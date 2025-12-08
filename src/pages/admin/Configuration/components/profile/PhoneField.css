@@ -1,0 +1,90 @@
+/* Estilos para react-phone-number-input unificado con Shadcn UI */
+
+/* El contenedor principal que simula ser el input */
+.phone-input-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border: 1px solid hsl(var(--input));
+    border-radius: 0.375rem;
+    /* var(--radius) */
+    background-color: hsl(var(--background));
+    padding-left: 12px;
+    transition: all 0.2s;
+}
+
+.phone-input-container:focus-within {
+    outline: none;
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 2px hsl(var(--ring));
+}
+
+/* El div interno que crea la librería */
+.phone-input-container .PhoneInput {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+/* El contenedor de la bandera */
+.phone-input-container .PhoneInputCountry {
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
+}
+
+/* La bandera en sí */
+.phone-input-container .PhoneInputCountryIcon {
+    width: 24px;
+    height: 18px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    display: block;
+    /* Asegurar que se comporte como bloque */
+}
+
+.phone-input-container .PhoneInputCountryIcon img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* La flechita al lado de la bandera */
+.phone-input-container .PhoneInputCountrySelectArrow {
+    display: block;
+    width: 0.6em;
+    height: 0.6em;
+    margin-left: 0.4em;
+    opacity: 0.5;
+    border-style: solid;
+    border-color: currentColor;
+    border-bottom-width: 0;
+    border-width: 0 0.15em 0.15em 0;
+    transform: rotate(45deg);
+}
+
+/* El input de texto */
+.phone-input-container input {
+    flex: 1;
+    border: none;
+    /* Quitamos el borde del input interno */
+    background: transparent;
+    outline: none;
+    height: 2.5rem;
+    font-size: 0.875rem;
+    color: hsl(var(--foreground));
+    padding: 0;
+    margin-left: 0;
+    /* Asegurar que no haya margen extraño */
+}
+
+.phone-input-container input::placeholder {
+    color: hsl(var(--muted-foreground));
+}
+
+/* El select nativo invisible */
+.PhoneInputCountrySelect {
+    cursor: pointer;
+}

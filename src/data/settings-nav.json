@@ -1,0 +1,177 @@
+{
+  "configuracion": {
+    "title": "Configuración",
+    "sections": [
+      {
+        "label": "",
+        "items": [
+          {
+            "id": "perfil-usuario",
+            "label": "Perfil del Usuario",
+            "path": "/setting/user-profile"
+          },
+          {
+            "id": "perfil-empresa",
+            "label": "Perfil de la Empresa",
+            "path": "/setting/company-profile"
+          }
+        ]
+      },
+      {
+        "label": "SEGURIDAD",
+        "items": [
+          {
+            "id": "cambiar-contrasena",
+            "label": "Cambiar Contraseña",
+            "path": "/setting/change-password"
+          },
+          {
+            "id": "mfa",
+            "label": "Método de Autenticación de Dos Factores",
+            "path": "/setting/two-factor-authentication"
+          }
+        ]
+      },
+      {
+        "label": "",
+        "items": [
+          {
+            "id": "notificaciones",
+            "label": "Notificaciones",
+            "path": "/setting/notifications"
+          },
+          {
+            "id": "politicas",
+            "label": "Políticas y Documentos",
+            "path": "/setting/politicas"
+          },
+          {
+            "id": "tipos-incidentes",
+            "label": "Tipos de Incidentes",
+            "path": "/setting/tipos-incidentes"
+          },
+          {
+            "id": "tipos-licencias",
+            "label": "Tipos de Licencias",
+            "path": "/setting/tipos-licencias"
+          },
+          {
+            "id": "conjunto-habilidades",
+            "label": "Conjuntos de Habilidades",
+            "path": "/setting/conjunto-habilidades"
+          },
+          {
+            "id": "departamentos",
+            "label": "Departamentos",
+            "path": "/setting/departamentos"
+          },
+          {
+            "id": "impuestos",
+            "label": "Impuestos",
+            "path": "/setting/impuestos"
+          },
+          {
+            "id": "roles",
+            "label": "Roles de Usuario",
+            "path": "/setting/roles"
+          },
+          {
+            "id": "campos-perfil",
+            "label": "Campos de Perfil",
+            "path": "/setting/campos-perfil"
+          },
+          {
+            "id": "custom-reports",
+            "label": "Informes Personalizados",
+            "path": "/setting/custom-reports"
+          },
+          {
+            "id": "integraciones",
+            "label": "Integraciones",
+            "path": "/setting/integraciones"
+          },
+          {
+            "id": "payroll-setup",
+            "label": "Configuración de Nómina",
+            "path": "/setting/payroll-setup"
+          }
+        ]
+      },
+      {
+        "label": "CONFIGURACIÓN GLOBAL",
+        "items": [
+          {
+            "id": "publishing-sites",
+            "label": "Sitios de Publicación",
+            "path": "/setting/publishing-sites"
+          },
+          {
+            "id": "keep-safe",
+            "label": "Guardias de Seguridad",
+            "path": "/setting/keep-safe"
+          }
+        ]
+      },
+      {
+        "label": "",
+        "items": [
+          {
+            "id": "report-configuration",
+            "label": "Configuración de Informes",
+            "path": "/setting/report-configuration"
+          },
+          {
+            "id": "other-settings",
+            "label": "Otras Configuraciones",
+            "path": "/setting/other-settings"
+          }
+        ]
+      },
+      {
+        "label": "ACCESO DE DESARROLLADOR",
+        "items": [
+          {
+            "id": "access-token",
+            "label": "Token de acceso",
+            "path": "/setting/access-token"
+          },
+          {
+            "id": "request-records",
+            "label": "Solicitar registros",
+            "path": "/setting/request-records"
+          }
+        ]
+      }
+    ]
+  },
+  "suscripcion": {
+    "title": "Suscripción",
+    "sections": [
+      {
+        "label": "",
+        "items": [
+          {
+            "id": "detalle",
+            "label": "Detalles de la Suscripción",
+            "path": "/billing"
+          },
+          {
+            "id": "modulos",
+            "label": "Módulos",
+            "path": "/billing-modulos"
+          },
+          {
+            "id": "metodos-pago",
+            "label": "Métodos de Pago",
+            "path": "/billing-metodos"
+          },
+          {
+            "id": "facturas",
+            "label": "Facturas",
+            "path": "/billing-facturas"
+          }
+        ]
+      }
+    ]
+  }
+}

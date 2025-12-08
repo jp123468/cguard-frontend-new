@@ -1,0 +1,311 @@
+[
+  {
+    "id": "panel",
+    "name": "Panel de control",
+    "icon": "Gauge",
+    "path": "/dashboard",
+    "active": true
+  },
+  {
+    "id": "actividad",
+    "name": "Actividad",
+    "icon": "Activity",
+    "path": "/activities"
+  },
+  {
+    "id": "clientes",
+    "name": "Clientes",
+    "icon": "Users",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "clientes",
+        "name": "Clientes",
+        "path": "/clients"
+      },
+      {
+        "id": "sitios-publicacion",
+        "name": "Sitios de Publicación",
+        "path": "/post-sites"
+      }
+    ]
+  },
+  {
+    "id": "equipo",
+    "name": "Equipo de Seguridad",
+    "icon": "Shield",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "guardias",
+        "name": "Guardias de Seguridad",
+        "path": "/security-guards"
+      },
+      {
+        "id": "usuarios",
+        "name": "Usuarios de Oficina Administrativa",
+        "path": "/back-office"
+      }
+    ]
+  },
+  {
+    "id": "analiticas",
+    "name": "Analíticas",
+    "icon": "BarChart3",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "informe",
+        "name": "Informe",
+        "path": "/analytics/reporting"
+      },
+      {
+        "id": "horario",
+        "name": "Horario",
+        "path": "/analytics/scheduling"
+      },
+      {
+        "id": "facturador",
+        "name": "Facturador",
+        "path": "/analytics/invoicer"
+      },
+      {
+        "id": "sitios-publicacion",
+        "name": "Sitios de Publicación",
+        "path": "/analytics/postsite"
+      },
+      {
+        "id": "guardias",
+        "name": "Guardias de Seguridad",
+        "path": "/analytics/guard"
+      }
+    ]
+  },
+  {
+    "id": "rastreador",
+    "name": "Rastreador GPS",
+    "icon": "MapPin",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "seguimiento",
+        "name": "Seguimiento en vivo",
+        "path": "/live-tracking"
+      },
+      {
+        "id": "historial",
+        "name": "Historial de seguimiento",
+        "path": "/tracking-history"
+      }
+    ]
+  },
+  {
+    "id": "mensajero",
+    "name": "Mensajero",
+    "icon": "MessageSquare",
+    "path": "/messenger"
+  },
+  {
+    "id": "reloj",
+    "name": "Reloj de Tiempo",
+    "icon": "Clock",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "registro",
+        "name": "Registro de tiempo",
+        "path": "/time-log"
+      },
+      {
+        "id": "tarjeta",
+        "name": "Tarjeta de tiempo",
+        "path": "/time-card"
+      },
+      {
+        "id": "descansos",
+        "name": "Descansos",
+        "path": "/breaks"
+      }
+    ]
+  },
+  {
+    "id": "informes",
+    "name": "Informes",
+    "icon": "FileText",
+    "path": "/reports"
+  },
+  {
+    "id": "programador",
+    "name": "Programador",
+    "icon": "Calendar",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "horario",
+        "name": "Horario",
+        "path": "/schedule"
+      },
+      {
+        "id": "plantillas",
+        "name": "Plantillas de turno",
+        "path": "/shift-templates"
+      },
+      {
+        "id": "asistencia",
+        "name": "Asistencia",
+        "path": "/attendance"
+      },
+      {
+        "id": "estado",
+        "name": "Estado de Turno",
+        "path": "/shift-status"
+      },
+      {
+        "id": "turnos-abiertos",
+        "name": "Turnos Abiertos",
+        "path": "/open-shifts"
+      },
+      {
+        "id": "intercambio",
+        "name": "Intercambio de Turno",
+        "path": "/shift-exchange"
+      },
+      {
+        "id": "tiempo-libre",
+        "name": "Tiempo Libre",
+        "path": "/time-off"
+      }
+    ]
+  },
+  {
+    "id": "nomina",
+    "name": "Nómina",
+    "icon": "DollarSign",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "ejecutar",
+        "name": "Ejecutar Nómina",
+        "path": "/payroll/generate-payroll"
+      },
+      {
+        "id": "pasadas",
+        "name": "Nóminas Pasadas",
+        "path": "/payroll/past-payroll"
+      },
+      {
+        "id": "horas-extras",
+        "name": "Multiplicador de Horas Extras",
+        "path": "/payroll/overtime-multiplier"
+      }
+    ]
+  },
+  {
+    "id": "facturador",
+    "name": "Facturador",
+    "icon": "Receipt",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "estimaciones",
+        "name": "Estimaciones",
+        "path": "/estimates"
+      },
+      {
+        "id": "facturas",
+        "name": "Facturas",
+        "path": "/invoices"
+      },
+      {
+        "id": "elementos",
+        "name": "Elementos",
+        "path": "/invoicer/items"
+      }
+    ]
+  },
+  {
+    "id": "despachador",
+    "name": "Despachador",
+    "icon": "MessageSquare",
+    "path": "/dispatch-tickets"
+  },
+  {
+    "id": "visitantes",
+    "name": "Gestión de Visitantes",
+    "icon": "UserPlus",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "visitantes",
+        "name": "Visitantes",
+        "path": "/visitors"
+      },
+      {
+        "id": "vehiculos",
+        "name": "Vehículos",
+        "path": "/visitor/vehicle-list"
+      },
+      {
+        "id": "visitas",
+        "name": "Visitas",
+        "path": "/visitor/visit-list"
+      }
+    ]
+  },
+  {
+    "id": "patrulla",
+    "name": "Patrulla vehicular",
+    "icon": "Car",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "vehiculo",
+        "name": "Vehículo",
+        "path": "/vehicle-patrol/vehicles"
+      },
+      {
+        "id": "rutas",
+        "name": "Rutas",
+        "path": "/vehicle-patrol/routes"
+      }
+    ]
+  },
+  {
+    "id": "parking",
+    "name": "Administrador de estacionamiento",
+    "icon": "SquareParking",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "contacto",
+        "name": "Contacto",
+        "path": "/parking-manager/parking-contact"
+      },
+      {
+        "id": "vehiculos",
+        "name": "Vehículos",
+        "path": "/parking-manager/parking-vehicle"
+      },
+      {
+        "id": "areas",
+        "name": "Área de estacionamiento",
+        "path": "/parking-manager/parking-area"
+      },
+      {
+        "id": "espacios",
+        "name": "Estacionamiento",
+        "path": "/parking-manager/parking-lot"
+      },
+      {
+        "id": "incidentes",
+        "name": "Incidentes",
+        "path": "/parking-manager/parking-incident"
+      },
+      {
+        "id": "tipo-incidente",
+        "name": "Tipo de Incidente",
+        "path": "/parking-manager/incident-type"
+      }
+    ]
+  }
+]
