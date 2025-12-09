@@ -27,7 +27,7 @@ const Schema = z.object({
   showIncidentIconOnMap: z.boolean().default(false),
 });
 
-export type OtherSettingsValues = z.infer<typeof Schema>;
+export type OtherSettingsValues = z.output<typeof Schema>;
 
 const defaultValues: OtherSettingsValues = Schema.parse({});
 
@@ -139,7 +139,7 @@ function Fields() {
                     <SelectValue placeholder="Selecciona día" />
                   </SelectTrigger>
                   <SelectContent>
-                    {["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"].map((d) => (
+                    {["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].map((d) => (
                       <SelectItem key={d} value={d}>{d}</SelectItem>
                     ))}
                   </SelectContent>
@@ -290,16 +290,18 @@ export default function OtherSettingsForm({
   initialValues?: Partial<OtherSettingsValues>;
   onSubmit?: (v: OtherSettingsValues) => void;
 }) {
-  const methods = useForm<OtherSettingsValues>({
+  const methods = useForm<z.input<typeof Schema>>({
     resolver: zodResolver(Schema),
     defaultValues: { ...defaultValues, ...initialValues },
     mode: "onChange",
   });
 
+
   const submit = methods.handleSubmit((v) => {
-    console.log("Otras Configuraciones (solo vista):", v);
-    onSubmit?.(v);
+    onSubmit?.(v as OtherSettingsValues);
   });
+
+
 
   return (
     <Form {...methods}>
