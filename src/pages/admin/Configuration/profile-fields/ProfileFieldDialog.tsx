@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ const TYPE_OPTIONS = [
 
 const schema = z.object({
   name: z.string().min(2, "Requerido"),
-  type: z.enum(["client", "jobsite", "guard", "office_user"], { required_error: "Seleccione un tipo" }),
+  type: z.enum(["client", "jobsite", "guard", "office_user"] as const),
 });
 
 export type ProfileFieldDialogValues = z.infer<typeof schema>;
@@ -37,7 +37,7 @@ export default function ProfileFieldDialog({ open, onOpenChange, title, defaultV
   const [openType, setOpenType] = useState(false);
 
   const form = useForm<ProfileFieldDialogValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as Resolver<ProfileFieldDialogValues>,
     defaultValues: defaultValues ?? { name: "", type: undefined as unknown as any },
     values: defaultValues ?? undefined,
   });
