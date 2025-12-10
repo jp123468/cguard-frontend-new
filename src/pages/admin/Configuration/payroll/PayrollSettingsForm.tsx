@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/form";
 
 const schema = z.object({
-  payPeriod: z.enum(["weekly", "biweekly", "monthly"], { required_error: "Seleccione un período" }),
+  payPeriod: z.enum(["weekly", "biweekly", "monthly"] as const),
   lastPeriodEnd: z.string().min(1, "Requerido"),
   california7thDayRule: z.boolean().optional().default(false),
   cutShiftAtMidnight: z.boolean().optional().default(false),
@@ -37,7 +37,7 @@ type Props = {
 
 export default function PayrollSettingsForm({ defaultValues, onSubmit }: Props) {
   const form = useForm<PayrollSettingsValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as Resolver<PayrollSettingsValues>,
     defaultValues: {
       payPeriod: defaultValues?.payPeriod ?? undefined,
       lastPeriodEnd: defaultValues?.lastPeriodEnd ?? "",

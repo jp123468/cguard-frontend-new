@@ -1,8 +1,7 @@
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Info } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -49,7 +48,7 @@ function Row({ children }: { children: React.ReactNode }) {
 
 export default function PostingGlobalForm({ defaultValues, onSubmit }: Props) {
   const form = useForm<PostingGlobalValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as Resolver<PostingGlobalValues>,
     defaultValues: {
       enforceClockInBeforeCheck: defaultValues?.enforceClockInBeforeCheck ?? true,
       notifyGeofenceEnterExit: defaultValues?.notifyGeofenceEnterExit ?? false,
