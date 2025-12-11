@@ -7,11 +7,11 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 
 export default function Login() {
-  const { signIn } = useAuth();
+  const { signIn, signInWithToken } = useAuth();
   const navigate = useNavigate();
   const {
-    email, password, showPassword, isLoading, formError,
-    setEmail, setPassword, toggleShowPassword, setIsLoading, setFormError,
+    email, password, showPassword, isLoading,
+    setEmail, setPassword, toggleShowPassword, setIsLoading
   } = useAuthForm();
 
   useEffect(() => {
@@ -20,9 +20,9 @@ export default function Login() {
   
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setFormError("");
+
     if (!email || !password) {
-      setFormError("Por favor, rellena todos los campos");
+      toast.error("Por favor, rellena todos los campos");
       return;
     }
     setIsLoading(true);
@@ -32,11 +32,47 @@ export default function Login() {
       toast.success("Sesión iniciada con éxito");
       navigate("/dashboard");
     } else {
-      setFormError(result.error || "Fallo en el inicio de sesión");
       toast.error(result.error || "Fallo en el inicio de sesión");
     }
   };
+  
+  // Abre una ventana popup hacia el endpoint de OAuth en el backend
+  const handleSocialLogin = (provider: "google" | "microsoft") => {
+    const width = 600;
+    const height = 700;
+    const left = window.screenX + (window.innerWidth - width) / 2;
+    const top = window.screenY + (window.innerHeight - height) / 2;
 
+    // Nota: el backend debe exponer /auth/oauth/:provider que hace el flujo OAuth
+    // y luego ejecuta window.opener.postMessage({ type: 'oauth_callback', token, user }, window.opener.location.origin)
+    const base = import.meta.env.VITE_API_URL ?? "http://localhost:3001/api";
+    const url = `${base.replace(/\/+$/, "")}/auth/oauth/${provider}`;
+    const popup = window.open(url, "oauth_popup", `width=${width},height=${height},left=${left},top=${top}`);
+    if (!popup) {
+      toast.error("No se pudo abrir la ventana de autenticación.");
+      return;
+    }
+
+    const listener = async (e: MessageEvent) => {
+      if (!e.data || e.data.type !== "oauth_callback") return;
+      const { token, user, error } = e.data;
+      window.removeEventListener("message", listener);
+      try { popup.close(); } catch {}
+      if (error) {
+        toast.error(error);
+        return;
+      }
+      const res = await signInWithToken(token, user);
+      if (res.success) {
+        toast.success("Sesión iniciada con éxito");
+        navigate("/dashboard");
+      } else {
+        toast.error(res.error || "Fallo en el inicio de sesión");
+      }
+    };
+
+    window.addEventListener("message", listener);
+  };
 
   return (
     <AuthLayout 
@@ -46,6 +82,7 @@ export default function Login() {
       <div className="mb-6 grid grid-cols-2 gap-3">
         <button
           type="button"
+          onClick={() => handleSocialLogin("google")}
           className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -58,6 +95,7 @@ export default function Login() {
         </button>
         <button
           type="button"
+          onClick={() => handleSocialLogin("microsoft")}
           className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           <svg className="h-5 w-5" viewBox="0 0 23 23" fill="none">
@@ -124,12 +162,6 @@ export default function Login() {
             </button>
           </div>
         </div>
-
-        {formError && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-200">
-            {formError}
-          </div>
-        )}
 
         <div className="text-right">
           <NavLink to="/forgot-password" className="text-sm font-medium hover:underline" style={{ color: "#F75638" }}>

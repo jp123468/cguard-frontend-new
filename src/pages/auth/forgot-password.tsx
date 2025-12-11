@@ -20,7 +20,7 @@ export default function ForgotPassword() {
 
     const value = email.trim();
     if (!value) {
-      setFormError("Por favor ingresa tu correo electrónico");
+      toast.error("Por favor ingresa tu correo electrónico");
       return;
     }
 
@@ -28,14 +28,10 @@ export default function ForgotPassword() {
     try {
       // NOTE: Assuming AuthService.sendPasswordResetEmail is correctly implemented
       await AuthService.sendPasswordResetEmail(value); 
-      toast.success("Enlace enviado correctamente. Revisa tu correo electrónico.");
+      toast.success("Enlace enviado correctamente. Revisa tu correo electrónico");
       setEmail("");
     } catch (err: any) {
       console.error("Error al enviar enlace:", err);
-      // The original Spanish error message was good, re-using it.
-      const msg = "No se pudo enviar el enlace. Verifica tu correo."; 
-      setFormError(msg);
-      toast.error("No se pudo enviar el enlace. Intenta nuevamente.");
     } finally {
       setIsLoading(false);
     }

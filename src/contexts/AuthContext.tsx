@@ -8,7 +8,10 @@ interface AuthContextType {
   user: User | null; loading: boolean; error: string | null;
   signIn: (c: LoginCredentials) => Promise<AuthResult>;
   signUp: (d: SignUpData) => Promise<AuthResult>;
-  signOut: () => Promise<void>; isAuthenticated: boolean;
+  signOut: () => Promise<void>;
+  // permite iniciar sesión usando un token (por ejemplo OAuth callback)
+  signInWithToken: (token: string, user?: any) => Promise<AuthResult>;
+  isAuthenticated: boolean;
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -82,8 +85,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const signInWithToken = async (token: string, userData?: any) => {
+    try {
+      localStorage.setItem("authToken", token);
+      if (userData) {
+        setUser(userData);
+      } else {
+        // intenta hidratar profile desde el backend
+        try {
+          const u = await AuthService.getProfile();
+          setUser(u);
+        } catch (e) {
+          // ignore
+        }
+      }
+      return { success: true };
+    } catch (err: any) {
+      const message = err?.message || "Error al iniciar sesión con token";
+      setError(message);
+      return { success: false, error: message };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, error, signIn, signUp, signOut, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, error, signIn, signUp, signOut, signInWithToken, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

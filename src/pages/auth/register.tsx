@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function Register() {
-  const { signUp } = useAuth();
+  const { signUp, signInWithToken } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -15,22 +15,23 @@ export default function Register() {
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formError, setFormError] = useState("");
+
 
   useEffect(() => {
-        document.title = "Registro | Cguard";
-    }, []);
+    document.title = "Registro | Cguard";
+  }, []);
 
   const handleRegister = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setFormError("");
+
 
     if (!email || !password || !confirm) {
-      setFormError("Por favor completa todos los campos");
+      toast.error("Por favor completa todos los campos");
       return;
     }
     if (password !== confirm) {
-      setFormError("Las contraseñas no coinciden");
+      toast.error("Las contraseñas no coinciden");
+
       return;
     }
 
@@ -43,38 +44,76 @@ export default function Register() {
       navigate("/login");
     } else {
       const msg = res?.error || "Error al registrarse";
-      setFormError(msg);
       toast.error(msg);
     }
   };
+  const handleSocialLogin = (provider: "google" | "microsoft") => {
+    const width = 600;
+    const height = 700;
+    const left = window.screenX + (window.innerWidth - width) / 2;
+    const top = window.screenY + (window.innerHeight - height) / 2;
 
+    // Nota: el backend debe exponer /auth/oauth/:provider que hace el flujo OAuth
+    // y luego ejecuta window.opener.postMessage({ type: 'oauth_callback', token, user }, window.opener.location.origin)
+    const base = import.meta.env.VITE_API_URL ?? "http://localhost:3001/api";
+    const url = `${base.replace(/\/+$/, "")}/auth/oauth/${provider}`;
+    const popup = window.open(url, "oauth_popup", `width=${width},height=${height},left=${left},top=${top}`);
+    if (!popup) {
+      toast.error("No se pudo abrir la ventana de autenticación.");
+      return;
+    }
+
+    const listener = async (e: MessageEvent) => {
+      if (!e.data || e.data.type !== "oauth_callback") return;
+      const { token, user, error } = e.data;
+      window.removeEventListener("message", listener);
+      try { popup.close(); } catch { }
+      if (error) {
+        toast.error(error);
+        return;
+      }
+      const res = await signInWithToken(token, user);
+      if (res.success) {
+        toast.success("Sesión iniciada con éxito");
+        navigate("/dashboard");
+      } else {
+        toast.error(res.error || "Fallo en el inicio de sesión");
+      }
+    };
+
+    window.addEventListener("message", listener);
+  };
   return (
     <AuthLayout
       title="Crea tu cuenta"
     >
+   
       {/* Botones Sociales */}
       <div className="mb-6 grid grid-cols-2 gap-3">
         <button
           type="button"
+          onClick={() => handleSocialLogin("google")}
           className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
-            <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115Z"/>
-            <path fill="#34A853" d="M16.04 18.013A7.077 7.077 0 0 1 12 19.091c-3.134 0-5.781-2.014-6.723-4.823L1.237 17.35C3.193 21.294 7.265 24 12 24c2.933 0 5.735-1.043 7.834-3l-3.793-2.987Z"/>
-            <path fill="#4A90E2" d="M19.834 21c2.195-2.048 3.62-5.096 3.62-9 0-.71-.109-1.473-.272-2.182H12v4.637h6.436c-.317 1.559-1.17 2.766-2.395 3.558L19.834 21Z"/>
-            <path fill="#FBBC05" d="M5.277 14.268A7.12 7.12 0 0 1 4.909 12c0-.782.125-1.533.357-2.235L1.24 6.65A11.934 11.934 0 0 0 0 12c0 1.92.445 3.73 1.237 5.335l4.04-3.067Z"/>
+            <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115Z" />
+            <path fill="#34A853" d="M16.04 18.013A7.077 7.077 0 0 1 12 19.091c-3.134 0-5.781-2.014-6.723-4.823L1.237 17.35C3.193 21.294 7.265 24 12 24c2.933 0 5.735-1.043 7.834-3l-3.793-2.987Z" />
+            <path fill="#4A90E2" d="M19.834 21c2.195-2.048 3.62-5.096 3.62-9 0-.71-.109-1.473-.272-2.182H12v4.637h6.436c-.317 1.559-1.17 2.766-2.395 3.558L19.834 21Z" />
+            <path fill="#FBBC05" d="M5.277 14.268A7.12 7.12 0 0 1 4.909 12c0-.782.125-1.533.357-2.235L1.24 6.65A11.934 11.934 0 0 0 0 12c0 1.92.445 3.73 1.237 5.335l4.04-3.067Z" />
           </svg>
           Google
         </button>
+
         <button
           type="button"
+          onClick={() => handleSocialLogin("microsoft")}
           className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           <svg className="h-5 w-5" viewBox="0 0 23 23" fill="none">
-            <path d="M0 0h11v11H0z" fill="#f25022"/>
-            <path d="M12 0h11v11H12z" fill="#00a4ef"/>
-            <path d="M0 12h11v11H0z" fill="#ffb900"/>
-            <path d="M12 12h11v11H12z" fill="#7fba00"/>
+            <path d="M0 0h11v11H0z" fill="#f25022" />
+            <path d="M12 0h11v11H12z" fill="#00a4ef" />
+            <path d="M0 12h11v11H0z" fill="#ffb900" />
+            <path d="M12 12h11v11H12z" fill="#7fba00" />
           </svg>
           Microsoft
         </button>
@@ -166,12 +205,7 @@ export default function Register() {
           </div>
         </div>
 
-        {/* Error */}
-        {formError && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-200">
-            {formError}
-          </div>
-        )}
+
 
         {/* Botón de Enviar */}
         <button
