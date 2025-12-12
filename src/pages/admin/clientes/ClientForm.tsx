@@ -55,9 +55,14 @@ export default function ClientForm({
         resolver: zodResolver(clientSchema as any),
         defaultValues: {
             name: "",
+            lastName: "",
             email: "",
             phoneNumber: "",
             address: "",
+            addressLine2: "",
+            postalCode: "",
+            city: "",
+            country: "",
             faxNumber: "",
             website: "",
             categoryId: "",
@@ -98,16 +103,20 @@ export default function ClientForm({
             (async () => {
                 try {
                     const data = await clientService.getClient(id);
-                    const payload: ClientInput = {
+                    form.reset({
                         name: data.name ?? "",
-                        email: data.email || "",
-                        phoneNumber: data.phoneNumber || "",
-                        address: data.address || "",
-                        faxNumber: data.faxNumber || "",
-                        website: data.website || "",
-                        categoryId: data.categoryId || "",
-                    };
-                    form.reset(payload);
+                        lastName: data.lastName ?? "",
+                        email: data.email ?? "",
+                        phoneNumber: data.phoneNumber ?? "",
+                        address: data.address ?? "",
+                        addressLine2: data.addressLine2 ?? "",
+                        postalCode: data.postalCode ?? "",
+                        city: data.city ?? "",
+                        country: data.country ?? "",
+                        faxNumber: data.faxNumber ?? "",
+                        website: data.website ?? "",
+                        categoryId: data.categoryId ?? "",
+                    });
                 } catch (e) {
                     console.error(e);
                     toast.error("No se pudo cargar el cliente");
@@ -117,33 +126,40 @@ export default function ClientForm({
     }, [mode, id, form]);
 
     async function onSubmit(values: ClientInput) {
-        const apiPayload: ClientApiPayload = {
-            ...values,
+        // Crear payload solo con los campos que el backend actual soporta
+        const apiPayload: any = {
+            name: values.name,
+            email: values.email,
+            phoneNumber: values.phoneNumber,
+            address: values.address,
             categoryId: values.categoryId || null,
         };
 
+        // Agregar campos opcionales solo si tienen valor
+        if (values.lastName) apiPayload.lastName = values.lastName;
+        if (values.addressLine2) apiPayload.addressLine2 = values.addressLine2;
+        if (values.postalCode) apiPayload.postalCode = values.postalCode;
+        if (values.city) apiPayload.city = values.city;
+        if (values.country) apiPayload.country = values.country;
+        if (values.faxNumber) apiPayload.faxNumber = values.faxNumber;
+        if (values.website) apiPayload.website = values.website;
+
         try {
             if (mode === "create") {
-                // const data = await clientService.createClient(
-                //     apiPayload as unknown as ClientInput
-                // );
-
                 const data = await clientService.createClient(apiPayload as ClientInput);
-
-                toast.success("Cliente creado");
+                toast.success("Cliente creado exitosamente");
                 onSaved?.({ id: data.id, data: values });
                 form.reset();
             } else if (mode === "edit" && id) {
-                await clientService.updateClient(
+                const response = await clientService.updateClient(
                     id,
                     apiPayload as unknown as ClientInput
                 );
-                toast.success("Cambios guardados");
+                toast.success("Cliente actualizado exitosamente");
                 onSaved?.({ id, data: values });
             }
         } catch (e: any) {
-            console.error(e);
-            toast.error(e?.message || "Error al guardar");
+            toast.error(e?.response?.data?.message || e?.message || "Error al guardar");
         }
     }
 
@@ -167,7 +183,7 @@ export default function ClientForm({
                             name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Nombre del Cliente *</FormLabel>
+                                    <FormLabel>Nombre *</FormLabel>
                                     <FormControl>
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -182,13 +198,12 @@ export default function ClientForm({
 
                         <FormField<ClientInput>
                             control={form.control}
-                            name="email"
+                            name="lastName"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Correo Electrónico *</FormLabel>
+                                    <FormLabel>Apellidos *</FormLabel>
                                     <FormControl>
                                         <input
-                                            type="email"
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             {...field}
                                             value={field.value || ""}
@@ -203,10 +218,30 @@ export default function ClientForm({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField<ClientInput>
                             control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Correo Electrónico *</FormLabel>
+                                    <FormControl>
+                                        <input
+                                            type="email"
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            {...field}
+                                            value={field.value || ""}
+                                            maxLength={50}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<ClientInput>
+                            control={form.control}
                             name="phoneNumber"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Número de Teléfono *</FormLabel>
+                                    <FormLabel>Teléfono *</FormLabel>
                                     <FormControl>
                                         <PhoneInput
                                             value={field.value || ""}
@@ -218,18 +253,100 @@ export default function ClientForm({
                                 </FormItem>
                             )}
                         />
+                    </div>
 
+                    <div className="grid grid-cols-1 gap-6">
                         <FormField<ClientInput>
                             control={form.control}
                             name="address"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Dirección del Cliente *</FormLabel>
+                                    <FormLabel>Dirección *</FormLabel>
                                     <FormControl>
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             {...field}
                                             value={field.value || ""}
+                                            maxLength={100}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<ClientInput>
+                            control={form.control}
+                            name="addressLine2"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Dirección Complementaria</FormLabel>
+                                    <FormControl>
+                                        <input
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            placeholder="Opcional"
+                                            {...field}
+                                            value={field.value || ""}
+                                            maxLength={100}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <FormField<ClientInput>
+                            control={form.control}
+                            name="postalCode"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Código postal/Zip *</FormLabel>
+                                    <FormControl>
+                                        <input
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            {...field}
+                                            value={field.value || ""}
+                                            maxLength={20}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<ClientInput>
+                            control={form.control}
+                            name="city"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Ciudad *</FormLabel>
+                                    <FormControl>
+                                        <input
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            {...field}
+                                            value={field.value || ""}
+                                            maxLength={100}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<ClientInput>
+                            control={form.control}
+                            name="country"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>País *</FormLabel>
+                                    <FormControl>
+                                        <input
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            {...field}
+                                            value={field.value || ""}
+                                            maxLength={100}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -307,7 +424,7 @@ export default function ClientForm({
 
                     <div className="flex justify-end gap-4">
                         <Button type="submit" className="min-w-28 bg-white text-[#FE6F02] rounded-none cursor-pointer border border-[#FE6F02] hover:bg-gray-100 hover:text-[#FE6F02]">
-                            Enviar
+                            Guardar
                         </Button>
                         <Link to="/clients" className="px-3 py-1 border rounded-none cursor-pointer font-medium">
                             Cancelar

@@ -31,6 +31,13 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
 
     const displayValue = useMemo(() => value ?? "", [value]);
 
+    // Calcular el máximo total: código de país + espacios + dígitos
+    const maxPhoneLength = useMemo(() => {
+        const codeLength = country.dialCode.length + 1; // +1 para el "+"
+        const maxDigits = country.maxLength || 15;
+        return codeLength + maxDigits;
+    }, [country]);
+
     const handleCountrySelect = (c: Country) => {
         setCountry(c);
 
@@ -41,6 +48,20 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
 
         const rest = displayValue.replace(/^\+\d+\s*/, "");
         onChange(`+${c.dialCode}${rest ? " " + rest : ""}`);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value;
+
+        // Solo permitir números, +, y espacios
+        if (!/^[\d+\s]*$/.test(newValue)) {
+            return;
+        }
+
+        // Limitar la longitud total
+        if (newValue.length <= maxPhoneLength) {
+            onChange(newValue);
+        }
     };
 
     return (
@@ -104,8 +125,9 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
                 <Input
                     className="flex-1 rounded-l-none"
                     value={displayValue}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={handleInputChange}
                     placeholder={placeholder ?? "e.g. +12015550123"}
+                    maxLength={maxPhoneLength}
                 />
             </div>
         </div>

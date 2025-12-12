@@ -57,9 +57,12 @@ export const clientService = {
         // Add filters
         if (filters) {
             if (filters.name) params.append("filter[name]", filters.name);
+            if (filters.lastName) params.append("filter[lastName]", filters.lastName);
             if (filters.email) params.append("filter[email]", filters.email);
             if (filters.phoneNumber) params.append("filter[phoneNumber]", filters.phoneNumber);
             if (filters.address) params.append("filter[address]", filters.address);
+            if (filters.city) params.append("filter[city]", filters.city);
+            if (filters.country) params.append("filter[country]", filters.country);
             if (filters.faxNumber) params.append("filter[faxNumber]", filters.faxNumber);
             if (filters.website) params.append("filter[website]", filters.website);
             if (filters.category) params.append("filter[category]", filters.category);
@@ -69,9 +72,17 @@ export const clientService = {
             }
         }
 
-        const { data } = await api.get<ClientListResponse>(
+        const { data } = await api.get<any>(
             `/tenant/${tenantId}/client-account?${params.toString()}`
         );
+        // Mapear zipCode y addressComplement del backend a postalCode y addressLine2 del frontend
+        if (data.rows) {
+            data.rows = data.rows.map((client: any) => ({
+                ...client,
+                postalCode: client.zipCode || client.postalCode,
+                addressLine2: client.addressComplement || client.addressLine2,
+            }));
+        }
         return data;
     },
 
@@ -80,10 +91,22 @@ export const clientService = {
      */
     async getClient(id: string): Promise<Client> {
         const tenantId = getTenantId();
-        const { data } = await api.get<Client>(
+        const { data } = await api.get<any>(
             `/tenant/${tenantId}/client-account/${id}`
         );
-        return data;
+        console.log("Respuesta getClient del backend:", data);
+        console.log("Campos de dirección:", {
+            address2: data.address2,
+            addressLine2: data.addressLine2,
+            zipCode: data.zipCode,
+            postalCode: data.postalCode
+        });
+        // Mapear zipCode y addressComplement del backend a postalCode y addressLine2 del frontend
+        return {
+            ...data,
+            postalCode: data.zipCode || data.postalCode,
+            addressLine2: data.addressComplement || data.addressLine2,
+        };
     },
 
     /**
@@ -91,10 +114,25 @@ export const clientService = {
      */
     async createClient(input: ClientInput): Promise<Client> {
         const tenantId = getTenantId();
-        const { data } = await api.post<Client>(`/tenant/${tenantId}/client-account`,
-            input
+        // Mapear postalCode y addressLine2 del frontend a zipCode y addressComplement del backend
+        const payload: any = { ...input };
+        if (input.postalCode !== undefined) {
+            payload.zipCode = input.postalCode;
+            delete payload.postalCode;
+        }
+        if (input.addressLine2 !== undefined) {
+            payload.addressComplement = input.addressLine2;
+            delete payload.addressLine2;
+        }
+        const { data } = await api.post<any>(`/tenant/${tenantId}/client-account`,
+            payload
         );
-        return data;
+        // Mapear zipCode y addressComplement del backend a postalCode y addressLine2 del frontend en la respuesta
+        return {
+            ...data,
+            postalCode: data.zipCode || data.postalCode,
+            addressLine2: data.addressComplement || data.addressLine2,
+        };
     },
 
     /**
@@ -102,11 +140,26 @@ export const clientService = {
      */
     async updateClient(id: string, input: ClientInput): Promise<Client> {
         const tenantId = getTenantId();
-        const { data } = await api.put<Client>(
+        // Mapear postalCode y addressLine2 del frontend a zipCode y addressComplement del backend
+        const payload: any = { ...input };
+        if (input.postalCode !== undefined) {
+            payload.zipCode = input.postalCode;
+            delete payload.postalCode;
+        }
+        if (input.addressLine2 !== undefined) {
+            payload.addressComplement = input.addressLine2;
+            delete payload.addressLine2;
+        }
+        const { data } = await api.put<any>(
             `/tenant/${tenantId}/client-account/${id}`,
-            input
+            payload
         );
-        return data;
+        // Mapear zipCode y addressComplement del backend a postalCode y addressLine2 del frontend en la respuesta
+        return {
+            ...data,
+            postalCode: data.zipCode || data.postalCode,
+            addressLine2: data.addressComplement || data.addressLine2,
+        };
     },
 
     /**
@@ -176,8 +229,13 @@ export const clientService = {
      */
     async importExcel(file: File): Promise<{ imported: number; errors?: string[] }> {
         const tenantId = getTenantId();
+        
+        // Generar un hash único para la importación
+        const importHash = `import-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+        
         const formData = new FormData();
         formData.append("file", file);
+        formData.append("importHash", importHash);
 
         const { data } = await api.post(
             `/tenant/${tenantId}/client-account/import`,

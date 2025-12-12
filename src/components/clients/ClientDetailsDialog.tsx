@@ -1,0 +1,178 @@
+import { useEffect, useState } from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { clientService } from "@/lib/api/clientService";
+import { categoryService, type Category } from "@/lib/api/categoryService";
+import { Client } from "@/types/client";
+import { Link } from "react-router-dom";
+
+interface ClientDetailsDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    clientId: string | null;
+}
+
+export function ClientDetailsDialog({
+    open,
+    onOpenChange,
+    clientId,
+}: ClientDetailsDialogProps) {
+    const [client, setClient] = useState<Client | null>(null);
+    const [category, setCategory] = useState<Category | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!open || !clientId) return;
+
+        const loadClient = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const data = await clientService.getClient(clientId);
+                setClient(data);
+
+                // Cargar la categoría si existe categoryId
+                if (data.categoryId) {
+                    try {
+                        const cat = await categoryService.findById(data.categoryId);
+                        setCategory(cat);
+                    } catch (err) {
+                        console.error("Error loading category:", err);
+                    }
+                }
+            } catch (e: any) {
+                setError(e?.message || "Error al cargar los detalles del cliente");
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadClient();
+    }, [open, clientId]);
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle className="text-center">
+                        Detalles del Cliente
+                    </DialogTitle>
+                </DialogHeader>
+
+                {loading ? (
+                    <div className="flex items-center justify-center py-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+                    </div>
+                ) : error ? (
+                    <div className="py-4 text-center text-red-500 text-sm">
+                        <p>{error}</p>
+                    </div>
+                ) : client ? (
+                    <div className="space-y-4">
+                        {/* Información básica en dos columnas */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-xs text-gray-600 font-semibold">Nombre</p>
+                                <p className="text-sm">{client.name}</p>
+                            </div>
+                            {client.lastName && (
+                                <div>
+                                    <p className="text-xs text-gray-600 font-semibold">Apellidos</p>
+                                    <p className="text-sm">{client.lastName}</p>
+                                </div>
+                            )}
+                            <div>
+                                <p className="text-xs text-gray-600 font-semibold">Correo</p>
+                                <p className="text-sm truncate">{client.email || "-"}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-600 font-semibold">Teléfono</p>
+                                <p className="text-sm">{client.phoneNumber || "-"}</p>
+                            </div>
+                            {client.faxNumber && (
+                                <div>
+                                    <p className="text-xs text-gray-600 font-semibold">Fax</p>
+                                    <p className="text-sm">{client.faxNumber}</p>
+                                </div>
+                            )}
+                            {category && (
+                                <div>
+                                    <p className="text-xs text-gray-600 font-semibold">Categoría</p>
+                                    <p className="text-sm">{category.name}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Dirección completa */}
+                        <div className="border-t pt-3">
+                            <h4 className="text-sm font-semibold mb-2 text-gray-700">Dirección</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs text-gray-600 font-semibold">Dirección</p>
+                                    <p className="text-sm">{client.address || "-"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-600 font-semibold">Dirección Complementaria</p>
+                                    <p className="text-sm">{client.addressLine2 || "-"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-600 font-semibold">Código Postal</p>
+                                    <p className="text-sm">{client.postalCode || "-"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-600 font-semibold">Ciudad</p>
+                                    <p className="text-sm">{client.city || "-"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-600 font-semibold">País</p>
+                                    <p className="text-sm">{client.country || "-"}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Sitio web */}
+                        {client.website && (
+                            <div className="border-t pt-3">
+                                <p className="text-xs text-gray-600 font-semibold">Sitio Web</p>
+                                <p className="text-sm">
+                                    <a
+                                        href={client.website}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-orange-500 hover:underline truncate block"
+                                    >
+                                        {client.website}
+                                    </a>
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Acciones */}
+                        <div className="flex justify-end gap-2 pt-3 border-t">
+                            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                                Cerrar
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="bg-orange-500 hover:bg-orange-600"
+                                asChild
+                            >
+                                <Link to={`/clients/edit/${client.id}`}>
+                                    Editar
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
+                ) : null}
+            </DialogContent>
+        </Dialog>
+    );
+}

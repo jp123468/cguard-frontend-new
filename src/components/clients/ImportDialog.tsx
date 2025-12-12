@@ -16,6 +16,21 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
 
+    function downloadTemplate() {
+        const csvContent = `name,lastName,email,phoneNumber,address,addressLine2,zipCode,city,country,faxNumber,website,categoryId
+Cliente Ejemplo 1,García,cliente1@ejemplo.com,+593987654321,Calle Principal 123,Edificio A - Piso 3,170123,Quito,Ecuador,+593987654322,https://ejemplo1.com,
+Cliente Ejemplo 2,Rodríguez,cliente2@ejemplo.com,+12025551234,Av. Secundaria 456,Oficina 205,10001,New York,USA,,,`;
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'plantilla-clientes.csv';
+        link.click();
+        window.URL.revokeObjectURL(url);
+        toast.success("Plantilla descargada");
+    }
+
     async function handleImport() {
         if (!file) {
             toast.error("Selecciona un archivo");
@@ -23,20 +38,37 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
         }
 
         setLoading(true);
+        const toastId = toast.loading("Procesando archivo...");
+        
         try {
             const result = await clientService.importExcel(file);
-            toast.success(`${result.imported} clientes importados`);
-            if (result.errors && result.errors.length > 0) {
-                toast.warning(`${result.errors.length} errores encontrados`);
+            
+            toast.dismiss(toastId);
+            
+            if (result.imported > 0) {
+                toast.success(`✅ ${result.imported} clientes guardados en la base de datos exitosamente`);
             }
+            
+            if (result.errors && result.errors.length > 0) {
+                toast.error(`${result.errors.length} filas no se pudieron importar. Revisa los detalles.`);
+            }
+            
             onSuccess();
             onOpenChange(false);
             setFile(null);
         } catch (error: any) {
-            console.error(error);
-            toast.error(error.message || "Error al importar");
+            toast.dismiss(toastId);
+            const errorMessage = error?.details || error?.response?.data?.message || error?.message || "Error al importar";
+            
+            if (errorMessage.includes("cannot be null")) {
+                toast.error("Algunos campos obligatorios están vacíos. Verifica: name, lastName, email, phoneNumber, address, zipCode, city, country.");
+            } else {
+                toast.error(errorMessage);
+            }
         } finally {
             setLoading(false);
+                toast.success(`Clientes importados por exito.`);
+
         }
     }
 
@@ -53,16 +85,23 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
                             Antes de cargar, asegúrese de:
                         </p>
                         <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                            <li>El archivo debe ser formato .xlsx o .xls</li>
-                            <li>Agregue los detalles del cliente correctamente.</li>
-                            <li>El campo requerido es el nombre del cliente.</li>
+                            <li>El archivo debe ser formato .xlsx, .xls o .csv</li>
+                            <li><strong>Columnas obligatorias:</strong> name, lastName, email, phoneNumber, address, zipCode, city, country</li>
+                            <li><strong>Columnas opcionales:</strong> addressLine2, faxNumber, website, categoryId</li>
                         </ul>
+                        <Button
+                            variant="link"
+                            className="px-0 text-orange-500"
+                            onClick={downloadTemplate}
+                        >
+                            Descargar plantilla de ejemplo
+                        </Button>
                     </div>
 
                     <div className="border-2 border-dashed rounded-lg p-8 text-center">
                         <Input
                             type="file"
-                            accept=".xlsx,.xls"
+                            accept=".xlsx,.xls,.csv"
                             onChange={(e) => setFile(e.target.files?.[0] || null)}
                             className="hidden"
                             id="file-upload"

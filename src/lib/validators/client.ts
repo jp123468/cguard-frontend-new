@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const clientSchema = z.object({
     name: z.string().trim().min(1, "Nombre del cliente requerido").max(200, "Máximo 200 caracteres"),
+    lastName: z.string().trim().max(200, "Máximo 200 caracteres").optional().or(z.literal("")),
     email: z
         .string()
         .trim()
@@ -18,6 +19,30 @@ export const clientSchema = z.object({
         .trim()
         .min(1, "Dirección requerida")
         .max(200, "Máximo 200 caracteres"),
+    addressLine2: z
+        .string()
+        .trim()
+        .max(200, "Máximo 200 caracteres")
+        .optional()
+        .or(z.literal("")),
+    postalCode: z
+        .string()
+        .trim()
+        .max(20, "Máximo 20 caracteres")
+        .optional()
+        .or(z.literal("")),
+    city: z
+        .string()
+        .trim()
+        .max(100, "Máximo 100 caracteres")
+        .optional()
+        .or(z.literal("")),
+    country: z
+        .string()
+        .trim()
+        .max(100, "Máximo 100 caracteres")
+        .optional()
+        .or(z.literal("")),
     faxNumber: z
         .string()
         .trim()
@@ -32,7 +57,6 @@ export const clientSchema = z.object({
         .optional()
         .or(z.literal("")),
     categoryId: z.string().optional(),
-    // publishSite: z.boolean().optional().default(false),
 });
 
 export type ClientInput = z.infer<typeof clientSchema>;

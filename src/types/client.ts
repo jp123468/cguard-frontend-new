@@ -3,9 +3,14 @@
 export interface Client {
     id: string;
     name: string;
+    lastName?: string;
     email: string;
     phoneNumber: string;
     address: string;
+    addressLine2?: string;
+    postalCode?: string;
+    city?: string;
+    country?: string;
     faxNumber?: string;
     website?: string;
     categoryId?: string;
@@ -21,9 +26,14 @@ export interface Client {
 
 export interface ClientInput {
     name: string;
+    lastName?: string;
     email: string;
     phoneNumber: string;
     address: string;
+    addressLine2?: string;
+    postalCode?: string;
+    city?: string;
+    country?: string;
     faxNumber?: string;
     website?: string;
     categoryId?: string;
@@ -31,9 +41,12 @@ export interface ClientInput {
 
 export interface ClientFilters {
     name?: string;
+    lastName?: string;
     email?: string;
     phoneNumber?: string;
     address?: string;
+    city?: string;
+    country?: string;
     faxNumber?: string;
     website?: string;
     category?: string;

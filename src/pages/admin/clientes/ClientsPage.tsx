@@ -40,9 +40,11 @@ import {
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { clientService } from "@/lib/api/clientService";
+import { categoryService, type Category } from "@/lib/api/categoryService";
 import { Client, ClientFilters } from "@/types/client";
 import { useDebouncedValue } from "@/hooks/useDebounce";
 import { ImportDialog } from "@/components/clients/ImportDialog";
+import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
 import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActionsSelect";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import type { RowAction } from "@/components/table/RowActionsMenu";
@@ -50,10 +52,13 @@ import type { RowAction } from "@/components/table/RowActionsMenu";
 export default function ClientesPage() {
   const [openFilter, setOpenFilter] = useState(false);
   const [openImport, setOpenImport] = useState(false);
+  const [openClientDetails, setOpenClientDetails] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
@@ -67,7 +72,11 @@ export default function ClientesPage() {
     setLoading(true);
     try {
       const data = await clientService.getClients(
-        { ...filters, name: debouncedSearch || undefined },
+        { 
+          ...filters, 
+          name: debouncedSearch || undefined,
+          lastName: debouncedSearch || undefined 
+        },
         { limit, offset: (page - 1) * limit }
       );
       setClients(data.rows);
@@ -79,6 +88,20 @@ export default function ClientesPage() {
       setLoading(false);
     }
   };
+
+  const loadCategories = async () => {
+    try {
+      const data = await categoryService.list();
+      console.log("Categorías cargadas:", data);
+      setCategories(data.rows);
+    } catch (error) {
+      console.error("Error al cargar categorías:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -127,11 +150,13 @@ export default function ClientesPage() {
 
   const handleExportPDF = async () => {
     try {
+
       toast.loading("Generando PDF...");
       const blob = await clientService.exportPDF({
         ...filters,
         name: debouncedSearch || undefined,
       });
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -140,19 +165,21 @@ export default function ClientesPage() {
       window.URL.revokeObjectURL(url);
       toast.dismiss();
       toast.success("PDF descargado");
-    } catch (error) {
+    } catch (error: any) {
       toast.dismiss();
-      toast.error("Error al exportar PDF");
+      toast.error(error?.response?.data?.message || error?.message || "Error al exportar PDF");
     }
   };
 
   const handleExportExcel = async () => {
     try {
+
       toast.loading("Generando Excel...");
       const blob = await clientService.exportExcel({
         ...filters,
         name: debouncedSearch || undefined,
       });
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -161,9 +188,10 @@ export default function ClientesPage() {
       window.URL.revokeObjectURL(url);
       toast.dismiss();
       toast.success("Excel descargado");
-    } catch (error) {
+    } catch (error: any) {
+
       toast.dismiss();
-      toast.error("Error al exportar Excel");
+      toast.error(error?.response?.data?.message || error?.message || "Error al exportar Excel");
     }
   };
 
@@ -175,7 +203,16 @@ export default function ClientesPage() {
 
   const columns: Column<Client>[] = useMemo(
     () => [
-      { key: "name", header: "Cliente", className: "font-medium" },
+      {
+        key: "name",
+        header: "Cliente",
+        className: "font-medium",
+        render: (value, row) => {
+          const lastName = row.lastName && row.lastName !== 'undefined' ? row.lastName : '';
+          return lastName ? `${row.name} ${lastName}` : row.name;
+        }
+
+      },
       { key: "address", header: "Dirección" },
       { key: "email", header: "Correo Electrónico" },
       { key: "phoneNumber", header: "Número de Teléfono" },
@@ -197,7 +234,8 @@ export default function ClientesPage() {
       label: "Ver Detalles",
       icon: <Eye className="h-4 w-4" />,
       onClick: () => {
-        window.location.href = `/admin/clientes/${client.id}/editar`;
+        setSelectedClientId(client.id);
+        setOpenClientDetails(true);
       },
     },
     {
@@ -265,6 +303,62 @@ export default function ClientesPage() {
 
                 <div className="mt-6 space-y-4">
                   <div className="space-y-2">
+                    <Label>Correo Electrónico</Label>
+                    <Input
+                      placeholder="ejemplo@correo.com"
+                      value={filters.email || ""}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          email: e.target.value || undefined,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Número de Teléfono</Label>
+                    <Input
+                      placeholder="+593 123456789"
+                      value={filters.phoneNumber || ""}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          phoneNumber: e.target.value || undefined,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Ciudad</Label>
+                    <Input
+                      placeholder="Quito"
+                      value={filters.city || ""}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          city: e.target.value || undefined,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>País</Label>
+                    <Input
+                      placeholder="Ecuador"
+                      value={filters.country || ""}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          country: e.target.value || undefined,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label>Categorías</Label>
                     <Select
                       value={filters.category || "all"}
@@ -280,6 +374,11 @@ export default function ClientesPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Todas</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -301,7 +400,7 @@ export default function ClientesPage() {
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white"
                     onClick={() => setOpenFilter(false)}
                   >
-                    Filtro
+                    Aplicar Filtros
                   </Button>
 
                   <Button
@@ -414,6 +513,11 @@ export default function ClientesPage() {
       </section>
 
       <ImportDialog open={openImport} onOpenChange={setOpenImport} onSuccess={loadClients} />
+      <ClientDetailsDialog
+        open={openClientDetails}
+        onOpenChange={setOpenClientDetails}
+        clientId={selectedClientId}
+      />
     </AppLayout>
   );
 }
