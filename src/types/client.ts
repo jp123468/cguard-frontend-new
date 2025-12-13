@@ -13,6 +13,7 @@ export interface Client {
     country?: string;
     faxNumber?: string;
     website?: string;
+    active?: boolean;
     categoryId?: string;
     category?: {
         id: string;
@@ -36,6 +37,7 @@ export interface ClientInput {
     country?: string;
     faxNumber?: string;
     website?: string;
+    active?: boolean;
     categoryId?: string;
 }
 
@@ -50,6 +52,7 @@ export interface ClientFilters {
     faxNumber?: string;
     website?: string;
     category?: string;
+    active?: boolean;
     createdAtRange?: [string, string];
 }
 

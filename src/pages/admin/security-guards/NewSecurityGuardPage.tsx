@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RefreshCcw } from "lucide-react";
@@ -39,6 +39,8 @@ import { Copyable } from "@/components/app/copyable";
 import { AddBlockButton, RemoveBlockButton } from "@/components/app/add-remove";
 import { SubmitBar } from "@/components/app/submit-bar";
 import { FormErrorSummary } from "@/components/app/form-error-summary";
+import { clientService } from "@/lib/api/clientService";
+import { postSiteService } from "@/lib/api/postSiteService";
 
 // Helpers
 const blankInviteEntry = (inviteBy: GuardEntryValues["inviteBy"] = "Correo Electrónico"): GuardEntryValues => ({
@@ -52,10 +54,27 @@ type TabKey = "invite" | "join_code" | "invite_link" | "create_profile";
 
 export default function NewSecurityGuardPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("invite");
+  const [clients, setClients] = useState<Array<{ id: string; name: string; lastName?: string }>>([]);
+  const [sites, setSites] = useState<Array<{ id: string; name: string }>>([]);
 
-  // TODO: reemplaza con datos reales
-  const clients: Array<{ id: string; name: string }> = [];
-  const sites: Array<{ id: string; name: string }> = [];
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [clientsResp, sitesResp] = await Promise.all([
+          clientService.getClients({}),
+          postSiteService.list({}, { limit: 1000, offset: 0 }),
+        ]);
+
+        setClients(clientsResp.rows || []);
+        setSites(sitesResp.rows || []);
+      } catch (error) {
+        console.error(error);
+        toast.error("No se pudieron cargar clientes o sitios");
+      }
+    };
+
+    loadData();
+  }, []);
 
   /* ============== TAB 1: INVITAR (bloques) ============== */
   const inviteForm = useForm<SecurityGuardsFormValues>({
@@ -124,7 +143,10 @@ export default function NewSecurityGuardPage() {
   };
 
   // Data helpers for combobox
-  const clientOptions = clients.map((c) => ({ value: c.id, label: c.name }));
+  const clientOptions = clients.map((c) => ({
+    value: c.id,
+    label: [c.name, c.lastName].filter(Boolean).join(" ").trim() || c.name,
+  }));
   const siteOptions = sites.map((s) => ({ value: s.id, label: s.name }));
 
   return (

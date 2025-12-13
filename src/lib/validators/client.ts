@@ -1,8 +1,18 @@
 import { z } from "zod";
 
 export const clientSchema = z.object({
-    name: z.string().trim().min(1, "Nombre del cliente requerido").max(200, "Máximo 200 caracteres"),
-    lastName: z.string().trim().max(200, "Máximo 200 caracteres").optional().or(z.literal("")),
+    name: z
+        .string()
+        .trim()
+        .min(1, "Nombre del cliente requerido")
+        .max(200, "Máximo 200 caracteres")
+        .regex(/^[A-Za-zÀ-ÿ'\-\s]+$/, "Solo letras, espacios, ' y -"),
+    lastName: z
+        .string()
+        .trim()
+        .min(1, "Apellido requerido")
+        .max(200, "Máximo 200 caracteres")
+        .regex(/^[A-Za-zÀ-ÿ'\-\s]+$/, "Solo letras, espacios, ' y -"),
     email: z
         .string()
         .trim()
@@ -28,21 +38,20 @@ export const clientSchema = z.object({
     postalCode: z
         .string()
         .trim()
-        .max(20, "Máximo 20 caracteres")
-        .optional()
-        .or(z.literal("")),
+        .min(1, "Código postal requerido")
+        .max(20, "Máximo 20 caracteres"),
     city: z
         .string()
         .trim()
+        .min(1, "Ciudad requerida")
         .max(100, "Máximo 100 caracteres")
-        .optional()
-        .or(z.literal("")),
+        .regex(/^[A-Za-zÀ-ÿ'\-\s]+$/, "Solo letras, espacios, ' y -"),
     country: z
         .string()
         .trim()
+        .min(1, "País requerido")
         .max(100, "Máximo 100 caracteres")
-        .optional()
-        .or(z.literal("")),
+        .regex(/^[A-Za-zÀ-ÿ'\-\s]+$/, "Solo letras, espacios, ' y -"),
     faxNumber: z
         .string()
         .trim()
@@ -56,6 +65,7 @@ export const clientSchema = z.object({
         .max(255, "Máximo 255 caracteres")
         .optional()
         .or(z.literal("")),
+    active: z.boolean().optional(),
     categoryId: z.string().optional(),
 });
 

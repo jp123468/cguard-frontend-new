@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import PostSiteForm, { Client, Category } from "./PostSiteForm";
+import { clientService } from "@/lib/api/clientService";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -11,17 +12,30 @@ export default function NewOrEditPostSitePage() {
     const [categories, setCategories] = useState<Category[]>([]);
 
     useEffect(() => {
-        // Cargar clientes
+        // Cargar clientes desde backend oficial y mostrar name + lastName
         (async () => {
-            const { data } = await axios.get("/api/clients");
-            setClients(data ?? []);
-        })().catch(console.error);
+            try {
+                const data = await clientService.getClients({});
+                const rows = Array.isArray(data?.rows) ? data.rows : [];
+                const mapped: Client[] = rows.map((c: any) => ({
+                    id: c.id,
+                    name: [c.name, c.lastName].filter(Boolean).join(" "),
+                }));
+                setClients(mapped);
+            } catch (e) {
+                console.error(e);
+            }
+        })();
 
         // Cargar categorías
         (async () => {
-            const { data } = await axios.get("/api/categories", { params: { type: "post-site" } });
-            setCategories(data ?? []);
-        })().catch(console.error);
+            try {
+                const { data } = await axios.get("/api/categories", { params: { type: "post-site" } });
+                setCategories(data ?? []);
+            } catch (e) {
+                console.error(e);
+            }
+        })();
     }, []);
 
     return (

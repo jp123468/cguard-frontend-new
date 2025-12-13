@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +25,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
 import {
   EllipsisVertical,
   Filter,
@@ -36,10 +34,156 @@ import {
   Search,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
+import { postSiteService, PostSite, PostSiteFilters } from "@/lib/api/postSiteService";
+import { clientService } from "@/lib/api/clientService";
+import { categoryService, type Category } from "@/lib/api/categoryService";
+import type { Client } from "@/types/client";
 
 export default function PostSitePage() {
   const [openFilter, setOpenFilter] = useState(false);
-  const rows: Array<never> = [];
+  const [postSites, setPostSites] = useState<PostSite[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [filters, setFilters] = useState<PostSiteFilters>({});
+  
+  // Filter options loading
+  const [clients, setClients] = useState<Client[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingFilters, setLoadingFilters] = useState(false);
+  
+  // Temporary filter state for the sheet
+  const [tempFilters, setTempFilters] = useState<PostSiteFilters>({});
+
+  const formatClientName = (client: Client) => {
+    const fullName = [client.name, client.lastName].filter(Boolean).join(" ").trim();
+    return fullName || client.name;
+  };
+
+  const from = (postSites?.length ?? 0) > 0 ? (page - 1) * limit + 1 : 0;
+  const to = Math.min(page * limit, totalCount);
+
+  // Load post sites
+  const loadPostSites = async () => {
+    setLoading(true);
+    try {
+      const data = await postSiteService.list(
+        { ...filters, name: searchQuery || undefined },
+        { limit, offset: (page - 1) * limit }
+      );
+      setPostSites(data.rows);
+      setTotalCount(data.count);
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al cargar sitios de publicación");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, filters]);
+
+  useEffect(() => {
+    loadPostSites();
+  }, [page, limit, searchQuery, filters]);
+
+  // Load filter options when sheet opens
+  useEffect(() => {
+    if (openFilter) {
+      setLoadingFilters(true);
+      Promise.all([
+        clientService.getClients(),
+        categoryService.list({ filter: { module: "postSite" } }),
+      ])
+        .then(([clientsResponse, categoriesResponse]) => {
+          setClients(clientsResponse.rows);
+          setCategories(categoriesResponse.rows);
+          // Initialize temp filters from current filters
+          setTempFilters(filters);
+        })
+        .catch((error) => {
+          console.error(error);
+          toast.error("Error al cargar opciones de filtro");
+        })
+        .finally(() => {
+          setLoadingFilters(false);
+        });
+    }
+  }, [openFilter]);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds((postSites ?? []).map((s) => s.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      toast.warning("Selecciona al menos un sitio");
+      return;
+    }
+    if (!confirm(`¿Estás seguro de eliminar ${selectedIds.length} sitio(s)?`)) return;
+    try {
+      await postSiteService.delete(selectedIds);
+      toast.success("Sitios eliminados");
+      setSelectedIds([]);
+      loadPostSites();
+    } catch (error) {
+      toast.error("Error al eliminar");
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      toast.loading("Generando PDF...");
+      const blob = await postSiteService.exportPDF(filters);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sitios-${new Date().toISOString().split("T")[0]}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.dismiss();
+      toast.success("PDF descargado");
+    } catch (error: any) {
+      toast.dismiss();
+      toast.error(error?.response?.data?.message || "Error al exportar PDF");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      toast.loading("Generando Excel...");
+      const blob = await postSiteService.exportExcel(filters);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sitios-${new Date().toISOString().split("T")[0]}.xlsx`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.dismiss();
+      toast.success("Excel descargado");
+    } catch (error: any) {
+      toast.dismiss();
+      toast.error(error?.response?.data?.message || "Error al exportar Excel");
+    }
+  };
 
   return (
     <AppLayout>
@@ -54,7 +198,9 @@ export default function PostSitePage() {
         {/* Acciones superiores */}
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <Select>
+            <Select onValueChange={(action) => {
+              if (action === "eliminar") handleBulkDelete();
+            }}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Acción" />
               </SelectTrigger>
@@ -99,36 +245,77 @@ export default function PostSitePage() {
                 <div className="mt-6 space-y-4">
                   <div className="space-y-2">
                     <Label>Categorías</Label>
-                    <Select>
+                    <Select 
+                      value={tempFilters.categoryId || ""} 
+                      onValueChange={(value) => {
+                        setTempFilters(prev => ({
+                          ...prev,
+                          categoryId: value || undefined
+                        }));
+                      }}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Categorías" />
+                        <SelectValue placeholder="Todas las categorías" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="todas">Todas</SelectItem>
+                        <SelectItem value="">Todas las categorías</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Cliente</Label>
-                    <Select>
+                    <Select 
+                      value={tempFilters.clientId || ""} 
+                      onValueChange={(value) => {
+                        setTempFilters(prev => ({
+                          ...prev,
+                          clientId: value || undefined
+                        }));
+                      }}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Cliente" />
+                        <SelectValue placeholder="Todos los clientes" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="todos">Todos</SelectItem>
+                        <SelectItem value="">Todos los clientes</SelectItem>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {formatClientName(client)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Estado*</Label>
-                    <Select>
+                    <Label>Estado</Label>
+                    <Select 
+                      value={tempFilters.status || ""} 
+                      onValueChange={(value) => {
+                        setTempFilters(prev => {
+                          const newFilters: PostSiteFilters = { ...prev };
+                          if (value === "") {
+                            delete newFilters.status;
+                          } else {
+                            newFilters.status = value as 'active' | 'inactive';
+                          }
+                          return newFilters;
+                        });
+                      }}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Todos los sitios de publicación" />
+                        <SelectValue placeholder="Todos los estados" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="todos">Todos los sitios de publicación</SelectItem>
+                        <SelectItem value="">Todos los estados</SelectItem>
+                        <SelectItem value="active">Activo</SelectItem>
+                        <SelectItem value="inactive">Inactivo</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -136,11 +323,12 @@ export default function PostSitePage() {
                   <Button
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white"
                     onClick={() => {
-                      console.log("Aplicar filtros");
+                      setFilters(tempFilters);
                       setOpenFilter(false);
                     }}
+                    disabled={loadingFilters}
                   >
-                    Filtro
+                    Aplicar Filtros
                   </Button>
                 </div>
               </SheetContent>
@@ -187,7 +375,7 @@ export default function PostSitePage() {
 
             <tbody>
               {/* sin filas por defecto */}
-              {rows.length === 0 && (
+              {(postSites?.length ?? 0) === 0 && (
                 <tr>
                   <td colSpan={7} className="py-20">
                     <div className="flex flex-col items-center justify-center text-center">
@@ -204,16 +392,53 @@ export default function PostSitePage() {
                   </td>
                 </tr>
               )}
+              {(postSites ?? []).map((site) => (
+                <tr key={site.id} className="border-b">
+                  <td className="px-4 py-3">
+                    <Checkbox />
+                  </td>
+                  <td className="px-4 py-3 font-medium">{site.name}</td>
+                  <td className="px-4 py-3">{site.client?.name || "-"}</td>
+                  <td className="px-4 py-3">{site.email || "-"}</td>
+                  <td className="px-4 py-3">{site.phone || "-"}</td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      site.status === "active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}>
+                      {site.status === "active" ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger>
+                        <EllipsisVertical className="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>Editar</DropdownMenuItem>
+                        <DropdownMenuItem>Eliminar</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
 
-          {/* Footer de tabla */}
-          <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50">
+          {/* Footer de tabla - Única sección de paginación */}
+          <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50 border-x border-b rounded-b-lg">
             <div className="flex items-center gap-2">
               <span>Elementos por página</span>
-              <Select>
+              <Select
+                value={limit.toString()}
+                onValueChange={(v) => {
+                  setLimit(Number(v));
+                  setPage(1);
+                }}
+              >
                 <SelectTrigger className="h-8 w-20">
-                  <SelectValue placeholder="25" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="10">10</SelectItem>
@@ -222,31 +447,33 @@ export default function PostSitePage() {
                 </SelectContent>
               </Select>
             </div>
-            <div>0 – 0 de 0</div>
+
+            <div>
+              {from} – {to} de {totalCount}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 1 || loading}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page * limit >= totalCount || loading}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Siguiente
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Paginación */}
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Elementos por página
-            <Select defaultValue="25">
-              <SelectTrigger className="ml-2 h-8 w-16">
-                <SelectValue placeholder="25" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            0 - 0 de 0
-          </div>
-        </div>
-      </section>
+        </section>
     </AppLayout>
   );
 }

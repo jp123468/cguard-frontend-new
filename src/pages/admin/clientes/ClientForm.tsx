@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { clientSchema, type ClientInput } from "@/lib/validators/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { clientService } from "@/lib/api/clientService";
 import { categoryService } from "@/lib/api/categoryService";
 
@@ -21,6 +22,14 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import {
@@ -48,6 +57,7 @@ export default function ClientForm({
     categories: initialCategories,
     onSaved,
 }: ClientFormProps) {
+    const navigate = useNavigate();
     const [categories, setCategories] = useState<Category[]>(initialCategories || []);
     const [loadingCategories, setLoadingCategories] = useState(false);
 
@@ -65,6 +75,7 @@ export default function ClientForm({
             country: "",
             faxNumber: "",
             website: "",
+            active: true,
             categoryId: "",
         },
     });
@@ -103,6 +114,8 @@ export default function ClientForm({
             (async () => {
                 try {
                     const data = await clientService.getClient(id);
+                    console.log("Cliente cargado:", data);
+                    console.log("Valor de active:", data.active, "Tipo:", typeof data.active);
                     form.reset({
                         name: data.name ?? "",
                         lastName: data.lastName ?? "",
@@ -115,6 +128,7 @@ export default function ClientForm({
                         country: data.country ?? "",
                         faxNumber: data.faxNumber ?? "",
                         website: data.website ?? "",
+                        active: data.active ?? true,
                         categoryId: data.categoryId ?? "",
                     });
                 } catch (e) {
@@ -135,14 +149,15 @@ export default function ClientForm({
             categoryId: values.categoryId || null,
         };
 
-        // Agregar campos opcionales solo si tienen valor
-        if (values.lastName) apiPayload.lastName = values.lastName;
-        if (values.addressLine2) apiPayload.addressLine2 = values.addressLine2;
-        if (values.postalCode) apiPayload.postalCode = values.postalCode;
-        if (values.city) apiPayload.city = values.city;
-        if (values.country) apiPayload.country = values.country;
-        if (values.faxNumber) apiPayload.faxNumber = values.faxNumber;
-        if (values.website) apiPayload.website = values.website;
+        // Agregar campos opcionales (enviar aunque estén vacíos para permitir borrarlos)
+        if (values.lastName !== undefined) apiPayload.lastName = values.lastName;
+        if (values.addressLine2 !== undefined) apiPayload.addressLine2 = values.addressLine2;
+        if (values.postalCode !== undefined) apiPayload.postalCode = values.postalCode;
+        if (values.city !== undefined) apiPayload.city = values.city;
+        if (values.country !== undefined) apiPayload.country = values.country;
+        if (values.faxNumber !== undefined) apiPayload.faxNumber = values.faxNumber;
+        if (values.website !== undefined) apiPayload.website = values.website;
+        if (values.active !== undefined) apiPayload.active = values.active;
 
         try {
             if (mode === "create") {
@@ -150,6 +165,7 @@ export default function ClientForm({
                 toast.success("Cliente creado exitosamente");
                 onSaved?.({ id: data.id, data: values });
                 form.reset();
+                navigate("/clients");
             } else if (mode === "edit" && id) {
                 const response = await clientService.updateClient(
                     id,
@@ -157,6 +173,7 @@ export default function ClientForm({
                 );
                 toast.success("Cliente actualizado exitosamente");
                 onSaved?.({ id, data: values });
+                navigate("/clients");
             }
         } catch (e: any) {
             toast.error(e?.response?.data?.message || e?.message || "Error al guardar");
@@ -188,7 +205,15 @@ export default function ClientForm({
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             {...field}
-                                            value={field.value || ""}
+                                            value={typeof field.value === "string" ? field.value : ""}
+                                            onChange={(e) => {
+                                                const noDigits = e.target.value.replace(/[0-9]/g, "");
+                                                const capitalized = noDigits
+                                                    .split(' ')
+                                                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                                    .join(' ');
+                                                field.onChange(capitalized);
+                                            }}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -206,7 +231,15 @@ export default function ClientForm({
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             {...field}
-                                            value={field.value || ""}
+                                            value={typeof field.value === "string" ? field.value : ""}
+                                            onChange={(e) => {
+                                                const noDigits = e.target.value.replace(/[0-9]/g, "");
+                                                const capitalized = noDigits
+                                                    .split(' ')
+                                                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                                    .join(' ');
+                                                field.onChange(capitalized);
+                                            }}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -227,7 +260,7 @@ export default function ClientForm({
                                             type="email"
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             {...field}
-                                            value={field.value || ""}
+                                            value={typeof field.value === "string" ? field.value : ""}
                                             maxLength={50}
                                         />
                                     </FormControl>
@@ -244,7 +277,7 @@ export default function ClientForm({
                                     <FormLabel>Teléfono *</FormLabel>
                                     <FormControl>
                                         <PhoneInput
-                                            value={field.value || ""}
+                                            value={typeof field.value === "string" ? field.value : ""}
                                             onChange={field.onChange}
                                             placeholder="e.g. +12015550123"
                                         />
@@ -266,8 +299,16 @@ export default function ClientForm({
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             {...field}
-                                            value={field.value || ""}
+                                            value={typeof field.value === "string" ? field.value : ""}
                                             maxLength={100}
+                                            onChange={(e) => {
+                                                const sanitized = e.target.value.replace(/[0-9]/g, "");
+                                                const capitalized = sanitized
+                                                    .split(' ')
+                                                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                                    .join(' ');
+                                                field.onChange(capitalized);
+                                            }}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -286,7 +327,7 @@ export default function ClientForm({
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             placeholder="Opcional"
                                             {...field}
-                                            value={field.value || ""}
+                                            value={typeof field.value === "string" ? field.value : ""}
                                             maxLength={100}
                                         />
                                     </FormControl>
@@ -305,10 +346,15 @@ export default function ClientForm({
                                     <FormLabel>Código postal/Zip *</FormLabel>
                                     <FormControl>
                                         <input
+                                            type="text"
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             {...field}
-                                            value={field.value || ""}
+                                            value={String(field.value || "")}
                                             maxLength={20}
+                                            onChange={(e) => {
+                                                const onlyNumbers = e.target.value.replace(/\D/g, '');
+                                                field.onChange(onlyNumbers);
+                                            }}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -326,8 +372,16 @@ export default function ClientForm({
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             {...field}
-                                            value={field.value || ""}
+                                            value={typeof field.value === "string" ? field.value : ""}
                                             maxLength={100}
+                                            onChange={(e) => {
+                                                const sanitized = e.target.value.replace(/[0-9]/g, "");
+                                                const capitalized = sanitized
+                                                    .split(' ')
+                                                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                                    .join(' ');
+                                                field.onChange(capitalized);
+                                            }}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -345,8 +399,16 @@ export default function ClientForm({
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             {...field}
-                                            value={field.value || ""}
+                                            value={typeof field.value === "string" ? field.value : ""}
                                             maxLength={100}
+                                            onChange={(e) => {
+                                                const sanitized = e.target.value.replace(/[0-9]/g, "");
+                                                const capitalized = sanitized
+                                                    .split(' ')
+                                                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                                    .join(' ');
+                                                field.onChange(capitalized);
+                                            }}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -370,7 +432,7 @@ export default function ClientForm({
                                                 <FormLabel>Fax</FormLabel>
                                                 <FormControl>
                                                     <PhoneInput
-                                                        value={field.value || ""}
+                                                        value={typeof field.value === "string" ? field.value : ""}
                                                         onChange={field.onChange}
                                                         placeholder="e.g. +12015550123"
                                                     />
@@ -391,7 +453,7 @@ export default function ClientForm({
                                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                                         placeholder="https://"
                                                         {...field}
-                                                        value={field.value || ""}
+                                                        value={typeof field.value === "string" ? field.value : ""}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -414,6 +476,22 @@ export default function ClientForm({
                                                     onCategoryCreated={handleCategoryCreated}
                                                 />
                                                 <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField<ClientInput>
+                                        control={form.control}
+                                        name="active"
+                                        render={({ field }) => (
+                                            <FormItem className="flex items-center justify-between">
+                                                <FormLabel>Estado</FormLabel>
+                                                <FormControl>
+                                                    <Switch
+                                                        checked={field.value === true}
+                                                        onCheckedChange={field.onChange}
+                                                    />
+                                                </FormControl>
                                             </FormItem>
                                         )}
                                     />

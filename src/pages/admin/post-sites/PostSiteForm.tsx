@@ -1,11 +1,17 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { categoryService } from "@/lib/api/categoryService";
+import { postSiteService } from "@/lib/api/postSiteService";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+    CategorySelect,
+    CategoryOption,
+} from "@/components/categories/CategorySelect";
 import {
     Accordion,
     AccordionContent,
@@ -19,6 +25,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/app/combobox";
 import {
     Form,
     FormControl,
@@ -28,9 +35,10 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { PostSiteInput, postSiteSchema } from "@/lib/validators/post-site";
+import { PhoneInput } from "@/components/phone/PhoneInput";
 
-export type Client = { id: string; name: string };
-export type Category = { id: string; name: string };
+export type Client = { id: string; name: string; lastName?: string };
+export type Category = { id: string; name: string; description?: string };
 
 export type PostSiteFormProps = {
     mode: "create" | "edit";
@@ -45,10 +53,47 @@ export default function PostSiteForm({
     mode,
     id,
     clients,
-    categories,
+    categories: initialCategories,
     baseUrl = "/api/post-sites",
     onSaved,
 }: PostSiteFormProps) {
+    const navigate = useNavigate();
+    const [categories, setCategories] = useState<Category[]>(initialCategories || []);
+    const [loadingCategories, setLoadingCategories] = useState(false);
+
+    const formatClientName = (client: Client) => {
+        const fullName = [client.name, client.lastName].filter(Boolean).join(" ").trim();
+        return fullName || client.name;
+    };
+
+    const loadCategories = async () => {
+        setLoadingCategories(true);
+        try {
+            const response = await categoryService.list({
+                filter: {
+                    module: "postSite"
+                },
+                limit: 1000,
+                offset: 0
+            });
+            const categoryList = response?.rows || [];
+            setCategories(categoryList);
+        } catch (e) {
+            console.error("Error loading categories:", e);
+            toast.error("No se pudieron cargar las categorías");
+        } finally {
+            setLoadingCategories(false);
+        }
+    };
+
+    useEffect(() => {
+        loadCategories();
+    }, []);
+
+    const handleCategoryCreated = () => {
+        loadCategories();
+    };
+
     const form = useForm<PostSiteInput>({
         resolver: zodResolver(postSiteSchema as any),
         defaultValues: {
@@ -67,7 +112,7 @@ export default function PostSiteForm({
     useEffect(() => {
         if (mode === "edit" && id) {
             (async () => {
-                const { data } = await axios.get(`${baseUrl}/${id}`);
+                const data = await postSiteService.get(id);
                 const payload: PostSiteInput = {
                     name: data.name ?? "",
                     clientId: data.clientId ?? "",
@@ -88,15 +133,22 @@ export default function PostSiteForm({
 
     async function onSubmit(values: PostSiteInput) {
         try {
+            const payload: PostSiteInput = {
+                ...values,
+                // Map empty string to null for category
+                categoryId: values.categoryId && String(values.categoryId).length > 0 ? values.categoryId : undefined,
+            };
+            
             if (mode === "create") {
-                const { data } = await axios.post(baseUrl, values);
+                const data = await postSiteService.create(payload);
                 toast.success("Sitio de publicación creado");
-                onSaved?.({ id: data?.id ?? "", data: values });
-                form.reset();
+                onSaved?.({ id: data.id, data: payload });
+                navigate("/admin/post-sites");
             } else if (mode === "edit" && id) {
-                await axios.put(`${baseUrl}/${id}`, values);
+                await postSiteService.update(id, payload);
                 toast.success("Cambios guardados");
-                onSaved?.({ id, data: values });
+                onSaved?.({ id, data: payload });
+                navigate("/admin/post-sites");
             }
         } catch (e: any) {
             console.error(e);
@@ -109,9 +161,9 @@ export default function PostSiteForm({
         return clients;
     }, [clients]);
 
-    const categoriesList = useMemo(() => {
+    const cats: CategoryOption[] = useMemo(() => {
         if (!categories || !Array.isArray(categories)) return [];
-        return categories;
+        return categories.map((c) => ({ id: c.id, name: c.name }));
     }, [categories]);
 
     return (
@@ -126,23 +178,16 @@ export default function PostSiteForm({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Cliente *</FormLabel>
-                                    <Select 
-                                        onValueChange={field.onChange} 
+                                    <Combobox
                                         value={field.value ? String(field.value) : ""}
-                                    >
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Selecciona un cliente" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {clientsList.map((c) => (
-                                                <SelectItem value={c.id} key={c.id}>
-                                                    {c.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                        onChange={field.onChange}
+                                        options={clientsList.map((c) => ({
+                                            value: c.id,
+                                            label: formatClientName(c),
+                                        }))}
+                                        placeholder="Selecciona un cliente"
+                                        aria-label="Selecciona un cliente"
+                                    />
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -216,10 +261,9 @@ export default function PostSiteForm({
                                             <FormItem>
                                                 <FormLabel>Número de Teléfono</FormLabel>
                                                 <FormControl>
-                                                    <Input 
-                                                        placeholder="e.g. +12015550123" 
-                                                        {...field} 
-                                                        value={field.value ? String(field.value) : ""}
+                                                    <PhoneInput
+                                                        value={field.value ?? ""}
+                                                        onChange={field.onChange}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -234,10 +278,9 @@ export default function PostSiteForm({
                                             <FormItem>
                                                 <FormLabel>Fax</FormLabel>
                                                 <FormControl>
-                                                    <Input 
-                                                        placeholder="e.g. +12015550123" 
-                                                        {...field} 
-                                                        value={field.value ? String(field.value) : ""}
+                                                    <PhoneInput
+                                                        value={field.value ?? ""}
+                                                        onChange={field.onChange}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -251,23 +294,14 @@ export default function PostSiteForm({
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Categoría</FormLabel>
-                                                <Select 
-                                                    onValueChange={field.onChange} 
-                                                    value={field.value ? String(field.value) : ""}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Selecciona una categoría" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {categoriesList.map((c) => (
-                                                            <SelectItem value={c.id} key={c.id}>
-                                                                {c.name}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
+                                                <CategorySelect
+                                                    options={cats}
+                                                    value={field.value ? String(field.value) : undefined}
+                                                    onChange={field.onChange}
+                                                    placeholder={loadingCategories ? "Cargando..." : "Selecciona una categoría"}
+                                                    module="postSite"
+                                                    onCategoryCreated={handleCategoryCreated}
+                                                />
                                                 <FormMessage />
                                             </FormItem>
                                         )}

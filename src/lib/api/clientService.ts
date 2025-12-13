@@ -66,6 +66,11 @@ export const clientService = {
             if (filters.faxNumber) params.append("filter[faxNumber]", filters.faxNumber);
             if (filters.website) params.append("filter[website]", filters.website);
             if (filters.category) params.append("filter[category]", filters.category);
+            // Backend espera 1/0 para activo/inactivo
+            if (filters.active !== undefined) {
+                const activeInt = filters.active ? 1 : 0;
+                params.append("filter[active]", String(activeInt));
+            }
             if (filters.createdAtRange) {
                 params.append("filter[createdAtRange][]", filters.createdAtRange[0]);
                 params.append("filter[createdAtRange][]", filters.createdAtRange[1]);
@@ -75,13 +80,21 @@ export const clientService = {
         const { data } = await api.get<any>(
             `/tenant/${tenantId}/client-account?${params.toString()}`
         );
-        // Mapear zipCode y addressComplement del backend a postalCode y addressLine2 del frontend
+        // Mapear zipCode/addressComplement y normalizar active a boolean
         if (data.rows) {
-            data.rows = data.rows.map((client: any) => ({
-                ...client,
-                postalCode: client.zipCode || client.postalCode,
-                addressLine2: client.addressComplement || client.addressLine2,
-            }));
+            data.rows = data.rows.map((client: any) => {
+                const normalizedActive = client.active === true || client.active === 1
+                    ? true
+                    : client.active === false || client.active === 0
+                    ? false
+                    : true; // fallback activo si falta en lista
+                return {
+                    ...client,
+                    postalCode: client.zipCode || client.postalCode,
+                    addressLine2: client.addressComplement || client.addressLine2,
+                    active: normalizedActive,
+                };
+            });
         }
         return data;
     },
@@ -95,17 +108,17 @@ export const clientService = {
             `/tenant/${tenantId}/client-account/${id}`
         );
         console.log("Respuesta getClient del backend:", data);
-        console.log("Campos de dirección:", {
-            address2: data.address2,
-            addressLine2: data.addressLine2,
-            zipCode: data.zipCode,
-            postalCode: data.postalCode
-        });
-        // Mapear zipCode y addressComplement del backend a postalCode y addressLine2 del frontend
+        // Mapear zipCode/addressComplement y normalizar active a boolean
         return {
             ...data,
             postalCode: data.zipCode || data.postalCode,
             addressLine2: data.addressComplement || data.addressLine2,
+            active:
+                data.active === true || data.active === 1
+                    ? true
+                    : data.active === false || data.active === 0
+                    ? false
+                    : true,
         };
     },
 

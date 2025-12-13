@@ -92,7 +92,7 @@ export default function ClientesPage() {
   const loadCategories = async () => {
     try {
       const data = await categoryService.list();
-      console.log("Categorías cargadas:", data);
+
       setCategories(data.rows);
     } catch (error) {
       console.error("Error al cargar categorías:", error);
@@ -217,13 +217,19 @@ export default function ClientesPage() {
       { key: "email", header: "Correo Electrónico" },
       { key: "phoneNumber", header: "Número de Teléfono" },
       {
-        key: "status",
+        key: "active",
         header: "Estado",
-        render: () => (
-          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-            Activo
-          </span>
-        ),
+        render: (_value: any, row: Client) => {
+          // El backend puede enviar booleano o entero (0/1)
+          const isActive = row.active === true ;
+          return (
+            <span className={`px-2 py-1 text-xs rounded-full ${
+              isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+            }`}>
+              {isActive ? "Activo" : "Inactivo"}
+            </span>
+          );
+        },
       },
     ],
     []
@@ -385,13 +391,31 @@ export default function ClientesPage() {
 
                   <div className="space-y-2">
                     <Label>Estado</Label>
-                    <Select>
+                    <Select
+                      value={
+                        filters.active === undefined
+                          ? "all"
+                          : filters.active
+                          ? "active"
+                          : "inactive"
+                      }
+                      onValueChange={(v) => {
+                        if (v === "all") {
+                          setFilters({ ...filters, active: undefined });
+                        } else if (v === "active") {
+                          setFilters({ ...filters, active: true });
+                        } else {
+                          setFilters({ ...filters, active: false });
+                        }
+                      }}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Activo" />
+                        <SelectValue placeholder="Todos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="activo">Activo</SelectItem>
-                        <SelectItem value="inactivo">Inactivo</SelectItem>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="active">Activo</SelectItem>
+                        <SelectItem value="inactive">Inactivo</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

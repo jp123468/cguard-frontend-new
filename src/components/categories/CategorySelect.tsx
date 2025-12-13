@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
@@ -36,6 +36,7 @@ export function CategorySelect({
     const [isCreating, setIsCreating] = useState(false);
     const [items, setItems] = useState<CategoryOption[]>(options);
     const [isLoading, setIsLoading] = useState(false);
+    const prevValueRef = useRef<string | undefined>(undefined);
 
     useEffect(() => {
         setItems(options);
@@ -130,7 +131,14 @@ export function CategorySelect({
                                         key={opt.id}
                                         value={opt.name}
                                         onSelect={() => {
-                                            onChange(opt.id);
+                                            // Si hace clic en la misma opción, desselecciona
+                                            if (opt.id === value && opt.id === prevValueRef.current) {
+                                                onChange(undefined);
+                                                prevValueRef.current = undefined;
+                                            } else {
+                                                onChange(opt.id);
+                                                prevValueRef.current = opt.id;
+                                            }
                                             setOpen(false);
                                         }}
                                         className="flex items-center gap-2"
