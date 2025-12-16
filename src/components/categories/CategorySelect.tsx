@@ -14,11 +14,12 @@ export type CategoryOption = { id: string; name: string };
 
 type CategorySelectProps = {
     options?: CategoryOption[];
-    value?: string;
-    onChange: (value?: string) => void;
+    value?: string | string[];
+    onChange: (value?: string | string[]) => void;
     placeholder?: string;
     module: string;
     onCategoryCreated?: () => void;
+    multiple?: boolean;
 };
 
 export function CategorySelect({
@@ -28,6 +29,7 @@ export function CategorySelect({
     placeholder = "Categoría",
     module,
     onCategoryCreated,
+    multiple = false,
 }: CategorySelectProps) {
     const [open, setOpen] = useState(false);
     const [openCreate, setOpenCreate] = useState(false);
@@ -65,7 +67,16 @@ export function CategorySelect({
         load();
     }, [module, options]);
 
-    const selected = useMemo(() => items.find((o) => o.id === value), [items, value]);
+    const selectedSingle = useMemo(() => {
+        if (multiple) return undefined;
+        return items.find((o) => o.id === value);
+    }, [items, value, multiple]);
+
+    const selectedMany = useMemo(() => {
+        if (!multiple) return [] as CategoryOption[];
+        const ids = Array.isArray(value) ? value : [];
+        return items.filter((o) => ids.includes(o.id));
+    }, [items, value, multiple]);
 
     const handleCreate = async () => {
         if (!newName.trim()) {
@@ -100,8 +111,16 @@ export function CategorySelect({
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button type="button" variant="outline" className="w-full justify-between font-normal" disabled={isLoading}>
-                        <span className={selected ? "" : "text-muted-foreground"}>
-                            {isLoading ? "Cargando..." : selected ? selected.name : placeholder}
+                        <span className={(multiple ? selectedMany.length > 0 : !!selectedSingle) ? "" : "text-muted-foreground"}>
+                            {isLoading
+                                ? "Cargando..."
+                                : multiple
+                                    ? selectedMany.length > 0
+                                        ? selectedMany.map(s => s.name).join(", ")
+                                        : placeholder
+                                    : selectedSingle
+                                        ? selectedSingle.name
+                                        : placeholder}
                         </span>
                         <ChevronDown className="h-4 w-4 opacity-60" />
                     </Button>
@@ -131,19 +150,28 @@ export function CategorySelect({
                                         key={opt.id}
                                         value={opt.name}
                                         onSelect={() => {
-                                            // Si hace clic en la misma opción, desselecciona
-                                            if (opt.id === value && opt.id === prevValueRef.current) {
-                                                onChange(undefined);
-                                                prevValueRef.current = undefined;
+                                            if (multiple) {
+                                                const current = Array.isArray(value) ? [...value] : [];
+                                                const exists = current.includes(opt.id);
+                                                const next = exists ? current.filter(id => id !== opt.id) : [...current, opt.id];
+                                                onChange(next.length > 0 ? next : undefined);
                                             } else {
-                                                onChange(opt.id);
-                                                prevValueRef.current = opt.id;
+                                                if (opt.id === value && opt.id === prevValueRef.current) {
+                                                    onChange(undefined);
+                                                    prevValueRef.current = undefined;
+                                                } else {
+                                                    onChange(opt.id);
+                                                    prevValueRef.current = opt.id;
+                                                }
+                                                setOpen(false);
                                             }
-                                            setOpen(false);
                                         }}
                                         className="flex items-center gap-2"
                                     >
-                                        <Checkbox checked={opt.id === value} className="pointer-events-none" />
+                                        <Checkbox
+                                            checked={multiple ? (Array.isArray(value) ? value.includes(opt.id) : false) : opt.id === value}
+                                            className="pointer-events-none"
+                                        />
                                         <span>{opt.name}</span>
                                     </CommandItem>
                                 ))}

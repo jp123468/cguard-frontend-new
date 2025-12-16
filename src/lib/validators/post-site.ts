@@ -3,7 +3,16 @@ import { z } from "zod";
 export const postSiteSchema = z.object({
     name: z.string().trim().min(1, "Nombre del sitio requerido"),
     clientId: z.string().trim().min(1, "Cliente requerido"),
-    address: z.string().trim().min(1, "Dirección requerida"),
+    address: z.string().trim().min(1, "Dirección requerida").max(200, "Máximo 200 caracteres"),
+    addressLine2: z
+        .string()
+        .trim()
+        .max(200, "Máximo 200 caracteres")
+        .optional()
+        .or(z.literal("")),
+    postalCode: z.string().trim().min(1, "Código postal requerido").max(20, "Máximo 20 caracteres"),
+    city: z.string().trim().min(1, "Ciudad requerida").max(100, "Máximo 100 caracteres"),
+    country: z.string().trim().min(1, "País requerido").max(100, "Máximo 100 caracteres"),
     email: z
         .string()
         .trim()

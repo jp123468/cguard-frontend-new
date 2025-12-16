@@ -47,8 +47,8 @@ export type ClientFormProps = {
     onSaved?: (payload: { id: string; data: ClientInput }) => void;
 };
 
-type ClientApiPayload = Omit<ClientInput, "categoryId"> & {
-    categoryId?: string | null;
+type ClientApiPayload = Omit<ClientInput, "categoryIds"> & {
+    categoryIds?: string[] | null;
 };
 
 export default function ClientForm({
@@ -75,8 +75,10 @@ export default function ClientForm({
             country: "",
             faxNumber: "",
             website: "",
+            latitude: "",
+            longitude: "",
             active: true,
-            categoryId: "",
+            categoryIds: [],
         },
     });
 
@@ -128,8 +130,10 @@ export default function ClientForm({
                         country: data.country ?? "",
                         faxNumber: data.faxNumber ?? "",
                         website: data.website ?? "",
+                        latitude: (data as any)?.latitude !== undefined && (data as any)?.latitude !== null ? String((data as any).latitude) : "",
+                        longitude: (data as any)?.longitude !== undefined && (data as any)?.longitude !== null ? String((data as any).longitude) : "",
                         active: data.active ?? true,
-                        categoryId: data.categoryId ?? "",
+                        categoryIds: (data as any).categoryIds ?? [],
                     });
                 } catch (e) {
                     console.error(e);
@@ -146,7 +150,7 @@ export default function ClientForm({
             email: values.email,
             phoneNumber: values.phoneNumber,
             address: values.address,
-            categoryId: values.categoryId || null,
+            categoryIds: Array.isArray((values as any).categoryIds) ? (values as any).categoryIds : null,
         };
 
         // Agregar campos opcionales (enviar aunque estén vacíos para permitir borrarlos)
@@ -157,6 +161,8 @@ export default function ClientForm({
         if (values.country !== undefined) apiPayload.country = values.country;
         if (values.faxNumber !== undefined) apiPayload.faxNumber = values.faxNumber;
         if (values.website !== undefined) apiPayload.website = values.website;
+        if ((values as any).latitude !== undefined) (apiPayload as any).latitude = (values as any).latitude;
+        if ((values as any).longitude !== undefined) (apiPayload as any).longitude = (values as any).longitude;
         if (values.active !== undefined) apiPayload.active = values.active;
 
         try {
@@ -417,6 +423,72 @@ export default function ClientForm({
                         />
                     </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField<ClientInput>
+                            control={form.control}
+                            name="latitude"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Latitud</FormLabel>
+                                    <FormControl>
+                                        <input
+                                            type="text"
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            placeholder="-90 a 90"
+                                            {...field}
+                                            value={String(field.value ?? "")}
+                                            maxLength={20}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<ClientInput>
+                            control={form.control}
+                            name="longitude"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Longitud</FormLabel>
+                                    <FormControl>
+                                        <input
+                                            type="text"
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            placeholder="-180 a 180"
+                                            {...field}
+                                            value={String(field.value ?? "")}
+                                            maxLength={20}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <div className="flex items-end">
+                            <Button type="button" variant="outline" className="w-full" onClick={() => {
+                                if (!navigator.geolocation) {
+                                    toast.error("Geolocalización no disponible en este navegador");
+                                    return;
+                                }
+                                navigator.geolocation.getCurrentPosition(
+                                    (pos) => {
+                                        const { latitude, longitude } = pos.coords;
+                                        form.setValue("latitude", String(latitude));
+                                        form.setValue("longitude", String(longitude));
+                                        toast.success("Ubicación establecida");
+                                    },
+                                    (err) => {
+                                        toast.error(err.message || "No se pudo obtener la ubicación");
+                                    },
+                                    { enableHighAccuracy: true, timeout: 10000 }
+                                );
+                            }}>
+                                Usar mi ubicación
+                            </Button>
+                        </div>
+                    </div>
+
                     <Accordion type="single" collapsible defaultValue="more">
                         <AccordionItem value="more" className="border rounded-md">
                             <AccordionTrigger className="px-4">
@@ -438,6 +510,7 @@ export default function ClientForm({
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
+     npm run dev
                                             </FormItem>
                                         )}
                                     />
@@ -463,35 +536,20 @@ export default function ClientForm({
 
                                     <FormField<ClientInput>
                                         control={form.control}
-                                        name="categoryId"
+                                        name="categoryIds"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Categoría</FormLabel>
+                                                <FormLabel>Categorías</FormLabel>
                                                 <CategorySelect
                                                     options={cats}
-                                                    value={field.value ? String(field.value) : undefined}
-                                                    onChange={field.onChange}
-                                                    placeholder={loadingCategories ? "Cargando..." : "Selecciona una categoría"}
+                                                    value={Array.isArray(field.value) ? field.value : []}
+                                                    onChange={(val) => field.onChange(Array.isArray(val) ? val : [])}
+                                                    placeholder={loadingCategories ? "Cargando..." : "Selecciona categorías"}
                                                     module="clientAccount"
                                                     onCategoryCreated={handleCategoryCreated}
+                                                    multiple
                                                 />
                                                 <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    <FormField<ClientInput>
-                                        control={form.control}
-                                        name="active"
-                                        render={({ field }) => (
-                                            <FormItem className="flex items-center justify-between">
-                                                <FormLabel>Estado</FormLabel>
-                                                <FormControl>
-                                                    <Switch
-                                                        checked={field.value === true}
-                                                        onCheckedChange={field.onChange}
-                                                    />
-                                                </FormControl>
                                             </FormItem>
                                         )}
                                     />

@@ -24,7 +24,7 @@ export function ClientDetailsDialog({
     clientId,
 }: ClientDetailsDialogProps) {
     const [client, setClient] = useState<Client | null>(null);
-    const [category, setCategory] = useState<Category | null>(null);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -38,14 +38,19 @@ export function ClientDetailsDialog({
                 const data = await clientService.getClient(clientId);
                 setClient(data);
 
-                // Cargar la categoría si existe categoryId
-                if (data.categoryId) {
+                // Cargar las categorías si existen categoryIds
+                const categoryIds = (data as any).categoryIds || [];
+                if (categoryIds.length > 0) {
                     try {
-                        const cat = await categoryService.findById(data.categoryId);
-                        setCategory(cat);
+                        const cats = await Promise.all(
+                            categoryIds.map((id: string) => categoryService.findById(id))
+                        );
+                        setCategories(cats);
                     } catch (err) {
-                        console.error("Error loading category:", err);
+                        console.error("Error loading categories:", err);
                     }
+                } else {
+                    setCategories([]);
                 }
             } catch (e: any) {
                 setError(e?.message || "Error al cargar los detalles del cliente");
@@ -103,10 +108,10 @@ export function ClientDetailsDialog({
                                     <p className="text-sm">{client.faxNumber}</p>
                                 </div>
                             )}
-                            {category && (
-                                <div>
-                                    <p className="text-xs text-gray-600 font-semibold">Categoría</p>
-                                    <p className="text-sm">{category.name}</p>
+                            {categories.length > 0 && (
+                                <div className="md:col-span-2">
+                                    <p className="text-xs text-gray-600 font-semibold">Categorías</p>
+                                    <p className="text-sm">{categories.map(c => c.name).join(", ")}</p>
                                 </div>
                             )}
                         </div>

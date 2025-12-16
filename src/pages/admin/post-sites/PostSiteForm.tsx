@@ -100,6 +100,10 @@ export default function PostSiteForm({
             name: "",
             clientId: "",
             address: "",
+            addressLine2: "",
+            postalCode: "",
+            city: "",
+            country: "",
             email: undefined,
             phone: undefined,
             fax: undefined,
@@ -117,6 +121,10 @@ export default function PostSiteForm({
                     name: data.name ?? "",
                     clientId: data.clientId ?? "",
                     address: data.address ?? "",
+                    addressLine2: (data as any).addressLine2 ?? "",
+                    postalCode: (data as any).postalCode ?? "",
+                    city: (data as any).city ?? "",
+                    country: (data as any).country ?? "",
                     email: data.email || undefined,
                     phone: data.phone || undefined,
                     fax: data.fax || undefined,
@@ -208,7 +216,7 @@ export default function PostSiteForm({
                         />
                     </div>
 
-                    {/* Fila 2 */}
+                    {/* Fila 2: Dirección */}
                     <div className="grid grid-cols-1 gap-6">
                         <FormField<PostSiteInput>
                             control={form.control}
@@ -221,6 +229,84 @@ export default function PostSiteForm({
                                             placeholder="" 
                                             {...field} 
                                             value={field.value ? String(field.value) : ""}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="addressLine2"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Dirección Complementaria</FormLabel>
+                                    <FormControl>
+                                        <Input 
+                                            placeholder="Opcional" 
+                                            {...field} 
+                                            value={field.value ? String(field.value) : ""}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    {/* Fila 3: Código postal, Ciudad, País */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="postalCode"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Código postal/Zip *</FormLabel>
+                                    <FormControl>
+                                        <Input 
+                                            placeholder="" 
+                                            {...field} 
+                                            value={field.value ? String(field.value) : ""}
+                                            maxLength={20}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="city"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Ciudad *</FormLabel>
+                                    <FormControl>
+                                        <Input 
+                                            placeholder="" 
+                                            {...field} 
+                                            value={field.value ? String(field.value) : ""}
+                                            maxLength={100}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="country"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>País *</FormLabel>
+                                    <FormControl>
+                                        <Input 
+                                            placeholder="" 
+                                            {...field} 
+                                            value={field.value ? String(field.value) : ""}
+                                            maxLength={100}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -307,30 +393,32 @@ export default function PostSiteForm({
                                         )}
                                     />
 
-                                    <FormField<PostSiteInput>
-                                        control={form.control}
-                                        name="status"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Estado</FormLabel>
-                                                <Select 
-                                                    onValueChange={field.onChange} 
-                                                    value={field.value ? String(field.value) : "active"}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Selecciona un estado" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="active">Activo</SelectItem>
-                                                        <SelectItem value="inactive">Inactivo</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                    {mode === 'edit' && (
+                                        <FormField<PostSiteInput>
+                                            control={form.control}
+                                            name="status"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Estado</FormLabel>
+                                                    <Select 
+                                                        onValueChange={field.onChange} 
+                                                        value={field.value ? String(field.value) : "active"}
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Selecciona un estado" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="active">Activo</SelectItem>
+                                                            <SelectItem value="inactive">Inactivo</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )}
                                 </div>
                             </AccordionContent>
                         </AccordionItem>

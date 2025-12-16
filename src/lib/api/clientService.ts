@@ -65,7 +65,7 @@ export const clientService = {
             if (filters.country) params.append("filter[country]", filters.country);
             if (filters.faxNumber) params.append("filter[faxNumber]", filters.faxNumber);
             if (filters.website) params.append("filter[website]", filters.website);
-            if (filters.category) params.append("filter[category]", filters.category);
+            if (filters.category) params.append("filter[categoryIds]", filters.category);
             // Backend espera 1/0 para activo/inactivo
             if (filters.active !== undefined) {
                 const activeInt = filters.active ? 1 : 0;
@@ -271,5 +271,36 @@ export const clientService = {
             `/tenant/${tenantId}/client-account/autocomplete?query=${encodeURIComponent(query)}&limit=${limit}`
         );
         return data;
+    },
+
+    /**
+     * Check if a category is in use by any client
+     */
+    async checkCategoryUsage(categoryId: string): Promise<number> {
+        const tenantId = getTenantId();
+        
+        // Obtener todos los clientes y filtrar manualmente
+        // ya que el backend puede no soportar filtrado por array JSON
+        const { data } = await api.get<any>(
+            `/tenant/${tenantId}/client-account?limit=9999&offset=0`
+        );
+        
+        console.log(`Verificando uso de categoría ${categoryId} en ${data.count} clientes totales`);
+        
+        // Contar manualmente cuántos clientes tienen esta categoría
+        let count = 0;
+        if (data.rows) {
+            count = data.rows.filter((client: any) => {
+                const categoryIds = client.categoryIds || [];
+                const hasCategory = Array.isArray(categoryIds) && categoryIds.includes(categoryId);
+                if (hasCategory) {
+                    console.log(`Cliente ${client.name} tiene la categoría`);
+                }
+                return hasCategory;
+            }).length;
+        }
+        
+        console.log(`Total de clientes con esta categoría: ${count}`);
+        return count;
     },
 };

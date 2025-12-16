@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+  import { useState, useEffect, useMemo } from "react";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -36,6 +36,8 @@ import {
   Eye,
   Tag,
   Archive,
+  Trash,
+  RotateCcw,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -44,14 +46,19 @@ import { categoryService, type Category } from "@/lib/api/categoryService";
 import { Client, ClientFilters } from "@/types/client";
 import { useDebouncedValue } from "@/hooks/useDebounce";
 import { ImportDialog } from "@/components/clients/ImportDialog";
+import CategoryManagerDialog from "@/components/categories/CategoryManagerDialog";
 import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
 import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActionsSelect";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import type { RowAction } from "@/components/table/RowActionsMenu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { CategorySelect } from "@/components/categories/CategorySelect";
 
 export default function ClientesPage() {
   const [openFilter, setOpenFilter] = useState(false);
   const [openImport, setOpenImport] = useState(false);
+  const [openCategoryManager, setOpenCategoryManager] = useState(false);
   const [openClientDetails, setOpenClientDetails] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
@@ -64,7 +71,26 @@ export default function ClientesPage() {
   const [limit, setLimit] = useState(25);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [filters, setFilters] = useState<ClientFilters>({});
+  const [filters, setFilters] = useState<ClientFilters>({ active: true });
+  const [bulkKey, setBulkKey] = useState(0);
+  const [openMoveDialog, setOpenMoveDialog] = useState(false);
+  const [moveCategories, setMoveCategories] = useState<string[]>([]);
+  const [moveLoading, setMoveLoading] = useState(false);
+  const [openCategorizeDialog, setOpenCategorizeDialog] = useState(false);
+  const [categorizeClientId, setCategorizeClientId] = useState<string | null>(null);
+  const [categorizeClientName, setCategorizeClientName] = useState<string>("");
+  const [categorizeCategories, setCategorizeCategories] = useState<string[]>([]);
+  const [categorizeLoading, setCategorizeLoading] = useState(false);
+  const [categorizeSaving, setCategorizeSaving] = useState(false);
+  const [openArchiveBulkDialog, setOpenArchiveBulkDialog] = useState(false);
+  const [openArchiveSingleDialog, setOpenArchiveSingleDialog] = useState(false);
+  const [archiveSingleClient, setArchiveSingleClient] = useState<Client | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deleteClient, setDeleteClient] = useState<Client | null>(null);
+  const [openRestoreDialog, setOpenRestoreDialog] = useState(false);
+  const [restoreClient, setRestoreClient] = useState<Client | null>(null);
+  const [openRestoreBulkDialog, setOpenRestoreBulkDialog] = useState(false);
+  const [openDeleteBulkDialog, setOpenDeleteBulkDialog] = useState(false);
 
   const debouncedSearch = useDebouncedValue(searchQuery, 500);
 
@@ -91,9 +117,8 @@ export default function ClientesPage() {
 
   const loadCategories = async () => {
     try {
-      const data = await categoryService.list();
-
-      setCategories(data.rows);
+      const data = await categoryService.list({ filter: { module: "clientAccount" }, limit: 1000 });
+      setCategories(data.rows || []);
     } catch (error) {
       console.error("Error al cargar categorías:", error);
     }
@@ -104,8 +129,25 @@ export default function ClientesPage() {
   }, []);
 
   useEffect(() => {
+    if (openCategorizeDialog) {
+      loadCategories();
+    }
+  }, [openCategorizeDialog]);
+
+  useEffect(() => {
+    if (openMoveDialog) {
+      loadCategories();
+    }
+  }, [openMoveDialog]);
+
+  useEffect(() => {
     setPage(1);
   }, [debouncedSearch, filters]);
+
+  // Reset bulk action selector when filter (active state) changes to reflect new options
+  useEffect(() => {
+    setBulkKey((k) => k + 1);
+  }, [filters.active]);
 
   useEffect(() => {
     loadClients();
@@ -127,25 +169,108 @@ export default function ClientesPage() {
     }
   };
 
+  const openCategorizeForClient = async (client: Client) => {
+    setCategorizeClientId(client.id);
+    setCategorizeClientName(`${client.name}${client.lastName ? ` ${client.lastName}` : ""}`);
+    setCategorizeLoading(true);
+    setCategorizeCategories([]);
+    setOpenCategorizeDialog(true);
+    try {
+      const data = await clientService.getClient(client.id);
+      setCategorizeCategories((data as any).categoryIds ?? []);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || "No se pudo cargar el cliente");
+      setOpenCategorizeDialog(false);
+    } finally {
+      setCategorizeLoading(false);
+    }
+  };
+
   const handleBulkAction = async (action: string) => {
+    if (action === "gestionar-categorias") {
+      // Permitir reabrir/retocar el diálogo aunque ya esté abierto
+      setOpenCategoryManager((prev) => {
+        if (prev) {
+          // toggle para forzar re-render del diálogo
+          setTimeout(() => setOpenCategoryManager(true), 0);
+          return false;
+        }
+        return true;
+      });
+      // Resetear el selector para poder re-seleccionar la misma opción
+      setBulkKey((k) => k + 1);
+      return;
+    }
+
+    if (action === "mover") {
+      if (selectedIds.length === 0) {
+        toast.warning("Selecciona al menos un cliente");
+        setBulkKey((k) => k + 1);
+        return;
+      }
+      setMoveCategories([]);
+      setOpenMoveDialog(true);
+      setBulkKey((k) => k + 1);
+      return;
+    }
+
     if (selectedIds.length === 0) {
       toast.warning("Selecciona al menos un cliente");
+      setBulkKey((k) => k + 1);
+      return;
+    }
+
+    if (action === "archivar") {
+      const invalid = selectedIds.filter((id) => {
+        const c = clients.find((x) => x.id === id);
+        return !c || c.active === false;
+      });
+      if (invalid.length > 0) {
+        toast.warning("Selecciona solo clientes activos para archivar");
+        setSelectedIds([]);
+        setBulkKey((k) => k + 1);
+        return;
+      }
+      setOpenArchiveBulkDialog(true);
+      setBulkKey((k) => k + 1);
+      return;
+    }
+
+    if (action === "restaurar") {
+      const invalid = selectedIds.filter((id) => {
+        const c = clients.find((x) => x.id === id);
+        return !c || c.active === true;
+      });
+      if (invalid.length > 0) {
+        toast.warning("Selecciona solo clientes archivados para restaurar");
+        setSelectedIds([]);
+        setBulkKey((k) => k + 1);
+        return;
+      }
+      setOpenRestoreBulkDialog(true);
+      setBulkKey((k) => k + 1);
       return;
     }
 
     if (action === "eliminar") {
-      if (!confirm(`¿Estás seguro de eliminar ${selectedIds.length} cliente(s)?`)) return;
-      try {
-        await clientService.deleteClients(selectedIds);
-        toast.success("Clientes eliminados");
+      const invalid = selectedIds.filter((id) => {
+        const c = clients.find((x) => x.id === id);
+        return !c || c.active === true;
+      });
+      if (invalid.length > 0) {
+        toast.warning("Selecciona solo clientes archivados para eliminar");
         setSelectedIds([]);
-        loadClients();
-      } catch (error) {
-        toast.error("Error al eliminar");
+        setBulkKey((k) => k + 1);
+        return;
       }
-    } else {
-      toast.info(`Acción "${action}" no implementada aún`);
+      setOpenDeleteBulkDialog(true);
+      setBulkKey((k) => k + 1);
+      return;
     }
+
+    toast.info(`Acción "${action}" no implementada aún`);
+    // Resetear el selector tras cualquier acción
+    setBulkKey((k) => k + 1);
   };
 
   const handleExportPDF = async () => {
@@ -195,11 +320,73 @@ export default function ClientesPage() {
     }
   };
 
-  const bulkActions: BulkAction[] = [
-    { value: "mover", label: "Mover" },
-    { value: "archivar", label: "Archivar" },
-    { value: "gestionar-categorias", label: "Gestionar Categorías" },
-  ];
+  const handleCategorizeSubmit = async () => {
+    if (!categorizeClientId) return;
+    setCategorizeSaving(true);
+    console.log('🔵 Categorizando cliente:', {
+      clientId: categorizeClientId,
+      categoryIds: categorizeCategories,
+    });
+    try {
+      await clientService.updateClient(categorizeClientId, {
+        categoryIds: categorizeCategories,
+      } as any);
+      toast.success("Categorías actualizadas");
+      setOpenCategorizeDialog(false);
+      loadClients();
+      loadCategories();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || "Error al actualizar categorías");
+    } finally {
+      setCategorizeSaving(false);
+    }
+  };
+
+  const handleMoveSubmit = async () => {
+    if (moveCategories.length === 0) {
+      toast.warning("Selecciona al menos una categoría");
+      return;
+    }
+    setMoveLoading(true);
+    console.log('🟢 Moviendo clientes a categorías:', {
+      selectedIds,
+      categoryIds: moveCategories,
+    });
+    try {
+      await Promise.all(
+        selectedIds.map((id) =>
+          clientService.updateClient(id, {
+            categoryIds: moveCategories,
+          } as any)
+        )
+      );
+      toast.success("Categorías actualizadas");
+      setOpenMoveDialog(false);
+      setSelectedIds([]);
+      loadClients();
+      loadCategories();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || "Error al mover categorías");
+    } finally {
+      setMoveLoading(false);
+    }
+  };
+
+  const bulkActions: BulkAction[] = useMemo(() => {
+    const actions: BulkAction[] = [{ value: "mover", label: "Mover" }];
+    if (filters.active === true) {
+      actions.push({ value: "archivar", label: "Archivar" });
+    } else if (filters.active === false) {
+      actions.push({ value: "restaurar", label: "Restaurar" });
+      actions.push({ value: "eliminar", label: "Eliminar" });
+    } else {
+      actions.push({ value: "archivar", label: "Archivar" });
+      actions.push({ value: "restaurar", label: "Restaurar" });
+      actions.push({ value: "eliminar", label: "Eliminar" });
+    }
+    actions.push({ value: "gestionar-categorias", label: "Gestionar Categorías" });
+    return actions;
+  }, [filters.active]);
 
   const columns: Column<Client>[] = useMemo(
     () => [
@@ -224,9 +411,9 @@ export default function ClientesPage() {
           const isActive = row.active === true ;
           return (
             <span className={`px-2 py-1 text-xs rounded-full ${
-              isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+              isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
             }`}>
-              {isActive ? "Activo" : "Inactivo"}
+              {isActive ? "Activo" : "Archivado"}
             </span>
           );
         },
@@ -235,26 +422,62 @@ export default function ClientesPage() {
     []
   );
 
-  const rowActions = (client: Client): RowAction[] => [
-    {
-      label: "Ver Detalles",
-      icon: <Eye className="h-4 w-4" />,
-      onClick: () => {
-        setSelectedClientId(client.id);
-        setOpenClientDetails(true);
-      },
-    },
-    {
-      label: "Categorizar",
-      icon: <Tag className="h-4 w-4" />,
-      onClick: () => toast.info("Acción de categorizar pendiente"),
-    },
-    {
-      label: "Archivo",
-      icon: <Archive className="h-4 w-4" />,
-      onClick: () => toast.info("Mover a archivo pendiente"),
-    },
-  ];
+  const rowActions = (client: Client): RowAction[] => {
+    const isActive = client.active === true;
+
+    if (isActive) {
+      return [
+        {
+          label: "Ver Detalles",
+          icon: <Eye className="h-4 w-4" />,
+          onClick: () => {
+            setSelectedClientId(client.id);
+            setOpenClientDetails(true);
+          },
+        },
+        {
+          label: "Categorizar",
+          icon: <Tag className="h-4 w-4" />,
+          onClick: () => openCategorizeForClient(client),
+        },
+        {
+          label: "Archivo",
+          icon: <Archive className="h-4 w-4" />,
+          onClick: () => {
+            setArchiveSingleClient(client);
+            setOpenArchiveSingleDialog(true);
+          },
+        },
+      ];
+    } else {
+      return [
+        {
+          label: "Ver Detalles",
+          icon: <Eye className="h-4 w-4" />,
+          onClick: () => {
+            setSelectedClientId(client.id);
+            setOpenClientDetails(true);
+          },
+        },
+        {
+          label: "Eliminar",
+          icon: <Trash className="h-4 w-4" />,
+          onClick: () => {
+            setDeleteClient(client);
+            setOpenDeleteDialog(true);
+          },
+        },
+        {
+          label: "Restaurar",
+          icon: <RotateCcw className="h-4 w-4" />,
+          onClick: () => {
+            setRestoreClient(client);
+            setOpenRestoreDialog(true);
+          },
+        },
+      ];
+    }
+  };
 
   const from = clients.length > 0 ? (page - 1) * limit + 1 : 0;
   const to = Math.min(page * limit, totalCount);
@@ -271,7 +494,7 @@ export default function ClientesPage() {
       <section className="p-4">
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <BulkActionsSelect actions={bulkActions} onChange={handleBulkAction} />
+            <BulkActionsSelect key={bulkKey} actions={bulkActions} onChange={handleBulkAction} />
           </div>
 
           <div className="flex items-center gap-2">
@@ -415,7 +638,7 @@ export default function ClientesPage() {
                       <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
                         <SelectItem value="active">Activo</SelectItem>
-                        <SelectItem value="inactive">Inactivo</SelectItem>
+                        <SelectItem value="inactive">Archivado</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -431,7 +654,7 @@ export default function ClientesPage() {
                     variant="outline"
                     className="w-full"
                     onClick={() => {
-                      setFilters({});
+                      setFilters({ active: true });
                       setOpenFilter(false);
                     }}
                   >
@@ -537,11 +760,255 @@ export default function ClientesPage() {
       </section>
 
       <ImportDialog open={openImport} onOpenChange={setOpenImport} onSuccess={loadClients} />
+      <Dialog open={openMoveDialog} onOpenChange={setOpenMoveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cambiar categorías</DialogTitle>
+            <DialogDescription>
+              Aplica a {selectedIds.length} cliente(s) seleccionados.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label>Nuevas categorías</Label>
+            <CategorySelect
+              module="clientAccount"
+              multiple
+              value={moveCategories}
+              onChange={(val) => setMoveCategories(Array.isArray(val) ? val : [])}
+              placeholder={categories.length === 0 ? "Cargando..." : "Selecciona categorías"}
+              options={categories.map((c) => ({ id: c.id, name: c.name }))}
+              onCategoryCreated={loadCategories}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenMoveDialog(false)} disabled={moveLoading}>
+              Cancelar
+            </Button>
+            <Button onClick={handleMoveSubmit} disabled={moveLoading}>
+              {moveLoading ? "Guardando..." : "Guardar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={openCategorizeDialog} onOpenChange={setOpenCategorizeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Categorizar cliente</DialogTitle>
+            <DialogDescription>
+              {categorizeClientName || "Cliente"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label>Categorías</Label>
+            <CategorySelect
+              module="clientAccount"
+              multiple
+              value={categorizeCategories}
+              onChange={(val) => setCategorizeCategories(Array.isArray(val) ? val : [])}
+              placeholder={categorizeLoading || categories.length === 0 ? "Cargando..." : "Selecciona categorías"}
+              options={categories.map((c) => ({ id: c.id, name: c.name }))}
+              onCategoryCreated={loadCategories}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenCategorizeDialog(false)} disabled={categorizeSaving}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCategorizeSubmit} disabled={categorizeSaving || categorizeLoading}>
+              {categorizeSaving ? "Guardando..." : "Guardar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <CategoryManagerDialog open={openCategoryManager} onOpenChange={setOpenCategoryManager} module="clientAccount" onChanged={loadCategories} />
       <ClientDetailsDialog
         open={openClientDetails}
         onOpenChange={setOpenClientDetails}
         clientId={selectedClientId}
       />
+
+      <AlertDialog open={openArchiveBulkDialog} onOpenChange={setOpenArchiveBulkDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Archivar clientes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de archivar {selectedIds.length} cliente(s)? Esta acción los marcará como inactivos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  await Promise.all(
+                    selectedIds.map((id) =>
+                      clientService.updateClient(id, { active: false } as any)
+                    )
+                  );
+                  toast.success("Clientes archivados");
+                  setSelectedIds([]);
+                  loadClients();
+                  setOpenArchiveBulkDialog(false);
+                } catch (error) {
+                  toast.error("Error al archivar");
+                }
+              }}
+            >
+              Aceptar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={openRestoreBulkDialog} onOpenChange={setOpenRestoreBulkDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Restaurar clientes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de restaurar {selectedIds.length} cliente(s)? Volverán a estar activos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  await Promise.all(
+                    selectedIds.map((id) =>
+                      clientService.updateClient(id, { active: true } as any)
+                    )
+                  );
+                  toast.success("Clientes restaurados");
+                  setSelectedIds([]);
+                  loadClients();
+                  setOpenRestoreBulkDialog(false);
+                } catch (error) {
+                  toast.error("Error al restaurar");
+                }
+              }}
+            >
+              Aceptar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={openDeleteBulkDialog} onOpenChange={setOpenDeleteBulkDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar clientes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de eliminar permanentemente {selectedIds.length} cliente(s)? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  await clientService.deleteClients(selectedIds);
+                  toast.success("Clientes eliminados");
+                  setSelectedIds([]);
+                  loadClients();
+                  setOpenDeleteBulkDialog(false);
+                } catch (error) {
+                  toast.error("Error al eliminar");
+                }
+              }}
+            >
+              Aceptar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={openArchiveSingleDialog} onOpenChange={setOpenArchiveSingleDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Archivar cliente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de archivar a {archiveSingleClient?.name}? Esta acción lo marcará como inactivo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!archiveSingleClient) return;
+                try {
+                  await clientService.updateClient(archiveSingleClient.id, { active: false } as any);
+                  toast.success("Cliente archivado");
+                  loadClients();
+                } catch (error: any) {
+                  toast.error(error?.response?.data?.message || "Error al archivar");
+                }
+              }}
+            >
+              Aceptar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar cliente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de eliminar permanentemente a {deleteClient?.name}? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!deleteClient) return;
+                try {
+                  await clientService.deleteClients([deleteClient.id]);
+                  toast.success("Cliente eliminado");
+                  loadClients();
+                } catch (error: any) {
+                  toast.error(error?.response?.data?.message || "Error al eliminar");
+                }
+              }}
+            >
+              Aceptar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={openRestoreDialog} onOpenChange={setOpenRestoreDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Restaurar cliente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de restaurar a {restoreClient?.name}? El cliente volverá a estar activo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!restoreClient) return;
+                try {
+                  await clientService.updateClient(restoreClient.id, { active: true } as any);
+                  toast.success("Cliente restaurado");
+                  loadClients();
+                } catch (error: any) {
+                  toast.error(error?.response?.data?.message || "Error al restaurar");
+                }
+              }}
+            >
+              Aceptar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }
