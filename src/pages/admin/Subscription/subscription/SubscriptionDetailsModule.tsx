@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DialogDescription } from "@/components/ui/dialog";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
 
@@ -202,6 +203,9 @@ export default function SubscriptionDetailsModule() {
         <DialogContent className="sm:max-w-[680px]">
           <DialogHeader>
             <DialogTitle>Confirm Subscription Changes</DialogTitle>
+            <DialogDescription>
+              Revisa los cambios de suscripción antes de confirmar la operación.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 text-sm">
             <ul className="list-disc pl-5 space-y-2">

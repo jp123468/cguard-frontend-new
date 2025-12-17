@@ -98,19 +98,25 @@ export default function PostSiteForm({
         resolver: zodResolver(postSiteSchema as any),
         defaultValues: {
             name: "",
+            description: "",
             clientId: "",
             address: "",
             addressLine2: "",
             postalCode: "",
             city: "",
             country: "",
-            email: undefined,
-            phone: undefined,
-            fax: undefined,
-            categoryId: undefined,
+            email: "",
+            phone: "",
+            fax: "",
+            categoryId: "",
             status: "active",
         },
     });
+
+    const setFormValue = (name: keyof PostSiteInput, value: any) => {
+        // use form.setValue while keeping validation trigger
+        form.setValue(name as any, value, { shouldValidate: true, shouldDirty: true });
+    };
 
     // Cargar datos en modo edición
     useEffect(() => {
@@ -118,18 +124,23 @@ export default function PostSiteForm({
             (async () => {
                 const data = await postSiteService.get(id);
                 const payload: PostSiteInput = {
-                    name: data.name ?? "",
-                    clientId: data.clientId ?? "",
+                    name: (data as any).companyName ?? (data as any).name ?? "",
+                    description: (data as any).description ?? "",
+                    clientId: (data as any).clientAccountId ?? (data as any).clientId ?? "",
                     address: data.address ?? "",
-                    addressLine2: (data as any).addressLine2 ?? "",
-                    postalCode: (data as any).postalCode ?? "",
+                    addressLine2: (data as any).secondAddress ?? (data as any).addressLine2 ?? "",
+                    postalCode: (data as any).postalCode ?? (data as any).zipCode ?? "",
                     city: (data as any).city ?? "",
                     country: (data as any).country ?? "",
-                    email: data.email || undefined,
-                    phone: data.phone || undefined,
-                    fax: data.fax || undefined,
-                    categoryId: data.categoryId || undefined,
-                    status: data.status ?? "active",
+                    latitud: (data as any).latitud ?? undefined,
+                    longitud: (data as any).longitud ?? undefined,
+                    email: (data as any).contactEmail ?? data.email ?? "",
+                    phone: (data as any).contactPhone ?? data.phone ?? "",
+                    fax: data.fax || "",
+                    categoryId: Array.isArray((data as any).categoryIds) && (data as any).categoryIds.length > 0
+                        ? (data as any).categoryIds[0]
+                        : (data as any).categoryId || undefined,
+                    status: typeof (data as any).active === 'boolean' ? ((data as any).active ? 'active' : 'inactive') : (data.status ?? "active"),
                 };
                 form.reset(payload);
             })().catch((e) => {
@@ -146,17 +157,17 @@ export default function PostSiteForm({
                 // Map empty string to null for category
                 categoryId: values.categoryId && String(values.categoryId).length > 0 ? values.categoryId : undefined,
             };
-            
+
             if (mode === "create") {
                 const data = await postSiteService.create(payload);
                 toast.success("Sitio de publicación creado");
                 onSaved?.({ id: data.id, data: payload });
-                navigate("/admin/post-sites");
+                navigate("/post-sites");
             } else if (mode === "edit" && id) {
                 await postSiteService.update(id, payload);
                 toast.success("Cambios guardados");
                 onSaved?.({ id, data: payload });
-                navigate("/admin/post-sites");
+                navigate("/post-sites");
             }
         } catch (e: any) {
             console.error(e);
@@ -225,9 +236,9 @@ export default function PostSiteForm({
                                 <FormItem>
                                     <FormLabel>Dirección *</FormLabel>
                                     <FormControl>
-                                        <Input 
-                                            placeholder="" 
-                                            {...field} 
+                                        <Input
+                                            placeholder=""
+                                            {...field}
                                             value={field.value ? String(field.value) : ""}
                                         />
                                     </FormControl>
@@ -243,9 +254,9 @@ export default function PostSiteForm({
                                 <FormItem>
                                     <FormLabel>Dirección Complementaria</FormLabel>
                                     <FormControl>
-                                        <Input 
-                                            placeholder="Opcional" 
-                                            {...field} 
+                                        <Input
+                                            placeholder="Opcional"
+                                            {...field}
                                             value={field.value ? String(field.value) : ""}
                                         />
                                     </FormControl>
@@ -264,9 +275,9 @@ export default function PostSiteForm({
                                 <FormItem>
                                     <FormLabel>Código postal/Zip *</FormLabel>
                                     <FormControl>
-                                        <Input 
-                                            placeholder="" 
-                                            {...field} 
+                                        <Input
+                                            placeholder=""
+                                            {...field}
                                             value={field.value ? String(field.value) : ""}
                                             maxLength={20}
                                         />
@@ -283,9 +294,9 @@ export default function PostSiteForm({
                                 <FormItem>
                                     <FormLabel>Ciudad *</FormLabel>
                                     <FormControl>
-                                        <Input 
-                                            placeholder="" 
-                                            {...field} 
+                                        <Input
+                                            placeholder=""
+                                            {...field}
                                             value={field.value ? String(field.value) : ""}
                                             maxLength={100}
                                         />
@@ -302,9 +313,9 @@ export default function PostSiteForm({
                                 <FormItem>
                                     <FormLabel>País *</FormLabel>
                                     <FormControl>
-                                        <Input 
-                                            placeholder="" 
-                                            {...field} 
+                                        <Input
+                                            placeholder=""
+                                            {...field}
                                             value={field.value ? String(field.value) : ""}
                                             maxLength={100}
                                         />
@@ -314,49 +325,135 @@ export default function PostSiteForm({
                             )}
                         />
                     </div>
+                    <div className="md:col-span-2 flex gap-4 items-start">
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="latitud"
+                            render={({ field }) => (
+                                <FormItem className="flex-1">
+                                    <FormLabel>Latitud</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Latitud"
+                                            {...field}
+                                            value={field.value ? String(field.value) : ""}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="longitud"
+                            render={({ field }) => (
+                                <FormItem className="flex-1">
+                                    <FormLabel>Longitud</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Longitud"
+                                            {...field}
+                                            value={field.value ? String(field.value) : ""}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <div className="mt-6">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                    if (!navigator.geolocation) {
+                                        toast.error("Geolocalización no soportada en este navegador");
+                                        return;
+                                    }
+                                    navigator.geolocation.getCurrentPosition(
+                                        (pos) => {
+                                            const lat = String(pos.coords.latitude);
+                                            const lng = String(pos.coords.longitude);
+                                            setFormValue('latitud' as any, lat);
+                                            setFormValue('longitud' as any, lng);
+                                            toast.success("Ubicación actual establecida");
+                                        },
+                                        (err) => {
+                                            console.error(err);
+                                            toast.error("No se pudo obtener la ubicación");
+                                        },
+                                        { enableHighAccuracy: true, timeout: 10000 }
+                                    );
+                                }}
+                            >
+                                Usar ubicación actual
+                            </Button>
+                        </div>
+
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Número de Teléfono *</FormLabel>
+                                    <FormControl>
+                                        <PhoneInput
+                                            value={field.value ?? ""}
+                                            onChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Correo Electrónico *</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="email"
+                                            placeholder=""
+                                            {...field}
+                                            value={field.value ? String(field.value) : ""}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Descripción *</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Descripción del sitio"
+                                            {...field}
+                                            value={field.value ? String(field.value) : ""}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+
+                    </div>
                     {/* Más Información (Accordion) */}
                     <Accordion type="single" collapsible defaultValue="more">
                         <AccordionItem value="more" className="border rounded-md">
                             <AccordionTrigger className="px-4 hover:cursor-pointer text-md font-medium hover:no-underline">Más Información</AccordionTrigger>
                             <AccordionContent className="px-4 pb-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <FormField<PostSiteInput>
-                                        control={form.control}
-                                        name="email"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Correo Electrónico</FormLabel>
-                                                <FormControl>
-                                                    <Input 
-                                                        type="email" 
-                                                        placeholder="" 
-                                                        {...field} 
-                                                        value={field.value ? String(field.value) : ""}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    <FormField<PostSiteInput>
-                                        control={form.control}
-                                        name="phone"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Número de Teléfono</FormLabel>
-                                                <FormControl>
-                                                    <PhoneInput
-                                                        value={field.value ?? ""}
-                                                        onChange={field.onChange}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
                                     <FormField<PostSiteInput>
                                         control={form.control}
                                         name="fax"
@@ -373,7 +470,6 @@ export default function PostSiteForm({
                                             </FormItem>
                                         )}
                                     />
-
                                     <FormField<PostSiteInput>
                                         control={form.control}
                                         name="categoryId"
@@ -392,33 +488,6 @@ export default function PostSiteForm({
                                             </FormItem>
                                         )}
                                     />
-
-                                    {mode === 'edit' && (
-                                        <FormField<PostSiteInput>
-                                            control={form.control}
-                                            name="status"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Estado</FormLabel>
-                                                    <Select 
-                                                        onValueChange={field.onChange} 
-                                                        value={field.value ? String(field.value) : "active"}
-                                                    >
-                                                        <FormControl>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Selecciona un estado" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="active">Activo</SelectItem>
-                                                            <SelectItem value="inactive">Inactivo</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    )}
                                 </div>
                             </AccordionContent>
                         </AccordionItem>

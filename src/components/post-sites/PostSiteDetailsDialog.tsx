@@ -1,0 +1,185 @@
+import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { postSiteService } from "@/lib/api/postSiteService";
+import { categoryService, type Category } from "@/lib/api/categoryService";
+import { PostSite } from "@/lib/api/postSiteService";
+import { Link } from "react-router-dom";
+
+interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  siteId: string | null;
+}
+
+export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Props) {
+  const [site, setSite] = useState<PostSite | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open || !siteId) return;
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await postSiteService.get(siteId);
+        setSite(data as any);
+
+        const ids = (data as any).categoryIds || [];
+        if (ids.length > 0) {
+          try {
+            const cats = await Promise.all(ids.map((id: string) => categoryService.findById(id)));
+            setCategories(cats);
+          } catch (err) {
+            console.error("Error loading categories:", err);
+            setCategories([]);
+          }
+        } else {
+          setCategories([]);
+        }
+      } catch (e: any) {
+        console.error(e);
+        setError(e?.message || "Error al cargar detalles del sitio");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [open, siteId]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl sm:max-w-2xl p-4">
+        <DialogHeader>
+          <DialogTitle className="text-center">Detalles del Sitio</DialogTitle>
+          <DialogDescription>
+            Información detallada del sitio de publicación seleccionada.
+          </DialogDescription>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+          </div>
+        ) : error ? (
+          <div className="py-4 text-center text-red-500 text-sm">
+            <p>{error}</p>
+          </div>
+        ) : site ? (
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-gray-600 font-semibold">Nombre</p>
+                <p className="text-sm">{(site as any).companyName || site.name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600 font-semibold">Descripción</p>
+                <p className="text-sm">{(site as any).description || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600 font-semibold">Correo</p>
+                <p className="text-sm truncate">{(site as any).contactEmail ?? site.email ?? "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600 font-semibold">Teléfono</p>
+                <p className="text-sm">{(site as any).contactPhone ?? site.phone ?? "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600 font-semibold">Fax</p>
+                <p className="text-sm">{(site as any).fax ?? "-"}</p>
+              </div>
+              {/* Client account summary if present */}
+              {(site as any).clientAccount && (
+                <div className="sm:col-span-2 border-t pt-3">
+                  <h4 className="text-sm font-semibold mb-2 text-gray-700">Cliente Asociado</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-xs text-gray-600 font-semibold">Nombre</p>
+                      <p className="text-sm">{(site as any).clientAccount.name || '-' } { (site as any).clientAccount.lastName || '' }</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 font-semibold">Correo</p>
+                      <p className="text-sm">{(site as any).clientAccount.email || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 font-semibold">Teléfono</p>
+                      <p className="text-sm">{(site as any).clientAccount.phoneNumber || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 font-semibold">Dirección</p>
+                      <p className="text-sm">{(site as any).clientAccount.address || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="sm:col-span-2">
+                <p className="text-xs text-gray-600 font-semibold">Categorías</p>
+                <p className="text-sm">
+                  {categories.length > 0
+                    ? categories.map((c) => c.name).join(", ")
+                    : ((site as any).categoryIds && (site as any).categoryIds.length > 0)
+                    ? (site as any).categoryIds.join(", ")
+                    : "-"}
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t pt-3">
+              <h4 className="text-sm font-semibold mb-2 text-gray-700">Dirección</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-gray-600 font-semibold">Dirección</p>
+                  <p className="text-sm">{(site as any).address || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 font-semibold">Dirección Complementaria</p>
+                  <p className="text-sm">{(site as any).secondAddress || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 font-semibold">Código Postal</p>
+                  <p className="text-sm">{(site as any).postalCode || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 font-semibold">Ciudad</p>
+                  <p className="text-sm">{(site as any).city || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 font-semibold">País</p>
+                  <p className="text-sm">{(site as any).country || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 font-semibold">Latitud</p>
+                  <p className="text-sm">{(site as any).latitud ?? "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 font-semibold">Longitud</p>
+                  <p className="text-sm">{(site as any).longitud ?? "-"}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t">
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                Cerrar
+              </Button>
+              <Button size="sm" className="bg-orange-500 hover:bg-orange-600" asChild>
+                <Link to={`/post-sites/${site.id}/edit`}>Editar</Link>
+              </Button>
+            </div>
+          </div>
+        ) : null}
+      </DialogContent>
+    </Dialog>
+  );
+}

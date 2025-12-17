@@ -47,11 +47,9 @@ export class AuthService {
   }
 
   static async signOut(): Promise<void> {
-    try {
-      await ApiService.post('/auth/sign-out', {})
-    } catch (error) {
-      console.error('Error during logout:', error)
-    }
+    // El logout se maneja completamente en el frontend limpiando el localStorage
+    // No es necesario llamar al backend ya que estamos usando JWT stateless
+    return Promise.resolve();
   }
 
   static async sendPasswordResetEmail(email: string): Promise<void> {

@@ -32,12 +32,33 @@ import {
   FileSpreadsheet,
   ArrowDownUp,
   Search,
+  Eye,
+  Tag,
+  Archive,
+  Trash,
+  RotateCcw,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import PostSiteImportDialog from "@/components/post-sites/PostSiteImportDialog";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+} from "@/components/ui/alert-dialog";
 import { postSiteService, PostSite, PostSiteFilters } from "@/lib/api/postSiteService";
 import { clientService } from "@/lib/api/clientService";
 import { categoryService, type Category } from "@/lib/api/categoryService";
+import CategoryManagerDialog from "@/components/categories/CategoryManagerDialog";
+import CategoryAssignDialog from "@/components/categories/CategoryAssignDialog";
+import PostSiteDetailsDialog from "@/components/post-sites/PostSiteDetailsDialog";
+import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActionsSelect";
+import { RowActionsMenu, type RowAction } from "@/components/table/RowActionsMenu";
 import type { Client } from "@/types/client";
 
 export default function PostSitePage() {
@@ -55,13 +76,23 @@ export default function PostSitePage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingFilters, setLoadingFilters] = useState(false);
+  const [openCategoryManager, setOpenCategoryManager] = useState(false);
+  const [openAssignDialog, setOpenAssignDialog] = useState(false);
+  const [assignTargetIds, setAssignTargetIds] = useState<string[]>([]);
+  const navigate = useNavigate();
+  const [openDetails, setOpenDetails] = useState(false);
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState(false);
+  const [openImportDialog, setOpenImportDialog] = useState(false);
   
   // Temporary filter state for the sheet
   const [tempFilters, setTempFilters] = useState<PostSiteFilters>({});
 
-  const formatClientName = (client: Client) => {
+  const formatClientName = (client: Partial<Client>) => {
     const fullName = [client.name, client.lastName].filter(Boolean).join(" ").trim();
-    return fullName || client.name;
+    return fullName || client.name || "";
   };
 
   const from = (postSites?.length ?? 0) > 0 ? (page - 1) * limit + 1 : 0;
@@ -71,11 +102,36 @@ export default function PostSitePage() {
   const loadPostSites = async () => {
     setLoading(true);
     try {
-      const data = await postSiteService.list(
-        { ...filters, name: searchQuery || undefined },
-        { limit, offset: (page - 1) * limit }
-      );
-      setPostSites(data.rows);
+      // Fetch post sites and clients in parallel so we can display client names
+      // Build search filters: apply the query across name, email and phone
+      // so backend can match any of these fields (more user-friendly).
+      const searchFilters = { ...filters } as any;
+      const q = (searchQuery || "").trim();
+      if (q) {
+        searchFilters.name = q;
+        searchFilters.email = q;
+        searchFilters.phoneNumber = q;
+      }
+
+      // Debug: help inspect what filters are sent during search
+      // eslint-disable-next-line no-console
+      console.debug('[PostSitePage] searchFilters ->', searchFilters);
+
+      const [data, clientsResponse] = await Promise.all([
+        postSiteService.list(searchFilters, { limit, offset: (page - 1) * limit }),
+        clientService.getClients(),
+      ]);
+
+      const clientsMap = new Map<string, Client>();
+      (clientsResponse.rows || []).forEach((c: Client) => clientsMap.set(c.id, c));
+
+      // Attach client object to rows when possible
+      const rowsWithClient = (data.rows || []).map((r: any) => ({
+        ...r,
+        client: r.client ?? clientsMap.get(r.clientId) ?? undefined,
+      }));
+
+      setPostSites(rowsWithClient);
       setTotalCount(data.count);
     } catch (error) {
       console.error(error);
@@ -138,15 +194,9 @@ export default function PostSitePage() {
       toast.warning("Selecciona al menos un sitio");
       return;
     }
-    if (!confirm(`¿Estás seguro de eliminar ${selectedIds.length} sitio(s)?`)) return;
-    try {
-      await postSiteService.delete(selectedIds);
-      toast.success("Sitios eliminados");
-      setSelectedIds([]);
-      loadPostSites();
-    } catch (error) {
-      toast.error("Error al eliminar");
-    }
+    // Open confirmation dialog for bulk delete
+    setDeleteTargetIds(selectedIds.slice());
+    setOpenDeleteDialog(true);
   };
 
   const handleExportPDF = async () => {
@@ -185,6 +235,75 @@ export default function PostSitePage() {
     }
   };
 
+  const rowActions = (site: PostSite): RowAction[] => {
+    const isActive = site.status === "active";
+    if (isActive) {
+      return [
+        {
+          label: "Ver Detalles",
+          icon: <Eye className="h-4 w-4" />,
+          onClick: () => {
+            setSelectedSiteId(site.id);
+            setOpenDetails(true);
+          },
+        },
+        {
+          label: "Categorizar",
+          icon: <Tag className="h-4 w-4" />,
+          onClick: () => {
+            setAssignTargetIds([site.id]);
+            setOpenAssignDialog(true);
+          },
+        },
+        {
+          label: "Archivo",
+          icon: <Archive className="h-4 w-4" />,
+          onClick: async () => {
+            try {
+              await postSiteService.update(site.id, { status: "inactive" } as any);
+              toast.success("Sitio archivado");
+              loadPostSites();
+            } catch (e) {
+              toast.error("Error al archivar");
+            }
+          },
+        },
+      ];
+    }
+
+      return [
+      {
+        label: "Ver Detalles",
+        icon: <Eye className="h-4 w-4" />,
+        onClick: () => {
+          setSelectedSiteId(site.id);
+          setOpenDetails(true);
+        },
+      },
+      {
+        label: "Eliminar",
+        icon: <Trash className="h-4 w-4" />,
+        onClick: () => {
+          setDeleteTargetIds([site.id]);
+          setOpenDeleteDialog(true);
+        },
+      },
+      {
+        label: "Restaurar",
+        icon: <RotateCcw className="h-4 w-4" />,
+        onClick: async () => {
+          try {
+            await postSiteService.update(site.id, { status: "active" } as any);
+            toast.success("Sitio restaurado");
+            loadPostSites();
+          } catch (e) {
+            toast.error("Error al restaurar");
+          }
+        },
+      },
+    ];
+  };
+
   return (
     <AppLayout>
       <Breadcrumb
@@ -198,18 +317,45 @@ export default function PostSitePage() {
         {/* Acciones superiores */}
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <Select onValueChange={(action) => {
-              if (action === "eliminar") handleBulkDelete();
-            }}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Acción" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="activar">Activar</SelectItem>
-                <SelectItem value="inactivar">Inactivar</SelectItem>
-                <SelectItem value="eliminar">Eliminar</SelectItem>
-              </SelectContent>
-            </Select>
+            <BulkActionsSelect
+              actions={[
+                { value: "mover", label: "Mover" },
+                { value: "archivar", label: "Archivar" },
+                { value: "gestionar-categorias", label: "Gestionar Categorías" },
+              ]}
+              onChange={async (action) => {
+                if (action === "gestionar-categorias") {
+                  setOpenCategoryManager(true);
+                  return;
+                }
+                if (action === "archivar") {
+                  if (selectedIds.length === 0) {
+                    toast.warning("Selecciona al menos un sitio");
+                    return;
+                  }
+                  try {
+                    await Promise.all(
+                      selectedIds.map((id) => postSiteService.update(id, { status: "inactive" } as any))
+                    );
+                    toast.success("Sitios archivados");
+                    setSelectedIds([]);
+                    loadPostSites();
+                  } catch (e) {
+                    toast.error("Error al archivar");
+                  }
+                  return;
+                }
+                if (action === "mover") {
+                  if (selectedIds.length === 0) {
+                    toast.warning("Selecciona al menos un sitio");
+                    return;
+                  }
+                  setAssignTargetIds(selectedIds.slice());
+                  setOpenAssignDialog(true);
+                  return;
+                }
+              }}
+            />
           </div>
 
           <div className="flex items-center gap-2">
@@ -218,7 +364,8 @@ export default function PostSitePage() {
               <Input
                 placeholder="Buscar Sitios de Publicación"
                 className="pl-9 w-64"
-                onChange={(e) => console.log("buscar:", e.target.value)}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
 
@@ -232,7 +379,10 @@ export default function PostSitePage() {
             {/* Filtros */}
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="text-orange-600 border-orange-200">
+                <Button
+                  variant="outline"
+                  className="text-orange-600 border-orange-200"
+                >
                   <Filter className="mr-2 h-4 w-4" />
                   Filtros
                 </Button>
@@ -244,49 +394,80 @@ export default function PostSitePage() {
 
                 <div className="mt-6 space-y-4">
                   <div className="space-y-2">
-                    <Label>Categorías</Label>
-                    <Select 
-                      value={tempFilters.categoryId || ""} 
-                      onValueChange={(value) => {
-                        setTempFilters(prev => ({
-                          ...prev,
-                          categoryId: value || undefined
-                        }));
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todas las categorías" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Todas las categorías</SelectItem>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Correo Electrónico</Label>
+                    <Input
+                      placeholder="ejemplo@correo.com"
+                      value={filters.email || ""}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          email: e.target.value || undefined,
+                        })
+                      }
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Cliente</Label>
-                    <Select 
-                      value={tempFilters.clientId || ""} 
-                      onValueChange={(value) => {
-                        setTempFilters(prev => ({
-                          ...prev,
-                          clientId: value || undefined
-                        }));
-                      }}
+                    <Label>Número de Teléfono</Label>
+                    <Input
+                      placeholder="+593 123456789"
+                      value={filters.phoneNumber || ""}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          phoneNumber: e.target.value || undefined,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Ciudad</Label>
+                    <Input
+                      placeholder="Quito"
+                      value={filters.city || ""}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          city: e.target.value || undefined,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>País</Label>
+                    <Input
+                      placeholder="Ecuador"
+                      value={filters.country || ""}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          country: e.target.value || undefined,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Categorías</Label>
+                    <Select
+                      value={filters.category || "all"}
+                      onValueChange={(v) =>
+                        setFilters({
+                          ...filters,
+                          category: v === "all" ? undefined : v,
+                        })
+                      }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Todos los clientes" />
+                        <SelectValue placeholder="Todas" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos los clientes</SelectItem>
-                        {clients.map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {formatClientName(client)}
+                        <SelectItem value="all">Todas</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -295,40 +476,52 @@ export default function PostSitePage() {
 
                   <div className="space-y-2">
                     <Label>Estado</Label>
-                    <Select 
-                      value={tempFilters.status || ""} 
-                      onValueChange={(value) => {
-                        setTempFilters(prev => {
-                          const newFilters: PostSiteFilters = { ...prev };
-                          if (value === "") {
-                            delete newFilters.status;
-                          } else {
-                            newFilters.status = value as 'active' | 'inactive';
-                          }
-                          return newFilters;
-                        });
+                    <Select
+                      value={
+                        filters.active === undefined
+                          ? "all"
+                          : filters.active
+                          ? "active"
+                          : "inactive"
+                      }
+                      onValueChange={(v) => {
+                        if (v === "all") {
+                          setFilters({ ...filters, active: undefined });
+                        } else if (v === "active") {
+                          setFilters({ ...filters, active: true });
+                        } else {
+                          setFilters({ ...filters, active: false });
+                        }
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Todos los estados" />
+                        <SelectValue placeholder="Todos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos los estados</SelectItem>
+                        <SelectItem value="all">Todos</SelectItem>
                         <SelectItem value="active">Activo</SelectItem>
-                        <SelectItem value="inactive">Inactivo</SelectItem>
+                        <SelectItem value="inactive">Archivado</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <Button
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                    onClick={() => {
-                      setFilters(tempFilters);
-                      setOpenFilter(false);
-                    }}
-                    disabled={loadingFilters}
+                    onClick={() => setOpenFilter(false)}
                   >
                     Aplicar Filtros
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      setFilters({});
+                      setSearchQuery("");
+                      setOpenFilter(false);
+                    }}
+                  >
+                    Limpiar Filtros
                   </Button>
                 </div>
               </SheetContent>
@@ -342,13 +535,13 @@ export default function PostSitePage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => console.log("Exportar PDF")}>
+                <DropdownMenuItem onClick={handleExportPDF}>
                   <FileDown className="mr-2 h-4 w-4" /> Exportar como PDF
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => console.log("Exportar Excel")}>
+                <DropdownMenuItem onClick={handleExportExcel}>
                   <FileSpreadsheet className="mr-2 h-4 w-4" /> Exportar como Excel
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => console.log("Importar")}>
+                <DropdownMenuItem onClick={() => setOpenImportDialog(true)}>
                   <ArrowDownUp className="mr-2 h-4 w-4" /> Importar
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -362,14 +555,14 @@ export default function PostSitePage() {
             <thead className="bg-gray-50">
               <tr className="border-b">
                 <th className="px-4 py-3">
-                  <Checkbox />
+                  <Checkbox onCheckedChange={handleSelectAll} checked={selectedIds.length === postSites.length && postSites.length > 0} />
                 </th>
                 <th className="px-4 py-3 font-semibold">Sitio de publicación</th>
                 <th className="px-4 py-3 font-semibold">Cliente</th>
-                <th className="px-4 py-3 font-semibold">Correo Electrónico</th>
-                <th className="px-4 py-3 font-semibold">Número de Teléfono</th>
+                <th className="px-4 py-3 font-semibold">Email</th>
+                <th className="px-4 py-3 font-semibold">Teléfono</th>
                 <th className="px-4 py-3 font-semibold">Estado</th>
-                <th />
+                <th className="px-4 py-3 font-semibold text-right">Acciones</th>
               </tr>
             </thead>
 
@@ -384,8 +577,7 @@ export default function PostSitePage() {
                         alt="Sin datos"
                         className="h-36 mb-4"
                       />
-                      <h3 className="text-lg font-semibold">No se encontraron resultados</h3>
-                      <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+                      <p className="text-gray-500">
                         No pudimos encontrar ningún elemento que coincida con su búsqueda
                       </p>
                     </div>
@@ -395,31 +587,26 @@ export default function PostSitePage() {
               {(postSites ?? []).map((site) => (
                 <tr key={site.id} className="border-b">
                   <td className="px-4 py-3">
-                    <Checkbox />
+                    <Checkbox 
+                      checked={selectedIds.includes(site.id)}
+                      onCheckedChange={(checked) => handleSelectOne(site.id, checked as boolean)}
+                    />
                   </td>
                   <td className="px-4 py-3 font-medium">{site.name}</td>
-                  <td className="px-4 py-3">{site.client?.name || "-"}</td>
+                  <td className="px-4 py-3">{site.client ? formatClientName(site.client) : "-"}</td>
                   <td className="px-4 py-3">{site.email || "-"}</td>
                   <td className="px-4 py-3">{site.phone || "-"}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 text-xs rounded-full ${
                       site.status === "active"
                         ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
+                        : "bg-red-100 text-red-800"
                     }`}>
-                      {site.status === "active" ? "Activo" : "Inactivo"}
+                      {site.status === "active" ? "Activo" : "Archivado"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <EllipsisVertical className="h-4 w-4" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                        <DropdownMenuItem>Eliminar</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <RowActionsMenu actions={rowActions(site)} />
                   </td>
                 </tr>
               ))}
@@ -472,6 +659,80 @@ export default function PostSitePage() {
             </div>
           </div>
         </div>
+
+        <CategoryManagerDialog
+          open={openCategoryManager}
+          onOpenChange={setOpenCategoryManager}
+          module="postSite"
+          onChanged={loadPostSites}
+        />
+
+        <CategoryAssignDialog
+          open={openAssignDialog}
+          onOpenChange={setOpenAssignDialog}
+          targetIds={assignTargetIds}
+          onDone={() => {
+            setSelectedIds([]);
+            loadPostSites();
+          }}
+        />
+
+        {/* Post site details dialog */}
+        {selectedSiteId && (
+          <>
+            <PostSiteDetailsDialog
+              open={openDetails}
+              onOpenChange={(v) => setOpenDetails(v)}
+              siteId={selectedSiteId}
+            />
+          </>
+        )}
+
+        {/* Confirm delete dialog (single or bulk) */}
+        <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Eliminar sitio{deleteTargetIds.length > 1 ? 's' : ''}
+              </AlertDialogTitle>
+            </AlertDialogHeader>
+
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar {deleteTargetIds.length} sitio{deleteTargetIds.length > 1 ? 's' : ''}? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteTargetIds([])}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-600 hover:bg-red-700"
+                onClick={async () => {
+                  try {
+                    setDeleting(true);
+                    await postSiteService.delete(deleteTargetIds);
+                    toast.success(deleteTargetIds.length > 1 ? 'Sitios eliminados' : 'Sitio eliminado');
+                    setSelectedIds([]);
+                    setDeleteTargetIds([]);
+                    setOpenDeleteDialog(false);
+                    await loadPostSites();
+                  } catch (e) {
+                    console.error(e);
+                    toast.error('Error al eliminar');
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+              >
+                {deleting ? 'Eliminando...' : 'Eliminar'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <PostSiteImportDialog
+          open={openImportDialog}
+          onOpenChange={(v) => setOpenImportDialog(v)}
+          onSuccess={() => loadPostSites()}
+        />
 
         </section>
     </AppLayout>

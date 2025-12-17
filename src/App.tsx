@@ -209,7 +209,7 @@ export default function App() {
               }
             />
             <Route
-              path="/post-sites/edit/:id"
+              path="/post-sites/:id/edit"
               element={
                 <ProtectedRoute>
                   <NewOrEditPostSitePage />

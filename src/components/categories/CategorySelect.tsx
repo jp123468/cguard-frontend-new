@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -183,9 +183,10 @@ export function CategorySelect({
 
             <Dialog open={openCreate} onOpenChange={setOpenCreate}>
                 <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>Agregar categoría</DialogTitle>
-                    </DialogHeader>
+                        <DialogHeader>
+                            <DialogTitle>Agregar categoría</DialogTitle>
+                            <DialogDescription>Formulario para crear una nueva categoría.</DialogDescription>
+                        </DialogHeader>
 
                     <div className="space-y-4">
                         <div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -77,6 +77,7 @@ Cliente Ejemplo 2,Rodríguez,cliente2@ejemplo.com,+12025551234,Av. Secundaria 45
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Importar Clientes desde Excel</DialogTitle>
+                    <DialogDescription>Sube un archivo .xlsx/.xls/.csv para importar clientes.</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">

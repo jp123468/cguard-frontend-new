@@ -356,6 +356,7 @@ export default function ProfileUserForm() {
               <X className="h-4 w-4" />
               <span className="sr-only">Cerrar</span>
             </DialogClose>
+            <DialogDescription>Proporciona tu contraseña y el nuevo correo electrónico para actualizar tu cuenta.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -401,6 +402,7 @@ export default function ProfileUserForm() {
               <X className="h-4 w-4" />
               <span className="sr-only">Cerrar</span>
             </DialogClose>
+            <DialogDescription>Ingresa el código que te hemos enviado por SMS para verificar tu número.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">

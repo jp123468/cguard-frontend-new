@@ -40,6 +40,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { DialogDescription } from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
@@ -268,6 +269,9 @@ export default function CheckInOut() {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 gap-0">
             <DialogHeader className="px-6 py-4 border-b flex flex-row items-center justify-between">
               <DialogTitle className="text-base font-normal text-slate-700">Añadir informe</DialogTitle>
+              <DialogDescription>
+                Rellena los campos para crear un nuevo informe de registro.
+              </DialogDescription>
               {/* Close button is automatic */}
             </DialogHeader>
 

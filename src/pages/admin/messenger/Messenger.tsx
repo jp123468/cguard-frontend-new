@@ -12,6 +12,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import { DialogDescription } from "@/components/ui/dialog";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
@@ -137,6 +138,9 @@ function NewMessageDialog({
       <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="text-base font-normal text-slate-700">Nuevo Mensaje</DialogTitle>
+          <DialogDescription>
+            Busca un guardia o un sitio para enviar un nuevo mensaje.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="p-6 space-y-6">
@@ -222,6 +226,9 @@ function NewGroupDialog({
       <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="text-base font-normal text-slate-700">Nuevo grupo</DialogTitle>
+          <DialogDescription>
+            Crea un grupo seleccionando un sitio (opcional) y agregando guardias.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="p-6 space-y-5">

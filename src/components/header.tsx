@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -263,6 +263,7 @@ export default function Header({
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-center text-lg font-normal">GuardsPro</DialogTitle>
+            <DialogDescription>Califique su experiencia con GuardsPro.</DialogDescription>
           </DialogHeader>
 
           <div className="py-6">
@@ -314,6 +315,7 @@ export default function Header({
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle className="text-center text-lg font-normal">¿Cómo podemos ayudar?</DialogTitle>
+            <DialogDescription>Encuentra artículos, videos y soporte para resolver tus dudas.</DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-2 gap-4 py-6">
@@ -374,6 +376,7 @@ export default function Header({
                 <Search className="w-4 h-4 text-gray-600" />
               </button>
             </div>
+            <DialogDescription>Lista de actividad y notificaciones recientes.</DialogDescription>
           </DialogHeader>
 
           <div className="py-6">

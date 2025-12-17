@@ -4,6 +4,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -70,6 +71,9 @@ export function ClientDetailsDialog({
                     <DialogTitle className="text-center">
                         Detalles del Cliente
                     </DialogTitle>
+                    <DialogDescription>
+                        Información detallada del cliente seleccionado.
+                    </DialogDescription>
                 </DialogHeader>
 
                 {loading ? (

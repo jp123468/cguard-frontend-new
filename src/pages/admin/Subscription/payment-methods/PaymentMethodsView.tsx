@@ -9,6 +9,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { DialogDescription } from "@/components/ui/dialog";
 import {
   Tabs,
   TabsContent,
@@ -76,9 +77,9 @@ function AddPaymentMethodDialog({ onSubmit }: { onSubmit: () => void }) {
     <DialogContent className="sm:max-w-[720px] max-h-[90vh] overflow-y-auto">
       <DialogHeader className="pb-4">
         <DialogTitle className="text-2xl font-semibold">Añadir Método de Pago</DialogTitle>
-        <p className="text-sm text-muted-foreground mt-1">
+        <DialogDescription className="text-sm text-muted-foreground mt-1">
           Selecciona tu método de pago preferido para continuar
-        </p>
+        </DialogDescription>
       </DialogHeader>
 
       {/* Tabs con estilo mejorado */}
