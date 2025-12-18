@@ -3,11 +3,22 @@ import { z } from "zod";
 // E.164: + y 8–15 dígitos
 const e164 = /^\+[1-9]\d{7,14}$/;
 
+// Nombre/Apellido: permitir letras Unicode, espacios, apóstrofe y guiones. No números.
+const nameRegex = /^[\p{L} '\-]+$/u;
+
 export const inviteByOptions = ["SMS", "Correo Electrónico"] as const;
 
 const baseEntry = {
-  firstName: z.string().trim().min(1, "El nombre es requerido"),
-  lastName: z.string().trim().min(1, "El apellido es requerido"),
+  firstName: z
+    .string()
+    .trim()
+    .min(1, "El nombre es requerido")
+    .regex(nameRegex, "El nombre no debe contener números ni caracteres inválidos"),
+  lastName: z
+    .string()
+    .trim()
+    .min(1, "El apellido es requerido")
+    .regex(nameRegex, "El apellido no debe contener números ni caracteres inválidos"),
   clientId: z.string().trim().min(1, "Seleccione un cliente"),
   postSiteId: z.string().trim().min(1, "Asigne un sitio de publicación"),
 };

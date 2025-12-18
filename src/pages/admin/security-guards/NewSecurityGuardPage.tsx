@@ -55,7 +55,7 @@ type TabKey = "invite" | "join_code" | "invite_link" | "create_profile";
 export default function NewSecurityGuardPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("invite");
   const [clients, setClients] = useState<Array<{ id: string; name: string; lastName?: string }>>([]);
-  const [sites, setSites] = useState<Array<{ id: string; name: string }>>([]);
+  const [sites, setSites] = useState<Array<any>>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -147,7 +147,22 @@ export default function NewSecurityGuardPage() {
     value: c.id,
     label: [c.name, c.lastName].filter(Boolean).join(" ").trim() || c.name,
   }));
-  const siteOptions = sites.map((s) => ({ value: s.id, label: s.name }));
+  const siteOptions = sites.map((s: any) => ({ value: s.id, label: s.name }));
+
+  // watch create form clientId to filter site options for create form
+  const createClientId = useWatch({ control: createCtrl, name: 'clientId' });
+  const matchesClient = (s: any, clientId?: string) => {
+    if (!clientId) return false;
+    // check multiple possible shapes returned by the API
+    if (s.clientId && String(s.clientId) === String(clientId)) return true;
+    if (s.clientAccountId && String(s.clientAccountId) === String(clientId)) return true;
+    if (s.client && (s.client.id && String(s.client.id) === String(clientId))) return true;
+    if (s.clientAccount && (s.clientAccount.id && String(s.clientAccount.id) === String(clientId))) return true;
+    // some backends may return nested clientAccount object under `clientAccount` or `client`
+    return false;
+  };
+
+  const createSiteOptions = createClientId ? (sites.filter((s: any) => matchesClient(s, createClientId)).map((s: any) => ({ value: s.id, label: s.name }))) : [];
 
   return (
     <AppLayout>
@@ -208,13 +223,17 @@ export default function NewSecurityGuardPage() {
                             <FormMessage />
                           </FormItem>
                         )} />
-                        <FormField control={inviteCtrl} name={`entries.${idx}.postSiteId`} render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Asignar Sitio de Publicación</FormLabel>
-                            <Combobox value={field.value} onChange={field.onChange} options={siteOptions} placeholder="Asignar Sitio de Publicación" aria-label="Asignar Sitio de Publicación" />
-                            <FormMessage />
-                          </FormItem>
-                        )} />
+                        <FormField control={inviteCtrl} name={`entries.${idx}.postSiteId`} render={({ field }) => {
+                          const entryClientId = inviteEntries?.[idx]?.clientId;
+                          const optionsForEntry = entryClientId ? sites.filter((s: any) => matchesClient(s, entryClientId)).map((s: any) => ({ value: s.id, label: s.name })) : [];
+                          return (
+                            <FormItem>
+                              <FormLabel>Asignar Sitio de Publicación</FormLabel>
+                              <Combobox value={field.value} onChange={field.onChange} options={optionsForEntry} placeholder="Asignar Sitio de Publicación" aria-label="Asignar Sitio de Publicación" />
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }} />
                       </div>
 
                       <div className="mt-4 flex items-center gap-3">
@@ -357,7 +376,7 @@ export default function NewSecurityGuardPage() {
                     <FormItem><FormLabel>Seleccionar Cliente</FormLabel><Combobox value={field.value} onChange={field.onChange} options={clientOptions} placeholder="Seleccionar Cliente" aria-label="Seleccionar Cliente" /><FormMessage /></FormItem>
                   )} />
                   <FormField control={createCtrl} name="postSiteId" render={({ field }) => (
-                    <FormItem><FormLabel>Asignar Sitio de Publicación</FormLabel><Combobox value={field.value} onChange={field.onChange} options={siteOptions} placeholder="Asignar Sitio de Publicación" aria-label="Asignar Sitio de Publicación" /><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Asignar Sitio de Publicación</FormLabel><Combobox value={field.value} onChange={field.onChange} options={createSiteOptions} placeholder="Asignar Sitio de Publicación" aria-label="Asignar Sitio de Publicación" /><FormMessage /></FormItem>
                   )} />
                 </div>
 

@@ -18,7 +18,7 @@ export const routeCreateSchema = z
       categoryId: z.string().optional(),
     }),
     guardId: z.string().min(1, "Guardia requerido"),
-    siteIds: z.array(z.string()).min(1, "Selecciona al menos un sitio"),
+    siteIds: z.array(z.string()).min(1, "Selecciona al menos un sitio de publicación "),
     vehicleId: z.string().min(1, "Vehículo requerido"),
     syncHitsBetweenGuards: z.boolean().default(false),
     forceVehicleRouteOrder: z.boolean().default(false),

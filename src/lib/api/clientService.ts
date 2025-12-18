@@ -180,7 +180,7 @@ export const clientService = {
      */
     async deleteClient(id: string): Promise<void> {
         const tenantId = getTenantId();
-        await api.delete(`/tenant/${tenantId}/client-account/${id}`);
+        await api.delete(`/tenant/${tenantId}/client-account/${id}`, { toast: { silentError: true } });
     },
 
     /**
@@ -188,7 +188,7 @@ export const clientService = {
      */
     async deleteClients(ids: string[]): Promise<void> {
         const tenantId = getTenantId();
-        await api.post(`/tenant/${tenantId}/client-account/destroy-all`, { ids });
+        await api.post(`/tenant/${tenantId}/client-account/destroy-all`, { ids }, { toast: { silentError: true } });
     },
 
     /**

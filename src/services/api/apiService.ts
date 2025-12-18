@@ -59,25 +59,22 @@ export class ApiService {
     }
 
     if (!response.ok) {
-  const msg =
-    (data && (data.message || data.error || data.detail)) ||
-    (typeof data === "string" && data) ||
-    `Error: ${response.status} ${response.statusText}`;
+      const msg =
+        (data && (data.message || data.error || data.detail)) ||
+        (typeof data === "string" && data) ||
+        `Error: ${response.status} ${response.statusText}`;
 
-  // ✅ Log detallado para debugging
-  console.error(`[API Error ${response.status}]`, {
-    endpoint: url,
-    status: response.status,
-    message: msg,
-    fullResponse: data,
-  });
+      // Log detallado para debugging
+      console.error(`[API Error ${response.status}]`, {
+        endpoint: url,
+        status: response.status,
+        message: msg,
+        fullResponse: data,
+      });
 
-  // ✅ Mostrar toast correctamente
-  toast.error(msg);
-
-  // ✅ Lanzar error correctamente para que el flujo continúe
-  throw new Error(msg);
-}
+      // Lanzar ApiError para que la UI decida mostrar toast
+      throw new ApiError(msg, response.status, data);
+    }
 
 
     return data;

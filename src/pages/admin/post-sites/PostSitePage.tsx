@@ -41,6 +41,7 @@ import {
 import PostSiteImportDialog from "@/components/post-sites/PostSiteImportDialog";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import getServerErrorMessage from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -70,7 +71,8 @@ export default function PostSitePage() {
   const [limit, setLimit] = useState(25);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [filters, setFilters] = useState<PostSiteFilters>({});
+  // By default show only active post sites in the list
+  const [filters, setFilters] = useState<PostSiteFilters>({ active: true });
   
   // Filter options loading
   const [clients, setClients] = useState<Client[]>([]);
@@ -79,6 +81,7 @@ export default function PostSitePage() {
   const [openCategoryManager, setOpenCategoryManager] = useState(false);
   const [openAssignDialog, setOpenAssignDialog] = useState(false);
   const [assignTargetIds, setAssignTargetIds] = useState<string[]>([]);
+  const [bulkKey, setBulkKey] = useState(0);
   const navigate = useNavigate();
   const [openDetails, setOpenDetails] = useState(false);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
@@ -106,36 +109,66 @@ export default function PostSitePage() {
       // Build search filters: apply the query across name, email and phone
       // so backend can match any of these fields (more user-friendly).
       const searchFilters = { ...filters } as any;
-      const q = (searchQuery || "").trim();
+      const q = (searchQuery || "").trim().toLowerCase();
       if (q) {
+        // Only search by site/business name on the backend.
+        // For better UX, also apply a client-side filter by site name
+        // or client full name after we receive the rows.
         searchFilters.name = q;
-        searchFilters.email = q;
-        searchFilters.phoneNumber = q;
       }
 
       // Debug: help inspect what filters are sent during search
       // eslint-disable-next-line no-console
       console.debug('[PostSitePage] searchFilters ->', searchFilters);
 
+      // If category filter is provided, do not send it to backend (some endpoints
+      // have inconsistent column names) — instead fetch and filter client-side.
+      const categoryFilter = searchFilters.category ?? searchFilters.categoryId;
+      if (categoryFilter) {
+        // remove category from searchFilters before calling backend
+        delete (searchFilters as any).category;
+        delete (searchFilters as any).categoryId;
+      }
+
       const [data, clientsResponse] = await Promise.all([
         postSiteService.list(searchFilters, { limit, offset: (page - 1) * limit }),
         clientService.getClients(),
       ]);
 
+      // If we pulled data without backend category filter, apply it locally.
+      if (categoryFilter) {
+        data.rows = (data.rows || []).filter((r: any) => {
+          const ids = (r as any).categoryIds || [];
+          // accept if any category id matches or the mapped `categoryId` matches
+          return ids.includes(categoryFilter) || (r.categoryId === categoryFilter);
+        });
+        data.count = data.rows.length;
+      }
+
       const clientsMap = new Map<string, Client>();
       (clientsResponse.rows || []).forEach((c: Client) => clientsMap.set(c.id, c));
 
       // Attach client object to rows when possible
-      const rowsWithClient = (data.rows || []).map((r: any) => ({
+      const rowsWithClient: any[] = (data.rows || []).map((r: any) => ({
         ...r,
         client: r.client ?? clientsMap.get(r.clientId) ?? undefined,
       }));
 
-      setPostSites(rowsWithClient);
-      setTotalCount(data.count);
-    } catch (error) {
+      // If user searched, additionally filter client-side by site name or client name
+      let finalRows = rowsWithClient;
+      if (q) {
+        finalRows = rowsWithClient.filter((r: any) => {
+          const siteName = (r.name || "").toLowerCase();
+          const clientName = (r.client ? formatClientName(r.client) : "").toLowerCase();
+          return siteName.includes(q) || clientName.includes(q);
+        });
+      }
+
+      setPostSites(finalRows);
+      setTotalCount(q ? finalRows.length : data.count);
+    } catch (error: any) {
       console.error(error);
-      toast.error("Error al cargar sitios de publicación");
+      toast.error(getServerErrorMessage(error, "Error al cargar sitios de publicación"));
     } finally {
       setLoading(false);
     }
@@ -163,9 +196,9 @@ export default function PostSitePage() {
           // Initialize temp filters from current filters
           setTempFilters(filters);
         })
-        .catch((error) => {
+        .catch((error: any) => {
           console.error(error);
-          toast.error("Error al cargar opciones de filtro");
+          toast.error(getServerErrorMessage(error, "Error al cargar opciones de filtro"));
         })
         .finally(() => {
           setLoadingFilters(false);
@@ -191,7 +224,7 @@ export default function PostSitePage() {
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) {
-      toast.warning("Selecciona al menos un sitio");
+      toast.warning("Selecciona al menos un sitio de publicación ");
       return;
     }
     // Open confirmation dialog for bulk delete
@@ -213,7 +246,7 @@ export default function PostSitePage() {
       toast.success("PDF descargado");
     } catch (error: any) {
       toast.dismiss();
-      toast.error(error?.response?.data?.message || "Error al exportar PDF");
+      toast.error(getServerErrorMessage(error, "Error al exportar PDF"));
     }
   };
 
@@ -231,7 +264,7 @@ export default function PostSitePage() {
       toast.success("Excel descargado");
     } catch (error: any) {
       toast.dismiss();
-      toast.error(error?.response?.data?.message || "Error al exportar Excel");
+      toast.error(getServerErrorMessage(error, "Error al exportar Excel"));
     }
   };
 
@@ -318,6 +351,7 @@ export default function PostSitePage() {
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <BulkActionsSelect
+              key={bulkKey}
               actions={[
                 { value: "mover", label: "Mover" },
                 { value: "archivar", label: "Archivar" },
@@ -326,11 +360,13 @@ export default function PostSitePage() {
               onChange={async (action) => {
                 if (action === "gestionar-categorias") {
                   setOpenCategoryManager(true);
+                  setBulkKey((k) => k + 1);
                   return;
                 }
                 if (action === "archivar") {
                   if (selectedIds.length === 0) {
-                    toast.warning("Selecciona al menos un sitio");
+                    toast.warning("Selecciona al menos un sitio de publicación ");
+                    setBulkKey((k) => k + 1);
                     return;
                   }
                   try {
@@ -340,18 +376,22 @@ export default function PostSitePage() {
                     toast.success("Sitios archivados");
                     setSelectedIds([]);
                     loadPostSites();
+                    setBulkKey((k) => k + 1);
                   } catch (e) {
                     toast.error("Error al archivar");
+                    setBulkKey((k) => k + 1);
                   }
                   return;
                 }
                 if (action === "mover") {
                   if (selectedIds.length === 0) {
-                    toast.warning("Selecciona al menos un sitio");
+                    toast.warning("Selecciona al menos un sitio de publicación ");
+                    setBulkKey((k) => k + 1);
                     return;
                   }
                   setAssignTargetIds(selectedIds.slice());
                   setOpenAssignDialog(true);
+                  setBulkKey((k) => k + 1);
                   return;
                 }
               }}
@@ -397,10 +437,10 @@ export default function PostSitePage() {
                     <Label>Correo Electrónico</Label>
                     <Input
                       placeholder="ejemplo@correo.com"
-                      value={filters.email || ""}
+                      value={tempFilters.email || ""}
                       onChange={(e) =>
-                        setFilters({
-                          ...filters,
+                        setTempFilters({
+                          ...tempFilters,
                           email: e.target.value || undefined,
                         })
                       }
@@ -411,10 +451,10 @@ export default function PostSitePage() {
                     <Label>Número de Teléfono</Label>
                     <Input
                       placeholder="+593 123456789"
-                      value={filters.phoneNumber || ""}
+                      value={tempFilters.phoneNumber || ""}
                       onChange={(e) =>
-                        setFilters({
-                          ...filters,
+                        setTempFilters({
+                          ...tempFilters,
                           phoneNumber: e.target.value || undefined,
                         })
                       }
@@ -425,10 +465,10 @@ export default function PostSitePage() {
                     <Label>Ciudad</Label>
                     <Input
                       placeholder="Quito"
-                      value={filters.city || ""}
+                      value={tempFilters.city || ""}
                       onChange={(e) =>
-                        setFilters({
-                          ...filters,
+                        setTempFilters({
+                          ...tempFilters,
                           city: e.target.value || undefined,
                         })
                       }
@@ -439,10 +479,10 @@ export default function PostSitePage() {
                     <Label>País</Label>
                     <Input
                       placeholder="Ecuador"
-                      value={filters.country || ""}
+                      value={tempFilters.country || ""}
                       onChange={(e) =>
-                        setFilters({
-                          ...filters,
+                        setTempFilters({
+                          ...tempFilters,
                           country: e.target.value || undefined,
                         })
                       }
@@ -452,10 +492,10 @@ export default function PostSitePage() {
                   <div className="space-y-2">
                     <Label>Categorías</Label>
                     <Select
-                      value={filters.category || "all"}
+                      value={tempFilters.category || "all"}
                       onValueChange={(v) =>
-                        setFilters({
-                          ...filters,
+                        setTempFilters({
+                          ...tempFilters,
                           category: v === "all" ? undefined : v,
                         })
                       }
@@ -478,19 +518,19 @@ export default function PostSitePage() {
                     <Label>Estado</Label>
                     <Select
                       value={
-                        filters.active === undefined
+                        tempFilters.active === undefined
                           ? "all"
-                          : filters.active
+                          : tempFilters.active
                           ? "active"
                           : "inactive"
                       }
                       onValueChange={(v) => {
                         if (v === "all") {
-                          setFilters({ ...filters, active: undefined });
+                          setTempFilters({ ...tempFilters, active: undefined });
                         } else if (v === "active") {
-                          setFilters({ ...filters, active: true });
+                          setTempFilters({ ...tempFilters, active: true });
                         } else {
-                          setFilters({ ...filters, active: false });
+                          setTempFilters({ ...tempFilters, active: false });
                         }
                       }}
                     >
@@ -507,7 +547,11 @@ export default function PostSitePage() {
 
                   <Button
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                    onClick={() => setOpenFilter(false)}
+                    onClick={() => {
+                      const next = { ...tempFilters } as PostSiteFilters;
+                      setFilters(next);
+                      setOpenFilter(false);
+                    }}
                   >
                     Aplicar Filtros
                   </Button>
@@ -516,7 +560,9 @@ export default function PostSitePage() {
                     variant="outline"
                     className="w-full"
                     onClick={() => {
-                      setFilters({});
+                      setTempFilters({});
+                      // Reset to default: only active items
+                      setFilters({ active: true });
                       setSearchQuery("");
                       setOpenFilter(false);
                     }}

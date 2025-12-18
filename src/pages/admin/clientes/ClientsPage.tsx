@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import getServerErrorMessage from "@/lib/utils";
 import { clientService } from "@/lib/api/clientService";
 import { categoryService, type Category } from "@/lib/api/categoryService";
 import { Client, ClientFilters } from "@/types/client";
@@ -107,9 +108,9 @@ export default function ClientesPage() {
       );
       setClients(data.rows);
       setTotalCount(data.count);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Error al cargar clientes");
+      toast.error(getServerErrorMessage(error, "Error al cargar clientes"));
     } finally {
       setLoading(false);
     }
@@ -179,7 +180,7 @@ export default function ClientesPage() {
       const data = await clientService.getClient(client.id);
       setCategorizeCategories((data as any).categoryIds ?? []);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || error?.message || "No se pudo cargar el cliente");
+      toast.error(getServerErrorMessage(error, "No se pudo cargar el cliente"));
       setOpenCategorizeDialog(false);
     } finally {
       setCategorizeLoading(false);
@@ -292,7 +293,7 @@ export default function ClientesPage() {
       toast.success("PDF descargado");
     } catch (error: any) {
       toast.dismiss();
-      toast.error(error?.response?.data?.message || error?.message || "Error al exportar PDF");
+      toast.error(getServerErrorMessage(error, "Error al exportar PDF"));
     }
   };
 
@@ -316,7 +317,7 @@ export default function ClientesPage() {
     } catch (error: any) {
 
       toast.dismiss();
-      toast.error(error?.response?.data?.message || error?.message || "Error al exportar Excel");
+      toast.error(getServerErrorMessage(error, "Error al exportar Excel"));
     }
   };
 
@@ -336,7 +337,7 @@ export default function ClientesPage() {
       loadClients();
       loadCategories();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || error?.message || "Error al actualizar categorías");
+      toast.error(getServerErrorMessage(error, "Error al actualizar categorías"));
     } finally {
       setCategorizeSaving(false);
     }
@@ -366,7 +367,7 @@ export default function ClientesPage() {
       loadClients();
       loadCategories();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || error?.message || "Error al mover categorías");
+      toast.error(getServerErrorMessage(error, "Error al mover categorías"));
     } finally {
       setMoveLoading(false);
     }
@@ -853,8 +854,8 @@ export default function ClientesPage() {
                   setSelectedIds([]);
                   loadClients();
                   setOpenArchiveBulkDialog(false);
-                } catch (error) {
-                  toast.error("Error al archivar");
+                } catch (error: any) {
+                  toast.error(getServerErrorMessage(error, "Error al archivar"));
                 }
               }}
             >
@@ -886,8 +887,8 @@ export default function ClientesPage() {
                   setSelectedIds([]);
                   loadClients();
                   setOpenRestoreBulkDialog(false);
-                } catch (error) {
-                  toast.error("Error al restaurar");
+                } catch (error: any) {
+                  toast.error(getServerErrorMessage(error, "Error al restaurar"));
                 }
               }}
             >
@@ -915,8 +916,8 @@ export default function ClientesPage() {
                   setSelectedIds([]);
                   loadClients();
                   setOpenDeleteBulkDialog(false);
-                } catch (error) {
-                  toast.error("Error al eliminar");
+                } catch (error: any) {
+                  toast.error(getServerErrorMessage(error, "Error al eliminar"));
                 }
               }}
             >
@@ -944,7 +945,7 @@ export default function ClientesPage() {
                   toast.success("Cliente archivado");
                   loadClients();
                 } catch (error: any) {
-                  toast.error(error?.response?.data?.message || "Error al archivar");
+                  toast.error(getServerErrorMessage(error, "Error al archivar"));
                 }
               }}
             >
@@ -972,7 +973,7 @@ export default function ClientesPage() {
                   toast.success("Cliente eliminado");
                   loadClients();
                 } catch (error: any) {
-                  toast.error(error?.response?.data?.message || "Error al eliminar");
+                  toast.error(getServerErrorMessage(error, "Error al eliminar"));
                 }
               }}
             >
@@ -1000,7 +1001,7 @@ export default function ClientesPage() {
                   toast.success("Cliente restaurado");
                   loadClients();
                 } catch (error: any) {
-                  toast.error(error?.response?.data?.message || "Error al restaurar");
+                  toast.error(getServerErrorMessage(error, "Error al restaurar"));
                 }
               }}
             >

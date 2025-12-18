@@ -85,12 +85,21 @@ const postSiteService = {
 
       // category may be provided as `category` or `categoryId`
       const categoryToUse = filters.categoryId ?? filters.category;
-      if (categoryToUse) params.append('filter[categoryId]', categoryToUse);
+      if (categoryToUse) {
+        // Only send `categoryIds` to avoid ambiguous column errors
+        params.append('filter[categoryIds]', categoryToUse);
+      }
 
-      // email / phone filters
-      if (filters.email) params.append('filter[email]', filters.email);
-      const phoneToUse = filters.phone ?? filters.phoneNumber;
-      if (phoneToUse) params.append('filter[phone]', phoneToUse);
+      // email / phone filters - include common backend field variants
+      if (filters.email) {
+        params.append('filter[email]', filters.email);
+        params.append('filter[contactEmail]', filters.email);
+      }
+      const phoneToUse = (filters as any).phone ?? (filters as any).phoneNumber;
+      if (phoneToUse) {
+        params.append('filter[phone]', phoneToUse);
+        params.append('filter[contactPhone]', phoneToUse);
+      }
 
       if (filters.city) params.append('filter[city]', filters.city);
       if (filters.country) params.append('filter[country]', filters.country);
@@ -106,6 +115,10 @@ const postSiteService = {
       params.append('limit', options.limit.toString());
       params.append('offset', options.offset.toString());
 
+      if (typeof window !== 'undefined') {
+        // eslint-disable-next-line no-console
+        console.debug('[postSiteService] list params ->', params.toString());
+      }
       const { data } = await api.get(`/tenant/${tenantId}/business-info?${params.toString()}`);
 
       // Map backend `business-info` shape to frontend `PostSite` shape
@@ -130,6 +143,7 @@ const postSiteService = {
         fax: r.fax ?? undefined,
         categoryId: Array.isArray(r.categoryIds) && r.categoryIds.length > 0 ? r.categoryIds[0] : undefined,
         category: undefined,
+        categoryIds: Array.isArray(r.categoryIds) ? r.categoryIds : [],
         status: typeof r.active === 'boolean' ? (r.active ? 'active' : 'inactive') : (r.status ?? 'inactive'),
       }));
 
@@ -260,7 +274,18 @@ const postSiteService = {
       if (filters.name) params.append('filter[name]', filters.name);
       if (filters.clientId) params.append('filter[clientId]', filters.clientId);
       const categoryToUse = filters.categoryId ?? (filters as any).category;
-      if (categoryToUse) params.append('filter[categoryId]', categoryToUse);
+      if (categoryToUse) {
+        params.append('filter[categoryIds]', categoryToUse);
+      }
+      if (filters.email) {
+        params.append('filter[email]', filters.email);
+        params.append('filter[contactEmail]', filters.email);
+      }
+      const phoneToUse = (filters as any).phone ?? (filters as any).phoneNumber;
+      if (phoneToUse) {
+        params.append('filter[phone]', phoneToUse);
+        params.append('filter[contactPhone]', phoneToUse);
+      }
       if (typeof filters.status === 'string') {
         params.append('filter[active]', filters.status === 'active' ? 'true' : 'false');
       } else if (typeof filters.active === 'boolean') {
@@ -268,6 +293,10 @@ const postSiteService = {
       }
       params.append('format', 'pdf');
 
+      if (typeof window !== 'undefined') {
+        // eslint-disable-next-line no-console
+        console.debug('[postSiteService] exportPDF params ->', params.toString());
+      }
       const { data } = await api.get(`/tenant/${tenantId}/business-info/export?${params.toString()}`, {
         responseType: 'blob',
       });
@@ -289,7 +318,18 @@ const postSiteService = {
       if (filters.name) params.append('filter[name]', filters.name);
       if (filters.clientId) params.append('filter[clientId]', filters.clientId);
       const categoryExcel = filters.categoryId ?? (filters as any).category;
-      if (categoryExcel) params.append('filter[categoryId]', categoryExcel);
+      if (categoryExcel) {
+        params.append('filter[categoryIds]', categoryExcel);
+      }
+      if (filters.email) {
+        params.append('filter[email]', filters.email);
+        params.append('filter[contactEmail]', filters.email);
+      }
+      const phoneExcel = (filters as any).phone ?? (filters as any).phoneNumber;
+      if (phoneExcel) {
+        params.append('filter[phone]', phoneExcel);
+        params.append('filter[contactPhone]', phoneExcel);
+      }
       if (typeof filters.status === 'string') {
         params.append('filter[active]', filters.status === 'active' ? 'true' : 'false');
       } else if (typeof filters.active === 'boolean') {
@@ -297,6 +337,10 @@ const postSiteService = {
       }
       params.append('format', 'excel');
 
+      if (typeof window !== 'undefined') {
+        // eslint-disable-next-line no-console
+        console.debug('[postSiteService] exportExcel params ->', params.toString());
+      }
       const { data } = await api.get(`/tenant/${tenantId}/business-info/export?${params.toString()}`, {
         responseType: 'blob',
       });
@@ -316,7 +360,7 @@ const postSiteService = {
       const formData = new FormData();
       formData.append('file', file);
 
-      const { data } = await api.post(`/tenant/${tenantId}/business-info/import`, formData, {
+      const { data } = await api.post(`/tenant/${tenantId}/business-info/import-file`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return data;

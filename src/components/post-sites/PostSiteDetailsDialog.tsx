@@ -24,6 +24,8 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [clientCollapsed, setClientCollapsed] = useState(false);
+  const [addressCollapsed, setAddressCollapsed] = useState(false);
 
   useEffect(() => {
     if (!open || !siteId) return;
@@ -60,14 +62,15 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl sm:max-w-2xl p-4">
-        <DialogHeader>
-          <DialogTitle className="text-center">Detalles del Sitio</DialogTitle>
-          <DialogDescription>
-            Información detallada del sitio de publicación seleccionada.
-          </DialogDescription>
-        </DialogHeader>
-
+      <DialogContent className="max-w-4xl w-full p-4">
+        <div className="bg-muted/30 p-2 border-b">
+          <DialogHeader>
+            <DialogTitle className="text-center">Detalles del Sitio</DialogTitle>
+            <DialogDescription>
+              Información detallada del sitio de publicación seleccionada.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
         {loading ? (
           <div className="flex items-center justify-center py-4">
             <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
@@ -77,8 +80,8 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
             <p>{error}</p>
           </div>
         ) : site ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <p className="text-xs text-gray-600 font-semibold">Nombre</p>
                 <p className="text-sm">{(site as any).companyName || site.name}</p>
@@ -101,26 +104,35 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
               </div>
               {/* Client account summary if present */}
               {(site as any).clientAccount && (
-                <div className="sm:col-span-2 border-t pt-3">
-                  <h4 className="text-sm font-semibold mb-2 text-gray-700">Cliente Asociado</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div>
-                      <p className="text-xs text-gray-600 font-semibold">Nombre</p>
-                      <p className="text-sm">{(site as any).clientAccount.name || '-' } { (site as any).clientAccount.lastName || '' }</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600 font-semibold">Correo</p>
-                      <p className="text-sm">{(site as any).clientAccount.email || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600 font-semibold">Teléfono</p>
-                      <p className="text-sm">{(site as any).clientAccount.phoneNumber || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-600 font-semibold">Dirección</p>
-                      <p className="text-sm">{(site as any).clientAccount.address || '-'}</p>
-                    </div>
+                <div className="sm:col-span-3 border-t pt-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold mb-2 text-gray-700">Cliente Asociado</h4>
+                    <button type="button" className="text-xs text-muted-foreground" onClick={() => setClientCollapsed(!clientCollapsed)}>
+                      {clientCollapsed ? 'Mostrar' : 'Ocultar'}
+                    </button>
                   </div>
+                  {clientCollapsed ? (
+                    <div className="text-sm text-muted-foreground">{(site as any).clientAccount.name || '-'} · {(site as any).clientAccount.email || '-'}</div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">Nombre</p>
+                        <p className="text-sm">{(site as any).clientAccount.name || '-'} {(site as any).clientAccount.lastName || ''}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">Correo</p>
+                        <p className="text-sm">{(site as any).clientAccount.email || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">Teléfono</p>
+                        <p className="text-sm">{(site as any).clientAccount.phoneNumber || '-'}</p>
+                      </div>
+                      <div className="sm:col-span-3">
+                        <p className="text-xs text-gray-600 font-semibold">Dirección</p>
+                        <p className="text-sm">{(site as any).clientAccount.address || '-'}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="sm:col-span-2">
@@ -129,47 +141,56 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
                   {categories.length > 0
                     ? categories.map((c) => c.name).join(", ")
                     : ((site as any).categoryIds && (site as any).categoryIds.length > 0)
-                    ? (site as any).categoryIds.join(", ")
-                    : "-"}
+                      ? (site as any).categoryIds.join(", ")
+                      : "-"}
                 </p>
               </div>
             </div>
 
             <div className="border-t pt-3">
-              <h4 className="text-sm font-semibold mb-2 text-gray-700">Dirección</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <p className="text-xs text-gray-600 font-semibold">Dirección</p>
-                  <p className="text-sm">{(site as any).address || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-semibold">Dirección Complementaria</p>
-                  <p className="text-sm">{(site as any).secondAddress || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-semibold">Código Postal</p>
-                  <p className="text-sm">{(site as any).postalCode || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-semibold">Ciudad</p>
-                  <p className="text-sm">{(site as any).city || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-semibold">País</p>
-                  <p className="text-sm">{(site as any).country || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-semibold">Latitud</p>
-                  <p className="text-sm">{(site as any).latitud ?? "-"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-semibold">Longitud</p>
-                  <p className="text-sm">{(site as any).longitud ?? "-"}</p>
-                </div>
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold mb-2 text-gray-700">Dirección</h4>
+                <button type="button" className="text-xs text-muted-foreground" onClick={() => setAddressCollapsed(!addressCollapsed)}>
+                  {addressCollapsed ? 'Mostrar' : 'Ocultar'}
+                </button>
               </div>
+              {addressCollapsed ? (
+                <div className="text-sm text-muted-foreground">{(site as any).address || '-'}{(site as any).city ? ` · ${(site as any).city}` : ''}</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold">Dirección</p>
+                    <p className="text-sm">{(site as any).address || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold">Dirección Complementaria</p>
+                    <p className="text-sm">{(site as any).secondAddress || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold">Código Postal</p>
+                    <p className="text-sm">{(site as any).postalCode || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold">Ciudad</p>
+                    <p className="text-sm">{(site as any).city || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold">País</p>
+                    <p className="text-sm">{(site as any).country || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold">Latitud</p>
+                    <p className="text-sm">{(site as any).latitud ?? "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold">Longitud</p>
+                    <p className="text-sm">{(site as any).longitud ?? "-"}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t">
+            <div className="flex justify-end gap-2 pt-2 border-t">
               <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
                 Cerrar
               </Button>

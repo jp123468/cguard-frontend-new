@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
 
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -14,15 +15,17 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
+import { clientService } from "@/lib/api/clientService";
+import { postSiteService } from "@/lib/api/postSiteService";
+
 import {
   accessLevels,
   newAdminUserSchema,
   type NewAdminUserValues,
 } from "@/lib/validators/new-admin-user.schema";
 
-/* Reemplaza estos arrays por tus datos reales (API) */
-const CLIENT_OPTIONS: Array<{ id: string; name: string }> = [];
-const SITE_OPTIONS: Array<{ id: string; name: string }> = [];
+/* dynamic options loaded from API */
+const CLIENT_OPTIONS_PLACEHOLDER: Array<{ id: string; name: string }> = [];
 
 export default function NewAdminUserPage() {
   const form = useForm<NewAdminUserValues>({
@@ -38,6 +41,50 @@ export default function NewAdminUserPage() {
   });
 
   const { handleSubmit, control, formState } = form;
+  const [clientOptions, setClientOptions] = useState<Array<{ id: string; name: string }>>(CLIENT_OPTIONS_PLACEHOLDER);
+  const [siteOptions, setSiteOptions] = useState<Array<{ id: string; name: string }>>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const clients = await clientService.getClients({});
+        setClientOptions((clients as any).rows || []);
+      } catch (err) {
+        console.error('No se pudieron cargar clientes', err);
+        setClientOptions([]);
+      }
+    })();
+  }, []);
+
+  // watch clientId changes using form getValues in an interval to avoid adding useWatch import
+  useEffect(() => {
+    let last = '';
+    let mounted = true;
+    const iv = setInterval(async () => {
+      try {
+        const vals = (form.getValues as any) ? (form.getValues() as any) : {};
+        const clientId = vals.clientId || '';
+        if (clientId !== last) {
+          last = clientId;
+          if (!clientId) {
+            setSiteOptions([]);
+            return;
+          }
+          try {
+            const res = await postSiteService.list({ clientId }, { limit: 1000, offset: 0 });
+            if (!mounted) return;
+            setSiteOptions((res as any).rows || []);
+          } catch (err) {
+            console.error('No se pudieron cargar sitios para cliente', clientId, err);
+            setSiteOptions([]);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 300);
+    return () => { mounted = false; clearInterval(iv); };
+  }, [form]);
 
   const onSubmit = (values: NewAdminUserValues) => {
     // TODO: conectar a tu API
@@ -130,12 +177,12 @@ export default function NewAdminUserPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {CLIENT_OPTIONS.length === 0 && (
+                        {clientOptions.length === 0 && (
                           <SelectItem value="__void__" disabled>
                             Sin opciones
                           </SelectItem>
                         )}
-                        {CLIENT_OPTIONS.map((c) => (
+                        {clientOptions.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
                             {c.name}
                           </SelectItem>
@@ -163,12 +210,12 @@ export default function NewAdminUserPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {SITE_OPTIONS.length === 0 && (
+                        {siteOptions.length === 0 && (
                           <SelectItem value="__void__" disabled>
                             Sin opciones
                           </SelectItem>
                         )}
-                        {SITE_OPTIONS.map((s) => (
+                        {siteOptions.map((s) => (
                           <SelectItem key={s.id} value={s.id}>
                             {s.name}
                           </SelectItem>
