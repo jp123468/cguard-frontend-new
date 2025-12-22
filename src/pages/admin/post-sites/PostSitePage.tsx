@@ -83,6 +83,9 @@ export default function PostSitePage() {
   const [assignTargetIds, setAssignTargetIds] = useState<string[]>([]);
   const [bulkKey, setBulkKey] = useState(0);
   const navigate = useNavigate();
+  // Sorting state (client-side for post sites list)
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
   const [openDetails, setOpenDetails] = useState(false);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -161,6 +164,24 @@ export default function PostSitePage() {
           const siteName = (r.name || "").toLowerCase();
           const clientName = (r.client ? formatClientName(r.client) : "").toLowerCase();
           return siteName.includes(q) || clientName.includes(q);
+        });
+      }
+
+      // Apply client-side sorting if requested
+      if (sortKey) {
+        finalRows = finalRows.slice().sort((a: any, b: any) => {
+          const getVal = (row: any) => {
+            if (sortKey === "name") return (row.name || "").toString().toLowerCase();
+            if (sortKey === "client") return (row.client ? formatClientName(row.client) : "").toString().toLowerCase();
+            if (sortKey === "email") return (row.email || "").toString().toLowerCase();
+            if (sortKey === "phone") return (row.phone || "").toString().toLowerCase();
+            return (row[sortKey] ?? "").toString().toLowerCase();
+          };
+          const va = getVal(a);
+          const vb = getVal(b);
+          if (va < vb) return sortDir === "asc" ? -1 : 1;
+          if (va > vb) return sortDir === "asc" ? 1 : -1;
+          return 0;
         });
       }
 
@@ -603,10 +624,90 @@ export default function PostSitePage() {
                 <th className="px-4 py-3">
                   <Checkbox onCheckedChange={handleSelectAll} checked={selectedIds.length === postSites.length && postSites.length > 0} />
                 </th>
-                <th className="px-4 py-3 font-semibold">Sitio de publicación</th>
-                <th className="px-4 py-3 font-semibold">Cliente</th>
-                <th className="px-4 py-3 font-semibold">Email</th>
-                <th className="px-4 py-3 font-semibold">Teléfono</th>
+                <th className="px-4 py-3 font-semibold">
+                  <button
+                    type="button"
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      if (sortKey !== "name") {
+                        setSortKey("name");
+                        setSortDir("asc");
+                      } else if (sortDir === "asc") {
+                        setSortDir("desc");
+                      } else {
+                        setSortKey(null);
+                        setSortDir(null);
+                      }
+                      setPage(1);
+                    }}
+                  >
+                    <span>Sitio de publicación</span>
+                    <span className="text-xs text-muted-foreground">{sortKey === "name" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
+                  </button>
+                </th>
+                <th className="px-4 py-3 font-semibold">
+                  <button
+                    type="button"
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      if (sortKey !== "client") {
+                        setSortKey("client");
+                        setSortDir("asc");
+                      } else if (sortDir === "asc") {
+                        setSortDir("desc");
+                      } else {
+                        setSortKey(null);
+                        setSortDir(null);
+                      }
+                      setPage(1);
+                    }}
+                  >
+                    <span>Cliente</span>
+                    <span className="text-xs text-muted-foreground">{sortKey === "client" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
+                  </button>
+                </th>
+                <th className="px-4 py-3 font-semibold">
+                  <button
+                    type="button"
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      if (sortKey !== "email") {
+                        setSortKey("email");
+                        setSortDir("asc");
+                      } else if (sortDir === "asc") {
+                        setSortDir("desc");
+                      } else {
+                        setSortKey(null);
+                        setSortDir(null);
+                      }
+                      setPage(1);
+                    }}
+                  >
+                    <span>Email</span>
+                    <span className="text-xs text-muted-foreground">{sortKey === "email" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
+                  </button>
+                </th>
+                <th className="px-4 py-3 font-semibold">
+                  <button
+                    type="button"
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      if (sortKey !== "phone") {
+                        setSortKey("phone");
+                        setSortDir("asc");
+                      } else if (sortDir === "asc") {
+                        setSortDir("desc");
+                      } else {
+                        setSortKey(null);
+                        setSortDir(null);
+                      }
+                      setPage(1);
+                    }}
+                  >
+                    <span>Teléfono</span>
+                    <span className="text-xs text-muted-foreground">{sortKey === "phone" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
+                  </button>
+                </th>
                 <th className="px-4 py-3 font-semibold">Estado</th>
                 <th className="px-4 py-3 font-semibold text-right">Acciones</th>
               </tr>

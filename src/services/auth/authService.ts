@@ -8,6 +8,7 @@ export interface LoginCredentials {
 export interface SignUpData {
   email: string
   password: string
+  name: string
   invitationToken?: string
   tenantId?: string
 }
@@ -38,8 +39,35 @@ export class AuthService {
   }
 
   static async signUp(data: SignUpData): Promise<AuthResponse> {
-    const response = await ApiService.post('/auth/sign-up', data, { skipAuth: true })
-    return response
+    // Some backends expect `fullName` or `firstName` instead of `name`.
+    // Include both to improve compatibility with different schemas.
+    // split name into firstName and lastName
+    const rawName = (data as any).name ? String((data as any).name).trim() : ''
+    let firstName: string | undefined = undefined
+    let lastName: string | undefined = undefined
+    if (rawName) {
+      const parts = rawName.split(/\s+/)
+      firstName = parts[0]
+      if (parts.length > 1) {
+        lastName = parts.slice(1).join(' ')
+      }
+    }
+
+    const payload = {
+      ...data,
+      fullName: rawName || undefined,
+      firstName: firstName || undefined,
+      lastName: lastName || undefined,
+    }
+    try {
+      console.log('[AuthService] signUp payload ->', payload)
+      const response = await ApiService.post('/auth/sign-up', payload, { skipAuth: true })
+      console.log('[AuthService] signUp response <-', response)
+      return response
+    } catch (err: any) {
+      console.error('[AuthService] signUp error <-', err)
+      throw err
+    }
   }
 
   static async getProfile(): Promise<any> {

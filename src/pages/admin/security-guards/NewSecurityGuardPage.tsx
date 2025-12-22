@@ -38,8 +38,8 @@ import { Combobox } from "@/components/app/combobox";
 import { Copyable } from "@/components/app/copyable";
 import { AddBlockButton, RemoveBlockButton } from "@/components/app/add-remove";
 import { SubmitBar } from "@/components/app/submit-bar";
-import { FormErrorSummary } from "@/components/app/form-error-summary";
 import { clientService } from "@/lib/api/clientService";
+import { securityGuardService } from "@/lib/api/securityGuardService";
 import { postSiteService } from "@/lib/api/postSiteService";
 
 // Helpers
@@ -86,9 +86,16 @@ export default function NewSecurityGuardPage() {
   const { fields: inviteFields, append: inviteAppend, remove: inviteRemove } = useFieldArray({ control: inviteCtrl, name: "entries" });
   const inviteEntries = useWatch({ control: inviteCtrl, name: "entries" });
 
-  const onSubmitInvite = (v: SecurityGuardsFormValues) => {
-    console.log("Invitar →", v.entries);
-    toast.success("Invitaciones enviadas");
+  const onSubmitInvite = async (v: SecurityGuardsFormValues) => {
+    try {
+      console.log('[NewSecurityGuardPage] invite payload ->', v.entries)
+      await securityGuardService.invite(v.entries);
+      console.log('[NewSecurityGuardPage] invite response: sent')
+      toast.success("Invitaciones enviadas");
+    } catch (e: any) {
+      console.error('[NewSecurityGuardPage] invite error <-', e)
+      toast.error(e?.message ?? "Error al enviar invitaciones");
+    }
   };
 
   /* ============== TAB 2: UNIRSE POR CÓDIGO (bloques) ============== */
@@ -102,9 +109,16 @@ export default function NewSecurityGuardPage() {
   const { fields: joinFields, append: joinAppend, remove: joinRemove } = useFieldArray({ control: joinCtrl, name: "entries" });
   const codeValue = useWatch({ control: joinCtrl, name: "code" });
 
-  const onSubmitJoin = (v: JoinByCodeFormValues) => {
-    console.log("Join code →", v);
-    toast.success("Invitación enviada por código");
+  const onSubmitJoin = async (v: JoinByCodeFormValues) => {
+    try {
+      console.log('[NewSecurityGuardPage] joinByCode payload ->', { code: v.code, entries: v.entries })
+      await securityGuardService.joinByCode(v.code, v.entries);
+      console.log('[NewSecurityGuardPage] joinByCode response: sent')
+      toast.success("Invitación enviada por código");
+    } catch (e: any) {
+      console.error('[NewSecurityGuardPage] joinByCode error <-', e)
+      toast.error(e?.message ?? "Error al enviar invitación por código");
+    }
   };
   const regenCode = () => setJoinValue("code", genCode(), { shouldValidate: true });
 
@@ -118,9 +132,16 @@ export default function NewSecurityGuardPage() {
   const { fields: linkFields, append: linkAppend, remove: linkRemove } = useFieldArray({ control: linkCtrl, name: "entries" });
   const linkValue = useWatch({ control: linkCtrl, name: "link" });
 
-  const onSubmitLink = (v: InviteByLinkFormValues) => {
-    console.log("Invite link →", v);
-    toast.success("Invitación por enlace enviada");
+  const onSubmitLink = async (v: InviteByLinkFormValues) => {
+    try {
+      console.log('[NewSecurityGuardPage] inviteByLink payload ->', { link: v.link, entries: v.entries })
+      await securityGuardService.inviteByLink(v.link, v.entries);
+      console.log('[NewSecurityGuardPage] inviteByLink response: sent')
+      toast.success("Invitación por enlace enviada");
+    } catch (e: any) {
+      console.error('[NewSecurityGuardPage] inviteByLink error <-', e)
+      toast.error(e?.message ?? "Error al enviar invitación por enlace");
+    }
   };
 
   /* ============== TAB 4: CREAR PERFIL ============== */
@@ -132,13 +153,19 @@ export default function NewSecurityGuardPage() {
   });
   const { control: createCtrl, handleSubmit: submitCreate, formState: createState } = createForm;
 
-  const onSubmitCreate = (v: CreateProfileValues) => {
-    if (createIntentRef.current === "create_send") {
-      console.log("Crear perfil + enviar →", v);
-      toast.success("Perfil creado y enviado");
-    } else {
-      console.log("Crear perfil →", v);
-      toast.success("Perfil creado");
+  const onSubmitCreate = async (v: CreateProfileValues) => {
+    try {
+      console.log('[NewSecurityGuardPage] createProfile payload ->', v, 'intent:', createIntentRef.current)
+      await securityGuardService.create(v);
+      console.log('[NewSecurityGuardPage] createProfile response: created')
+      if (createIntentRef.current === "create_send") {
+        toast.success("Perfil creado y enviado");
+      } else {
+        toast.success("Perfil creado");
+      }
+    } catch (e: any) {
+      console.error('[NewSecurityGuardPage] createProfile error <-', e)
+      toast.error(e?.message ?? "Error al crear perfil");
     }
   };
 
@@ -176,11 +203,8 @@ export default function NewSecurityGuardPage() {
             <p className="mt-8 max-w-5xl text-sm text-muted-foreground">
               Ingrese el nombre, correo electrónico/número de móvil del guardia. Se enviará un mensaje con un enlace.
             </p>
-
             <Form {...inviteForm}>
               <form className="mt-6 grid gap-8" onSubmit={submitInvite(onSubmitInvite)}>
-                <FormErrorSummary hasErrors={!!Object.keys(inviteState.errors).length} />
-
                 {inviteFields.map((f, idx) => {
                   const inviteBy = inviteEntries?.[idx]?.inviteBy ?? "Correo Electrónico";
                   const contactLabel = inviteBy === "SMS" ? "Número de Móvil *" : "Correo Electrónico *";
@@ -272,8 +296,6 @@ export default function NewSecurityGuardPage() {
 
             <Form {...joinForm}>
               <form className="mt-8 grid gap-8 border-t pt-8" onSubmit={submitJoin(onSubmitJoin)}>
-                <FormErrorSummary hasErrors={!!Object.keys(joinState.errors).length} />
-
                 {joinFields.map((f, idx) => (
                   <FormBlock key={f.id}>
                     <FormField control={joinCtrl} name={`entries.${idx}.phone`} render={({ field }) => (
@@ -308,8 +330,6 @@ export default function NewSecurityGuardPage() {
 
             <Form {...linkForm}>
               <form className="mt-8 grid gap-8 border-t pt-8" onSubmit={submitLink(onSubmitLink)}>
-                <FormErrorSummary hasErrors={!!Object.keys(linkState.errors).length} />
-
                 {linkFields.map((f, idx) => (
                   <FormBlock key={f.id}>
                     <FormField control={linkCtrl} name={`entries.${idx}.phone`} render={({ field }) => (
@@ -340,9 +360,9 @@ export default function NewSecurityGuardPage() {
               Cree manualmente el perfil del guardia. Deberá validar su correo y número móvil antes de iniciar sesión.
             </p>
 
-            <Form {...createForm}>
+            <Form {...createForm}>npm run dev
+              
               <form className="mt-8 grid gap-6" onSubmit={submitCreate(onSubmitCreate)}>
-                <FormErrorSummary hasErrors={!!Object.keys(createState.errors).length} />
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <FormField control={createCtrl} name="firstName" render={({ field }) => (

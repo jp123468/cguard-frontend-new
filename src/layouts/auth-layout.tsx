@@ -69,10 +69,10 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
         </div>
 
         {/* LADO DERECHO - Autenticación */}
-        <div className="flex items-center justify-center p-6 lg:p-12 relative">
-          <div className="w-full max-w-md relative">
+        <div className="flex items-start justify-center p-6 lg:p-12 pt-12 lg:pt-20 relative">
+          <div className="w-full max-w-xl relative">
             {/* Tarjeta del formulario */}
-            <div className="rounded-2xl border border-slate-200/50 bg-white/90 backdrop-blur-xl p-8 shadow-2xl dark:border-white/10 dark:bg-slate-900/80">
+            <div className="rounded-2xl border border-slate-200/50 bg-white/90 backdrop-blur-xl p-10 shadow-2xl dark:border-white/10 dark:bg-slate-900/80">
               <div className="mb-8">
                 <h2
                   className="text-3xl font-bold"

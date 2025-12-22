@@ -6,6 +6,7 @@ export type Column<T = any> = {
     header: string;
     className?: string;
     render?: (value: any, row: T) => React.ReactNode;
+    sortable?: boolean;
 };
 
 type DataTableProps<T> = {
@@ -17,6 +18,10 @@ type DataTableProps<T> = {
     onSelectAll: (checked: boolean) => void;
     rowActions?: (row: T) => RowAction[];
     emptyState?: React.ReactNode;
+    // optional sorting
+    sortKey?: string | null;
+    sortDir?: "asc" | "desc" | null;
+    onSortChange?: (key: string, dir: "asc" | "desc" | null) => void;
 };
 
 export function DataTable<T extends { id: string }>({
@@ -28,6 +33,9 @@ export function DataTable<T extends { id: string }>({
     onSelectAll,
     rowActions,
     emptyState,
+    sortKey,
+    sortDir,
+    onSortChange,
 }: DataTableProps<T>) {
     const allSelected = data.length > 0 && selectedIds.length === data.length;
 
@@ -42,14 +50,40 @@ export function DataTable<T extends { id: string }>({
                                 onCheckedChange={(checked) => onSelectAll(!!checked)}
                             />
                         </th>
-                        {columns.map((col) => (
-                            <th
-                                key={String(col.key)}
-                                className={`px-4 py-3 font-semibold ${col.className ?? ""}`}
-                            >
-                                {col.header}
-                            </th>
-                        ))}
+                        {columns.map((col) => {
+                            const key = String(col.key);
+                            const isSorted = sortKey === key;
+                            const nextSort = () => {
+                                if (!onSortChange || !col.sortable) return;
+                                let next: "asc" | "desc" | null = "asc";
+                                if (!isSorted) next = "asc";
+                                else if (isSorted && sortDir === "asc") next = "desc";
+                                else next = null;
+                                onSortChange(key, next);
+                            };
+
+                            return (
+                                <th
+                                    key={key}
+                                    className={`px-4 py-3 font-semibold ${col.className ?? ""}`}
+                                >
+                                    {col.sortable ? (
+                                        <button
+                                            type="button"
+                                            onClick={nextSort}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <span>{col.header}</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {isSorted ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}
+                                            </span>
+                                        </button>
+                                    ) : (
+                                        col.header
+                                    )}
+                                </th>
+                            );
+                        })}
                         {rowActions && <th className="w-12" />}
                     </tr>
                 </thead>

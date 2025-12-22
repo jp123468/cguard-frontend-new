@@ -41,12 +41,22 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import getServerErrorMessage from "@/lib/utils";
+
 import { clientService } from "@/lib/api/clientService";
+type Client = any;
+
+type ClientFilters = {
+  active?: boolean;
+  email?: string;
+  phoneNumber?: string;
+  city?: string;
+  country?: string;
+  category?: string;
+  name?: string;
+  lastName?: string;
+};
+
 import { categoryService, type Category } from "@/lib/api/categoryService";
-import { Client, ClientFilters } from "@/types/client";
-import { useDebouncedValue } from "@/hooks/useDebounce";
-import { ImportDialog } from "@/components/clients/ImportDialog";
 import CategoryManagerDialog from "@/components/categories/CategoryManagerDialog";
 import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
 import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActionsSelect";
@@ -55,6 +65,30 @@ import type { RowAction } from "@/components/table/RowActionsMenu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { CategorySelect } from "@/components/categories/CategorySelect";
+import { ImportDialog } from "@/components/clients/ImportDialog";
+// Local replacement for missing hook: useDebouncedValue
+function useDebouncedValue<T>(value: T, delay = 300): T {
+  const [debounced, setDebounced] = useState<T>(value);
+  useEffect(() => {
+    const handler = window.setTimeout(() => setDebounced(value), delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debounced;
+}
+
+const getServerErrorMessage = (error: any, defaultMessage = "Error") => {
+  try {
+    return (
+      error?.response?.data?.message ??
+      error?.message ??
+      defaultMessage
+    );
+  } catch {
+    return defaultMessage;
+  }
+};
 
 export default function ClientesPage() {
   const [openFilter, setOpenFilter] = useState(false);
@@ -74,6 +108,9 @@ export default function ClientesPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filters, setFilters] = useState<ClientFilters>({ active: true });
   const [bulkKey, setBulkKey] = useState(0);
+  // Sorting state
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
   const [openMoveDialog, setOpenMoveDialog] = useState(false);
   const [moveCategories, setMoveCategories] = useState<string[]>([]);
   const [moveLoading, setMoveLoading] = useState(false);
@@ -98,13 +135,16 @@ export default function ClientesPage() {
   const loadClients = async () => {
     setLoading(true);
     try {
+      const pagination: any = { limit, offset: (page - 1) * limit };
+      if (sortKey && sortDir) pagination.orderBy = `${sortKey}:${sortDir}`;
+
       const data = await clientService.getClients(
         { 
           ...filters, 
           name: debouncedSearch || undefined,
           lastName: debouncedSearch || undefined 
         },
-        { limit, offset: (page - 1) * limit }
+        pagination
       );
       setClients(data.rows);
       setTotalCount(data.count);
@@ -152,7 +192,7 @@ export default function ClientesPage() {
 
   useEffect(() => {
     loadClients();
-  }, [page, limit, debouncedSearch, filters]);
+  }, [page, limit, debouncedSearch, filters, sortKey, sortDir]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -695,6 +735,13 @@ export default function ClientesPage() {
             onSelectAll={handleSelectAll}
             onSelectOne={handleSelectOne}
             rowActions={rowActions}
+            sortKey={sortKey ?? undefined}
+            sortDir={sortDir ?? undefined}
+            onSortChange={(key, dir) => {
+              setSortKey(dir ? key : null);
+              setSortDir(dir);
+              setPage(1);
+            }}
             emptyState={
               <div className="flex flex-col items-center justify-center text-center">
                 <img

@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import AuthLayout from "@/layouts/auth-layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ export default function Register() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPwd, setShowPwd] = useState(false);
@@ -25,7 +26,7 @@ export default function Register() {
     if (e) e.preventDefault();
 
 
-    if (!email || !password || !confirm) {
+    if (!name || !email || !password || !confirm) {
       toast.error("Por favor completa todos los campos");
       return;
     }
@@ -36,7 +37,7 @@ export default function Register() {
     }
 
     setIsLoading(true);
-    const res = await signUp({ email, password });
+    const res = await signUp({ email, password, name });
     setIsLoading(false);
 
     if (res?.success) {
@@ -131,6 +132,25 @@ export default function Register() {
 
       {/* Formulario */}
       <form className="space-y-4" onSubmit={handleRegister}>
+        {/* Nombre */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Nombre<span style={{ color: "#F75638" }}>*</span>
+          </label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Tu nombre"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleRegister()}
+              disabled={isLoading}
+              className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 transition-all focus:border-[#0C2459] focus:outline-none focus:ring-2 focus:ring-[#0C2459]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border:white/10 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#F75638] dark:focus:ring-[#F75638]/20"
+              autoComplete="name"
+            />
+          </div>
+        </div>
         {/* Email */}
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">

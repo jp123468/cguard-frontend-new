@@ -42,6 +42,7 @@ import PostSitePage from "./pages/admin/post-sites/PostSitePage"
 import NewOrEditPostSitePage from "./pages/admin/post-sites/NewOrEditPostSitePage"
 import SecurityGuardsPage from "./pages/admin/security-guards/SecurityGuardsPage"
 import NewSecurityGuardPage from "./pages/admin/security-guards/NewSecurityGuardPage"
+import GuardRegistration from "./pages/guard/registration"
 import AdminOfficeUsersPage from "./pages/admin/administrative-office-users/AdminOfficeUsersPage"
 import NewAdminUserPage from "./pages/admin/administrative-office-users/NewAdminUserPage"
 import MessengerPage from "./pages/admin/messenger/MessengerPage"
@@ -140,6 +141,8 @@ export default function App() {
                 </PublicOnlyRoute>
               }
             />
+            <Route path="/guard_registration" element={<GuardRegistration />} />
+            <Route path="/auth/invitation" element={<GuardRegistration />} />
             <Route
               path="/forgot-password"
               element={

@@ -59,21 +59,27 @@ export class ApiService {
     }
 
     if (!response.ok) {
-      const msg =
-        (data && (data.message || data.error || data.detail)) ||
-        (typeof data === "string" && data) ||
-        `Error: ${response.status} ${response.statusText}`;
+      // Build a concise message. If the response is non-JSON and looks like an HTML error page,
+      // avoid including the full HTML body in logs and thrown errors.
+      let msgRaw = (data && (data.message || data.error || data.detail)) || (typeof data === "string" && data) || `Error: ${response.status} ${response.statusText}`;
 
-      // Log detallado para debugging
+      let msg = msgRaw;
+      let fullResponse = data;
+      if (typeof data === "string" && /<\s*!?doctype|<html/i.test(data)) {
+        msg = `Error: ${response.status} ${response.statusText}`;
+        fullResponse = null; // avoid logging large HTML blobs
+      }
+
+      // Log concise info for debugging
       console.error(`[API Error ${response.status}]`, {
         endpoint: url,
         status: response.status,
         message: msg,
-        fullResponse: data,
+        fullResponse,
       });
 
       // Lanzar ApiError para que la UI decida mostrar toast
-      throw new ApiError(msg, response.status, data);
+      throw new ApiError(msg, response.status, fullResponse);
     }
 
 
