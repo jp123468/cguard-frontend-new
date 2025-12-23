@@ -35,6 +35,12 @@ export class ApiService {
 
     const url = `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
+    try {
+      try {
+        const tokenMask = token ? `${String(token).slice(0, 6)}...${String(token).slice(-4)}` : null;
+      } catch {}
+    } catch {}
+
     let response: Response;
     try {
       response = await fetch(url, { ...options, headers });
@@ -69,15 +75,6 @@ export class ApiService {
         msg = `Error: ${response.status} ${response.statusText}`;
         fullResponse = null; // avoid logging large HTML blobs
       }
-
-      // Log concise info for debugging
-      console.error(`[API Error ${response.status}]`, {
-        endpoint: url,
-        status: response.status,
-        message: msg,
-        fullResponse,
-      });
-
       // Lanzar ApiError para que la UI decida mostrar toast
       throw new ApiError(msg, response.status, fullResponse);
     }

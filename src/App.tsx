@@ -109,6 +109,7 @@ import GuardDeviceFallReport from "./pages/admin/Reports/GuardDeviceFallReport"
 import PostOrderAck from "./pages/admin/Reports/PostOrderAck"
 import DocPolicyAck from "./pages/admin/Reports/DocPolicyAck"
 import License from "./pages/admin/Reports/License"
+import EditSecurityGuardPage from "./pages/admin/security-guards/EditSecurityGuardPage";
 
 export default function App() {
   return (
@@ -254,6 +255,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <NewSecurityGuardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/security-guards/edit/:id"
+              element={
+                <ProtectedRoute>
+                  <EditSecurityGuardPage />
                 </ProtectedRoute>
               }
             />

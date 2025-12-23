@@ -41,6 +41,14 @@ const api: AxiosInstance = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = getAuthToken()
+  // Debug: log token presence (masked) and url
+  try {
+    const mask = (t: string | null) => {
+      if (!t) return null;
+      if (t.length <= 12) return t;
+      return `${t.slice(0, 6)}...${t.slice(-4)}`;
+    };
+  } catch {}
   if (token) {
     config.headers.set("Authorization", `Bearer ${token}`)
   }

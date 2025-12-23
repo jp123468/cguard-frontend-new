@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { AuthService, LoginCredentials, SignUpData } from "../services/auth/authService";
+import { setAuthToken, clearAuthToken } from "@/lib/api";
 import { ApiError } from "../services/api/apiService";
 
 interface User { id?: string; email: string; [k: string]: any }
@@ -34,6 +35,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem("authToken");
     if (!token) { setLoading(false); return; }
 
+    // Sync token with axios client instance
+    try { setAuthToken(token); } catch {}
+
     try {
       const userData = await AuthService.getProfile();
       setUser(userData);
@@ -60,6 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await AuthService.signIn(credentials);
       if (response?.token) {
         localStorage.setItem("authToken", response.token);
+        try { setAuthToken(response.token); } catch {}
         setUser(response.user || { email: credentials.email });
         return { success: true };
       }
@@ -81,13 +86,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try { await AuthService.signOut(); } catch {} finally {
-      localStorage.removeItem("authToken"); setUser(null);
+      localStorage.removeItem("authToken");
+      try { clearAuthToken(); } catch {}
+      setUser(null);
     }
   };
 
   const signInWithToken = async (token: string, userData?: any) => {
     try {
       localStorage.setItem("authToken", token);
+      try { setAuthToken(token); } catch {}
       if (userData) {
         setUser(userData);
       } else {

@@ -104,9 +104,11 @@ export const clientService = {
      */
     async getClient(id: string): Promise<Client> {
         const tenantId = getTenantId();
-        const { data } = await api.get<any>(
-            `/tenant/${tenantId}/client-account/${id}`
-        );
+            const { data } = await api.get<any>(
+                `/tenant/${tenantId}/client-account/${id}`,
+                // Prevent global interceptor from showing duplicate toasts; component will show one
+                { toast: { silentError: true } } as any
+            );
         console.log("Respuesta getClient del backend:", data);
         // Mapear zipCode/addressComplement y normalizar active a boolean
         return {

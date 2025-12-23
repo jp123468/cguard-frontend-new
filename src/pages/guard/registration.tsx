@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { NavLink, useSearchParams, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import AuthLayout from "@/layouts/auth-layout";
@@ -41,6 +41,7 @@ export default function GuardRegistration() {
   const [step, setStep] = useState(1);
   const totalSteps = 3;
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const shownToastRef = useRef<string | null>(null);
 
   const errorClass = (field: string) => (errors[field] ? "border-red-600 ring-1 ring-red-600" : "");
 
@@ -80,7 +81,44 @@ export default function GuardRegistration() {
         // Per request: leave all other fields empty (do not prefill)
         // Only `firstName`, `lastName` and `email` are prefilled and locked when present.
 
-      } catch (err) {
+      } catch (err: any) {
+        const msgCandidates = [
+          typeof err?.message === "string" ? err.message : undefined,
+          err?.data?.message,
+          err?.data?.error,
+          err?.message && String(err.message),
+        ].filter(Boolean) as string[];
+        let rawMsg = msgCandidates.join(" ") || "";
+
+        // Normalize repeated sentences: keep first occurrence of consecutive duplicates
+        const parts = rawMsg.split(/([.?!])\s*/).filter(Boolean);
+        const sentences: string[] = [];
+        for (let i = 0; i < parts.length; i += 2) {
+          const sentence = (parts[i] || "").trim();
+          const punct = parts[i + 1] || ".";
+          const full = (sentence + punct).trim();
+          if (!full) continue;
+          if (sentences.length === 0 || sentences[sentences.length - 1] !== full) sentences.push(full);
+        }
+        let msg = sentences.join(" ");
+
+        // Truncate if too long
+        const MAX = 140;
+        if (msg.length > MAX) msg = msg.slice(0, MAX - 3).trim() + "...";
+
+        // If message indicates already-created user, show it once and redirect
+        const lower = msg.toLowerCase();
+        if (lower.includes("ya fue creado") || lower.includes("ya fue creado y no puede")) {
+          if (shownToastRef.current !== msg) {
+            shownToastRef.current = msg;
+            toast.error(msg || "La cuenta ya fue creada — serás redirigido al inicio de sesión.");
+            // clear ref after short delay to allow future toasts
+            setTimeout(() => (shownToastRef.current = null), 3000);
+          }
+          navigate("/login");
+          return;
+        }
+
         setInviteNotFound(true);
       } finally {
         setIsLoading(false);
@@ -371,9 +409,13 @@ export default function GuardRegistration() {
               </div>
 
               <div>
-                <label className={labelClass}>Confirmar contraseña<span style={{ color: "#F75638" }}>*</span></label>
+                <label htmlFor="confirm-password" className={labelClass}>
+                  Confirmar contraseña
+                  <span style={{ color: "#F75638" }}>*</span>
+                </label>
                 <div className="relative">
                   <input
+                    id="confirm-password"
                     type={showConfirm ? "text" : "password"}
                     placeholder="Confirmar contraseña*"
                     value={confirm}

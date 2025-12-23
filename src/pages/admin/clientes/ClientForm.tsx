@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { clientSchema, type ClientInput } from "@/lib/validators/client";
@@ -58,6 +58,14 @@ export default function ClientForm({
     onSaved,
 }: ClientFormProps) {
     const navigate = useNavigate();
+    // Deduplicate toasts in case of multiple mounts (React StrictMode)
+    const shownToasts = useRef<Set<string>>(new Set());
+    const showToastOnce = (key: string, message: string) => {
+        if (shownToasts.current.has(key)) return;
+        shownToasts.current.add(key);
+        toast.error(message);
+    };
+    const [redirecting, setRedirecting] = useState(false);
     const [categories, setCategories] = useState<Category[]>(initialCategories || []);
     const [loadingCategories, setLoadingCategories] = useState(false);
 
@@ -137,7 +145,11 @@ export default function ClientForm({
                     });
                 } catch (e) {
                     console.error(e);
-                    toast.error("No se pudo cargar el cliente");
+                    if (!redirecting) {
+                        setRedirecting(true);
+                        showToastOnce('edit-client-not-found', 'Cliente no encontrado o error al cargar los datos.');
+                        navigate('/clients', { replace: true });
+                    }
                 }
             })();
         }

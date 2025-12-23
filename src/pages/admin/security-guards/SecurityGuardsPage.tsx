@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 
 import { Button } from "@/components/ui/button";
@@ -36,9 +37,13 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  Tag,
+  Archive,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import securityGuardService from "@/lib/api/securityGuardService";
 
 // Tipos para los guardias de seguridad
 type GuardStatus = "Activo" | "Pendiente" | "Invitado";
@@ -49,6 +54,7 @@ interface SecurityGuard {
   email: string;
   phone: string;
   status: GuardStatus;
+  raw?: any; // Para detalles
 }
 
 export default function SecurityGuardsPage() {
@@ -60,12 +66,70 @@ export default function SecurityGuardsPage() {
 
   // Estado principal SIN datos de prueba
   const [guards, setGuards] = useState<SecurityGuard[]>([]);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsGuard, setDetailsGuard] = useState<SecurityGuard | null>(null);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Ejemplo de dónde cargar datos reales:
   useEffect(() => {
-    // (Opcional) Reemplaza con tu fetch:
-    // fetch("/api/guards").then(r => r.json()).then(data => setGuards(data));
-    // Por ahora queda vacío como pediste.
+    let mounted = true;
+    setLoading(true);
+    setError(null);
+    securityGuardService
+      .list()
+      .then((data) => {
+        console.log("[SecurityGuardsPage] securityGuardService.list response:", data);
+        if (!mounted) return;
+        // Algunos endpoints devuelven { rows, count } u otras formas
+        const normalize = (item: any): SecurityGuard => {
+          const guardObj = item.guard ?? {};
+          const id = guardObj.id ?? item.guardId ?? item.id ?? "";
+          const name =
+            (guardObj.firstName && guardObj.lastName)
+              ? `${guardObj.firstName} ${guardObj.lastName}`
+              : item.fullName ?? `${guardObj.firstName ?? ""} ${guardObj.lastName ?? ""}`.trim();
+          const email = guardObj.email ?? item.email ?? "";
+          const phone =
+            guardObj.phone ?? guardObj.phoneNumber ?? item.phone ?? item.mobile ?? "";
+          const status: GuardStatus = ((): GuardStatus => {
+            const s = (guardObj.status ?? item.status ?? "").toString().toLowerCase();
+            if (s === "active" || s === "activo") return "Activo";
+            if (s === "invited" || s === "invitado") return "Invitado";
+            if (s === "pending" || s === "pendiente") return "Pendiente";
+            if (typeof item.isOnDuty === "boolean") return item.isOnDuty ? "Activo" : "Pendiente";
+            return "Pendiente";
+          })();
+
+          return {
+            id,
+            name: name || "-",
+            email,
+            phone,
+            status,
+            raw: item,
+          };
+        };
+
+        if (Array.isArray(data)) setGuards(data.map(normalize));
+        else if (data && Array.isArray((data as any).rows)) setGuards((data as any).rows.map(normalize));
+        else setGuards([]);
+      })
+      .catch((err) => {
+        console.log("[SecurityGuardsPage] securityGuardService.list error:", err);
+        if (!mounted) return;
+        console.error("Error cargando guardias:", err);
+        setError(String(err?.message || err));
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Reiniciar página cuando cambie criterio de búsqueda o tamaño de página
@@ -362,15 +426,29 @@ export default function SecurityGuardsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link to={`/security-guards/edit/${guard.id}`}>
-                                Editar
-                              </Link>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setDetailsGuard(guard);
+                                setDetailsOpen(true);
+                              }}
+                            >
+                              <Eye className="mr-2 h-4 w-4" /> Ver Detalles
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => console.log("Eliminar", guard.id)}
+                              onClick={() => {
+                                // Placeholder para categorizar
+                                alert("Funcionalidad de categorizar próximamente");
+                              }}
                             >
-                              Eliminar
+                              <Tag className="mr-2 h-4 w-4" /> Categorizar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                // Archivar (placeholder)
+                                alert("Guardia archivado (simulado)");
+                              }}
+                            >
+                              <Archive className="mr-2 h-4 w-4" /> Archivo
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -455,6 +533,109 @@ export default function SecurityGuardsPage() {
           </div>
         </section>
       </div>
+      {/* Modal de detalles del guardia */}
+      {detailsOpen && detailsGuard && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={(e) => {
+            // Solo cerrar si el click es en el fondo, no en el modal
+            if (e.target === e.currentTarget) setDetailsOpen(false);
+          }}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl max-w-xl w-full p-6 sm:p-10 relative border border-gray-200 animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl font-bold"
+              onClick={() => setDetailsOpen(false)}
+              aria-label="Cerrar"
+              style={{ lineHeight: 1 }}
+            >
+              ×
+            </button>
+            <h2 className="text-xl sm:text-2xl font-bold mb-1 text-center">Detalles del Guardia</h2>
+            <div className="mb-4 text-xs sm:text-sm text-gray-500 text-center">Información detallada del guardia seleccionado.</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-6">
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Nombre</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.firstName ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Apellidos</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.lastName ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Correo</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.email ?? detailsGuard.email ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Teléfono</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.phoneNumber ?? detailsGuard.phone ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Cédula</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.governmentId ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Credencial Guardia</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guardCredentials ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Dirección</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.address ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Fecha de nacimiento</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.birthDate ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Lugar de nacimiento</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.birthPlace ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Estado civil</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.maritalStatus ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Tipo de sangre</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.bloodType ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Instrucción académica</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.academicInstruction ?? "-"}</div>
+              </div>
+              <div>
+                <div className="font-semibold text-gray-700 text-sm">Contrato</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.hiringContractDate ?? "-"}</div>
+              </div>
+              <div className="sm:col-span-2">
+                <div className="font-semibold text-gray-700 text-sm">Género</div>
+                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.gender ?? "-"}</div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-2">
+              <Button
+                variant="outline"
+                onClick={() => setDetailsOpen(false)}
+                className="text-sm px-4 py-1"
+              >
+                Cerrar
+              </Button>
+              <Button
+                className="bg-orange-500 hover:bg-orange-600 text-white text-sm px-4 py-1"
+                onClick={() => {
+                  setDetailsOpen(false);
+                  const realId = detailsGuard.raw?.id || detailsGuard.id;
+                  navigate(`/security-guards/edit/${realId}`);
+                }}
+              >
+                Editar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }

@@ -160,7 +160,10 @@ const postSiteService = {
   async get(id: string): Promise<any> {
     try {
       const tenantId = getTenantId();
-      const { data } = await api.get(`/tenant/${tenantId}/business-info/${id}`);
+      const { data } = await api.get(`/tenant/${tenantId}/business-info/${id}`, {
+        // Prevent global interceptor from showing duplicate toasts for not-found errors.
+        toast: { silentError: true },
+      } as any);
       // Return raw backend object so callers can access fields like companyName, categoryIds, latitud, longitud, etc.
       console.debug('Fetched post site:', data);
       return data;
