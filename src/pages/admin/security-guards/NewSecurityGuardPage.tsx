@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { RefreshCcw } from "lucide-react";
+import { RefreshCcw, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 import AppLayout from "@/layouts/app-layout";
@@ -56,6 +56,8 @@ export default function NewSecurityGuardPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("invite");
   const [clients, setClients] = useState<Array<{ id: string; name: string; lastName?: string }>>([]);
   const [sites, setSites] = useState<Array<any>>([]);
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+  const [showCreateConfirm, setShowCreateConfirm] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -89,7 +91,18 @@ export default function NewSecurityGuardPage() {
   const onSubmitInvite = async (v: SecurityGuardsFormValues) => {
     try {
       console.log('[NewSecurityGuardPage] invite payload ->', v.entries)
-      await securityGuardService.invite(v.entries);
+      // Normalize entries so backend receives explicit phoneNumber/email fields
+      const payload = v.entries.map((e) => ({
+        firstName: e.firstName,
+        lastName: e.lastName,
+        clientId: e.clientId,
+        postSiteId: e.postSiteId,
+        // backend may expect `phoneNumber` or `email` fields rather than a generic `contact`
+        phoneNumber: e.inviteBy === "SMS" ? e.contact : undefined,
+        email: e.inviteBy === "Correo Electrónico" ? e.contact : undefined,
+        inviteBy: e.inviteBy,
+      }));
+      await securityGuardService.invite(payload);
       console.log('[NewSecurityGuardPage] invite response: sent')
       toast.success("Invitaciones enviadas");
     } catch (e: any) {
@@ -112,7 +125,9 @@ export default function NewSecurityGuardPage() {
   const onSubmitJoin = async (v: JoinByCodeFormValues) => {
     try {
       console.log('[NewSecurityGuardPage] joinByCode payload ->', { code: v.code, entries: v.entries })
-      await securityGuardService.joinByCode(v.code, v.entries);
+      // Ensure backend gets phoneNumber
+      const payload = v.entries.map((e) => ({ phoneNumber: e.phone }));
+      await securityGuardService.joinByCode(v.code, payload);
       console.log('[NewSecurityGuardPage] joinByCode response: sent')
       toast.success("Invitación enviada por código");
     } catch (e: any) {
@@ -135,7 +150,9 @@ export default function NewSecurityGuardPage() {
   const onSubmitLink = async (v: InviteByLinkFormValues) => {
     try {
       console.log('[NewSecurityGuardPage] inviteByLink payload ->', { link: v.link, entries: v.entries })
-      await securityGuardService.inviteByLink(v.link, v.entries);
+      // Ensure backend receives phoneNumber
+      const payload = v.entries.map((e) => ({ phoneNumber: e.phone }));
+      await securityGuardService.inviteByLink(v.link, payload);
       console.log('[NewSecurityGuardPage] inviteByLink response: sent')
       toast.success("Invitación por enlace enviada");
     } catch (e: any) {
@@ -360,7 +377,7 @@ export default function NewSecurityGuardPage() {
               Cree manualmente el perfil del guardia. Deberá validar su correo y número móvil antes de iniciar sesión.
             </p>
 
-            <Form {...createForm}>npm run dev
+            <Form {...createForm}>
               
               <form className="mt-8 grid gap-6" onSubmit={submitCreate(onSubmitCreate)}>
 
@@ -384,10 +401,53 @@ export default function NewSecurityGuardPage() {
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <FormField control={createCtrl} name="password" render={({ field }) => (
-                    <FormItem><FormLabel>Contraseña *</FormLabel><FormControl><Input type="password" placeholder="Contraseña *" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem>
+                      <FormLabel>Contraseña *</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input
+                            type={showCreatePassword ? "text" : "password"}
+                            placeholder="Contraseña *"
+                            {...field}
+                            className="w-full h-12 rounded-lg border border-slate-200 px-4 pr-10"
+                          />
+                        </FormControl>
+                        <button
+                          type="button"
+                          aria-label={showCreatePassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                          onClick={() => setShowCreatePassword((s) => !s)}
+                          className="absolute right-3 top-0 bottom-0 h-12 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
+                        >
+                          {showCreatePassword ? <EyeOff className="h-6 w-6 translate-y-1" /> : <Eye className="h-6 w-6 translate-y-1" />}
+                        </button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
                   )} />
+
                   <FormField control={createCtrl} name="confirmPassword" render={({ field }) => (
-                    <FormItem><FormLabel>Confirmar Contraseña *</FormLabel><FormControl><Input type="password" placeholder="Confirmar Contraseña *" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem>
+                      <FormLabel>Confirmar Contraseña *</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <Input
+                            type={showCreateConfirm ? "text" : "password"}
+                            placeholder="Confirmar Contraseña *"
+                            {...field}
+                            className="w-full h-12 rounded-lg border border-slate-200 px-4 pr-10"
+                          />
+                        </FormControl>
+                        <button
+                          type="button"
+                          aria-label={showCreateConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+                          onClick={() => setShowCreateConfirm((s) => !s)}
+                          className="absolute right-3 top-0 bottom-0 h-12 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
+                        >
+                          {showCreateConfirm ? <EyeOff className="h-6 w-6 translate-y-1" /> : <Eye className="h-6 w-6 translate-y-1" />}
+                        </button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
                   )} />
                 </div>
 

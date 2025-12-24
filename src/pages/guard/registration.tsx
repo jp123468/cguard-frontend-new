@@ -31,6 +31,7 @@ export default function GuardRegistration() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [lockedEmail, setLockedEmail] = useState(false);
+  const [lockedPhone, setLockedPhone] = useState(false);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPwd, setShowPwd] = useState(false);
@@ -54,6 +55,7 @@ export default function GuardRegistration() {
 
   useEffect(() => { 
     const fetchInvite = async () => {
+      console.log('[registration] params ->', { inviteToken, securityGuardId });
       if (!inviteToken && !securityGuardId) return;
       setIsLoading(true);
       try {
@@ -64,6 +66,7 @@ export default function GuardRegistration() {
         const urlWithQs = qp.toString() ? `${endpointBase}?${qp.toString()}` : endpointBase;
         const res = await ApiService.get(urlWithQs);
         const data = res?.data || res;
+        console.log('[registration] invite response ->', data);
         if (!data) {
           setInviteNotFound(true);
           return;
@@ -74,9 +77,14 @@ export default function GuardRegistration() {
         // nombres / email
         const rootFirst = data.firstName || data.guard?.firstName || (data.fullName ? String(data.fullName).split(" ")[0] : undefined);
         const rootLast = data.lastName || data.guard?.lastName || (data.fullName ? String(data.fullName).split(" ").slice(1).join(" ") : undefined);
+        const emailCandidate = data.email || data.guard?.email || undefined;
+        const phoneCandidate = data.guard?.phoneNumber || data.phoneNumber || data.phone || data.mobile || undefined;
+        // Log which fields we will prefill
+        console.log('[registration] prefill candidates ->', { rootFirst, rootLast, emailCandidate, phoneCandidate });
         if (rootFirst) { setFirstName(rootFirst); setLockedFirstName(true); }
         if (rootLast) { setLastName(rootLast); setLockedLastName(true); }
-        if (data.email || data.guard?.email) { setEmail(data.email || data.guard?.email); setLockedEmail(true); }
+        if (emailCandidate) { setEmail(emailCandidate); setLockedEmail(true); }
+        if (phoneCandidate) { setPhone(phoneCandidate); setLockedPhone(true); }
 
         // Per request: leave all other fields empty (do not prefill)
         // Only `firstName`, `lastName` and `email` are prefilled and locked when present.
@@ -213,28 +221,58 @@ export default function GuardRegistration() {
 
     setIsLoading(true);
     try {
-      const payload: any = {
-        firstName: firstName || undefined,
-        lastName: lastName || undefined,
-        email: email || undefined,
-        governmentId: governmentId || undefined,
-        birthDate: birthDate || undefined,
-        birthPlace: birthPlace || undefined,
-        gender: gender || undefined,
-        maritalStatus: maritalStatus || undefined,
-        academicInstruction: academicInstruction || undefined,
-        hiringContractDate: hiringContractDate || undefined,
-        bloodType: bloodType || undefined,
-        guardCredentials: guardCredentials || undefined,
-        address: address || undefined,
-        phone: phone || undefined,
-        password: password || undefined,
-      };
+      // If we fetched an invite object, merge it with only the changed fields
+      let payload: any;
+      if (fetched) {
+        payload = { ...fetched };
+        // Map form fields onto fetched structure, overriding where appropriate
+        payload.firstName = firstName || payload.firstName;
+        payload.lastName = lastName || payload.lastName;
+        payload.email = email || payload.email;
+        payload.governmentId = governmentId || payload.governmentId;
+        payload.birthDate = birthDate || payload.birthDate;
+        payload.birthPlace = birthPlace || payload.birthPlace;
+        payload.gender = gender || payload.gender;
+        payload.maritalStatus = maritalStatus || payload.maritalStatus;
+        payload.academicInstruction = academicInstruction || payload.academicInstruction;
+        payload.hiringContractDate = hiringContractDate || payload.hiringContractDate;
+        payload.bloodType = bloodType || payload.bloodType;
+        payload.guardCredentials = guardCredentials || payload.guardCredentials;
+        payload.address = address || payload.address;
+        payload.phoneNumber = phone || payload.phoneNumber || payload.guard?.phoneNumber || payload.phoneNumber;
+
+        // Ensure nested guard object contains first/last/email/phone
+        payload.guard = { ...(payload.guard || {}) };
+        payload.guard.firstName = firstName || payload.guard.firstName || payload.firstName;
+        payload.guard.lastName = lastName || payload.guard.lastName || payload.lastName;
+        payload.guard.email = (email ?? payload.guard.email) ?? payload.email ?? null;
+        payload.guard.phoneNumber = phone || payload.guard.phoneNumber || payload.phoneNumber || null;
+        // Include password if user provided one so backend can set it on create
+        if (password) payload.password = password;
+      } else {
+        payload = {
+          firstName: firstName || undefined,
+          lastName: lastName || undefined,
+          email: email || undefined,
+          governmentId: governmentId || undefined,
+          birthDate: birthDate || undefined,
+          birthPlace: birthPlace || undefined,
+          gender: gender || undefined,
+          maritalStatus: maritalStatus || undefined,
+          academicInstruction: academicInstruction || undefined,
+          hiringContractDate: hiringContractDate || undefined,
+          bloodType: bloodType || undefined,
+          guardCredentials: guardCredentials || undefined,
+          address: address || undefined,
+          phoneNumber: phone || undefined,
+          password: password || undefined,
+        };
+      }
 
       if (inviteToken) payload.token = inviteToken;
       if (securityGuardId) payload.securityGuardId = securityGuardId;
 
-      // Log payload for backend debugging
+      // Log final payload for backend debugging
       console.log("[registration] payload ->", payload);
 
       // Persist tenantId from fetched invite if missing so tenant-scoped endpoint can be used
@@ -387,7 +425,7 @@ export default function GuardRegistration() {
               </div>
               <div>
                 <label className={labelClass}>Teléfono móvil<span style={{ color: "#F75638" }}>*</span></label>
-                <Input className={`${formControl} ${errorClass('phone')}`} value={phone} onChange={(e: any) => setPhone(e.target.value)} placeholder="p.ej. +12015550123" disabled={isLoading} />
+                <Input className={`${formControl} ${errorClass('phone')}`} value={phone} onChange={(e: any) => setPhone(e.target.value)} placeholder="p.ej. +12015550123" disabled={isLoading || lockedPhone} />
               </div>
             </div>
 

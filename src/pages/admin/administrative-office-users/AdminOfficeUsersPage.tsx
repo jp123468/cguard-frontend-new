@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ApiService } from "@/services/api/apiService";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -54,11 +55,62 @@ export default function AdminOfficeUsersPage() {
 
   const debouncedQuery = useDebounced(query, 450);
 
-  // sin datos de prueba
-  const rows: Array<never> = [];
+  // filas desde API
+  const [rows, setRows] = useState<any[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const tenantId = localStorage.getItem("tenantId") || "";
+        if (!tenantId) return;
+        const res = await ApiService.get(`/tenant/${tenantId}/user`);
+        let users: any[] = [];
+        if (!res) users = [];
+        else if (Array.isArray(res)) users = res;
+        else if (res.rows && Array.isArray(res.rows)) users = res.rows;
+        else users = Array.isArray(res.data) ? res.data : [];
+
+        const normalizeRoles = (roles: any): string[] => {
+          if (!roles) return [];
+          if (Array.isArray(roles)) {
+            return roles
+              .map((r) => (typeof r === "string" ? r : r && (r.name || r.role) ? (r.name || r.role) : ""))
+              .filter(Boolean)
+              .map((s) => String(s).toLowerCase().trim());
+          }
+          if (typeof roles === "string") return [roles.toLowerCase().trim()];
+          if (typeof roles === "object") {
+            const candidate = roles.name || roles.role || roles.type || "";
+            return candidate ? [String(candidate).toLowerCase().trim()] : [];
+          }
+          return [];
+        };
+
+        // Excluir usuarios con rol `securityGuard` (insensible a mayúsculas/espacios y distintos formatos)
+        const filtered = users.filter((u) => {
+          const r = normalizeRoles(u.roles || u.role || u.rolesList);
+          return !(r.includes("securityguard") || r.includes("security_guard") || r.includes("guard"));
+        }).map((u) => ({
+          ...u,
+          _rolesDisplay: (normalizeRoles(u.roles || u.role || u.rolesList) || []).join(", "),
+        }));
+
+        setRows(filtered);
+      } catch (err) {
+        console.error("Error cargando usuarios:", err);
+      }
+    };
+    load();
+  }, []);
+
   const filteredRows = useMemo(() => {
-    // Cuando conectes tu API, usa debouncedQuery y los filtros del sheet
-    return rows;
+    if (!debouncedQuery) return rows;
+    const q = debouncedQuery.toLowerCase();
+    return rows.filter((r) => {
+      const name = (r.firstName || r.name || "").toString().toLowerCase();
+      const email = (r.email || "").toString().toLowerCase();
+      return name.includes(q) || email.includes(q);
+    });
   }, [rows, debouncedQuery]);
 
   return (
@@ -214,8 +266,7 @@ export default function AdminOfficeUsersPage() {
             </thead>
 
             <tbody>
-              {/* sin filas por defecto */}
-              {filteredRows.length === 0 && (
+              {filteredRows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-20">
                     <div className="flex flex-col items-center justify-center text-center">
@@ -224,16 +275,35 @@ export default function AdminOfficeUsersPage() {
                         alt="Sin datos"
                         className="mb-4 h-36"
                       />
-                      <h3 className="text-lg font-semibold">
-                        No se encontraron resultados
-                      </h3>
+                      <h3 className="text-lg font-semibold">No se encontraron resultados</h3>
                       <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-                        No pudimos encontrar ningún elemento que coincida con su
-                        búsqueda
+                        No pudimos encontrar ningún elemento que coincida con su búsqueda
                       </p>
                     </div>
                   </td>
                 </tr>
+              ) : (
+                filteredRows.map((u, i) => (
+                  <tr key={u.id || i} className="border-b">
+                    <td className="px-4 py-3"><Checkbox /></td>
+                    <td className="px-4 py-3">{[u.firstName, u.lastName].filter(Boolean).join(" ") || u.name || "-"}</td>
+                    <td className="px-4 py-3">{u.email || "-"}</td>
+                    <td className="px-4 py-3">{(u.roles || []).join(", ")}</td>
+                    <td className="px-4 py-3">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : "-"}</td>
+                    <td className="px-4 py-3">{u.active === false ? "Inactivo" : "Activo"}</td>
+                    <td className="px-4 py-3 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon"><EllipsisVertical className="h-5 w-5" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => console.log("Editar", u.id)}>Editar</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => console.log("Suspender", u.id)}>Suspender</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -256,7 +326,9 @@ export default function AdminOfficeUsersPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div>0 – 0 de 0</div>
+            <div>
+              {filteredRows.length === 0 ? "0 – 0 de 0" : `1 – ${filteredRows.length} de ${filteredRows.length}`}
+            </div>
           </div>
         </div>
       </section>

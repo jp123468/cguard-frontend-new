@@ -38,14 +38,16 @@ export const securityGuardService = {
     return data;
   },
 
-  async import(file: File) {
+  async import(file: File | Blob, filename?: string) {
     const tenantId = getTenantId();
     const formData = new FormData();
-    formData.append("file", file);
+    // If caller passed a filename, use it; if file is a File, use its name; otherwise fallback
+    const nameToUse = filename ?? (file instanceof File ? file.name : undefined) ?? "upload.csv";
+    formData.append("file", file as Blob, nameToUse);
     const { data } = await api.post(`/tenant/${tenantId}/security-guard/import`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
-    });
-    
+    } as any);
+
     return data;
   },
 
@@ -58,7 +60,20 @@ export const securityGuardService = {
 
   async destroy(ids: string[]) {
     const tenantId = getTenantId();
-    const { data } = await api.delete(`/tenant/${tenantId}/security-guard`, { data: { ids } });
+    const { data } = await api.delete(`/tenant/${tenantId}/security-guard`, { data: { ids }, toast: { silentError: true } });
+
+    return data;
+  },
+
+  async archive(ids: string[]) {
+    const tenantId = getTenantId();
+    const { data } = await api.post(`/tenant/${tenantId}/security-guard/archive`, { ids }, { toast: { silentError: true } });
+
+    return data;
+  },
+  async restore(ids: string[]) {
+    const tenantId = getTenantId();
+    const { data } = await api.post(`/tenant/${tenantId}/security-guard/restore`, { ids }, { toast: { silentError: true } });
 
     return data;
   },
@@ -76,6 +91,17 @@ export const securityGuardService = {
     const { data } = await api.get(`/tenant/${tenantId}/security-guard${qs}`);
 
     return data;
+  },
+
+  async export(format: "excel" | "pdf" | "csv", params?: Record<string, any>) {
+    const tenantId = getTenantId();
+    const qs = params ? `?${new URLSearchParams(params).toString()}&format=${format}` : `?format=${format}`;
+    const response = await api.get(`/tenant/${tenantId}/security-guard/export${qs}`, {
+      responseType: "blob",
+      // prevent global error toast; page will show its own
+      toast: { silentError: true },
+    } as any);
+    return response.data;
   },
 
   async find(id: string) {

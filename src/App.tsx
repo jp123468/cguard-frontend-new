@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import ProtectedRoute, { PublicOnlyRoute } from "@/components/ProtectedRoute"
 import Login from "./pages/auth/login"
 import ForgotPassword from "./pages/auth/forgot-password"
+import ResetPassword from "./pages/auth/reset-password"
 import DashboardPage from "./pages/admin/dashboard/dasboard"
 import LanguagePage from "./pages/idioma/configuracion"
 
@@ -152,6 +153,7 @@ export default function App() {
                 </PublicOnlyRoute>
               }
             />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Rutas protegidas (requieren autenticación) */}
             <Route

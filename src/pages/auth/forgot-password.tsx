@@ -43,12 +43,13 @@ export default function ForgotPassword() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Correo Electrónico<span style={{ color: "#F75638" }}>*</span>
           </label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input
+              id="email"
               type="email"
               placeholder="tu@correo.com"
               value={email}

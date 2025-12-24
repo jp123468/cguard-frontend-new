@@ -83,4 +83,10 @@ export class AuthService {
   static async sendPasswordResetEmail(email: string): Promise<void> {
     return ApiService.post('/auth/send-password-reset-email', { email }, { skipAuth: true })
   }
+
+  static async resetPassword(token: string, newPassword: string): Promise<void> {
+    // Backend may expect { token, newPassword } or { resetToken, password } depending on implementation.
+    // Adjust payload keys if your backend uses different names.
+    return ApiService.post('/auth/reset-password', { token, newPassword }, { skipAuth: true })
+  }
 }

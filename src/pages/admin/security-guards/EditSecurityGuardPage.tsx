@@ -42,6 +42,7 @@ export default function EditSecurityGuardPage() {
     governmentId: "",
     guardCredentials: "",
   });
+  const [fetchedData, setFetchedData] = useState<any>(null);
 
   useEffect(() => {
     if (hasFetched.current) return;
@@ -51,6 +52,7 @@ export default function EditSecurityGuardPage() {
     (async () => {
       try {
         const data = await securityGuardService.get(id);
+        setFetchedData(data);
         const g = data.guard ?? data;
         setForm({
           firstName: g.firstName ?? "",
@@ -128,10 +130,40 @@ export default function EditSecurityGuardPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    securityGuardService.update(id!, form)
-      .then(() => navigate("/security-guards"))
-      .catch((err) => setError("Error guardando cambios: " + err?.message))
-      .finally(() => setLoading(false));
+    (async () => {
+      try {
+        // Merge fetched raw data with only the changed fields from the form so we don't
+        // accidentally overwrite server fields that the form doesn't include.
+        const base = fetchedData ? { ...fetchedData } : {};
+
+        // Update top-level fields from form
+        base.address = form.address ?? base.address;
+        base.birthDate = form.birthDate ?? base.birthDate;
+        base.birthPlace = form.birthPlace ?? base.birthPlace;
+        base.maritalStatus = form.maritalStatus ?? base.maritalStatus;
+        base.bloodType = form.bloodType ?? base.bloodType;
+        base.academicInstruction = form.academicInstruction ?? base.academicInstruction;
+        base.hiringContractDate = form.hiringContractDate ?? base.hiringContractDate;
+        base.gender = form.gender ?? base.gender;
+        base.governmentId = form.governmentId ?? base.governmentId;
+        base.guardCredentials = form.guardCredentials ?? base.guardCredentials;
+
+        // Ensure nested guard object exists and update its fields
+        base.guard = { ...(base.guard || {}) };
+        base.guard.firstName = form.firstName ?? base.guard.firstName;
+        base.guard.lastName = form.lastName ?? base.guard.lastName;
+        // prefer explicit email/phoneNumber from form
+        if (typeof form.email === "string") base.guard.email = form.email;
+        if (typeof form.phoneNumber === "string") base.guard.phoneNumber = form.phoneNumber;
+
+        await securityGuardService.update(id!, base);
+        navigate("/security-guards");
+      } catch (err: any) {
+        setError("Error guardando cambios: " + err?.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }
 
   if (redirecting) return null;
