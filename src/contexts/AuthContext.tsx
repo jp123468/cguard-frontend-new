@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { AuthService, LoginCredentials, SignUpData } from "../services/auth/authService";
 import { setAuthToken, clearAuthToken } from "@/lib/api";
+import { setTenantId as setClientServiceTenantId } from "@/lib/api/clientService";
 import { ApiError } from "../services/api/apiService";
 
-interface User { id?: string; email: string; [k: string]: any }
+interface User { id?: string; email: string; permissions?: string[]; [k: string]: any }
 interface AuthResult { success: boolean; error?: string; needVerification?: boolean }
 interface AuthContextType {
   user: User | null; loading: boolean; error: string | null;
@@ -13,6 +14,8 @@ interface AuthContextType {
   // permite iniciar sesión usando un token (por ejemplo OAuth callback)
   signInWithToken: (token: string, user?: any) => Promise<AuthResult>;
   isAuthenticated: boolean;
+  hasPermission: (perm: string) => boolean;
+  hasAny: (perms: string[]) => boolean;
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -24,16 +27,85 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [permissions, setPermissions] = useState<string[]>(() => {
+    try {
+      const cached = localStorage.getItem('userPermissions');
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  });
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+    try { return localStorage.getItem('userIsAdmin') === 'true'; } catch { return false; }
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Quick diagnostics: dump persisted auth keys and restore tenantId for services
+    try {
+      console.debug('[AuthProvider] localStorage userPermissions=', localStorage.getItem('userPermissions'));
+      console.debug('[AuthProvider] localStorage userIsAdmin=', localStorage.getItem('userIsAdmin'));
+      console.debug('[AuthProvider] localStorage tenantId=', localStorage.getItem('tenantId'));
+      const t = localStorage.getItem('tenantId');
+      if (t) {
+        try { setClientServiceTenantId(t); } catch {}
+      }
+    } catch (e) {}
+
     checkAuth();
   }, []);
+
+  // Expose debug handle for quick inspection in the browser console
+  useEffect(() => {
+    try {
+      (window as any).__APP_AUTH = {
+        user,
+        permissions,
+        isAdmin,
+        loading,
+        authToken: localStorage.getItem('authToken'),
+        tenantId: localStorage.getItem('tenantId'),
+      };
+    } catch (e) {}
+  }, [user, permissions, isAdmin, loading]);
+
+  // Persist permissions and isAdmin whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('userPermissions', JSON.stringify(permissions || []));
+      localStorage.setItem('userIsAdmin', isAdmin ? 'true' : 'false');
+    } catch (e) {}
+  }, [permissions, isAdmin]);
+
+  // Persist tenantId derived from user when user changes, and restore into clientService
+  useEffect(() => {
+    try {
+      const tenantId = (user && Array.isArray(user.tenants) && user.tenants.length > 0)
+        ? (user.tenants[0].tenantId || (user.tenants[0].tenant && user.tenants[0].tenant.id))
+        : null;
+      if (tenantId) {
+        try { localStorage.setItem('tenantId', tenantId); } catch {}
+        try { setClientServiceTenantId(tenantId); } catch {}
+      }
+    } catch (e) {}
+  }, [user]);
 
   const checkAuth = async () => {
     const token = localStorage.getItem("authToken");
     if (!token) { setLoading(false); return; }
+
+    // restore cached permissions/tenant quickly to avoid UI flash
+    try {
+      const cached = localStorage.getItem('userPermissions');
+      if (cached) {
+        try { setPermissions(JSON.parse(cached)); } catch { setPermissions([]); }
+      }
+      const cachedAdmin = localStorage.getItem('userIsAdmin');
+      if (cachedAdmin) setIsAdmin(cachedAdmin === 'true');
+      const cachedTenant = localStorage.getItem('tenantId');
+      if (cachedTenant) {
+        try { /* nothing else needed here */ } catch {}
+      }
+    } catch {}
 
     // Sync token with axios client instance
     try { setAuthToken(token); } catch {}
@@ -41,6 +113,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const userData = await AuthService.getProfile();
       setUser(userData);
+      // normalize permissions and admin flag
+      const { perms, admin } = extractPermissionsFromUser(userData);
+      setPermissions(perms);
+      // Debug: show extracted permissions for current tenant
+      try { console.debug('[AuthContext] extracted permissions for tenant:', perms); } catch (e) {}
+      setIsAdmin(admin);
+      // persist for fast restore on next reload
+      try { localStorage.setItem('userPermissions', JSON.stringify(perms)); localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
     } catch (e: any) {
       if (e instanceof ApiError) {
         console.warn("getProfile falló:", e.status, e.message);
@@ -65,7 +145,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (response?.token) {
         localStorage.setItem("authToken", response.token);
         try { setAuthToken(response.token); } catch {}
-        setUser(response.user || { email: credentials.email });
+        const u = response.user || { email: credentials.email };
+        setUser(u);
+        const { perms, admin } = extractPermissionsFromUser(u);
+        setPermissions(perms);
+        try { localStorage.setItem('userPermissions', JSON.stringify(perms)); localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
+        // store tenantId quickly if available
+        try {
+          const tenantId = (u.tenants && u.tenants[0] && (u.tenants[0].tenantId || (u.tenants[0].tenant && u.tenants[0].tenant.id))) || null;
+          if (tenantId) localStorage.setItem('tenantId', tenantId);
+        } catch {}
+        try { console.debug('[AuthContext] permissions after signIn:', perms); } catch (e) {}
+        setIsAdmin(admin);
         return { success: true };
       }
       throw new Error("No se recibió token de autenticación");
@@ -87,6 +178,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try { await AuthService.signOut(); } catch {} finally {
       localStorage.removeItem("authToken");
+      try { localStorage.removeItem('userPermissions'); localStorage.removeItem('userIsAdmin'); localStorage.removeItem('tenantId'); } catch {}
       try { clearAuthToken(); } catch {}
       setUser(null);
     }
@@ -98,11 +190,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try { setAuthToken(token); } catch {}
       if (userData) {
         setUser(userData);
+        const { perms, admin } = extractPermissionsFromUser(userData);
+        setPermissions(perms);
+        setIsAdmin(admin);
       } else {
         // intenta hidratar profile desde el backend
         try {
           const u = await AuthService.getProfile();
           setUser(u);
+          const { perms, admin } = extractPermissionsFromUser(u);
+          setPermissions(perms);
+          setIsAdmin(admin);
         } catch (e) {
           // ignore
         }
@@ -115,9 +213,86 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  function matchesByAlias(requested: string): boolean {
+    if (!requested) return false;
+    // direct match
+    if (permissions.includes(requested)) return true;
+    // try to match by action suffix and resource substring
+    const m = requested.match(/(.*?)(Import|Create|Edit|Destroy|Read|Autocomplete|Export|Restore|Archive)$/i);
+    if (m) {
+      const resource = m[1];
+      const action = m[2];
+      const actionNorm = action.charAt(0).toUpperCase() + action.slice(1);
+      const found = permissions.find((p) => p.endsWith(actionNorm) && p.toLowerCase().includes(resource.toLowerCase()));
+      if (found) return true;
+    }
+    // try reverse: requested might be full resource like clientAccountEdit while permissions use clientEdit
+    const m2 = requested.match(/(.*?)(Import|Create|Edit|Destroy|Read|Autocomplete|Export|Restore|Archive)$/i);
+    if (m2) {
+      const action = m2[2];
+      const actionNorm = action.charAt(0).toUpperCase() + action.slice(1);
+      const found = permissions.find((p) => p.endsWith(actionNorm) && p.toLowerCase().includes(requested.toLowerCase()));
+      if (found) return true;
+    }
+    return false;
+  }
+
+  const hasPermission = (perm: string) => {
+    if (isAdmin) return true;
+    if (!permissions || permissions.length === 0) return false;
+    const ok = matchesByAlias(perm);
+    // Debug: only log client-related permission checks to avoid noisy logs
+    try {
+      if (perm && perm.toLowerCase().includes('client')) {
+        console.debug('[AuthContext] hasPermission check', { perm, isAdmin, permissions, result: ok });
+      }
+    } catch (e) {}
+    return ok;
+  };
+
+  const hasAny = (perms: string[]) => {
+    if (isAdmin) return true;
+    if (!perms || perms.length === 0) return false;
+    return perms.some((p) => hasPermission(p));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, error, signIn, signUp, signOut, signInWithToken, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, error, signIn, signUp, signOut, signInWithToken, isAuthenticated: !!user, hasPermission, hasAny }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+function extractPermissionsFromUser(u: any): { perms: string[]; admin: boolean } {
+  if (!u) return { perms: [], admin: false };
+  // If user has a tenants array, prefer tenant-scoped permissions for current tenant
+  const tenantId = localStorage.getItem('tenantId');
+  let tenantEntry: any = null;
+  if (Array.isArray(u.tenants) && u.tenants.length > 0) {
+    if (tenantId) {
+      tenantEntry = u.tenants.find((t: any) => (t.tenantId === tenantId) || (t.tenant && (t.tenant.id === tenantId || t.tenant.tenantId === tenantId)));
+    }
+    if (!tenantEntry) tenantEntry = u.tenants[0];
+  }
+
+  // candidate permission sources
+  const p = (tenantEntry && (tenantEntry.permissions ?? tenantEntry.perms)) ?? u.permissions ?? u.perms ?? u.role?.permissions ?? u.roles?.permissions;
+  const roles = (tenantEntry && tenantEntry.roles) ?? u.roles ?? u.role ?? [];
+
+  const admin = Array.isArray(roles) ? roles.includes('admin') : (typeof roles === 'string' ? roles === 'admin' : false);
+
+  let perms: string[] = [];
+  if (!p) perms = [];
+  else if (Array.isArray(p)) perms = p;
+  else if (typeof p === 'string') {
+    try {
+      const parsed = JSON.parse(p);
+      if (Array.isArray(parsed)) perms = parsed;
+      else perms = p.split(/\s*,\s*/).filter(Boolean);
+    } catch {
+      perms = p.split(/\s*,\s*/).filter(Boolean);
+    }
+  }
+
+  return { perms, admin };
+}

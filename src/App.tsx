@@ -46,6 +46,7 @@ import NewSecurityGuardPage from "./pages/admin/security-guards/NewSecurityGuard
 import GuardRegistration from "./pages/guard/registration"
 import AdminOfficeUsersPage from "./pages/admin/administrative-office-users/AdminOfficeUsersPage"
 import NewAdminUserPage from "./pages/admin/administrative-office-users/NewAdminUserPage"
+import EditAdminUserPage from "./pages/admin/administrative-office-users/EditAdminUserPage";
 import MessengerPage from "./pages/admin/messenger/MessengerPage"
 import DispatcherPage from "./pages/admin/dispatcher/DispatcherPage"
 import NewDispatchPage from "./pages/admin/dispatcher/NewDispatchPage"
@@ -281,6 +282,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <NewAdminUserPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/back-office/edit/:id"
+              element={
+                <ProtectedRoute>
+                  <EditAdminUserPage />
                 </ProtectedRoute>
               }
             />

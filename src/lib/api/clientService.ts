@@ -1,4 +1,4 @@
-import api from "../api";
+import api, { getAuthToken } from "../api";
 import type {
     Client,
     ClientInput,
@@ -165,10 +165,19 @@ export const clientService = {
             payload.addressComplement = input.addressLine2;
             delete payload.addressLine2;
         }
-        const { data } = await api.put<any>(
-            `/tenant/${tenantId}/client-account/${id}`,
-            payload
-        );
+            // Debug: log tenant, masked token and payload to help diagnose 403 Forbidden
+            try {
+                const token = typeof getAuthToken === 'function' ? getAuthToken() : null;
+                const masked = token ? (token.length > 12 ? `${token.slice(0, 6)}...${token.slice(-4)}` : token) : null;
+                console.log('[clientService] PUT', `/tenant/${tenantId}/client-account/${id}`, 'tenantId=', tenantId, 'token=', masked, 'payload=', payload);
+            } catch (e) {
+                // ignore logging errors
+            }
+
+            const { data } = await api.put<any>(
+                `/tenant/${tenantId}/client-account/${id}`,
+                payload
+            );
         // Mapear zipCode y addressComplement del backend a postalCode y addressLine2 del frontend en la respuesta
         return {
             ...data,

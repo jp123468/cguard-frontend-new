@@ -41,6 +41,8 @@ import { SubmitBar } from "@/components/app/submit-bar";
 import { clientService } from "@/lib/api/clientService";
 import { securityGuardService } from "@/lib/api/securityGuardService";
 import { postSiteService } from "@/lib/api/postSiteService";
+import { usePermissions } from '@/hooks/usePermissions';
+import { useNavigate } from 'react-router-dom';
 
 // Helpers
 const blankInviteEntry = (inviteBy: GuardEntryValues["inviteBy"] = "Correo Electrónico"): GuardEntryValues => ({
@@ -53,6 +55,15 @@ const genCode = () => String(Math.floor(100000 + Math.random() * 900000));
 type TabKey = "invite" | "join_code" | "invite_link" | "create_profile";
 
 export default function NewSecurityGuardPage() {
+  const { hasPermission } = usePermissions();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!hasPermission('securityGuardCreate')) {
+      toast.error('No tienes permiso para crear guardias');
+      navigate('/security-guards');
+    }
+  }, [hasPermission, navigate]);
   const [activeTab, setActiveTab] = useState<TabKey>("invite");
   const [clients, setClients] = useState<Array<{ id: string; name: string; lastName?: string }>>([]);
   const [sites, setSites] = useState<Array<any>>([]);
@@ -84,7 +95,7 @@ export default function NewSecurityGuardPage() {
     defaultValues: { entries: [blankInviteEntry("Correo Electrónico")] },
     mode: "onTouched",
   });
-  const { control: inviteCtrl, handleSubmit: submitInvite, setValue: setInviteValue, formState: inviteState } = inviteForm;
+  const { control: inviteCtrl, handleSubmit: submitInvite, setValue: setInviteValue, formState: inviteState, setError: setInviteError } = inviteForm;
   const { fields: inviteFields, append: inviteAppend, remove: inviteRemove } = useFieldArray({ control: inviteCtrl, name: "entries" });
   const inviteEntries = useWatch({ control: inviteCtrl, name: "entries" });
 
@@ -107,7 +118,15 @@ export default function NewSecurityGuardPage() {
       toast.success("Invitaciones enviadas");
     } catch (e: any) {
       console.error('[NewSecurityGuardPage] invite error <-', e)
-      toast.error(e?.message ?? "Error al enviar invitaciones");
+      try {
+        const { applyValidationErrorsToForm } = await import('@/lib/utils/formErrorMapper');
+        const result = applyValidationErrorsToForm(e, setInviteError as any);
+        const msgs = Array.isArray(result) ? result : result.messages;
+        if (msgs && msgs.length > 0) msgs.forEach((m) => toast.error(m));
+        else toast.error(e?.message ?? "Error al enviar invitaciones");
+      } catch (ex) {
+        toast.error(e?.message ?? "Error al enviar invitaciones");
+      }
     }
   };
 
@@ -118,7 +137,7 @@ export default function NewSecurityGuardPage() {
     defaultValues: { code: initialCode, entries: [blankJoinEntry()] },
     mode: "onTouched",
   });
-  const { control: joinCtrl, handleSubmit: submitJoin, setValue: setJoinValue, getValues: getJoinValues, formState: joinState } = joinForm;
+  const { control: joinCtrl, handleSubmit: submitJoin, setValue: setJoinValue, getValues: getJoinValues, formState: joinState, setError: setJoinError } = joinForm;
   const { fields: joinFields, append: joinAppend, remove: joinRemove } = useFieldArray({ control: joinCtrl, name: "entries" });
   const codeValue = useWatch({ control: joinCtrl, name: "code" });
 
@@ -132,7 +151,15 @@ export default function NewSecurityGuardPage() {
       toast.success("Invitación enviada por código");
     } catch (e: any) {
       console.error('[NewSecurityGuardPage] joinByCode error <-', e)
-      toast.error(e?.message ?? "Error al enviar invitación por código");
+      try {
+        const { applyValidationErrorsToForm } = await import('@/lib/utils/formErrorMapper');
+        const result = applyValidationErrorsToForm(e, setJoinError as any);
+        const msgs = Array.isArray(result) ? result : result.messages;
+        if (msgs && msgs.length > 0) msgs.forEach((m) => toast.error(m));
+        else toast.error(e?.message ?? "Error al enviar invitación por código");
+      } catch (ex) {
+        toast.error(e?.message ?? "Error al enviar invitación por código");
+      }
     }
   };
   const regenCode = () => setJoinValue("code", genCode(), { shouldValidate: true });
@@ -143,7 +170,7 @@ export default function NewSecurityGuardPage() {
     defaultValues: { link: "https://gp.guardspro.com/guard-join/your-company", entries: [blankLinkEntry()] },
     mode: "onTouched",
   });
-  const { control: linkCtrl, handleSubmit: submitLink, getValues: getLinkValues, formState: linkState } = linkForm;
+  const { control: linkCtrl, handleSubmit: submitLink, getValues: getLinkValues, formState: linkState, setError: setLinkError } = linkForm;
   const { fields: linkFields, append: linkAppend, remove: linkRemove } = useFieldArray({ control: linkCtrl, name: "entries" });
   const linkValue = useWatch({ control: linkCtrl, name: "link" });
 
@@ -157,7 +184,15 @@ export default function NewSecurityGuardPage() {
       toast.success("Invitación por enlace enviada");
     } catch (e: any) {
       console.error('[NewSecurityGuardPage] inviteByLink error <-', e)
-      toast.error(e?.message ?? "Error al enviar invitación por enlace");
+      try {
+        const { applyValidationErrorsToForm } = await import('@/lib/utils/formErrorMapper');
+        const result = applyValidationErrorsToForm(e, setLinkError as any);
+        const msgs = Array.isArray(result) ? result : result.messages;
+        if (msgs && msgs.length > 0) msgs.forEach((m) => toast.error(m));
+        else toast.error(e?.message ?? "Error al enviar invitación por enlace");
+      } catch (ex) {
+        toast.error(e?.message ?? "Error al enviar invitación por enlace");
+      }
     }
   };
 
@@ -168,7 +203,7 @@ export default function NewSecurityGuardPage() {
     defaultValues: { firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "", clientId: "", postSiteId: "" },
     mode: "onTouched",
   });
-  const { control: createCtrl, handleSubmit: submitCreate, formState: createState } = createForm;
+  const { control: createCtrl, handleSubmit: submitCreate, formState: createState, setError: setCreateError } = createForm;
 
   const onSubmitCreate = async (v: CreateProfileValues) => {
     try {
@@ -182,7 +217,15 @@ export default function NewSecurityGuardPage() {
       }
     } catch (e: any) {
       console.error('[NewSecurityGuardPage] createProfile error <-', e)
-      toast.error(e?.message ?? "Error al crear perfil");
+      try {
+        const { applyValidationErrorsToForm } = await import('@/lib/utils/formErrorMapper');
+        const result = applyValidationErrorsToForm(e, setCreateError as any);
+        const msgs = Array.isArray(result) ? result : result.messages;
+        if (msgs && msgs.length > 0) msgs.forEach((m) => toast.error(m));
+        else toast.error(e?.message ?? "Error al crear perfil");
+      } catch (ex) {
+        toast.error(e?.message ?? "Error al crear perfil");
+      }
     }
   };
 

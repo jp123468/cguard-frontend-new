@@ -59,6 +59,7 @@ import Breadcrumb from "@/components/ui/breadcrumb";
 import securityGuardService from "@/lib/api/securityGuardService";
 import { toast } from "sonner";
 import * as XLSX from 'xlsx';
+import { usePermissions } from '@/hooks/usePermissions';
 
 // Tipos para los guardias de seguridad
 type GuardStatus = "Activo" | "Pendiente" | "Invitado" | "Archivado";
@@ -73,6 +74,7 @@ interface SecurityGuard {
 }
 
 export default function SecurityGuardsPage() {
+  const { hasPermission } = usePermissions();
   const [openFilter, setOpenFilter] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGuards, setSelectedGuards] = useState<string[]>([]);
@@ -80,6 +82,12 @@ export default function SecurityGuardsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(25);
   // Mostrar guardias activos por defecto; el usuario puede cambiar el filtro.
   const [filterStatus, setFilterStatus] = useState<string>("activos");
+  // Filtros adicionales (controlados) para permitir "Limpiar filtros"
+  const [filterCategory, setFilterCategory] = useState<string>("todas");
+  const [filterClient, setFilterClient] = useState<string>("todos");
+  const [filterSite, setFilterSite] = useState<string>("todos");
+  const [filterSkills, setFilterSkills] = useState<string>("todos");
+  const [filterDepartment, setFilterDepartment] = useState<string>("todos");
 
   // Estado principal SIN datos de prueba
   const [guards, setGuards] = useState<SecurityGuard[]>([]);
@@ -378,6 +386,18 @@ export default function SecurityGuardsPage() {
                     return;
                   }
 
+                  // Permission checks for bulk actions
+                  if (v === 'eliminar' && !hasPermission('securityGuardDestroy')) {
+                    toast.error('No tienes permiso para eliminar guardias');
+                    setBulkActionValue("");
+                    return;
+                  }
+                  if ((v === 'archivar' || v === 'restaurar' || v === 'mover') && !hasPermission('securityGuardEdit')) {
+                    toast.error('No tienes permiso para modificar guardias');
+                    setBulkActionValue("");
+                    return;
+                  }
+
                   const ids = selectedGuards.map((sid) => {
                     const g = guards.find((x) => x.id === sid);
                     return g?.raw?.id || sid;
@@ -420,9 +440,11 @@ export default function SecurityGuardsPage() {
                 />
               </div>
 
-              <Button className="bg-orange-500 hover:bg-orange-600 text-white" asChild>
-                <Link to="/security-guards/new">Nuevo Guardia</Link>
-              </Button>
+              {hasPermission('securityGuardCreate') && (
+                <Button className="bg-orange-500 hover:bg-orange-600 text-white" asChild>
+                  <Link to="/security-guards/new">Nuevo Guardia</Link>
+                </Button>
+              )}
 
               {/* Filtros */}
               <Sheet open={openFilter} onOpenChange={setOpenFilter}>
@@ -443,7 +465,7 @@ export default function SecurityGuardsPage() {
                   <div className="mt-6 space-y-4">
                     <div className="space-y-2">
                       <Label>Categorías</Label>
-                      <Select>
+                      <Select value={filterCategory} onValueChange={(v) => setFilterCategory(v)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Categorías" />
                         </SelectTrigger>
@@ -455,7 +477,7 @@ export default function SecurityGuardsPage() {
 
                     <div className="space-y-2">
                       <Label>Cliente</Label>
-                      <Select>
+                      <Select value={filterClient} onValueChange={(v) => setFilterClient(v)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Cliente" />
                         </SelectTrigger>
@@ -467,7 +489,7 @@ export default function SecurityGuardsPage() {
 
                     <div className="space-y-2">
                       <Label>Sitio de publicación</Label>
-                      <Select>
+                      <Select value={filterSite} onValueChange={(v) => setFilterSite(v)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Sitio de publicación" />
                         </SelectTrigger>
@@ -479,7 +501,7 @@ export default function SecurityGuardsPage() {
 
                     <div className="space-y-2">
                       <Label>Conjunto de Habilidades</Label>
-                      <Select>
+                      <Select value={filterSkills} onValueChange={(v) => setFilterSkills(v)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Conjunto de Habilidades" />
                         </SelectTrigger>
@@ -491,7 +513,7 @@ export default function SecurityGuardsPage() {
 
                     <div className="space-y-2">
                       <Label>Departamento</Label>
-                      <Select>
+                      <Select value={filterDepartment} onValueChange={(v) => setFilterDepartment(v)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Departamento" />
                         </SelectTrigger>
@@ -524,6 +546,8 @@ export default function SecurityGuardsPage() {
                       </Select>
                     </div>
 
+                    
+
                     <Button
                       className="w-full bg-orange-500 hover:bg-orange-600 text-white"
                       onClick={() => {
@@ -532,6 +556,20 @@ export default function SecurityGuardsPage() {
                       }}
                     >
                       Filtro
+                    </Button>
+                    <Button
+                      className="w-full bg-white text-black border hover:bg-gray-50"
+                      onClick={() => {
+                        // Limpiar filtros: resetear filtros controlados y mantener la hoja abierta
+                        setFilterCategory("todas");
+                        setFilterClient("todos");
+                        setFilterSite("todos");
+                        setFilterSkills("todos");
+                        setFilterDepartment("todos");
+                        setFilterStatus("activos");
+                      }}
+                    >
+                      Limpiar filtros
                     </Button>
                   </div>
                 </SheetContent>
@@ -551,9 +589,11 @@ export default function SecurityGuardsPage() {
                     <DropdownMenuItem onClick={async () => { if (!(await exportFromBackend('excel'))) downloadFallback('excel', filteredGuards); }}>
                       <FileSpreadsheet className="mr-2 h-4 w-4" /> Exportar como Excel
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
-                      <ArrowDownUp className="mr-2 h-4 w-4" /> Importar
-                    </DropdownMenuItem>
+                    {hasPermission('securityGuardImport') && (
+                      <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
+                        <ArrowDownUp className="mr-2 h-4 w-4" /> Importar
+                      </DropdownMenuItem>
+                    )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -647,53 +687,65 @@ export default function SecurityGuardsPage() {
                                   <Copy className="mr-2 h-4 w-4" /> Copiar enlace de registro
                                 </DropdownMenuItem>
 
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setGuardToDelete(guard);
-                                    setDeleteDialogOpen(true);
-                                  }}
-                                >
-                                  <Trash className="mr-2 h-4 w-4" /> Remover
-                                </DropdownMenuItem>
+                                {hasPermission('securityGuardDestroy') && (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setGuardToDelete(guard);
+                                      setDeleteDialogOpen(true);
+                                    }}
+                                  >
+                                    <Trash className="mr-2 h-4 w-4" /> Remover
+                                  </DropdownMenuItem>
+                                )}
                               </>
                             ) : (
                               <>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setDetailsGuard(guard);
-                                    setDetailsOpen(true);
-                                  }}
-                                >
-                                  <Eye className="mr-2 h-4 w-4" /> Ver Detalles
-                                </DropdownMenuItem>
-                                {guard.status === "Archivado" ? (
-                                  <>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setGuardToRestore(guard);
-                                        setRestoreDialogOpen(true);
-                                      }}
-                                    >
-                                      <RotateCw className="mr-2 h-4 w-4" /> Restaurar
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setGuardToDelete(guard);
-                                        setDeleteDialogOpen(true);
-                                      }}
-                                    >
-                                      <Archive className="mr-2 h-4 w-4" /> Eliminar permanentemente
-                                    </DropdownMenuItem>
-                                  </>
-                                ) : (
+                                {hasPermission('securityGuardRead') && (
                                   <DropdownMenuItem
                                     onClick={() => {
-                                      setGuardToArchive(guard);
-                                      setArchiveDialogOpen(true);
+                                      setDetailsGuard(guard);
+                                      setDetailsOpen(true);
                                     }}
                                   >
-                                    <Archive className="mr-2 h-4 w-4" /> Archivo
+                                    <Eye className="mr-2 h-4 w-4" /> Ver Detalles
                                   </DropdownMenuItem>
+                                )}
+                                {guard.status === "Archivado" ? (
+                                  <>
+                                    {hasPermission('securityGuardEdit') && (
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setGuardToRestore(guard);
+                                          setRestoreDialogOpen(true);
+                                        }}
+                                      >
+                                        <RotateCw className="mr-2 h-4 w-4" /> Restaurar
+                                      </DropdownMenuItem>
+                                    )}
+                                    {hasPermission('securityGuardDestroy') && (
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setGuardToDelete(guard);
+                                          setDeleteDialogOpen(true);
+                                        }}
+                                      >
+                                        <Archive className="mr-2 h-4 w-4" /> Eliminar permanentemente
+                                      </DropdownMenuItem>
+                                    )}
+                                  </>
+                                ) : (
+                                  <>
+                                    {hasPermission('securityGuardEdit') && (
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setGuardToArchive(guard);
+                                          setArchiveDialogOpen(true);
+                                        }}
+                                      >
+                                        <Archive className="mr-2 h-4 w-4" /> Archivar
+                                      </DropdownMenuItem>
+                                    )}
+                                  </>
                                 )}
                               </>
                             )}
@@ -1139,16 +1191,18 @@ export default function SecurityGuardsPage() {
               >
                 Cerrar
               </Button>
-              <Button
-                className="bg-orange-500 hover:bg-orange-600 text-white text-sm px-4 py-1"
-                onClick={() => {
-                  setDetailsOpen(false);
-                  const realId = detailsGuard.raw?.id || detailsGuard.id;
-                  navigate(`/security-guards/edit/${realId}`);
-                }}
-              >
-                Editar
-              </Button>
+              {hasPermission('securityGuardEdit') && (
+                <Button
+                  className="bg-orange-500 hover:bg-orange-600 text-white text-sm px-4 py-1"
+                  onClick={() => {
+                    setDetailsOpen(false);
+                    const realId = detailsGuard.raw?.id || detailsGuard.id;
+                    navigate(`/security-guards/edit/${realId}`);
+                  }}
+                >
+                  Editar
+                </Button>
+              )}
             </div>
           </div>
         </div>

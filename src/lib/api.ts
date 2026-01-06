@@ -50,7 +50,13 @@ api.interceptors.request.use((config) => {
     };
   } catch {}
   if (token) {
-    config.headers.set("Authorization", `Bearer ${token}`)
+    if (!config.headers) config.headers = {} as any;
+    try {
+      // Axios headers may be a plain object; set Authorization reliably
+      (config.headers as any)["Authorization"] = `Bearer ${token}`
+    } catch (e) {
+      // fallback: ignore
+    }
   }
   if (config.toast?.loading) {
     const id = toast.loading(config.toast.loading)
@@ -62,12 +68,19 @@ api.interceptors.request.use((config) => {
 function normalizeError(error: AxiosError): ApiError {
   const status = error.response?.status ?? (error.code === "ECONNABORTED" ? 408 : 0)
   const data: any = error.response?.data
-  const message =
-    data?.message ||
-    data?.error ||
-    (Array.isArray(data?.errors) ? data.errors.join(", ") : data?.errors) ||
-    error.message ||
-    "Error"
+  let message = error.message || "Error"
+  if (data) {
+    if (typeof data === "string") {
+      // Backend returned plain text (localized message)
+      message = data.trim()
+    } else {
+      message =
+        data?.message ||
+        data?.error ||
+        (Array.isArray(data?.errors) ? data.errors.join(", ") : data?.errors) ||
+        message
+    }
+  }
 
   const code = (data?.code as string | undefined) ?? error.code
 

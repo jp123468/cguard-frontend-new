@@ -9,9 +9,10 @@ interface BreadcrumbItem {
 
 interface BreadcrumbProps {
   items?: BreadcrumbItem[];
+  className?: string;
 }
 
-const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => {
+const Breadcrumb: React.FC<BreadcrumbProps> = ({ items, className }) => {
   const location = useLocation();
 
   // Si no se pasan items, generamos a partir de la URL actual
@@ -24,7 +25,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => {
     }));
 
   return (
-    <nav className="bg-white border-b border-gray-200 px-6 py-6">
+    <nav className={`bg-white border-b border-gray-200 px-6 py-6 ${className || ""}`}>
       <ol className="flex items-center text-sm">
         {generatedItems.map((item, index) => {
           const isLast = index === generatedItems.length - 1;

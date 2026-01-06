@@ -66,6 +66,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { CategorySelect } from "@/components/categories/CategorySelect";
 import { ImportDialog } from "@/components/clients/ImportDialog";
+import { usePermissions } from "@/hooks/usePermissions";
 // Local replacement for missing hook: useDebouncedValue
 function useDebouncedValue<T>(value: T, delay = 300): T {
   const [debounced, setDebounced] = useState<T>(value);
@@ -91,6 +92,7 @@ const getServerErrorMessage = (error: any, defaultMessage = "Error") => {
 };
 
 export default function ClientesPage() {
+  const { hasPermission } = usePermissions();
   const [openFilter, setOpenFilter] = useState(false);
   const [openImport, setOpenImport] = useState(false);
   const [openCategoryManager, setOpenCategoryManager] = useState(false);
@@ -414,18 +416,20 @@ export default function ClientesPage() {
   };
 
   const bulkActions: BulkAction[] = useMemo(() => {
-    const actions: BulkAction[] = [{ value: "mover", label: "Mover" }];
+    const actions: BulkAction[] = [];
+    // mover (cambiar categoría) requires edit
+    if (hasPermission('clientAccountEdit')) actions.push({ value: "mover", label: "Mover" });
     if (filters.active === true) {
-      actions.push({ value: "archivar", label: "Archivar" });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "archivar", label: "Archivar" });
     } else if (filters.active === false) {
-      actions.push({ value: "restaurar", label: "Restaurar" });
-      actions.push({ value: "eliminar", label: "Eliminar" });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "restaurar", label: "Restaurar" });
+      if (hasPermission('clientAccountDestroy')) actions.push({ value: "eliminar", label: "Eliminar" });
     } else {
-      actions.push({ value: "archivar", label: "Archivar" });
-      actions.push({ value: "restaurar", label: "Restaurar" });
-      actions.push({ value: "eliminar", label: "Eliminar" });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "archivar", label: "Archivar" });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "restaurar", label: "Restaurar" });
+      if (hasPermission('clientAccountDestroy')) actions.push({ value: "eliminar", label: "Eliminar" });
     }
-    actions.push({ value: "gestionar-categorias", label: "Gestionar Categorías" });
+    if (hasPermission('clientAccountEdit')) actions.push({ value: "gestionar-categorias", label: "Gestionar Categorías" });
     return actions;
   }, [filters.active]);
 
@@ -465,59 +469,67 @@ export default function ClientesPage() {
 
   const rowActions = (client: Client): RowAction[] => {
     const isActive = client.active === true;
+    const actions: RowAction[] = [];
+
+    if (hasPermission('clientAccountRead')) {
+      actions.push({
+        label: "Ver Detalles",
+        icon: <Eye className="h-4 w-4" />,
+        onClick: () => {
+          setSelectedClientId(client.id);
+          setOpenClientDetails(true);
+        },
+      });
+    }
 
     if (isActive) {
-      return [
-        {
-          label: "Ver Detalles",
-          icon: <Eye className="h-4 w-4" />,
-          onClick: () => {
-            setSelectedClientId(client.id);
-            setOpenClientDetails(true);
-          },
-        },
-        {
+      if (hasPermission('clientAccountEdit')) {
+        actions.push({
           label: "Categorizar",
           icon: <Tag className="h-4 w-4" />,
           onClick: () => openCategorizeForClient(client),
-        },
-        {
+        });
+
+        actions.push({
           label: "Archivo",
           icon: <Archive className="h-4 w-4" />,
-          onClick: () => {
-            setArchiveSingleClient(client);
-            setOpenArchiveSingleDialog(true);
+          onClick: async () => {
+            try {
+              await clientService.updateClient(client.id, { active: false } as any);
+              toast.success("Cliente archivado");
+              // refresh list
+              loadClients();
+            } catch (error: any) {
+              toast.error(getServerErrorMessage(error, "Error al archivar cliente"));
+            }
           },
-        },
-      ];
+        });
+      }
     } else {
-      return [
-        {
-          label: "Ver Detalles",
-          icon: <Eye className="h-4 w-4" />,
-          onClick: () => {
-            setSelectedClientId(client.id);
-            setOpenClientDetails(true);
-          },
-        },
-        {
+      if (hasPermission('clientAccountDestroy')) {
+        actions.push({
           label: "Eliminar",
           icon: <Trash className="h-4 w-4" />,
           onClick: () => {
             setDeleteClient(client);
             setOpenDeleteDialog(true);
           },
-        },
-        {
+        });
+      }
+
+      if (hasPermission('clientAccountEdit')) {
+        actions.push({
           label: "Restaurar",
           icon: <RotateCcw className="h-4 w-4" />,
           onClick: () => {
             setRestoreClient(client);
             setOpenRestoreDialog(true);
           },
-        },
-      ];
+        });
+      }
     }
+
+    return actions;
   };
 
   const from = clients.length > 0 ? (page - 1) * limit + 1 : 0;
@@ -549,12 +561,14 @@ export default function ClientesPage() {
               />
             </div>
 
-            <Button
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-              asChild
-            >
-              <Link to="/clients/add-new">Nuevo cliente</Link>
-            </Button>
+            {hasPermission('clientAccountCreate') && (
+              <Button
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+                asChild
+              >
+                <Link to="/clients/add-new">Nuevo cliente</Link>
+              </Button>
+            )}
 
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
               <SheetTrigger asChild>
@@ -712,15 +726,17 @@ export default function ClientesPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={handleExportPDF}>
+                <DropdownMenuItem disabled={!hasPermission('clientAccountRead')} onClick={async () => { if (!hasPermission('clientAccountRead')) return; await handleExportPDF(); }}>
                   <FileDown className="mr-2 h-4 w-4" /> Exportar como PDF
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportExcel}>
+                <DropdownMenuItem disabled={!hasPermission('clientAccountRead')} onClick={async () => { if (!hasPermission('clientAccountRead')) return; await handleExportExcel(); }}>
                   <FileSpreadsheet className="mr-2 h-4 w-4" /> Exportar como Excel
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setOpenImport(true)}>
-                  <ArrowDownUp className="mr-2 h-4 w-4" /> Importar
-                </DropdownMenuItem>
+                {hasPermission('clientAccountImport') && (
+                  <DropdownMenuItem onClick={() => setOpenImport(true)}>
+                    <ArrowDownUp className="mr-2 h-4 w-4" /> Importar
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -863,10 +879,13 @@ export default function ClientesPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenCategorizeDialog(false)} disabled={categorizeSaving}>
+            <Button 
+            variant="outline" onClick={() => setOpenCategorizeDialog(false)} disabled={categorizeSaving}>
               Cancelar
             </Button>
-            <Button onClick={handleCategorizeSubmit} disabled={categorizeSaving || categorizeLoading}>
+            <Button 
+            className="bg-orange-500 hover:bg-orange-600"
+            onClick={handleCategorizeSubmit} disabled={categorizeSaving || categorizeLoading}>
               {categorizeSaving ? "Guardando..." : "Guardar"}
             </Button>
           </DialogFooter>
@@ -974,33 +993,6 @@ export default function ClientesPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={openArchiveSingleDialog} onOpenChange={setOpenArchiveSingleDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Archivar cliente?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de archivar a {archiveSingleClient?.name}? Esta acción lo marcará como inactivo.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                if (!archiveSingleClient) return;
-                try {
-                  await clientService.updateClient(archiveSingleClient.id, { active: false } as any);
-                  toast.success("Cliente archivado");
-                  loadClients();
-                } catch (error: any) {
-                  toast.error(getServerErrorMessage(error, "Error al archivar"));
-                }
-              }}
-            >
-              Aceptar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <AlertDialogContent>

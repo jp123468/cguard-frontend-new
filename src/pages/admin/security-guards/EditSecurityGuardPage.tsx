@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import securityGuardService from "@/lib/api/securityGuardService";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import { usePermissions } from '@/hooks/usePermissions';
 
 export default function EditSecurityGuardPage() {
   // Deduplicate toasts across component remounts (React StrictMode may mount twice)
@@ -20,6 +21,17 @@ export default function EditSecurityGuardPage() {
   }
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
+
+  useEffect(() => {
+    if (!hasPermission('securityGuardEdit')) {
+      if (!toastAndRedirected.current) {
+        toastAndRedirected.current = true;
+        toast.error('No tienes permiso para editar guardias');
+        navigate('/security-guards');
+      }
+    }
+  }, [hasPermission, navigate]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState(false);
@@ -159,7 +171,8 @@ export default function EditSecurityGuardPage() {
         await securityGuardService.update(id!, base);
         navigate("/security-guards");
       } catch (err: any) {
-        setError("Error guardando cambios: " + err?.message);
+        const msg = err?.message || String(err);
+        toast.error("Error guardando cambios: " + msg);
       } finally {
         setLoading(false);
       }
@@ -173,7 +186,7 @@ export default function EditSecurityGuardPage() {
       <div className="p-6 w-full">
         <Breadcrumb
           items={[
-            { label: "Panel de control", to: "/dashboard" },
+            { label: "Panel de control", path: "/dashboard" },
             { label: "Editar guardia" },
           ]}
           className="mb-4"
@@ -248,7 +261,7 @@ export default function EditSecurityGuardPage() {
               Guardar cambios
             </Button>
           </div>
-          {error && <div className="md:col-span-2 text-red-600 mt-2">{error}</div>}
+          {/* error display removed per UX request; errors now shown via toast */}
         </form>
       </div>
     </AppLayout>

@@ -19,6 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useEffect } from "react";
 
 const schema = z.object({
   name: z
@@ -32,6 +33,7 @@ const schema = z.object({
     .max(500, "Máximo 500 caracteres.")
     .optional()
     .or(z.literal("")),
+  permissions: z.array(z.string()).optional(),
 });
 
 export type UserRoleDialogValues = z.infer<typeof schema>;
@@ -51,25 +53,31 @@ export default function UserRoleDialog({
   defaultValues,
   onSubmit,
 }: Props) {
+  useEffect(() => {
+    console.debug('[UserRoleDialog] mount/open state', open);
+  }, [open]);
   const form = useForm<UserRoleDialogValues>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues ?? { name: "", description: "" },
-    values: defaultValues ?? { name: "", description: "" },
+    defaultValues: defaultValues ?? { name: "", description: "", permissions: [] },
+    values: defaultValues ?? { name: "", description: "", permissions: [] },
     mode: "onBlur",
   });
 
   const submitting = form.formState.isSubmitting;
 
+
+
+
   const submit = form.handleSubmit(async (values) => {
     await onSubmit(values);
-    form.reset({ name: "", description: "" });
+    form.reset();
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+        <DialogHeader className="text-center">
+          <DialogTitle className="w-full text-center">{title}</DialogTitle>
           <DialogDescription>
             Proporcione un nombre y, opcionalmente, una breve descripción para el rol.
           </DialogDescription>
@@ -115,9 +123,12 @@ export default function UserRoleDialog({
                 </FormItem>
               )}
             />
-
             <div className="flex justify-end">
-              <Button type="submit" disabled={submitting}>
+              <Button
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+                type="submit"
+                disabled={submitting}
+              >
                 {submitting ? "Guardando..." : "Guardar"}
               </Button>
             </div>

@@ -12,6 +12,7 @@ import { clientService } from "@/lib/api/clientService";
 import { categoryService, type Category } from "@/lib/api/categoryService";
 import { Client } from "@/types/client";
 import { Link } from "react-router-dom";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface ClientDetailsDialogProps {
     open: boolean;
@@ -169,15 +170,20 @@ export function ClientDetailsDialog({
                             <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
                                 Cerrar
                             </Button>
-                            <Button
-                                size="sm"
-                                className="bg-orange-500 hover:bg-orange-600"
-                                asChild
-                            >
-                                <Link to={`/clients/edit/${client.id}`}>
-                                    Editar
-                                </Link>
-                            </Button>
+                            {(() => {
+                                const { hasPermission } = usePermissions();
+                                return hasPermission('clientAccountEdit') ? (
+                                    <Button
+                                        size="sm"
+                                        className="bg-orange-500 hover:bg-orange-600"
+                                        asChild
+                                    >
+                                        <Link to={`/clients/edit/${client.id}`}>
+                                            Editar
+                                        </Link>
+                                    </Button>
+                                ) : null;
+                            })()}
                         </div>
                     </div>
                 ) : null}

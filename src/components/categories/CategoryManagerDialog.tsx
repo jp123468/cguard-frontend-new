@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { categoryService, type Category } from "@/lib/api/categoryService";
 import { useDebouncedValue } from "@/hooks/useDebounce";
 import { clientService } from "@/lib/api/clientService";
+import { usePermissions } from '@/hooks/usePermissions';
 
 type Props = {
   open: boolean;
@@ -34,6 +35,7 @@ export function CategoryManagerDialog({ open, onOpenChange, module, onChanged }:
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [inUseInfo, setInUseInfo] = useState<{ id: string; name: string; count: number } | null>(null);
+  const { hasPermission } = usePermissions();
 
   const load = async () => {
     setLoading(true);
@@ -58,12 +60,20 @@ export function CategoryManagerDialog({ open, onOpenChange, module, onChanged }:
   }, [open, debounced, module]);
 
   const startCreate = () => {
+    if (!hasPermission('categoryCreate')) {
+      toast.error('No tienes permiso para crear categorías');
+      return;
+    }
     setNewName("");
     setNewDesc("");
     setCreating(true);
   };
 
   const submitCreate = async () => {
+    if (!hasPermission('categoryCreate')) {
+      toast.error('No tienes permiso para crear categorías');
+      return;
+    }
     if (!newName.trim()) {
       toast.error("El nombre es requerido");
       return;
@@ -80,12 +90,20 @@ export function CategoryManagerDialog({ open, onOpenChange, module, onChanged }:
   };
 
   const startEdit = (cat: Category) => {
+    if (!hasPermission('categoryEdit')) {
+      toast.error('No tienes permiso para editar categorías');
+      return;
+    }
     setEditing(cat);
     setEditName(cat.name);
     setEditDesc(cat.description || "");
   };
 
   const attemptDelete = async (cat: Category) => {
+    if (!hasPermission('categoryDestroy')) {
+      toast.error('No tienes permiso para eliminar categorías');
+      return;
+    }
     try {
       // Pre-chequeo: ¿está en uso por algún cliente?
       const usedCount = await clientService.checkCategoryUsage(cat.id);
@@ -104,6 +122,10 @@ export function CategoryManagerDialog({ open, onOpenChange, module, onChanged }:
   };
 
   const submitEdit = async () => {
+    if (!hasPermission('categoryEdit')) {
+      toast.error('No tienes permiso para editar categorías');
+      return;
+    }
     if (!editing) return;
     if (!editName.trim()) {
       toast.error("El nombre es requerido");
@@ -122,6 +144,11 @@ export function CategoryManagerDialog({ open, onOpenChange, module, onChanged }:
 
   const removeConfirmed = async () => {
     if (!confirmDeleteId) return;
+    if (!hasPermission('categoryDestroy')) {
+      toast.error('No tienes permiso para eliminar categorías');
+      setConfirmDeleteId(null);
+      return;
+    }
     try {
       await categoryService.delete([confirmDeleteId]);
       toast.success("Categoría eliminada");
@@ -151,9 +178,11 @@ export function CategoryManagerDialog({ open, onOpenChange, module, onChanged }:
               <Input placeholder="Buscar categoría" className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
 
+            {hasPermission('categoryCreate') && (
             <Button onClick={startCreate} className="bg-orange-500 hover:bg-orange-600 text-white">
               <Plus className="mr-2 h-4 w-4" /> Nueva Categoría
             </Button>
+            )}
           </div>
 
           <div className="border rounded-lg overflow-hidden">
@@ -186,12 +215,16 @@ export function CategoryManagerDialog({ open, onOpenChange, module, onChanged }:
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
+                          {hasPermission('categoryEdit') && (
                           <DropdownMenuItem onClick={() => startEdit(cat)}>
                             <Pencil className="mr-2 h-4 w-4" /> Editar
                           </DropdownMenuItem>
+                          )}
+                          {hasPermission('categoryDestroy') && (
                           <DropdownMenuItem onClick={() => attemptDelete(cat)}>
                             <Trash2 className="mr-2 h-4 w-4" /> Eliminar
                           </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

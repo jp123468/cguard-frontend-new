@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { categoryService } from "@/lib/api/categoryService";
+import { usePermissions } from '@/hooks/usePermissions';
 
 export type CategoryOption = { id: string; name: string };
 
@@ -31,6 +32,7 @@ export function CategorySelect({
     onCategoryCreated,
     multiple = false,
 }: CategorySelectProps) {
+    const { hasPermission } = usePermissions();
     const [open, setOpen] = useState(false);
     const [openCreate, setOpenCreate] = useState(false);
     const [newName, setNewName] = useState("");
@@ -79,6 +81,10 @@ export function CategorySelect({
     }, [items, value, multiple]);
 
     const handleCreate = async () => {
+        if (!hasPermission('categoryCreate')) {
+            toast.error('No tienes permiso para crear categorías');
+            return;
+        }
         if (!newName.trim()) {
             toast.error("El nombre de la categoría es requerido");
             return;
@@ -132,6 +138,7 @@ export function CategorySelect({
                         <CommandList>
                             <CommandEmpty>{isLoading ? "Cargando..." : "No se encontraron categorías."}</CommandEmpty>
 
+                            {hasPermission('categoryCreate') && (
                             <CommandGroup>
                                 <CommandItem
                                     value="__add__"
@@ -143,6 +150,7 @@ export function CategorySelect({
                                     <Plus className="ml-auto h-4 w-4 text-orange-500" />
                                 </CommandItem>
                             </CommandGroup>
+                            )}
 
                             <CommandGroup>
                                 {items.map((opt) => (

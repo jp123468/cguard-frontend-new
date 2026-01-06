@@ -1,5 +1,8 @@
+import React from "react";
 import { MoreVertical, Plus, Search, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePermissions } from '@/hooks/usePermissions';
+import { PermissionedButton } from '@/components/permissions/Permissioned';
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -40,8 +43,12 @@ type Props = {
   query: string;
   onQueryChange: (v: string) => void;
   onNew: () => void;
+  onToggleExpand?: (r: UserRoleRow) => void;
   onEdit: (r: UserRoleRow) => void;
   onBulkDelete: () => void;
+  expandedRoleId?: string | null;
+  expandedContent?: any;
+  onSaveExpanded?: (id: string, perms: string[]) => void;
   pageSize: string;
   onPageSize: (v: string) => void;
   pageLabel: string;
@@ -55,13 +62,18 @@ export default function UserRolesTable({
   query,
   onQueryChange,
   onNew,
+  onToggleExpand,
   onEdit,
   onBulkDelete,
+  expandedRoleId,
+  expandedContent,
   pageSize,
   onPageSize,
   pageLabel,
 }: Props) {
   const allChecked = rows.length > 0 && rows.every((r) => checked[r.id]);
+
+  const { hasPermission } = usePermissions();
 
   return (
     <div className="space-y-4">
@@ -89,10 +101,7 @@ export default function UserRolesTable({
           />
         </div>
 
-        <Button onClick={onNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nuevo Rol
-        </Button>
+        <PermissionedButton permission="settingsEdit" className="bg-orange-500 hover:bg-orange-600 text-white" onClick={onNew}> Nuevo Rol</PermissionedButton>
       </div>
 
       <div className="rounded-md border">
@@ -119,31 +128,48 @@ export default function UserRolesTable({
               </TableRow>
             ) : (
               rows.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={!!checked[r.id]}
-                      onCheckedChange={(v) => onCheckRow(r.id, Boolean(v))}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <span className="mr-2">{r.name}</span>
-                    {r.isDefault && <Badge variant="secondary">Predeterminado</Badge>}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{r.description}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem onClick={() => onEdit(r)}>Editar</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
+                <React.Fragment key={r.id}>
+                  <TableRow>
+                    <TableCell>
+                      <Checkbox
+                        checked={!!checked[r.id]}
+                        onCheckedChange={(v) => onCheckRow(r.id, Boolean(v))}
+                      />
+                    </TableCell>
+                    <TableCell
+                      className="font-medium cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => onToggleExpand && onToggleExpand(r)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") onToggleExpand && onToggleExpand(r);
+                      }}
+                    >
+                      <span className="mr-2">{r.name}</span>
+                      {r.isDefault && <Badge variant="secondary">Predeterminado</Badge>}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{r.description}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem disabled={!hasPermission('settingsEdit')} onClick={() => { if (!hasPermission('settingsEdit')) return; onEdit(r); }}>Editar</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                  {expandedRoleId === r.id && (
+                    <TableRow key={`${r.id}-expanded`}>
+                      <TableCell colSpan={4}>
+                        <div className="p-4 border rounded">{expandedContent}</div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))
             )}
           </TableBody>

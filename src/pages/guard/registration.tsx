@@ -293,9 +293,19 @@ export default function GuardRegistration() {
       toast.success("Registro completado");
       navigate("/login");
     } catch (err: any) {
-      // ApiService throws ApiError with .message and .status
-      const msg = err?.message || "Error al registrar";
-      toast.error(msg);
+      try {
+        const { applyValidationErrorsToForm } = await import('@/lib/utils/formErrorMapper');
+        const result = applyValidationErrorsToForm(err);
+        if (result && result.fieldErrors) setErrors((p) => ({ ...p, ...result.fieldErrors }));
+        if (result && result.messages && result.messages.length) result.messages.forEach((m) => toast.error(m));
+        else {
+          const msg = err?.message || "Error al registrar";
+          toast.error(msg);
+        }
+      } catch (e) {
+        const msg = err?.message || "Error al registrar";
+        toast.error(msg);
+      }
       console.error("Registration error:", err);
     } finally {
       setIsLoading(false);
