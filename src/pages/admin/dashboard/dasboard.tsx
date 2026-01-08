@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import AppLayout from "@/layouts/app-layout";
 import WidgetsBoard from "./WidgetsBoard";
+import { clientService } from "@/lib/api/clientService";
+import { postSiteService } from "@/lib/api/postSiteService";
+import securityGuardService from "@/lib/api/securityGuardService";
+import userService from "@/lib/api/userService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -56,9 +60,48 @@ export default function DashboardPage() {
     scans: true,
   });
 
+  const [data, setData] = useState({ clientes: 0, sitios: 0, guardias: 0, equipo: 0, registros: 0, fichados: 0 });
+  const [loadingStats, setLoadingStats] = useState(false);
+
   const toggleWidget = (key: string, checked: boolean) => {
     setVisibleWidgets((prev) => ({ ...prev, [key]: checked }));
   };
+
+  useEffect(() => {
+    let mounted = true;
+    const getCount = (res: any) => {
+      if (!res) return 0;
+      return res.total ?? res.count ?? (Array.isArray(res.rows) ? res.rows.length : 0);
+    };
+
+    (async () => {
+      setLoadingStats(true);
+      try {
+        const [clientsRes, sitesRes, guardsRes, usersRes] = await Promise.all([
+          // request minimal page to let backend return totals
+          clientService.getClients({}, { limit: 1, offset: 0 }),
+          postSiteService.list({ limit: 1, offset: 0 } as any),
+          securityGuardService.list({ limit: 1, offset: 0 } as any),
+          userService.listUsers(),
+        ]);
+
+        if (!mounted) return;
+
+        const clientes = getCount(clientsRes);
+        const sitios = getCount(sitesRes);
+        const guardias = getCount(guardsRes);
+        const equipo = Array.isArray(usersRes) ? usersRes.length : getCount(usersRes);
+
+        setData((d) => ({ ...d, clientes, sitios, guardias, equipo }));
+      } catch (e) {
+        console.error('Error loading dashboard stats', e);
+      } finally {
+        if (mounted) setLoadingStats(false);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <AppLayout>
@@ -80,71 +123,81 @@ export default function DashboardPage() {
             </PopoverTrigger>
             <PopoverContent className="w-72 p-3">
               <div className="space-y-2">
-                <label className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
+                <label htmlFor="widget-stats" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
                   <Checkbox
+                    id="widget-stats"
                     checked={visibleWidgets.stats}
                     onCheckedChange={(v) => toggleWidget("stats", v as boolean)}
                   />
                   <span className="text-sm">Cuadro de Estadísticas</span>
                 </label>
-                <label className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
+                <label htmlFor="widget-tracker" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
                   <Checkbox
+                    id="widget-tracker"
                     checked={visibleWidgets.tracker}
                     onCheckedChange={(v) => toggleWidget("tracker", v as boolean)}
                   />
                   <span className="text-sm">Guardias Activos</span>
                 </label>
-                <label className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
+                <label htmlFor="widget-activity" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
                   <Checkbox
+                    id="widget-activity"
                     checked={visibleWidgets.activity}
                     onCheckedChange={(v) => toggleWidget("activity", v as boolean)}
                   />
                   <span className="text-sm">Última Actividad</span>
                 </label>
-                <label className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
+                <label htmlFor="widget-timeLog" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
                   <Checkbox
+                    id="widget-timeLog"
                     checked={visibleWidgets.timeLog}
                     onCheckedChange={(v) => toggleWidget("timeLog", v as boolean)}
                   />
                   <span className="text-sm">Reloj de Tiempo</span>
                 </label>
-                <label className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
+                <label htmlFor="widget-checkIn" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
                   <Checkbox
+                    id="widget-checkIn"
                     checked={visibleWidgets.checkIn}
                     onCheckedChange={(v) => toggleWidget("checkIn", v as boolean)}
                   />
                   <span className="text-sm">Registro</span>
                 </label>
-                <label className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
+                <label htmlFor="widget-checkOut" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
                   <Checkbox
+                    id="widget-checkOut"
                     checked={visibleWidgets.checkOut}
                     onCheckedChange={(v) => toggleWidget("checkOut", v as boolean)}
                   />
                   <span className="text-sm">Salida</span>
                 </label>
-                <label className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
+                <label htmlFor="widget-incidents" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
                   <Checkbox
+                    id="widget-incidents"
                     checked={visibleWidgets.incidents}
                     onCheckedChange={(v) => toggleWidget("incidents", v as boolean)}
                   />
                   <span className="text-sm">Últimos Incidentes</span>
                 </label>
-                <label className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
+                <label htmlFor="widget-reports" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
                   <Checkbox
+                    id="widget-reports"
                     checked={visibleWidgets.reports}
                     onCheckedChange={(v) => toggleWidget("reports", v as boolean)}
                   />
                   <span className="text-sm">Informes Estándar</span>
                 </label>
-                <label className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
+                <label htmlFor="widget-tours" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
                   <Checkbox
+                    id="widget-tours"
                     checked={visibleWidgets.tours}
                     onCheckedChange={(v) => toggleWidget("tours", v as boolean)}
                   />
                   <span className="text-sm">Últimos Recorridos por el Sitio</span>
                 </label>
-                <label className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
+                <label htmlFor="widget-scans" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
                   <Checkbox
+                    id="widget-scans"
                     checked={visibleWidgets.scans}
                     onCheckedChange={(v) => toggleWidget("scans", v as boolean)}
                   />
@@ -157,16 +210,7 @@ export default function DashboardPage() {
 
         {/* Stats Cards */}
         {visibleWidgets.stats && (
-          <WidgetsBoard
-            data={{
-              clientes: 2,
-              sitios: 3,
-              guardias: 2,
-              equipo: 1,
-              registros: 0,
-              fichados: 0,
-            }}
-          />
+          <WidgetsBoard data={data} />
         )}
 
         {/* Live Tracker Map */}

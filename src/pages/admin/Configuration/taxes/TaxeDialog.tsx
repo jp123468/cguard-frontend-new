@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,29 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 export type TaxDialogValues = {
   name: string;
   rate: number;
+  description?: string;
 };
 
 const schema = z.object({
   name: z.string().trim().min(1, "Requerido"),
-  rate: z
-    .number("Ingrese un número")
-    .min(0, "Mínimo 0")
-    .max(100, "Máximo 100"),
+  rate: z.preprocess((val) => {
+    if (typeof val === "string") {
+      const s = val.trim();
+      if (s === "") return NaN;
+      const n = Number(s.replace(",", "."));
+      return Number.isNaN(n) ? NaN : n;
+    }
+    return val;
+  },
+    z
+      .number({
+        // Use the newer error mapping signature supported by our Zod version
+        error: (issue) => ({ message: issue.code === "invalid_type" ? "Ingrese un número" : "Requerido" }),
+      })
+      .min(0.0000001, "Debe ser mayor que 0")
+      .max(100, "Máximo 100"),
+  ),
+  description: z.string().optional(),
 });
 
 type Props = {
@@ -30,8 +45,8 @@ type Props = {
 
 export default function TaxDialog({ open, onOpenChange, title = "Nuevo Impuesto", defaultValues, onSubmit }: Props) {
   const form = useForm<TaxDialogValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { name: "", rate: 0 },
+    resolver: zodResolver(schema) as Resolver<TaxDialogValues, any>,
+    defaultValues: { name: "", rate: undefined as unknown as number, description: "" },
     mode: "onChange",
   });
 
@@ -39,12 +54,13 @@ export default function TaxDialog({ open, onOpenChange, title = "Nuevo Impuesto"
     if (open) {
       form.reset({
         name: defaultValues?.name ?? "",
-        rate: typeof defaultValues?.rate === "number" ? defaultValues.rate : 0,
+        rate: typeof defaultValues?.rate === "number" ? defaultValues.rate : (undefined as unknown as number),
+        description: defaultValues?.description ?? "",
       });
     }
   }, [open, defaultValues, form]);
 
-  const submit = async (v: TaxDialogValues) => {
+  const submit: SubmitHandler<TaxDialogValues> = async (v) => {
     await onSubmit(v);
     onOpenChange(false);
   };
@@ -52,12 +68,9 @@ export default function TaxDialog({ open, onOpenChange, title = "Nuevo Impuesto"
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle className="text-center">{title}</DialogTitle>
           <DialogDescription>Configura los detalles del impuesto.</DialogDescription>
-        </DialogHeader>
-
-        <Form {...form}>
+        <Form {...(form as any)}>
           <form onSubmit={form.handleSubmit(submit)} className="space-y-4">
             <FormField
               control={form.control}
@@ -96,11 +109,30 @@ export default function TaxDialog({ open, onOpenChange, title = "Nuevo Impuesto"
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descripción (opcional)</FormLabel>
+                  <FormControl>
+                    <textarea
+                      {...field}
+                      rows={3}
+                      className="w-full rounded border px-3 py-2 text-sm"
+                      placeholder="Descripción del impuesto"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="flex items-center justify-end gap-2 pt-2">
               <DialogClose asChild>
                 <Button variant="outline">Cancelar</Button>
               </DialogClose>
-              <Button type="submit">Guardar</Button>
+              <Button  className="bg-orange-500 hover:bg-orange-600" type="submit">Guardar</Button>
             </div>
           </form>
         </Form>

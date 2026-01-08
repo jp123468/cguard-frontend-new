@@ -10,6 +10,7 @@ export type TaxRow = {
   id: string;
   name: string;
   rate: number;
+  description?: string;
   status: "active" | "inactive";
 };
 
@@ -23,6 +24,7 @@ type Props = {
   onNew: () => void;
   onEdit: (row: TaxRow) => void;
   onDeactivate: (row: TaxRow) => void;
+  onDelete: (row: TaxRow) => void;
   onBulkDelete: () => void;
   pageSize: string;
   onPageSize: (v: string) => void;
@@ -39,6 +41,7 @@ export default function TaxesTable({
   onNew,
   onEdit,
   onDeactivate,
+  onDelete,
   onBulkDelete,
   pageSize,
   onPageSize,
@@ -68,7 +71,7 @@ export default function TaxesTable({
           <Input value={query} onChange={(e) => onQueryChange(e.target.value)} placeholder="Buscar Impuesto" className="pl-9" />
         </div>
 
-        <Button onClick={onNew}>Nuevo Impuesto</Button>
+        <Button  className="bg-orange-500 hover:bg-orange-600" onClick={onNew}>Nuevo Impuesto</Button>
       </div>
 
       <div className="rounded-md border">
@@ -115,6 +118,7 @@ export default function TaxesTable({
                       <DropdownMenuContent align="end" className="w-40">
                         <DropdownMenuItem onClick={() => onEdit(r)}>Editar</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onDeactivate(r)}>Desactivar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onDelete(r)}>Eliminar</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

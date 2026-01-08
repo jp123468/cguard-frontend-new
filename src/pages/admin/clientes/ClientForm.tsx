@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { clientService } from "@/lib/api/clientService";
 import { categoryService } from "@/lib/api/categoryService";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +59,7 @@ export default function ClientForm({
     onSaved,
 }: ClientFormProps) {
     const navigate = useNavigate();
+    const { user } = useAuth();
     // Deduplicate toasts in case of multiple mounts (React StrictMode)
     const shownToasts = useRef<Set<string>>(new Set());
     const showToastOnce = (key: string, message: string) => {
@@ -179,6 +181,18 @@ export default function ClientForm({
 
         try {
             if (mode === "create") {
+                console.log('[ClientForm] creating client payload:', apiPayload);
+                try {
+                    console.log('[ClientForm] creating client by user:', {
+                        id: user?.id,
+                        email: user?.email,
+                        name: user?.fullName || user?.firstName || user?.name || null,
+                        tenantId: (user && Array.isArray(user.tenants) && user.tenants[0]) ? (user.tenants[0].tenantId || (user.tenants[0].tenant && user.tenants[0].tenant.id)) : null,
+                        tenantUserId: (user && Array.isArray(user.tenants) && user.tenants[0]) ? (user.tenants[0].id || null) : null,
+                    });
+                } catch (e) {
+                    console.debug('[ClientForm] failed to log creating user', e);
+                }
                 const data = await clientService.createClient(apiPayload as ClientInput);
                 toast.success("Cliente creado exitosamente");
                 onSaved?.({ id: data.id, data: values });

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import {
     SelectItem,
     SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/app/combobox";
 import {
     Table,
     TableHeader,
@@ -25,6 +26,9 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarIcon, Plus, Trash2 } from "lucide-react";
+import { ApiService } from "@/services/api/apiService";
+import { clientService } from "@/lib/api/clientService";
+import { postSiteService } from "@/lib/api/postSiteService";
 
 
 interface InvoiceItem {
@@ -33,6 +37,23 @@ interface InvoiceItem {
     quantity: number;
     rate: number;
     tax: number;
+}
+
+interface TaxOption {
+    id: string;
+    name: string;
+    rate: number;
+}
+
+interface ClientOption {
+    id: string;
+    name: string;
+}
+
+interface PostSiteOption {
+    id: string;
+    name: string;
+    clientId?: string;
 }
 
 export default function NewInvoice() {
@@ -53,6 +74,72 @@ export default function NewInvoice() {
     const [items, setItems] = useState<InvoiceItem[]>([
         { id: "1", name: "", quantity: 1, rate: 0, tax: 0 },
     ]);
+
+    const [taxes, setTaxes] = useState<TaxOption[]>([]);
+    const [clients, setClients] = useState<ClientOption[]>([]);
+    const [postSites, setPostSites] = useState<PostSiteOption[]>([]);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const tenantId = localStorage.getItem("tenantId") || "";
+                if (!tenantId) return;
+                const res = await ApiService.get(`/tenant/${tenantId}/tax`);
+                const data = Array.isArray(res)
+                    ? res
+                    : res && res.rows
+                    ? res.rows
+                    : res && res.data && Array.isArray(res.data.rows)
+                    ? res.data.rows
+                    : [];
+                if (!mounted) return;
+                const mapped: TaxOption[] = data.map((r: any) => ({ id: r.id ?? r._id ?? String(r.id), name: r.name ?? "", rate: Number(r.rate ?? 0) }));
+                setTaxes(mapped);
+            } catch (err) {
+                console.error('Error cargando impuestos', err);
+            }
+        })();
+        return () => { mounted = false };
+    }, []);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const data = await clientService.getClients(undefined, { limit: 9999, offset: 0 });
+                if (!mounted) return;
+                const mapped = (data.rows || []).map((c: any) => ({
+                    id: c.id,
+                    name: c.companyName ?? (c.name && c.lastName ? `${c.name} ${c.lastName}` : c.name ?? c.lastName ?? ""),
+                }));
+                setClients(mapped);
+            } catch (err) {
+                console.error('Error cargando clientes', err);
+            }
+        })();
+        return () => { mounted = false };
+    }, []);
+
+    const loadPostSitesForClient = async (clientId: string) => {
+        try {
+            if (!clientId || clientId === "none") {
+                setPostSites([]);
+                return;
+            }
+            const res = await postSiteService.list({ clientId }, { limit: 9999, offset: 0 });
+            const mapped = (res.rows || []).map((s: any) => ({
+                id: s.id,
+                name: s.name,
+                clientId: s.client?.id ?? s.clientAccount?.id ?? s.clientId ?? s.clientAccountId ?? undefined,
+            }));
+            // Ensure only sites matching the requested client are stored (defensive)
+            setPostSites(mapped.filter((ps: any) => !ps.clientId || ps.clientId === clientId ? true : ps.clientId === clientId));
+        } catch (err) {
+            console.error('Error cargando sitios de publicación', err);
+            setPostSites([]);
+        }
+    };
 
     const addItem = () => {
         setItems([
@@ -80,7 +167,17 @@ export default function NewInvoice() {
     };
 
     const calculateTotal = () => {
-        return calculateSubtotal();
+        return items.reduce((acc, item) => {
+            const line = item.quantity * item.rate;
+            const taxAmount = item.tax ? (line * (item.tax / 100)) : 0;
+            return acc + line + taxAmount;
+        }, 0);
+    };
+
+    const calculateTaxTotal = () => {
+        const subtotal = calculateSubtotal();
+        const total = calculateTotal();
+        return total - subtotal;
     };
 
     const handlePreview = () => {
@@ -89,6 +186,45 @@ export default function NewInvoice() {
             return;
         }
         setIsPreviewMode(true);
+    };
+
+    const buildPayload = () => {
+        return {
+            clientId: client,
+            postSiteId: site,
+            title,
+            summary,
+            invoiceNumber,
+            poSoNumber,
+            date: date ? date.toISOString() : null,
+            dueDate: dueDate ? dueDate.toISOString() : null,
+            items: items.map((it) => {
+                const line = it.quantity * it.rate;
+                const taxAmount = it.tax ? (line * (it.tax / 100)) : 0;
+                const taxOption = taxes.find((t) => Number(t.rate) === Number(it.tax));
+                return {
+                    id: it.id,
+                    name: it.name,
+                    quantity: it.quantity,
+                    rate: it.rate,
+                    taxRate: it.tax,
+                    taxName: taxOption ? taxOption.name : undefined,
+                    line: line,
+                    taxAmount: taxAmount,
+                    lineTotal: line + taxAmount,
+                };
+            }),
+            notes,
+            subtotal: calculateSubtotal(),
+            total: calculateTotal(),
+        };
+    };
+
+    const handleSaveLog = () => {
+        const payload = buildPayload();
+        // eslint-disable-next-line no-console
+        console.log("[NewInvoice] payload ->", payload);
+        // keep existing behavior: you can later replace this with an API call
     };
 
     if (isPreviewMode) {
@@ -105,7 +241,7 @@ export default function NewInvoice() {
                             >
                                 Editar Factura
                             </Button>
-                            <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                            <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleSaveLog}>
                                 Guardar y continuar
                             </Button>
                         </div>
@@ -185,7 +321,11 @@ export default function NewInvoice() {
                                                 <TableCell>${item.rate}</TableCell>
                                                 <TableCell>{item.tax ? `${item.tax}%` : "-"}</TableCell>
                                                 <TableCell className="text-right font-medium">
-                                                    ${(item.quantity * item.rate).toFixed(2)}
+                                                    {(() => {
+                                                        const line = item.quantity * item.rate;
+                                                        const taxAmount = item.tax ? (line * (item.tax / 100)) : 0;
+                                                        return `$${(line + taxAmount).toFixed(2)}`;
+                                                    })()}
                                                 </TableCell>
                                             </TableRow>
                                         ))
@@ -259,15 +399,12 @@ export default function NewInvoice() {
                             <div className="space-y-4">
                                 <div className="space-y-2">
                                     <Label className="text-xs text-gray-500">Cliente*</Label>
-                                    <Select value={client} onValueChange={setClient}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Cliente*" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="central">Central</SelectItem>
-                                            <SelectItem value="norte">Norte</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <Combobox
+                                        value={client}
+                                        onChange={(v) => { setClient(v); setSite(""); loadPostSitesForClient(v); }}
+                                        options={clients.map((c) => ({ value: c.id, label: c.name }))}
+                                        placeholder="Seleccionar Cliente"
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
@@ -277,7 +414,13 @@ export default function NewInvoice() {
                                             <SelectValue placeholder="Sitio de publicación*" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="site1">Sitio Principal</SelectItem>
+                                            {postSites.length === 0 ? (
+                                                <SelectItem value="none" disabled>No hay sitios disponibles</SelectItem>
+                                            ) : (
+                                                postSites.map((s) => (
+                                                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                                ))
+                                            )}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -354,6 +497,8 @@ export default function NewInvoice() {
                                     </PopoverContent>
                                 </Popover>
                             </div>
+
+                            
                         </div>
                     </div>
 
@@ -400,13 +545,15 @@ export default function NewInvoice() {
                                             />
                                         </TableCell>
                                         <TableCell>
-                                            <Select defaultValue="none">
+                                            <Select value={String(item.tax)} onValueChange={(v) => updateItem(item.id, "tax", Number(v))}>
                                                 <SelectTrigger className="border-0 shadow-none focus:ring-0 px-0">
                                                     <SelectValue placeholder="Ninguno" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="none">Ninguno</SelectItem>
-                                                    <SelectItem value="iva">IVA (12%)</SelectItem>
+                                                    <SelectItem value="0">Ninguno</SelectItem>
+                                                    {taxes.map((t) => (
+                                                        <SelectItem key={t.id} value={String(t.rate)}>{t.name} ({t.rate}%)</SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </TableCell>
@@ -440,29 +587,37 @@ export default function NewInvoice() {
                         </div>
                     </div>
 
-                    {/* Totals */}
-                    <div className="flex justify-end mt-4">
-                        <div className="w-64 space-y-2">
-                            <div className="flex justify-between text-sm font-medium">
-                                <span>Total</span>
-                                <span>${calculateTotal().toFixed(2)}</span>
+             
+                  
+
+                    {/* Action Buttons */}
+                    <div className="mt-6">
+                        <div className="flex justify-end mb-4">
+                            <div className="w-64 bg-white p-4 rounded border">
+                                <div className="flex justify-between text-sm text-slate-600 mb-2">
+                                    <span>Subtotal</span>
+                                    <span>${calculateSubtotal().toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-slate-600 mb-2">
+                                    <span>Impuestos</span>
+                                    <span>${calculateTaxTotal().toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-base font-semibold text-slate-800 border-t pt-2">
+                                    <span>Total a pagar</span>
+                                    <span>${calculateTotal().toFixed(2)}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Notes */}
-                    <div className="mt-8">
-                        <Label htmlFor="notes" className="text-gray-500 mb-2 block">Notas</Label>
+                        <Label className="text-xs text-gray-500">Notas</Label>
                         <Textarea
-                            id="notes"
                             placeholder="Notas..."
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            className="min-h-[100px]"
+                            className="w-full h-28"
                         />
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="flex justify-end gap-4 mt-8 pt-4 border-t">
                         <Button
                             variant="outline"
@@ -471,7 +626,7 @@ export default function NewInvoice() {
                         >
                             Vista previa
                         </Button>
-                        <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                        <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleSaveLog}>
                             Guardar y continuar
                         </Button>
                     </div>

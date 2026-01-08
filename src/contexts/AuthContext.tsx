@@ -115,12 +115,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(userData);
       // normalize permissions and admin flag
       const { perms, admin } = extractPermissionsFromUser(userData);
-      setPermissions(perms);
-      // Debug: show extracted permissions for current tenant
-      try { console.debug('[AuthContext] extracted permissions for tenant:', perms); } catch (e) {}
-      setIsAdmin(admin);
-      // persist for fast restore on next reload
-      try { localStorage.setItem('userPermissions', JSON.stringify(perms)); localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
+      // Only overwrite cached permissions if the backend returned a non-empty set.
+      // This protects against responses that do not include tenant-scoped permissions
+      // and would otherwise clear permissions that were persisted at login.
+      if (Array.isArray(perms) && perms.length > 0) {
+        setPermissions(perms);
+        // Debug: show extracted permissions for current tenant
+        try { console.debug('[AuthContext] extracted permissions for tenant:', perms); } catch (e) {}
+        try { localStorage.setItem('userPermissions', JSON.stringify(perms)); } catch {}
+      } else {
+        try { console.debug('[AuthContext] profile returned no permissions; keeping cached permissions'); } catch (e) {}
+      }
+
+      // Only set admin flag to true if backend indicates admin; avoid clearing a cached admin flag
+      if (admin) {
+        setIsAdmin(admin);
+        try { localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
+      }
     } catch (e: any) {
       if (e instanceof ApiError) {
         console.warn("getProfile falló:", e.status, e.message);
@@ -191,16 +202,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (userData) {
         setUser(userData);
         const { perms, admin } = extractPermissionsFromUser(userData);
-        setPermissions(perms);
-        setIsAdmin(admin);
+        if (Array.isArray(perms) && perms.length > 0) {
+          setPermissions(perms);
+          try { localStorage.setItem('userPermissions', JSON.stringify(perms)); } catch {}
+        }
+        if (admin) {
+          setIsAdmin(admin);
+          try { localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
+        }
       } else {
         // intenta hidratar profile desde el backend
         try {
           const u = await AuthService.getProfile();
           setUser(u);
           const { perms, admin } = extractPermissionsFromUser(u);
-          setPermissions(perms);
-          setIsAdmin(admin);
+          if (Array.isArray(perms) && perms.length > 0) {
+            setPermissions(perms);
+            try { localStorage.setItem('userPermissions', JSON.stringify(perms)); } catch {}
+          }
+          if (admin) {
+            setIsAdmin(admin);
+            try { localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
+          }
         } catch (e) {
           // ignore
         }

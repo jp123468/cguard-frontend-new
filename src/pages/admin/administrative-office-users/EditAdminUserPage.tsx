@@ -126,7 +126,7 @@ export default function EditAdminUserPage() {
   const { handleSubmit, control, formState, setValue, setError } = form;
   const [clientOptions, setClientOptions] = useState<Array<{ id: string; name: string }>>(CLIENT_OPTIONS_PLACEHOLDER);
   const [siteOptions, setSiteOptions] = useState<Array<{ id: string; name: string; clientIds?: string[] }>>([]);
-  const [roleOptions, setRoleOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [roleOptions, setRoleOptions] = useState<Array<{ id: string; name?: string; label?: string }>>([]);
   const [fetchedRoleCandidate, setFetchedRoleCandidate] = useState<any>(null);
   const prevClientIdsRef = useRef<string[] | undefined>(undefined);
 
@@ -161,13 +161,35 @@ export default function EditAdminUserPage() {
   useEffect(() => {
     if (!fetchedRoleCandidate || roleOptions.length === 0) return;
     const candidate = fetchedRoleCandidate;
-    const found = roleOptions.find((o) => {
-      if (!candidate) return false;
-      if (typeof candidate === 'string') {
-        return o.name?.toString().toLowerCase() === candidate.toString().toLowerCase() || o.id === candidate;
+
+    const normalize = (s: any) => {
+      if (!s && s !== 0) return '';
+      try {
+        return String(s)
+          .normalize('NFD')
+          .replace(/\p{Diacritic}/gu, '')
+          .toLowerCase()
+          .replace(/[_\-\s]+/g, '');
+      } catch (e) {
+        return String(s).toLowerCase();
       }
-      return o.id === (candidate.id ?? candidate._id ?? candidate) || o.name?.toString().toLowerCase() === (candidate.name ?? candidate.role ?? '')?.toString().toLowerCase();
+    };
+
+    const candNorm = normalize(typeof candidate === 'object' ? (candidate.name ?? candidate.role ?? candidate) : candidate);
+
+    const found = roleOptions.find((o) => {
+      if (!o) return false;
+      const nameNorm = normalize(o.name ?? o.label ?? o.id);
+      // exact id match
+      if (o.id === candidate) return true;
+      // exact normalized match
+      if (candNorm && (nameNorm === candNorm)) return true;
+      // contains or partial match (e.g., 'gerente-general' vs 'Gerente General')
+      if (candNorm && nameNorm.includes(candNorm)) return true;
+      if (candNorm && candNorm.includes(nameNorm)) return true;
+      return false;
     });
+
     if (found) setValue('accessLevel', String(found.id));
     setFetchedRoleCandidate(null);
   }, [fetchedRoleCandidate, roleOptions, setValue]);
@@ -185,8 +207,24 @@ export default function EditAdminUserPage() {
         // map backend user to form fields as best-effort
         setValue('name', user.fullName || user.name || [user.firstName, user.lastName].filter(Boolean).join(' ') || '');
         setValue('email', user.email || '');
-        // Try to resolve accessLevel from several shapes
-        const roleCandidate = user.role || (Array.isArray(user.roles) && user.roles[0]) || user.roles?.[0];
+        // Try to resolve accessLevel from several shapes, prefer tenant-scoped roles
+        let roleCandidate: any = null;
+        try {
+          const tenantId = localStorage.getItem('tenantId');
+          if (Array.isArray(user.tenants) && user.tenants.length > 0) {
+            const tenantEntry = tenantId ? user.tenants.find((t: any) => (t.tenantId === tenantId) || (t.tenant && (t.tenant.id === tenantId || t.tenant.tenantId === tenantId))) : user.tenants[0];
+            if (tenantEntry) {
+              // tenantEntry.roles might be array or single value
+              if (Array.isArray(tenantEntry.roles) && tenantEntry.roles.length > 0) roleCandidate = tenantEntry.roles[0];
+              else if (tenantEntry.role) roleCandidate = tenantEntry.role;
+            }
+          }
+        } catch (e) {
+          // ignore and fallback below
+        }
+        if (!roleCandidate) {
+          roleCandidate = user.role || (Array.isArray(user.roles) && user.roles[0]) || user.roles?.[0];
+        }
         // if candidate is an object with id, use it; otherwise keep candidate to resolve after roleOptions load
         const roleId = roleCandidate && (roleCandidate.id ?? roleCandidate._id ?? null);
         if (roleId) {
