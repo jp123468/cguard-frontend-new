@@ -44,6 +44,42 @@ const AccountService = {
   async verifyPhone(code: string, phoneNumber: string) {
     return ApiService.post("/auth/verify-phone", { code, phoneNumber });
   },
+
+  async uploadAvatar(file: File, tenantId: string, userId: string) {
+    const filename = file.name;
+    const creds: any = await ApiService.get(
+      `/tenant/${tenantId}/file/credentials?filename=${encodeURIComponent(
+        filename,
+      )}&storageId=userAvatarsProfiles`,
+    );
+
+    const uploadUrl = creds.uploadCredentials?.url;
+    if (!uploadUrl) throw new Error('Upload URL not available');
+
+    const form = new FormData();
+    form.append('filename', filename);
+    form.append('file', file);
+
+    const uploadResp = await fetch(uploadUrl, {
+      method: 'POST',
+      body: form,
+    });
+
+    if (!uploadResp.ok) {
+      const text = await uploadResp.text().catch(() => null);
+      throw new Error(`Upload failed: ${uploadResp.status} ${text}`);
+    }
+
+    const fileObj = {
+      new: true,
+      name: filename,
+      sizeInBytes: file.size,
+      privateUrl: creds.privateUrl,
+      publicUrl: creds.uploadCredentials?.publicUrl ?? null,
+    };
+
+    return ApiService.put('/auth/profile', { data: { avatars: [fileObj] } });
+  },
 };
 
 export default AccountService;

@@ -20,6 +20,13 @@ export function Combobox({ value, onChange, placeholder = "Seleccionar", options
   const [open, setOpen] = React.useState(false);
   const selected = options.find((o) => o.value === value)?.label ?? "";
 
+  // Close popover when value becomes empty/undefined to support external resets
+  React.useEffect(() => {
+    if (value === undefined || value === null || value === "") {
+      setOpen(false);
+    }
+  }, [value]);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>

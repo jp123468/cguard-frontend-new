@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { X } from "lucide-react";
 import AccountService from "@/services/accountService";
+import { useAuth } from "@/contexts/AuthContext";
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import AvatarUploader from "./profile/AvatarUploader";
 import PhoneField from "./profile/PhoneField";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -48,7 +51,19 @@ function pickAvatarUrl(avatars?: MeAvatar[] | null): string | null {
   if (!avatars || avatars.length === 0) return null;
   const a = avatars[0];
   if (typeof a === "string") return a;
-  return a?.downloadUrl ?? null;
+  // Prefer an explicit full download URL
+  if ((a as any).downloadUrl) return String((a as any).downloadUrl);
+  // Some APIs return a privateUrl path; build a download endpoint if it's relative
+  if ((a as any).privateUrl) {
+    const privateUrl = String((a as any).privateUrl);
+    // If it's already an absolute URL, return it; otherwise construct download path
+    if (/^https?:\/\//i.test(privateUrl)) return privateUrl;
+    return `/file/download?privateUrl=${encodeURIComponent(privateUrl)}`;
+  }
+  // Fallback to other common fields
+  if ((a as any).url) return String((a as any).url);
+  if ((a as any).src) return String((a as any).src);
+  return null;
 }
 
 function normalizeMe(raw: any): MeResponse {
@@ -59,7 +74,15 @@ function normalizeMe(raw: any): MeResponse {
   const email = base?.email ?? "";
   const phoneNumber = base?.phoneNumber ?? "";
   const language = base?.language ?? "es";
-  const avatarUrl = base?.avatarUrl ?? pickAvatarUrl(base?.avatars) ?? null;
+  let avatarUrl = base?.avatarUrl ?? pickAvatarUrl(base?.avatars) ?? null;
+  if (avatarUrl) {
+    try {
+      // Encode spaces and other characters in the URL path
+      avatarUrl = encodeURI(String(avatarUrl));
+    } catch (e) {
+      // if encoding fails, keep original
+    }
+  }
   const tenants = base?.tenants ?? [];
   const emailVerified = base?.emailVerified ?? false;
 
@@ -97,6 +120,7 @@ export default function ProfileUserForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation();
 
   const [fullName, setFullName] = useState("");
 
@@ -106,6 +130,8 @@ export default function ProfileUserForm() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentTenantId, setCurrentTenantId] = useState<string | null>(null);
 
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [password, setPassword] = useState("");
@@ -113,27 +139,70 @@ export default function ProfileUserForm() {
 
   const [showPhoneVerifyModal, setShowPhoneVerifyModal] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-
+  const { loading: authLoading } = useAuth();
   useEffect(() => {
     let mounted = true;
+    // Wait until auth provider finished initializing to avoid calling without token
+    if (authLoading) {
+      // we will re-run when authLoading changes
+      return;
+    }
+
     (async () => {
       try {
         const res = await AccountService.getMe();
+        const raw = res?.user ?? res?.data ?? res;
         const me = normalizeMe(res);
+        console.log('[ProfileUserForm] /auth/me response raw:', raw, 'normalized:', me);
+        setCurrentUserId(raw?.id ?? null);
+        const tid = raw?.tenants && raw.tenants.length ? raw.tenants[0].tenant?.id : localStorage.getItem('tenantId');
+        setCurrentTenantId(tid ?? null);
         if (!mounted) return;
 
-        setFullName(me.fullName ?? "");
+        // Prefer explicit fullName (non-empty), otherwise try first/last, otherwise fallback to email
+        const resolvedFullName = (me.fullName && String(me.fullName).trim())
+          ? String(me.fullName).trim()
+          : ((me.firstName || me.lastName)
+              ? `${me.firstName ?? ''} ${me.lastName ?? ''}`.trim()
+              : (me.email ?? ""));
+        setFullName(resolvedFullName);
         setEmail(me.email ?? "");
         setEmailVerified(me.emailVerified ?? false);
         setAvatar(me.avatarUrl ?? null);
 
-        if (me.phoneNumber) {
-          const match = String(me.phoneNumber).match(/^(\+\d{1,3})\s*(.*)$/);
-          if (match) {
-            setPhoneCode(match[1]);
-            setPhoneNumber(match[2].replace(/\s+/g, ""));
-          } else {
-            setPhoneNumber(String(me.phoneNumber).replace(/\s+/g, ""));
+        // phoneNumber may be stored on the user or on the tenant object
+        const tenantPhone = (me.tenants && Array.isArray(me.tenants) && me.tenants[0] && me.tenants[0].tenant && (me.tenants[0].tenant as any).phone)
+          ? (me.tenants[0].tenant as any).phone
+          : null;
+        // Treat empty string as absent: prefer explicit non-empty user phone, otherwise tenant phone
+        const phoneSource = (me.phoneNumber && String(me.phoneNumber).trim() !== "")
+          ? me.phoneNumber
+          : (tenantPhone && String(tenantPhone).trim() !== "")
+            ? tenantPhone
+            : null;
+        if (phoneSource) {
+          try {
+            const parsed = parsePhoneNumberFromString(String(phoneSource));
+            if (parsed && parsed.country) {
+              setPhoneCode(`+${parsed.countryCallingCode}`);
+              setPhoneNumber(parsed.nationalNumber ?? String(phoneSource).replace(/\s+/g, ""));
+            } else {
+              const match = String(phoneSource).match(/^(\+\d{1,3})\s*(.*)$/);
+              if (match) {
+                setPhoneCode(match[1]);
+                setPhoneNumber(match[2].replace(/\s+/g, ""));
+              } else {
+                setPhoneNumber(String(phoneSource).replace(/\s+/g, ""));
+              }
+            }
+          } catch (err) {
+            const match = String(phoneSource).match(/^(\+\d{1,3})\s*(.*)$/);
+            if (match) {
+              setPhoneCode(match[1]);
+              setPhoneNumber(match[2].replace(/\s+/g, ""));
+            } else {
+              setPhoneNumber(String(phoneSource).replace(/\s+/g, ""));
+            }
           }
         }
       } catch (e: any) {
@@ -142,38 +211,65 @@ export default function ProfileUserForm() {
         if (mounted) setLoading(false);
       }
     })();
+
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [authLoading]);
 
-  const handleAvatarChange = (file: File) => {
+  const handleAvatarChange = (file: File | null) => {
     setAvatarFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatar(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    if (file) setAvatar(URL.createObjectURL(file));
+    else setAvatar(null);
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async () => {
     setSaving(true);
     try {
       const { firstName, lastName } = splitFullName(fullName);
 
-      await AccountService.updateProfile({
-        fullName: fullName.trim(),
-        firstName,
-        lastName,
-        phoneNumber: `${phoneCode} ${phoneNumber}`.trim(),
-      });
+      // Build payload only with non-empty values to avoid overwriting DB with empty strings
+      const payload: any = {};
+      const trimmedFull = fullName.trim();
+      if (trimmedFull) payload.fullName = trimmedFull;
+      if (firstName && String(firstName).trim() !== "") payload.firstName = firstName;
+      if (lastName && String(lastName).trim() !== "") payload.lastName = lastName;
 
-      // if (avatarFile) {
-      //   await AccountService.uploadAvatar(avatarFile);
-      // }
+      // Normalize phone to E.164 when possible before sending
+      let phoneToSend = `${phoneCode} ${phoneNumber}`.trim();
+      try {
+        const parsedSend = parsePhoneNumberFromString(phoneToSend);
+        if (parsedSend && parsedSend.isValid()) {
+          phoneToSend = parsedSend.number; // E.164
+        }
+      } catch (err) {
+        // keep raw value
+      }
+      if (phoneToSend && String(phoneToSend).trim() !== "") payload.phoneNumber = phoneToSend;
 
-      toast.success("Perfil actualizado correctamente.");
+      let didUpdate = false;
+      if (Object.keys(payload).length > 0) {
+        await AccountService.updateProfile(payload);
+        didUpdate = true;
+      }
+      if (avatarFile && currentTenantId && currentUserId) {
+        try {
+          await AccountService.uploadAvatar(avatarFile, currentTenantId, currentUserId);
+          const refreshed = await AccountService.getMe();
+          const refreshedMe = normalizeMe(refreshed);
+          setAvatar(refreshedMe.avatarUrl ?? null);
+          didUpdate = true;
+        } catch (err) {
+          // ignore upload errors here and let user know via toast
+          console.error('Avatar upload failed', err);
+          toast.error('No se pudo subir el avatar.');
+        }
+      }
+      if (didUpdate) {
+        toast.success("Perfil actualizado correctamente.");
+      } else {
+        toast.success("No hubo cambios para guardar.");
+      }
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? "Error al guardar el perfil.");
     } finally {
@@ -268,12 +364,12 @@ export default function ProfileUserForm() {
             ) : (
               <>
                 <div className="space-y-2">
-                  <Label>Nombre*</Label>
+                  <Label>{t('profile.name')}</Label>
                   <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
                 </div>
 
                 <div className="mb-0">
-                  <Label>Correo Electrónico*</Label>
+                  <Label>{t('profile.email')}</Label>
                   <Input value={email} disabled className="cursor-not-allowed pr-48" />
                   <div className="flex justify-end">
                     <Button
@@ -282,13 +378,13 @@ export default function ProfileUserForm() {
                       className="text-red-500 text-xs hover:text-red-600"
                       onClick={handleEmailAction}
                     >
-                      {emailVerified ? "Cambiar Correo Electrónico" : "Verificar correo"}
+                      {emailVerified ? t('profile.changeEmail') : t('profile.verifyEmail')}
                     </Button>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Número de Móvil*</Label>
+                  <Label>{t('profile.phone')}</Label>
                   <PhoneField
                     code={phoneCode}
                     number={phoneNumber}
@@ -296,25 +392,24 @@ export default function ProfileUserForm() {
                     onNumberChange={setPhoneNumber}
                   />
                   <div className="flex justify-between items-center">
-                    <p className="text-xs text-sky-600">e.g. +593991234567</p>
+                    <p className="text-xs text-sky-600">{t('profile.phoneExample')}</p>
                     <Button
                       type="button"
                       variant="link"
                       className="text-red-500 text-xs hover:text-red-600"
                       onClick={handleSendVerificationCode}
                     >
-                      Confirmar número
+                      {t('profile.confirmNumber')}
                     </Button>
                   </div>
                 </div>
-
                 <div className="space-y-2">
-                  <Label>Seleccionar idioma</Label>
+                  <Label>{t('profile.selectLanguage')}</Label>
                   <Select
                     value={language}
                     onValueChange={(value) => {
                       setLanguage(value as "es" | "en" | "pt");
-                      toast.success("Idioma cambiado correctamente");
+                      toast.success(t('profile.languageSaved'));
                     }}
                   >
                     <SelectTrigger>
@@ -326,9 +421,7 @@ export default function ProfileUserForm() {
                       <SelectItem value="pt">🇧🇷 Português</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-500">
-                    El idioma se guarda automáticamente en tu navegador
-                  </p>
+                  <p className="text-xs text-gray-500">{t('profile.languageSaved')}</p>
                 </div>
 
                 <div className="flex justify-end">
@@ -338,7 +431,7 @@ export default function ProfileUserForm() {
                     onClick={handleSave}
                     className="bg-[#f36a6d] hover:bg-[#e85b5f] text-white"
                   >
-                    {saving ? "Guardando..." : "Guardar"}
+                    {saving ? t('profile.saving') : t('profile.save')}
                   </Button>
                 </div>
               </>
@@ -349,20 +442,20 @@ export default function ProfileUserForm() {
 
       <Dialog open={showEmailModal} onOpenChange={setShowEmailModal}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+            <DialogHeader>
             <DialogTitle className="text-lg font-medium">
-              Cambiar Correo Electrónico
+              {t('profile.changeEmailTitle')}
             </DialogTitle>
             <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100">
               <X className="h-4 w-4" />
               <span className="sr-only">Cerrar</span>
             </DialogClose>
-            <DialogDescription>Proporciona tu contraseña y el nuevo correo electrónico para actualizar tu cuenta.</DialogDescription>
+            <DialogDescription>{t('profile.changeEmailDesc')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña*</Label>
+              <Label htmlFor="password">{t('profile.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -373,7 +466,7 @@ export default function ProfileUserForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="newEmail">Nuevo Correo Electrónico*</Label>
+              <Label htmlFor="newEmail">{t('profile.newEmail')}</Label>
               <Input
                 id="newEmail"
                 type="email"
@@ -397,20 +490,18 @@ export default function ProfileUserForm() {
 
       <Dialog open={showPhoneVerifyModal} onOpenChange={setShowPhoneVerifyModal}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-medium">Verificar número</DialogTitle>
+            <DialogHeader>
+            <DialogTitle className="text-lg font-medium">{t('profile.verifyNumberTitle')}</DialogTitle>
             <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100">
               <X className="h-4 w-4" />
               <span className="sr-only">Cerrar</span>
             </DialogClose>
-            <DialogDescription>Ingresa el código que te hemos enviado por SMS para verificar tu número.</DialogDescription>
+            <DialogDescription>{t('profile.verifyNumberDesc')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="verificationCode">
-                Ingrese el código de verificación*
-              </Label>
+              <Label htmlFor="verificationCode">{t('profile.enterVerificationCode')}</Label>
               <Input
                 id="verificationCode"
                 type="text"
@@ -427,7 +518,7 @@ export default function ProfileUserForm() {
               className="text-gray-400 hover:text-gray-600"
               variant="ghost"
             >
-              Enviar
+              {t('profile.send')}
             </Button>
           </div>
         </DialogContent>

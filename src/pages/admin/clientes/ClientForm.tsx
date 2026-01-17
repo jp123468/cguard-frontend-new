@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { clientService } from "@/lib/api/clientService";
 import { categoryService } from "@/lib/api/categoryService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -60,12 +61,14 @@ export default function ClientForm({
 }: ClientFormProps) {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { t } = useTranslation();
     // Deduplicate toasts in case of multiple mounts (React StrictMode)
     const shownToasts = useRef<Set<string>>(new Set());
     const showToastOnce = (key: string, message: string) => {
         if (shownToasts.current.has(key)) return;
         shownToasts.current.add(key);
-        toast.error(message);
+        // Avoid showing error/warning toasts; log instead per UX decision.
+        console.warn(message);
     };
     const [redirecting, setRedirecting] = useState(false);
     const [categories, setCategories] = useState<Category[]>(initialCategories || []);
@@ -109,7 +112,7 @@ export default function ClientForm({
             setCategories(categoryList);
         } catch (e) {
             console.error("Error loading categories:", e);
-            toast.error("No se pudieron cargar las categorías");
+            console.warn("No se pudieron cargar las categorías");
         } finally {
             setLoadingCategories(false);
         }
@@ -194,7 +197,7 @@ export default function ClientForm({
                     console.debug('[ClientForm] failed to log creating user', e);
                 }
                 const data = await clientService.createClient(apiPayload as ClientInput);
-                toast.success("Cliente creado exitosamente");
+                toast.success(t('clients.clientCreated') || "Cliente creado exitosamente");
                 onSaved?.({ id: data.id, data: values });
                 form.reset();
                 navigate("/clients");
@@ -203,7 +206,7 @@ export default function ClientForm({
                     id,
                     apiPayload as unknown as ClientInput
                 );
-                toast.success("Cliente actualizado exitosamente");
+                toast.success(t('clients.clientUpdated') || "Cliente actualizado exitosamente");
                 onSaved?.({ id, data: values });
                 navigate("/clients");
             }
@@ -232,7 +235,7 @@ export default function ClientForm({
                             name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Nombre *</FormLabel>
+                                    <FormLabel>{t('clients.form.name', 'Nombre *')}</FormLabel>
                                     <FormControl>
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -258,7 +261,7 @@ export default function ClientForm({
                             name="lastName"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Apellidos *</FormLabel>
+                                    <FormLabel>{t('clients.form.lastName', 'Apellidos *')}</FormLabel>
                                     <FormControl>
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -286,7 +289,7 @@ export default function ClientForm({
                             name="email"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Correo Electrónico *</FormLabel>
+                                    <FormLabel>{t('clients.form.email', 'Correo Electrónico *')}</FormLabel>
                                     <FormControl>
                                         <input
                                             type="email"
@@ -306,7 +309,7 @@ export default function ClientForm({
                             name="phoneNumber"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Teléfono *</FormLabel>
+                                    <FormLabel>{t('clients.form.phone', 'Teléfono *')}</FormLabel>
                                     <FormControl>
                                         <PhoneInput
                                             value={typeof field.value === "string" ? field.value : ""}
@@ -326,7 +329,7 @@ export default function ClientForm({
                             name="address"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Dirección *</FormLabel>
+                                    <FormLabel>{t('clients.form.address', 'Dirección *')}</FormLabel>
                                     <FormControl>
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -353,7 +356,7 @@ export default function ClientForm({
                             name="addressLine2"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Dirección Complementaria</FormLabel>
+                                    <FormLabel>{t('clients.form.addressLine2', 'Dirección Complementaria')}</FormLabel>
                                     <FormControl>
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -375,7 +378,7 @@ export default function ClientForm({
                             name="postalCode"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Código postal/Zip *</FormLabel>
+                                    <FormLabel>{t('clients.form.postalCode', 'Código postal/Zip *')}</FormLabel>
                                     <FormControl>
                                         <input
                                             type="text"
@@ -399,7 +402,7 @@ export default function ClientForm({
                             name="city"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Ciudad *</FormLabel>
+                                    <FormLabel>{t('clients.form.city', 'Ciudad *')}</FormLabel>
                                     <FormControl>
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -426,7 +429,7 @@ export default function ClientForm({
                             name="country"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>País *</FormLabel>
+                                    <FormLabel>{t('clients.form.country', 'País *')}</FormLabel>
                                     <FormControl>
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -455,7 +458,7 @@ export default function ClientForm({
                             name="latitude"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Latitud</FormLabel>
+                                    <FormLabel>{t('clients.form.latitude', 'Latitud')}</FormLabel>
                                     <FormControl>
                                         <input
                                             type="text"
@@ -476,7 +479,7 @@ export default function ClientForm({
                             name="longitude"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Longitud</FormLabel>
+                                    <FormLabel>{t('clients.form.longitude', 'Longitud')}</FormLabel>
                                     <FormControl>
                                         <input
                                             type="text"
@@ -494,7 +497,7 @@ export default function ClientForm({
                         <div className="flex items-end">
                             <Button type="button" variant="outline" className="w-full" onClick={() => {
                                 if (!navigator.geolocation) {
-                                    toast.error("Geolocalización no disponible en este navegador");
+                                    console.warn("Geolocalización no disponible en este navegador");
                                     return;
                                 }
                                 navigator.geolocation.getCurrentPosition(
@@ -502,10 +505,10 @@ export default function ClientForm({
                                         const { latitude, longitude } = pos.coords;
                                         form.setValue("latitude", String(latitude));
                                         form.setValue("longitude", String(longitude));
-                                        toast.success("Ubicación establecida");
+                                        toast.success(t('clients.form.locationSet') || "Ubicación establecida");
                                     },
                                     (err) => {
-                                        toast.error(err.message || "No se pudo obtener la ubicación");
+                                        console.warn(err.message || "No se pudo obtener la ubicación");
                                     },
                                     { enableHighAccuracy: true, timeout: 10000 }
                                 );
@@ -518,7 +521,7 @@ export default function ClientForm({
                     <Accordion type="single" collapsible defaultValue="more">
                         <AccordionItem value="more" className="border rounded-md">
                             <AccordionTrigger className="px-4">
-                                Más Información
+                                {t('clients.form.moreInfo', 'Más Información')}
                             </AccordionTrigger>
                             <AccordionContent className="px-4 pb-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -527,7 +530,7 @@ export default function ClientForm({
                                         name="faxNumber"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Fax</FormLabel>
+                                                <FormLabel>{t('clients.form.fax', 'Fax')}</FormLabel>
                                                 <FormControl>
                                                     <PhoneInput
                                                         value={typeof field.value === "string" ? field.value : ""}
@@ -546,7 +549,7 @@ export default function ClientForm({
                                         name="website"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Sitio Web</FormLabel>
+                                                <FormLabel>{t('clients.form.website', 'Sitio Web')}</FormLabel>
                                                 <FormControl>
                                                     <input
                                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -565,7 +568,7 @@ export default function ClientForm({
                                         name="categoryIds"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Categorías</FormLabel>
+                                                <FormLabel>{t('clients.form.categories', 'Categorías')}</FormLabel>
                                                 <CategorySelect
                                                     options={cats}
                                                     value={Array.isArray(field.value) ? field.value : []}

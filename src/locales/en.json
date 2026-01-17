@@ -1,0 +1,320 @@
+{
+  "profile": {
+    "name": "Name*",
+    "email": "Email Address*",
+    "changeEmail": "Change Email",
+    "verifyEmail": "Verify email",
+    "phone": "Mobile Number*",
+    "phoneExample": "e.g. +593991234567",
+    "confirmNumber": "Confirm number",
+    "selectLanguage": "Select language",
+    "languageSaved": "The language is saved automatically in your browser",
+    "save": "Save",
+    "saving": "Saving...",
+    "changeEmailTitle": "Change Email",
+    "changeEmailDesc": "Provide your password and the new email to update your account.",
+    "password": "Password*",
+    "newEmail": "New Email Address*",
+    "verifyNumberTitle": "Verify number",
+    "verifyNumberDesc": "Enter the code we sent you by SMS to verify your number.",
+    "send": "Send"
+  }
+  ,
+  "sidebar": {
+    "panel": "Dashboard",
+    "actividad": "Activity",
+    "clientes": {
+      "label": "Clients",
+      "clientes": "Clients",
+      "sitios-publicacion": "Post Sites"
+    },
+    "equipo": {
+      "label": "Security Team",
+      "guardias": "Security Guards",
+      "usuarios": "Admin Office Users"
+    },
+    "analiticas": {
+      "label": "Analytics",
+      "informe": "Reporting",
+      "horario": "Scheduling",
+      "facturador": "Invoicing",
+      "sitios-publicacion": "Post Sites",
+      "guardias": "Guards"
+    },
+    "rastreador": {
+      "label": "GPS Tracker",
+      "seguimiento": "Live Tracking",
+      "historial": "Tracking History"
+    },
+    "mensajero": "Messenger",
+    "reloj": {
+      "label": "Time Clock",
+      "registro": "Time Recorder",
+      "tarjeta": "Time Card",
+      "descansos": "Breaks"
+    },
+    "informes": "Reports",
+    "programador": {
+      "label": "Scheduler",
+      "horario": "Schedule",
+      "plantillas": "Shift Templates",
+      "asistencia": "Attendance",
+      "estado": "Shift Status",
+      "turnos-abiertos": "Open Shifts",
+      "intercambio": "Shift Exchange",
+      "tiempo-libre": "Time Off"
+    },
+    "nomina": {
+      "label": "Payroll",
+      "ejecutar": "Generate Payroll",
+      "pasadas": "Past Payroll",
+      "horas-extras": "Overtime Multiplier"
+    },
+    "facturador": {
+      "label": "Billing",
+      "estimaciones": "Estimates",
+      "facturas": "Invoices",
+      "elementos": "Items"
+    },
+    "despachador": "Dispatcher",
+    "visitantes": {
+      "label": "Visitor Management",
+      "visitantes": "Visitors",
+      "vehiculos": "Vehicles",
+      "visitas": "Visits"
+    },
+    "patrulla": {
+      "label": "Vehicle Patrol",
+      "vehiculo": "Vehicle",
+      "rutas": "Routes"
+    },
+    "parking": {
+      "label": "Parking Manager",
+      "contacto": "Contact",
+      "vehiculos": "Vehicles",
+      "areas": "Parking Area",
+      "espacios": "Parking Lot",
+      "incidentes": "Incidents",
+      "tipo-incidente": "Incident Type"
+    }
+  }
+  ,
+  "settings": {
+    "configuracion": {
+      "title": "Configuration",
+      "perfil-usuario": "User Profile",
+      "perfil-empresa": "Company Profile",
+      "cambiar-contrasena": "Change Password",
+      "mfa": "Two-Factor Authentication",
+      "notificaciones": "Notifications",
+      "politicas": "Policies & Documents",
+      "tipos-incidentes": "Incident Types",
+      "tipos-licencias": "License Types",
+      "conjunto-habilidades": "Skill Sets",
+      "departamentos": "Departments",
+      "impuestos": "Taxes",
+      "roles": "User Roles",
+      "campos-perfil": "Profile Fields",
+      "custom-reports": "Custom Reports",
+      "integraciones": "Integrations",
+      "payroll-setup": "Payroll Settings",
+      "publishing-sites": "Publishing Sites",
+      "keep-safe": "Security Guards",
+      "report-configuration": "Report Configuration",
+      "other-settings": "Other Settings",
+      "access-token": "Access Token",
+      "request-records": "Request Records"
+    },
+    "suscripcion": {
+      "title": "Subscription",
+      "detalle": "Subscription Details",
+      "modulos": "Modules",
+      "metodos-pago": "Payment Methods",
+      "facturas": "Invoices"
+    },
+    "section": {
+      "seguridad": "SECURITY",
+      "configuracion_global": "GLOBAL CONFIGURATION",
+      "acceso_de_desarrollador": "DEVELOPER ACCESS"
+    }
+  },
+  "clients": {
+    "loadError": "Error loading clients",
+    "loadClientError": "Could not load client",
+    "selectAtLeastOne": "Select at least one client",
+    "selectOnlyActiveToArchive": "Select only active clients to archive",
+    "selectOnlyArchivedToRestore": "Select only archived clients to restore",
+    "selectOnlyArchivedToDelete": "Select only archived clients to delete",
+    "actionNotImplemented": "Action \"{{action}}\" not implemented yet",
+    "generatingPDF": "Generating PDF...",
+    "pdfDownloaded": "PDF downloaded",
+    "errorExportPDF": "Error exporting PDF",
+    "generatingExcel": "Generating Excel...",
+    "excelDownloaded": "Excel downloaded",
+    "errorExportExcel": "Error exporting Excel",
+    "categoriesUpdated": "Categories updated",
+    "errorUpdateCategories": "Error updating categories",
+    "selectAtLeastOneCategory": "Select at least one category",
+    "errorMoveCategories": "Error moving categories",
+    "bulk": {
+      "move": "Move",
+      "archive": "Archive",
+      "restore": "Restore",
+      "delete": "Delete",
+      "manageCategories": "Manage Categories"
+    },
+    "columns": {
+      "name": "Client",
+      "address": "Address",
+      "email": "Email",
+      "phone": "Phone Number",
+      "status": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "categorize": "Categorize",
+      "categorize_label": "Categorize",
+      "archive": "Archive",
+      "delete": "Delete",
+      "restore": "Restore"
+    },
+    "clientArchived": "Client archived",
+    "errorArchiveClient": "Error archiving client",
+    "breadcrumb": {
+      "dashboard": "Dashboard",
+      "clients": "Clients"
+    },
+    "searchPlaceholder": "Search client",
+    "newClient": "New client",
+    "editClient": "Edit client",
+    "clientCreated": "Client created successfully",
+    "clientUpdated": "Client updated successfully",
+    "form": {
+      "name": "Name *",
+      "lastName": "Last name *",
+      "email": "Email Address *",
+      "phone": "Phone *",
+      "address": "Address *",
+      "addressLine2": "Address Line 2",
+      "addressLine2Placeholder": "Optional",
+      "postalCode": "Postal code/Zip *",
+      "city": "City *",
+      "country": "Country *",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "locationSet": "Location set",
+      "useMyLocation": "Use my location",
+      "moreInfo": "More information",
+      "fax": "Fax",
+      "website": "Website",
+      "categories": "Categories"
+    },
+    "filters": {
+      "title": "Filters",
+      "email": "Email",
+      "phone": "Phone Number",
+      "city": "City",
+      "country": "Country",
+      "categories": "Categories",
+      "status": "Status",
+      "all": "All",
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "placeholders": {
+      "emailExample": "example@email.com",
+      "phoneExample": "+1 555 1234567",
+      "cityExample": "Quito",
+      "countryExample": "Ecuador"
+    },
+    "applyFilters": "Apply filters",
+    "clearFilters": "Clear filters",
+    "export": {
+      "pdf": "Export as PDF",
+      "excel": "Export as Excel"
+    },
+    "import": "Import",
+    "empty": {
+      "alt": "No data",
+      "title": "No results found",
+      "description": "We couldn't find any items matching your search."
+    },
+    "pagination": {
+      "itemsPerPage": "Items per page",
+      "of": "of",
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "dialogs": {
+      "changeCategories": {
+        "title": "Change categories",
+        "desc": "Applies to {{count}} selected client(s).",
+        "newCategories": "New categories"
+      },
+      "categorize": {
+        "title": "Categorize client"
+      }
+    },
+    "client": "Client",
+    "loading": "Loading...",
+    "selectCategories": "Select categories",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "accept": "Accept",
+    "alerts": {
+      "archiveClients": {
+        "title": "Archive clients?",
+        "desc": "Are you sure you want to archive {{count}} client(s)? This will mark them as inactive."
+      },
+      "restoreClients": {
+        "title": "Restore clients?",
+        "desc": "Are you sure you want to restore {{count}} client(s)? They will become active again."
+      },
+      "deleteClients": {
+        "title": "Delete clients?",
+        "desc": "Are you sure you want to permanently delete {{count}} client(s)? This action cannot be undone."
+      },
+      "deleteClient": {
+        "title": "Delete client?",
+        "desc": "Are you sure you want to permanently delete {{name}}? This action cannot be undone."
+      },
+      "restoreClient": {
+        "title": "Restore client?",
+        "desc": "Are you sure you want to restore {{name}}? The client will become active again."
+      }
+    },
+    "clientsArchived": "Clients archived",
+    "clientsRestored": "Clients restored",
+    "clientsDeleted": "Clients deleted",
+    "clientDeleted": "Client deleted",
+    "clientRestored": "Client restored",
+    "clientArchived": "Client archived",
+    "errorArchive": "Error archiving",
+    "errorRestore": "Error restoring",
+    "errorDelete": "Error deleting"
+  }
+  ,
+  "postSites": {
+    "searchPlaceholder": "Search Post Sites",
+    "newPostSite": "New Post Site",
+    "filtersTitle": "Filters",
+    "filters": {
+      "email": "Email",
+      "phone": "Phone Number",
+      "city": "City",
+      "country": "Country",
+      "categories": "Categories"
+    },
+    "selectAtLeastOne": "Select at least one post site",
+    "generatingPDF": "Generating PDF...",
+    "pdfDownloaded": "PDF downloaded",
+    "generatingExcel": "Generating Excel...",
+    "excelDownloaded": "Excel downloaded",
+    "sitesArchived": "Sites archived"
+  }
+}

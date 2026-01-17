@@ -5,7 +5,7 @@ import ClientForm, { Category } from "./ClientForm";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { usePermissions } from "@/hooks/usePermissions";
-import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 
 export default function NewOrEditClientPage() {
@@ -13,15 +13,18 @@ export default function NewOrEditClientPage() {
     const [cats, setCats] = useState<Category[]>([]);
     const navigate = useNavigate();
     const { hasPermission } = usePermissions();
+    const { t } = useTranslation();
 
     useEffect(() => {
         // If creating, require create permission. If editing, require edit permission.
         if (!id && !hasPermission('clientAccountCreate')) {
-            toast.error('No tienes permiso para crear clientes');
+            // Frontend won't display error toast - backend handles error messages.
+            console.warn('No tienes permiso para crear clientes');
             navigate('/clients');
         }
         if (id && !hasPermission('clientAccountEdit')) {
-            toast.error('No tienes permiso para editar clientes');
+            // Frontend won't display error toast - backend handles error messages.
+            console.warn('No tienes permiso para editar clientes');
             navigate('/clients');
         }
     }, [id, hasPermission, navigate]);
@@ -39,8 +42,8 @@ export default function NewOrEditClientPage() {
         <AppLayout>
             <Breadcrumb
                 items={[
-                    { label: "Panel de control", path: "/dashboard" },
-                    { label: id ? "Editar cliente" : "Nuevo cliente" },
+                    { label: t('clients.breadcrumb.dashboard'), path: "/dashboard" },
+                    { label: id ? t('clients.editClient') : t('clients.newClient') },
                 ]}
             />
             <section className="p-4">

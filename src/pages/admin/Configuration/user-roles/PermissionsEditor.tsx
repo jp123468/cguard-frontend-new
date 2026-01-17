@@ -16,7 +16,12 @@ export default function PermissionsEditor({ value, onChange, query = "" }: Props
     const q = query.toLowerCase();
     const out: Record<string, string[]> = {};
     for (const k of Object.keys(grouped)) {
-      const items = grouped[k].filter((p) => p.toLowerCase().includes(q));
+      const items = grouped[k].filter((p) => {
+        const key = p.toLowerCase();
+        const label = formatPermissionLabel(p).toLowerCase();
+        const groupLabel = (RESOURCE_LABELS[k] ?? k).toLowerCase();
+        return key.includes(q) || label.includes(q) || groupLabel.includes(q);
+      });
       if (items.length) out[k] = items;
     }
     return out;

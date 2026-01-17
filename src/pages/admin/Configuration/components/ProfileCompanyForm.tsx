@@ -6,14 +6,31 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import CountryPhoneSelect, { CountryPhoneSelectValue } from "@/components/CountryPhoneSelect";
+import CompanyPhoneField from "./profile/CompanyPhoneField";
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { toast } from "sonner";
 import { Camera } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import tenantService from '@/services/tenant.service';
+import { useEffect } from 'react';
 
 export default function ProfileCompanyForm() {
+  const { user } = useAuth();
+
+  const isAdmin = (() => {
+    if (!user) return false;
+    if (Array.isArray(user.roles) && user.roles.includes('admin')) return true;
+    if (Array.isArray(user.tenants) && user.tenants.length > 0) {
+      const t = user.tenants[0];
+      if (Array.isArray(t.roles) && t.roles.includes('admin')) return true;
+    }
+    return false;
+  })();
+
+  const canEdit = isAdmin;
   const [logo, setLogo] = useState<string | null>(null);
 
-  const [country, setCountry] = useState<CountryPhoneSelectValue>({
+  const [country, setCountry] = useState({
     code: "US",
     dialCode: "+1",
     name: "United States",
@@ -30,6 +47,16 @@ export default function ProfileCompanyForm() {
     timezone: "America/Guayaquil",
   });
 
+  const [phoneE164, setPhoneE164] = useState(`${country.dialCode}${form.phone}`);
+  const isPhoneValid = (() => {
+    if (!phoneE164) return false;
+    try {
+      const parsed = parsePhoneNumberFromString(String(phoneE164));
+      return !!parsed && parsed.isValid();
+    } catch (err) {
+      return false;
+    }
+  })();
   const onPickLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -40,8 +67,47 @@ export default function ProfileCompanyForm() {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (phoneE164 && !isPhoneValid) {
+      toast.error("Por favor ingresa un número de teléfono válido antes de guardar.");
+      return;
+    }
+
+    // Aquí se podría transformar phoneE164 a la estructura que el backend espera
+    // y enviar PUT /tenant/:id -> tenantService.update(tenantId, payload)
     toast.success("Datos de la empresa guardados");
   };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        // try to get tenantId from localStorage (set by AuthContext) or from user.tenants
+        const tenantId = localStorage.getItem('tenantId') || (user && Array.isArray(user.tenants) && user.tenants.length > 0 ? (user.tenants[0].tenantId || (user.tenants[0].tenant && user.tenants[0].tenant.id)) : null);
+        if (!tenantId) return;
+        const res: any = await tenantService.findById(String(tenantId));
+        if (!mounted || !res) return;
+        // tenantService returns the tenant record directly
+        const t = res;
+        setForm((s) => ({
+          ...s,
+          name: t.name ?? s.name,
+          website: t.website ?? s.website,
+          address: t.address ?? s.address,
+          email: t.email ?? s.email,
+          license: t.licenseNumber ?? t.license ?? s.license,
+          timezone: t.timezone ?? s.timezone,
+        }));
+        // set phone value for phone component. Backend may store E.164 or plain number
+        if (t.phone) {
+          setPhoneE164(String(t.phone));
+        }
+        // logo handling: backend stores logoId; we leave existing behavior for now
+      } catch (err) {
+        console.warn('No se pudo cargar datos del tenant:', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [user]);
 
   return (
     <>
@@ -57,36 +123,37 @@ export default function ProfileCompanyForm() {
             </div>
             <label
               htmlFor="logo"
-              className="absolute -right-2 -bottom-2 h-8 w-8 rounded-full bg-muted grid place-items-center cursor-pointer border"
+              className={`absolute -right-2 -bottom-2 h-8 w-8 rounded-full bg-muted grid place-items-center border ${!canEdit ? 'cursor-not-allowed opacity-60 pointer-events-none' : 'cursor-pointer'}`}
             >
               <Camera className="h-4 w-4 text-muted-foreground" />
             </label>
-            <input id="logo" type="file" accept="image/*" className="hidden" onChange={onPickLogo} />
+            <input id="logo" type="file" accept="image/*" className="hidden" onChange={onPickLogo} disabled={!canEdit} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-6">
+          {!canEdit && (
+            <div className="p-3 rounded-md bg-yellow-50 border border-yellow-100 text-sm text-yellow-800">
+              Sólo los usuarios con el rol <strong>admin</strong> pueden editar la información de la empresa.
+            </div>
+          )}
           <div className="space-y-2">
             <Label>Nombre de la Empresa*</Label>
             <Input
               value={form.name}
               onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
+              disabled={!canEdit}
               placeholder="Nombre"
             />
           </div>
 
           <div className="space-y-2">
             <Label>Número de Teléfono de la Empresa*</Label>
-            <div className="flex gap-2">
-              <CountryPhoneSelect value={country} onChange={setCountry} className="w-44" />
-              <Input
-                type="tel"
-                value={form.phone}
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, phone: e.target.value.replace(/[^\d]/g, "") }))
-                }
-                placeholder="e.g. 12015550123"
-              />
+            <div>
+              <CompanyPhoneField value={phoneE164} onChange={setPhoneE164} disabled={!canEdit} />
+              {phoneE164 && !isPhoneValid && (
+                <p className="text-xs text-red-500">Número inválido. Usa el formato internacional, por ejemplo +12015550123.</p>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">e.g. {country.dialCode}2015550123</p>
           </div>
@@ -98,6 +165,7 @@ export default function ProfileCompanyForm() {
               value={form.website}
               onChange={(e) => setForm((s) => ({ ...s, website: e.target.value }))}
               placeholder="https://tu-dominio.com"
+              disabled={!canEdit}
             />
           </div>
 
@@ -108,6 +176,7 @@ export default function ProfileCompanyForm() {
               value={form.address}
               onChange={(e) => setForm((s) => ({ ...s, address: e.target.value }))}
               placeholder="Dirección"
+              disabled={!canEdit}
             />
           </div>
 
@@ -118,6 +187,7 @@ export default function ProfileCompanyForm() {
               value={form.email}
               onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
               placeholder="correo@empresa.com"
+              disabled={!canEdit}
             />
           </div>
 
@@ -127,6 +197,7 @@ export default function ProfileCompanyForm() {
               value={form.license}
               onChange={(e) => setForm((s) => ({ ...s, license: e.target.value }))}
               placeholder="Licencia"
+              disabled={!canEdit}
             />
           </div>
 
@@ -135,6 +206,7 @@ export default function ProfileCompanyForm() {
             <Select
               value={form.timezone}
               onValueChange={(v) => setForm((s) => ({ ...s, timezone: v }))}
+              disabled={!canEdit}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar zona horaria" />
@@ -150,11 +222,15 @@ export default function ProfileCompanyForm() {
                 <SelectItem value="UTC">UTC</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-gray-500">La zona horaria determina cómo se muestran y calculan los horarios y marcas de tiempo en la aplicación (turnos, registros y reportes).</p>
           </div>
 
           <div className="flex justify-end">
             <Button
               className="bg-[#f36a6d] hover:bg-[#e85b5f] text-white"
+              type="submit"
+              disabled={!canEdit}
+              title={!canEdit ? 'Solo admins pueden guardar cambios' : undefined}
             >
               Guardar
             </Button>

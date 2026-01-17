@@ -53,6 +53,7 @@ import {
   AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import { postSiteService, PostSite, PostSiteFilters } from "@/lib/api/postSiteService";
+import { useTranslation } from "react-i18next";
 import { clientService } from "@/lib/api/clientService";
 import { categoryService, type Category } from "@/lib/api/categoryService";
 import CategoryManagerDialog from "@/components/categories/CategoryManagerDialog";
@@ -63,6 +64,7 @@ import { RowActionsMenu, type RowAction } from "@/components/table/RowActionsMen
 import type { Client } from "@/types/client";
 
 export default function PostSitePage() {
+  const { t } = useTranslation();
   const [openFilter, setOpenFilter] = useState(false);
   const [postSites, setPostSites] = useState<PostSite[]>([]);
   const [loading, setLoading] = useState(false);
@@ -189,7 +191,8 @@ export default function PostSitePage() {
       setTotalCount(q ? finalRows.length : data.count);
     } catch (error: any) {
       console.error(error);
-      toast.error(getServerErrorMessage(error, "Error al cargar sitios de publicación"));
+      // Do not show error toast; log instead
+      console.warn(getServerErrorMessage(error, "Error al cargar sitios de publicación"));
     } finally {
       setLoading(false);
     }
@@ -218,9 +221,9 @@ export default function PostSitePage() {
           setTempFilters(filters);
         })
         .catch((error: any) => {
-          console.error(error);
-          toast.error(getServerErrorMessage(error, "Error al cargar opciones de filtro"));
-        })
+              console.error(error);
+              console.warn(getServerErrorMessage(error, "Error al cargar opciones de filtro"));
+            })
         .finally(() => {
           setLoadingFilters(false);
         });
@@ -245,7 +248,7 @@ export default function PostSitePage() {
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) {
-      toast.warning("Selecciona al menos un sitio de publicación ");
+      console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación'));
       return;
     }
     // Open confirmation dialog for bulk delete
@@ -255,7 +258,7 @@ export default function PostSitePage() {
 
   const handleExportPDF = async () => {
     try {
-      toast.loading("Generando PDF...");
+      toast.loading(t('postSites.generatingPDF', 'Generando PDF...'));
       const blob = await postSiteService.exportPDF(filters);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -264,16 +267,16 @@ export default function PostSitePage() {
       a.click();
       window.URL.revokeObjectURL(url);
       toast.dismiss();
-      toast.success("PDF descargado");
+      toast.success(t('postSites.pdfDownloaded', 'PDF descargado'));
     } catch (error: any) {
       toast.dismiss();
-      toast.error(getServerErrorMessage(error, "Error al exportar PDF"));
+      console.warn(getServerErrorMessage(error, "Error al exportar PDF"));
     }
   };
 
   const handleExportExcel = async () => {
     try {
-      toast.loading("Generando Excel...");
+      toast.loading(t('postSites.generatingExcel', 'Generando Excel...'));
       const blob = await postSiteService.exportExcel(filters);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -282,10 +285,10 @@ export default function PostSitePage() {
       a.click();
       window.URL.revokeObjectURL(url);
       toast.dismiss();
-      toast.success("Excel descargado");
+      toast.success(t('postSites.excelDownloaded', 'Excel descargado'));
     } catch (error: any) {
       toast.dismiss();
-      toast.error(getServerErrorMessage(error, "Error al exportar Excel"));
+      console.warn(getServerErrorMessage(error, "Error al exportar Excel"));
     }
   };
 
@@ -386,7 +389,7 @@ export default function PostSitePage() {
                 }
                 if (action === "archivar") {
                   if (selectedIds.length === 0) {
-                    toast.warning("Selecciona al menos un sitio de publicación ");
+                                  console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación'));
                     setBulkKey((k) => k + 1);
                     return;
                   }
@@ -394,19 +397,19 @@ export default function PostSitePage() {
                     await Promise.all(
                       selectedIds.map((id) => postSiteService.update(id, { status: "inactive" } as any))
                     );
-                    toast.success("Sitios archivados");
+                    toast.success(t('postSites.sitesArchived', 'Sitios archivados'));
                     setSelectedIds([]);
                     loadPostSites();
                     setBulkKey((k) => k + 1);
                   } catch (e) {
-                    toast.error("Error al archivar");
+                    console.warn('Error al archivar');
                     setBulkKey((k) => k + 1);
                   }
                   return;
                 }
                 if (action === "mover") {
                   if (selectedIds.length === 0) {
-                    toast.warning("Selecciona al menos un sitio de publicación ");
+                    console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación'));
                     setBulkKey((k) => k + 1);
                     return;
                   }
@@ -423,7 +426,7 @@ export default function PostSitePage() {
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar Sitios de Publicación"
+                placeholder={t('postSites.searchPlaceholder', 'Buscar Sitios de Publicación')}
                 className="pl-9 w-64"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -434,7 +437,7 @@ export default function PostSitePage() {
               className="bg-orange-500 hover:bg-orange-600 text-white"
               onClick={() => console.log("Nuevo sitio de publicación")}
             >
-              <Link to="/post-sites/new">Nuevo Sitio de Publicación</Link>
+              <Link to="/post-sites/new">{t('postSites.newPostSite', 'Nuevo Sitio de Publicación')}</Link>
             </Button>
 
             {/* Filtros */}
@@ -445,17 +448,17 @@ export default function PostSitePage() {
                   className="text-orange-600 border-orange-200"
                 >
                   <Filter className="mr-2 h-4 w-4" />
-                  Filtros
+                  {t('postSites.filtersTitle', 'Filtros')}
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[400px] sm:w-[460px]">
                 <SheetHeader>
-                  <SheetTitle>Filtros</SheetTitle>
+                  <SheetTitle>{t('postSites.filtersTitle', 'Filtros')}</SheetTitle>
                 </SheetHeader>
 
                 <div className="mt-6 space-y-4">
                   <div className="space-y-2">
-                    <Label>Correo Electrónico</Label>
+                    <Label>{t('postSites.filters.email', 'Correo Electrónico')}</Label>
                     <Input
                       placeholder="ejemplo@correo.com"
                       value={tempFilters.email || ""}
@@ -469,7 +472,7 @@ export default function PostSitePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Número de Teléfono</Label>
+                    <Label>{t('postSites.filters.phone', 'Número de Teléfono')}</Label>
                     <Input
                       placeholder="+593 123456789"
                       value={tempFilters.phoneNumber || ""}
@@ -483,7 +486,7 @@ export default function PostSitePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Ciudad</Label>
+                    <Label>{t('postSites.filters.city', 'Ciudad')}</Label>
                     <Input
                       placeholder="Quito"
                       value={tempFilters.city || ""}
@@ -497,7 +500,7 @@ export default function PostSitePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>País</Label>
+                    <Label>{t('postSites.filters.country', 'País')}</Label>
                     <Input
                       placeholder="Ecuador"
                       value={tempFilters.country || ""}
@@ -511,7 +514,7 @@ export default function PostSitePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Categorías</Label>
+                    <Label>{t('postSites.filters.categories', 'Categorías')}</Label>
                     <Select
                       value={tempFilters.category || "all"}
                       onValueChange={(v) =>

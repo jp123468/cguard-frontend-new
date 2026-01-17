@@ -17,11 +17,11 @@ export default function AvatarUploader({ src, onChange, size = 128 }: Props) {
         {src ? (
           <img src={src} alt="avatar" className="w-full h-full object-cover" />
         ) : (
-          <img
-            src="https://static-00.iconduck.com/assets.00/user-avatar-generic-icon-512x512-yvvtgpby.png"
-            alt="avatar"
-            className="w-20 h-20 opacity-70"
-          />
+          <div className="w-20 h-20 opacity-70 text-gray-400 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-12 h-12" fill="currentColor">
+              <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 3.134-7 7 0 .552.448 1 1 1h12c.552 0 1-.448 1-1 0-3.866-3.134-7-7-7z" />
+            </svg>
+          </div>
         )}
       </div>
 

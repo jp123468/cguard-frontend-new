@@ -1,0 +1,321 @@
+{
+  "profile": {
+    "name": "Nombre*",
+    "email": "Correo Electrónico*",
+    "changeEmail": "Cambiar Correo Electrónico",
+    "verifyEmail": "Verificar correo",
+    "phone": "Número de Móvil*",
+    "phoneExample": "e.g. +593991234567",
+    "confirmNumber": "Confirmar número",
+    "selectLanguage": "Seleccionar idioma",
+    "languageSaved": "El idioma se guarda automáticamente en tu navegador",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "changeEmailTitle": "Cambiar Correo Electrónico",
+    "changeEmailDesc": "Proporciona tu contraseña y el nuevo correo electrónico para actualizar tu cuenta.",
+    "password": "Contraseña*",
+    "newEmail": "Nuevo Correo Electrónico*",
+    "verifyNumberTitle": "Verificar número",
+    "verifyNumberDesc": "Ingresa el código que te hemos enviado por SMS para verificar tu número.",
+    "enterVerificationCode": "Ingrese el código de verificación*",
+    "send": "Enviar"
+  }
+  ,
+  "sidebar": {
+    "panel": "Panel de control",
+    "actividad": "Actividad",
+    "clientes": {
+      "label": "Clientes",
+      "clientes": "Clientes",
+      "sitios-publicacion": "Sitios de Publicación"
+    },
+    "equipo": {
+      "label": "Equipo de Seguridad",
+      "guardias": "Guardias de Seguridad",
+      "usuarios": "Usuarios de Oficina Administrativa"
+    },
+    "analiticas": {
+      "label": "Analíticas",
+      "informe": "Informe",
+      "horario": "Horario",
+      "facturador": "Facturador",
+      "sitios-publicacion": "Sitios de Publicación",
+      "guardias": "Guardias de Seguridad"
+    },
+    "rastreador": {
+      "label": "Rastreador GPS",
+      "seguimiento": "Seguimiento en vivo",
+      "historial": "Historial de seguimiento"
+    },
+    "mensajero": "Mensajero",
+    "reloj": {
+      "label": "Reloj de Tiempo",
+      "registro": "Registro de tiempo",
+      "tarjeta": "Tarjeta de tiempo",
+      "descansos": "Descansos"
+    },
+    "informes": "Informes",
+    "programador": {
+      "label": "Programador",
+      "horario": "Horario",
+      "plantillas": "Plantillas de turno",
+      "asistencia": "Asistencia",
+      "estado": "Estado de Turno",
+      "turnos-abiertos": "Turnos Abiertos",
+      "intercambio": "Intercambio de Turno",
+      "tiempo-libre": "Tiempo Libre"
+    },
+    "nomina": {
+      "label": "Nómina",
+      "ejecutar": "Ejecutar Nómina",
+      "pasadas": "Nóminas Pasadas",
+      "horas-extras": "Multiplicador de Horas Extras"
+    },
+    "facturador": {
+      "label": "Facturador",
+      "estimaciones": "Estimaciones",
+      "facturas": "Facturas",
+      "elementos": "Elementos"
+    },
+    "despachador": "Despachador",
+    "visitantes": {
+      "label": "Gestión de Visitantes",
+      "visitantes": "Visitantes",
+      "vehiculos": "Vehículos",
+      "visitas": "Visitas"
+    },
+    "patrulla": {
+      "label": "Patrulla vehicular",
+      "vehiculo": "Vehículo",
+      "rutas": "Rutas"
+    },
+    "parking": {
+      "label": "Administrador de estacionamiento",
+      "contacto": "Contacto",
+      "vehiculos": "Vehículos",
+      "areas": "Área de estacionamiento",
+      "espacios": "Estacionamiento",
+      "incidentes": "Incidentes",
+      "tipo-incidente": "Tipo de Incidente"
+    }
+  }
+  ,
+  "settings": {
+    "configuracion": {
+      "title": "Configuración",
+      "perfil-usuario": "Perfil del Usuario",
+      "perfil-empresa": "Perfil de la Empresa",
+      "cambiar-contrasena": "Cambiar Contraseña",
+      "mfa": "Método de Autenticación de Dos Factores",
+      "notificaciones": "Notificaciones",
+      "politicas": "Políticas y Documentos",
+      "tipos-incidentes": "Tipos de Incidentes",
+      "tipos-licencias": "Tipos de Licencias",
+      "conjunto-habilidades": "Conjuntos de Habilidades",
+      "departamentos": "Departamentos",
+      "impuestos": "Impuestos",
+      "roles": "Roles de Usuario",
+      "campos-perfil": "Campos de Perfil",
+      "custom-reports": "Informes Personalizados",
+      "integraciones": "Integraciones",
+      "payroll-setup": "Configuración de Nómina",
+      "publishing-sites": "Sitios de Publicación",
+      "keep-safe": "Guardias de Seguridad",
+      "report-configuration": "Configuración de Informes",
+      "other-settings": "Otras Configuraciones",
+      "access-token": "Token de acceso",
+      "request-records": "Solicitar registros"
+    },
+    "suscripcion": {
+      "title": "Suscripción",
+      "detalle": "Detalles de la Suscripción",
+      "modulos": "Módulos",
+      "metodos-pago": "Métodos de Pago",
+      "facturas": "Facturas"
+    },
+    "section": {
+      "seguridad": "SEGURIDAD",
+      "configuracion_global": "CONFIGURACIÓN GLOBAL",
+      "acceso_de_desarrollador": "ACCESO DE DESARROLLADOR"
+    }
+  },
+  "clients": {
+    "loadError": "Error al cargar clientes",
+    "loadClientError": "No se pudo cargar el cliente",
+    "selectAtLeastOne": "Selecciona al menos un cliente",
+    "selectOnlyActiveToArchive": "Selecciona solo clientes activos para archivar",
+    "selectOnlyArchivedToRestore": "Selecciona solo clientes archivados para restaurar",
+    "selectOnlyArchivedToDelete": "Selecciona solo clientes archivados para eliminar",
+    "actionNotImplemented": "Acción \"{{action}}\" no implementada aún",
+    "generatingPDF": "Generando PDF...",
+    "pdfDownloaded": "PDF descargado",
+    "errorExportPDF": "Error al exportar PDF",
+    "generatingExcel": "Generando Excel...",
+    "excelDownloaded": "Excel descargado",
+    "errorExportExcel": "Error al exportar Excel",
+    "categoriesUpdated": "Categorías actualizadas",
+    "errorUpdateCategories": "Error al actualizar categorías",
+    "selectAtLeastOneCategory": "Selecciona al menos una categoría",
+    "errorMoveCategories": "Error al mover categorías",
+    "bulk": {
+      "move": "Mover",
+      "archive": "Archivar",
+      "restore": "Restaurar",
+      "delete": "Eliminar",
+      "manageCategories": "Gestionar Categorías"
+    },
+    "columns": {
+      "name": "Cliente",
+      "address": "Dirección",
+      "email": "Correo Electrónico",
+      "phone": "Número de Teléfono",
+      "status": "Estado"
+    },
+    "status": {
+      "active": "Activo",
+      "archived": "Archivado"
+    },
+    "actions": {
+      "viewDetails": "Ver Detalles",
+      "categorize": "Categorizar",
+      "categorize_label": "Categorizar",
+      "archive": "Archivo",
+      "delete": "Eliminar",
+      "restore": "Restaurar"
+    },
+    "clientArchived": "Cliente archivado",
+    "errorArchiveClient": "Error al archivar cliente",
+    "breadcrumb": {
+      "dashboard": "Panel de control",
+      "clients": "Clientes"
+    },
+    "searchPlaceholder": "Buscar Cliente",
+    "newClient": "Nuevo cliente",
+    "editClient": "Editar cliente",
+    "clientCreated": "Cliente creado exitosamente",
+    "clientUpdated": "Cliente actualizado exitosamente",
+    "form": {
+      "name": "Nombre *",
+      "lastName": "Apellidos *",
+      "email": "Correo Electrónico *",
+      "phone": "Teléfono *",
+      "address": "Dirección *",
+      "addressLine2": "Dirección Complementaria",
+      "addressLine2Placeholder": "Opcional",
+      "postalCode": "Código postal/Zip *",
+      "city": "Ciudad *",
+      "country": "País *",
+      "latitude": "Latitud",
+      "longitude": "Longitud",
+      "locationSet": "Ubicación establecida",
+      "useMyLocation": "Usar mi ubicación",
+      "moreInfo": "Más Información",
+      "fax": "Fax",
+      "website": "Sitio Web",
+      "categories": "Categorías"
+    },
+    "filters": {
+      "title": "Filtros",
+      "email": "Correo Electrónico",
+      "phone": "Número de Teléfono",
+      "city": "Ciudad",
+      "country": "País",
+      "categories": "Categorías",
+      "status": "Estado",
+      "all": "Todos",
+      "active": "Activo",
+      "archived": "Archivado"
+    },
+    "placeholders": {
+      "emailExample": "ejemplo@correo.com",
+      "phoneExample": "+593 123456789",
+      "cityExample": "Quito",
+      "countryExample": "Ecuador"
+    },
+    "applyFilters": "Aplicar Filtros",
+    "clearFilters": "Limpiar Filtros",
+    "export": {
+      "pdf": "Exportar como PDF",
+      "excel": "Exportar como Excel"
+    },
+    "import": "Importar",
+    "empty": {
+      "alt": "Sin datos",
+      "title": "No se encontraron resultados",
+      "description": "No pudimos encontrar ningún elemento que coincida con su búsqueda."
+    },
+    "pagination": {
+      "itemsPerPage": "Elementos por página",
+      "of": "de",
+      "prev": "Anterior",
+      "next": "Siguiente"
+    },
+    "dialogs": {
+      "changeCategories": {
+        "title": "Cambiar categorías",
+        "desc": "Aplica a {{count}} cliente(s) seleccionados.",
+        "newCategories": "Nuevas categorías"
+      },
+      "categorize": {
+        "title": "Categorizar cliente"
+      }
+    },
+    "client": "Cliente",
+    "loading": "Cargando...",
+    "selectCategories": "Selecciona categorías",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "accept": "Aceptar",
+    "alerts": {
+      "archiveClients": {
+        "title": "¿Archivar clientes?",
+        "desc": "¿Estás seguro de archivar {{count}} cliente(s)? Esta acción los marcará como inactivos."
+      },
+      "restoreClients": {
+        "title": "¿Restaurar clientes?",
+        "desc": "¿Estás seguro de restaurar {{count}} cliente(s)? Volverán a estar activos."
+      },
+      "deleteClients": {
+        "title": "¿Eliminar clientes?",
+        "desc": "¿Estás seguro de eliminar permanentemente {{count}} cliente(s)? Esta acción no se puede deshacer."
+      },
+      "deleteClient": {
+        "title": "¿Eliminar cliente?",
+        "desc": "¿Estás seguro de eliminar permanentemente a {{name}}? Esta acción no se puede deshacer."
+      },
+      "restoreClient": {
+        "title": "¿Restaurar cliente?",
+        "desc": "¿Estás seguro de restaurar a {{name}}? El cliente volverá a estar activo."
+      }
+    },
+    "clientsArchived": "Clientes archivados",
+    "clientsRestored": "Clientes restaurados",
+    "clientsDeleted": "Clientes eliminados",
+    "clientDeleted": "Cliente eliminado",
+    "clientRestored": "Cliente restaurado",
+    "clientArchived": "Cliente archivado",
+    "errorArchive": "Error al archivar",
+    "errorRestore": "Error al restaurar",
+    "errorDelete": "Error al eliminar"
+  }
+  ,
+  "postSites": {
+    "searchPlaceholder": "Buscar Sitios de Publicación",
+    "newPostSite": "Nuevo Sitio de Publicación",
+    "filtersTitle": "Filtros",
+    "filters": {
+      "email": "Correo Electrónico",
+      "phone": "Número de Teléfono",
+      "city": "Ciudad",
+      "country": "País",
+      "categories": "Categorías"
+    },
+    "selectAtLeastOne": "Selecciona al menos un sitio de publicación",
+    "generatingPDF": "Generando PDF...",
+    "pdfDownloaded": "PDF descargado",
+    "generatingExcel": "Generando Excel...",
+    "excelDownloaded": "Excel descargado",
+    "sitesArchived": "Sitios archivados"
+  }
+}

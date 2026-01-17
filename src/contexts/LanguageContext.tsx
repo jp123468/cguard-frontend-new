@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import i18n from '@/i18n';
 
 type Language = 'es' | 'en' | 'pt';
 
@@ -24,7 +25,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const setLanguage = (lang: Language) => {
         setLanguageState(lang);
         localStorage.setItem('app_language', lang);
+        // also set generic key used by legacy pages (Google Translate page)
+        try { localStorage.setItem('language', lang); } catch {}
+        i18n.changeLanguage(lang);
     };
+
+    useEffect(() => {
+        // ensure i18n is using the stored language on mount
+        try { i18n.changeLanguage(language); } catch {}
+    }, []);
 
     return (
         <LanguageContext.Provider value={{ language, setLanguage }}>

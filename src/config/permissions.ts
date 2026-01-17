@@ -20,6 +20,8 @@ export const PERMISSIONS: string[] = [
   "inventoryHistoryImport","inventoryHistoryCreate","inventoryHistoryEdit","inventoryHistoryDestroy","inventoryHistoryRead","inventoryHistoryAutocomplete",
   "additionalServiceImport","additionalServiceCreate","additionalServiceEdit","additionalServiceDestroy","additionalServiceRead","additionalServiceAutocomplete",
   "billingImport","billingCreate","billingEdit","billingDestroy","billingRead","billingAutocomplete",
+  "estimateImport","estimateCreate","estimateEdit","estimateDestroy","estimateRead","estimateAutocomplete",
+  "invoiceImport","invoiceCreate","invoiceEdit","invoiceDestroy","invoiceRead","invoiceAutocomplete",
   "notificationImport","notificationCreate","notificationEdit","notificationDestroy","notificationRead","notificationAutocomplete",
   "notificationRecipientImport","notificationRecipientCreate","notificationRecipientEdit","notificationRecipientDestroy","notificationRecipientRead","notificationRecipientAutocomplete",
   "inquiriesImport","inquiriesCreate","inquiriesEdit","inquiriesDestroy","inquiriesRead","inquiriesAutocomplete",

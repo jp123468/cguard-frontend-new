@@ -26,8 +26,10 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarIcon, Plus, Trash2 } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Badge } from "@/components/ui/badge";
 import { ApiService } from "@/services/api/apiService";
+import { userService } from "@/lib/api/userService";
 import { clientService } from "@/lib/api/clientService";
 import { postSiteService } from "@/lib/api/postSiteService";
 import {
@@ -69,15 +71,22 @@ interface PostSiteOption {
     raw?: any;
 }
 
-export default function NewEstimate() {
+export default function EditEstimate() {
     const [isPreviewMode, setIsPreviewMode] = useState(false);
+    const [rawEstimate, setRawEstimate] = useState<any | null>(null);
+    const [createdByName, setCreatedByName] = useState<string | null>(null);
+    const [updatedByName, setUpdatedByName] = useState<string | null>(null);
+    const [sendConfirmOpen, setSendConfirmOpen] = useState(false);
+    const [convertConfirmOpen, setConvertConfirmOpen] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
+    const [searchParams] = useSearchParams();
 
     // Form State
     const [title, setTitle] = useState("Estimate");
     const [summary, setSummary] = useState("");
     const [client, setClient] = useState("");
     const [site, setSite] = useState("");
-    const [estimateNumber, setEstimateNumber] = useState("1");
+    const [estimateNumber, setEstimateNumber] = useState("");
     const [poSoNumber, setPoSoNumber] = useState("");
     const [notes, setNotes] = useState("");
 
@@ -104,6 +113,8 @@ export default function NewEstimate() {
     const [postSites, setPostSites] = useState<PostSiteOption[]>([]);
     const [tenantInfo, setTenantInfo] = useState<{ name?: string; address?: string; phone?: string } | null>(null);
     const navigate = useNavigate();
+    const params = useParams();
+    const estimateId = params?.id;
 
     useEffect(() => {
         let mounted = true;
@@ -153,7 +164,7 @@ export default function NewEstimate() {
                     taxName: s.taxName ?? s.tax?.name ?? undefined,
                     taxRate: Number(s.taxRate ?? s.tax?.rate ?? 0),
                 }));
-                console.debug('[NewEstimate] loaded services', mapped);
+                console.debug('[EditEstimate] loaded services', mapped);
                 setServices(mapped);
             } catch (err) {
                 console.error('Error cargando servicios para artículos', err);
@@ -244,6 +255,209 @@ export default function NewEstimate() {
         if (expiryDate && expiryDate < todayStart) setExpiryDate(todayStart);
     }, []);
 
+    // Load existing estimate if id provided
+    useEffect(() => {
+        let mounted = true;
+        if (!estimateId) return;
+        const parseDateOnly = (value: any): Date | undefined => {
+            if (!value) return undefined;
+            if (typeof value === 'string') {
+                const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+                const d = new Date(value);
+                return isNaN(d.getTime()) ? undefined : d;
+            }
+            const d = new Date(value);
+            return isNaN(d.getTime()) ? undefined : d;
+        };
+
+        (async () => {
+            try {
+                const tenantId = localStorage.getItem('tenantId') || '';
+                if (!tenantId) return;
+                const res = await ApiService.get(`/tenant/${tenantId}/estimate/${estimateId}`);
+                const raw = res && (res.data || res) || res;
+                const e = raw?.estimate || raw || (Array.isArray(raw) ? raw[0] : raw);
+                if (!e) return;
+                if (!mounted) return;
+                setRawEstimate(e);
+                setTitle(e.title ?? e.name ?? title);
+                setSummary(e.summary ?? e.description ?? summary ?? '');
+                setEstimateNumber(e.estimateNumber ?? e.number ?? estimateNumber);
+                setPoSoNumber(e.poSoNumber ?? e.po ?? poSoNumber ?? '');
+                setNotes(e.notes ?? e.notesText ?? notes ?? '');
+                setDate(e.date ? parseDateOnly(e.date) : (e.createdAt ? parseDateOnly(e.createdAt) : date));
+                setExpiryDate(e.expiryDate ? parseDateOnly(e.expiryDate) : (e.expiresAt ? parseDateOnly(e.expiresAt) : expiryDate));
+
+                const clientId = e.clientId ?? e.client?.id ?? e.client?.clientId ?? '';
+                if (clientId) {
+                    setClient(clientId);
+                    await loadPostSitesForClient(clientId);
+                }
+                const siteId = e.postSiteId ?? e.postSite?.id ?? '';
+                if (siteId) setSite(siteId);
+
+                if (Array.isArray(e.items) && e.items.length > 0) {
+                    const mappedItems = e.items.map((it: any, idx: number) => {
+                        const rawSvc = it.serviceId ?? it.service?.id ?? undefined;
+                        return {
+                            id: it.id ?? it._id ?? String(idx + 1),
+                            name: it.name ?? it.title ?? it.serviceName ?? '',
+                            quantity: Number(it.quantity ?? it.qty ?? 1),
+                            rate: Number(it.rate ?? it.price ?? it.unitPrice ?? 0),
+                            tax: Number(it.taxRate ?? it.tax ?? 0),
+                            serviceId: rawSvc != null && rawSvc !== '' ? String(rawSvc) : undefined,
+                        };
+                    });
+                    setItems(mappedItems.length ? mappedItems : items);
+                }
+            } catch (err) {
+                console.error('Error cargando estimación', err);
+                toast.error('Error cargando la estimación');
+            }
+        })();
+        return () => { mounted = false };
+    }, [estimateId]);
+
+    // If preview query param present, enable preview mode
+    useEffect(() => {
+        const p = searchParams.get('preview');
+        if (p === '1' || p === 'true') setIsPreviewMode(true);
+    }, [searchParams]);
+
+    const computeStatus = (raw: any) => {
+        try {
+            const expiry = raw?.expiryDate || raw?.expiry || raw?.expiresAt || raw?.expiry_date;
+            if (expiry) {
+                const ex = new Date(expiry);
+                if (!isNaN(ex.getTime()) && ex < new Date()) return 'Expirado';
+            }
+            if (raw?.acceptedAt || raw?.accepted_at || raw?.accepted) return 'Aceptado';
+            if (raw?.rejectedAt || raw?.rejected_at || raw?.rejected) return 'Rechazado';
+            if (raw?.sentAt || raw?.sent_at || raw?.sent) return 'Enviado';
+            const candidate = (raw?.status || raw?.state || raw?.statusName || raw?.status_label || '').toString().toLowerCase();
+            if (!candidate) return 'Borrador';
+            if (candidate.includes('draft') || candidate.includes('borrador')) return 'Borrador';
+            if (candidate.includes('sent') || candidate.includes('enviado')) return 'Enviado';
+            if (candidate.includes('accept') || candidate.includes('acept')) return 'Aceptado';
+            if (candidate.includes('reject') || candidate.includes('rechaz')) return 'Rechazado';
+            if (candidate.includes('expir') || candidate.includes('expired')) return 'Expirado';
+            return 'Borrador';
+        } catch (e) {
+            return 'Borrador';
+        }
+    };
+
+    const handleDownload = () => {
+        (async () => {
+            try {
+                const id = estimateId;
+                const tenantId = localStorage.getItem('tenantId') || '';
+                if (!id || !tenantId) {
+                    toast.error('No se puede descargar esta estimación');
+                    return;
+                }
+
+                const blob = await ApiService.getBlob(`/tenant/${tenantId}/estimate/${id}/download?format=pdf`);
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `estimate-${estimateNumber || id}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (err: any) {
+                console.error('Error descargando estimación', err);
+                const msg = err?.message || 'Error descargando estimación';
+                toast.error(msg);
+            }
+        })();
+    };
+
+    const performSendEstimate = async () => {
+        setActionLoading(true);
+        try {
+            const id = estimateId;
+            const tenantId = localStorage.getItem('tenantId') || '';
+            if (!id || !tenantId) throw new Error('Faltan parámetros');
+            await ApiService.post(`/tenant/${tenantId}/estimate/${id}/send`);
+            toast.success('Estimación enviada');
+            // Update local UI state so status changes to 'Enviado' without a full reload
+            setRawEstimate((prev: any) => prev ? ({ ...prev, sentAt: new Date().toISOString(), sent: true }) : prev);
+            setSendConfirmOpen(false);
+        } catch (err) {
+            console.error('Error enviando estimación', err);
+            toast.error('Error enviando estimación');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const performConvertEstimate = async () => {
+        setActionLoading(true);
+        try {
+            const id = estimateId;
+            const tenantId = localStorage.getItem('tenantId') || '';
+            if (!id || !tenantId) throw new Error('Faltan parámetros');
+            const res = await ApiService.post(`/tenant/${tenantId}/estimate/${id}/convert`);
+            const invoice = res && (res.data || res) || null;
+            toast.success('Estimación convertida a factura');
+            setConvertConfirmOpen(false);
+            // Navigate to the created invoice if available, otherwise go to invoices list
+            const invoiceId = invoice?.id || (invoice && invoice.invoice && invoice.invoice.id) || null;
+            try {
+                if (invoiceId) {
+                    navigate(`/invoices/${invoiceId}?preview=1`);
+                } else {
+                    navigate('/invoices');
+                }
+            } catch (e) {
+                // Fallback to full reload to invoices list
+                if (invoiceId) window.location.href = `${window.location.origin}/invoices/${invoiceId}?preview=1`;
+                else window.location.href = `${window.location.origin}/invoices`;
+            }
+        } catch (err) {
+            console.error('Error convirtiendo estimación', err);
+            toast.error('Error convirtiendo estimación');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Fetch user names for createdById / updatedById when rawEstimate is loaded
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                if (!rawEstimate) return;
+                const tenantId = localStorage.getItem('tenantId') || '';
+                if (!tenantId) return;
+                if (rawEstimate.createdById) {
+                    try {
+                        const u = await userService.fetchUser(String(rawEstimate.createdById));
+                        if (!mounted) return;
+                        setCreatedByName(u?.fullName || u?.firstName || u?.name || u?.email || String(rawEstimate.createdById));
+                    } catch (e) {
+                        setCreatedByName(String(rawEstimate.createdById));
+                    }
+                }
+                if (rawEstimate.updatedById) {
+                    try {
+                        const u2 = await userService.fetchUser(String(rawEstimate.updatedById));
+                        if (!mounted) return;
+                        setUpdatedByName(u2?.fullName || u2?.firstName || u2?.name || u2?.email || String(rawEstimate.updatedById));
+                    } catch (e) {
+                        setUpdatedByName(String(rawEstimate.updatedById));
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching user names for estimate records', err);
+            }
+        })();
+        return () => { mounted = false; };
+    }, [rawEstimate]);
+
     const addItem = () => {
         setItems([
             ...items,
@@ -266,19 +480,15 @@ export default function NewEstimate() {
     };
 
     const handleSelectService = (itemId: string, selectedValue: string) => {
-        // Special option to create a new service
         if (selectedValue === '__create__') {
             setCreateForItemId(itemId);
             setCreateModalOpen(true);
             return;
         }
-        // If selectedValue matches a service id, autofill name/rate/tax, otherwise use free text
         const svc = services.find((s) => s.id === selectedValue);
-        console.debug('[NewEstimate] select service', { itemId, selectedValue, svc });
         if (svc) {
             setItems((prev) => prev.map((it) => it.id === itemId ? { ...it, serviceId: svc.id, name: svc.name, rate: svc.price, tax: svc.taxRate ?? 0 } : it));
         } else {
-            // free text case
             setItems((prev) => prev.map((it) => it.id === itemId ? { ...it, serviceId: undefined, name: selectedValue } : it));
         }
     };
@@ -316,7 +526,6 @@ export default function NewEstimate() {
                 taxRate: Number(((created && (created.taxRate || (created.tax && created.tax.rate))) ?? payload.taxRate) ?? 0),
             };
             setServices((prev) => [svc, ...prev]);
-            // select into the row
             setItems((prev) => prev.map((it) => it.id === createForItemId ? { ...it, serviceId: svc.id, name: svc.name, rate: svc.price, tax: (svc.taxRate != null ? svc.taxRate : 0) } : it));
             toast.success('Artículo creado');
             setCreateModalOpen(false);
@@ -326,7 +535,6 @@ export default function NewEstimate() {
             setNewServiceTaxId(null);
         } catch (err: any) {
             console.error('Error creando servicio', err);
-            // Prefer the backend message if available
             const backendMessage = (err && err.data && (err.data.message || err.data.error)) || err?.message || 'Error creando servicio';
             toast.error(String(backendMessage));
         } finally {
@@ -334,14 +542,20 @@ export default function NewEstimate() {
         }
     };
 
+
+    const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
+
     const calculateSubtotal = () => {
-        return items.reduce((acc, item) => acc + item.quantity * item.rate, 0);
+        return items.reduce((acc, item) => {
+            const line = round2(Number(item.quantity || 0) * Number(item.rate || 0));
+            return acc + line;
+        }, 0);
     };
 
     const calculateTotal = () => {
         return items.reduce((acc, item) => {
-            const line = item.quantity * item.rate;
-            const taxAmount = item.tax ? (line * (item.tax / 100)) : 0;
+            const line = round2(Number(item.quantity || 0) * Number(item.rate || 0));
+            const taxAmount = item.tax ? round2(line * (Number(item.tax || 0) / 100)) : 0;
             return acc + line + taxAmount;
         }, 0);
     };
@@ -412,20 +626,21 @@ export default function NewEstimate() {
                     return;
                 }
 
-                // Post to backend
-                const res = await ApiService.post(`/tenant/${tenantId}/estimate`, { data: payload });
-                // eslint-disable-next-line no-console
-                console.log('[NewEstimate] saved ->', res);
+                let res;
+                if (estimateId) {
+                    res = await ApiService.put(`/tenant/${tenantId}/estimate/${estimateId}`, { data: payload });
+                } else {
+                    res = await ApiService.post(`/tenant/${tenantId}/estimate`, { data: payload });
+                }
+
+                console.log('[EditEstimate] saved ->', res);
                 toast.success('Estimación guardada correctamente');
-                // Navigate to estimates list
                 try {
                     navigate('/estimates');
                 } catch (e) {
-                    // Fallback to full redirect if navigation fails
                     window.location.href = 'http://localhost:5173/estimates';
                 }
             } catch (err: any) {
-                // eslint-disable-next-line no-console
                 console.error('Error saving estimate', err);
                 toast.error(err?.message || 'Error guardando estimación');
             }
@@ -446,11 +661,62 @@ export default function NewEstimate() {
                             >
                                 Editar Presupuesto
                             </Button>
-
                         </div>
                     </div>
+                    {/* Confirm dialogs for preview actions */}
+                    <Dialog open={sendConfirmOpen} onOpenChange={setSendConfirmOpen}>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>Confirmar envío</DialogTitle>
+                                <DialogDescription>¿Deseas enviar por correo esta estimación?</DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter className="mt-4 flex justify-end gap-2">
+                                <Button variant="outline" onClick={() => setSendConfirmOpen(false)} disabled={actionLoading}>Cancelar</Button>
+                                <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={performSendEstimate} disabled={actionLoading}>{actionLoading ? 'Enviando...' : 'Enviar'}</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={convertConfirmOpen} onOpenChange={setConvertConfirmOpen}>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>Confirmar conversión</DialogTitle>
+                                <DialogDescription>¿Deseas convertir esta estimación a factura? Esta acción puede ser irreversible.</DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter className="mt-4 flex justify-end gap-2">
+                                <Button variant="outline" onClick={() => setConvertConfirmOpen(false)} disabled={actionLoading}>Cancelar</Button>
+                                <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={performConvertEstimate} disabled={actionLoading}>{actionLoading ? 'Convirtiendo...' : 'Convertir'}</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
 
                     <div className="bg-white p-8 rounded-lg border shadow-sm space-y-8">
+                        {/* Preview action header (title + buttons + total/status) */}
+                        <div className="border rounded p-4 bg-white">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <h3 className="text-lg font-semibold">{title || `Presupuesto #${estimateNumber}`}</h3>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50"
+                                            onClick={() => setSendConfirmOpen(true)}>Enviar</Button>
+                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50"
+                                            onClick={() => setConvertConfirmOpen(true)}>Convertir a Factura</Button>
+                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50"
+                                            onClick={handleDownload}>Descargar</Button>
+
+                                    </div>
+                                </div>
+
+                                <div className="text-right">
+                                    <p className="text-sm text-slate-500">Total General:</p>
+                                    <p className="text-xl font-semibold">${calculateTotal().toFixed(2)}</p>
+                                    <div className="mt-2 flex justify-end">
+                                        <Badge className="bg-gray-100 text-gray-800">{computeStatus(rawEstimate)}</Badge>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Header */}
                         <div className="flex justify-between items-start">
                             <div>
@@ -478,20 +744,8 @@ export default function NewEstimate() {
                                     const postPhone = (postRaw && (postRaw.phone || postRaw.phoneNumber || postRaw.telephone)) || '';
                                     const postEmail = (postRaw && (postRaw.email || postRaw.contactEmail || postRaw.primaryEmail)) || '';
 
-                                    return (
-                                        <div className="text-left bg-white p-2 rounded">
-                                            <p className="text-xs text-gray-400">Cliente</p>
-                                            <p className="font-semibold text-slate-800">{clientName || '—'}</p>
-
-                                            <div className="mt-3">
-                                                <p className="text-xs text-gray-400">Sitio</p>
-                                                <p className="text-sm font-medium text-slate-700">{postName || '—'}</p>
-                                                {postAddress ? <p className="text-sm text-slate-500">{postAddress}</p> : null}
-                                                {postPhone ? <p className="text-sm text-slate-500">Tel: {postPhone}</p> : null}
-                                                {postEmail ? <p className="text-sm text-slate-500">{postEmail}</p> : null}
-                                            </div>
-                                        </div>
-                                    );
+                                    // intentionally render nothing here to avoid duplicating client/site info
+                                    return (<div />);
                                 })()}
                             </div> {/* Logo placeholder if needed */}
                             <div className="text-right">
@@ -515,7 +769,6 @@ export default function NewEstimate() {
                                         const selectedClient = clients.find(c => c.id === client);
                                         const selectedSite = postSites.find(s => s.id === site);
                                         const clientName = selectedClient?.name ?? client;
-                                        // Try to extract an address from common fields on the client or site raw object
                                         const addrCandidates: string[] = [];
                                         const rawC = selectedClient?.raw;
                                         const rawS = selectedSite?.raw;
@@ -531,7 +784,6 @@ export default function NewEstimate() {
                                         const clientAddress = addrCandidates.find(Boolean) ?? '';
                                         const clientPhone = (rawC && (rawC.phone || rawC.phoneNumber || rawC.telephone)) || (rawS && (rawS.phone || rawS.phoneNumber)) || '';
 
-                                        // Build postSite details to show under the client
                                         const postName = selectedSite?.name ?? '';
                                         const postRaw = selectedSite?.raw;
                                         const postAddrParts: string[] = [];
@@ -610,28 +862,32 @@ export default function NewEstimate() {
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        items.map((item) => (
+                                                                items.map((item) => (
                                             <TableRow key={item.id}>
                                                 <TableCell>{item.name}</TableCell>
                                                 <TableCell>{item.quantity}</TableCell>
                                                 <TableCell>${item.rate}</TableCell>
                                                 <TableCell>{item.tax ? `${item.tax}%` : "-"}</TableCell>
-                                                <TableCell className="text-right font-medium">
-                                                    {(() => {
-                                                        const line = item.quantity * item.rate;
-                                                        const taxAmount = item.tax ? (line * (item.tax / 100)) : 0;
-                                                        return `$${(line + taxAmount).toFixed(2)}`;
-                                                    })()}
-                                                </TableCell>
+                                                                        <TableCell className="text-right font-medium">{(() => { const line = Math.round((Number(item.quantity || 0) * Number(item.rate || 0) + Number.EPSILON) * 100) / 100; const taxAmount = item.tax ? Math.round((line * (Number(item.tax || 0) / 100) + Number.EPSILON) * 100) / 100 : 0; return `$${(line + taxAmount).toFixed(2)}`; })()}</TableCell>
                                             </TableRow>
                                         ))
                                     )}
                                 </TableBody>
                             </Table>
                             <div className="flex justify-end p-4 bg-gray-50 border-t">
-                                <div className="w-64 flex justify-between items-center">
-                                    <span className="font-bold text-slate-700">Total</span>
-                                    <span className="font-bold text-slate-800">${calculateTotal().toFixed(2)}</span>
+                                <div className="w-64">
+                                    <div className="flex justify-between text-sm text-slate-700">
+                                        <span>Subtotal</span>
+                                        <span>${calculateSubtotal().toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm text-slate-700 mt-1">
+                                        <span>Impuesto</span>
+                                        <span>${(Math.round(((calculateTotal() - calculateSubtotal()) + Number.EPSILON) * 100) / 100).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between mt-2">
+                                        <span className="font-bold text-slate-700">Total</span>
+                                        <span className="font-bold text-slate-800">${calculateTotal().toFixed(2)}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -643,6 +899,23 @@ export default function NewEstimate() {
                                 <span>Nombre de Usuario</span>
                                 <span>Fecha del Evento</span>
                                 <span>Nombre del Evento</span>
+                            </div>
+                            <div className="mt-3 space-y-2">
+                                {/* Show creator / updater rows if available */}
+                                {rawEstimate?.createdById ? (
+                                    <div className="grid grid-cols-3 items-center text-sm py-2 border-b">
+                                        <div className="font-medium text-slate-700">{createdByName || rawEstimate?.createdById}</div>
+                                        <div className="text-slate-600">{rawEstimate?.createdAt ? format(new Date(rawEstimate.createdAt), 'MMM dd, yyyy HH:mm') : '-'}</div>
+                                        <div className="text-slate-600">Creado</div>
+                                    </div>
+                                ) : null}
+                                {rawEstimate?.updatedById ? (
+                                    <div className="grid grid-cols-3 items-center text-sm py-2 border-b">
+                                        <div className="font-medium text-slate-700">{updatedByName || rawEstimate?.updatedById}</div>
+                                        <div className="text-slate-600">{rawEstimate?.updatedAt ? format(new Date(rawEstimate.updatedAt), 'MMM dd, yyyy HH:mm') : '-'}</div>
+                                        <div className="text-slate-600">Actualizado</div>
+                                    </div>
+                                ) : null}
                             </div>
                         </div>
                     </div>
@@ -692,9 +965,7 @@ export default function NewEstimate() {
                         <div className="space-y-6">
                             <h3 className="font-medium text-lg text-slate-700">Facturar a</h3>
 
-                                
-
-                                <div className="space-y-4">
+                            <div className="space-y-4">
                                 <div className="space-y-2">
                                     <Label className="text-xs text-gray-500">Cliente*</Label>
                                     <Combobox
@@ -704,9 +975,6 @@ export default function NewEstimate() {
                                         placeholder="Seleccionar Cliente"
                                     />
                                 </div>
-
-                                {/* Inline preview panel: show client and postSite details in the editor (moved below selects) */}
-                                {/* moved: inline preview panel will render below the site selector */}
 
                                 <div className="space-y-2">
                                     <Label className="text-xs text-gray-500">Sitio de publicación*</Label>
@@ -874,13 +1142,25 @@ export default function NewEstimate() {
                                     <TableRow key={item.id}>
                                         <TableCell>
                                             <Combobox
-                                                value={item.serviceId ?? item.name}
+                                                value={item.serviceId ?? item.name ?? ''}
                                                 onChange={(v) => handleSelectService(item.id, v)}
-                                                options={[{ value: '__create__', label: '+ Crear nuevo artículo' }].concat(
-                                                    services
+                                                options={(() => {
+                                                    const base = [{ value: '__create__', label: '+ Crear nuevo artículo' }];
+                                                    const svcOpts = services
                                                         .filter((s) => s.id === item.serviceId || !items.some((it) => it.serviceId === s.id))
-                                                        .map((s) => ({ value: s.id, label: `${s.name} — $${s.price.toFixed(2)}` }))
-                                                )}
+                                                        .map((s) => ({ value: s.id, label: `${s.name} — $${s.price.toFixed(2)}` }));
+                                                    // If current item's serviceId is set but not present in svcOpts (service deleted), add a fallback option
+                                                    if (item.serviceId && !svcOpts.find(o => o.value === String(item.serviceId))) {
+                                                        base.push({ value: String(item.serviceId), label: item.name || String(item.serviceId) });
+                                                    }
+                                                    // If item has a free-text name but no serviceId, include it so Combobox can display it
+                                                    if (!item.serviceId && item.name) {
+                                                        if (!svcOpts.find(o => o.value === item.name)) {
+                                                            base.push({ value: item.name, label: item.name });
+                                                        }
+                                                    }
+                                                    return base.concat(svcOpts);
+                                                })()}
                                                 placeholder="Seleccionar o escribir artículo"
                                             />
                                         </TableCell>
@@ -919,7 +1199,6 @@ export default function NewEstimate() {
                                             ${(item.quantity * item.rate).toFixed(2)}
                                         </TableCell>
                                         <TableCell>
-                                            {/* Disable delete when there is only one item */}
                                             <Button
                                                 variant="ghost"
                                                 size="icon"

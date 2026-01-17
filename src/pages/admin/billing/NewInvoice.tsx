@@ -25,10 +25,20 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { Calendar as CalendarIcon, Plus, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Trash2, X } from "lucide-react";
 import { ApiService } from "@/services/api/apiService";
 import { clientService } from "@/lib/api/clientService";
 import { postSiteService } from "@/lib/api/postSiteService";
+import { toast } from "sonner";
+import { useNavigate } from 'react-router-dom';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog";
 
 
 interface InvoiceItem {
@@ -37,6 +47,8 @@ interface InvoiceItem {
     quantity: number;
     rate: number;
     tax: number;
+    serviceId?: string;
+    reset?: number;
 }
 
 interface TaxOption {
@@ -48,16 +60,20 @@ interface TaxOption {
 interface ClientOption {
     id: string;
     name: string;
+    raw?: any;
 }
 
 interface PostSiteOption {
     id: string;
     name: string;
     clientId?: string;
+    raw?: any;
 }
 
 export default function NewInvoice() {
     const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+    const navigate = useNavigate();
 
     // Form State
     const [title, setTitle] = useState("Invoice");
@@ -72,12 +88,22 @@ export default function NewInvoice() {
     const [dueDate, setDueDate] = useState<Date | undefined>(new Date());
 
     const [items, setItems] = useState<InvoiceItem[]>([
-        { id: "1", name: "", quantity: 1, rate: 0, tax: 0 },
+        { id: "1", name: "", quantity: 1, rate: 0, tax: 0, reset: 0 },
     ]);
 
     const [taxes, setTaxes] = useState<TaxOption[]>([]);
     const [clients, setClients] = useState<ClientOption[]>([]);
     const [postSites, setPostSites] = useState<PostSiteOption[]>([]);
+    // Services for items (to allow selecting existing or creating new)
+    const [services, setServices] = useState<Array<{ id: string; name: string; price: number; taxId?: string; taxName?: string; taxRate?: number }>>([]);
+
+    // Create-new-service modal state
+    const [createModalOpen, setCreateModalOpen] = useState(false);
+    const [createForItemId, setCreateForItemId] = useState<string | null>(null);
+    const [newServiceTitle, setNewServiceTitle] = useState('');
+    const [newServicePrice, setNewServicePrice] = useState<number | string>(0);
+    const [newServiceTaxId, setNewServiceTaxId] = useState<string | null>(null);
+    const [creatingService, setCreatingService] = useState(false);
 
     useEffect(() => {
         let mounted = true;
@@ -103,6 +129,38 @@ export default function NewInvoice() {
         return () => { mounted = false };
     }, []);
 
+    // Cargar servicios/items para usar en los artículos
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const tenantId = localStorage.getItem('tenantId') || '';
+                if (!tenantId) return;
+                const res = await ApiService.get(`/tenant/${tenantId}/service`);
+                const data = Array.isArray(res)
+                    ? res
+                    : res && res.rows
+                        ? res.rows
+                        : res && res.data && Array.isArray(res.data.rows)
+                            ? res.data.rows
+                            : [];
+                if (!mounted) return;
+                const mapped = (data || []).map((s: any) => ({
+                    id: s.id ?? s._id ?? String(s.id),
+                    name: s.title ?? s.name ?? s.title ?? s.name ?? s.label ?? '',
+                    price: Number(s.price ?? s.amount ?? 0),
+                    taxId: s.taxId ?? s.tax?.id ?? undefined,
+                    taxName: s.taxName ?? s.tax?.name ?? undefined,
+                    taxRate: Number(s.taxRate ?? s.tax?.rate ?? 0),
+                }));
+                setServices(mapped);
+            } catch (err) {
+                console.error('Error cargando servicios para artículos', err);
+            }
+        })();
+        return () => { mounted = false };
+    }, []);
+
     useEffect(() => {
         let mounted = true;
         (async () => {
@@ -112,6 +170,7 @@ export default function NewInvoice() {
                 const mapped = (data.rows || []).map((c: any) => ({
                     id: c.id,
                     name: c.companyName ?? (c.name && c.lastName ? `${c.name} ${c.lastName}` : c.name ?? c.lastName ?? ""),
+                    raw: c,
                 }));
                 setClients(mapped);
             } catch (err) {
@@ -132,6 +191,7 @@ export default function NewInvoice() {
                 id: s.id,
                 name: s.name,
                 clientId: s.client?.id ?? s.clientAccount?.id ?? s.clientId ?? s.clientAccountId ?? undefined,
+                raw: s,
             }));
             // Ensure only sites matching the requested client are stored (defensive)
             setPostSites(mapped.filter((ps: any) => !ps.clientId || ps.clientId === clientId ? true : ps.clientId === clientId));
@@ -144,7 +204,7 @@ export default function NewInvoice() {
     const addItem = () => {
         setItems([
             ...items,
-            { id: Math.random().toString(36).substr(2, 9), name: "", quantity: 1, rate: 0, tax: 0 },
+            { id: Math.random().toString(36).substr(2, 9), name: "", quantity: 1, rate: 0, tax: 0, reset: 0 },
         ]);
     };
 
@@ -160,6 +220,70 @@ export default function NewInvoice() {
                 item.id === id ? { ...item, [field]: value } : item
             )
         );
+    };
+
+    const handleSelectService = (itemId: string, selectedValue: string) => {
+        if (selectedValue === '__create__') {
+            setCreateForItemId(itemId);
+            setCreateModalOpen(true);
+            return;
+        }
+        const svc = services.find((s) => s.id === selectedValue);
+        if (svc) {
+            setItems((prev) => prev.map((it) => it.id === itemId ? { ...it, serviceId: svc.id, name: svc.name, rate: svc.price, tax: (svc.taxRate != null ? svc.taxRate : 0) } : it));
+        } else {
+            setItems((prev) => prev.map((it) => it.id === itemId ? { ...it, serviceId: undefined, name: selectedValue } : it));
+        }
+    };
+
+    const createService = async () => {
+        if (!createForItemId) return;
+        setCreatingService(true);
+        try {
+            const tenantId = localStorage.getItem('tenantId') || '';
+            if (!tenantId) {
+                toast.error('El tenant no está configurado.');
+                setCreatingService(false);
+                return;
+            }
+            const payload: any = {
+                title: newServiceTitle,
+                price: Number(newServicePrice) || 0,
+            };
+            if (newServiceTaxId) {
+                const taxObj = taxes.find((t) => String(t.id) === String(newServiceTaxId));
+                if (taxObj) {
+                    payload.taxId = taxObj.id;
+                    payload.taxName = taxObj.name;
+                    payload.taxRate = String(taxObj.rate ?? 0);
+                }
+            }
+            const res = await ApiService.post(`/tenant/${tenantId}/service`, { data: payload });
+            const created = res && (res.data || res);
+            const svc = {
+                id: created && (created.id || created._id) ? (created.id || created._id) : String(Math.random()).slice(2, 10),
+                name: created && (created.title || created.name) ? (created.title || created.name) : newServiceTitle,
+                price: Number(((created && (created.price ?? created.amount)) ?? payload.price)),
+                taxId: created && (created.taxId || (created.tax && (created.tax.id || created.tax._id))) ? (created.taxId || (created.tax && (created.tax.id || created.tax._id))) : (payload.taxId ?? undefined),
+                taxName: created && (created.taxName || (created.tax && created.tax.name)) ? (created.taxName || (created.tax && created.tax.name)) : (payload.taxName ?? undefined),
+                taxRate: Number(((created && (created.taxRate || (created.tax && created.tax.rate))) ?? payload.taxRate) ?? 0),
+            };
+            setServices((prev) => [svc, ...prev]);
+            // select into the row (also set tax)
+            setItems((prev) => prev.map((it) => it.id === createForItemId ? { ...it, serviceId: svc.id, name: svc.name, rate: svc.price, tax: (svc.taxRate != null ? svc.taxRate : 0), reset: it.reset ?? 0 } : it));
+            toast.success('Artículo creado');
+            setCreateModalOpen(false);
+            setCreateForItemId(null);
+            setNewServiceTitle('');
+            setNewServicePrice(0);
+            setNewServiceTaxId(null);
+        } catch (err: any) {
+            console.error('Error creando servicio', err);
+            const backendMessage = (err && err.data && (err.data.message || err.data.error)) || err?.message || 'Error creando servicio';
+            toast.error(String(backendMessage));
+        } finally {
+            setCreatingService(false);
+        }
     };
 
     const calculateSubtotal = () => {
@@ -182,7 +306,7 @@ export default function NewInvoice() {
 
     const handlePreview = () => {
         if (!client || !site) {
-            alert("Por favor seleccione un Cliente y un Sitio de publicación para ver la vista previa.");
+            toast.error("Por favor seleccione un Cliente y un Sitio de publicación para ver la vista previa.");
             return;
         }
         setIsPreviewMode(true);
@@ -222,9 +346,28 @@ export default function NewInvoice() {
 
     const handleSaveLog = () => {
         const payload = buildPayload();
-        // eslint-disable-next-line no-console
-        console.log("[NewInvoice] payload ->", payload);
-        // keep existing behavior: you can later replace this with an API call
+        (async () => {
+            try {
+                const tenantId = localStorage.getItem('tenantId') || '';
+                if (!tenantId) {
+                    toast.error('Tenant no disponible.');
+                    return;
+                }
+                // Post to backend
+                const res = await ApiService.post(`/tenant/${tenantId}/invoice`, { data: payload });
+                // eslint-disable-next-line no-console
+                console.log('[NewInvoice] saved ->', res);
+                toast.success('Factura guardada correctamente');
+                try {
+                    navigate('/invoices');
+                } catch (e) {
+                    window.location.href = '/invoices';
+                }
+            } catch (err: any) {
+                console.error('Error saving invoice', err);
+                toast.error(err?.message || 'Error guardando factura');
+            }
+        })();
     };
 
     if (isPreviewMode) {
@@ -250,7 +393,9 @@ export default function NewInvoice() {
                     <div className="bg-white p-8 rounded-lg border shadow-sm space-y-8">
                         {/* Header */}
                         <div className="flex justify-between items-start">
-                            <div></div> {/* Logo placeholder if needed */}
+                            <div>
+                                {/* left can hold logo if needed */}
+                            </div>
                             <div className="text-right">
                                 <h2 className="text-2xl font-bold text-slate-800">Factura</h2>
                                 <h3 className="font-semibold text-lg text-slate-700 mt-2">Seguridad BAS</h3>
@@ -268,9 +413,41 @@ export default function NewInvoice() {
                             <div>
                                 <h3 className="text-lg font-medium text-slate-700 mb-4">Facturar a</h3>
                                 <div className="space-y-1">
-                                    <p className="font-semibold text-slate-800">{client === "central" ? "Central" : client === "norte" ? "Norte" : client}</p>
-                                    <p className="text-sm text-slate-500">Fray Bartolomé de las Casas & Antonio De San Miguel y Solier, 170129 Quito, Ecuador</p>
-                                    <p className="text-sm text-slate-500">{client === "central" ? "Central" : client === "norte" ? "Norte" : client}</p>
+                                    {(() => {
+                                        const selectedClient = clients.find(c => c.id === client);
+                                        const selectedSite = postSites.find(s => s.id === site);
+                                        const clientName = selectedClient?.name ?? (selectedClient && (selectedClient as any).raw && ((selectedClient as any).raw.companyName || (selectedClient as any).raw.name)) ?? client;
+
+                                        // build postSite address/phone/email from raw fields when available
+                                        const postRaw = (selectedSite && (selectedSite as any).raw) || null;
+                                        const postAddrParts: string[] = [];
+                                        if (postRaw) {
+                                            if (postRaw.address) {
+                                                if (typeof postRaw.address === 'string') postAddrParts.push(postRaw.address);
+                                                else {
+                                                    if (postRaw.address.street) postAddrParts.push(postRaw.address.street);
+                                                    if (postRaw.address.city) postAddrParts.push(postRaw.address.city);
+                                                    if (postRaw.address.state) postAddrParts.push(postRaw.address.state);
+                                                    if (postRaw.address.postalCode) postAddrParts.push(postRaw.address.postalCode);
+                                                }
+                                            }
+                                            if (postRaw.location) postAddrParts.push(postRaw.location);
+                                            if (postRaw.addressLine1) postAddrParts.push(postRaw.addressLine1);
+                                            if (postRaw.secondAddress) postAddrParts.push(postRaw.secondAddress);
+                                        }
+                                        const postAddress = postAddrParts.filter(Boolean).join(', ');
+                                        const postPhone = postRaw && (postRaw.phone || postRaw.phoneNumber || postRaw.telephone || postRaw.contactPhone || postRaw.contactPhoneNumber) || '';
+                                        const postEmail = postRaw && (postRaw.email || postRaw.contactEmail || postRaw.primaryEmail || postRaw.contactEmailAddress) || '';
+
+                                        return (
+                                            <>
+                                                <p className="font-semibold text-slate-800">{clientName}</p>
+                                                {postAddress ? <p className="text-sm text-slate-500">{postAddress}</p> : null}
+                                                {postPhone ? <p className="text-sm text-slate-500">Tel: {postPhone}</p> : null}
+                                                {postEmail ? <p className="text-sm text-slate-500">{postEmail}</p> : null}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </div>
 
@@ -424,6 +601,58 @@ export default function NewInvoice() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                {/* Inline preview panel: show client and postSite details in the editor */}
+                                <div className="bg-white p-3 rounded border mt-3">
+                                    {(() => {
+                                        const selectedClient = clients.find(c => c.id === client);
+                                        const selectedSite = postSites.find(s => s.id === site);
+                                        const clientName = selectedClient?.name ?? '—';
+                                        const rawC = selectedClient?.raw;
+                                        const postRaw = selectedSite?.raw;
+                                        const postName = selectedSite?.name ?? '—';
+                                        const postAddrParts: string[] = [];
+                                        if (postRaw) {
+                                            if (postRaw.address) {
+                                                if (typeof postRaw.address === 'string') postAddrParts.push(postRaw.address);
+                                                else {
+                                                    if (postRaw.address.street) postAddrParts.push(postRaw.address.street);
+                                                    if (postRaw.address.city) postAddrParts.push(postRaw.address.city);
+                                                    if (postRaw.address.state) postAddrParts.push(postRaw.address.state);
+                                                    if (postRaw.address.postalCode) postAddrParts.push(postRaw.address.postalCode);
+                                                }
+                                            }
+                                            if (postRaw.location) postAddrParts.push(postRaw.location);
+                                            if (postRaw.addressLine1) postAddrParts.push(postRaw.addressLine1);
+                                        }
+                                        const postAddress = postAddrParts.filter(Boolean).join(', ');
+                                        const postPhone = (postRaw && (postRaw.phone || postRaw.phoneNumber || postRaw.telephone || postRaw.contactPhone || postRaw.contactPhoneNumber)) || '';
+                                        const postEmail = (postRaw && (postRaw.email || postRaw.contactEmail || postRaw.primaryEmail || postRaw.contactEmailAddress)) || '';
+
+                                        const clientAddrCandidates: string[] = [];
+                                        if (rawC) {
+                                            if (rawC.companyAddress) clientAddrCandidates.push(rawC.companyAddress);
+                                            if (rawC.address) clientAddrCandidates.push(typeof rawC.address === 'string' ? rawC.address : [rawC.address.street, rawC.address.city, rawC.address.state, rawC.address.postalCode].filter(Boolean).join(', '));
+                                            if (rawC.location) clientAddrCandidates.push(rawC.location);
+                                        }
+                                        const clientAddress = clientAddrCandidates.find(Boolean) ?? '';
+                                        const clientPhone = (rawC && (rawC.phone || rawC.phoneNumber || rawC.telephone)) || '';
+
+                                        return (
+                                            <div>
+                                                <p className="text-xs text-gray-400">Cliente</p>
+                                                <p className="font-semibold text-slate-800">{clientName}</p>
+                                                <div className="mt-2">
+                                                    <p className="text-xs text-gray-400">Sitio</p>
+                                                    <p className="text-sm font-medium text-slate-700">{postName}</p>
+                                                    {postAddress ? <p className="text-sm text-slate-500">{postAddress}</p> : null}
+                                                    {postPhone ? <p className="text-sm text-slate-500">Tel: {postPhone}</p> : null}
+                                                    {postEmail ? <p className="text-sm text-slate-500">{postEmail}</p> : null}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
                             </div>
                         </div>
 
@@ -461,7 +690,7 @@ export default function NewInvoice() {
                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
+                                    <PopoverContent className="w-[380px] p-3 rounded-lg shadow-lg">
                                         <Calendar
                                             mode="single"
                                             selected={date}
@@ -487,7 +716,7 @@ export default function NewInvoice() {
                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
+                                    <PopoverContent className="w-[380px] p-3 rounded-lg shadow-lg">
                                         <Calendar
                                             mode="single"
                                             selected={dueDate}
@@ -519,12 +748,28 @@ export default function NewInvoice() {
                                 {items.map((item) => (
                                     <TableRow key={item.id}>
                                         <TableCell>
-                                            <Input
-                                                placeholder="Nombre del artículo"
-                                                value={item.name}
-                                                onChange={(e) => updateItem(item.id, "name", e.target.value)}
-                                                className="border-0 shadow-none focus-visible:ring-0 px-0"
-                                            />
+                                            <div className="flex items-center gap-2">
+                                                <Combobox
+                                                    key={`cb-${item.id}-${item.reset ?? 0}`}
+                                                    value={(item as any).serviceId ?? item.name}
+                                                    onChange={(v) => handleSelectService(item.id, v)}
+                                                    options={[{ value: '__create__', label: '+ Crear nuevo artículo' }].concat(
+                                                        services
+                                                            .filter((s) => s.id === (item as any).serviceId || !items.some((it) => (it as any).serviceId === s.id))
+                                                            .map((s) => ({ value: s.id, label: `${s.name} — $${s.price.toFixed(2)}` }))
+                                                    )}
+                                                    placeholder="Seleccionar o escribir artículo"
+                                                />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setItems(prev => prev.map(it => it.id === item.id ? ({ ...it, serviceId: undefined, name: '', reset: ((it.reset ?? 0) + 1) }) : it))}
+                                                    title="Reiniciar artículo"
+                                                    className="text-gray-400 hover:text-gray-600"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <Input
@@ -585,6 +830,44 @@ export default function NewInvoice() {
                                 Añadir un artículo
                             </Button>
                         </div>
+
+                        {/* Create Service Modal */}
+                        <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Crear nuevo artículo</DialogTitle>
+                                    <DialogDescription>Crear un artículo y usarlo en la fila seleccionada.</DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 mt-2">
+                                    <div className="grid gap-2">
+                                        <Label>Título</Label>
+                                        <Input value={newServiceTitle} onChange={(e) => setNewServiceTitle(e.target.value)} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>Precio</Label>
+                                        <Input type="number" value={String(newServicePrice)} onChange={(e) => setNewServicePrice(e.target.value)} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>Impuesto</Label>
+                                        <Select value={newServiceTaxId ?? "0"} onValueChange={(v) => setNewServiceTaxId(v === "0" ? null : v)}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Ninguno" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="0">Ninguno</SelectItem>
+                                                {taxes.map((t) => (
+                                                    <SelectItem key={t.id} value={String(t.id)}>{t.name} ({t.rate}%)</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => { setCreateModalOpen(false); setCreateForItemId(null); }}>Cancelar</Button>
+                                    <Button className="bg-orange-500 text-white" disabled={creatingService || !newServiceTitle} onClick={createService}>{creatingService ? 'Creando...' : 'Crear'}</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </div>
 
              

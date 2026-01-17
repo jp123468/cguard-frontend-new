@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import NAVS from "../../src/data/settings-nav.json";
+import { useTranslation } from 'react-i18next';
 
 type SubItem = { id: string; label: string; path: string };
 type Section = { label?: string; items: SubItem[] };
@@ -15,6 +16,7 @@ export default function SubSidebar({
   heightOffset?: number;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const dict = NAVS as NavRecord;
   const nav = dict[String(navKey)];
   if (!nav) return null;
@@ -34,7 +36,7 @@ export default function SubSidebar({
     >
       {/* Título principal */}
       <div className="px-4 py-3 text-sm font-semibold text-gray-400">
-        {nav.title ?? "Menú"}
+        {t(`settings.${navKey}.title`, { defaultValue: nav.title ?? "Menú" })}
       </div>
 
       <nav className="pb-6">
@@ -43,7 +45,14 @@ export default function SubSidebar({
             {/* Si la sección tiene label, se muestra */}
             {sec.label ? (
               <div className="px-2 py-2 text-[12px] font-bold text-blue-700 uppercase tracking-wide">
-                {sec.label}
+                {(() => {
+                  // create a slug from the section label to use as translation key
+                  const slug = String(sec.label)
+                    .toLowerCase()
+                    .replace(/\s+/g, "_")
+                    .replace(/[^a-z0-9_]/g, "");
+                  return t(`settings.section.${slug}`, { defaultValue: sec.label });
+                })()}
               </div>
             ) : null}
 
@@ -66,7 +75,7 @@ export default function SubSidebar({
                       ].join(" ")
                     }
                   >
-                    {item.label}
+                    {t(`settings.${navKey}.${item.id}`, { defaultValue: item.label })}
                   </NavLink>
                 </li>
               ))}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   Shield, ChevronRight, Gauge, Activity, Users, BarChart3, MapPin,
@@ -21,6 +22,7 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 export default function Sidebar() {
+  const { t } = useTranslation();
   const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
@@ -119,7 +121,17 @@ export default function Sidebar() {
                   >
                     <div className="flex items-center gap-3">
                       <item.icon className="w-[18px] h-[18px]" />
-                      <span className="text-start">{item.name}</span>
+                      <span className="text-start">
+                        {(() => {
+                          // Prefer explicit label key: sidebar.<id>.label
+                          const label = t(`sidebar.${item.id}.label`, { defaultValue: '' });
+                          if (label) return label;
+                          // Fallback to flattened key sidebar.<id>
+                          const flat = t(`sidebar.${item.id}`, { defaultValue: '' });
+                          if (flat) return flat;
+                          return item.name;
+                        })()}
+                      </span>
                     </div>
                     {isExpandable && (
                       <ChevronRight className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
@@ -142,7 +154,14 @@ export default function Sidebar() {
                             }`
                           }
                         >
-                          {sub.name}
+                          {(() => {
+                            // Try specific subkey under parent, then flat sub key, then fallback
+                            const parentSub = t(`sidebar.${item.id}.${sub.id}`, { defaultValue: '' });
+                            if (parentSub) return parentSub;
+                            const flat = t(`sidebar.${sub.id}`, { defaultValue: '' });
+                            if (flat) return flat;
+                            return sub.name;
+                          })()}
                         </NavLink>
                       );
                     })}

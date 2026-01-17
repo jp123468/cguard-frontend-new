@@ -97,4 +97,39 @@ export class ApiService {
   static delete(endpoint: string, options = {}) {
     return this.request(endpoint, { ...options, method: "DELETE" });
   }
+
+  static async getBlob(endpoint: string, options: any = {}) {
+    const token = localStorage.getItem("authToken");
+
+    const headers: Record<string, string> = {
+      ...(options.headers || {}),
+    };
+
+    if (token && !options.skipAuth) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const url = `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
+
+    let response: Response;
+    try {
+      response = await fetch(url, { ...options, method: 'GET', headers });
+    } catch {
+      throw new ApiError("No se pudo conectar con el servidor.", 0, null);
+    }
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => null);
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+      let msg = (data && (data.message || data.error)) || `Error: ${response.status} ${response.statusText}`;
+      if (typeof text === 'string' && /<\s*!?doctype|<html/i.test(text)) {
+        msg = `Error: ${response.status} ${response.statusText}`;
+      }
+      throw new ApiError(msg, response.status, data);
+    }
+
+    const blob = await response.blob();
+    return blob;
+  }
 }

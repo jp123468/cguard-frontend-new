@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/header";
 import Sidebar from "@/components/sidebar";
+import { Toaster } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { setTenantId } from "@/lib/api/clientService";
 import { setTenantId as setCategoryTenantId } from "@/lib/api/categoryService";
@@ -70,6 +71,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
       >
         {children}
       </main>
+
+      {/* Global toaster for notifications */}
+      <Toaster position="top-right" />
 
 
     </div>

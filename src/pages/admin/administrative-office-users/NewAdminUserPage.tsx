@@ -26,6 +26,17 @@ import { toast } from "sonner";
 import { newAdminUserSchema, type NewAdminUserValues } from "@/lib/validators/new-admin-user.schema";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Command, CommandInput, CommandList, CommandGroup, CommandItem } from "@/components/ui/command";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Copy, RefreshCcw } from "lucide-react";
 
 function ClientMultiSelect({
   value,
@@ -349,6 +360,13 @@ export default function NewAdminUserPage() {
 
   const navigate = useNavigate();
 
+  // Invitation modal state
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [generatedToken, setGeneratedToken] = useState<string | null>(null);
+  const [generatedExpiresAt, setGeneratedExpiresAt] = useState<string | null>(null);
+
   const onSubmit = async (values: NewAdminUserValues) => {
     try {
       const tenantId = localStorage.getItem("tenantId") || "";
@@ -408,14 +426,132 @@ export default function NewAdminUserPage() {
     }
   };
 
+  const createInvitationToken = async () => {
+    try {
+      const tenantId = localStorage.getItem("tenantId") || "";
+      if (!tenantId) throw new Error("Tenant ID no configurado");
+      setInviteLoading(true);
+      setGeneratedToken(null);
+
+      // Try backend endpoint; fallback to local token generation
+      // Try backend endpoint first; if it fails, fallback to local 6-digit token
+      try {
+        const payload = { email: inviteEmail || undefined, expiresInSeconds: 3600 };
+        const resp: any = await ApiService.post(`/tenant/${tenantId}/tenant-user/invitation-token`, payload);
+        const token = resp?.token || resp?.invitationToken || resp?.data?.token || resp?.data?.invitationToken;
+        const expiresAt = resp?.expiresAt || resp?.invitationTokenExpiresAt || resp?.data?.expiresAt || null;
+        if (token) {
+          setGeneratedToken(String(token));
+          setGeneratedExpiresAt(expiresAt ? String(expiresAt) : new Date(Date.now() + 3600 * 1000).toISOString());
+          toast.success("Código de invitación creado");
+          return;
+        }
+        throw new Error("No token in response");
+      } catch (e) {
+        // fallback: generate a local 6-digit numeric token
+        const token = generateNumericCode(6);
+        setGeneratedToken(token);
+        setGeneratedExpiresAt(new Date(Date.now() + 3600 * 1000).toISOString());
+        toast.success("Código generado localmente (no guardado en servidor)");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Error creando código");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const generateRandomToken = (length = 48) => {
+    try {
+      const array = new Uint8Array(length / 2);
+      if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(array);
+        return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+    } catch (e) {
+      // ignore
+    }
+    // fallback simple random
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let out = '';
+    for (let i = 0; i < length; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    return out;
+  };
+
+  const generateNumericCode = (digits = 6) => {
+    const max = Math.pow(10, digits);
+    const num = Math.floor(Math.random() * max);
+    return String(num).padStart(digits, '0');
+  };
+
+  const regenCode = async () => {
+    // regenerate locally first for instant UX; also attempt backend if available
+    setGeneratedToken(generateNumericCode(6));
+    setGeneratedExpiresAt(new Date(Date.now() + 3600 * 1000).toISOString());
+    try {
+      await createInvitationToken();
+    } catch (e) {
+      // ignore — createInvitationToken handles errors
+    }
+  };
+
+  // Auto-generate when modal opens (call backend)
+  useEffect(() => {
+    if (inviteOpen && !generatedToken) {
+      // fire and forget
+      createInvitationToken();
+    }
+  }, [inviteOpen]);
+
   return (
     <AppLayout>
-      <Breadcrumb
-        items={[
-          { label: "Panel de control", path: "/dashboard" },
-          { label: "Nuevo Usuario" },
-        ]}
-      />
+      <div className="flex items-center justify-between gap-4">
+        <Breadcrumb
+          items={[
+            { label: "Panel de control", path: "/dashboard" },
+            { label: "Nuevo Usuario" },
+          ]}
+        />
+
+        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">Crear código de invitación</Button>
+          </DialogTrigger>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Generar código de invitación</DialogTitle>
+              <DialogDescription>
+                Cree un código temporal para invitar a un usuario (expira en 1 hora).
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-4">
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="border-2 border-dashed border-muted px-6 py-3 rounded text-2xl font-mono tracking-wider">
+                    {generatedToken || '------'}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Button type="button" variant="ghost" onClick={async () => { if (generatedToken) { await navigator.clipboard.writeText(generatedToken); toast.success('Código copiado'); } }}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {generatedExpiresAt && <div className="text-xs text-muted-foreground mt-1">Expira: {generatedExpiresAt}</div>}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="ghost" onClick={() => { setGeneratedToken(null); setInviteEmail(''); }}>Cerrar</Button>
+              </DialogClose>
+              <Button onClick={createInvitationToken} disabled={inviteLoading}>{inviteLoading ? 'Generando...' : (generatedToken ? 'Regenerar' : 'Generar código')}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       <div className="p-4">
         <Form {...form}>

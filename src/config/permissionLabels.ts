@@ -22,6 +22,8 @@ export const RESOURCE_LABELS: Record<string, string> = {
   inventoryHistory: 'Historial de inventario',
   additionalService: 'Servicios adicionales',
   billing: 'Facturación',
+  estimate: 'Estimaciones',
+  invoice: 'Facturas',
   notification: 'Notificaciones',
   notificationRecipient: 'Destinatarios',
   inquiries: 'Consultas',

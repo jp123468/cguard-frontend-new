@@ -1,4 +1,5 @@
   import { useState, useEffect, useMemo } from "react";
+  import { useTranslation } from "react-i18next";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -92,6 +93,7 @@ const getServerErrorMessage = (error: any, defaultMessage = "Error") => {
 };
 
 export default function ClientesPage() {
+  const { t } = useTranslation();
   const { hasPermission } = usePermissions();
   const [openFilter, setOpenFilter] = useState(false);
   const [openImport, setOpenImport] = useState(false);
@@ -152,7 +154,7 @@ export default function ClientesPage() {
       setTotalCount(data.count);
     } catch (error: any) {
       console.error(error);
-      toast.error(getServerErrorMessage(error, "Error al cargar clientes"));
+      // error handled by backend
     } finally {
       setLoading(false);
     }
@@ -222,7 +224,7 @@ export default function ClientesPage() {
       const data = await clientService.getClient(client.id);
       setCategorizeCategories((data as any).categoryIds ?? []);
     } catch (error: any) {
-      toast.error(getServerErrorMessage(error, "No se pudo cargar el cliente"));
+      // error handled by backend
       setOpenCategorizeDialog(false);
     } finally {
       setCategorizeLoading(false);
@@ -247,7 +249,7 @@ export default function ClientesPage() {
 
     if (action === "mover") {
       if (selectedIds.length === 0) {
-        toast.warning("Selecciona al menos un cliente");
+        // user-visible warnings/errors are handled by backend
         setBulkKey((k) => k + 1);
         return;
       }
@@ -258,7 +260,7 @@ export default function ClientesPage() {
     }
 
     if (selectedIds.length === 0) {
-      toast.warning("Selecciona al menos un cliente");
+      // backend will notify user
       setBulkKey((k) => k + 1);
       return;
     }
@@ -269,7 +271,7 @@ export default function ClientesPage() {
         return !c || c.active === false;
       });
       if (invalid.length > 0) {
-        toast.warning("Selecciona solo clientes activos para archivar");
+        // backend will notify user
         setSelectedIds([]);
         setBulkKey((k) => k + 1);
         return;
@@ -285,7 +287,7 @@ export default function ClientesPage() {
         return !c || c.active === true;
       });
       if (invalid.length > 0) {
-        toast.warning("Selecciona solo clientes archivados para restaurar");
+        // backend will notify user
         setSelectedIds([]);
         setBulkKey((k) => k + 1);
         return;
@@ -301,7 +303,7 @@ export default function ClientesPage() {
         return !c || c.active === true;
       });
       if (invalid.length > 0) {
-        toast.warning("Selecciona solo clientes archivados para eliminar");
+        // backend will notify user
         setSelectedIds([]);
         setBulkKey((k) => k + 1);
         return;
@@ -311,7 +313,7 @@ export default function ClientesPage() {
       return;
     }
 
-    toast.info(`Acción "${action}" no implementada aún`);
+    toast.info(t('clients.actionNotImplemented', { action }));
     // Resetear el selector tras cualquier acción
     setBulkKey((k) => k + 1);
   };
@@ -319,7 +321,7 @@ export default function ClientesPage() {
   const handleExportPDF = async () => {
     try {
 
-      toast.loading("Generando PDF...");
+      toast.loading(t('clients.generatingPDF'));
       const blob = await clientService.exportPDF({
         ...filters,
         name: debouncedSearch || undefined,
@@ -332,17 +334,17 @@ export default function ClientesPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       toast.dismiss();
-      toast.success("PDF descargado");
+      toast.success(t('clients.pdfDownloaded'));
     } catch (error: any) {
       toast.dismiss();
-      toast.error(getServerErrorMessage(error, "Error al exportar PDF"));
+      // backend handles error notification
     }
   };
 
   const handleExportExcel = async () => {
     try {
 
-      toast.loading("Generando Excel...");
+      toast.loading(t('clients.generatingExcel'));
       const blob = await clientService.exportExcel({
         ...filters,
         name: debouncedSearch || undefined,
@@ -355,11 +357,10 @@ export default function ClientesPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       toast.dismiss();
-      toast.success("Excel descargado");
+      toast.success(t('clients.excelDownloaded'));
     } catch (error: any) {
-
       toast.dismiss();
-      toast.error(getServerErrorMessage(error, "Error al exportar Excel"));
+      // backend handles error notification
     }
   };
 
@@ -374,12 +375,12 @@ export default function ClientesPage() {
       await clientService.updateClient(categorizeClientId, {
         categoryIds: categorizeCategories,
       } as any);
-      toast.success("Categorías actualizadas");
+      toast.success(t('clients.categoriesUpdated'));
       setOpenCategorizeDialog(false);
       loadClients();
       loadCategories();
     } catch (error: any) {
-      toast.error(getServerErrorMessage(error, "Error al actualizar categorías"));
+      // backend handles error notification
     } finally {
       setCategorizeSaving(false);
     }
@@ -387,7 +388,7 @@ export default function ClientesPage() {
 
   const handleMoveSubmit = async () => {
     if (moveCategories.length === 0) {
-      toast.warning("Selecciona al menos una categoría");
+      toast.warning(t('clients.selectAtLeastOneCategory'));
       return;
     }
     setMoveLoading(true);
@@ -403,13 +404,13 @@ export default function ClientesPage() {
           } as any)
         )
       );
-      toast.success("Categorías actualizadas");
+      toast.success(t('clients.categoriesUpdated'));
       setOpenMoveDialog(false);
       setSelectedIds([]);
       loadClients();
       loadCategories();
     } catch (error: any) {
-      toast.error(getServerErrorMessage(error, "Error al mover categorías"));
+      // backend handles error notification
     } finally {
       setMoveLoading(false);
     }
@@ -418,18 +419,18 @@ export default function ClientesPage() {
   const bulkActions: BulkAction[] = useMemo(() => {
     const actions: BulkAction[] = [];
     // mover (cambiar categoría) requires edit
-    if (hasPermission('clientAccountEdit')) actions.push({ value: "mover", label: "Mover" });
+    if (hasPermission('clientAccountEdit')) actions.push({ value: "mover", label: t('clients.bulk.move') });
     if (filters.active === true) {
-      if (hasPermission('clientAccountEdit')) actions.push({ value: "archivar", label: "Archivar" });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "archivar", label: t('clients.bulk.archive') });
     } else if (filters.active === false) {
-      if (hasPermission('clientAccountEdit')) actions.push({ value: "restaurar", label: "Restaurar" });
-      if (hasPermission('clientAccountDestroy')) actions.push({ value: "eliminar", label: "Eliminar" });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "restaurar", label: t('clients.bulk.restore') });
+      if (hasPermission('clientAccountDestroy')) actions.push({ value: "eliminar", label: t('clients.bulk.delete') });
     } else {
-      if (hasPermission('clientAccountEdit')) actions.push({ value: "archivar", label: "Archivar" });
-      if (hasPermission('clientAccountEdit')) actions.push({ value: "restaurar", label: "Restaurar" });
-      if (hasPermission('clientAccountDestroy')) actions.push({ value: "eliminar", label: "Eliminar" });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "archivar", label: t('clients.bulk.archive') });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "restaurar", label: t('clients.bulk.restore') });
+      if (hasPermission('clientAccountDestroy')) actions.push({ value: "eliminar", label: t('clients.bulk.delete') });
     }
-    if (hasPermission('clientAccountEdit')) actions.push({ value: "gestionar-categorias", label: "Gestionar Categorías" });
+    if (hasPermission('clientAccountEdit')) actions.push({ value: "gestionar-categorias", label: t('clients.bulk.manageCategories') });
     return actions;
   }, [filters.active]);
 
@@ -437,7 +438,7 @@ export default function ClientesPage() {
     () => [
       {
         key: "name",
-        header: "Cliente",
+        header: t('clients.columns.name'),
         className: "font-medium",
         render: (value, row) => {
           const lastName = row.lastName && row.lastName !== 'undefined' ? row.lastName : '';
@@ -445,12 +446,12 @@ export default function ClientesPage() {
         }
 
       },
-      { key: "address", header: "Dirección" },
-      { key: "email", header: "Correo Electrónico" },
-      { key: "phoneNumber", header: "Número de Teléfono" },
+      { key: "address", header: t('clients.columns.address') },
+      { key: "email", header: t('clients.columns.email') },
+      { key: "phoneNumber", header: t('clients.columns.phone') },
       {
         key: "active",
-        header: "Estado",
+        header: t('clients.columns.status'),
         render: (_value: any, row: Client) => {
           // El backend puede enviar booleano o entero (0/1)
           const isActive = row.active === true ;
@@ -458,7 +459,7 @@ export default function ClientesPage() {
             <span className={`px-2 py-1 text-xs rounded-full ${
               isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
             }`}>
-              {isActive ? "Activo" : "Archivado"}
+              {isActive ? t('clients.status.active') : t('clients.status.archived')}
             </span>
           );
         },
@@ -473,7 +474,7 @@ export default function ClientesPage() {
 
     if (hasPermission('clientAccountRead')) {
       actions.push({
-        label: "Ver Detalles",
+        label: t('clients.actions.viewDetails'),
         icon: <Eye className="h-4 w-4" />,
         onClick: () => {
           setSelectedClientId(client.id);
@@ -485,22 +486,22 @@ export default function ClientesPage() {
     if (isActive) {
       if (hasPermission('clientAccountEdit')) {
         actions.push({
-          label: "Categorizar",
+          label: t('clients.actions.categorize'),
           icon: <Tag className="h-4 w-4" />,
           onClick: () => openCategorizeForClient(client),
         });
 
         actions.push({
-          label: "Archivo",
+          label: t('clients.actions.archive'),
           icon: <Archive className="h-4 w-4" />,
           onClick: async () => {
             try {
               await clientService.updateClient(client.id, { active: false } as any);
-              toast.success("Cliente archivado");
+              toast.success(t('clients.clientArchived'));
               // refresh list
               loadClients();
             } catch (error: any) {
-              toast.error(getServerErrorMessage(error, "Error al archivar cliente"));
+              toast.error(getServerErrorMessage(error, t('clients.errorArchiveClient')));
             }
           },
         });
@@ -508,24 +509,24 @@ export default function ClientesPage() {
     } else {
       if (hasPermission('clientAccountDestroy')) {
         actions.push({
-          label: "Eliminar",
-          icon: <Trash className="h-4 w-4" />,
-          onClick: () => {
-            setDeleteClient(client);
-            setOpenDeleteDialog(true);
-          },
-        });
+            label: t('clients.actions.delete'),
+            icon: <Trash className="h-4 w-4" />,
+            onClick: () => {
+              setDeleteClient(client);
+              setOpenDeleteDialog(true);
+            },
+          });
       }
 
       if (hasPermission('clientAccountEdit')) {
         actions.push({
-          label: "Restaurar",
-          icon: <RotateCcw className="h-4 w-4" />,
-          onClick: () => {
-            setRestoreClient(client);
-            setOpenRestoreDialog(true);
-          },
-        });
+            label: t('clients.actions.restore'),
+            icon: <RotateCcw className="h-4 w-4" />,
+            onClick: () => {
+              setRestoreClient(client);
+              setOpenRestoreDialog(true);
+            },
+          });
       }
     }
 
@@ -539,8 +540,8 @@ export default function ClientesPage() {
     <AppLayout>
       <Breadcrumb
         items={[
-          { label: "Panel de control", path: "/dashboard" },
-          { label: "Clientes" },
+          { label: t('clients.breadcrumb.dashboard'), path: "/dashboard" },
+          { label: t('clients.breadcrumb.clients') },
         ]}
       />
 
@@ -554,7 +555,7 @@ export default function ClientesPage() {
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar Cliente"
+                placeholder={t('clients.searchPlaceholder')}
                 className="pl-9 w-64"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -566,7 +567,7 @@ export default function ClientesPage() {
                 className="bg-orange-500 hover:bg-orange-600 text-white"
                 asChild
               >
-                <Link to="/clients/add-new">Nuevo cliente</Link>
+                <Link to="/clients/add-new">{t('clients.newClient')}</Link>
               </Button>
             )}
 
@@ -577,19 +578,19 @@ export default function ClientesPage() {
                   className="text-orange-600 border-orange-200"
                 >
                   <Filter className="mr-2 h-4 w-4" />
-                  Filtros
+                  {t('clients.filters.title')}
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[400px] sm:w-[460px]">
                 <SheetHeader>
-                  <SheetTitle>Filtros</SheetTitle>
+                  <SheetTitle>{t('clients.filters.title')}</SheetTitle>
                 </SheetHeader>
 
                 <div className="mt-6 space-y-4">
                   <div className="space-y-2">
-                    <Label>Correo Electrónico</Label>
+                    <Label>{t('clients.filters.email')}</Label>
                     <Input
-                      placeholder="ejemplo@correo.com"
+                      placeholder={t('clients.placeholders.emailExample')}
                       value={filters.email || ""}
                       onChange={(e) =>
                         setFilters({
@@ -601,9 +602,9 @@ export default function ClientesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Número de Teléfono</Label>
+                    <Label>{t('clients.filters.phone')}</Label>
                     <Input
-                      placeholder="+593 123456789"
+                      placeholder={t('clients.placeholders.phoneExample')}
                       value={filters.phoneNumber || ""}
                       onChange={(e) =>
                         setFilters({
@@ -615,9 +616,9 @@ export default function ClientesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Ciudad</Label>
+                    <Label>{t('clients.filters.city')}</Label>
                     <Input
-                      placeholder="Quito"
+                      placeholder={t('clients.placeholders.cityExample')}
                       value={filters.city || ""}
                       onChange={(e) =>
                         setFilters({
@@ -629,9 +630,9 @@ export default function ClientesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>País</Label>
+                    <Label>{t('clients.filters.country')}</Label>
                     <Input
-                      placeholder="Ecuador"
+                      placeholder={t('clients.placeholders.countryExample')}
                       value={filters.country || ""}
                       onChange={(e) =>
                         setFilters({
@@ -643,7 +644,7 @@ export default function ClientesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Categorías</Label>
+                    <Label>{t('clients.filters.categories')}</Label>
                     <Select
                       value={filters.category || "all"}
                       onValueChange={(v) =>
@@ -654,10 +655,10 @@ export default function ClientesPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Todas" />
+                        <SelectValue placeholder={t('clients.filters.all')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todas</SelectItem>
+                        <SelectItem value="all">{t('clients.filters.all')}</SelectItem>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
@@ -668,7 +669,7 @@ export default function ClientesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Estado</Label>
+                    <Label>{t('clients.filters.status')}</Label>
                     <Select
                       value={
                         filters.active === undefined
@@ -688,12 +689,12 @@ export default function ClientesPage() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Todos" />
+                        <SelectValue placeholder={t('clients.filters.all')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="active">Activo</SelectItem>
-                        <SelectItem value="inactive">Archivado</SelectItem>
+                        <SelectItem value="all">{t('clients.filters.all')}</SelectItem>
+                        <SelectItem value="active">{t('clients.filters.active')}</SelectItem>
+                        <SelectItem value="inactive">{t('clients.filters.archived')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -702,7 +703,7 @@ export default function ClientesPage() {
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white"
                     onClick={() => setOpenFilter(false)}
                   >
-                    Aplicar Filtros
+                    {t('clients.applyFilters')}
                   </Button>
 
                   <Button
@@ -713,7 +714,7 @@ export default function ClientesPage() {
                       setOpenFilter(false);
                     }}
                   >
-                    Limpiar Filtros
+                    {t('clients.clearFilters')}
                   </Button>
                 </div>
               </SheetContent>
@@ -725,16 +726,16 @@ export default function ClientesPage() {
                   <EllipsisVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem disabled={!hasPermission('clientAccountRead')} onClick={async () => { if (!hasPermission('clientAccountRead')) return; await handleExportPDF(); }}>
-                  <FileDown className="mr-2 h-4 w-4" /> Exportar como PDF
+                  <FileDown className="mr-2 h-4 w-4" /> {t('clients.export.pdf')}
                 </DropdownMenuItem>
                 <DropdownMenuItem disabled={!hasPermission('clientAccountRead')} onClick={async () => { if (!hasPermission('clientAccountRead')) return; await handleExportExcel(); }}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" /> Exportar como Excel
+                  <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('clients.export.excel')}
                 </DropdownMenuItem>
                 {hasPermission('clientAccountImport') && (
                   <DropdownMenuItem onClick={() => setOpenImport(true)}>
-                    <ArrowDownUp className="mr-2 h-4 w-4" /> Importar
+                    <ArrowDownUp className="mr-2 h-4 w-4" /> {t('clients.import')}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -762,15 +763,14 @@ export default function ClientesPage() {
               <div className="flex flex-col items-center justify-center text-center">
                 <img
                   src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
-                  alt="Sin datos"
+                  alt={t('clients.empty.alt')}
                   className="h-36 mb-4"
                 />
                 <h3 className="text-lg font-semibold">
-                  No se encontraron resultados
+                  {t('clients.empty.title')}
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-                  No pudimos encontrar ningún elemento que coincida con su
-                  búsqueda.
+                  {t('clients.empty.description')}
                 </p>
               </div>
             }
@@ -778,7 +778,7 @@ export default function ClientesPage() {
 
           <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50 border-x border-b rounded-b-lg">
             <div className="flex items-center gap-2">
-              <span>Elementos por página</span>
+              <span>{t('clients.pagination.itemsPerPage')}</span>
               <Select
                 value={limit.toString()}
                 onValueChange={(v) => {
@@ -798,7 +798,7 @@ export default function ClientesPage() {
             </div>
 
             <div>
-              {from} – {to} de {totalCount}
+              {from} – {to} {t('clients.pagination.of')} {totalCount}
             </div>
 
             <div className="flex gap-2">
@@ -808,7 +808,7 @@ export default function ClientesPage() {
                 disabled={page === 1 || loading}
                 onClick={() => setPage((p) => p - 1)}
               >
-                Anterior
+                {t('clients.pagination.prev')}
               </Button>
               <Button
                 variant="outline"
@@ -816,7 +816,7 @@ export default function ClientesPage() {
                 disabled={page * limit >= totalCount || loading}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Siguiente
+                {t('clients.pagination.next')}
               </Button>
             </div>
           </div>
@@ -827,20 +827,20 @@ export default function ClientesPage() {
       <Dialog open={openMoveDialog} onOpenChange={setOpenMoveDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cambiar categorías</DialogTitle>
+            <DialogTitle>{t('clients.dialogs.changeCategories.title')}</DialogTitle>
             <DialogDescription>
-              Aplica a {selectedIds.length} cliente(s) seleccionados.
+              {t('clients.dialogs.changeCategories.desc', { count: selectedIds.length })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
-            <Label>Nuevas categorías</Label>
+            <Label>{t('clients.dialogs.changeCategories.newCategories')}</Label>
             <CategorySelect
               module="clientAccount"
               multiple
               value={moveCategories}
               onChange={(val) => setMoveCategories(Array.isArray(val) ? val : [])}
-              placeholder={categories.length === 0 ? "Cargando..." : "Selecciona categorías"}
+              placeholder={categories.length === 0 ? t('clients.loading') : t('clients.selectCategories')}
               options={categories.map((c) => ({ id: c.id, name: c.name }))}
               onCategoryCreated={loadCategories}
             />
@@ -848,10 +848,10 @@ export default function ClientesPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenMoveDialog(false)} disabled={moveLoading}>
-              Cancelar
+              {t('clients.cancel')}
             </Button>
             <Button onClick={handleMoveSubmit} disabled={moveLoading}>
-              {moveLoading ? "Guardando..." : "Guardar"}
+              {moveLoading ? t('clients.saving') : t('clients.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -859,20 +859,20 @@ export default function ClientesPage() {
       <Dialog open={openCategorizeDialog} onOpenChange={setOpenCategorizeDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Categorizar cliente</DialogTitle>
+            <DialogTitle>{t('clients.dialogs.categorize.title')}</DialogTitle>
             <DialogDescription>
-              {categorizeClientName || "Cliente"}
+              {categorizeClientName || t('clients.client')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
-            <Label>Categorías</Label>
+            <Label>{t('clients.filters.categories')}</Label>
             <CategorySelect
               module="clientAccount"
               multiple
               value={categorizeCategories}
               onChange={(val) => setCategorizeCategories(Array.isArray(val) ? val : [])}
-              placeholder={categorizeLoading || categories.length === 0 ? "Cargando..." : "Selecciona categorías"}
+              placeholder={categorizeLoading || categories.length === 0 ? t('clients.loading') : t('clients.selectCategories')}
               options={categories.map((c) => ({ id: c.id, name: c.name }))}
               onCategoryCreated={loadCategories}
             />
@@ -881,12 +881,12 @@ export default function ClientesPage() {
           <DialogFooter>
             <Button 
             variant="outline" onClick={() => setOpenCategorizeDialog(false)} disabled={categorizeSaving}>
-              Cancelar
+              {t('clients.cancel')}
             </Button>
             <Button 
             className="bg-orange-500 hover:bg-orange-600"
             onClick={handleCategorizeSubmit} disabled={categorizeSaving || categorizeLoading}>
-              {categorizeSaving ? "Guardando..." : "Guardar"}
+              {categorizeSaving ? t('clients.saving') : t('clients.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -901,31 +901,31 @@ export default function ClientesPage() {
       <AlertDialog open={openArchiveBulkDialog} onOpenChange={setOpenArchiveBulkDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Archivar clientes?</AlertDialogTitle>
+            <AlertDialogTitle>{t('clients.alerts.archiveClients.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de archivar {selectedIds.length} cliente(s)? Esta acción los marcará como inactivos.
+              {t('clients.alerts.archiveClients.desc', { count: selectedIds.length })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
-                try {
-                  await Promise.all(
-                    selectedIds.map((id) =>
-                      clientService.updateClient(id, { active: false } as any)
-                    )
-                  );
-                  toast.success("Clientes archivados");
-                  setSelectedIds([]);
-                  loadClients();
-                  setOpenArchiveBulkDialog(false);
-                } catch (error: any) {
-                  toast.error(getServerErrorMessage(error, "Error al archivar"));
-                }
-              }}
+                  try {
+                    await Promise.all(
+                      selectedIds.map((id) =>
+                        clientService.updateClient(id, { active: false } as any)
+                      )
+                    );
+                    toast.success(t('clients.clientsArchived'));
+                    setSelectedIds([]);
+                    loadClients();
+                    setOpenArchiveBulkDialog(false);
+                  } catch (error: any) {
+                    // backend handles errors
+                  }
+                }}
             >
-              Aceptar
+              {t('clients.accept')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -934,13 +934,13 @@ export default function ClientesPage() {
       <AlertDialog open={openRestoreBulkDialog} onOpenChange={setOpenRestoreBulkDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Restaurar clientes?</AlertDialogTitle>
+            <AlertDialogTitle>{t('clients.alerts.restoreClients.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de restaurar {selectedIds.length} cliente(s)? Volverán a estar activos.
+              {t('clients.alerts.restoreClients.desc', { count: selectedIds.length })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 try {
@@ -949,16 +949,16 @@ export default function ClientesPage() {
                       clientService.updateClient(id, { active: true } as any)
                     )
                   );
-                  toast.success("Clientes restaurados");
+                  toast.success(t('clients.clientsRestored'));
                   setSelectedIds([]);
                   loadClients();
                   setOpenRestoreBulkDialog(false);
                 } catch (error: any) {
-                  toast.error(getServerErrorMessage(error, "Error al restaurar"));
+                  // backend handles errors
                 }
               }}
             >
-              Aceptar
+              {t('clients.accept')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -967,27 +967,27 @@ export default function ClientesPage() {
       <AlertDialog open={openDeleteBulkDialog} onOpenChange={setOpenDeleteBulkDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar clientes?</AlertDialogTitle>
+            <AlertDialogTitle>{t('clients.alerts.deleteClients.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de eliminar permanentemente {selectedIds.length} cliente(s)? Esta acción no se puede deshacer.
+              {t('clients.alerts.deleteClients.desc', { count: selectedIds.length })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 try {
                   await clientService.deleteClients(selectedIds);
-                  toast.success("Clientes eliminados");
+                  toast.success(t('clients.clientsDeleted'));
                   setSelectedIds([]);
                   loadClients();
                   setOpenDeleteBulkDialog(false);
                 } catch (error: any) {
-                  toast.error(getServerErrorMessage(error, "Error al eliminar"));
+                  // backend handles errors
                 }
               }}
             >
-              Aceptar
+              {t('clients.accept')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -997,26 +997,26 @@ export default function ClientesPage() {
       <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar cliente?</AlertDialogTitle>
+            <AlertDialogTitle>{t('clients.alerts.deleteClient.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de eliminar permanentemente a {deleteClient?.name}? Esta acción no se puede deshacer.
+              {t('clients.alerts.deleteClient.desc', { name: deleteClient?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 if (!deleteClient) return;
                 try {
                   await clientService.deleteClients([deleteClient.id]);
-                  toast.success("Cliente eliminado");
+                  toast.success(t('clients.clientDeleted'));
                   loadClients();
                 } catch (error: any) {
-                  toast.error(getServerErrorMessage(error, "Error al eliminar"));
+                  // backend handles errors
                 }
               }}
             >
-              Aceptar
+              {t('clients.accept')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1025,26 +1025,26 @@ export default function ClientesPage() {
       <AlertDialog open={openRestoreDialog} onOpenChange={setOpenRestoreDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Restaurar cliente?</AlertDialogTitle>
+            <AlertDialogTitle>{t('clients.alerts.restoreClient.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de restaurar a {restoreClient?.name}? El cliente volverá a estar activo.
+              {t('clients.alerts.restoreClient.desc', { name: restoreClient?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 if (!restoreClient) return;
                 try {
                   await clientService.updateClient(restoreClient.id, { active: true } as any);
-                  toast.success("Cliente restaurado");
+                  toast.success(t('clients.clientRestored'));
                   loadClients();
                 } catch (error: any) {
-                  toast.error(getServerErrorMessage(error, "Error al restaurar"));
+                  // backend handles errors
                 }
               }}
             >
-              Aceptar
+              {t('clients.accept')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

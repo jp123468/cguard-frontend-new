@@ -8,6 +8,7 @@ import LanguagePage from "./pages/idioma/configuracion"
 
 import { AuthProvider } from "./contexts/AuthContext"
 import { LanguageProvider } from "./contexts/LanguageContext"
+import "./i18n"
 import Register from "./pages/auth/register"
 import ProfileUser from "./pages/admin/Configuration/ProfileUserPage"
 import ProfileCompany from "./pages/admin/Configuration/ProfileCompanyPage"
@@ -75,8 +76,10 @@ import PostSite from "./pages/admin/analytics/PostSite"
 import Guard from "./pages/admin/analytics/Guard"
 import Estimates from "./pages/admin/billing/Estimates"
 import NewEstimate from "./pages/admin/billing/NewEstimate"
+import EditEstimate from "./pages/admin/billing/EditEstimate"
 import Invoices from "./pages/admin/billing/Invoices"
 import NewInvoice from "./pages/admin/billing/NewInvoice"
+import EditInvoice from "./pages/admin/billing/EditInvoice"
 import Items from "./pages/admin/billing/Items"
 import ParkingContact from "./pages/admin/parking-manager/ParkingContact"
 import ParkingVehicles from "./pages/admin/parking-manager/ParkingVehicles"
@@ -612,6 +615,14 @@ export default function App() {
               }
             />
             <Route
+              path="/estimates/:id"
+              element={
+                <ProtectedRoute>
+                  <EditEstimate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/invoices"
               element={
                 <ProtectedRoute>
@@ -624,6 +635,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <NewInvoice />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/billing/invoices/:id"
+              element={
+                <ProtectedRoute>
+                  <EditInvoice />
                 </ProtectedRoute>
               }
             />
