@@ -109,6 +109,9 @@ export default function DispatcherPage() {
   const [shareLoading, setShareLoading] = useState(false);
   const shareDialogRef = useRef<HTMLDivElement | null>(null);
 
+  // Action select state so we can reset after use
+  const [actionSelectValue, setActionSelectValue] = useState<string>('');
+
   // Send-email dialog state
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [emailFormat, setEmailFormat] = useState<'pdf' | 'xlsx'>('pdf');
@@ -778,14 +781,19 @@ export default function DispatcherPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {/* Acción (izquierda) */}
           <div className="flex items-center gap-2">
-            <Select onValueChange={(v) => {
+            <Select value={actionSelectValue} onValueChange={(v) => {
+              setActionSelectValue(v);
               if (v === 'eliminar') {
                 if (!selectedIds || selectedIds.length === 0) {
                   // no items selected
                   toast.error('Seleccione al menos un despacho para eliminar');
+                  // reset select after showing message
+                  setActionSelectValue('');
                   return;
                 }
                 setShowDeleteConfirm(true);
+                // reset select so it returns to placeholder
+                setActionSelectValue('');
                 return;
               }
             }}>
