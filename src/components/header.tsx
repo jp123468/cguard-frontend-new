@@ -58,6 +58,14 @@ export default function Header({
   const userName = getDisplayName(user);
   const userEmail = user?.email ?? "";
   const avatar: string | undefined = user?.avatar || user?.photoURL || undefined;
+  const tenantName =
+    (user && (user.tenant && (user.tenant.tenant?.name || user.tenant.name))) ||
+    (user && Array.isArray(user.tenants) && user.tenants[0] && (user.tenants[0].tenant?.name || user.tenants[0].tenantName)) ||
+    "";
+
+  const showTenant = Boolean(
+    (user && user.tenant) || (user && Array.isArray(user.tenants) && user.tenants.length > 0)
+  );
 
   const [openUser, setOpenUser] = useState(false);
   const [openTheme, setOpenTheme] = useState(false);
@@ -170,7 +178,7 @@ export default function Header({
                 </div>
               )}
               <div className="leading-tight hidden sm:block mr-1">
-                <div className="text-[11px] text-gray-500">Seguridad BAS</div>
+                <div className="text-[11px] text-gray-500">{showTenant ? tenantName : ''}</div>
                 <div className="text-[11px] text-gray-800">{userName}</div>
               </div>
               <ChevronDown className="w-4 h-4 text-gray-600" />

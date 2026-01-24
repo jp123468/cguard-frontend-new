@@ -84,11 +84,31 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
 
                     <PopoverContent
                         align="start"
-                        className="p-0 w-[420px] max-h-[320px] overflow-auto"
+                        className="p-0 w-[320px] max-h-[320px] overflow-hidden"
                     >
                         <Command>
                             <CommandInput placeholder="Search..." />
-                            <CommandList>
+                            <CommandList
+                                className="max-h-[240px] overflow-auto overscroll-contain touch-auto"
+                                onWheel={(e: any) => {
+                                    const el = e.currentTarget as HTMLElement;
+                                    const delta = e.deltaY;
+
+                                    const atTop = el.scrollTop === 0;
+                                    const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
+
+                                    // Si intentan desplazar más allá del límite, dejar que el evento llegue al padre.
+                                    if ((delta < 0 && atTop) || (delta > 0 && atBottom)) {
+                                        // Allow propagation so parent can scroll if needed
+                                        return;
+                                    }
+
+                                    // Dentro del listado: prevenir comportamiento por defecto y actualizar scroll aquí.
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    el.scrollTop += delta;
+                                }}
+                            >
                                 <CommandEmpty>No se encontraron países.</CommandEmpty>
                                 <CommandGroup>
                                     {COUNTRIES.map((c) => (

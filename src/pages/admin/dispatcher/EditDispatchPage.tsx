@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,11 +34,6 @@ import api from "@/lib/api";
 import { postSiteService } from "@/lib/api/postSiteService";
 import { toast } from "sonner";
 
-// Datos cargados desde backend
-// Se usan estados vacíos y se rellenan en useEffect
-// Cada elemento tiene { id, name }
-
-
 const prioridades = [
   { id: "alta", name: "Alta" },
   { id: "media", name: "Media" },
@@ -51,11 +46,10 @@ const tiposLlamador = [
   { id: "supervisor", name: "Supervisor" },
 ];
 
-// tiposIncidente se carga desde backend en el estado `tiposIncidente`
-
-export default function NewDispatchPage() {
+export default function EditDispatchPage() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const params = useParams();
+  const editId = params?.id;
   const [attachments, setAttachments] = useState<File[]>([]);
   const [clientes, setClientes] = useState<Array<{ id: string; name: string }>>([]);
   const [sitios, setSitios] = useState<Array<{ id: string; name: string }>>([]);
@@ -74,7 +68,6 @@ export default function NewDispatchPage() {
   const incidentTimeRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    // Cargar clientes
     (async () => {
       try {
         const clientsResp = await clientService.getClients({ active: true }, { limit: 100, offset: 0 });
@@ -91,19 +84,15 @@ export default function NewDispatchPage() {
               else if (company) display = company;
               else display = c.name || "Sin nombre";
 
-              return { id: c.id, name: display };
+              return { id: String(c.id), name: display };
             })
           );
         }
       } catch (e) {
-        // silent: dejar el arreglo vacío si falla
         console.error("Error cargando clientes:", e);
       }
     })();
 
-    // NOTA: la carga de `sitios` se hace cuando cambia el `clientId` seleccionado
-
-    // Cargar guardias (securityGuard) — intentamos múltiples endpoints/formatos por compatibilidad
     (async () => {
       try {
         const tenantId = localStorage.getItem("tenantId");
@@ -121,7 +110,7 @@ export default function NewDispatchPage() {
         for (const path of tryPaths) {
           try {
             const resp = await api.get(path, { toast: { silentError: true } } as any);
-            const body = resp.data ?? resp; // axios returns { data }
+            const body = resp.data ?? resp;
             if (Array.isArray(body)) {
               rows = body;
             } else if (body && Array.isArray(body.rows)) {
@@ -130,9 +119,7 @@ export default function NewDispatchPage() {
               rows = body.data;
             }
             if (rows && rows.length > 0) break;
-          } catch (err) {
-            // intentar siguiente path
-          }
+          } catch (err) {}
         }
 
         if (rows && Array.isArray(rows)) {
@@ -152,11 +139,10 @@ export default function NewDispatchPage() {
                 g.username ||
                 g.email ||
                 "Sin nombre";
-              return { id: g.id || g.userId || g.guardId || g.uuid, name: display };
+              return { id: String(g.id || g.userId || g.guardId || g.uuid), name: display };
             })
           );
         } else {
-          // No se encontraron guardias; limpiar
           setGuardias([]);
         }
       } catch (e) {
@@ -165,7 +151,6 @@ export default function NewDispatchPage() {
       }
     })();
 
-    // Cargar tipos de incidente
     (async () => {
       try {
         const res = await IncidentTypesService.list("", 1, 100);
@@ -199,50 +184,6 @@ export default function NewDispatchPage() {
     mode: "onBlur",
   });
 
-  // If navigated with a duplicate state, prefill the form
-  useEffect(() => {
-    try {
-      const dup = (location && (location as any).state && (location as any).state.duplicate) || null;
-      if (!dup) return;
-
-      const data: any = dup;
-
-      let incidentDate = "";
-      let incidentTime = "";
-      const dateVal = data.incidentAt || data.dateTime || null;
-      if (dateVal) {
-        const d = new Date(dateVal);
-        if (!isNaN(d.getTime())) {
-          incidentDate = d.toISOString().slice(0, 10);
-          // format HH:MM
-          incidentTime = d.toTimeString().slice(0,5);
-        }
-      }
-
-      const prefill: any = {
-        clientId: data.clientId || data.clientId || "",
-        siteId: data.siteId || "",
-        guardId: data.guardId || data.guardName || "",
-        priority: data.priority || "media",
-        callerType: data.callerType || "",
-        callerName: data.callerName || "",
-        location: data.location || "",
-        incidentType: data.incidentTypeId || data.incidentType || "",
-        incidentDate,
-        incidentTime,
-        incidentDetails: data.content || data.incidentDetails || "",
-        actionsTaken: data.action || "",
-        internalNotes: data.internalNotes || "",
-        subject: data.subject || "",
-      };
-
-      form.reset(prefill);
-      // fill sitios when clientId present (the useEffect watching watchedClientId will load sitios)
-    } catch (err) {
-      // ignore
-    }
-  }, [location]);
-
   // Watch selected clientId and load sitios (postSite) solo para ese cliente
   const watchedClientId = useWatch({ control: form.control, name: "clientId" }) as string | undefined;
 
@@ -255,7 +196,7 @@ export default function NewDispatchPage() {
         }
         const resp = await postSiteService.list({ clientId: watchedClientId }, { limit: 100, offset: 0 });
         if (resp && Array.isArray(resp.rows)) {
-          setSitios(resp.rows.map((s: any) => ({ id: s.id, name: s.name || s.companyName || s.address || "Sitio" })));
+          setSitios(resp.rows.map((s: any) => ({ id: String(s.id), name: s.name || s.companyName || s.address || "Sitio" })));
         } else {
           setSitios([]);
         }
@@ -266,67 +207,166 @@ export default function NewDispatchPage() {
     })();
   }, [watchedClientId]);
 
+  // Load the existing request and prefill form
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!editId) return;
+        const tenantId = localStorage.getItem("tenantId");
+        if (!tenantId) return;
+        const resp = await api.get(`/tenant/${tenantId}/request/${editId}`);
+        const data = (resp && (resp as any).data) || resp;
+        if (!data) return;
+
+        let incidentDate = "";
+        let incidentTime = "";
+        const dateVal = data.incidentAt || data.dateTime || null;
+        if (dateVal) {
+          const d = new Date(dateVal);
+          if (!isNaN(d.getTime())) {
+            incidentDate = d.toISOString().slice(0, 10);
+            incidentTime = d.toTimeString().slice(0, 5);
+          }
+        }
+
+        // Derive guard id and display name from multiple possible response shapes
+        const deriveGuard = (d: any) => {
+          const maybeId =
+            d.guardId || d.guard_id || d.guard?.id || d.guard?.userId || d.guard?.guardId || d.guard?.uuid || d.userId || d.assignedGuardId || d.guardName?.id || d.guardName?.guardId;
+          const id = maybeId ? String(maybeId) : "";
+          const name =
+            (d.guardName && (d.guardName.fullName || d.guardName.name)) ||
+            d.guard?.fullName ||
+            d.guard?.displayName ||
+            d.guard?.name ||
+            d.guard?.user?.fullName ||
+            d.guard?.employeeName ||
+            d.guardName ||
+            d.guard?.username ||
+            d.guard?.email ||
+            "";
+          return { id, name };
+        };
+
+        const derivedGuard = deriveGuard(data);
+
+        const prefill: any = {
+          clientId: data.clientId ? String(data.clientId) : "",
+          siteId: data.siteId ? String(data.siteId) : "",
+          guardId: derivedGuard.id || "",
+          priority: data.priority || "media",
+          callerType: data.callerType || "",
+          callerName: data.callerName || "",
+          location: data.location || "",
+          incidentType: data.incidentTypeId || data.incidentType || "",
+          incidentDate,
+          incidentTime,
+          incidentDetails: data.content || "",
+          actionsTaken: data.actionsTaken || data.action || "",
+          internalNotes: data.internalNotes || "",
+          subject: data.subject || "",
+        };
+
+        form.reset(prefill);
+        // Explicitly set form values to ensure controlled Selects pick them up
+        try {
+          form.setValue('siteId', prefill.siteId ? String(prefill.siteId) : '');
+        } catch (err) {}
+        try {
+          form.setValue('guardId', prefill.guardId ? String(prefill.guardId) : '');
+        } catch (err) {}
+
+        // Try to load the actual sitios for the client so the select contains the
+        // saved site option. If that fails, fall back to a single option using the
+        // returned display name. Always ensure the saved siteId is present in
+        // the `sitios` options so the Select can display it.
+        try {
+          if (prefill.clientId) {
+            const resp = await postSiteService.list({ clientId: prefill.clientId }, { limit: 100, offset: 0 });
+            if (resp && Array.isArray(resp.rows) && resp.rows.length > 0) {
+              setSitios(resp.rows.map((s: any) => ({ id: String(s.id), name: s.name || s.companyName || s.address || 'Sitio' })));
+            } else if (prefill.siteId) {
+              setSitios([{ id: String(prefill.siteId), name: data.site || 'Sitio' }]);
+            }
+          } else if (prefill.siteId) {
+            setSitios([{ id: String(prefill.siteId), name: data.site || 'Sitio' }]);
+          }
+        } catch (err) {
+          if (prefill.siteId) setSitios([{ id: String(prefill.siteId), name: data.site || 'Sitio' }]);
+        }
+
+        // Ensure the saved site is present in the sitios list (prepend if missing)
+        if (prefill.siteId) {
+          setSitios((prev) => {
+            const exists = Array.isArray(prev) && prev.some((s) => String(s.id) === String(prefill.siteId));
+            if (exists) return prev;
+            return [{ id: String(prefill.siteId), name: data.site || 'Sitio' }, ...(prev || [])];
+          });
+          try { form.setValue('siteId', String(prefill.siteId)); } catch (e) {}
+        }
+        // Ensure guard select contains the current guard so the select can display
+        // the saved value even if the initial guard list didn't include it.
+        try {
+          if (prefill.guardId) {
+            const guardNameDisplay = derivedGuard.name || (data.guardName && (data.guardName.fullName || data.guardName.name)) || data.guardName || 'Guardia';
+            setGuardias((prev) => {
+              const exists = Array.isArray(prev) && prev.some((g) => String(g.id) === String(prefill.guardId));
+              if (exists) return prev;
+              return [{ id: String(prefill.guardId), name: guardNameDisplay }, ...(prev || [])];
+            });
+            try { form.setValue('guardId', String(prefill.guardId)); } catch (e) {}
+          }
+        } catch (err) {
+          // ignore
+        }
+      } catch (err) {
+        console.error("Error cargando despacho para editar:", err);
+      }
+    })();
+  }, [editId]);
+
   const onSubmit = async (data: DispatchCreateSchema) => {
     const incidentAt =
       data.incidentDate && data.incidentTime
         ? new Date(`${data.incidentDate}T${data.incidentTime}:00`).toISOString()
         : null;
 
-    // Build explicit payload mapping form fields to backend field names
     const payload: any = {
       clientId: data.clientId || null,
       siteId: data.siteId || null,
       guardId: data.guardId || null,
       priority: data.priority || null,
-      // default to 'abierto' when creating a new dispatch
-      status: 'abierto',
       callerType: data.callerType || null,
       callerName: data.callerName || null,
       location: data.location || null,
       incidentTypeId: data.incidentType || null,
       incidentAt,
-      // Map textual fields to backend expected names
       content: data.incidentDetails || null,
-      // `action` on backend is an enum (validated with isIn).
-      // Do not send free-form text there to avoid validation errors.
       action: null,
-      // Send `actionsTaken` as its own field and keep `internalNotes` separate.
       actionsTaken: data.actionsTaken || null,
       internalNotes: data.internalNotes || null,
-      // Derive a subject if not provided
       subject:
         (data as any).subject ||
         `${data.location || ''}${data.incidentDetails ? ' - ' + String(data.incidentDetails).slice(0, 80) : ''}`,
     };
 
-    // Ensure we don't accidentally send File objects
-    // (form has `attachment` but attachments are handled separately)
-    // Log payload for debugging in DevTools / network
-    // eslint-disable-next-line no-console
-    console.log('Creating request payload:', payload);
-
     try {
       const tenantId = localStorage.getItem('tenantId');
-      if (!tenantId) {
-        console.error('No tenantId found');
-        return;
-      }
+      if (!tenantId) return;
+      if (!editId) return;
 
-      // Note: attachments are not uploaded in this flow (option B).
       // Backend controller expects `req.body.data` so wrap payload accordingly
-      await api.post(`/tenant/${tenantId}/request`, { data: payload });
-
-      // Show success toast, clear attachments and navigate back
-      toast.success('Despacho creado');
+      await api.put(`/tenant/${tenantId}/request/${editId}`, { data: payload });
+      toast.success('Despacho actualizado');
       setAttachments([]);
       navigate('/dispatch-tickets');
     } catch (error) {
-      console.error('Error creating request:', error);
+      console.error('Error actualizando despacho:', error);
       try {
-        const msg = (error && (error as any).message) || 'Error al crear despacho';
+        const msg = (error && (error as any).message) || 'Error al actualizar despacho';
         toast.error(msg);
       } catch (e) {
-        toast.error('Error al crear despacho');
+        toast.error('Error al actualizar despacho');
       }
     }
   };
@@ -336,7 +376,7 @@ export default function NewDispatchPage() {
       <Breadcrumb
         items={[
           { label: "Panel de control", path: "/dashboard" },
-          { label: "Nuevo Despacho" },
+          { label: "Editar Despacho" },
         ]}
       />
 
@@ -590,7 +630,6 @@ export default function NewDispatchPage() {
                         onClick={() => {  
                           const el = incidentDateRef.current;
                           if (!el) return;
-                          // Prefer showPicker() when available (Chromium), otherwise focus.
                           if (typeof (el as any).showPicker === "function") {
                             try {
                               (el as any).showPicker();
@@ -729,7 +768,6 @@ export default function NewDispatchPage() {
                             }
                             return next;
                           });
-                          // reset input so same file can be reselected if needed
                           input.value = "";
                         }}
                       />

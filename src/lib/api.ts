@@ -30,7 +30,9 @@ type MutableConfig = { __toastId?: string | number }
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,
-  withCredentials: false,
+  // Ensure cookies (session) are sent so server-side auth middleware
+  // can populate `req.currentUser` for permission checks.
+  withCredentials: true,
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
@@ -38,6 +40,11 @@ const api: AxiosInstance = axios.create({
     "X-Requested-With": "XMLHttpRequest",
   },
 })
+
+// Simple in-memory dedupe for error toasts to avoid duplicate messages
+let __lastErrorMsg: string | null = null;
+let __lastErrorAt = 0;
+const ERROR_DEDUPE_WINDOW = 3000; // ms
 
 api.interceptors.request.use((config) => {
   const token = getAuthToken()
@@ -114,8 +121,13 @@ api.interceptors.response.use(
     const apiError = normalizeError(error as AxiosError)
     if (!cfg.toast?.silentError) {
       const custom = cfg.toast?.error
-      const msg = typeof custom === "function" ? custom(apiError) : custom || apiError.message
-      toast.error(msg)
+      const msg = String(typeof custom === "function" ? custom(apiError) : custom || apiError.message || "Error")
+      const now = Date.now();
+      if (!(msg && __lastErrorMsg === msg && now - __lastErrorAt < ERROR_DEDUPE_WINDOW)) {
+        toast.error(msg)
+        __lastErrorMsg = msg
+        __lastErrorAt = now
+      }
     }
     return Promise.reject(apiError)
   }

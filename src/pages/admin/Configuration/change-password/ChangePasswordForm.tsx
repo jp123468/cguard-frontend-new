@@ -12,6 +12,9 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
+
 
 const schema = z
   .object({
@@ -37,6 +40,10 @@ type Props = {
 };
 
 export default function ChangePasswordForm({ defaultValues, onSubmit }: Props) {
+  const [showOldPassword, setShowOldPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
   const form = useForm<ChangePasswordValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -61,7 +68,26 @@ export default function ChangePasswordForm({ defaultValues, onSubmit }: Props) {
             <FormItem>
               <Label>Contraseña Antigua*</Label>
               <FormControl>
-                <Input type="password" autoComplete="current-password" className="h-12" {...field} />
+                <div className="relative">
+                  <Input
+                    type={showOldPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    className="h-12 pr-10"
+                    {...field}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                  >
+                    {showOldPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -75,7 +101,26 @@ export default function ChangePasswordForm({ defaultValues, onSubmit }: Props) {
             <FormItem>
               <Label>Nueva Contraseña*</Label>
               <FormControl>
-                <Input type="password" autoComplete="new-password" className="h-12" {...field} />
+                <div className="relative">
+                  <Input
+                    type={showNewPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    className="h-12 pr-10"
+                    {...field}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -89,15 +134,35 @@ export default function ChangePasswordForm({ defaultValues, onSubmit }: Props) {
             <FormItem>
               <Label>Confirmar Nueva Contraseña*</Label>
               <FormControl>
-                <Input type="password" autoComplete="new-password" className="h-12" {...field} />
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    className="h-12 pr-10"
+                    {...field}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
+
         <div className="flex justify-end">
-          <Button type="submit" className="px-6">Guardar Cambios</Button>
+          <Button type="submit" className="bg-orange-500 text-white hover:bg-orange-600 px-6">Guardar Cambios</Button>
         </div>
       </form>
     </Form>

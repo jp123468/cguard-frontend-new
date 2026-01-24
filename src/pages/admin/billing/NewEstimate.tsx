@@ -77,7 +77,7 @@ export default function NewEstimate() {
     const [summary, setSummary] = useState("");
     const [client, setClient] = useState("");
     const [site, setSite] = useState("");
-    const [estimateNumber, setEstimateNumber] = useState("1");
+    const [estimateNumber, setEstimateNumber] = useState("");
     const [poSoNumber, setPoSoNumber] = useState("");
     const [notes, setNotes] = useState("");
 
@@ -378,8 +378,8 @@ export default function NewEstimate() {
             summary,
             estimateNumber,
             poSoNumber,
-            date: date ? date.toISOString() : null,
-            expiryDate: expiryDate ? expiryDate.toISOString() : null,
+            date: date ? (new Date(date)).toISOString().split('T')[0] : null,
+            expiryDate: expiryDate ? (new Date(expiryDate)).toISOString().split('T')[0] : null,
             items: items.map((it) => {
                 const line = it.quantity * it.rate;
                 const taxAmount = it.tax ? (line * (it.tax / 100)) : 0;
@@ -412,6 +412,10 @@ export default function NewEstimate() {
                     return;
                 }
 
+                // Debug: log payload being sent to backend
+                // eslint-disable-next-line no-console
+                console.debug('[NewEstimate] POST payload ->', payload);
+
                 // Post to backend
                 const res = await ApiService.post(`/tenant/${tenantId}/estimate`, { data: payload });
                 // eslint-disable-next-line no-console
@@ -426,8 +430,10 @@ export default function NewEstimate() {
                 }
             } catch (err: any) {
                 // eslint-disable-next-line no-console
-                console.error('Error saving estimate', err);
-                toast.error(err?.message || 'Error guardando estimación');
+                console.error('Error saving estimate', err, err?.data || err?.response);
+                // Show backend-provided message if available
+                const backendMessage = err && (err.data?.message || err.data?.error || err.message);
+                toast.error(String(backendMessage || 'Error guardando estimación'));
             }
         })();
     };

@@ -1,4 +1,4 @@
-  import { useState, useEffect, useMemo } from "react";
+  import { useState, useEffect, useMemo, useRef } from "react";
   import { useTranslation } from "react-i18next";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -136,9 +136,22 @@ export default function ClientesPage() {
 
   const debouncedSearch = useDebouncedValue(searchQuery, 500);
 
+  // Ensure we only notify tenant-missing once per page lifecycle
+  const tenantMissingNotifiedRef = useRef(false);
+
   const loadClients = async () => {
     setLoading(true);
     try {
+      const tenantId = localStorage.getItem('tenantId');
+      if (!tenantId) {
+        if (!tenantMissingNotifiedRef.current) {
+          toast.error("El usuario debe estar vinculado a una empresa para continuar");
+          tenantMissingNotifiedRef.current = true;
+        }
+        setClients([]);
+        setTotalCount(0);
+        return;
+      }
       const pagination: any = { limit, offset: (page - 1) * limit };
       if (sortKey && sortDir) pagination.orderBy = `${sortKey}:${sortDir}`;
 
@@ -154,7 +167,7 @@ export default function ClientesPage() {
       setTotalCount(data.count);
     } catch (error: any) {
       console.error(error);
-      // error handled by backend
+      toast.error(getServerErrorMessage(error, t('clients.errorLoadingClients')));
     } finally {
       setLoading(false);
     }
@@ -162,6 +175,15 @@ export default function ClientesPage() {
 
   const loadCategories = async () => {
     try {
+      const tenantId = localStorage.getItem('tenantId');
+      if (!tenantId) {
+        if (!tenantMissingNotifiedRef.current) {
+          toast.error("El usuario debe estar vinculado a una empresa para continuar");
+          tenantMissingNotifiedRef.current = true;
+        }
+        setCategories([]);
+        return;
+      }
       const data = await categoryService.list({ filter: { module: "clientAccount" }, limit: 1000 });
       setCategories(data.rows || []);
     } catch (error) {

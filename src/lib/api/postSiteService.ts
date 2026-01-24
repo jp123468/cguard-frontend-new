@@ -65,7 +65,31 @@ const getTenantId = (): string => {
     globalTenantId = local;
     return local;
   }
-  throw new Error("Tenant ID no configurado. Asegúrese de que el usuario ha iniciado sesión correctamente.");
+
+  // Fallback: try to read from window.__APP_AUTH which AuthProvider sets for debug
+  try {
+    const w: any = window as any;
+    const info = w.__APP_AUTH;
+    if (info) {
+      if (info.tenantId) {
+        globalTenantId = info.tenantId;
+        try { localStorage.setItem('tenantId', info.tenantId); } catch {}
+        return info.tenantId;
+      }
+      const u = info.user;
+      if (u && Array.isArray(u.tenants) && u.tenants.length > 0) {
+        const t = u.tenants[0];
+        const tid = t.tenantId || (t.tenant && (t.tenant.id || t.tenant.tenantId));
+        if (tid) {
+          globalTenantId = tid;
+          try { localStorage.setItem('tenantId', tid); } catch {}
+          return tid;
+        }
+      }
+    }
+  } catch (e) {}
+
+  throw new Error("El usuario debe estar vinculado a una empresa para continuar.");
 };
 
 const postSiteService = {
@@ -119,7 +143,7 @@ const postSiteService = {
         // eslint-disable-next-line no-console
         console.debug('[postSiteService] list params ->', params.toString());
       }
-      const { data } = await api.get(`/tenant/${tenantId}/business-info?${params.toString()}`);
+      const { data } = await api.get(`/tenant/${tenantId}/business-info?${params.toString()}`, { toast: { silentError: true } } as any);
 
       // Map backend `business-info` shape to frontend `PostSite` shape
       const mappedRows: PostSite[] = (data.rows || []).map((r: any) => ({

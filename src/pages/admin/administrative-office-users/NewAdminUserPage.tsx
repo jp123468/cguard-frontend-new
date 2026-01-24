@@ -505,53 +505,12 @@ export default function NewAdminUserPage() {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between gap-4">
-        <Breadcrumb
-          items={[
-            { label: "Panel de control", path: "/dashboard" },
-            { label: "Nuevo Usuario" },
-          ]}
-        />
-
-        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">Crear código de invitación</Button>
-          </DialogTrigger>
-
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Generar código de invitación</DialogTitle>
-              <DialogDescription>
-                Cree un código temporal para invitar a un usuario (expira en 1 hora).
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid gap-4">
-              <div className="flex flex-col items-center gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="border-2 border-dashed border-muted px-6 py-3 rounded text-2xl font-mono tracking-wider">
-                    {generatedToken || '------'}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Button type="button" variant="ghost" onClick={async () => { if (generatedToken) { await navigator.clipboard.writeText(generatedToken); toast.success('Código copiado'); } }}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {generatedExpiresAt && <div className="text-xs text-muted-foreground mt-1">Expira: {generatedExpiresAt}</div>}
-              </div>
-            </div>
-
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="ghost" onClick={() => { setGeneratedToken(null); setInviteEmail(''); }}>Cerrar</Button>
-              </DialogClose>
-              <Button onClick={createInvitationToken} disabled={inviteLoading}>{inviteLoading ? 'Generando...' : (generatedToken ? 'Regenerar' : 'Generar código')}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+      <Breadcrumb
+        items={[
+          { label: "Panel de control", path: "/dashboard" },
+          { label: "Nuevo Usuario" },
+        ]}
+      />
 
       <div className="p-4">
         <Form {...form}>
@@ -622,13 +581,13 @@ export default function NewAdminUserPage() {
                 name="clientIds"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Asignar Clientes*</FormLabel>
+                    <FormLabel>Asignar Clientes</FormLabel>
                     <FormControl>
                       <ClientMultiSelect
                         value={(field.value as string[]) || []}
                         onChange={(ids: string[]) => field.onChange(ids)}
                         options={clientOptions}
-                        placeholder="Asignar Clientes*"
+                        placeholder="Asignar Clientes"
                       />
                     </FormControl>
                     <FormMessage />
@@ -658,11 +617,43 @@ export default function NewAdminUserPage() {
                 )}
               />
             </div>
+            <div className="flex justify-between items-center">
+              <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+                <DialogTrigger asChild>
+                  <Button className="border border-orange-500 text-orange-500 bg-transparent hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 transition duration-200 px-4 py-2 rounded-md" variant="outline">Crear código de invitación</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="textalign-center ">Generar código de invitación</DialogTitle>
+                    <DialogDescription>
+                      Cree un código temporal para invitar a un usuario (expira en 1 hora).
+                    </DialogDescription>
+                  </DialogHeader>
 
-            {/* Botón enviar alineado a la derecha */}
-            <div className="flex justify-end">
-              <Button type="submit" disabled={formState.isSubmitting}>
-                {formState.isSubmitting ? "Enviando..." : "Enviar"}
+                  <div className="grid gap-4">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="border-2 border-dashed border-muted px-6 py-3 rounded text-2xl font-mono tracking-wider">
+                          {generatedToken || '------'}
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Button type="button" variant="ghost" onClick={async () => { if (generatedToken) { await navigator.clipboard.writeText(generatedToken); toast.success('Código copiado'); } }}>
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {generatedExpiresAt && <div className="text-xs text-muted-foreground mt-1">Expira: {generatedExpiresAt}</div>}
+                    </div>
+                  </div>
+
+                  <DialogFooter>
+                    <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={createInvitationToken} disabled={inviteLoading}>{inviteLoading ? 'Generando...' : (generatedToken ? 'Regenerar' : 'Generar código')}</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <Button className="bg-orange-500 text-white hover:bg-orange-600" type="submit" disabled={formState.isSubmitting}>
+                {formState.isSubmitting ? "Creando..." : "Crear"}
               </Button>
             </div>
           </form>

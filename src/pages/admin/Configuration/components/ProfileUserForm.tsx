@@ -206,7 +206,7 @@ export default function ProfileUserForm() {
           }
         }
       } catch (e: any) {
-        toast.error("No se pudo cargar tu perfil. Verifica el servicio /auth/me.");
+        toast.error("No se pudo cargar tu perfil.");
       } finally {
         if (mounted) setLoading(false);
       }

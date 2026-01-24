@@ -5,6 +5,8 @@ import { Toaster } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { setTenantId } from "@/lib/api/clientService";
 import { setTenantId as setCategoryTenantId } from "@/lib/api/categoryService";
+import { useLocation, useNavigate } from "react-router-dom";
+import TenantJoinModal from "@/components/TenantJoinModal";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -12,7 +14,9 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
@@ -27,12 +31,101 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   // Configurar tenantId globalmente cuando el usuario cambia
   useEffect(() => {
-    if (user && user.tenants && user.tenants.length > 0) {
-      const tenantId = user.tenants[0].tenant.id;
-      setTenantId(tenantId);
-      setCategoryTenantId(tenantId);
+    try {
+      let tenantId: string | null = null;
+      if (user) {
+        if (Array.isArray(user.tenants) && user.tenants.length > 0) {
+          const t = user.tenants[0];
+          tenantId = t.tenantId || (t.tenant && (t.tenant.id || t.tenant.tenantId)) || null;
+        }
+        if (!tenantId) {
+          // legacy shapes
+          tenantId = (user.tenant && (user.tenant.tenant?.id || user.tenant.tenantId)) || (user.tenantId || null);
+        }
+      }
+      if (tenantId) {
+        setTenantId(tenantId);
+        setCategoryTenantId(tenantId);
+      }
+    } catch (e) {
+      // ignore
     }
   }, [user]);
+
+  // If user has no tenant, ensure they stay on dashboard route
+  useEffect(() => {
+    // Wait until auth finished loading to avoid redirecting before profile is ready
+    if (loading) return;
+
+    const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenantId') : null;
+    const hasTenant = Boolean(tenantId || (user && (user.tenant || (Array.isArray(user.tenants) && user.tenants.length > 0))));
+    if (!hasTenant && location.pathname !== "/dashboard") {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, loading, location.pathname, navigate]);
+
+  // show modal when user has no tenant and is on dashboard
+  const tenantIdNow = typeof window !== 'undefined' ? localStorage.getItem('tenantId') : null;
+
+  const userHasActiveTenant = (u: any) => {
+    if (!u) return false;
+    // Direct tenant shape (single-tenant mode)
+    if (u.tenant) {
+      const t = u.tenant;
+      const tid = t.tenantId || (t.tenant && (t.tenant.id || t.tenant.tenantId));
+      if (tid) return true;
+    }
+    // Tenants array (multi-tenant or legacy shapes)
+    if (Array.isArray(u.tenants) && u.tenants.length > 0) {
+      // consider tenantUser entries that are active or have a tenantId
+      return u.tenants.some((tu: any) => {
+        if (!tu) return false;
+        const tid = tu.tenantId || (tu.tenant && (tu.tenant.id || tu.tenant.tenantId));
+        const status = tu.status || null;
+        return Boolean(tid) && status !== 'invited';
+      });
+    }
+    return false;
+  };
+
+  const hasTenantNow = Boolean(
+    tenantIdNow || (user && userHasActiveTenant(user))
+  );
+
+  // If the user object contains an active tenant but localStorage isn't
+  // populated yet (race on initial load), persist it so other codepaths
+  // (permissions, services) pick it up and the modal doesn't show.
+  useEffect(() => {
+    if (!user) return;
+    if (tenantIdNow) return;
+    if (!userHasActiveTenant(user)) return;
+
+    // Derive tenantId from `user` shape
+    let derived: string | null = null;
+    try {
+      if (user.tenant) {
+        const t = user.tenant;
+        derived = t.tenantId || (t.tenant && (t.tenant.id || t.tenant.tenantId)) || null;
+      }
+      if (!derived && Array.isArray(user.tenants) && user.tenants.length > 0) {
+        const first = user.tenants[0];
+        derived = first.tenantId || (first.tenant && (first.tenant.id || first.tenant.tenantId)) || null;
+      }
+    } catch (e) {
+      derived = null;
+    }
+
+    if (derived) {
+      try { localStorage.setItem('tenantId', derived); } catch {}
+      try { setTenantId(derived); } catch {}
+      try { setCategoryTenantId(derived); } catch {}
+    }
+  }, [user]);
+
+  // Only show the tenant modal after auth has finished loading. This prevents
+  // a flash where the modal appears before the user's profile (and tenant)
+  // are available and blocks the UI.
+  const showTenantModal = !loading && !hasTenantNow && location.pathname === "/dashboard";
 
 
   return (
@@ -74,6 +167,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       {/* Global toaster for notifications */}
       <Toaster position="top-right" />
+
+      <TenantJoinModal open={showTenantModal} onOpenChange={() => { /* noop - modal controlled by presence */ }} />
 
 
     </div>

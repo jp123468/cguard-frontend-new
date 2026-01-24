@@ -5,7 +5,6 @@ import ForgotPassword from "./pages/auth/forgot-password"
 import ResetPassword from "./pages/auth/reset-password"
 import DashboardPage from "./pages/admin/dashboard/dasboard"
 import LanguagePage from "./pages/idioma/configuracion"
-
 import { AuthProvider } from "./contexts/AuthContext"
 import { LanguageProvider } from "./contexts/LanguageContext"
 import "./i18n"
@@ -51,9 +50,13 @@ import EditAdminUserPage from "./pages/admin/administrative-office-users/EditAdm
 import MessengerPage from "./pages/admin/messenger/MessengerPage"
 import DispatcherPage from "./pages/admin/dispatcher/DispatcherPage"
 import NewDispatchPage from "./pages/admin/dispatcher/NewDispatchPage"
+import EditDispatchPage from "./pages/admin/dispatcher/EditDispatchPage"
 import VehiclesPage from "./pages/admin/vehicles/VehiclesPage"
 import BranchList from "./pages/admin/branch/BranchList"
 import AddBranch from "./pages/admin/branch/AddBranch"
+import DispatchDetailsPage from '@/pages/admin/dispatcher/DispatchDetailsPage';
+import DispatchPrintablePage from '@/pages/admin/dispatcher/DispatchPrintablePage';
+import DispatchPublicView from '@/pages/public/DispatchPublicView';
 import NewVehiclePage from "./pages/admin/vehicles/NewVehiclePage"
 import RoutesPage from "./pages/admin/routes/RoutesPage"
 import NewRoutePage from "./pages/admin/routes/NewRoutePage"
@@ -788,6 +791,35 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
+            
+            <Route
+              path="/dispatch-tickets/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditDispatchPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dispatch-tickets/:id"
+              element={
+                <ProtectedRoute>
+                  <DispatchDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dispatch-tickets/:id/print"
+              element={
+                <ProtectedRoute>
+                  <DispatchPrintablePage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Public shared dispatch view (no auth) */}
+            <Route path="/public/dispatch/:token" element={<DispatchPublicView />} />
 
             {/* FIN DESPACHADOR */}
 

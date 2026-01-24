@@ -7,6 +7,7 @@ import {
   UserPlus, SquareParking, UserCog, type LucideIcon,
 } from "lucide-react";
 import sidebarMenuData from "../data/sidebar-menu.json";
+import { useAuth } from "@/contexts/AuthContext";
 
 type SubMenuItem = { id: string; name: string; path: string };
 type MenuItem = {
@@ -23,6 +24,7 @@ const iconMap: Record<string, LucideIcon> = {
 
 export default function Sidebar() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
@@ -33,6 +35,12 @@ export default function Sidebar() {
     ...item,
     icon: iconMap[item.icon as string] || UserCog
   }));
+
+  const tenantIdFromStorage = typeof window !== 'undefined' ? localStorage.getItem('tenantId') : null;
+  const hasTenant = Boolean(
+    tenantIdFromStorage ||
+    (user && (user.tenant || (Array.isArray(user.tenants) && user.tenants.length > 0)))
+  );
 
   // Función para verificar si un menú debe estar expandido basado en la ruta actual
   const shouldExpandMenu = (item: MenuItem): boolean => {
@@ -91,8 +99,12 @@ export default function Sidebar() {
             const isExpanded = !!expandedMenus[item.id];
             const isExpandable = !!item.expandable;
 
-            const ItemWrapper = ({ children }: { children: React.ReactNode }) =>
-              !isExpandable && item.path ? (
+            const ItemWrapper = ({ children }: { children: React.ReactNode }) => {
+              // If user has no tenant, only allow Dashboard (panel) navigation; disable others
+              if (!hasTenant && item.path && item.path !== "/dashboard") {
+                return <div className="block rounded-lg mb-1 transition-colors font-bold text-gray-400 cursor-not-allowed">{children}</div>;
+              }
+              return !isExpandable && item.path ? (
                 <NavLink
                   to={item.path}
                   className={({ isActive }) =>
@@ -107,6 +119,7 @@ export default function Sidebar() {
               ) : (
                 <div className="rounded-lg mb-1 font-bold text-[#0C2459]">{children}</div>
               );
+            };
 
             return (
               <div key={item.id}>
@@ -114,10 +127,12 @@ export default function Sidebar() {
                   <button
                     type="button"
                     onClick={() => {
+                      if (!hasTenant && item.path !== "/dashboard") return; // block navigation when no tenant
                       if (isExpandable) toggleMenu(item.id);
                       else if (item.path) navigate(item.path);
                     }}
-                    className="w-full hover:bg-[#F8F8F8] rounded hover:cursor-pointer font-semibold flex items-center justify-between px-3 py-2 text-[12px]"
+                    className={`w-full hover:bg-[#F8F8F8] rounded hover:cursor-pointer font-semibold flex items-center justify-between px-3 py-2 text-[12px] ${!hasTenant && item.path !== "/dashboard" ? 'opacity-60' : ''}`}
+                    aria-disabled={!hasTenant && item.path !== "/dashboard"}
                   >
                     <div className="flex items-center gap-3">
                       <item.icon className="w-[18px] h-[18px]" />
@@ -139,7 +154,7 @@ export default function Sidebar() {
                   </button>
                 </ItemWrapper>
 
-                {isExpandable && isExpanded && item.subItems && (
+                {isExpandable && isExpanded && item.subItems && hasTenant && (
                   <div className="ml-8 mb-2">
                     {item.subItems.map((sub) => {
                       const isActive = location.pathname.startsWith(sub.path);

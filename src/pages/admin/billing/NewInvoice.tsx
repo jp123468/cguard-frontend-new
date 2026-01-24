@@ -80,7 +80,7 @@ export default function NewInvoice() {
     const [summary, setSummary] = useState("");
     const [client, setClient] = useState("");
     const [site, setSite] = useState("");
-    const [invoiceNumber, setInvoiceNumber] = useState("1");
+    const [invoiceNumber, setInvoiceNumber] = useState("");
     const [poSoNumber, setPoSoNumber] = useState("");
     const [notes, setNotes] = useState("");
 
@@ -662,7 +662,9 @@ export default function NewInvoice() {
                                 <Label className="text-xs text-gray-500">Número de Factura*</Label>
                                 <Input
                                     value={invoiceNumber}
-                                    onChange={(e) => setInvoiceNumber(e.target.value)}
+                                    placeholder="Asignado automáticamente"
+                                    readOnly
+                                    disabled
                                 />
                             </div>
 

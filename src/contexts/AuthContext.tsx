@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { AuthService, LoginCredentials, SignUpData } from "../services/auth/authService";
 import { setAuthToken, clearAuthToken } from "@/lib/api";
 import { setTenantId as setClientServiceTenantId } from "@/lib/api/clientService";
+import { setTenantId as setCategoryTenantId } from "@/lib/api/categoryService";
 import { ApiError } from "../services/api/apiService";
 
 interface User { id?: string; email: string; permissions?: string[]; [k: string]: any }
@@ -156,15 +157,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (response?.token) {
         localStorage.setItem("authToken", response.token);
         try { setAuthToken(response.token); } catch {}
-        const u = response.user || { email: credentials.email };
+        let u = response.user || { email: credentials.email };
+        // If the returned user is incomplete (no tenants/roles/permissions),
+        // try to fetch the full profile now so UI permissions are hydrated
+        // immediately after login (avoids needing a manual page refresh).
+        const looksIncomplete = !(Array.isArray(u.tenants) && u.tenants.length > 0) && !(u.permissions || u.perms || u.role || u.roles);
+        if (looksIncomplete) {
+          try {
+            const prof = await AuthService.getProfile();
+            if (prof) u = prof;
+          } catch (e) {
+            // ignore - we'll continue with what we have
+          }
+        }
+
+        // Ensure tenantId is persisted and client services configured BEFORE
+        // extracting tenant-scoped permissions (extractPermissionsFromUser
+        // reads localStorage.tenantId to pick tenantEntry).
+        try {
+          const tenantId = (u.tenants && u.tenants[0] && (u.tenants[0].tenantId || (u.tenants[0].tenant && u.tenants[0].tenant.id))) || null;
+          if (tenantId) {
+            localStorage.setItem('tenantId', tenantId);
+            try { setClientServiceTenantId(String(tenantId)); } catch {}
+            try { setCategoryTenantId(String(tenantId)); } catch {}
+          }
+        } catch (e) {}
+
         setUser(u);
         const { perms, admin } = extractPermissionsFromUser(u);
         setPermissions(perms);
         try { localStorage.setItem('userPermissions', JSON.stringify(perms)); localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
-        // store tenantId quickly if available
+        // store tenantId quickly if available and configure services immediately
         try {
           const tenantId = (u.tenants && u.tenants[0] && (u.tenants[0].tenantId || (u.tenants[0].tenant && u.tenants[0].tenant.id))) || null;
-          if (tenantId) localStorage.setItem('tenantId', tenantId);
+          if (tenantId) {
+            localStorage.setItem('tenantId', tenantId);
+            try { setClientServiceTenantId(String(tenantId)); } catch {}
+            try { setCategoryTenantId(String(tenantId)); } catch {}
+          }
         } catch {}
         try { console.debug('[AuthContext] permissions after signIn:', perms); } catch (e) {}
         setIsAdmin(admin);
@@ -200,8 +230,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem("authToken", token);
       try { setAuthToken(token); } catch {}
       if (userData) {
-        setUser(userData);
-        const { perms, admin } = extractPermissionsFromUser(userData);
+        let u = userData;
+        const looksIncomplete = !(Array.isArray(u.tenants) && u.tenants.length > 0) && !(u.permissions || u.perms || u.role || u.roles);
+        if (looksIncomplete) {
+          try {
+            const prof = await AuthService.getProfile();
+            if (prof) u = prof;
+          } catch (e) {}
+        }
+
+        // Persist tenantId and configure services before extracting permissions
+        try {
+          const tenantId = (u.tenants && u.tenants[0] && (u.tenants[0].tenantId || (u.tenants[0].tenant && u.tenants[0].tenant.id))) || null;
+          if (tenantId) {
+            localStorage.setItem('tenantId', tenantId);
+            try { setClientServiceTenantId(String(tenantId)); } catch {}
+            try { setCategoryTenantId(String(tenantId)); } catch {}
+          }
+        } catch (e) {}
+
+        setUser(u);
+        const { perms, admin } = extractPermissionsFromUser(u);
         if (Array.isArray(perms) && perms.length > 0) {
           setPermissions(perms);
           try { localStorage.setItem('userPermissions', JSON.stringify(perms)); } catch {}
@@ -302,19 +351,41 @@ function extractPermissionsFromUser(u: any): { perms: string[]; admin: boolean }
   const p = (tenantEntry && (tenantEntry.permissions ?? tenantEntry.perms)) ?? u.permissions ?? u.perms ?? u.role?.permissions ?? u.roles?.permissions;
   const roles = (tenantEntry && tenantEntry.roles) ?? u.roles ?? u.role ?? [];
 
-  const admin = Array.isArray(roles) ? roles.includes('admin') : (typeof roles === 'string' ? roles === 'admin' : false);
+  // Normalize roles: allow array of strings or array of objects like { name: 'admin' }
+  let roleNames: string[] = [];
+  if (Array.isArray(roles)) {
+    roleNames = roles.map((r: any) => {
+      if (!r) return '';
+      if (typeof r === 'string') return r;
+      return r.name || r.key || r.slug || r.id || '';
+    }).filter(Boolean);
+  } else if (typeof roles === 'string') {
+    roleNames = [roles];
+  }
 
+  const admin = roleNames.includes('admin');
+
+  // Normalize permissions: handle arrays of strings, arrays of objects, or comma-separated strings
   let perms: string[] = [];
   if (!p) perms = [];
-  else if (Array.isArray(p)) perms = p;
-  else if (typeof p === 'string') {
+  else if (Array.isArray(p)) {
+    perms = p.map((item: any) => {
+      if (!item) return '';
+      if (typeof item === 'string') return item;
+      // item might be an object like { permission: 'clientAccountRead' } or { name: '...' }
+      return item.permission || item.name || item.key || '';
+    }).filter(Boolean);
+  } else if (typeof p === 'string') {
     try {
       const parsed = JSON.parse(p);
-      if (Array.isArray(parsed)) perms = parsed;
+      if (Array.isArray(parsed)) perms = parsed.map((it: any) => (typeof it === 'string' ? it : (it?.permission || it?.name || it?.key || ''))).filter(Boolean);
       else perms = p.split(/\s*,\s*/).filter(Boolean);
     } catch {
       perms = p.split(/\s*,\s*/).filter(Boolean);
     }
+  } else if (typeof p === 'object') {
+    // e.g. { read: true, write: true } — not typical, but try to extract keys
+    perms = Object.keys(p).filter(Boolean);
   }
 
   return { perms, admin };

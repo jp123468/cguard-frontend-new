@@ -412,7 +412,7 @@ export default function Invoices() {
                             </div>
 
                             <Button className="bg-orange-500 hover:bg-orange-600 text-white" asChild>
-                                <Link to="/invoices/new">Nueva Factura</Link>
+                                <Link to="/billing/invoices/new">Nueva Factura</Link>
                             </Button>
 
                             <InvoiceFilters
@@ -466,13 +466,13 @@ export default function Invoices() {
                                             <td className="px-4 py-3">{format(invoice.date, "dd MMM yyyy", { locale: es })}</td>
                                             <td className="px-4 py-3">
                                                 <a
-                                                    href={`/invoices/${invoice.id}?preview=1`}
+                                                    href={`/billing/invoices/${invoice.id}?preview=1`}
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         try {
-                                                            navigate(`/invoices/${invoice.id}?preview=1`);
+                                                            navigate(`/billing/invoices/${invoice.id}?preview=1`);
                                                         } catch (err) {
-                                                            window.location.href = `${window.location.origin}/invoices/${invoice.id}?preview=1`;
+                                                            window.location.href = `${window.location.origin}/billing/invoices/${invoice.id}?preview=1`;
                                                         }
                                                     }}
                                                     className="text-blue-600 hover:underline cursor-pointer"
@@ -493,15 +493,15 @@ export default function Invoices() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => {
+                                                            <DropdownMenuItem onClick={() => {
                                                             try {
-                                                                navigate(`/invoices/${invoice.id}?preview=1`);
+                                                                navigate(`/billing/invoices/${invoice.id}?preview=1`);
                                                             } catch (e) {
-                                                                window.location.href = `${window.location.origin}/invoices/${invoice.id}?preview=1`;
+                                                                window.location.href = `${window.location.origin}/billing/invoices/${invoice.id}?preview=1`;
                                                             }
                                                         }}>Ver</DropdownMenuItem>
                                                         <DropdownMenuItem asChild>
-                                                            <Link to={`/invoices/${invoice.id}`}>Editar</Link>
+                                                            <Link to={`/billing/invoices/${invoice.id}`}>Editar</Link>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem className="text-red-600" onClick={() => { setPendingDeleteId(invoice.id); setIsDeleteDialogOpen(true); }}>Eliminar</DropdownMenuItem>
                                                     </DropdownMenuContent>

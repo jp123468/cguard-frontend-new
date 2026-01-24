@@ -26,14 +26,38 @@ export const setTenantId = (id: string) => {
  */
 const getTenantId = (): string => {
     if (globalTenantId) return globalTenantId;
-
     const local = localStorage.getItem("tenantId");
     if (local) {
         globalTenantId = local;
         return local;
     }
 
-    throw new Error("Tenant ID no configurado. Asegúrese de que el usuario ha iniciado sesión correctamente.");
+    // Fallback: AuthProvider exposes debugging info on window.__APP_AUTH
+    try {
+        const w: any = window as any;
+        const info = w.__APP_AUTH;
+        if (info) {
+            if (info.tenantId) {
+                globalTenantId = info.tenantId;
+                try { localStorage.setItem('tenantId', info.tenantId); } catch {}
+                return info.tenantId;
+            }
+            const u = info.user;
+            if (u && Array.isArray(u.tenants) && u.tenants.length > 0) {
+                const t = u.tenants[0];
+                const tid = t.tenantId || (t.tenant && (t.tenant.id || t.tenant.tenantId));
+                if (tid) {
+                    globalTenantId = tid;
+                    try { localStorage.setItem('tenantId', tid); } catch {}
+                    return tid;
+                }
+            }
+        }
+    } catch (e) {
+        // ignore
+    }
+
+    throw new Error("El usuario debe estar vinculado a una empresa para continuar");
 };
 
 export const clientService = {
@@ -78,7 +102,9 @@ export const clientService = {
         }
 
         const { data } = await api.get<any>(
-            `/tenant/${tenantId}/client-account?${params.toString()}`
+            `/tenant/${tenantId}/client-account?${params.toString()}`,
+            // Prevent global interceptor from showing duplicate toasts; component will show one
+            { toast: { silentError: true } } as any
         );
         // Mapear zipCode/addressComplement y normalizar active a boolean
         if (data.rows) {

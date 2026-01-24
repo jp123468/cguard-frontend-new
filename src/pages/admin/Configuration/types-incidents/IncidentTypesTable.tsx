@@ -83,7 +83,8 @@ export default function IncidentTypesTable({
           <Input className="pl-9" placeholder="Buscar tipo de incidente" value={query} onChange={(e) => onQueryChange?.(e.target.value)} />
         </div>
 
-        <Button onClick={onCreate}>Nuevo Tipo de Incidente</Button>
+        <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8"
+          onClick={onCreate}>Nuevo Tipo de Incidente</Button>
       </div>
 
       <div className="rounded-md border">
@@ -122,7 +123,7 @@ export default function IncidentTypesTable({
                   </TableCell>
                   <TableCell className="font-medium">{row.name}</TableCell>
                   <TableCell>
-                    <Badge variant={row.status === "active" ? "default" : "secondary"}>
+                      <Badge variant="outline" className={row.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
                       {row.status === "active" ? "Activo" : "Inactivo"}
                     </Badge>
                   </TableCell>
@@ -134,7 +135,6 @@ export default function IncidentTypesTable({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="min-w-[160px]">
-                        <DropdownMenuItem onClick={() => onEdit?.(row)}>Editar</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onToggleStatus?.(row.id)}>
                           {row.status === "active" ? "Desactivar" : "Activar"}
                         </DropdownMenuItem>
@@ -148,29 +148,41 @@ export default function IncidentTypesTable({
         </Table>
       </div>
 
-      <div className="flex items-center justify-end gap-4">
-        <div className="text-sm text-muted-foreground">Elementos por página</div>
-        <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange?.(Number(v))}>
-          <SelectTrigger className="w-[90px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PAGE_SIZES.map((s) => (
-              <SelectItem key={s} value={String(s)}>{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <div className="min-w-[110px] text-right text-sm text-muted-foreground">
-          {start} – {end} of {total}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">Elementos por página</div>
+          <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange?.(Number(v))}>
+            <SelectTrigger className="w-[90px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PAGE_SIZES.map((s) => (
+                <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8" disabled={page <= 1 || !!loading} onClick={() => onPageChange?.(Math.max(1, page - 1))}>
-            <ChevronLeft className="h-4 w-4" />
+        <div className="min-w-[110px] text-center text-sm text-muted-foreground">
+          {start} – {end} de {total}
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1 || !!loading}
+            onClick={() => onPageChange?.(Math.max(1, page - 1))}
+          >
+            Anterior
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" disabled={page >= totalPages || !!loading} onClick={() => onPageChange?.(Math.min(totalPages, page + 1))}>
-            <ChevronRight className="h-4 w-4" />
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page * pageSize >= total || !!loading}
+            onClick={() => onPageChange?.(Math.min(totalPages, page + 1))}
+          >
+            Siguiente
           </Button>
         </div>
       </div>

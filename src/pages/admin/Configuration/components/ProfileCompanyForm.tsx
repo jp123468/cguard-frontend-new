@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,17 +13,33 @@ import { toast } from "sonner";
 import { Camera } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import tenantService from '@/services/tenant.service';
-import { useEffect } from 'react';
+// useEffect imported above
 
 export default function ProfileCompanyForm() {
   const { user } = useAuth();
 
   const isAdmin = (() => {
     if (!user) return false;
-    if (Array.isArray(user.roles) && user.roles.includes('admin')) return true;
+    const parseRoles = (r: any) => {
+      if (!r) return [];
+      if (Array.isArray(r)) return r;
+      if (typeof r === 'string') {
+        try {
+          const parsed = JSON.parse(r);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+          return [r];
+        }
+      }
+      return [];
+    };
+
+    const topRoles = parseRoles(user.roles);
+    if (topRoles.includes('admin')) return true;
     if (Array.isArray(user.tenants) && user.tenants.length > 0) {
       const t = user.tenants[0];
-      if (Array.isArray(t.roles) && t.roles.includes('admin')) return true;
+      const tRoles = parseRoles(t.roles);
+      if (tRoles.includes('admin')) return true;
     }
     return false;
   })();
@@ -38,16 +55,24 @@ export default function ProfileCompanyForm() {
   });
 
   const [form, setForm] = useState({
-    name: "Seguridad BAS",
-    phone: "8014004269",
+    name: "",
+    phone: "",
     website: "",
-    address: "Antonio Miguel de solier N29-26 y bartolome de las casas",
+    address: "",
     email: "",
     license: "",
     timezone: "America/Guayaquil",
   });
 
-  const [phoneE164, setPhoneE164] = useState(`${country.dialCode}${form.phone}`);
+  const [phoneE164, setPhoneE164] = useState("");
+  const navigate = useNavigate();
+
+  // resolved tenantId used across render and effect
+  const resolvedTenantId =
+    localStorage.getItem("tenantId") ||
+    (user && Array.isArray(user.tenants) && user.tenants.length > 0
+      ? (user.tenants[0].tenantId || (user.tenants[0].tenant && user.tenants[0].tenant.id))
+      : null);
   const isPhoneValid = (() => {
     if (!phoneE164) return false;
     try {
@@ -81,26 +106,26 @@ export default function ProfileCompanyForm() {
     let mounted = true;
     (async () => {
       try {
-        // try to get tenantId from localStorage (set by AuthContext) or from user.tenants
-        const tenantId = localStorage.getItem('tenantId') || (user && Array.isArray(user.tenants) && user.tenants.length > 0 ? (user.tenants[0].tenantId || (user.tenants[0].tenant && user.tenants[0].tenant.id)) : null);
+        // use resolvedTenantId computed above
+        const tenantId = resolvedTenantId;
         if (!tenantId) return;
+
         const res: any = await tenantService.findById(String(tenantId));
         if (!mounted || !res) return;
-        // tenantService returns the tenant record directly
+
         const t = res;
+
         setForm((s) => ({
           ...s,
-          name: t.name ?? s.name,
-          website: t.website ?? s.website,
-          address: t.address ?? s.address,
-          email: t.email ?? s.email,
-          license: t.licenseNumber ?? t.license ?? s.license,
+          name: t.name ?? "",
+          website: t.website ?? "",
+          address: t.address ?? "",
+          email: t.email ?? "",
+          license: t.licenseNumber ?? t.license ?? "",
           timezone: t.timezone ?? s.timezone,
         }));
-        // set phone value for phone component. Backend may store E.164 or plain number
-        if (t.phone) {
-          setPhoneE164(String(t.phone));
-        }
+
+        if (t.phone) setPhoneE164(String(t.phone));
         // logo handling: backend stores logoId; we leave existing behavior for now
       } catch (err) {
         console.warn('No se pudo cargar datos del tenant:', err);
@@ -108,6 +133,25 @@ export default function ProfileCompanyForm() {
     })();
     return () => { mounted = false; };
   }, [user]);
+
+  // If there's no tenant assigned, force admins to create one
+  if (!resolvedTenantId) {
+    if (isAdmin) {
+      return (
+        <div className="p-6">
+          <div className="max-w-2xl mx-auto bg-white border rounded-md p-6 text-center">
+            <h3 className="text-lg font-medium mb-2">Debe crear una Empresa</h3>
+            <p className="text-sm text-gray-600 mb-4">Aún no tiene una empresa asignada. Cree una para continuar configurando la información.</p>
+            <div className="flex justify-center">
+              <Button onClick={() => navigate('/tenant/create')} className="bg-[#f36a6d] hover:bg-[#e85b5f] text-white">
+                Crear Empresa
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  }
 
   return (
     <>

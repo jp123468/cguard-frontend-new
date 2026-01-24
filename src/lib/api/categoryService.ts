@@ -75,7 +75,7 @@ class CategoryService {
         orderBy?: string;
     }): Promise<{ rows: Category[]; count: number }> {
         const tenantId = getTenantId();
-        const response = await api.get(`/tenant/${tenantId}/category`, { params });
+        const response = await api.get(`/tenant/${tenantId}/category`, { params, toast: { silentError: true } } as any);
         return response.data;
     }
 
