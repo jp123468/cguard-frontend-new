@@ -156,7 +156,7 @@ function NewMessageDialog({
 
           <div className="space-y-2">
             <div className="text-sm font-medium text-slate-500">Guardias</div>
-            <div className="rounded-none border-t border-x border-b-0">
+            <div className=" border-t border-x border-b-0">
               <ScrollArea className="max-h-48">
                 {guardsF.length === 0 && <div className="p-4 text-sm text-muted-foreground border-b">Sin resultados</div>}
                 {guardsF.map((g) => (
@@ -177,7 +177,7 @@ function NewMessageDialog({
 
           <div className="space-y-2">
             <div className="text-sm font-medium text-slate-500">Sitios de publicación</div>
-            <div className="rounded-none border-t border-x border-b-0">
+            <div className=" border-t border-x border-b-0">
               <ScrollArea className="max-h-48">
                 {sitesF.length === 0 && <div className="p-4 text-sm text-muted-foreground border-b">Sin resultados</div>}
                 {sitesF.map((s) => (
@@ -261,7 +261,7 @@ function NewGroupDialog({
 
           <div className="space-y-2">
             <div className="text-sm font-medium text-slate-500">Guardias</div>
-            <div className="rounded-none border-t border-x border-b-0">
+            <div className=" border-t border-x border-b-0">
               <ScrollArea className="max-h-60">
                 {guardsF.length === 0 && <div className="p-4 text-sm text-muted-foreground border-b">Sin resultados</div>}
                 {guardsF.map((g) => {

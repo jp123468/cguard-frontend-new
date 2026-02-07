@@ -135,7 +135,6 @@ export const clientService = {
                 // Prevent global interceptor from showing duplicate toasts; component will show one
                 { toast: { silentError: true } } as any
             );
-        console.log("Respuesta getClient del backend:", data);
         // Mapear zipCode/addressComplement y normalizar active a boolean
         return {
             ...data,
@@ -195,7 +194,6 @@ export const clientService = {
             try {
                 const token = typeof getAuthToken === 'function' ? getAuthToken() : null;
                 const masked = token ? (token.length > 12 ? `${token.slice(0, 6)}...${token.slice(-4)}` : token) : null;
-                console.log('[clientService] PUT', `/tenant/${tenantId}/client-account/${id}`, 'tenantId=', tenantId, 'token=', masked, 'payload=', payload);
             } catch (e) {
                 // ignore logging errors
             }
@@ -322,7 +320,6 @@ export const clientService = {
             `/tenant/${tenantId}/client-account?limit=9999&offset=0`
         );
         
-        console.log(`Verificando uso de categoría ${categoryId} en ${data.count} clientes totales`);
         
         // Contar manualmente cuántos clientes tienen esta categoría
         let count = 0;
@@ -331,13 +328,167 @@ export const clientService = {
                 const categoryIds = client.categoryIds || [];
                 const hasCategory = Array.isArray(categoryIds) && categoryIds.includes(categoryId);
                 if (hasCategory) {
-                    console.log(`Cliente ${client.name} tiene la categoría`);
                 }
                 return hasCategory;
             }).length;
         }
         
-        console.log(`Total de clientes con esta categoría: ${count}`);
         return count;
+    },
+
+    /**
+     * Get post sites for a client (supports pagination)
+     */
+    async getClientPostSites(clientId: string, pagination: { limit?: number; offset?: number } = { limit: 25, offset: 0 }) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams();
+        if (pagination.limit !== undefined) params.append('limit', String(pagination.limit));
+        if (pagination.offset !== undefined) params.append('offset', String(pagination.offset));
+
+        const { data } = await api.get<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/post-sites?${params.toString()}`,
+            { toast: { silentError: true } } as any,
+        );
+
+        return data;
+    },
+
+    /**
+     * Client contacts CRUD
+     */
+    async getClientContacts(clientId: string, pagination: { limit?: number; offset?: number } = { limit: 25, offset: 0 }) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams();
+        if (pagination.limit !== undefined) params.append('limit', String(pagination.limit));
+        if (pagination.offset !== undefined) params.append('offset', String(pagination.offset));
+
+        const { data } = await api.get<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/contacts?${params.toString()}`,
+            { toast: { silentError: true } } as any,
+        );
+
+        return data;
+    },
+
+    async createClientContact(clientId: string, payload: any) {
+        const tenantId = getTenantId();
+        const { data } = await api.post<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/contacts`,
+            payload,
+        );
+        // Return full payload from backend so callers can read message and data
+        return data;
+    },
+
+    async updateClientContact(clientId: string, contactId: string, payload: any) {
+        const tenantId = getTenantId();
+        const { data } = await api.put<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/contacts/${contactId}`,
+            payload,
+        );
+        return data;
+    },
+
+    async destroyClientContact(clientId: string, contactId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.delete<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/contacts/${contactId}`,
+        );
+        // For delete we return the whole payload so callers can read messages
+        return data;
+    },
+
+    /**
+     * Client notes CRUD
+     */
+    async getClientNotes(clientId: string, pagination: { limit?: number; offset?: number } = { limit: 25, offset: 0 }) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams();
+        if (pagination.limit !== undefined) params.append('limit', String(pagination.limit));
+        if (pagination.offset !== undefined) params.append('offset', String(pagination.offset));
+
+        const { data } = await api.get<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/notes?${params.toString()}`,
+            { toast: { silentError: true } } as any,
+        );
+
+        return data;
+    },
+
+    async createClientNote(clientId: string, payload: any) {
+        const tenantId = getTenantId();
+        const { data } = await api.post<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/notes`,
+            payload,
+        );
+        return data;
+    },
+
+    async updateClientNote(clientId: string, noteId: string, payload: any) {
+        const tenantId = getTenantId();
+        const { data } = await api.put<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/notes/${noteId}`,
+            payload,
+        );
+        return data;
+    },
+
+    async destroyClientNote(clientId: string, noteId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.delete<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/notes/${noteId}`,
+        );
+        return data;
+    },
+
+    /**
+     * Get guards assigned to a client (uses tenant pivot) - supports pagination
+     */
+    async getClientGuards(clientId: string, pagination: { limit?: number; offset?: number } = { limit: 25, offset: 0 }) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams();
+        if (pagination.limit !== undefined) params.append('limit', String(pagination.limit));
+        if (pagination.offset !== undefined) params.append('offset', String(pagination.offset));
+
+        const { data } = await api.get<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/guards?${params.toString()}`,
+            { toast: { silentError: true } } as any,
+        );
+
+        return data;
+    },
+
+    /**
+     * Get only the count of guards assigned to a client (much lighter)
+     */
+    async getClientGuardsCount(clientId: string): Promise<number> {
+        const tenantId = getTenantId();
+        const { data } = await api.get<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/guards/count`,
+            { toast: { silentError: true } } as any,
+        );
+        return Number(data?.count || 0);
+    },
+
+
+    /**
+     * Get incidents for a client (by station ids) - supports filters and pagination
+     */
+    async getClientIncidents(clientId: string, options: { limit?: number; offset?: number; filter?: any } = {}) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams();
+        if (options.limit !== undefined) params.append('limit', String(options.limit));
+        if (options.offset !== undefined) params.append('offset', String(options.offset));
+        if (options.filter && typeof options.filter === 'object') {
+            for (const key of Object.keys(options.filter)) {
+                const val = options.filter[key];
+                if (Array.isArray(val)) {
+                    for (const v of val) params.append(`filter[${key}][]`, String(v));
+                } else {
+                    params.append(`filter[${key}]`, String(val));
+                }
+            }
+        }
+
     },
 };

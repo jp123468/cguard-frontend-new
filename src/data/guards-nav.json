@@ -1,0 +1,24 @@
+{
+  "keep-safe": {
+    "title": "security-guards",
+    "sections": [
+      {
+        "label": "",
+        "items": [
+          { "id": "resumen", "label": "guards.nav.resumen", "path": "/guards/:id/resumen" },
+          { "id": "perfil", "label": "guards.nav.perfil", "path": "/guards/:id/perfil" },
+          { "id": "disponibilidad", "label": "guards.nav.disponibilidad", "path": "/guards/:id/availability" },
+          { "id": "indicadores-kpi", "label": "guards.nav.indicadores", "path": "/guards/:id/indicadores" },
+          { "id": "licencias", "label": "guards.nav.licencias", "path": "/guards/:id/licencias" },
+          { "id": "notas", "label": "guards.nav.notas", "path": "/guards/:id/notas" },
+          { "id": "recordatorios", "label": "guards.nav.recordatorios", "path": "/guards/:id/recordatorios" },
+          { "id": "archivos", "label": "guards.nav.archivos", "path": "/guards/:id/archivos" },
+          { "id": "asignar-sitios", "label": "guards.nav.asignarSitios", "path": "/guards/:id/asignar-sitios" },
+          { "id": "conjunto-habilidades", "label": "guards.nav.conjuntoHabilidades", "path": "/guards/:id/habilidades" },
+          { "id": "departamento", "label": "guards.nav.departamento", "path": "/guards/:id/departamento" },
+          { "id": "configuracion", "label": "guards.nav.configuracion", "path": "/guards/:id/configuracion" }
+        ]
+      }
+    ]
+  }
+}

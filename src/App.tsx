@@ -39,8 +39,10 @@ import InvoicesPage from "./pages/admin/Subscription/invoices/InvoicesPage"
 import ActivitiesPage from "./pages/admin/actividades/ActivitiesPage"
 import ClientesPage from "./pages/admin/clientes/ClientsPage"
 import NewOrEditClientPage from "./pages/admin/clientes/NewOrEditClientPage"
+import ClientsDetails from "./pages/admin/clientes/ClientsDetails"
 import PostSitePage from "./pages/admin/post-sites/PostSitePage"
 import NewOrEditPostSitePage from "./pages/admin/post-sites/NewOrEditPostSitePage"
+import PostSiteDetailsPage from "./pages/admin/post-sites/PostSiteDetailsPage"
 import SecurityGuardsPage from "./pages/admin/security-guards/SecurityGuardsPage"
 import NewSecurityGuardPage from "./pages/admin/security-guards/NewSecurityGuardPage"
 import GuardRegistration from "./pages/guard/registration"
@@ -118,6 +120,19 @@ import PostOrderAck from "./pages/admin/Reports/PostOrderAck"
 import DocPolicyAck from "./pages/admin/Reports/DocPolicyAck"
 import License from "./pages/admin/Reports/License"
 import EditSecurityGuardPage from "./pages/admin/security-guards/EditSecurityGuardPage";
+import GuardOverview from "./pages/admin/security-guards/SegurityGuardsDetails";
+import GuardResumenPage from "./pages/admin/security-guards/components/GuardOverview/GuardOverviewPage";
+import GuardPerfilPage from "./pages/admin/security-guards/components/GuardProfile/GuardProfilepage";
+import GuardAvailabilityPage from "./pages/admin/security-guards/components/GuardAvailability/GuardAvailabilitypage";
+import GuardIndicadoresPage from "./pages/admin/security-guards/components/GuardKPIs/GuardKPIspage";
+import GuardLicenciasPage from "./pages/admin/security-guards/components/GuardLicenses/GuardLicensespage";
+import GuardNotasPage from "./pages/admin/security-guards/components/GuardNotes/GuardNotespage";
+import GuardRemindersPage from "./pages/admin/security-guards/components/GuardReminders/GuardRemindersPage";
+import GuardFilesPage from "./pages/admin/security-guards/components/GuardFiles/GuardFilesPage";
+import GuardAsignarSitiosPage from "./pages/admin/security-guards/components/GuardAssign-Sites/GuardAsignarSitiosPage";
+import GuardSkillsPage from "./pages/admin/security-guards/components/GuardSkills/GuardSkillsPage";
+import GuardDepartamentoPage from "./pages/admin/security-guards/components/GuardDepartment/GuardDepartamentoPage";
+import GuardConfiguracionPage from "./pages/admin/security-guards/components/GuardConfiguration/GuardConfiguracionPage";
 
 export default function App() {
   return (
@@ -206,6 +221,78 @@ export default function App() {
               }
             />
             <Route
+              path="/clients/:id/overview"
+              element={
+                <ProtectedRoute>
+                  <ClientsDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients/:id/profile"
+              element={
+                <ProtectedRoute>
+                  <ClientsDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients/:id/contacts"
+              element={
+                <ProtectedRoute>
+                  <ClientsDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients/:id/notes"
+              element={
+                <ProtectedRoute>
+                  <ClientsDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients/:id/files"
+              element={
+                <ProtectedRoute>
+                  <ClientsDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients/:id/post-sites"
+              element={
+                <ProtectedRoute>
+                  <ClientsDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients/:id/portal"
+              element={
+                <ProtectedRoute>
+                  <ClientsDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients/:id/user-access"
+              element={
+                <ProtectedRoute>
+                  <ClientsDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients/:id/email-reports"
+              element={
+                <ProtectedRoute>
+                  <ClientsDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/post-sites"
               element={
                 <ProtectedRoute>
@@ -226,6 +313,142 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <NewOrEditPostSitePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/overview"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/profile"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/contacts"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/kpis"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/post-orders"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/notes"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/files"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/assign-guards"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/tasks"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/site-tours"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/site-tour-tags"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/geo-fence"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/assign-reports"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/checklists"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/email-reports"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/post-sites/:id/settings"
+              element={
+                <ProtectedRoute>
+                  <PostSiteDetailsPage />
                 </ProtectedRoute>
               }
             />
@@ -268,10 +491,114 @@ export default function App() {
               }
             />
             <Route
+              path="/guards/:id/overview"
+              element={
+                <ProtectedRoute>
+                  <GuardOverview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/security-guards/edit/:id"
               element={
                 <ProtectedRoute>
                   <EditSecurityGuardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/resumen"
+              element={
+                <ProtectedRoute>
+                  <GuardResumenPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/perfil"
+              element={
+                <ProtectedRoute>
+                  <GuardPerfilPage {...({} as any)} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/availability"
+              element={
+                <ProtectedRoute>
+                  <GuardAvailabilityPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/indicadores"
+              element={
+                <ProtectedRoute>
+                  <GuardIndicadoresPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/licencias"
+              element={
+                <ProtectedRoute>
+                  <GuardLicenciasPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/notas"
+              element={
+                <ProtectedRoute>
+                  <GuardNotasPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/recordatorios"
+              element={
+                <ProtectedRoute>
+                  <GuardRemindersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/archivos"
+              element={
+                <ProtectedRoute>
+                  <GuardFilesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/asignar-sitios"
+              element={
+                <ProtectedRoute>
+                  <GuardAsignarSitiosPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/habilidades"
+              element={
+                <ProtectedRoute>
+                  <GuardSkillsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/departamento"
+              element={
+                <ProtectedRoute>
+                  <GuardDepartamentoPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guards/:id/configuracion"
+              element={
+                <ProtectedRoute>
+                  <GuardConfiguracionPage />
                 </ProtectedRoute>
               }
             />

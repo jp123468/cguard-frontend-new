@@ -47,6 +47,10 @@ export type ClientFormProps = {
     id?: string;
     categories?: Category[];
     onSaved?: (payload: { id: string; data: ClientInput }) => void;
+    /** If true, do not navigate away after successful save; call onSaved instead */
+    keepOnSave?: boolean;
+    /** Optional cancel handler: when provided, Cancel button will call this instead of navigating */
+    onCancel?: () => void;
 };
 
 type ClientApiPayload = Omit<ClientInput, "categoryIds"> & {
@@ -58,6 +62,8 @@ export default function ClientForm({
     id,
     categories: initialCategories,
     onSaved,
+    keepOnSave = false,
+    onCancel,
 }: ClientFormProps) {
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -129,9 +135,7 @@ export default function ClientForm({
             (async () => {
                 try {
                     const data = await clientService.getClient(id);
-                    console.log("Cliente cargado:", data);
-                    console.log("Valor de active:", data.active, "Tipo:", typeof data.active);
-                    form.reset({
+                     form.reset({
                         name: data.name ?? "",
                         lastName: data.lastName ?? "",
                         email: data.email ?? "",
@@ -184,23 +188,11 @@ export default function ClientForm({
 
         try {
             if (mode === "create") {
-                console.log('[ClientForm] creating client payload:', apiPayload);
-                try {
-                    console.log('[ClientForm] creating client by user:', {
-                        id: user?.id,
-                        email: user?.email,
-                        name: user?.fullName || user?.firstName || user?.name || null,
-                        tenantId: (user && Array.isArray(user.tenants) && user.tenants[0]) ? (user.tenants[0].tenantId || (user.tenants[0].tenant && user.tenants[0].tenant.id)) : null,
-                        tenantUserId: (user && Array.isArray(user.tenants) && user.tenants[0]) ? (user.tenants[0].id || null) : null,
-                    });
-                } catch (e) {
-                    console.debug('[ClientForm] failed to log creating user', e);
-                }
                 const data = await clientService.createClient(apiPayload as ClientInput);
                 toast.success(t('clients.clientCreated') || "Cliente creado exitosamente");
                 onSaved?.({ id: data.id, data: values });
                 form.reset();
-                navigate("/clients");
+                if (!keepOnSave) navigate("/clients");
             } else if (mode === "edit" && id) {
                 const response = await clientService.updateClient(
                     id,
@@ -208,7 +200,7 @@ export default function ClientForm({
                 );
                 toast.success(t('clients.clientUpdated') || "Cliente actualizado exitosamente");
                 onSaved?.({ id, data: values });
-                navigate("/clients");
+                if (!keepOnSave) navigate("/clients");
             }
         } catch (e: any) {
             toast.error(e?.response?.data?.message || e?.message || "Error al guardar");
@@ -458,7 +450,7 @@ export default function ClientForm({
                             name="latitude"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>{t('clients.form.latitude', 'Latitud')}</FormLabel>
+                                    <FormLabel>{t('clients.form.latitude', 'Latitud *')}</FormLabel>
                                     <FormControl>
                                         <input
                                             type="text"
@@ -467,6 +459,8 @@ export default function ClientForm({
                                             {...field}
                                             value={String(field.value ?? "")}
                                             maxLength={20}
+                                            required
+                                            aria-required="true"
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -479,7 +473,7 @@ export default function ClientForm({
                             name="longitude"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>{t('clients.form.longitude', 'Longitud')}</FormLabel>
+                                    <FormLabel>{t('clients.form.longitude', 'Longitud *')}</FormLabel>
                                     <FormControl>
                                         <input
                                             type="text"
@@ -488,6 +482,8 @@ export default function ClientForm({
                                             {...field}
                                             value={String(field.value ?? "")}
                                             maxLength={20}
+                                            required
+                                            aria-required="true"
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -505,7 +501,7 @@ export default function ClientForm({
                                         const { latitude, longitude } = pos.coords;
                                         form.setValue("latitude", String(latitude));
                                         form.setValue("longitude", String(longitude));
-                                        toast.success(t('clients.form.locationSet') || "Ubicación establecida");
+                                        toast.success(t('clients.form.locationSet', 'Ubicación establecida'));
                                     },
                                     (err) => {
                                         console.warn(err.message || "No se pudo obtener la ubicación");
@@ -513,7 +509,7 @@ export default function ClientForm({
                                     { enableHighAccuracy: true, timeout: 10000 }
                                 );
                             }}>
-                                Usar mi ubicación
+                                {t('clients.form.useMyLocation', 'Usar mi ubicación')}
                             </Button>
                         </div>
                     </div>
@@ -539,7 +535,6 @@ export default function ClientForm({
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
-     npm run dev
                                             </FormItem>
                                         )}
                                     />
@@ -588,12 +583,19 @@ export default function ClientForm({
                     </Accordion>
 
                     <div className="flex justify-end gap-4">
-                        <Button type="submit" className="min-w-28 bg-white text-[#FE6F02] rounded-none cursor-pointer border border-[#FE6F02] hover:bg-gray-100 hover:text-[#FE6F02]">
-                            Guardar
+                        <Button
+                            type="button"
+                            onClick={() => onCancel ? onCancel() : navigate('/clients')}
+                            className="min-w-28 bg-gray-100 text-black  cursor-pointer border border-gray-200 hover:bg-gray-200 hover:text-black"
+                        >
+                            {t('profile.cancel', 'Cancelar')}
                         </Button>
-                        <Link to="/clients" className="px-3 py-1 border rounded-none cursor-pointer font-medium">
-                            Cancelar
-                        </Link>
+                        <Button
+                            type="submit"
+                            className="min-w-28 bg-orange-500 text-white  cursor-pointer border border-orange-500 hover:bg-orange-600"
+                        >
+                            {t('profile.save', 'Guardar')}
+                        </Button>
                     </div>
                 </form>
             </Form>

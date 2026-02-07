@@ -43,7 +43,8 @@ export class ApiService {
 
     let response: Response;
     try {
-      response = await fetch(url, { ...options, headers });
+      // Ensure credentials (cookies) are sent so backend session auth works
+      response = await fetch(url, { ...options, headers, credentials: 'include' });
     } catch {
       throw new ApiError("No se pudo conectar con el servidor.", 0, null);
     }
@@ -113,7 +114,7 @@ export class ApiService {
 
     let response: Response;
     try {
-      response = await fetch(url, { ...options, method: 'GET', headers });
+      response = await fetch(url, { ...options, method: 'GET', headers, credentials: 'include' });
     } catch {
       throw new ApiError("No se pudo conectar con el servidor.", 0, null);
     }

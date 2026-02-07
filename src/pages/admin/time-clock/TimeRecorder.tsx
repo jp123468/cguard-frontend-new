@@ -381,16 +381,16 @@ export default function TimeRecorder() {
                 className="w-[400px] sm:w-[440px] overflow-y-auto"
               >
                 <Tabs defaultValue="filters" className="mt-2">
-                  <TabsList className="w-full justify-start border-b rounded-none bg-transparent px-0 pb-0">
+                  <TabsList className="w-full justify-start border-b  bg-transparent px-0 pb-0">
                     <TabsTrigger
                       value="filters"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-orange-600 px-0 mr-6 pb-2"
+                      className=" border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-orange-600 px-0 mr-6 pb-2"
                     >
                       Filtros
                     </TabsTrigger>
                     <TabsTrigger
                       value="saved"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-orange-600 px-0 pb-2"
+                      className=" border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-orange-600 px-0 pb-2"
                     >
                       Filtros Guardados
                     </TabsTrigger>

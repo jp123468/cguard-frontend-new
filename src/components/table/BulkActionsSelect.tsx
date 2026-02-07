@@ -6,6 +6,7 @@ import {
     SelectItem,
 } from "@/components/ui/select";
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 export type BulkAction = {
     value: string;
@@ -18,6 +19,7 @@ type BulkActionsSelectProps = {
 };
 
 export function BulkActionsSelect({ actions, onChange }: BulkActionsSelectProps) {
+    const { t } = useTranslation();
     const [value, setValue] = useState<string | undefined>(undefined);
 
     const handleChange = (v: string) => {
@@ -30,7 +32,7 @@ export function BulkActionsSelect({ actions, onChange }: BulkActionsSelectProps)
     return (
         <Select value={value} onValueChange={handleChange}>
             <SelectTrigger className="w-44">
-                <SelectValue placeholder="Acción" />
+                <SelectValue placeholder={t('postSites.action') || 'Action'} />
             </SelectTrigger>
             <SelectContent>
                 {actions.map((a) => (

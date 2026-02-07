@@ -1,0 +1,21 @@
+{
+  "clients": {
+    "title": "clients.nav.title",
+    "sections": [
+      {
+        "label": "",
+        "items": [
+          { "id": "overview", "path": "/clients/:id/overview", "label": "clients.nav.overview" },
+          { "id": "profile", "path": "/clients/:id/profile", "label": "clients.nav.profile" },
+          { "id": "contacts", "path": "/clients/:id/contacts", "label": "clients.nav.contacts" },
+          { "id": "notes", "path": "/clients/:id/notes", "label": "clients.nav.notes" },
+          { "id": "files", "path": "/clients/:id/files", "label": "clients.nav.files" },
+          { "id": "postSites", "path": "/clients/:id/post-sites", "label": "clients.nav.postSites" },
+          { "id": "clientPortal", "path": "/clients/:id/portal", "label": "clients.nav.clientPortal" },
+          { "id": "userAccess", "path": "/clients/:id/user-access", "label": "clients.nav.userAccess" },
+          { "id": "emailReports", "path": "/clients/:id/email-reports", "label": "clients.nav.emailReports" }
+        ]
+      }
+    ]
+  }
+}

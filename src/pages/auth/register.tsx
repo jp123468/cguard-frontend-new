@@ -4,8 +4,10 @@ import AuthLayout from "@/layouts/auth-layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 export default function Register() {
+  const { t } = useTranslation();
   const { signUp, signInWithToken } = useAuth();
   const navigate = useNavigate();
 
@@ -19,7 +21,7 @@ export default function Register() {
 
 
   useEffect(() => {
-    document.title = "Registro | Cguard";
+    document.title = t('auth.register_title') || 'Registro | Cguard';
   }, []);
 
   const handleRegister = async (e?: React.FormEvent) => {
@@ -27,11 +29,11 @@ export default function Register() {
 
 
     if (!name || !email || !password || !confirm) {
-      toast.error("Por favor completa todos los campos");
+      toast.error(t('auth.fill_all_fields'));
       return;
     }
     if (password !== confirm) {
-      toast.error("Las contraseñas no coinciden");
+      toast.error(t('auth.passwords_not_match'));
 
       return;
     }
@@ -41,7 +43,7 @@ export default function Register() {
     setIsLoading(false);
 
     if (res?.success) {
-      toast.success("Cuenta creada. Verifica tu correo para poder iniciar sesión.");
+      toast.success(t('auth.account_created_verify_email'));
       navigate("/login");
     } else {
       const msg = res?.error || "Error al registrarse";
@@ -60,7 +62,7 @@ export default function Register() {
     const url = `${base.replace(/\/+$/, "")}/auth/oauth/${provider}`;
     const popup = window.open(url, "oauth_popup", `width=${width},height=${height},left=${left},top=${top}`);
     if (!popup) {
-      toast.error("No se pudo abrir la ventana de autenticación.");
+      toast.error(t('auth.could_not_open_auth_window'));
       return;
     }
 
@@ -75,10 +77,10 @@ export default function Register() {
       }
       const res = await signInWithToken(token, user);
       if (res.success) {
-        toast.success("Sesión iniciada con éxito");
+        toast.success(t('auth.login_success'));
         navigate("/dashboard");
       } else {
-        toast.error(res.error || "Fallo en el inicio de sesión");
+        toast.error(res.error || t('auth.login_failed'));
       }
     };
 
@@ -87,7 +89,7 @@ export default function Register() {
   
   return (
     <AuthLayout
-      title="Crea tu cuenta"
+      title={t('auth.register_prompt') || 'Crea tu cuenta'}
     >
    
       {/* Botones Sociales */}
@@ -136,14 +138,14 @@ export default function Register() {
         {/* Nombre */}
         <div>
           <label htmlFor="name" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Nombre<span style={{ color: "#F75638" }}>*</span>
+            {t('auth.name_label')}<span style={{ color: "#F75638" }}>*</span>
           </label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input
               id="name"
               type="text"
-              placeholder="Tu nombre"
+              placeholder={t('auth.name_placeholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRegister()}
@@ -177,14 +179,14 @@ export default function Register() {
         {/* Contraseña */}
         <div>
           <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Contraseña<span style={{ color: "#F75638" }}>*</span>
+            {t('auth.password_label')}<span style={{ color: "#F75638" }}>*</span>
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input
               id="password"
               type={showPwd ? "text" : "password"}
-              placeholder="••••••••"
+              placeholder={t('auth.password_placeholder')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRegister()}
@@ -205,14 +207,14 @@ export default function Register() {
         {/* Confirmar Contraseña */}
         <div>
           <label htmlFor="confirm" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Confirmar Contraseña<span style={{ color: "#F75638" }}>*</span>
+            {t('auth.confirm_password_label')}<span style={{ color: "#F75638" }}>*</span>
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input
               id="confirm"
               type={showConfirm ? "text" : "password"}
-              placeholder="••••••••"
+              placeholder={t('auth.password_placeholder')}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRegister()}
@@ -239,7 +241,7 @@ export default function Register() {
           className="w-full rounded-lg py-3 font-semibold text-white transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
           style={{ background: "linear-gradient(135deg, #0C2459 0%, #1a3a7d 100%)" }}
         >
-          {isLoading ? "Creando cuenta..." : "CREAR CUENTA"}
+          {isLoading ? t('auth.creating_account') : t('auth.create_account')}
         </button>
 
         {/* Separador */}
@@ -254,9 +256,9 @@ export default function Register() {
 
         {/* Enlace para Iniciar Sesión */}
         <div className="text-center">
-          <span className="text-sm text-slate-600 dark:text-slate-400">¿Ya tienes una cuenta? </span>
+          <span className="text-sm text-slate-600 dark:text-slate-400">{t('auth.already_have_account')} </span>
           <NavLink to="/login" className="text-sm font-semibold hover:underline" style={{ color: "#F75638" }}>
-            Inicia sesión
+            {t('auth.login')}
           </NavLink>
         </div>
       </form>

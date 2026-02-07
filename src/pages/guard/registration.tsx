@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { NavLink, useSearchParams, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import AuthLayout from "@/layouts/auth-layout";
@@ -10,6 +11,7 @@ import securityGuardService from "@/lib/api/securityGuardService";
 export default function GuardRegistration() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const inviteToken = searchParams.get("token") || searchParams.get("invite") || undefined;
   const securityGuardId = searchParams.get("securityGuardId") || undefined;
 
@@ -290,7 +292,7 @@ export default function GuardRegistration() {
       // Use tenant-scoped endpoint: POST /api/tenant/:tenantId/security-guard
       await securityGuardService.create(payload);
 
-      toast.success("Registro completado");
+      toast.success(t('guard.registration_success', { defaultValue: 'Registration completed' }));
       navigate("/login");
     } catch (err: any) {
       try {
@@ -313,11 +315,11 @@ export default function GuardRegistration() {
   };
 
   return (
-    <AuthLayout title="Registro de Guardia">
+    <AuthLayout title={t('guard.registration_title', { defaultValue: 'Guard registration' })}>
       <form className="space-y-3" onSubmit={handleSubmit}>
         {inviteNotFound && (
           <div className="rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800">
-            Invitación no encontrada o inválida — puedes completar el formulario manualmente.
+            {t('guard.invite_not_found', { defaultValue: 'Invitation not found or invalid — you can complete the form manually.' })}
           </div>
         )}
 
@@ -496,7 +498,7 @@ export default function GuardRegistration() {
         </div>
 
         <div className="text-center">
-          <NavLink to="/login" className="text-sm font-semibold" style={{ color: "#F75638" }}>Volver a iniciar sesión</NavLink>
+          <NavLink to="/login" className="text-sm font-semibold" style={{ color: "#F75638" }}>{t('auth.back_to_login', { defaultValue: 'Volver a iniciar sesión' })}</NavLink>
         </div>
       </form>
     </AuthLayout>

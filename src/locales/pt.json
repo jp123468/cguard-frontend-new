@@ -18,9 +18,46 @@
     "verifyNumberTitle": "Verificar número",
     "verifyNumberDesc": "Digite o código que enviamos por SMS para verificar seu número.",
     "enterVerificationCode": "Digite o código de verificação*",
-    "send": "Enviar"
-  }
-  ,
+    "send": "Enviar",
+    "cancel": "Cancelar",
+    "createdAt": "Fecha de creación",
+    "updatedAt": "Última actualización"
+  },
+  "categories": {
+    "addcategory": "Adicionar categoria",
+    "notcategories": "No categories available",
+    "addcategoryDescription": "Form to create a new category.",
+    "noPermissionCreate": "You don't have permission to create categories",
+    "noPermissionEdit": "You don't have permission to edit categories",
+    "noPermissionDelete": "You don't have permission to delete categories",
+    "nameRequired": "Category name is required",
+    "notfoundcategory": "No categories found",
+    "categoryCreated": "Category created successfully",
+    "errorCreating": "Error creating category",
+    "categoryEdited": "Category edited successfully",
+    "errorEditing": "Error editing category",
+    "couldNotVerifyUsage": "Could not verify if the category is in use. Proceed with caution.",
+    "categoryDeleted": "Category deleted successfully",
+    "searchPlaceholder": "Search...",
+    "name": "Name*",
+    "nameHint": "E.g. General",
+    "description": "Description",
+    "descriptionHint": "Brief description (optional)",
+    "create": "Create",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "delete": "Delete",
+    "cannotDelete": "Cannot delete",
+    "categoriesnotloaded": "The categories could not be loaded.",
+    "namecategory": "Category Name",
+    "actions": "Actions",
+    "title": "Category Manager",
+    "titleDescription": "Manage categories for the selected module. Categories in use cannot be deleted.",
+    "confirmDeleteId": "Wish to delete this category?",
+    "cannotDeleteMessage": "The category \"{{name}}\" cannot be deleted because it is in use by {{count}} clients.",
+    "Understood": "Understood"
+  },
   "sidebar": {
     "panel": "Painel",
     "actividad": "Atividade",
@@ -98,8 +135,7 @@
       "incidentes": "Incidentes",
       "tipo-incidente": "Tipo de incidente"
     }
-  }
-  ,
+  },
   "settings": {
     "configuracion": {
       "title": "Configuração",
@@ -139,7 +175,58 @@
       "acceso_de_desarrollador": "ACESSO DO DESENVOLVEDOR"
     }
   },
+  "guards": {
+    "nav": {
+      "resumen": "Resumo",
+      "perfil": "Perfil",
+      "disponibilidad": "Disponibilidade",
+      "indicadores": "Indicadores-chave de segurança",
+      "licencias": "Licenças",
+      "notas": "Notas",
+      "recordatorios": "Lembretes",
+      "archivos": "Arquivos",
+      "asignarSitios": "Atribuir Sites",
+      "conjuntoHabilidades": "Conjunto de Habilidades",
+      "departamento": "Departamento",
+      "configuracion": "Configurações"
+    }
+  },
   "clients": {
+    "nav": {
+      "title": "Clientes",
+      "overview": "Visão geral",
+      "profile": "Perfil",
+      "contacts": "Contatos",
+      "notes": "Notas",
+      "files": "Arquivos",
+      "postSites": "Post Sites",
+      "clientPortal": "Portal do cliente",
+      "userAccess": "Acesso de usuários",
+      "emailReports": "Relatórios por e-mail"
+    },
+    "overview": {
+      "cards": {
+        "postSites": "Post Sites",
+        "guardsAssigned": "Guardas atribuídos",
+        "toursCompleted": "Tours completados (últimos 7 dias)",
+        "tasksCompleted": "Tarefas completadas (últimos 7 dias)",
+        "incidents": "Relatórios de incidentes",
+        "hoursWorked": "Horas trabalhadas (últimos 7 dias)"
+      },
+      "generalInfo": {
+        "title": "Informação Geral",
+        "clientName": "Nome do cliente",
+        "address": "Endereço",
+        "addedOn": "Agregado em"
+      },
+      "contactDetails": {
+        "title": "Detalhes de Contato",
+        "phoneNumber": "Número de telefone",
+        "fax": "Fax",
+        "email": "Email",
+        "website": "Website"
+      }
+    },
     "loadError": "Erro ao carregar clientes",
     "loadClientError": "Não foi possível carregar o cliente",
     "selectAtLeastOne": "Selecione pelo menos um cliente",
@@ -175,19 +262,43 @@
       "active": "Ativo",
       "archived": "Arquivado"
     },
-    "actions": {
-      "viewDetails": "Ver Detalhes",
-      "categorize": "Categorizar",
-      "categorize_label": "Categorizar",
-      "archive": "Arquivar",
-      "delete": "Excluir",
-      "restore": "Restaurar"
-    },
-    "clientArchived": "Cliente arquivado",
     "errorArchiveClient": "Erro ao arquivar cliente",
     "breadcrumb": {
       "dashboard": "Painel",
       "clients": "Clientes"
+    },
+    "contacts": {
+      "addcontact": "Adicionar contato",
+      "searchcontact": "Buscar contatos",
+      "contactName": "Nome",
+      "contactEmail": "E-mail",
+      "contactPhone": "Número de telefone",
+      "contactPostSites": "Sites publicados",
+      "editcontact": "Editar contato",
+      "contactCreated": "Contato criado com sucesso",
+      "contactUpdated": "Contato atualizado com sucesso",
+      "contactDeleted": "Contato excluído com sucesso",
+      "contactCreateFailed": "Não foi possível criar contato",
+      "contactDeleteFailed": "Não foi possível excluir o contato",
+      "deleteContactButton": "Excluir",
+      "confirmDeleteTitle": "Excluir contato(s)?",
+      "confirmDeleteMessage": "Tem certeza de que deseja excluir permanentemente o(s) contato(s) selecionado(s)? Esta ação não pode ser desfeita.",
+      "form": {
+        "AddClientContact": "Adicionar contato",
+        "Name": "Nome *",
+        "Email": "E-mail *",
+        "Mobile Number": "Número de telefone *",
+        "Description": "Descrição",
+        "descriptioninput": "Digite a descrição do contato",
+        "AssignPostSite": "Atribuir site publicado",
+        "checkbox": "Permitir que o guarda veja o contato",
+        "Addcontact": "ADICIONAR"
+      },
+      "errors": {
+        "invalidEmail": "E-mail inválido",
+        "invalidPhone": "Número inválido",
+        "requiredName": "Nome obrigatório"
+      }
     },
     "searchPlaceholder": "Pesquisar cliente",
     "newClient": "Novo cliente",
@@ -205,8 +316,8 @@
       "postalCode": "Código postal/Zip *",
       "city": "Cidade *",
       "country": "País *",
-      "latitude": "Latitude",
-      "longitude": "Longitude",
+      "latitude": "Latitude *",
+      "longitude": "Longitude *",
       "locationSet": "Localização definida",
       "useMyLocation": "Usar minha localização",
       "moreInfo": "Mais informações",
@@ -297,25 +408,219 @@
     "clientArchived": "Cliente arquivado",
     "errorArchive": "Erro ao arquivar",
     "errorRestore": "Erro ao restaurar",
-    "errorDelete": "Erro ao excluir"
-  }
-  ,
+    "errorDelete": "Erro ao excluir",
+    "notes": {
+      "Title": "Adicionar nova nota",
+      "Titlenote": "Título *",
+      "addNote": "Adicionar nota",
+      "editNote": "Editar",
+      "deleteNote": "Excluir",
+      "Date": "Data",
+      "Added By": "Criado por",
+      "noteCreated": "Note created successfully",
+      "noteUpdated": "Note updated successfully",
+      "noteDeleted": "Note deleted successfully",
+      "noteCreateFailed": "Could not create note",
+      "noteUpdateFailed": "Could not update note",
+      "deleteFailed": "Could not delete note",
+      "notesearchPlaceholder": "Search notes",
+      "confirmDeleteTitle": "Delete note(s)?",
+      "confirmDeleteMessage": "Are you sure you want to permanently delete the selected note(s)? This action cannot be undone.",
+      "form": {
+        "Title": "Crear nueva nota",
+        "Titlenote": "Título *",
+        "Titleinput": "Ingrese el título de la nota",
+        "Description": "Descripción *",
+        "Descriptioninput": "Ingrese la descripción de la nota",
+        "Date": "Fecha *",
+        "AttachFile": "Adjuntos",
+        "AttachFileinput": "No files selected",
+        "Save": "SALVAR"
+      },
+      "Details": {
+        "detailsTitle": "Note details",
+        "Title": "Title",
+        "Date": "Date",
+        "Description": "Description",
+        "AddedBy": "Added by"
+      }
+    }
+  },
   "postSites": {
+    "postsitdash": "Painel de controle",
+    "postsite": "Site de Publicação",
     "searchPlaceholder": "Pesquisar Sites de Publicação",
     "newPostSite": "Novo Site de Publicação",
+    "editPostSite": "Editar Site de Publicação",
     "filtersTitle": "Filtros",
+    "action": "Ação",
+    "move": "Mover",
+    "archive": "Arquivar",
+    "manageCategories": "Gerenciar Categorias",
     "filters": {
       "email": "E-mail",
       "phone": "Número de Telefone",
       "city": "Cidade",
       "country": "País",
-      "categories": "Categorias"
+      "categories": "Categorias",
+      "all": "Todos",
+      "active": "Ativo",
+      "archived": "Arquivado",
+      "status": "Estado",
+      "applyFilters": "Aplicar filtros",
+      "clearFilters": "Limpar filtros"
     },
+    "clients": "Cliente",
+    "emails": "Email",
+    "phones": "Telefone",
+    "actions": "Ações",
+    "viewDetails": "Visualizar detalhes",
+    "categorize": "Categorizar",
+    "notsearch": "Nenhum resultado encontrado correspondente à sua pesquisa",
+    "pdfexport": "Exportar a PDF",
+    "excelexport": "Exportar a Excel",
+    "import": "Importar",
     "selectAtLeastOne": "Selecione pelo menos um site de publicação",
     "generatingPDF": "Gerando PDF...",
     "pdfDownloaded": "PDF baixado",
     "generatingExcel": "Gerando Excel...",
     "excelDownloaded": "Excel baixado",
-    "sitesArchived": "Sites arquivados"
+    "sitesArchived": "Sites arquivados",
+    "form": {
+      "client": "Cliente *",
+      "selectClient": "Selecionar cliente",
+      "siteName": "Nome do site *",
+      "address": "Endereço *",
+      "addressLine2": "Endereço linha 2",
+      "addressLine2Placeholder": "Opcional",
+      "postalCode": "Código postal/CEP *",
+      "city": "Cidade *",
+      "country": "País *",
+      "latitude": "Latitude *",
+      "longitude": "Longitude *",
+      "locationSet": "Localização definida",
+      "useMyLocation": "Usar minha localização",
+      "moreInfo": "Mais informações",
+      "geolocationNotSupported": "Geolocalização não suportada neste navegador",
+      "unableToRetrieveLocation": "Não foi possível obter a localização",
+      "phone": "Número de telefone *",
+      "email": "Endereço de e-mail *",
+      "description": "Descrição *",
+      "descriptionPlaceholder": "Descrição do site",
+      "fax": "Fax",
+      "category": "Categoria",
+      "slectcategory": "Selecionar categoria",
+      "cancel": "Cancelar",
+      "submit": "Enviar"
+    },
+    "overview": {
+      "Stats": {
+        "title": "Estatísticas do site",
+        "guardsAssigned": "Guardas designados",
+        "guardOnSite": "Guardas no local",
+        "toursCompleted": "Passeios concluídos (últimos 7 dias)",
+        "tasksCompleted": "Tarefas concluídas (últimos 7 dias)",
+        "incidentsReported": "Incidentes relatados",
+        "hoursLogged": "Horas registradas (últimos 7 dias)"
+      },
+      "Map": {
+        "title": "Mapa",
+        "MapType": "Tipo de mapa",
+        "Roadmap": "Mapa de estradas",
+        "Satellite": "Satélite",
+        "Hybrid": "íbrido",
+        "GeoFence": "Mostrar Geo-Cerca"
+      },
+      "LatestActivity": "Última atividade",
+      "Filters": "Filtros",
+      "FilterHelp": "Selecione filtros para a visualização",
+      "fromDate": "Desde a data",
+      "toDate": "Até a data",
+      "Type": "Tipo",
+      "types": {
+        "callOffRequest": "Solicitud de baja",
+        "checkList": "Lista de verificación",
+        "checkedIn": "Registrado",
+        "checkedOut": "Salida registrada",
+        "clockedIn": "Hora de entrada",
+        "clockedOut": "Hora de salida",
+        "companyPolicy": "Política de la empresa",
+        "dispatch": "Despacho",
+        "exchangeShift": "Intercambio de turno",
+        "geoFence": "Geo Fence",
+        "guardAvailability": "Disponibilidad de guardia",
+        "guardIdle": "Guardia inactivo",
+        "guardDeviceFall": "Fallo guardia/dispositivo",
+        "incidentReport": "Informe de incidente",
+        "lowBattery": "Batería baja",
+        "openShiftConfirmation": "Confirmación de turno abierto",
+        "panicAlert": "Alerta de pánico",
+        "parkingManager": "Gestor de parking",
+        "passdownReport": "Informe Passdown",
+        "postOrder": "Orden del puesto",
+        "shiftConfirmation": "Confirmación de turno",
+        "siteTour": "Recorrido del sitio",
+        "standardReport": "Informe estándar",
+        "taskReport": "Informe de tarea",
+        "timeOff": "Tiempo libre",
+        "vehiclePatrol": "Patrulla vehicular",
+        "watchModeReport": "Informe modo vigilancia"
+      }
+    },
+    "apply": "Filtrar",
+    "noActivity": "Ainda não há atividade.",
+    "profile": {
+      "title": "Post Site Profile",
+      "editProfile": "Edit Profile",
+      "profileUpdated": "Post site profile updated",
+      "errorUpdatingProfile": "Error updating post site profile",
+      "Map": {
+        "title": "Map",
+        "MapType": "Map Type",
+        "Roadmap": "Roadmap",
+        "Satellite": "Satellite",
+        "Hybrid": "Hybrid",
+        "GeoFence": "Show Geo-Fence",
+        "NoCoordinates": "No coordinates available for this site"
+      },
+      "GeneralInformation": {
+        "title": "General Information",
+        "client": "Client",
+        "siteName": "Site Name",
+        "address": "Address",
+        "addedOn": "Added On"
+      },
+      "ContactDetails": {
+        "title": "Contact Details",
+        "phoneNumber": "Phone Number",
+        "fax": "Fax",
+        "email": "Email",
+        "website": "Website"
+      },
+      "MoreInformation": {
+        "title": "More Information",
+        "categories": "Categories",
+        "postalCode": "Postal Code/Zip",
+        "city": "City",
+        "country": "Country",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+        "postSiteChargeRate": "Post Site Charge Rate",
+        "postSitePayRate": "Post Site Pay Rate"
+      },
+      "Edit": "Edit"
+    }
+  },
+  "actions": {
+    "action": "Ação",
+    "viewDetails": "Visualizar detalhes",
+    "edit": "Editar",
+    "categorize": "Categorizar",
+    "categorize_label": "Categorizar",
+    "archive": "Arquivar",
+    "delete": "Excluir",
+    "restore": "Restaurar",
+    "save": "Salvar",
+    "cancel": "Cancelar"
   }
 }

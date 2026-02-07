@@ -38,7 +38,7 @@
     "subItems": [
       {
         "id": "guardias",
-        "name": "Guardias de Seguridad",
+        "name": "security-guards",
         "path": "/security-guards"
       },
       {
@@ -76,7 +76,7 @@
       },
       {
         "id": "guardias",
-        "name": "Guardias de Seguridad",
+        "name": "security-guards",
         "path": "/analytics/guard"
       }
     ]

@@ -1,5 +1,6 @@
 import SplashScreen from "@/components/SplashScreen";
 import { ReactNode, useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -8,6 +9,7 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children, title }: AuthLayoutProps) {
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 2500);
@@ -38,17 +40,17 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
             className="text-5xl font-bold leading-tight mb-4"
             style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: "#0C2459" }}
           >
-            Lleva tus operaciones de seguridad <br />
-            al siguiente nivel
+            {t('auth.landing.title_part1')} <br />
+            {t('auth.landing.title_part2')}
           </h1>
 
           <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
-            Usando la plataforma de gestión de seguridad física <span className="font-semibold text-[#F75638]">GuardsPro</span>.
+            {t('auth.landing.desc', { product: 'CGUARD' })}
           </p>
 
           {/* Etiquetas */}
           <div className="flex flex-wrap gap-3">
-            {["Basado en la Nube", "Seguimiento en Tiempo Real", "Analíticas"].map((tag) => (
+            {[t('auth.landing.tag_cloud'), t('auth.landing.tag_realtime'), t('auth.landing.tag_analytics')].map((tag) => (
               <span
                 key={tag}
                 className="rounded-full border px-4 py-2 text-sm font-medium"
@@ -73,19 +75,19 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
           <div className="w-full max-w-xl relative">
             {/* Tarjeta del formulario */}
             <div className="rounded-2xl border border-slate-200/50 bg-white/90 backdrop-blur-xl p-10 shadow-2xl dark:border-white/10 dark:bg-slate-900/80">
-              <div className="mb-8">
-                <h2
-                  className="text-3xl font-bold"
-                  style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: "#F75638" }}
-                >
-                  {title}
-                </h2>
-              </div>
-              {children}
+                <div className="mb-8">
+                  <h2
+                    className="text-3xl font-bold"
+                    style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: "#F75638" }}
+                  >
+                    {title}
+                  </h2>
+                </div>
+                {children}
             </div>
 
             <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
-              © 2016-{new Date().getFullYear()} GUARDSPRO. Todos los derechos reservados.
+              {t('auth.footer_copyright', { defaultValue: `© 2025-{{year}} CGUARD. All rights reserved.`, year: new Date().getFullYear() })}
             </p>
           </div>
         </div>

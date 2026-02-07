@@ -61,7 +61,7 @@ import { toast } from "sonner";
 import * as XLSX from 'xlsx';
 import { usePermissions } from '@/hooks/usePermissions';
 
-// Tipos para los guardias de seguridad
+// Tipos para los security-guards
 type GuardStatus = "Activo" | "Pendiente" | "Invitado" | "Archivado";
 
 interface SecurityGuard {
@@ -210,11 +210,9 @@ export default function SecurityGuardsPage() {
       params = { "filter[status]": "invited" };
     }
 
-    console.log('[SecurityGuardsPage] fetching with params:', params);
     securityGuardService
       .list(params)
       .then((data) => {
-        console.log("[SecurityGuardsPage] securityGuardService.list response:", data);
         if (!mounted) return;
         // Algunos endpoints devuelven { rows, count } u otras formas
         const normalize = (item: any): SecurityGuard => {
@@ -253,7 +251,6 @@ export default function SecurityGuardsPage() {
         else setGuards([]);
       })
       .catch((err) => {
-        console.log("[SecurityGuardsPage] securityGuardService.list error:", err);
         if (!mounted) return;
         console.error("Error cargando guardias:", err);
         setError(String(err?.message || err));
@@ -367,7 +364,7 @@ export default function SecurityGuardsPage() {
       <Breadcrumb
         items={[
           { label: "Panel de control", path: "/dashboard" },
-          { label: "Guardias de Seguridad" },
+          { label: "security-guards" },
         ]}
       />
       <div className="p-4">
@@ -638,7 +635,25 @@ export default function SecurityGuardsPage() {
                         <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
                           {(guard.name?.trim()?.[0] ?? "G").toUpperCase()}
                         </div>
-                        {guard.name}
+                        <div
+                          role="link"
+                          tabIndex={0}
+                          className="flex-1 cursor-pointer select-none text-blue-600 hover:underline"
+                          onClick={() => {
+                            const realId = guard.raw?.id || guard.id;
+                            navigate(`/guards/${realId}/overview`);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              const realId = guard.raw?.id || guard.id;
+                              navigate(`/guards/${realId}/overview`);
+                            }
+                          }}
+                          aria-label={`Abrir resumen de ${guard.name}`}
+                        >
+                          {guard.name}
+                        </div>
                       </td>
                       <td className="px-4 py-3">{guard.email}</td>
                       <td className="px-4 py-3">{guard.phone}</td>
@@ -703,8 +718,8 @@ export default function SecurityGuardsPage() {
                                 {hasPermission('securityGuardRead') && (
                                   <DropdownMenuItem
                                     onClick={() => {
-                                      setDetailsGuard(guard);
-                                      setDetailsOpen(true);
+                                      const realId = guard.raw?.id || guard.id;
+                                      navigate(`/guards/${realId}/overview`);
                                     }}
                                   >
                                     <Eye className="mr-2 h-4 w-4" /> Ver Detalles

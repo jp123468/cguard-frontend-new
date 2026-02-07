@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 interface UseAuthFormReturn {
   email: string
   password: string
@@ -18,6 +19,7 @@ interface UseAuthFormReturn {
 }
 
 export const useAuthForm = (): UseAuthFormReturn => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -38,11 +40,11 @@ export const useAuthForm = (): UseAuthFormReturn => {
   const validateEmail = (): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!email) {
-       toast.error('El correo electrónico es requerido')
+       toast.error(t('auth.enter_email', { defaultValue: 'Please enter your email' }))
       return false
     }
     if (!emailRegex.test(email)) {
-       toast.error('Correo electrónico inválido')
+       toast.error(t('auth.invalid_email', { defaultValue: 'Invalid email address' }))
       return false
     }
     return true
@@ -50,11 +52,11 @@ export const useAuthForm = (): UseAuthFormReturn => {
 
   const validatePassword = (minLength = 6): boolean => {
     if (!password) {
-       toast.error('La contraseña es requerida')
+       toast.error(t('auth.enter_password', { defaultValue: 'Please enter your password' }))
       return false
     }
     if (password.length < minLength) {
-       toast.error(`La contraseña debe tener al menos ${minLength} caracteres`)
+       toast.error(t('auth.password_min_length', { defaultValue: `Password must be at least ${minLength} characters` }))
       return false
     }
     return true
@@ -62,7 +64,7 @@ export const useAuthForm = (): UseAuthFormReturn => {
 
   const validatePasswordMatch = (): boolean => {
     if (password !== confirmPassword) {
-       toast.error('Las contraseñas no coinciden')
+       toast.error(t('auth.passwords_mismatch', { defaultValue: 'Passwords do not match' }))
       return false
     }
     return true

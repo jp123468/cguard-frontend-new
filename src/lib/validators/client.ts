@@ -66,25 +66,25 @@ export const clientSchema = z.object({
         .optional()
         .or(z.literal("")),
     latitude: z
-        .union([z.literal(""), z.string().trim()])
-        .refine((val) => val === "" || !Number.isNaN(Number(val)), {
+        .string()
+        .trim()
+        .min(1, "Latitud requerida")
+        .refine((val) => !Number.isNaN(Number(val)), {
             message: "Latitud debe ser numérica",
         })
-        .refine(
-            (val) => val === "" || (Number(val) >= -90 && Number(val) <= 90),
-            { message: "Latitud entre -90 y 90" }
-        )
-        .optional(),
+        .refine((val) => Number(val) >= -90 && Number(val) <= 90, {
+            message: "Latitud entre -90 y 90",
+        }),
     longitude: z
-        .union([z.literal(""), z.string().trim()])
-        .refine((val) => val === "" || !Number.isNaN(Number(val)), {
+        .string()
+        .trim()
+        .min(1, "Longitud requerida")
+        .refine((val) => !Number.isNaN(Number(val)), {
             message: "Longitud debe ser numérica",
         })
-        .refine(
-            (val) => val === "" || (Number(val) >= -180 && Number(val) <= 180),
-            { message: "Longitud entre -180 y 180" }
-        )
-        .optional(),
+        .refine((val) => Number(val) >= -180 && Number(val) <= 180, {
+            message: "Longitud entre -180 y 180",
+        }),
     active: z.boolean().optional(),
     categoryIds: z.array(z.string()).optional(),
 });

@@ -26,6 +26,7 @@ export const PERMISSIONS: string[] = [
   "notificationRecipientImport","notificationRecipientCreate","notificationRecipientEdit","notificationRecipientDestroy","notificationRecipientRead","notificationRecipientAutocomplete",
   "inquiriesImport","inquiriesCreate","inquiriesEdit","inquiriesDestroy","inquiriesRead","inquiriesAutocomplete",
   "requestImport","requestCreate","requestEdit","requestDestroy","requestRead","requestAutocomplete",
+  "dispatchImport","dispatchCreate","dispatchEdit","dispatchDestroy","dispatchRead","dispatchAutocomplete",
   "taskImport","taskCreate","taskEdit","taskDestroy","taskRead","taskAutocomplete",
   "memosImport","memosCreate","memosEdit","memosDestroy","memosRead","memosAutocomplete",
   "tutorialImport","tutorialCreate","tutorialEdit","tutorialDestroy","tutorialRead","tutorialAutocomplete",

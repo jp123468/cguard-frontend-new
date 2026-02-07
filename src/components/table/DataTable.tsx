@@ -22,6 +22,7 @@ type DataTableProps<T> = {
     sortKey?: string | null;
     sortDir?: "asc" | "desc" | null;
     onSortChange?: (key: string, dir: "asc" | "desc" | null) => void;
+    onRowClick?: (row: T) => void;
 };
 
 export function DataTable<T extends { id: string }>({
@@ -36,6 +37,7 @@ export function DataTable<T extends { id: string }>({
     sortKey,
     sortDir,
     onSortChange,
+    onRowClick,
 }: DataTableProps<T>) {
     const allSelected = data.length > 0 && selectedIds.length === data.length;
 
@@ -116,10 +118,14 @@ export function DataTable<T extends { id: string }>({
                                 )}
                             </td>
                         </tr>
-                    ) : (
+                        ) : (
                         data.map((row) => (
-                            <tr key={row.id} className="border-b hover:bg-gray-50">
-                                <td className="px-4 py-3">
+                            <tr
+                                key={row.id}
+                                className={`border-b hover:bg-gray-50 ${onRowClick ? 'cursor-pointer' : ''}`}
+                                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                            >
+                                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                                     <Checkbox
                                         checked={selectedIds.includes(row.id)}
                                         onCheckedChange={(checked) =>
@@ -141,7 +147,7 @@ export function DataTable<T extends { id: string }>({
                                 })}
 
                                 {rowActions && (
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                                         <RowActionsMenu actions={rowActions(row)} />
                                     </td>
                                 )}

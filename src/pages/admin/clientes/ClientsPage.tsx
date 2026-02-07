@@ -1,5 +1,5 @@
-  import { useState, useEffect, useMemo, useRef } from "react";
-  import { useTranslation } from "react-i18next";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -40,7 +40,7 @@ import {
   Trash,
   RotateCcw,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { clientService } from "@/lib/api/clientService";
@@ -59,7 +59,6 @@ type ClientFilters = {
 
 import { categoryService, type Category } from "@/lib/api/categoryService";
 import CategoryManagerDialog from "@/components/categories/CategoryManagerDialog";
-import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
 import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActionsSelect";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import type { RowAction } from "@/components/table/RowActionsMenu";
@@ -95,11 +94,11 @@ const getServerErrorMessage = (error: any, defaultMessage = "Error") => {
 export default function ClientesPage() {
   const { t } = useTranslation();
   const { hasPermission } = usePermissions();
+  const navigate = useNavigate();
   const [openFilter, setOpenFilter] = useState(false);
   const [openImport, setOpenImport] = useState(false);
   const [openCategoryManager, setOpenCategoryManager] = useState(false);
-  const [openClientDetails, setOpenClientDetails] = useState(false);
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  // Details now open in separate page; modal state removed
 
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
@@ -156,10 +155,10 @@ export default function ClientesPage() {
       if (sortKey && sortDir) pagination.orderBy = `${sortKey}:${sortDir}`;
 
       const data = await clientService.getClients(
-        { 
-          ...filters, 
+        {
+          ...filters,
           name: debouncedSearch || undefined,
-          lastName: debouncedSearch || undefined 
+          lastName: debouncedSearch || undefined
         },
         pagination
       );
@@ -476,11 +475,10 @@ export default function ClientesPage() {
         header: t('clients.columns.status'),
         render: (_value: any, row: Client) => {
           // El backend puede enviar booleano o entero (0/1)
-          const isActive = row.active === true ;
+          const isActive = row.active === true;
           return (
-            <span className={`px-2 py-1 text-xs rounded-full ${
-              isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-            }`}>
+            <span className={`px-2 py-1 text-xs rounded-full ${isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+              }`}>
               {isActive ? t('clients.status.active') : t('clients.status.archived')}
             </span>
           );
@@ -496,11 +494,11 @@ export default function ClientesPage() {
 
     if (hasPermission('clientAccountRead')) {
       actions.push({
-        label: t('clients.actions.viewDetails'),
+        label: t('actions.viewDetails'),
         icon: <Eye className="h-4 w-4" />,
         onClick: () => {
-          setSelectedClientId(client.id);
-          setOpenClientDetails(true);
+          // Navigate to client details page instead of opening modal
+          navigate(`/clients/${client.id}/overview`);
         },
       });
     }
@@ -508,13 +506,13 @@ export default function ClientesPage() {
     if (isActive) {
       if (hasPermission('clientAccountEdit')) {
         actions.push({
-          label: t('clients.actions.categorize'),
+          label: t('actions.categorize'),
           icon: <Tag className="h-4 w-4" />,
           onClick: () => openCategorizeForClient(client),
         });
 
         actions.push({
-          label: t('clients.actions.archive'),
+          label: t('actions.archive'),
           icon: <Archive className="h-4 w-4" />,
           onClick: async () => {
             try {
@@ -531,24 +529,24 @@ export default function ClientesPage() {
     } else {
       if (hasPermission('clientAccountDestroy')) {
         actions.push({
-            label: t('clients.actions.delete'),
-            icon: <Trash className="h-4 w-4" />,
-            onClick: () => {
-              setDeleteClient(client);
-              setOpenDeleteDialog(true);
-            },
-          });
+          label: t('actions.delete'),
+          icon: <Trash className="h-4 w-4" />,
+          onClick: () => {
+            setDeleteClient(client);
+            setOpenDeleteDialog(true);
+          },
+        });
       }
 
       if (hasPermission('clientAccountEdit')) {
         actions.push({
-            label: t('clients.actions.restore'),
-            icon: <RotateCcw className="h-4 w-4" />,
-            onClick: () => {
-              setRestoreClient(client);
-              setOpenRestoreDialog(true);
-            },
-          });
+          label: t('actions.restore'),
+          icon: <RotateCcw className="h-4 w-4" />,
+          onClick: () => {
+            setRestoreClient(client);
+            setOpenRestoreDialog(true);
+          },
+        });
       }
     }
 
@@ -697,8 +695,8 @@ export default function ClientesPage() {
                         filters.active === undefined
                           ? "all"
                           : filters.active
-                          ? "active"
-                          : "inactive"
+                            ? "active"
+                            : "inactive"
                       }
                       onValueChange={(v) => {
                         if (v === "all") {
@@ -748,7 +746,7 @@ export default function ClientesPage() {
                   <EllipsisVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem disabled={!hasPermission('clientAccountRead')} onClick={async () => { if (!hasPermission('clientAccountRead')) return; await handleExportPDF(); }}>
                   <FileDown className="mr-2 h-4 w-4" /> {t('clients.export.pdf')}
                 </DropdownMenuItem>
@@ -774,6 +772,7 @@ export default function ClientesPage() {
             onSelectAll={handleSelectAll}
             onSelectOne={handleSelectOne}
             rowActions={rowActions}
+            onRowClick={(r) => navigate(`/clients/${r.id}/overview`)}
             sortKey={sortKey ?? undefined}
             sortDir={sortDir ?? undefined}
             onSortChange={(key, dir) => {
@@ -901,24 +900,20 @@ export default function ClientesPage() {
           </div>
 
           <DialogFooter>
-            <Button 
-            variant="outline" onClick={() => setOpenCategorizeDialog(false)} disabled={categorizeSaving}>
+            <Button
+              variant="outline" onClick={() => setOpenCategorizeDialog(false)} disabled={categorizeSaving}>
               {t('clients.cancel')}
             </Button>
-            <Button 
-            className="bg-orange-500 hover:bg-orange-600"
-            onClick={handleCategorizeSubmit} disabled={categorizeSaving || categorizeLoading}>
+            <Button
+              className="bg-orange-500 hover:bg-orange-600"
+              onClick={handleCategorizeSubmit} disabled={categorizeSaving || categorizeLoading}>
               {categorizeSaving ? t('clients.saving') : t('clients.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <CategoryManagerDialog open={openCategoryManager} onOpenChange={setOpenCategoryManager} module="clientAccount" onChanged={loadCategories} />
-      <ClientDetailsDialog
-        open={openClientDetails}
-        onOpenChange={setOpenClientDetails}
-        clientId={selectedClientId}
-      />
+      {/* ClientDetailsDialog removed: navigation uses ClientsDetails page instead of modal */}
 
       <AlertDialog open={openArchiveBulkDialog} onOpenChange={setOpenArchiveBulkDialog}>
         <AlertDialogContent>
@@ -932,20 +927,20 @@ export default function ClientesPage() {
             <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
-                  try {
-                    await Promise.all(
-                      selectedIds.map((id) =>
-                        clientService.updateClient(id, { active: false } as any)
-                      )
-                    );
-                    toast.success(t('clients.clientsArchived'));
-                    setSelectedIds([]);
-                    loadClients();
-                    setOpenArchiveBulkDialog(false);
-                  } catch (error: any) {
-                    // backend handles errors
-                  }
-                }}
+                try {
+                  await Promise.all(
+                    selectedIds.map((id) =>
+                      clientService.updateClient(id, { active: false } as any)
+                    )
+                  );
+                  toast.success(t('clients.clientsArchived'));
+                  setSelectedIds([]);
+                  loadClients();
+                  setOpenArchiveBulkDialog(false);
+                } catch (error: any) {
+                  // backend handles errors
+                }
+              }}
             >
               {t('clients.accept')}
             </AlertDialogAction>
@@ -964,6 +959,7 @@ export default function ClientesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
+              className="bg-orange-500 hover:bg-orange-600 text-white"
               onClick={async () => {
                 try {
                   await Promise.all(
@@ -997,6 +993,7 @@ export default function ClientesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
+              className="bg-red-500 hover:bg-orange-600 text-white"
               onClick={async () => {
                 try {
                   await clientService.deleteClients(selectedIds);
@@ -1027,6 +1024,7 @@ export default function ClientesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
+              className="bg-red-500 hover:bg-orange-600 text-white"
               onClick={async () => {
                 if (!deleteClient) return;
                 try {
@@ -1055,6 +1053,7 @@ export default function ClientesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
+              className="bg-orange-500 hover:bg-orange-600 text-white"
               onClick={async () => {
                 if (!restoreClient) return;
                 try {

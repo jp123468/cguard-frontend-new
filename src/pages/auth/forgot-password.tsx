@@ -4,14 +4,16 @@ import AuthLayout from "@/layouts/auth-layout";
 import { toast } from "sonner";
 import { AuthService } from "@/services/auth/authService";
 import { NavLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function ForgotPassword() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
   useEffect(() => {
-    document.title = "Olvidé mi contraseña | Cguard";
+    document.title = t('auth.forgot_title', { defaultValue: 'Forgot password | Cguard' });
   }, []);
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -20,7 +22,7 @@ export default function ForgotPassword() {
 
     const value = email.trim();
     if (!value) {
-      toast.error("Por favor ingresa tu correo electrónico");
+      toast.error(t('auth.enter_email', { defaultValue: 'Por favor ingresa tu correo electrónico' }));
       return;
     }
 
@@ -28,7 +30,7 @@ export default function ForgotPassword() {
     try {
       // NOTE: Assuming AuthService.sendPasswordResetEmail is correctly implemented
       await AuthService.sendPasswordResetEmail(value); 
-      toast.success("Enlace enviado correctamente. Revisa tu correo electrónico");
+      toast.success(t('auth.reset_sent', { defaultValue: 'Enlace enviado correctamente. Revisa tu correo electrónico' }));
       setEmail("");
     } catch (err: any) {
       console.error("Error al enviar enlace:", err);
@@ -39,19 +41,19 @@ export default function ForgotPassword() {
 
   return (
     <AuthLayout
-      title="¿Olvidaste tu contraseña?"
+      title={t('auth.forgot_title', { defaultValue: 'Forgot your password?' })}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Correo Electrónico<span style={{ color: "#F75638" }}>*</span>
+            {t('auth.email_label', { defaultValue: 'Email' })}<span style={{ color: "#F75638" }}>*</span>
           </label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input
               id="email"
               type="email"
-              placeholder="tu@correo.com"
+              placeholder={t('auth.email_placeholder', { defaultValue: 'you@company.com' })}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -74,7 +76,7 @@ export default function ForgotPassword() {
           className="w-full rounded-lg py-3 font-semibold text-white transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
           style={{ background: "linear-gradient(135deg, #0C2459 0%, #1a3a7d 100%)" }}
         >
-          {isLoading ? "Enviando enlace..." : "ENVIAR ENLACE DE RESTABLECIMIENTO"}
+          {isLoading ? t('auth.sending', { defaultValue: 'Sending link...' }) : t('auth.send_reset', { defaultValue: 'SEND RESET LINK' })}
         </button>
 
         <div className="relative">
@@ -83,17 +85,17 @@ export default function ForgotPassword() {
           </div>
           <div className="relative flex justify-center text-sm">
             <span className="bg-white/80 px-4 text-slate-500 dark:bg-slate-900/80 dark:text-slate-400">
-              o
+              {t('common.or', { defaultValue: 'or' })}
             </span>
           </div>
         </div>
 
         <div className="flex items-center justify-between text-sm">
           <NavLink to="/login" className="font-medium hover:underline" style={{ color: "#F75638" }}>
-            Volver a iniciar sesión
+            {t('auth.back_to_login', { defaultValue: 'Back to login' })}
           </NavLink>
           <NavLink to="/register" className="text-slate-600 hover:underline dark:text-slate-400">
-            Crear una cuenta
+            {t('auth.create_account', { defaultValue: 'Create account' })}
           </NavLink>
         </div>
       </form>

@@ -20,6 +20,7 @@ import {
   StoreIcon,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from 'react-i18next';
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ export default function Header({
   theme = "light",
 }: HeaderProps) {
   const { user, signOut } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const userName = getDisplayName(user);
@@ -92,19 +94,19 @@ export default function Header({
     try {
       await signOut();
       navigate("/login");
-      toast.success("Sesión cerrada con éxito");
+      toast.success(t('auth.logout_success'));
     } catch {
-      toast.error("No se pudo cerrar sesión");
+      toast.error(t('auth.logout_failed'));
     }
   };
 
   const handleFeedbackSubmit = () => {
     if (rating === 0) {
-      toast.error("Por favor seleccione una calificación");
+      toast.error(t('header.select_rating'));
       return;
     }
     console.log({ rating, feedback: feedbackText });
-    toast.success("¡Gracias por su retroalimentación!");
+    toast.success(t('header.feedback_thanks'));
     setFeedbackOpen(false);
     setRating(0);
     setHoverRating(0);
@@ -125,7 +127,8 @@ export default function Header({
           <button
             onClick={toggleSidebar}
             className="p-2 rounded hover:bg-gray-100"
-            aria-label="Abrir menú"
+            aria-label={t('header.openMenu')}
+            title={t('header.openMenu')}
           >
             <Menu className="w-5 h-5 text-gray-600" />
           </button>
@@ -135,24 +138,27 @@ export default function Header({
           <button
             onClick={() => setFeedbackOpen(true)}
             className="p-2 rounded hover:bg-gray-100"
-            aria-label="Enviar retroalimentación"
+            aria-label={t('header.feedback')}
+            title={t('header.feedback')}
           >
             <MessageSquare className="w-5 h-5 text-gray-600" />
           </button>
-          <button className="p-2 rounded hover:bg-gray-100" aria-label="Buscar">
+          <button className="p-2 rounded hover:bg-gray-100" aria-label={t('header.search')} title={t('header.search')}>
             <Search className="w-5 h-5 text-gray-600" />
           </button>
           <button
             onClick={() => setHelpOpen(true)}
             className="p-2 rounded hover:bg-gray-100"
-            aria-label="Ayuda"
+            aria-label={t('header.help')}
+            title={t('header.help')}
           >
             <HelpCircle className="w-5 h-5 text-gray-600" />
           </button>
           <button
             onClick={() => setNotificationsOpen(true)}
             className="relative p-2 rounded hover:bg-gray-100"
-            aria-label="Notificaciones"
+            aria-label={t('header.notifications')}
+            title={t('header.notifications')}
           >
             <Bell className="w-5 h-5 text-gray-600" />
             {notificationsCount > 0 && (
@@ -169,6 +175,8 @@ export default function Header({
                 setOpenTheme(false);
               }}
               className="flex items-center gap-2 rounded px-2 py-1 hover:bg-gray-100"
+              title={userName || t('header.account')}
+              aria-label={t('header.account')}
             >
               {avatar ? (
                 <img src={avatar} alt={userName} className="w-7 h-7 rounded-full object-cover" />
@@ -194,23 +202,23 @@ export default function Header({
                 <div className="py-1">
                   <NavLink to="/setting/user-profile" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-sm text-gray-800">
                     <Settings className="w-4 h-4 text-gray-600" />
-                    Configuración
+                    {t('header.settings')}
                   </NavLink>
                   <NavLink to="/billing" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-sm text-gray-800">
                     <CreditCard className="w-4 h-4 text-gray-600" />
-                    Suscripción
+                    {t('header.subscription')}
                   </NavLink>
                   <NavLink to="/branch" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-sm text-gray-800">
                     <StoreIcon className="w-4 h-4 text-gray-600" />
-                    Sucursales
+                    {t('header.branches')}
                   </NavLink>
                   <NavLink to="/registros-sistema" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-sm text-gray-800">
                     <Clock className="w-4 h-4 text-gray-600" />
-                    Registros del sistema
+                    {t('header.system_logs')}
                   </NavLink>
                   <NavLink to="/historial-inicio-sesion" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-sm text-gray-800">
                     <History className="w-4 h-4 text-gray-600" />
-                    Historial de inicio de sesión
+                    {t('header.login_history')}
                   </NavLink>
 
                   <div className="relative">
@@ -218,9 +226,9 @@ export default function Header({
                       onClick={() => setOpenTheme((v) => !v)}
                       className="w-full flex items-center justify-between px-4 py-2 hover:bg-gray-50 text-sm text-gray-800"
                     >
-                      <span className="inline-flex items-center gap-3">
+                        <span className="inline-flex items-center gap-3">
                         <Droplet className="w-4 h-4 text-gray-600" />
-                        Modo claro
+                        {t('header.light_mode')}
                       </span>
                       <ChevronRight className="w-4 h-4 text-gray-400" />
                     </button>
@@ -236,7 +244,7 @@ export default function Header({
                           className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 ${theme === "dark" ? "font-semibold text-gray-900" : "text-gray-800"}`}
                         >
                           <Moon className="w-4 h-4 text-gray-600" />
-                          Modo oscuro
+                          {t('header.dark_mode')}
                         </button>
                         <button
                           onClick={() => {
@@ -255,9 +263,9 @@ export default function Header({
                 </div>
 
                 <div className="border-t border-gray-200 p-1">
-                  <button onClick={handleLogout} className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                    <button onClick={handleLogout} className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                     <LogOut className="w-4 h-4" />
-                    Cerrar sesión
+                    {t('header.logout')}
                   </button>
                 </div>
               </div>
@@ -271,13 +279,11 @@ export default function Header({
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-center text-lg font-normal">GuardsPro</DialogTitle>
-            <DialogDescription>Califique su experiencia con GuardsPro.</DialogDescription>
+            <DialogDescription>{t('header.feedback_modal_desc')}</DialogDescription>
           </DialogHeader>
 
           <div className="py-6">
-            <h3 className="text-center text-base text-gray-700 mb-8">
-              ¿Cómo calificaría su experiencia con GuardsPro?
-            </h3>
+            <h3 className="text-center text-base text-gray-700 mb-8">{t('header.feedback_modal_title')}</h3>
 
             <div className="flex justify-center gap-2 mb-6">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -300,7 +306,7 @@ export default function Header({
             </div>
 
             <Textarea
-              placeholder="Cuéntenos un poco más sobre su experiencia"
+              placeholder={t('header.feedback_placeholder')}
               value={feedbackText}
               onChange={(e) => setFeedbackText(e.target.value)}
               className="min-h-[120px] resize-none"
@@ -312,7 +318,7 @@ export default function Header({
               onClick={handleFeedbackSubmit}
               className="bg-orange-500 hover:bg-orange-600 text-white px-8"
             >
-              Enviar
+              {t('header.send')}
             </Button>
           </div>
         </DialogContent>

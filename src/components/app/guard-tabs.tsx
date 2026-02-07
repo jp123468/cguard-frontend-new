@@ -13,16 +13,16 @@ export function GuardTabsHeader({ value, onValueChange, children }: Props) {
     <Tabs value={value} onValueChange={onValueChange} className="w-full">
       <div className="sticky top-0 z-10 backdrop-blur">
         <TabsList className="h-auto w-full justify-start gap-1 mt-5 overflow-x-auto border-b bg-transparent p-0">
-          <TabsTrigger value="invite" className="rounded-none px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
+          <TabsTrigger value="invite" className=" px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
             Invitar Usando SMS o Correo Electrónico
           </TabsTrigger>
-          <TabsTrigger value="join_code" className="rounded-none px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
+          <TabsTrigger value="join_code" className=" px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
             Unirse por Código
           </TabsTrigger>
-          <TabsTrigger value="invite_link" className="rounded-none px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
+          <TabsTrigger value="invite_link" className=" px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
             Invitar Usando Enlace
           </TabsTrigger>
-          <TabsTrigger value="create_profile" className="rounded-none px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
+          <TabsTrigger value="create_profile" className=" px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
             Crear perfil
           </TabsTrigger>
         </TabsList>

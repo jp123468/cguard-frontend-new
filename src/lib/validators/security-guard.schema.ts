@@ -19,8 +19,9 @@ const baseEntry = {
     .trim()
     .min(1, "El apellido es requerido")
     .regex(nameRegex, "El apellido no debe contener números ni caracteres inválidos"),
-  clientId: z.string().trim().min(1, "Seleccione un cliente"),
-  postSiteId: z.string().trim().min(1, "Asigne un sitio de publicación"),
+  // Allow multiple clients/sites to be selected; store as arrays
+  clientId: z.array(z.string().trim()).min(1, "Seleccione al menos un cliente"),
+  postSiteId: z.array(z.string().trim()).min(1, "Asigne al menos un sitio de publicación"),
 };
 
 // Un solo contacto por registro (email o teléfono según inviteBy)

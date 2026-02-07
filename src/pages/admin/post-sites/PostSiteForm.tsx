@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/form";
 import { PostSiteInput, postSiteSchema } from "@/lib/validators/post-site";
 import { PhoneInput } from "@/components/phone/PhoneInput";
+import { t } from "i18next";
 
 export type Client = { id: string; name: string; lastName?: string };
 export type Category = { id: string; name: string; description?: string };
@@ -58,6 +59,7 @@ export default function PostSiteForm({
     onSaved,
 }: PostSiteFormProps) {
     const navigate = useNavigate();
+    const redirectUrl = "/post-sites/fa6e52cc-7842-43a2-aba6-977e44ba082b/profile";
     const [categories, setCategories] = useState<Category[]>(initialCategories || []);
     const [loadingCategories, setLoadingCategories] = useState(false);
     // Deduplicate toasts across mounts and avoid duplicate navigation
@@ -162,6 +164,10 @@ export default function PostSiteForm({
         }
     }, [mode, id, baseUrl, form]);
 
+    const handleCancel = () => {
+        navigate(redirectUrl);
+    };
+
     async function onSubmit(values: PostSiteInput) {
         try {
             const payload: PostSiteInput = {
@@ -174,12 +180,12 @@ export default function PostSiteForm({
                 const data = await postSiteService.create(payload);
                 toast.success("Sitio de publicación creado");
                 onSaved?.({ id: data.id, data: payload });
-                navigate("/post-sites");
+                navigate(redirectUrl);
             } else if (mode === "edit" && id) {
                 await postSiteService.update(id, payload);
                 toast.success("Cambios guardados");
                 onSaved?.({ id, data: payload });
-                navigate("/post-sites");
+                navigate(redirectUrl);
             }
         } catch (e: any) {
             console.error(e);
@@ -208,7 +214,7 @@ export default function PostSiteForm({
                             name="clientId"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Cliente *</FormLabel>
+                                    <FormLabel>{t('postSites.form.client', 'Cliente *')}</FormLabel>
                                     <Combobox
                                         value={field.value ? String(field.value) : ""}
                                         onChange={field.onChange}
@@ -216,8 +222,8 @@ export default function PostSiteForm({
                                             value: c.id,
                                             label: formatClientName(c),
                                         }))}
-                                        placeholder="Selecciona un cliente"
-                                        aria-label="Selecciona un cliente"
+                                        placeholder={t('postSites.form.selectClient', 'Select client')}
+                                        aria-label={t('postSites.form.selectClient', 'Select client')}
                                     />
                                     <FormMessage />
                                 </FormItem>
@@ -229,7 +235,7 @@ export default function PostSiteForm({
                             name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Sitio de publicación *</FormLabel>
+                                    <FormLabel>{t('postSites.form.siteName', 'Sitio de publicación *')}</FormLabel>
                                     <FormControl>
                                         <Input placeholder="" {...field} value={field.value ? String(field.value) : ""} />
                                     </FormControl>
@@ -246,7 +252,7 @@ export default function PostSiteForm({
                             name="address"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Dirección *</FormLabel>
+                                    <FormLabel>{t('postSites.form.address', 'Dirección *')}</FormLabel>
                                     <FormControl>
                                         <Input
                                             placeholder=""
@@ -264,10 +270,10 @@ export default function PostSiteForm({
                             name="addressLine2"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Dirección Complementaria</FormLabel>
+                                    <FormLabel>{t('postSites.form.addressLine2', 'Dirección Complementaria')}</FormLabel>
                                     <FormControl>
                                         <Input
-                                            placeholder="Opcional"
+                                            placeholder={t('postSites.form.addressLine2Placeholder', 'Opcional')}
                                             {...field}
                                             value={field.value ? String(field.value) : ""}
                                         />
@@ -285,7 +291,7 @@ export default function PostSiteForm({
                             name="postalCode"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Código postal/Zip *</FormLabel>
+                                    <FormLabel>{t('postSites.form.postalCode', 'Código postal/Zip *')}</FormLabel>
                                     <FormControl>
                                         <Input
                                             placeholder=""
@@ -304,7 +310,7 @@ export default function PostSiteForm({
                             name="city"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Ciudad *</FormLabel>
+                                    <FormLabel>{t('postSites.form.city', 'Ciudad *')}</FormLabel>
                                     <FormControl>
                                         <Input
                                             placeholder=""
@@ -323,7 +329,7 @@ export default function PostSiteForm({
                             name="country"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>País *</FormLabel>
+                                    <FormLabel>{t('postSites.form.country', 'País *')}</FormLabel>
                                     <FormControl>
                                         <Input
                                             placeholder=""
@@ -343,10 +349,10 @@ export default function PostSiteForm({
                             name="latitud"
                             render={({ field }) => (
                                 <FormItem className="flex-1">
-                                    <FormLabel>Latitud</FormLabel>
+                                    <FormLabel>{t('postSites.form.latitude', 'Latitud *')}</FormLabel>
                                     <FormControl>
                                         <Input
-                                            placeholder="Latitud"
+                                            placeholder={t('postSites.form.latitude', 'Latitud *')}
                                             {...field}
                                             value={field.value ? String(field.value) : ""}
                                         />
@@ -361,10 +367,10 @@ export default function PostSiteForm({
                             name="longitud"
                             render={({ field }) => (
                                 <FormItem className="flex-1">
-                                    <FormLabel>Longitud</FormLabel>
+                                    <FormLabel>{t('postSites.form.longitude', 'Longitud *')}</FormLabel>
                                     <FormControl>
                                         <Input
-                                            placeholder="Longitud"
+                                            placeholder={t('postSites.form.longitude', 'Longitud *')}
                                             {...field}
                                             value={field.value ? String(field.value) : ""}
                                         />
@@ -380,7 +386,7 @@ export default function PostSiteForm({
                                 variant="outline"
                                 onClick={() => {
                                     if (!navigator.geolocation) {
-                                        toast.error("Geolocalización no soportada en este navegador");
+                                        toast.error(t('postSites.form.geolocationNotSupported', 'Geolocalización no soportada en este navegador'));
                                         return;
                                     }
                                     navigator.geolocation.getCurrentPosition(
@@ -389,17 +395,17 @@ export default function PostSiteForm({
                                             const lng = String(pos.coords.longitude);
                                             setFormValue('latitud' as any, lat);
                                             setFormValue('longitud' as any, lng);
-                                            toast.success("Ubicación actual establecida");
+                                            toast.success(t('postSites.form.locationSet', 'Ubicación actual establecida'));
                                         },
                                         (err) => {
                                             console.error(err);
-                                            toast.error("No se pudo obtener la ubicación");
+                                            toast.error(t('postSites.form.unableToRetrieveLocation', 'No se pudo obtener la ubicación'));
                                         },
                                         { enableHighAccuracy: true, timeout: 10000 }
                                     );
                                 }}
                             >
-                                Usar ubicación actual
+                                {t('postSites.form.useMyLocation', 'Usar mi ubicación')}
                             </Button>
                         </div>
 
@@ -410,7 +416,7 @@ export default function PostSiteForm({
                             name="phone"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Número de Teléfono *</FormLabel>
+                                    <FormLabel>{t('postSites.form.phone', 'Número de Teléfono *')}</FormLabel>
                                     <FormControl>
                                         <PhoneInput
                                             value={field.value ?? ""}
@@ -426,7 +432,7 @@ export default function PostSiteForm({
                             name="email"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Correo Electrónico *</FormLabel>
+                                    <FormLabel>{t('postSites.form.email', 'Email Address *')}</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="email"
@@ -445,10 +451,10 @@ export default function PostSiteForm({
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Descripción *</FormLabel>
+                                    <FormLabel>{t('postSites.form.description', 'Descripción *')}</FormLabel>
                                     <FormControl>
                                         <Input
-                                            placeholder="Descripción del sitio"
+                                            placeholder={t('postSites.form.descriptionPlaceholder', 'Descripción del sitio')}
                                             {...field}
                                             value={field.value ? String(field.value) : ""}
                                         />
@@ -463,7 +469,9 @@ export default function PostSiteForm({
                     {/* Más Información (Accordion) */}
                     <Accordion type="single" collapsible defaultValue="more">
                         <AccordionItem value="more" className="border rounded-md">
-                            <AccordionTrigger className="px-4 hover:cursor-pointer text-md font-medium hover:no-underline">Más Información</AccordionTrigger>
+                            <AccordionTrigger className="px-4 hover:cursor-pointer text-md font-medium hover:no-underline">
+                                {t('postSites.form.moreInfo', 'Más Información')}
+                            </AccordionTrigger>
                             <AccordionContent className="px-4 pb-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <FormField<PostSiteInput>
@@ -471,7 +479,7 @@ export default function PostSiteForm({
                                         name="fax"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Fax</FormLabel>
+                                                <FormLabel>{t('postSites.form.fax', 'Fax')}</FormLabel>
                                                 <FormControl>
                                                     <PhoneInput
                                                         value={field.value ?? ""}
@@ -487,12 +495,12 @@ export default function PostSiteForm({
                                         name="categoryId"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Categoría</FormLabel>
+                                                <FormLabel>{t('postSites.form.category', 'Categoría')}</FormLabel>
                                                 <CategorySelect
                                                     options={cats}
                                                     value={field.value ? String(field.value) : undefined}
                                                     onChange={field.onChange}
-                                                    placeholder={loadingCategories ? "Cargando..." : "Selecciona una categoría"}
+                                                    placeholder={loadingCategories ? "Cargando..." : t('postSites.form.slectcategory', 'Selecciona una categoría')}
                                                     module="postSite"
                                                     onCategoryCreated={handleCategoryCreated}
                                                 />
@@ -506,8 +514,12 @@ export default function PostSiteForm({
                     </Accordion>
 
                     <div className="flex justify-end gap-3">
-                        <Button type="button" variant="outline" className="min-w-28">Cancelar</Button>
-                        <Button type="submit" className="min-w-28">Enviar</Button>
+                        <Button type="button" variant="outline" className="min-w-28" onClick={handleCancel}>
+                            {t('postSites.form.cancel', 'Cancelar')}
+                        </Button>
+                        <Button type="submit" className="min-w-28 bg-orange-500 text-white  cursor-pointer border border-orange-500 hover:bg-orange-600">
+                            {t('postSites.form.submit', 'Enviar')}
+                        </Button>
                     </div>
                 </form>
             </Form>

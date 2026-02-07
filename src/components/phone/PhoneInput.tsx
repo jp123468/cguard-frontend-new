@@ -72,7 +72,7 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
                         <Button
                             type="button"
                             variant="outline"
-                            className="flex h-10 w-[220px] items-center gap-2 rounded-r-none border-r-0 px-3"
+                            className="flex h-10 w-20 md:w-28 items-center gap-2 rounded-r-none border-r-0 px-2"
                         >
                             <span className="text-lg leading-none">{country.flag}</span>
                             <span className="text-sm text-muted-foreground">
@@ -143,7 +143,7 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
                 </Popover>
 
                 <Input
-                    className="flex-1 rounded-l-none"
+                    className="flex-1 min-w-0 rounded-l-none"
                     value={displayValue}
                     onChange={handleInputChange}
                     placeholder={placeholder ?? "e.g. +12015550123"}

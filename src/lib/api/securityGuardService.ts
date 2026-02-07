@@ -118,6 +118,35 @@ export const securityGuardService = {
   get(id: string) {
     return securityGuardService.find(id);
   },
+
+  // Notes CRUD
+  async getSecurityGuardNotes(guardId: string, pagination: { limit?: number; offset?: number } = { limit: 25, offset: 0 }) {
+    const tenantId = getTenantId();
+    const params = new URLSearchParams();
+    if (pagination.limit !== undefined) params.append('limit', String(pagination.limit));
+    if (pagination.offset !== undefined) params.append('offset', String(pagination.offset));
+
+    const { data } = await api.get<any>(`/tenant/${tenantId}/security-guard/${guardId}/notes?${params.toString()}`);
+    return data;
+  },
+
+  async createSecurityGuardNote(guardId: string, payload: any) {
+    const tenantId = getTenantId();
+    const { data } = await api.post<any>(`/tenant/${tenantId}/security-guard/${guardId}/notes`, payload);
+    return data;
+  },
+
+  async updateSecurityGuardNote(guardId: string, noteId: string, payload: any) {
+    const tenantId = getTenantId();
+    const { data } = await api.put<any>(`/tenant/${tenantId}/security-guard/${guardId}/notes/${noteId}`, payload);
+    return data;
+  },
+
+  async destroySecurityGuardNote(guardId: string, noteId: string) {
+    const tenantId = getTenantId();
+    const { data } = await api.delete<any>(`/tenant/${tenantId}/security-guard/${guardId}/notes/${noteId}`);
+    return data;
+  },
 };
 
 export default securityGuardService;

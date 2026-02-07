@@ -10,6 +10,7 @@ import { ChevronDown, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { categoryService } from "@/lib/api/categoryService";
 import { usePermissions } from '@/hooks/usePermissions';
+import { useTranslation } from 'react-i18next';
 
 export type CategoryOption = { id: string; name: string };
 
@@ -33,6 +34,7 @@ export function CategorySelect({
     multiple = false,
 }: CategorySelectProps) {
     const { hasPermission } = usePermissions();
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const [openCreate, setOpenCreate] = useState(false);
     const [newName, setNewName] = useState("");
@@ -60,7 +62,7 @@ export function CategorySelect({
                 const mapped = res.rows.map((c) => ({ id: c.id, name: c.name }));
                 setItems(mapped);
             } catch {
-                toast.error("No se pudieron cargar las categorías");
+                toast.error(t('categories.notcategories', 'No hay categorías disponibles'));
             } finally {
                 setIsLoading(false);
             }
@@ -82,11 +84,11 @@ export function CategorySelect({
 
     const handleCreate = async () => {
         if (!hasPermission('categoryCreate')) {
-            toast.error('No tienes permiso para crear categorías');
+            toast.error(t('categories.noPermissionCreate', 'No tienes permiso para crear categorías'));
             return;
         }
         if (!newName.trim()) {
-            toast.error("El nombre de la categoría es requerido");
+            toast.error(t('categories.nameRequired', 'El nombre es obligatorio'));
             return;
         }
 
@@ -103,10 +105,10 @@ export function CategorySelect({
             setNewName("");
             setNewDescription("");
             setOpenCreate(false);
-            toast.success("Categoría creada exitosamente");
+            toast.success(t('categories.categoryCreated', 'Categoría creada con éxito'));
             onCategoryCreated?.();
         } catch (error: any) {
-            toast.error(error?.message || "Error al crear la categoría");
+            toast.error(error?.message || t('categories.categoryCreateFailed', 'Error al crear la categoría'));
         } finally {
             setIsCreating(false);
         }
@@ -134,22 +136,22 @@ export function CategorySelect({
 
                 <PopoverContent align="start" className="p-0 w-full min-w-[var(--radix-popover-trigger-width)]">
                     <Command>
-                        <CommandInput placeholder="Buscar..." />
+                        <CommandInput placeholder={t('categories.searchPlaceholder', 'Buscar...')} />
                         <CommandList>
-                            <CommandEmpty>{isLoading ? "Cargando..." : "No se encontraron categorías."}</CommandEmpty>
+                            <CommandEmpty>{isLoading ? "Cargando..." : t('categories.notfoundcategory', 'No se encontraron categorías.')}</CommandEmpty>
 
                             {hasPermission('categoryCreate') && (
-                            <CommandGroup>
-                                <CommandItem
-                                    value="__add__"
-                                    onSelect={() => setOpenCreate(true)}
-                                    className="flex items-center gap-2 font-medium"
-                                >
-                                    <Checkbox checked={false} className="pointer-events-none" />
-                                    <span>Agregar categoría</span>
-                                    <Plus className="ml-auto h-4 w-4 text-orange-500" />
-                                </CommandItem>
-                            </CommandGroup>
+                                <CommandGroup>
+                                    <CommandItem
+                                        value="__add__"
+                                        onSelect={() => setOpenCreate(true)}
+                                        className="flex items-center gap-2 font-medium"
+                                    >
+                                        <Checkbox checked={false} className="pointer-events-none" />
+                                        <span>{t('categories.addcategory', 'Agregar categoría')}</span>
+                                        <Plus className="ml-auto h-4 w-4 text-orange-500" />
+                                    </CommandItem>
+                                </CommandGroup>
                             )}
 
                             <CommandGroup>
@@ -191,33 +193,51 @@ export function CategorySelect({
 
             <Dialog open={openCreate} onOpenChange={setOpenCreate}>
                 <DialogContent className="max-w-lg">
-                        <DialogHeader>
-                            <DialogTitle>Agregar categoría</DialogTitle>
-                            <DialogDescription>Formulario para crear una nueva categoría.</DialogDescription>
-                        </DialogHeader>
+                    <DialogHeader>
+                        <DialogTitle className="text-center">{t('categories.addcategory', 'Add Category')}</DialogTitle>
+                        <DialogDescription>{t('categories.addcategoryDescription', 'Form to create a new category.')}</DialogDescription>
+                    </DialogHeader>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="text-sm font-medium mb-1 block">Nombre*</label>
-                            <Input value={newName} onChange={(e) => setNewName(e.target.value)} />
+                            <label className="text-sm font-medium mb-1 block">
+                                {t('categories.name', 'Name*')}
+                            </label>
+                            <Input
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                                placeholder={t('categories.nameHint', 'Ej: General')}
+                                className="placeholder:text-muted-foreground"
+                            />
                         </div>
 
                         <div>
-                            <label className="text-sm font-medium mb-1 block">Descripción</label>
-                            <Textarea rows={3} value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
+                            <label className="text-sm font-medium mb-1 block">
+                                {t('categories.description', 'Description')}
+                            </label>
+                            <Textarea
+                                rows={3}
+                                value={newDescription}
+                                onChange={(e) => setNewDescription(e.target.value)}
+                                placeholder={t('categories.descriptionHint', 'Breve descripción (opcional)')}
+                                className="placeholder:text-muted-foreground"
+                            />
                         </div>
                     </div>
 
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setOpenCreate(false)} disabled={isCreating}>
-                            Cancelar
+                            {t('categories.cancel', 'Cancel')}
                         </Button>
-                        <Button onClick={handleCreate} disabled={isCreating}>
-                            {isCreating ? "Creando..." : "Enviar"}
+                        <Button
+                            onClick={handleCreate}
+                            disabled={isCreating}
+                            className="bg-orange-500 hover:bg-orange-600 text-white disable:opacity-50 disabled:pointer-event-none">
+                            {isCreating ? t('categories.creating', 'Creating...') : t('categories.create', 'Create')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
         </>
     );
 }

@@ -18,7 +18,10 @@
     "verifyNumberTitle": "Verificar número",
     "verifyNumberDesc": "Digite o código que enviamos por SMS para verificar seu número.",
     "enterVerificationCode": "Digite o código de verificação*",
-    "send": "Enviar"
+    "send": "Enviar",
+    "cancel": "Cancelar",
+    "createdAt": "Fecha de creación",
+    "updatedAt": "Última actualización"
   },
   "sidebar": {
     "panel": "Painel",
@@ -137,7 +140,79 @@
       "acceso_de_desarrollador": "ACESSO DO DESENVOLVEDOR"
     }
   },
+  "guards": {
+    "nav": {
+      "resumen": "Resumo",
+      "perfil": "Perfil",
+      "disponibilidad": "Disponibilidade",
+      "indicadores": "Indicadores-chave de segurança",
+      "licencias": "Licenças",
+      "notas": "Notas",
+      "recordatorios": "Lembretes",
+      "archivos": "Arquivos",
+      "asignarSitios": "Atribuir Sites",
+      "conjuntoHabilidades": "Conjunto de Habilidades",
+      "departamento": "Departamento",
+      "configuracion": "Configurações"
+    }
+  },
   "clients": {
+    "nav": {
+      "title": "Clientes",
+      "overview": "Visão geral",
+      "profile": "Perfil",
+      "contacts": "Contatos",
+      "notes": "Notas",
+      "files": "Arquivos",
+      "postSites": "Post Sites",
+      "clientPortal": "Portal do cliente",
+      "userAccess": "Acesso de usuários",
+      "emailReports": "Relatórios por e-mail"
+    },
+    "contacts": {
+      "addcontact": "Adicionar contato",
+      "searchcontact": "Buscar contatos",
+      "contactName": "Nome",
+      "contactEmail": "E-mail",
+      "contactPhone": "Número de telefone",
+      "contactPostSites": "Sites publicados",
+      "editcontact": "Editar contato",
+      "contactCreated": "Contato criado com sucesso",
+      "contactUpdated": "Contato atualizado com sucesso",
+      "form": {
+        "AddClientContact": "Adicionar contato",
+        "Name": "Nome *",
+        "Email": "E-mail *",
+        "Mobile Number": "Número de telefone *",
+        "Description": "Descrição",
+        "AssignPostSite": "Atribuir site publicado",
+        "checkbox": "Permitir que o guarda veja o contato",
+        "Addcontact": "ADICIONAR"
+      }
+    },
+    "overview": {
+      "cards": {
+        "postSites": "Post Sites",
+        "guardsAssigned": "Guardas atribuídos",
+        "toursCompleted": "Tours completados (últimos 7 dias)",
+        "tasksCompleted": "Tarefas completadas (últimos 7 dias)",
+        "incidents": "Relatórios de incidentes",
+        "hoursWorked": "Horas trabalhadas (últimos 7 dias)"
+      },
+      "generalInfo": {
+        "title": "Informação Geral",
+        "clientName": "Nome do cliente",
+        "address": "Endereço",
+        "addedOn": "Agregado em"
+      },
+      "contactDetails": {
+        "title": "Detalhes de Contato",
+        "phoneNumber": "Número de telefone",
+        "fax": "Fax",
+        "email": "Email",
+        "website": "Website"
+      }
+    },
     "loadError": "Erro ao carregar clientes",
     "loadClientError": "Não foi possível carregar o cliente",
     "selectAtLeastOne": "Selecione pelo menos um cliente",
@@ -174,7 +249,9 @@
       "archived": "Arquivado"
     },
     "actions": {
-      "viewDetails": "Ver Detalhes",
+      "action": "Ação",
+      "viewDetails": "Visualizar detalhes",
+      "edit": "Editar",
       "categorize": "Categorizar",
       "categorize_label": "Categorizar",
       "archive": "Arquivar",
@@ -269,9 +346,44 @@
     "clientsDeleted": "Clientes excluídos",
     "clientDeleted": "Cliente excluído",
     "clientRestored": "Cliente restaurado",
-    "clientArchived": "Cliente arquivado",
     "errorArchive": "Erro ao arquivar",
     "errorRestore": "Erro ao restaurar",
     "errorDelete": "Erro ao excluir"
+  },
+  "header": {
+    "openMenu": "Abrir menu",
+    "feedback": "Enviar feedback",
+    "search": "Pesquisar",
+    "help": "Ajuda",
+    "notifications": "Notificações",
+    "account": "Conta de usuário"
+  },
+  "dispatcher": {
+    "noPermissionViewToast": "Você não tem permissão para ver despachos",
+    "noPermissionViewBanner": "Você não tem permissão para ver a lista de despachos. Contate um administrador.",
+    "tenantUnavailable": "Tenant não disponível",
+    "share_link_copied": "Link compartilhável copiado",
+    "share_link_failed": "Não foi possível gerar o link compartilhável",
+    "share_error": "Erro ao gerar link compartilhável",
+    "select_at_least_one_export": "Selecione pelo menos um despacho para exportar",
+    "export_excel_error": "Erro ao gerar Excel",
+    "select_at_least_one_print": "Selecione pelo menos um despacho para imprimir",
+    "pdf_generate_failed": "Não foi possível gerar PDF",
+    "pdf_invalid_response": "Resposta inválida do servidor ao gerar o PDF",
+    "print_error": "Erro ao imprimir PDF",
+    "select_at_least_one_send": "Selecione pelo menos um despacho para enviar",
+    "email_sent": "E-mail enviado",
+    "email_send_error": "Erro ao enviar e-mail",
+    "select_at_least_one_delete": "Selecione pelo menos um despacho para excluir",
+    "newDispatch": "Novo Despacho",
+    "no_permission_create": "Você não tem permissão para criar despachos",
+    "deleted_success": "Despachos excluídos",
+    "deleted_error": "Erro ao excluir despachos",
+    "searchPlaceholder": "Pesquisar por cliente ou site de publicação"
+  },
+  "errors": {
+    "invalidEmail": "E-mail inválido",
+    "invalidPhone": "Número inválido",
+    "requiredName": "Nome obrigatório"
   }
 }

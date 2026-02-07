@@ -35,6 +35,7 @@ import {
 import { GuardTabsHeader } from "@/components/app/guard-tabs";
 import { FormBlock } from "@/components/app/form-block";
 import { Combobox } from "@/components/app/combobox";
+import MultiCombobox from "@/components/app/multicombobox";
 import { Copyable } from "@/components/app/copyable";
 import { AddBlockButton, RemoveBlockButton } from "@/components/app/add-remove";
 import { SubmitBar } from "@/components/app/submit-bar";
@@ -45,8 +46,8 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useNavigate } from 'react-router-dom';
 
 // Helpers
-const blankInviteEntry = (inviteBy: GuardEntryValues["inviteBy"] = "Correo Electrónico"): GuardEntryValues => ({
-  firstName: "", lastName: "", inviteBy, contact: "", clientId: "", postSiteId: "",
+const blankInviteEntry = (inviteBy: GuardEntryValues["inviteBy"] = "Correo Electrónico"): any => ({
+  firstName: "", lastName: "", inviteBy, contact: "", clientId: [] as string[], postSiteId: [] as string[],
 });
 const blankJoinEntry = (): JoinByCodeEntry => ({ phone: "" });
 const blankLinkEntry = (): InviteByLinkEntry => ({ phone: "" });
@@ -106,8 +107,11 @@ export default function NewSecurityGuardPage() {
       const payload = v.entries.map((e) => ({
         firstName: e.firstName,
         lastName: e.lastName,
-        clientId: e.clientId,
-        postSiteId: e.postSiteId,
+        // send arrays and keep single-value compatibility
+        clientIds: Array.isArray(e.clientId) ? e.clientId : (e.clientId ? [e.clientId] : []),
+        postSiteIds: Array.isArray(e.postSiteId) ? e.postSiteId : (e.postSiteId ? [e.postSiteId] : []),
+        clientId: Array.isArray(e.clientId) ? e.clientId[0] : e.clientId,
+        postSiteId: Array.isArray(e.postSiteId) ? e.postSiteId[0] : e.postSiteId,
         // backend may expect `phoneNumber` or `email` fields rather than a generic `contact`
         phoneNumber: e.inviteBy === "SMS" ? e.contact : undefined,
         email: e.inviteBy === "Correo Electrónico" ? e.contact : undefined,
@@ -200,7 +204,7 @@ export default function NewSecurityGuardPage() {
   const createIntentRef = useRef<"create" | "create_send">("create");
   const createForm = useForm<CreateProfileValues>({
     resolver: zodResolver(createProfileSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "", clientId: "", postSiteId: "" },
+    defaultValues: { firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "", clientId: [] as string[], postSiteId: [] as string[] },
     mode: "onTouched",
   });
   const { control: createCtrl, handleSubmit: submitCreate, formState: createState, setError: setCreateError } = createForm;
@@ -249,7 +253,15 @@ export default function NewSecurityGuardPage() {
     return false;
   };
 
-  const createSiteOptions = createClientId ? (sites.filter((s: any) => matchesClient(s, createClientId)).map((s: any) => ({ value: s.id, label: s.name }))) : [];
+  // Normalize createClientId which may be a string or an array of strings from the form
+  const createClientIds: string[] = Array.isArray(createClientId)
+    ? (createClientId as string[])
+    : createClientId
+    ? [createClientId as string]
+    : [];
+  const createSiteOptions = createClientIds.length
+    ? sites.filter((s: any) => createClientIds.some((cid) => matchesClient(s, cid))).map((s: any) => ({ value: s.id, label: s.name }))
+    : [];
 
   return (
     <AppLayout>
@@ -303,17 +315,24 @@ export default function NewSecurityGuardPage() {
                         <FormField control={inviteCtrl} name={`entries.${idx}.clientId`} render={({ field }) => (
                           <FormItem>
                             <FormLabel>Seleccionar Cliente</FormLabel>
-                            <Combobox value={field.value} onChange={field.onChange} options={clientOptions} placeholder="Seleccionar Cliente" aria-label="Seleccionar Cliente" />
+                            <MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={clientOptions} placeholder="Seleccionar Cliente" aria-label="Seleccionar Cliente" />
                             <FormMessage />
                           </FormItem>
                         )} />
                         <FormField control={inviteCtrl} name={`entries.${idx}.postSiteId`} render={({ field }) => {
-                          const entryClientId = inviteEntries?.[idx]?.clientId;
-                          const optionsForEntry = entryClientId ? sites.filter((s: any) => matchesClient(s, entryClientId)).map((s: any) => ({ value: s.id, label: s.name })) : [];
+                          const entryClientIdsRaw = inviteEntries?.[idx]?.clientId || [];
+                          const entryClientIds = Array.isArray(entryClientIdsRaw)
+                            ? entryClientIdsRaw
+                            : entryClientIdsRaw
+                            ? [entryClientIdsRaw]
+                            : [];
+                          const optionsForEntry = entryClientIds.length
+                            ? sites.filter((s: any) => entryClientIds.some((cid: any) => matchesClient(s, cid))).map((s: any) => ({ value: s.id, label: s.name }))
+                            : [];
                           return (
                             <FormItem>
                               <FormLabel>Asignar Sitio de Publicación</FormLabel>
-                              <Combobox value={field.value} onChange={field.onChange} options={optionsForEntry} placeholder="Asignar Sitio de Publicación" aria-label="Asignar Sitio de Publicación" />
+                              <MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={optionsForEntry} placeholder="Asignar Sitio de Publicación" aria-label="Asignar Sitio de Publicación" />
                               <FormMessage />
                             </FormItem>
                           );
@@ -496,10 +515,10 @@ export default function NewSecurityGuardPage() {
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <FormField control={createCtrl} name="clientId" render={({ field }) => (
-                    <FormItem><FormLabel>Seleccionar Cliente</FormLabel><Combobox value={field.value} onChange={field.onChange} options={clientOptions} placeholder="Seleccionar Cliente" aria-label="Seleccionar Cliente" /><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Seleccionar Cliente</FormLabel><MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={clientOptions} placeholder="Seleccionar Cliente" aria-label="Seleccionar Cliente" /><FormMessage /></FormItem>
                   )} />
                   <FormField control={createCtrl} name="postSiteId" render={({ field }) => (
-                    <FormItem><FormLabel>Asignar Sitio de Publicación</FormLabel><Combobox value={field.value} onChange={field.onChange} options={createSiteOptions} placeholder="Asignar Sitio de Publicación" aria-label="Asignar Sitio de Publicación" /><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Asignar Sitio de Publicación</FormLabel><MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={createSiteOptions} placeholder="Asignar Sitio de Publicación" aria-label="Asignar Sitio de Publicación" /><FormMessage /></FormItem>
                   )} />
                 </div>
 

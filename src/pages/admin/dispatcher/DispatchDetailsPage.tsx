@@ -71,8 +71,8 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
           if (typeof downloadUrl === 'object' && downloadUrl !== null) downloadUrl = JSON.stringify(downloadUrl);
           attachment = { url: downloadUrl, name: selectedFile.name };
         } catch (err) {
-          console.error('File upload failed', err);
-          toast.error('No se pudo subir el archivo, comentario enviado sin adjunto');
+          const msg = err instanceof Error ? err.message : String(err);
+          toast.error(`File upload failed${msg ? `: ${msg}` : ''}`);
         } finally {
           setFileUploading(false);
         }
@@ -127,7 +127,6 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
       }
 
     } catch (err) {
-      console.error('Error agregando comentario', err);
       toast.error('No se pudo agregar comentario');
     } finally {
       setCommentsLoading(false);
@@ -174,7 +173,6 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
         if (!payload) return;
         // debug log to inspect payload shape
         // eslint-disable-next-line no-console
-        console.log('DispatchDetails payload:', payload);
         setRequestPayload(payload);
         setClientId(payload.clientId || (payload.client && payload.client.id) || undefined);
         setSiteId(payload.siteId || (payload.site && payload.site.id) || undefined);
@@ -189,7 +187,10 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
           setComments([]);
         }
       } catch (e) {
-        console.warn('No se pudieron cargar detalles del despacho', e);
+        // sonner toast does not have `warn`; use `error` and keep console warning for diagnostics
+        // eslint-disable-next-line no-console
+        console.warn('Failed to load dispatch details', e);
+        toast.error('No se pudieron cargar detalles del despacho');
       }
     };
 

@@ -4,6 +4,7 @@ import Breadcrumb from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
 import {
   Select,
   SelectTrigger,
@@ -58,13 +59,15 @@ import { clientService } from "@/lib/api/clientService";
 import { categoryService, type Category } from "@/lib/api/categoryService";
 import CategoryManagerDialog from "@/components/categories/CategoryManagerDialog";
 import CategoryAssignDialog from "@/components/categories/CategoryAssignDialog";
-import PostSiteDetailsDialog from "@/components/post-sites/PostSiteDetailsDialog";
+// PostSiteDetailsDialog is now rendered as a full page under /post-sites/:id
 import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActionsSelect";
 import { RowActionsMenu, type RowAction } from "@/components/table/RowActionsMenu";
 import type { Client } from "@/types/client";
+import { usePermissions } from '@/hooks/usePermissions';
 
 export default function PostSitePage() {
   const { t } = useTranslation();
+
   const [openFilter, setOpenFilter] = useState(false);
   const [postSites, setPostSites] = useState<PostSite[]>([]);
   const [loading, setLoading] = useState(false);
@@ -75,7 +78,7 @@ export default function PostSitePage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // By default show only active post sites in the list
   const [filters, setFilters] = useState<PostSiteFilters>({ active: true });
-  
+
   // Filter options loading
   const [clients, setClients] = useState<Client[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -85,16 +88,15 @@ export default function PostSitePage() {
   const [assignTargetIds, setAssignTargetIds] = useState<string[]>([]);
   const [bulkKey, setBulkKey] = useState(0);
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
   // Sorting state (client-side for post sites list)
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
-  const [openDetails, setOpenDetails] = useState(false);
-  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [openImportDialog, setOpenImportDialog] = useState(false);
-  
+
   // Temporary filter state for the sheet
   const [tempFilters, setTempFilters] = useState<PostSiteFilters>({});
 
@@ -221,9 +223,9 @@ export default function PostSitePage() {
           setTempFilters(filters);
         })
         .catch((error: any) => {
-              console.error(error);
-              console.warn(getServerErrorMessage(error, "Error al cargar opciones de filtro"));
-            })
+          console.error(error);
+          console.warn(getServerErrorMessage(error, "Error al cargar opciones de filtro"));
+        })
         .finally(() => {
           setLoadingFilters(false);
         });
@@ -297,15 +299,14 @@ export default function PostSitePage() {
     if (isActive) {
       return [
         {
-          label: "Ver Detalles",
+          label: t('postSites.viewDetails', 'Ver Detalles'),
           icon: <Eye className="h-4 w-4" />,
           onClick: () => {
-            setSelectedSiteId(site.id);
-            setOpenDetails(true);
+            navigate(`/post-sites/${site.id}`);
           },
         },
         {
-          label: "Categorizar",
+          label: t('postSites.categorize', 'Categorizar'),
           icon: <Tag className="h-4 w-4" />,
           onClick: () => {
             setAssignTargetIds([site.id]);
@@ -313,7 +314,7 @@ export default function PostSitePage() {
           },
         },
         {
-          label: "Archivo",
+          label: t('postSites.archive', 'Archivo'),
           icon: <Archive className="h-4 w-4" />,
           onClick: async () => {
             try {
@@ -328,13 +329,12 @@ export default function PostSitePage() {
       ];
     }
 
-      return [
+    return [
       {
         label: "Ver Detalles",
         icon: <Eye className="h-4 w-4" />,
         onClick: () => {
-          setSelectedSiteId(site.id);
-          setOpenDetails(true);
+          navigate(`/post-sites/${site.id}`);
         },
       },
       {
@@ -365,8 +365,8 @@ export default function PostSitePage() {
     <AppLayout>
       <Breadcrumb
         items={[
-          { label: "Panel de control", path: "/dashboard" },
-          { label: "Sitios de publicación" },
+          { label: t('postSites.postsitdash', 'Panel de control'), path: "/dashboard" },
+          { label: t('postSites.postsite', 'Sitios de publicación') },
         ]}
       />
 
@@ -376,27 +376,33 @@ export default function PostSitePage() {
           <div className="flex items-center gap-2">
             <BulkActionsSelect
               key={bulkKey}
-              actions={[
-                { value: "mover", label: "Mover" },
-                { value: "archivar", label: "Archivar" },
-                { value: "gestionar-categorias", label: "Gestionar Categorías" },
-              ]}
+              actions={useMemo(() => {
+                const actions: BulkAction[] = [];
+                if (hasPermission('postSiteEdit')) actions.push({ value: "mover", label: t('postSites.move', 'Mover') });
+                if (filters.active === true) {
+                  if (hasPermission('postSiteEdit')) actions.push({ value: "archivar", label: t('postSites.archive', 'Archivar') });
+                } else if (filters.active === false) {
+                  if (hasPermission('postSiteEdit')) actions.push({ value: "restaurar", label: t('postSites.restore', 'Restaurar') });
+                  if (hasPermission('postSiteDestroy')) actions.push({ value: "eliminar", label: t('postSites.delete', 'Eliminar') });
+                } else {
+                  if (hasPermission('postSiteEdit')) actions.push({ value: "archivar", label: t('postSites.archive', 'Archivar') });
+                  if (hasPermission('postSiteEdit')) actions.push({ value: "restaurar", label: t('postSites.restore', 'Restaurar') });
+                  if (hasPermission('postSiteDestroy')) actions.push({ value: "eliminar", label: t('postSites.delete', 'Eliminar') });
+                }
+                if (hasPermission('postSiteEdit')) actions.push({ value: "gestionar-categorias", label: t('postSites.manageCategories', 'Gestionar Categorías') });
+                return actions;
+              }, [filters.active, hasPermission])}
               onChange={async (action) => {
+                // centralized bulk action handler
                 if (action === "gestionar-categorias") {
                   setOpenCategoryManager(true);
                   setBulkKey((k) => k + 1);
                   return;
                 }
                 if (action === "archivar") {
-                  if (selectedIds.length === 0) {
-                                  console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación'));
-                    setBulkKey((k) => k + 1);
-                    return;
-                  }
+                  if (selectedIds.length === 0) { console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación')); setBulkKey((k) => k + 1); return; }
                   try {
-                    await Promise.all(
-                      selectedIds.map((id) => postSiteService.update(id, { status: "inactive" } as any))
-                    );
+                    await Promise.all(selectedIds.map((id) => postSiteService.update(id, { status: "inactive" } as any)));
                     toast.success(t('postSites.sitesArchived', 'Sitios archivados'));
                     setSelectedIds([]);
                     loadPostSites();
@@ -407,12 +413,29 @@ export default function PostSitePage() {
                   }
                   return;
                 }
-                if (action === "mover") {
-                  if (selectedIds.length === 0) {
-                    console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación'));
+                if (action === "restaurar") {
+                  if (selectedIds.length === 0) { console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación')); setBulkKey((k) => k + 1); return; }
+                  try {
+                    await Promise.all(selectedIds.map((id) => postSiteService.update(id, { status: "active" } as any)));
+                    toast.success(t('postSites.sitesRestored', 'Sitios restaurados'));
+                    setSelectedIds([]);
+                    loadPostSites();
                     setBulkKey((k) => k + 1);
-                    return;
+                  } catch (e) {
+                    console.warn('Error al restaurar');
+                    setBulkKey((k) => k + 1);
                   }
+                  return;
+                }
+                if (action === "eliminar") {
+                  if (selectedIds.length === 0) { setBulkKey((k) => k + 1); return; }
+                  setDeleteTargetIds(selectedIds.slice());
+                  setOpenDeleteDialog(true);
+                  setBulkKey((k) => k + 1);
+                  return;
+                }
+                if (action === "mover") {
+                  if (selectedIds.length === 0) { console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación')); setBulkKey((k) => k + 1); return; }
                   setAssignTargetIds(selectedIds.slice());
                   setOpenAssignDialog(true);
                   setBulkKey((k) => k + 1);
@@ -435,7 +458,6 @@ export default function PostSitePage() {
 
             <Button
               className="bg-orange-500 hover:bg-orange-600 text-white"
-              onClick={() => console.log("Nuevo sitio de publicación")}
             >
               <Link to="/post-sites/new">{t('postSites.newPostSite', 'Nuevo Sitio de Publicación')}</Link>
             </Button>
@@ -525,10 +547,10 @@ export default function PostSitePage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Todas" />
+                        <SelectValue placeholder={t('postSites.filters.categories', 'Categorías')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todas</SelectItem>
+                        <SelectItem value="all">{t('postSites.filters.all', 'Todas')}</SelectItem>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
@@ -539,14 +561,14 @@ export default function PostSitePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Estado</Label>
+                    <Label>{t('postSites.filters.status', 'Estado')}</Label>
                     <Select
                       value={
                         tempFilters.active === undefined
                           ? "all"
                           : tempFilters.active
-                          ? "active"
-                          : "inactive"
+                            ? "active"
+                            : "inactive"
                       }
                       onValueChange={(v) => {
                         if (v === "all") {
@@ -559,12 +581,12 @@ export default function PostSitePage() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Todos" />
+                        <SelectValue placeholder={t('postSites.filters.status', 'Estado')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="active">Activo</SelectItem>
-                        <SelectItem value="inactive">Archivado</SelectItem>
+                        <SelectItem value="all">{t('postSites.filters.all', 'Todos')}</SelectItem>
+                        <SelectItem value="active">{t('postSites.filters.active', 'Activo')}</SelectItem>
+                        <SelectItem value="inactive">{t('postSites.filters.archived', 'Archivado')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -577,7 +599,7 @@ export default function PostSitePage() {
                       setOpenFilter(false);
                     }}
                   >
-                    Aplicar Filtros
+                    {t('postSites.filters.applyFilters', 'Aplicar Filtros')}
                   </Button>
 
                   <Button
@@ -591,7 +613,7 @@ export default function PostSitePage() {
                       setOpenFilter(false);
                     }}
                   >
-                    Limpiar Filtros
+                    {t('postSites.filters.clearFilters', 'Limpiar Filtros')}
                   </Button>
                 </div>
               </SheetContent>
@@ -606,13 +628,13 @@ export default function PostSitePage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem onClick={handleExportPDF}>
-                  <FileDown className="mr-2 h-4 w-4" /> Exportar como PDF
+                  <FileDown className="mr-2 h-4 w-4" /> {t('postSites.pdfexport', 'Exportar como PDF')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportExcel}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" /> Exportar como Excel
+                  <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('postSites.excelexport', 'Exportar como Excel')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setOpenImportDialog(true)}>
-                  <ArrowDownUp className="mr-2 h-4 w-4" /> Importar
+                  <ArrowDownUp className="mr-2 h-4 w-4" /> {t('postSites.import', 'Importar')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -644,7 +666,7 @@ export default function PostSitePage() {
                       setPage(1);
                     }}
                   >
-                    <span>Sitio de publicación</span>
+                    <span>{t('postSites.postsite', 'Sitio de publicación')}</span>
                     <span className="text-xs text-muted-foreground">{sortKey === "name" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
                   </button>
                 </th>
@@ -665,7 +687,7 @@ export default function PostSitePage() {
                       setPage(1);
                     }}
                   >
-                    <span>Cliente</span>
+                    <span>{t('postSites.client', 'Cliente')}</span>
                     <span className="text-xs text-muted-foreground">{sortKey === "client" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
                   </button>
                 </th>
@@ -686,7 +708,7 @@ export default function PostSitePage() {
                       setPage(1);
                     }}
                   >
-                    <span>Email</span>
+                    <span>{t('postSites.emails', 'Email')}</span>
                     <span className="text-xs text-muted-foreground">{sortKey === "email" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
                   </button>
                 </th>
@@ -707,12 +729,12 @@ export default function PostSitePage() {
                       setPage(1);
                     }}
                   >
-                    <span>Teléfono</span>
+                    <span>{t('postSites.phones', 'Teléfono')}</span>
                     <span className="text-xs text-muted-foreground">{sortKey === "phone" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
                   </button>
                 </th>
-                <th className="px-4 py-3 font-semibold">Estado</th>
-                <th className="px-4 py-3 font-semibold text-right">Acciones</th>
+                <th className="px-4 py-3 font-semibold">{t('postSites.filters.status', 'Estado')}</th>
+                <th className="px-4 py-3 font-semibold text-right">{t('postSites.actions', 'Acciones')}</th>
               </tr>
             </thead>
 
@@ -728,16 +750,16 @@ export default function PostSitePage() {
                         className="h-36 mb-4"
                       />
                       <p className="text-gray-500">
-                        No pudimos encontrar ningún elemento que coincida con su búsqueda
+                        {t('postSites.notsearch')}
                       </p>
                     </div>
                   </td>
                 </tr>
               )}
               {(postSites ?? []).map((site) => (
-                <tr key={site.id} className="border-b">
-                  <td className="px-4 py-3">
-                    <Checkbox 
+                <tr key={site.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => { navigate(`/post-sites/${site.id}`); }}>
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
                       checked={selectedIds.includes(site.id)}
                       onCheckedChange={(checked) => handleSelectOne(site.id, checked as boolean)}
                     />
@@ -747,15 +769,14 @@ export default function PostSitePage() {
                   <td className="px-4 py-3">{site.email || "-"}</td>
                   <td className="px-4 py-3">{site.phone || "-"}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      site.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}>
-                      {site.status === "active" ? "Activo" : "Archivado"}
+                    <span className={`px-2 py-1 text-xs rounded-full ${site.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                      }`}>
+                      {site.status === "active" ? t('postSites.filters.active', 'Activo') : t('postSites.filters.archived', 'Archivado')}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <RowActionsMenu actions={rowActions(site)} />
                   </td>
                 </tr>
@@ -766,7 +787,7 @@ export default function PostSitePage() {
           {/* Footer de tabla - Única sección de paginación */}
           <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50 border-x border-b rounded-b-lg">
             <div className="flex items-center gap-2">
-              <span>Elementos por página</span>
+              <span>{t('clients.pagination.itemsPerPage')}</span>
               <Select
                 value={limit.toString()}
                 onValueChange={(v) => {
@@ -786,7 +807,7 @@ export default function PostSitePage() {
             </div>
 
             <div>
-              {from} – {to} de {totalCount}
+              {from} – {to} {t('clients.pagination.of')} {totalCount}
             </div>
 
             <div className="flex gap-2">
@@ -796,7 +817,7 @@ export default function PostSitePage() {
                 disabled={page === 1 || loading}
                 onClick={() => setPage((p) => p - 1)}
               >
-                Anterior
+                {t('clients.pagination.prev', 'Anterior')}
               </Button>
               <Button
                 variant="outline"
@@ -804,7 +825,7 @@ export default function PostSitePage() {
                 disabled={page * limit >= totalCount || loading}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Siguiente
+                {t('clients.pagination.next', 'Siguiente')}
               </Button>
             </div>
           </div>
@@ -827,16 +848,7 @@ export default function PostSitePage() {
           }}
         />
 
-        {/* Post site details dialog */}
-        {selectedSiteId && (
-          <>
-            <PostSiteDetailsDialog
-              open={openDetails}
-              onOpenChange={(v) => setOpenDetails(v)}
-              siteId={selectedSiteId}
-            />
-          </>
-        )}
+        {/* Post site details now opened via dedicated page /post-sites/:id */}
 
         {/* Confirm delete dialog (single or bulk) */}
         <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
@@ -884,7 +896,7 @@ export default function PostSitePage() {
           onSuccess={() => loadPostSites()}
         />
 
-        </section>
+      </section>
     </AppLayout>
   );
 }

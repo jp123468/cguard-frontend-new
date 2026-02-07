@@ -25,8 +25,9 @@ export const createProfileSchema = z
       .min(8, "Mínimo 8 caracteres")
       .max(64, "Máximo 64 caracteres"),
     confirmPassword: z.string(),
-    clientId: z.string().trim().min(1, "Seleccione un cliente"),
-    postSiteId: z.string().trim().min(1, "Asigne un sitio de publicación"),
+    // Support multiple assignments
+    clientId: z.array(z.string().trim()).min(1, "Seleccione al menos un cliente"),
+    postSiteId: z.array(z.string().trim()).min(1, "Asigne al menos un sitio de publicación"),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Las contraseñas no coinciden",

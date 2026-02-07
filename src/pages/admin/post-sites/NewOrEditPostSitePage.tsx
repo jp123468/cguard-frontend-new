@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import { clientService } from "@/lib/api/clientService";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import { useTranslation } from "react-i18next";
 
 export default function NewOrEditPostSitePage() {
     const { id } = useParams<{ id: string }>();
@@ -16,7 +17,7 @@ export default function NewOrEditPostSitePage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [site, setSite] = useState<any | null>(null);
     const [loadingSite, setLoadingSite] = useState(false);
-
+    const { t } = useTranslation();
     useEffect(() => {
         // Cargar clientes desde backend oficial y mostrar name + lastName
         (async () => {
@@ -81,8 +82,8 @@ export default function NewOrEditPostSitePage() {
         <AppLayout>
             <Breadcrumb
                 items={[
-                    { label: "Panel de control", path: "/dashboard" },
-                    { label: id ? "Editar sitio de publicación" : "Nuevo sitio de publicación" },
+                    { label: t('postSites.postsitdash', 'Panel de control'), path: "/dashboard" },
+                    { label: id ? t('postSites.editPostSite', 'Editar sitio de publicación') : t('postSites.newPostSite', 'Nuevo sitio de publicación') },
                 ]}
             />
             <section className="p-4">
@@ -169,7 +170,7 @@ export default function NewOrEditPostSitePage() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <p>No se encontró el sitio.</p>
+                                    <p>{t('postSites.form.notLocationSet')}</p>
                                 )}
                             </div>
                         </TabsContent>

@@ -45,7 +45,7 @@ const WIDGETS: WidgetDef[] = [
   },
   {
     id: "guardias",
-    title: "Guardias de seguridad",
+    title: "security-guards",
     subtitle: "Guardias Activos",
     Icon: Shield,
     color: { text: "text-violet-600", iconBg: "bg-violet-50" },

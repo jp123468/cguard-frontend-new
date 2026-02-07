@@ -77,8 +77,17 @@ import { clientService } from "@/lib/api/clientService";
 import { postSiteService } from "@/lib/api/postSiteService";
 import * as XLSX from 'xlsx';
 import { ApiService } from "@/services/api/apiService";
+import { usePermissions } from '@/hooks/usePermissions';
+import { useTranslation } from 'react-i18next';
 
 export default function DispatcherPage() {
+  const { t } = useTranslation();
+  const resolveServerMessage = (msg: any) => {
+    if (!msg) return null;
+    const s = String(msg);
+    const translated = t(s);
+    return translated && translated !== s ? translated : s;
+  };
   const [openFilter, setOpenFilter] = useState(false);
   const navigate = useNavigate();
 
@@ -100,6 +109,8 @@ export default function DispatcherPage() {
   const [limit, setLimit] = useState(25);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [forbiddenRead, setForbiddenRead] = useState(false);
+  const [forbiddenMessage, setForbiddenMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const searchTimeoutRef = useRef<any>(null);
   // Share modal state
@@ -122,6 +133,9 @@ export default function DispatcherPage() {
   const [sendingEmail, setSendingEmail] = useState(false);
 
   // close share dialog when clicking outside its content
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission('requestCreate');
+
   useEffect(() => {
     if (!shareDialogOpen) return;
     const handleOutsideClick = (e: MouseEvent) => {
@@ -165,10 +179,19 @@ export default function DispatcherPage() {
 
         setRows(rowsData);
         setTotalCount(count);
-      } catch (e) {
+      } catch (e: any) {
         console.error('Error cargando despachos:', e);
-        setRows([]);
-        setTotalCount(0);
+        // detect 403 forbidden and surface a friendly UI state
+        const status = e?.status || e?.response?.status || e?.data?.status || (e && e.statusCode);
+        if (status === 403) {
+          setForbiddenRead(true);
+          const serverMsg = e?.response?.data?.message || e?.message;
+          setForbiddenMessage(serverMsg || null);
+          try { toast.error(serverMsg ? resolveServerMessage(serverMsg) : t('dispatcher.noPermissionViewToast')); } catch (err) {}
+        } else {
+          setRows([]);
+          setTotalCount(0);
+        }
       } finally {
         setLoading(false);
       }
@@ -483,10 +506,15 @@ export default function DispatcherPage() {
 
       const api = (await import('@/lib/api')).default;
 
+      let lastSuccessMessage: string | null = null;
+      let lastErrorMessage: string | null = null;
       for (const id of selectedIds) {
         try {
-          await api.delete(`/tenant/${tenantId}/request/${id}`);
-        } catch (err) {
+          const resp = await api.delete(`/tenant/${tenantId}/request/${id}`);
+          const r = resp && (resp as any).data ? (resp as any).data : resp;
+          if (r && r.message) lastSuccessMessage = String(r.message);
+        } catch (err: any) {
+          lastErrorMessage = err?.response?.data?.message || err?.message || null;
           console.error('Error deleting id', id, err);
         }
       }
@@ -515,10 +543,17 @@ export default function DispatcherPage() {
         console.error('Error recargando despachos:', e);
       }
 
-      window.alert('Despachos eliminados');
+      if (lastErrorMessage) {
+        toast.error(resolveServerMessage(lastErrorMessage) || t('dispatcher.deleted_error'));
+      } else if (lastSuccessMessage) {
+        toast.success(resolveServerMessage(lastSuccessMessage) || t('dispatcher.deleted_success'));
+      } else {
+        toast.success(t('dispatcher.deleted_success'));
+      }
     } catch (e) {
       console.error('Error eliminando despachos:', e);
-      window.alert('Error al eliminar despachos');
+      const msg = (e as any)?.response?.data?.message || (e as any)?.message;
+      toast.error(msg || t('dispatcher.deleted_error'));
     }
   };
 
@@ -527,7 +562,7 @@ export default function DispatcherPage() {
     if (!shareTargetId) return;
     try {
       const tenantId = localStorage.getItem('tenantId');
-      if (!tenantId) { toast.error('Tenant no disponible'); return; }
+      if (!tenantId) { toast.error(t('dispatcher.tenantUnavailable')); return; }
       setShareLoading(true);
 
       const api = (await import('@/lib/api')).default;
@@ -549,24 +584,27 @@ export default function DispatcherPage() {
       }
 
       const resp = await api.post(`/tenant/${tenantId}/request/${shareTargetId}/share`, payloadBody);
-      const payload = resp && resp.data ? resp.data : resp;
+      const payload = resp && (resp as any).data ? (resp as any).data : resp;
 
       const url = payload && payload.token
         ? `${window.location.origin}/public/dispatch/${payload.token}`
         : (payload && payload.url ? payload.url : null);
 
+      // Prefer server-provided message when available
       if (url) {
         try { await navigator.clipboard.writeText(url); } catch (e) { }
         try { window.open(url, '_blank'); } catch (e) { }
-        toast.success('Enlace compartible copiado');
+        if (payload && payload.message) toast.success(resolveServerMessage(payload.message) || t('dispatcher.share_link_copied'));
+        else toast.success(t('dispatcher.share_link_copied'));
         setShareDialogOpen(false);
         setShareTargetId(null);
       } else {
-        toast.error('No se pudo generar el enlace');
+        const serverMsg = payload && payload.message ? payload.message : null;
+        toast.error(serverMsg ? resolveServerMessage(serverMsg) : t('dispatcher.share_link_failed'));
       }
-    } catch (err) {
+      } catch (err) {
       console.error(err);
-      toast.error('Error generando enlace compartible');
+      toast.error(t('dispatcher.share_error'));
     } finally {
       setShareLoading(false);
     }
@@ -576,12 +614,12 @@ export default function DispatcherPage() {
     const handleExportExcel = async () => {
       try {
         if (!selectedIds || selectedIds.length === 0) {
-          toast.error('Seleccione al menos un despacho para exportar');
+          toast.error(t('dispatcher.select_at_least_one_export'));
           return;
         }
 
         const tenantId = localStorage.getItem('tenantId');
-        if (!tenantId) { toast.error('Tenant no disponible'); return; }
+        if (!tenantId) { toast.error(t('dispatcher.tenantUnavailable')); return; }
         const api = (await import('@/lib/api')).default;
 
         // Fetch full details for each selected id to ensure all fields are present
@@ -619,7 +657,7 @@ export default function DispatcherPage() {
         URL.revokeObjectURL(url);
       } catch (err) {
         console.error('Export Excel error', err);
-        toast.error('Error generando Excel');
+        toast.error(t('dispatcher.export_excel_error'));
       }
     };
 
@@ -627,12 +665,12 @@ export default function DispatcherPage() {
     const handlePrintSelected = async () => {
       try {
         if (!selectedIds || selectedIds.length === 0) {
-          toast.error('Seleccione al menos un despacho para imprimir');
+          toast.error(t('dispatcher.select_at_least_one_print'));
           return;
         }
 
         const tenantId = localStorage.getItem('tenantId');
-        if (!tenantId) { toast.error('Tenant no disponible'); return; }
+        if (!tenantId) { toast.error(t('dispatcher.tenantUnavailable')); return; }
 
         // Determine backend origin: prefer VITE_API_URL, fallback to localhost:3001
         let apiOrigin = 'http://localhost:3001';
@@ -656,7 +694,7 @@ export default function DispatcherPage() {
         if (!resp.ok) {
           const text = await resp.text().catch(() => null);
           console.error('Export PDF failed', text || resp.statusText);
-          toast.error('No se pudo generar el PDF');
+          toast.error(t('dispatcher.pdf_generate_failed'));
           return;
         }
 
@@ -664,7 +702,7 @@ export default function DispatcherPage() {
         if (!contentType.includes('application/pdf')) {
           const text = await resp.text().catch(() => null);
           console.error('Expected PDF, got:', contentType, text);
-          toast.error('Respuesta inválida del servidor al generar el PDF');
+          toast.error(t('dispatcher.pdf_invalid_response'));
           return;
         }
 
@@ -708,14 +746,14 @@ export default function DispatcherPage() {
         };
       } catch (err) {
         console.error('Print PDF error', err);
-        toast.error('Error imprimiendo PDF');
+        toast.error(t('dispatcher.print_error'));
       }
     };
 
     // Open send-email dialog to collect details and send via backend
     const handleSendEmail = async () => {
       if (!selectedIds || selectedIds.length === 0) {
-        toast.error('Seleccione al menos un despacho para enviar');
+        toast.error(t('dispatcher.select_at_least_one_send'));
         return;
       }
       // Optionally prefill from address from local storage or user info
@@ -731,7 +769,7 @@ export default function DispatcherPage() {
       // Perform sending email using backend API
       const performSend = async () => {
         if (!selectedIds || selectedIds.length === 0) {
-          toast.error('Seleccione al menos un despacho para enviar');
+          toast.error(t('dispatcher.select_at_least_one_send'));
           return;
         }
 
@@ -755,13 +793,15 @@ export default function DispatcherPage() {
             },
           };
 
-          await api.post(`/tenant/${tenantId}/request/email`, payload);
-
-          toast.success('Correo enviado');
+          const resp = await api.post(`/tenant/${tenantId}/request/email`, payload);
+          const result = resp && (resp as any).data ? (resp as any).data : resp;
+          if (result && result.message) toast.success(resolveServerMessage(result.message) || t('dispatcher.email_sent'));
+          else toast.success(t('dispatcher.email_sent'));
           setSendDialogOpen(false);
         } catch (err) {
           console.error('Error enviando correo:', err);
-          toast.error('Error enviando correo');
+          const serverMsg = (err as any)?.response?.data?.message || (err as any)?.message;
+          toast.error(serverMsg ? resolveServerMessage(serverMsg) : t('dispatcher.email_send_error'));
         } finally {
           setSendingEmail(false);
         }
@@ -771,8 +811,8 @@ export default function DispatcherPage() {
     <AppLayout>
       <Breadcrumb
         items={[
-          { label: "Panel de control", path: "/dashboard" },
-          { label: "Lista de Despachos" },
+          { label: t('dispatcher.breadcrumbDashboard'), path: '/dashboard' },
+          { label: t('dispatcher.breadcrumbList') },
         ]}
       />
 
@@ -786,7 +826,7 @@ export default function DispatcherPage() {
               if (v === 'eliminar') {
                 if (!selectedIds || selectedIds.length === 0) {
                   // no items selected
-                  toast.error('Seleccione al menos un despacho para eliminar');
+                  toast.error(t('dispatcher.select_at_least_one_delete'));
                   // reset select after showing message
                   setActionSelectValue('');
                   return;
@@ -797,11 +837,11 @@ export default function DispatcherPage() {
                 return;
               }
             }}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Acción" />
+                <SelectTrigger className="w-40">
+                <SelectValue placeholder={t('dispatcher.actionPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="eliminar">Eliminar</SelectItem>
+                <SelectItem value="eliminar">{t('dispatcher.action_delete')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -812,7 +852,7 @@ export default function DispatcherPage() {
               <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 className="w-72 pl-9"
-                placeholder="Buscar por cliente o sitio de pub..."
+                placeholder={t('dispatcher.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -903,39 +943,50 @@ export default function DispatcherPage() {
               />
             </div>
 
-            <Button
-              className="bg-orange-500 text-white hover:bg-orange-600"
-              asChild
-            >
-              <Link to="/dispatch-tickets/new">Nuevo Despacho</Link>
-            </Button>
+            {canCreate ? (
+              <Button
+                className="bg-orange-500 text-white hover:bg-orange-600"
+                asChild
+              >
+                <Link to="/dispatch-tickets/new">{t('dispatcher.newDispatch')}</Link>
+              </Button>
+            ) : (
+              <Button
+                className="bg-orange-300 text-white cursor-not-allowed"
+                disabled
+                onClick={() => toast.error(t('dispatcher.no_permission_create'))}
+                title={t('dispatcher.no_permission_create')}
+              >
+                {t('dispatcher.newDispatch')}
+              </Button>
+            )}
 
             {/* Filtros */}
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
               <SheetTrigger asChild>
                 <Button variant="outline" className="border-orange-200 text-orange-600">
                   <FilterIcon className="mr-2 h-4 w-4" />
-                  Filtros
+                  {t('dispatcher.filters')}
                 </Button>
               </SheetTrigger>
 
               <SheetContent side="right" className="w-[400px] sm:w-[460px]">
                 <SheetHeader>
-                  <SheetTitle>Filtros</SheetTitle>
+                  <SheetTitle>{t('dispatcher.filters')}</SheetTitle>
                 </SheetHeader>
 
                 <div className="mt-6 space-y-5">
                   {/* Cliente */}
                   <div className="space-y-2">
-                    <Label>Cliente</Label>
+                    <Label>{t('dispatcher.client')}</Label>
                     <Select
                       value={filters.clientId ?? ""}
                       onValueChange={(v) =>
                         setFilters((s) => ({ ...s, clientId: v ? v : undefined, siteId: undefined }))
                       }
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar cliente" />
+                        <SelectTrigger>
+                        <SelectValue placeholder={t('dispatcher.select_client')} />
                       </SelectTrigger>
                       <SelectContent>
                         {/* Cargar clientes desde backend */}
@@ -946,7 +997,7 @@ export default function DispatcherPage() {
                             </SelectItem>
                           ))
                         ) : (
-                          <SelectItem value="__no_clients" disabled>No hay clientes</SelectItem>
+                          <SelectItem value="__no_clients" disabled>{t('dispatcher.no_clients')}</SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -954,7 +1005,7 @@ export default function DispatcherPage() {
 
                   {/* Sitio de publicación */}
                   <div className="space-y-2">
-                    <Label>Sitio de publicación</Label>
+                    <Label>{t('dispatcher.post_site')}</Label>
                     <Select
                       value={filters.siteId ?? ""}
                       onValueChange={(v) =>
@@ -962,7 +1013,7 @@ export default function DispatcherPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar sitio" />
+                        <SelectValue placeholder={t('dispatcher.select_site')} />
                       </SelectTrigger>
                       <SelectContent>
                         {displayedPostSites && displayedPostSites.length > 0 ? (
@@ -972,7 +1023,7 @@ export default function DispatcherPage() {
                             </SelectItem>
                           ))
                         ) : (
-                          <SelectItem value="__no_sites" disabled>No hay sitios</SelectItem>
+                          <SelectItem value="__no_sites" disabled>{t('dispatcher.no_sites')}</SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -980,7 +1031,7 @@ export default function DispatcherPage() {
 
                   {/* Estado */}
                   <div className="space-y-2">
-                    <Label>Estado</Label>
+                    <Label>{t('dispatcher.status')}</Label>
                     <Select
                       value={filters.status}
                       onValueChange={(v) =>
@@ -990,13 +1041,13 @@ export default function DispatcherPage() {
                         }))
                       }
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todo" />
+                        <SelectTrigger>
+                        <SelectValue placeholder={t('dispatcher.status_all')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="todo">Todos</SelectItem>
-                        <SelectItem value="abierto">Abierto</SelectItem>
-                        <SelectItem value="cerrado">Cerrado</SelectItem>
+                        <SelectItem value="todo">{t('dispatcher.status_all')}</SelectItem>
+                        <SelectItem value="abierto">{t('dispatcher.status_open')}</SelectItem>
+                        <SelectItem value="cerrado">{t('dispatcher.status_closed')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1004,7 +1055,7 @@ export default function DispatcherPage() {
                   {/* Fechas separadas: fecha de creación y fecha del incidente */}
                   <div className="grid grid-cols-1 gap-3">
                     <div className="space-y-2">
-                      <Label>Fecha de creación</Label>
+                      <Label>{t('dispatcher.created_date')}</Label>
                       <Input
                         type="date"
                         value={(filters as any).createdDate ?? ""}
@@ -1015,7 +1066,7 @@ export default function DispatcherPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Fecha del incidente</Label>
+                      <Label>{t('dispatcher.incident_date')}</Label>
                       <Input
                         type="date"
                         value={(filters as any).incidentDate ?? ""}
@@ -1042,7 +1093,7 @@ export default function DispatcherPage() {
                       }
                     />
                     <Label htmlFor="archived" className="cursor-pointer">
-                      Mostrar datos archivados
+                      {t('dispatcher.show_archived')}
                     </Label>
                   </div>
 
@@ -1051,13 +1102,13 @@ export default function DispatcherPage() {
                     className="w-full bg-orange-500 text-white hover:bg-orange-600"
                     onClick={aplicarFiltros}
                   >
-                    Filtro
+                    {t('dispatcher.apply_filters')}
                   </Button>
                   <Button
                     className="w-full bg-white text-black border hover:bg-gray-100"
                     onClick={clearFilters}
                   >
-                    Limpiar filtro
+                    {t('dispatcher.clear_filters')}
                   </Button>
                 </div>
               </SheetContent>
@@ -1075,14 +1126,14 @@ export default function DispatcherPage() {
                   try {
                     // require exactly one selected id
                     if (!selectedIds || selectedIds.length === 0) {
-                      toast.error('Seleccione al menos un despacho para exportar');
+                      toast.error(t('dispatcher.select_at_least_one_export'));
                       return;
                     }
                     // allow exporting multiple selected ids; backend will render one page per id
                     const id = selectedIds[0];
                     const idsParam = selectedIds.join(',');
                     const tenantId = localStorage.getItem('tenantId');
-                    if (!tenantId) { toast.error('Tenant no disponible'); return; }
+                    if (!tenantId) { toast.error(t('dispatcher.tenantUnavailable')); return; }
 
                     // Determine backend origin: prefer VITE_API_URL, fallback to localhost:3001
                     let apiOrigin = 'http://localhost:3001';
@@ -1108,7 +1159,7 @@ export default function DispatcherPage() {
                     if (!resp.ok) {
                       const text = await resp.text().catch(() => null);
                       console.error('Export PDF failed', text || resp.statusText);
-                      toast.error('No se pudo generar el PDF');
+                      toast.error(t('dispatcher.pdf_generate_failed'));
                       return;
                     }
 
@@ -1116,7 +1167,7 @@ export default function DispatcherPage() {
                     if (!contentType.includes('application/pdf')) {
                       const text = await resp.text().catch(() => null);
                       console.error('Expected PDF, got:', contentType, text);
-                      toast.error('Respuesta inválida del servidor al generar el PDF');
+                      toast.error(t('dispatcher.pdf_invalid_response'));
                       return;
                     }
 
@@ -1128,23 +1179,23 @@ export default function DispatcherPage() {
                     setTimeout(() => URL.revokeObjectURL(blobUrl), 60 * 1000);
                   } catch (err) {
                     console.error('Export PDF error', err);
-                    toast.error('Error generando PDF');
+                    toast.error(t('dispatcher.pdf_generate_failed'));
                   }
                 }}>
                   <FileDown className="mr-2 h-4 w-4" />
-                  Exportar como PDF
+                  {t('dispatcher.export_pdf')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportExcel}>
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Exportar como Excel
+                  {t('dispatcher.export_excel')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handlePrintSelected}>
                   <Printer className="mr-2 h-4 w-4" />
-                  Imprimir
+                  {t('dispatcher.print')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSendEmail}>
                   <Mail className="mr-2 h-4 w-4" />
-                  Enviar Informe por Correo
+                  {t('dispatcher.send_report_email')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -1152,6 +1203,11 @@ export default function DispatcherPage() {
         </div>
 
         {/* Tabla */}
+        {forbiddenRead && (
+          <div className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-red-700">
+            {forbiddenMessage ? resolveServerMessage(forbiddenMessage) : t('dispatcher.noPermissionViewBanner')}
+          </div>
+        )}
         <div className="mt-4 overflow-hidden rounded-lg border">
           <table className="min-w-full border-collapse text-left text-sm">
             <thead className="bg-gray-50">
@@ -1175,13 +1231,13 @@ export default function DispatcherPage() {
                     }}
                   />
                 </th>
-                <th className="px-4 py-3 font-semibold">ID de Ticket</th>
-                <th className="px-4 py-3 font-semibold">Fecha/Hora</th>
-                <th className="px-4 py-3 font-semibold">Cliente</th>
-                <th className="px-4 py-3 font-semibold">Sitio de publicación</th>
-                <th className="px-4 py-3 font-semibold">Tipo de Llamador</th>
-                <th className="px-4 py-3 font-semibold">Tipo de Incidente</th>
-                <th className="px-4 py-3 font-semibold">Estado</th>
+                <th className="px-4 py-3 font-semibold">{t('dispatcher.header_ticket_id')}</th>
+                <th className="px-4 py-3 font-semibold">{t('dispatcher.header_datetime')}</th>
+                <th className="px-4 py-3 font-semibold">{t('dispatcher.header_client')}</th>
+                <th className="px-4 py-3 font-semibold">{t('dispatcher.header_post_site')}</th>
+                <th className="px-4 py-3 font-semibold">{t('dispatcher.header_caller_type')}</th>
+                <th className="px-4 py-3 font-semibold">{t('dispatcher.header_incident_type')}</th>
+                <th className="px-4 py-3 font-semibold">{t('dispatcher.header_status')}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -1195,9 +1251,9 @@ export default function DispatcherPage() {
                         alt="Sin datos"
                         className="mb-4 h-36"
                       />
-                      <h3 className="text-lg font-semibold">No se encontraron resultados</h3>
+                      <h3 className="text-lg font-semibold">{t('dispatcher.no_results_title')}</h3>
                       <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-                        No pudimos encontrar ningún elemento que coincida con su búsqueda
+                        {t('dispatcher.no_results_subtitle')}
                       </p>
                     </div>
                   </td>
@@ -1273,14 +1329,14 @@ export default function DispatcherPage() {
                           <DropdownMenuItem onClick={() => navigate(`/dispatch-tickets/${r.id}`)}>
                             <div className="flex items-center w-full">
                               <Eye className="mr-2 h-4 w-4" />
-                              Ver detalles
+                              {t('dispatcher.view_details')}
                             </div>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => window.open(`${window.location.origin}/dispatch-tickets/${r.id}`, '_blank')}>
                             <div className="flex items-center">
                               <ExternalLink className="mr-2 h-4 w-4" />
-                              Abrir en nueva pestaña
+                              {t('dispatcher.open_new_tab')}
                             </div>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e: any) => {
@@ -1290,16 +1346,16 @@ export default function DispatcherPage() {
                             setShareExpiry('24h');
                             setShareDialogOpen(true);
                           }}>
-                            <div className="flex items-center">
+                              <div className="flex items-center">
                               <LinkIcon className="mr-2 h-4 w-4" />
-                              Generar enlace compartible
+                              {t('dispatcher.generate_share_link')}
                             </div>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem>
                             <Link to={`/dispatch-tickets/${r.id}/edit`} className="flex items-center w-full">
                               <Edit className="mr-2 h-4 w-4" />
-                              Editar
+                              {t('dispatcher.edit')}
                             </Link>
                           </DropdownMenuItem>
 
@@ -1310,7 +1366,7 @@ export default function DispatcherPage() {
                               const api = (await import('@/lib/api')).default;
                               // Use PATCH for partial updates so unspecified fields are not nulled
                               await api.patch(`/tenant/${tenantId}/request/${r.id}`, { data: { status: 'cerrado' } });
-                              toast.success('Ticket cerrado');
+                              toast.success(t('dispatcher.ticket_closed'));
 
                               // Refresh the page so the UI state and any other views update
                               try {
@@ -1321,12 +1377,12 @@ export default function DispatcherPage() {
                               }
                             } catch (err) {
                               console.error('Error cerrando ticket:', err);
-                              toast.error('No se pudo cerrar el ticket');
+                              toast.error(t('dispatcher.ticket_close_failed'));
                             }
                           }}>
                             <div className="flex items-center">
                               <X className="mr-2 h-4 w-4" />
-                              Cerrar ticket
+                              {t('dispatcher.close_ticket')}
                             </div>
                           </DropdownMenuItem>
 
@@ -1335,9 +1391,9 @@ export default function DispatcherPage() {
                             setSelectedIds([r.id]);
                             setShowDeleteConfirm(true);
                           }}>
-                            <div className="flex items-center">
+                              <div className="flex items-center">
                               <Trash className="mr-2 h-4 w-4" />
-                              Eliminar
+                              {t('dispatcher.action_delete_label')}
                             </div>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -1353,7 +1409,7 @@ export default function DispatcherPage() {
           {/* Footer de tabla */}
           <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50 border-x border-b rounded-b-lg">
             <div className="flex items-center gap-2">
-              <span>Elementos por página</span>
+              <span>{t('dispatcher.items_per_page')}</span>
               <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
                 <SelectTrigger className="h-8 w-20">
                   <SelectValue />
@@ -1377,7 +1433,7 @@ export default function DispatcherPage() {
                 disabled={page === 1 || loading}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
-                Anterior
+                {t('dispatcher.prev')}
               </Button>
               <Button
                 variant="outline"
@@ -1385,7 +1441,7 @@ export default function DispatcherPage() {
                 disabled={page * limit >= totalCount || loading}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Siguiente
+                {t('dispatcher.next')}
               </Button>
             </div>
           </div>
@@ -1395,8 +1451,8 @@ export default function DispatcherPage() {
         <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Enviar Informe por Correo</DialogTitle>
-              <DialogDescription>Complete los datos para enviar el informe por correo.</DialogDescription>
+              <DialogTitle>{t('dispatcher.send_report_title')}</DialogTitle>
+              <DialogDescription>{t('dispatcher.send_report_desc')}</DialogDescription>
             </DialogHeader>
 
             <div className="space-y-3 mt-4">
@@ -1433,8 +1489,8 @@ export default function DispatcherPage() {
             </div>
 
             <DialogFooter className="mt-4 flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setSendDialogOpen(false)}>Cancelar</Button>
-              <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={performSend} disabled={sendingEmail}>{sendingEmail ? 'Enviando...' : 'Enviar'}</Button>
+              <Button variant="outline" onClick={() => setSendDialogOpen(false)}>{t('cancel')}</Button>
+              <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={performSend} disabled={sendingEmail}>{sendingEmail ? t('dispatcher.sending') : t('send')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

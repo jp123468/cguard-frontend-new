@@ -412,6 +412,48 @@ const postSiteService = {
       throw error;
     }
   },
+
+  // Notes CRUD
+  async getPostSiteNotes(postSiteId: string, pagination: { limit?: number; offset?: number } = { limit: 25, offset: 0 }) {
+    const tenantId = getTenantId();
+    const params = new URLSearchParams();
+    if (pagination.limit !== undefined) params.append('limit', String(pagination.limit));
+    if (pagination.offset !== undefined) params.append('offset', String(pagination.offset));
+
+    const { data } = await api.get<any>(`/tenant/${tenantId}/post-site/${postSiteId}/notes?${params.toString()}`);
+    return data;
+  },
+
+  async createPostSiteNote(postSiteId: string, payload: any) {
+    const tenantId = getTenantId();
+    const { data } = await api.post<any>(`/tenant/${tenantId}/post-site/${postSiteId}/notes`, payload);
+    return data;
+  },
+
+  async updatePostSiteNote(postSiteId: string, noteId: string, payload: any) {
+    const tenantId = getTenantId();
+    const { data } = await api.put<any>(`/tenant/${tenantId}/post-site/${postSiteId}/notes/${noteId}`, payload);
+    return data;
+  },
+
+  async destroyPostSiteNote(postSiteId: string, noteId: string) {
+    const tenantId = getTenantId();
+    const { data } = await api.delete<any>(`/tenant/${tenantId}/post-site/${postSiteId}/notes/${noteId}`);
+    return data;
+  },
+
+  // Contacts listing for a post site
+  async getPostSiteContacts(postSiteId: string, pagination: { limit?: number; offset?: number } = { limit: 25, offset: 0 }) {
+    const tenantId = getTenantId();
+    const params = new URLSearchParams();
+    if (pagination.limit !== undefined) params.append('limit', String(pagination.limit));
+    if (pagination.offset !== undefined) params.append('offset', String(pagination.offset));
+
+    const { data } = await api.get<any>(`/tenant/${tenantId}/post-site/${postSiteId}/contacts?${params.toString()}`, { toast: { silentError: true } } as any);
+    return data;
+  },
+
+
 };
 
 export { postSiteService };

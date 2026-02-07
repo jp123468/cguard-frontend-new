@@ -107,7 +107,7 @@
           },
           {
             "id": "keep-safe",
-            "label": "Guardias de Seguridad",
+            "label": "Guards",
             "path": "/setting/keep-safe"
           }
         ]

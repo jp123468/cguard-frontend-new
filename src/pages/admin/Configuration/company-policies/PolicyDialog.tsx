@@ -100,7 +100,7 @@ export default function PolicyDialog({
               <Button size="sm" type="button" variant="ghost"><Type className="h-4 w-4" /></Button>
             </div>
             <Textarea
-              className="min-h-[220px] rounded-none border-0 focus-visible:ring-0"
+              className="min-h-[220px]  border-0 focus-visible:ring-0"
               placeholder="Escribir aquí"
               value={content}
               onChange={(e) => setContent(e.target.value)}
