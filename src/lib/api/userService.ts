@@ -30,7 +30,7 @@ export const userService = {
     } catch (e) {}
 
     try {
-      const { data: resp } = await api.put<any>(url, data);
+      const { data: resp } = await api.patch<any>(url, data);
       try { console.log('[userService] updateUser response ->', resp); } catch (e) {}
       return resp;
     } catch (err: any) {

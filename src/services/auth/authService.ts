@@ -85,8 +85,7 @@ export class AuthService {
   }
 
   static async resetPassword(token: string, newPassword: string): Promise<void> {
-    // Backend may expect { token, newPassword } or { resetToken, password } depending on implementation.
-    // Adjust payload keys if your backend uses different names.
-    return ApiService.post('/auth/reset-password', { token, newPassword }, { skipAuth: true })
+    // Backend expects PUT /auth/password-reset with { token, password }
+    return ApiService.put('/auth/password-reset', { token, password: newPassword }, { skipAuth: true })
   }
 }

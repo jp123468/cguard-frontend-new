@@ -62,7 +62,7 @@ import * as XLSX from 'xlsx';
 import { usePermissions } from '@/hooks/usePermissions';
 
 // Tipos para los security-guards
-type GuardStatus = "Activo" | "Pendiente" | "Invitado" | "Archivado";
+type GuardStatus = "Activo" | "Pendiente" | "Archivado" | "Invitado";
 
 interface SecurityGuard {
   id: string;
@@ -204,6 +204,10 @@ export default function SecurityGuardsPage() {
     } else if (filterStatus === "activos") {
       // backend may support a status filter; try common param name
       params = { "filter[status]": "active" };
+    } else if (filterStatus === "todos") {
+      // Request all statuses including archived: ask for ALL and archived
+      // Backend will interpret 'ALL,archived' to include both active and soft-deleted rows
+      params = { "filter[status]": "ALL,archived" };
     } else if (filterStatus === "pendientes") {
       params = { "filter[status]": "pending" };
     } else if (filterStatus === "invitados") {
@@ -213,11 +217,21 @@ export default function SecurityGuardsPage() {
     securityGuardService
       .list(params)
       .then((data) => {
+        // Debugging: log raw response to help diagnose status mismatches
+        try {
+          console.debug('[SecurityGuardsPage] raw list response:', data);
+        } catch (e) {
+          // ignore
+        }
         if (!mounted) return;
         // Algunos endpoints devuelven { rows, count } u otras formas
         const normalize = (item: any): SecurityGuard => {
           const guardObj = item.guard ?? {};
-          const id = guardObj.id ?? item.guardId ?? item.id ?? "";
+          // Prefer the securityGuard record id (item.id). Some API responses
+          // include nested `guard` (user) objects where `guard.id` is the user id;
+          // using that value as the list `id` causes actions that expect the
+          // securityGuard record id (delete/restore) to fail with not-found.
+          const id = item.id ?? guardObj.id ?? item.guardId ?? "";
           const name =
             (guardObj.firstName && guardObj.lastName)
               ? `${guardObj.firstName} ${guardObj.lastName}`
@@ -229,7 +243,7 @@ export default function SecurityGuardsPage() {
           const status: GuardStatus = ((): GuardStatus => {
             const s = (guardObj.status ?? item.status ?? "").toString().toLowerCase();
             if (s === "active" || s === "activo") return "Activo";
-            if (s === "invited" || s === "invitado") return "Invitado";
+            if (s === "invited" || s === "invitado") return "Pendiente";
             if (s === "pending" || s === "pendiente") return "Pendiente";
             if (s === "archived" || s === "archivado") return "Archivado";
             if (typeof item.isOnDuty === "boolean") return item.isOnDuty ? "Activo" : "Pendiente";
@@ -246,9 +260,23 @@ export default function SecurityGuardsPage() {
           };
         };
 
-        if (Array.isArray(data)) setGuards(data.map(normalize));
-        else if (data && Array.isArray((data as any).rows)) setGuards((data as any).rows.map(normalize));
-        else setGuards([]);
+        let normalizedList: SecurityGuard[] = [];
+        if (Array.isArray(data)) normalizedList = data.map(normalize);
+        else if (data && Array.isArray((data as any).rows)) normalizedList = (data as any).rows.map(normalize);
+        else normalizedList = [];
+
+        // Log normalized entries and highlight those that map to 'Pendiente'
+        try {
+          console.debug('[SecurityGuardsPage] normalized guards:', normalizedList);
+          const pending = normalizedList.filter((g) => g.status === 'Pendiente');
+          if (pending.length) {
+            console.debug('[SecurityGuardsPage] guards with Pendiente status (raw):', pending.map((g) => ({ id: g.id, name: g.name, email: g.email, raw: g.raw })));
+          }
+        } catch (e) {
+          // ignore logging errors
+        }
+
+        setGuards(normalizedList);
       })
       .catch((err) => {
         if (!mounted) return;
@@ -279,7 +307,6 @@ export default function SecurityGuardsPage() {
       list = list.filter((g) => {
         if (filterStatus === "activos") return g.status === "Activo";
         if (filterStatus === "pendientes") return g.status === "Pendiente";
-        if (filterStatus === "invitados") return g.status === "Invitado";
         if (filterStatus === "archivados") return g.status === "Archivado";
         return true;
       });
@@ -343,9 +370,10 @@ export default function SecurityGuardsPage() {
           </Badge>
         );
       case "Invitado":
+        // Backwards-compatibility: map legacy "Invitado" to "Pendiente" badge
         return (
-          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
-            Invitado
+          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+            Pendiente
           </Badge>
         );
       case "Archivado":
@@ -537,7 +565,6 @@ export default function SecurityGuardsPage() {
                           <SelectItem value="todos">Todos los Guardias</SelectItem>
                           <SelectItem value="activos">Activos</SelectItem>
                           <SelectItem value="pendientes">Pendientes</SelectItem>
-                          <SelectItem value="invitados">Invitados</SelectItem>
                           <SelectItem value="archivados">Archivados</SelectItem>
                         </SelectContent>
                       </Select>
@@ -671,9 +698,63 @@ export default function SecurityGuardsPage() {
                                 <DropdownMenuItem
                                   onClick={async () => {
                                     try {
-                                      // Placeholder: implement real resend logic if available
-                                      console.log("Resend invite for", guard);
+                                      // Build minimal payload for resend: prefer guard id if available, otherwise email/contact
+                                      const payload: any = {};
+                                      if (guard.raw?.guard && guard.raw.guard.id) {
+                                        payload.guard = guard.raw.guard.id;
+                                      } else if (guard.email) {
+                                        payload.contact = guard.email;
+                                      } else if (guard.raw?.contact) {
+                                        payload.contact = guard.raw.contact;
+                                      }
+                                      // Include names when available
+                                      if (guard.raw?.guard?.firstName || guard.raw?.firstName) {
+                                        payload.firstName = guard.raw?.guard?.firstName || guard.raw?.firstName;
+                                      }
+                                      if (guard.raw?.guard?.lastName || guard.raw?.lastName) {
+                                        payload.lastName = guard.raw?.guard?.lastName || guard.raw?.lastName;
+                                      }
+
+                                      await securityGuardService.resendInvite(payload);
                                       toast.success("Invitación reenviada");
+                                      // Refresh list
+                                      try {
+                                        const refreshed = await securityGuardService.list();
+                                        const normalize = (item: any) => {
+                                          const guardObj = item.guard ?? {};
+                                          const id = item.id ?? guardObj.id ?? item.guardId ?? "";
+                                          const name =
+                                            (guardObj.firstName && guardObj.lastName)
+                                              ? `${guardObj.firstName} ${guardObj.lastName}`
+                                              : item.fullName ?? `${guardObj.firstName ?? ""} ${guardObj.lastName ?? ""}`.trim();
+                                          const email = guardObj.email ?? item.email ?? "";
+                                          const phone =
+                                            guardObj.phone ?? guardObj.phoneNumber ?? item.guard?.phoneNumber ?? item.phoneNumber ?? item.phone ?? item.mobile ?? "";
+                                          const status: GuardStatus = ((): GuardStatus => {
+                                            const s = (guardObj.status ?? item.status ?? "").toString().toLowerCase();
+                                            if (s === "active" || s === "activo") return "Activo";
+                                            if (s === "invited" || s === "invitado") return "Pendiente";
+                                            if (s === "pending" || s === "pendiente") return "Pendiente";
+                                            if (s === "archived" || s === "archivado") return "Archivado";
+                                            if (typeof item.isOnDuty === "boolean") return item.isOnDuty ? "Activo" : "Pendiente";
+                                            return "Pendiente";
+                                          })();
+
+                                          return {
+                                            id,
+                                            name: name || "-",
+                                            email,
+                                            phone,
+                                            status,
+                                            raw: item,
+                                          };
+                                        };
+
+                                        if (Array.isArray(refreshed)) setGuards(refreshed.map(normalize));
+                                        else if (refreshed && Array.isArray((refreshed as any).rows)) setGuards((refreshed as any).rows.map(normalize));
+                                      } catch (e) {
+                                        // ignore refresh errors
+                                      }
                                     } catch (err) {
                                       console.error(err);
                                       toast.error("Error reenviando invitación");
@@ -960,6 +1041,12 @@ export default function SecurityGuardsPage() {
                   setDeleteDialogOpen(false);
                 } catch (err: any) {
                   console.error("Error eliminando guardia:", err);
+                  // Show user-friendly error
+                  try {
+                    toast.error("No se pudo eliminar el guardia: " + (err?.message || String(err)));
+                  } catch (e) {
+                    // ignore toast failures
+                  }
                 } finally {
                   setDeleteLoading(false);
                 }
@@ -1542,7 +1629,7 @@ export default function SecurityGuardsPage() {
                           const status: GuardStatus = ((): GuardStatus => {
                             const s = ((guardObj.status ?? item.status ?? "")).toString().toLowerCase();
                             if (s === "active" || s === "activo") return "Activo";
-                            if (s === "invited" || s === "invitado") return "Invitado";
+                            if (s === "invited" || s === "invitado") return "Pendiente";
                             if (s === "pending" || s === "pendiente") return "Pendiente";
                             if (s === "archived" || s === "archivado") return "Archivado";
                             return "Pendiente";

@@ -91,6 +91,10 @@ export class ApiService {
     const payload = body instanceof FormData ? body : JSON.stringify(body ?? {});
     return this.request(endpoint, { ...options, method: "POST", body: payload }); 
   }
+  static patch(endpoint: string, body?: any, options = {}) {
+    const payload = body instanceof FormData ? body : JSON.stringify(body ?? {});
+    return this.request(endpoint, { ...options, method: "PATCH", body: payload });
+  }
   static put(endpoint: string, body?: any, options = {}) {
     const payload = body instanceof FormData ? body : JSON.stringify(body ?? {});
     return this.request(endpoint, { ...options, method: "PUT", body: payload });

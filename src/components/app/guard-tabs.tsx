@@ -16,12 +16,12 @@ export function GuardTabsHeader({ value, onValueChange, children }: Props) {
           <TabsTrigger value="invite" className=" px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
             Invitar Usando SMS o Correo Electrónico
           </TabsTrigger>
-          <TabsTrigger value="join_code" className=" px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
+         {/* <TabsTrigger value="join_code" className=" px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
             Unirse por Código
           </TabsTrigger>
           <TabsTrigger value="invite_link" className=" px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
             Invitar Usando Enlace
-          </TabsTrigger>
+          </TabsTrigger>*/}
           <TabsTrigger value="create_profile" className=" px-4 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary">
             Crear perfil
           </TabsTrigger>

@@ -9,6 +9,7 @@ import { AuthProvider } from "./contexts/AuthContext"
 import { LanguageProvider } from "./contexts/LanguageContext"
 import "./i18n"
 import Register from "./pages/auth/register"
+import VerifyEmail from "./pages/auth/verify-email"
 import ProfileUser from "./pages/admin/Configuration/ProfileUserPage"
 import ProfileCompany from "./pages/admin/Configuration/ProfileCompanyPage"
 import TwoFactorAuthentication from "./pages/admin/Configuration/TwoFactorAuthenticationPage"
@@ -168,6 +169,14 @@ export default function App() {
             <Route path="/guard_registration" element={<GuardRegistration />} />
             <Route path="/auth/invitation" element={<GuardRegistration />} />
             <Route
+              path="/auth/verify-email"
+              element={
+                <PublicOnlyRoute>
+                  <VerifyEmail />
+                </PublicOnlyRoute>
+              }
+            />
+            <Route
               path="/forgot-password"
               element={
                 <PublicOnlyRoute>
@@ -176,6 +185,7 @@ export default function App() {
               }
             />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/password-reset" element={<ResetPassword />} />
 
             {/* Rutas protegidas (requieren autenticación) */}
             <Route

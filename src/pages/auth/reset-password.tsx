@@ -72,13 +72,13 @@ export default function ResetPassword() {
               type="button"
               aria-label={showPassword ? t('auth.hide_password', { defaultValue: 'Hide password' }) : t('auth.show_password', { defaultValue: 'Show password' })}
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-3 top-0 bottom-0 h-12 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
+              className="absolute right-3 inset-y-0 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
               disabled={loading}
             >
               {showPassword ? (
-                <EyeOff className="h-6 w-6 translate-y-1" />
+                <EyeOff className="h-6 w-6" />
               ) : (
-                <Eye className="h-6 w-6 translate-y-1" />
+                <Eye className="h-6 w-6" />
               )}
             </button>
           </div>
@@ -103,13 +103,13 @@ export default function ResetPassword() {
               type="button"
               aria-label={showConfirm ? t('auth.hide_password', { defaultValue: 'Ocultar contraseña' }) : t('auth.show_password', { defaultValue: 'Mostrar contraseña' })}
               onClick={() => setShowConfirm((s) => !s)}
-              className="absolute right-3 top-0 bottom-0 h-12 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
+              className="absolute right-3 inset-y-0 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
               disabled={loading}
             >
               {showConfirm ? (
-                <EyeOff className="h-6 w-6 translate-y-1" />
+                <EyeOff className="h-6 w-6" />
               ) : (
-                <Eye className="h-6 w-6 translate-y-1" />
+                <Eye className="h-6 w-6" />
               )}
             </button>
           </div>

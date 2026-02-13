@@ -7,6 +7,9 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { ApiService } from "@/services/api/apiService";
 import securityGuardService from "@/lib/api/securityGuardService";
+import userService from "@/lib/api/userService";
+import { AuthService } from '@/services/auth/authService';
+import { PhoneInput } from "@/components/phone/PhoneInput";
 
 export default function GuardRegistration() {
   const [searchParams] = useSearchParams();
@@ -162,6 +165,10 @@ export default function GuardRegistration() {
         if (!address?.trim()) nextErrors.address = "La dirección es obligatoria";
         if (!phone?.trim()) nextErrors.phone = "El teléfono es obligatorio";
         if (!password) nextErrors.password = "La contraseña es obligatoria";
+        else {
+          if ((password || "").length < 8) nextErrors.password = "La contraseña debe tener al menos 8 caracteres";
+          else if (!/[A-Z]/.test(password)) nextErrors.password = "La contraseña debe contener al menos una letra mayúscula";
+        }
         if (!confirm) nextErrors.confirm = "Confirme la contraseña";
         if (password && confirm && password !== confirm) nextErrors.confirm = "Las contraseñas no coinciden";
       }
@@ -208,6 +215,10 @@ export default function GuardRegistration() {
         if (!address?.trim()) nextErrors.address = "La dirección es obligatoria";
         if (!phone?.trim()) nextErrors.phone = "El teléfono es obligatorio";
         if (!password) nextErrors.password = "La contraseña es obligatoria";
+        else {
+          if ((password || "").length < 8) nextErrors.password = "La contraseña debe tener al menos 8 caracteres";
+          else if (!/[A-Z]/.test(password)) nextErrors.password = "La contraseña debe contener al menos una letra mayúscula";
+        }
         if (!confirm) nextErrors.confirm = "Confirme la contraseña";
         if (password && confirm && password !== confirm) nextErrors.confirm = "Las contraseñas no coinciden";
       }
@@ -289,26 +300,211 @@ export default function GuardRegistration() {
         console.warn("[registration] could not persist tenantId", e);
       }
 
+      // If email+password provided, create the user in the users table first
+      let createdUser: any = null;
+      const isInviteFlow = Boolean(inviteToken || (fetched && (fetched.invitationToken || fetched.tenantUserStatus === 'invited')));
+
+      if (email && password && !isInviteFlow) {
+        try {
+          const userPayload: any = {
+            emails: [email],
+            password,
+            firstName: firstName || undefined,
+            lastName: lastName || undefined,
+            phoneNumber: phone || undefined,
+          };
+          // Use AuthService.signUp to ensure password and verification fields are stored
+          try {
+            const signUpPayload: any = {
+              email,
+              password,
+              // Provide explicit name parts and phone so backend can persist them
+              name: `${firstName || ''} ${lastName || ''}`.trim() || undefined,
+              firstName: firstName || undefined,
+              lastName: lastName || undefined,
+              phoneNumber: phone || undefined,
+              tenantId: fetched?.tenantId || (fetched?.tenant as any) || undefined,
+            };
+            const signUpResp = await AuthService.signUp(signUpPayload as any);
+            // signUpResp may be token string or object containing token
+            let token: string | null = null;
+            if (typeof signUpResp === 'string') token = signUpResp;
+            else if (signUpResp && typeof signUpResp === 'object' && 'token' in signUpResp) token = (signUpResp as any).token;
+
+            if (token) {
+              // Temporarily set token to fetch profile and obtain user id
+              try {
+                localStorage.setItem('authToken', token);
+                const profile = await AuthService.getProfile();
+                createdUser = profile?.data || profile || null;
+              } finally {
+                // Remove token to avoid leaving user signed in
+                try { localStorage.removeItem('authToken'); } catch (e) {}
+              }
+            }
+
+            // Fallback: if we couldn't get profile but signUpResp contains user data
+            if (!createdUser && signUpResp && typeof signUpResp === 'object') {
+              createdUser = (signUpResp as any).user || (signUpResp as any).data || null;
+            }
+
+            if (createdUser && createdUser.id) {
+              // Link guard to user by id using the `guard` field expected by backend
+              payload.guard = createdUser.id;
+              // Ensure credentials are persisted on the user record: set password and mark email verified
+              try {
+                const uid = createdUser.id || createdUser._id || (createdUser.user && (createdUser.user.id || createdUser.user._id));
+                if (uid) {
+                  // Update the user with password and mark email as verified to avoid login issues
+                  await userService.updateUser(String(uid), { password: password || undefined, emailVerified: true } as any);
+                  console.debug('[registration] updated created user credentials ->', { uid });
+                }
+              } catch (e) {
+                console.warn('[registration] could not update user credentials', e);
+              }
+            }
+          } catch (innerErr) {
+            // If signup failed, fall back to userService.createUser
+            const userResp = await userService.createUser(userPayload);
+            createdUser = userResp?.data || userResp || null;
+            if (createdUser && createdUser.id) payload.guard = createdUser.id;
+          }
+        } catch (uErr: any) {
+          // Map user creation errors to form if possible
+          try {
+            const { applyValidationErrorsToForm } = await import('@/lib/utils/formErrorMapper');
+            const result = applyValidationErrorsToForm(uErr);
+            if (result && result.fieldErrors) setErrors((p) => ({ ...p, ...result.fieldErrors }));
+            if (result && result.messages && result.messages.length) result.messages.forEach((m) => toast.error(m));
+            else toast.error(uErr?.message || 'Error al crear usuario');
+          } catch (e) {
+            toast.error(uErr?.message || 'Error al crear usuario');
+          }
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Ensure we never send password inside the security-guard payload when
+      // we created the user separately. If it's an invitation flow, keep
+      // `password` so the backend can set the password for the invited user
+      // and accept the invitation in one request.
+      if (!isInviteFlow) {
+        if (payload && payload.password) delete payload.password;
+      }
+
       // Use tenant-scoped endpoint: POST /api/tenant/:tenantId/security-guard
-      await securityGuardService.create(payload);
+      // If this is an invitation flow, send the request without frontend auth
+      // so the backend can impersonate the invited tenantUser via the invitation token.
+      // For invite completions, mark email as verified on the payload and
+      // remove any email verification token fields so the backend doesn't
+      // try to generate or rely on extra verification emails.
+      if (isInviteFlow) {
+        try {
+          if (payload && typeof payload === 'object') {
+            payload.emailVerified = true;
+            if ('emailVerificationToken' in payload) delete payload.emailVerificationToken;
+            if ('emailVerificationTokenExpiresAt' in payload) delete payload.emailVerificationTokenExpiresAt;
+
+            // If the backend expects the nested `guard` object to contain
+            // the password and verification flags when completing an
+            // invitation, ensure we set them there as well. Some endpoints
+            // ignore top-level `password` and require `guard.password`.
+            if (payload.guard && typeof payload.guard === 'object') {
+              payload.guard.emailVerified = true;
+              if ('emailVerificationToken' in payload.guard) delete payload.guard.emailVerificationToken;
+              if ('emailVerificationTokenExpiresAt' in payload.guard) delete payload.guard.emailVerificationTokenExpiresAt;
+              if (password) payload.guard.password = password;
+            } else {
+              // If `guard` is not an object (e.g. id) or missing, create a
+              // minimal object so the backend receives the password and
+              // verified flag in the expected place.
+              payload.guard = { ...(payload.guard || {}) } as any;
+              if (password) payload.guard.password = password;
+              payload.guard.emailVerified = true;
+            }
+          }
+        } catch (e) {
+          console.warn('[registration] could not normalize payload for invite completion', e);
+        }
+        try {
+          const tenantId = localStorage.getItem('tenantId');
+          let createResp: any = null;
+
+          // Debug: log payloads so developer can inspect Network/console
+          try {
+            console.debug('[registration] about to send invite payload (redacted shown):', {
+              ...payload,
+              guard: { ...payload.guard, password: payload.guard?.password ? '<REDACTED>' : undefined },
+            });
+            console.debug('[registration] raw guard object (contains password if provided):', payload.guard);
+          } catch (e) {
+            console.warn('[registration] could not log invite payload', e);
+          }
+
+          // For invitation flows use the public endpoint that does not require auth
+          // This avoids 403 Forbidden when completing an invitation before having credentials.
+            try {
+            createResp = await ApiService.patch(`/security-guard/public`, payload, { skipAuth: true });
+          } catch (e) {
+            // Fallback: try tenant-scoped endpoint if public fails for some reason
+            const tenantIdFallback = localStorage.getItem('tenantId');
+            if (tenantIdFallback) {
+              createResp = await ApiService.post(`/tenant/${tenantIdFallback}/security-guard`, payload, { skipAuth: true });
+            } else {
+              // As last resort use service wrapper (will throw helpful error)
+              createResp = await securityGuardService.create(payload);
+            }
+          }
+
+          // We must not attempt to call tenant-scoped user update endpoints
+          // from the frontend in an unauthenticated invite flow because the
+          // request will be rejected (403). The backend should persist the
+          // provided `guard.password` / `emailVerified` during invite
+          // completion. Log a helpful message for debugging.
+          if (password) {
+            console.debug('[registration] invite flow: sent password to backend; skipping client-side user update to avoid 403');
+          }
+        } catch (e) {
+          // rethrow to be handled below
+          throw e;
+        }
+      } else {
+        await securityGuardService.create(payload);
+      }
 
       toast.success(t('guard.registration_success', { defaultValue: 'Registration completed' }));
       navigate("/login");
     } catch (err: any) {
-      try {
-        const { applyValidationErrorsToForm } = await import('@/lib/utils/formErrorMapper');
-        const result = applyValidationErrorsToForm(err);
-        if (result && result.fieldErrors) setErrors((p) => ({ ...p, ...result.fieldErrors }));
-        if (result && result.messages && result.messages.length) result.messages.forEach((m) => toast.error(m));
-        else {
+        // Improved error reporting: surface server status and returned payload when available
+        try {
+          // If ApiService threw an ApiError with structured data, prefer that
+          const { applyValidationErrorsToForm } = await import('@/lib/utils/formErrorMapper');
+          const result = applyValidationErrorsToForm(err);
+          if (result && result.fieldErrors) setErrors((p) => ({ ...p, ...result.fieldErrors }));
+          if (result && result.messages && result.messages.length) {
+            result.messages.forEach((m) => toast.error(m));
+          } else {
+            // If it's an ApiError with status/data, log and show backend message when available
+            if (err && err.status) {
+              console.error('API Error status:', err.status, 'data:', err.data || null, 'message:', err.message);
+              const backendMsg = err.data && (err.data.message || err.data.error);
+              if (backendMsg) {
+                toast.error(String(backendMsg));
+              } else {
+                toast.error(err.message || 'Error al registrar');
+              }
+            } else {
+              const msg = err?.message || "Error al registrar";
+              toast.error(msg);
+            }
+          }
+        } catch (e) {
           const msg = err?.message || "Error al registrar";
           toast.error(msg);
         }
-      } catch (e) {
-        const msg = err?.message || "Error al registrar";
-        toast.error(msg);
-      }
-      console.error("Registration error:", err);
+        // Always emit the full error object to the console to aid debugging
+        console.error("Registration error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -437,7 +633,12 @@ export default function GuardRegistration() {
               </div>
               <div>
                 <label className={labelClass}>Teléfono móvil<span style={{ color: "#F75638" }}>*</span></label>
-                <Input className={`${formControl} ${errorClass('phone')}`} value={phone} onChange={(e: any) => setPhone(e.target.value)} placeholder="p.ej. +12015550123" disabled={isLoading || lockedPhone} />
+                <PhoneInput
+                  value={phone || ""}
+                  onChange={(val: string) => setPhone(val)}
+                  placeholder="p.ej. +12015550123"
+                />
+                {errors.phone && <div className="text-red-600 text-sm mt-1">{errors.phone}</div>}
               </div>
             </div>
 
@@ -453,7 +654,7 @@ export default function GuardRegistration() {
                     disabled={isLoading}
                     className={`${formControl} ${errorClass('password')}`}
                   />
-                  <button type="button" className="absolute right-3 top-3" onClick={() => setShowPwd((v) => !v)}>{showPwd ? <EyeOff /> : <Eye />}</button>
+                  <button type="button" className="absolute right-3 top-2" onClick={() => setShowPwd((v) => !v)}>{showPwd ? <EyeOff /> : <Eye />}</button>
                 </div>
                 {errors.password && <div className="text-red-600 text-sm mt-1">{errors.password}</div>}
               </div>
@@ -461,6 +662,7 @@ export default function GuardRegistration() {
               <div>
                 <label htmlFor="confirm-password" className={labelClass}>
                   Confirmar contraseña
+                  
                   <span style={{ color: "#F75638" }}>*</span>
                 </label>
                 <div className="relative">
@@ -473,7 +675,7 @@ export default function GuardRegistration() {
                     disabled={isLoading}
                     className={`${formControl} ${errorClass('confirm')}`}
                   />
-                  <button type="button" className="absolute right-3 top-3" onClick={() => setShowConfirm((v) => !v)}>{showConfirm ? <EyeOff /> : <Eye />}</button>
+                  <button type="button" className="absolute right-3 top-2" onClick={() => setShowConfirm((v) => !v)}>{showConfirm ? <EyeOff /> : <Eye />}</button>
                 </div>
                 {errors.confirm && <div className="text-red-600 text-sm mt-1">{errors.confirm}</div>}
               </div>

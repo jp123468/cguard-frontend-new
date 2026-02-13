@@ -14,38 +14,48 @@ import {
 } from "@/components/ui/form";
 import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next";
 
-
-const schema = z
-  .object({
-    oldPassword: z.string().min(6, "Mínimo 6 caracteres"),
-    newPassword: z
-      .string()
-      .min(8, "Mínimo 8 caracteres")
-      .regex(/[A-Z]/, "Debe incluir una mayúscula")
-      .regex(/[a-z]/, "Debe incluir una minúscula")
-      .regex(/\d/, "Debe incluir un número"),
-    confirmPassword: z.string().min(1, "Confirma tu contraseña"),
-  })
-  .refine((v) => v.newPassword === v.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Las contraseñas no coinciden",
-  });
-
-export type ChangePasswordValues = z.infer<typeof schema>;
+export type ChangePasswordValues = {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
 
 type Props = {
   defaultValues?: Partial<ChangePasswordValues>;
   onSubmit?: (values: ChangePasswordValues) => Promise<void> | void;
+  showOldField?: boolean;
 };
 
-export default function ChangePasswordForm({ defaultValues, onSubmit }: Props) {
+export default function ChangePasswordForm({ defaultValues, onSubmit, showOldField = true }: Props) {
+  const { t } = useTranslation();
   const [showOldPassword, setShowOldPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
+  // Build schema conditionally so the oldPassword field can be omitted (useful for password reset flows)
+  const baseSchema: any = {
+    newPassword: z
+      .string()
+      .min(8, t('auth.validation_min8'))
+      .regex(/[A-Z]/, t('auth.validation_uppercase'))
+      .regex(/[a-z]/, t('auth.validation_lowercase'))
+      .regex(/\d/, t('auth.validation_number')),
+    confirmPassword: z.string().min(1, t('auth.validation_confirm_required')),
+  };
+
+  if (showOldField) {
+    baseSchema.oldPassword = z.string().min(6, t('auth.validation_min6'));
+  }
+
+  const schema: z.ZodTypeAny = z.object(baseSchema).refine((v: any) => v.newPassword === v.confirmPassword, {
+    path: ['confirmPassword'],
+    message: t('auth.validation_passwords_not_match'),
+  });
+
   const form = useForm<ChangePasswordValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema as any),
     defaultValues: {
       oldPassword: defaultValues?.oldPassword ?? "",
       newPassword: defaultValues?.newPassword ?? "",
@@ -61,45 +71,47 @@ export default function ChangePasswordForm({ defaultValues, onSubmit }: Props) {
   return (
     <Form {...form}>
       <form onSubmit={submit} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="oldPassword"
-          render={({ field }) => (
-            <FormItem>
-              <Label>Contraseña Antigua*</Label>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    type={showOldPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    className="h-12 pr-10"
-                    {...field}
-                  />
+        {showOldField && (
+          <FormField
+            control={form.control}
+            name="oldPassword"
+            render={({ field }) => (
+              <FormItem>
+                <Label>{t('auth.old_password_label')}*</Label>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showOldPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      className="h-12 pr-10"
+                      {...field}
+                    />
 
-                  <button
-                    type="button"
-                    onClick={() => setShowOldPassword(!showOldPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
-                  >
-                    {showOldPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                    <button
+                      type="button"
+                      onClick={() => setShowOldPassword(!showOldPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                    >
+                      {showOldPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}
           name="newPassword"
           render={({ field }) => (
             <FormItem>
-              <Label>Nueva Contraseña*</Label>
+              <Label>{t('auth.new_password_label')}*</Label>
               <FormControl>
                 <div className="relative">
                   <Input
@@ -132,7 +144,7 @@ export default function ChangePasswordForm({ defaultValues, onSubmit }: Props) {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <Label>Confirmar Nueva Contraseña*</Label>
+              <Label>{t('auth.confirm_new_password_label')}*</Label>
               <FormControl>
                 <div className="relative">
                   <Input
@@ -162,7 +174,7 @@ export default function ChangePasswordForm({ defaultValues, onSubmit }: Props) {
 
 
         <div className="flex justify-end">
-          <Button type="submit" className="bg-orange-500 text-white hover:bg-orange-600 px-6">Guardar Cambios</Button>
+          <Button type="submit" className="bg-orange-500 text-white hover:bg-orange-600 px-6">{t('auth.save_changes')}</Button>
         </div>
       </form>
     </Form>

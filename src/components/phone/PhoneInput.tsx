@@ -22,12 +22,21 @@ type PhoneInputProps = {
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
+    onCountryChange?: (country: Country) => void;
 };
 
 export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
+    // notify parent of selected country via onCountryChange when provided
     const defaultCountry = COUNTRIES[0];
     const [open, setOpen] = useState(false);
     const [country, setCountry] = useState<Country>(defaultCountry);
+    const { onCountryChange } = (arguments[0] || {}) as PhoneInputProps;
+
+    // notify initial country to parent once
+    useMemo(() => {
+        if (onCountryChange) onCountryChange(country);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const displayValue = useMemo(() => value ?? "", [value]);
 
@@ -40,6 +49,7 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
 
     const handleCountrySelect = (c: Country) => {
         setCountry(c);
+        if (onCountryChange) onCountryChange(c);
 
         if (!displayValue || !displayValue.startsWith("+")) {
             onChange(`+${c.dialCode}`);

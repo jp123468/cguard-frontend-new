@@ -45,8 +45,10 @@ export default function Login() {
 
     // Nota: el backend debe exponer /auth/oauth/:provider que hace el flujo OAuth
     // y luego ejecuta window.opener.postMessage({ type: 'oauth_callback', token, user }, window.opener.location.origin)
-    const base = import.meta.env.VITE_API_URL ?? "http://localhost:3001/api";
-    const url = `${base.replace(/\/+$/, "")}/auth/oauth/${provider}`;
+    // Use the configured API base (VITE_API_URL) so routes mounted under /api
+    // are addressed correctly. Fall back to the typical local API URL.
+    const base = (import.meta.env.VITE_API_URL ?? "http://localhost:3001/api").replace(/\/+$/, '');
+    const url = `${base}/auth/oauth/${provider}`;
     const popup = window.open(url, "oauth_popup", `width=${width},height=${height},left=${left},top=${top}`);
     if (!popup) {
       toast.error(t('auth.could_not_open_auth_window'));
@@ -83,7 +85,7 @@ export default function Login() {
         <button
           type="button"
           onClick={() => handleSocialLogin("google")}
-          className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="col-span-2 w-full flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115Z"/>
@@ -93,19 +95,7 @@ export default function Login() {
           </svg>
           Google
         </button>
-        <button
-          type="button"
-          onClick={() => handleSocialLogin("microsoft")}
-          className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 23 23" fill="none">
-            <path d="M0 0h11v11H0z" fill="#f25022"/>
-            <path d="M12 0h11v11H12z" fill="#00a4ef"/>
-            <path d="M0 12h11v11H0z" fill="#ffb900"/>
-            <path d="M12 12h11v11H12z" fill="#7fba00"/>
-          </svg>
-          Microsoft
-        </button>
+
       </div>
 
       <div className="relative mb-6">

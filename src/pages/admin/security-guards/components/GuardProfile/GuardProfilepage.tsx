@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editedGuard, setEditedGuard] = useState({ ...guard });
+  const [loading, setLoading] = useState(false);
 
   const InfoCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="bg-white border rounded-lg p-6 shadow-sm">
@@ -57,6 +58,32 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
     }
   };
 
+  // Fetch full guard details when component mounts or id changes
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const data = await securityGuardService.get(id);
+        if (!mounted) return;
+        // Some endpoints return { rows, count } for lists; single-get should return object
+        const payload = data && data.id ? data : (data && data.data) ? data.data : data;
+        setEditedGuard((prev: any) => ({ ...prev, ...payload }));
+        if (onGuardUpdate) onGuardUpdate(payload);
+      } catch (err) {
+        console.error('Error cargando guardia:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
   const handleCancel = () => {
     setEditedGuard({ ...guard });
     setIsEditing(false);
@@ -71,7 +98,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
         <div className="space-y-6 relative">
           {/* Edit/Save/Cancel Buttons */}
           <div className="fixed bottom-8 right-8 z-50 flex gap-3">
-                {isEditing ? (
+            {isEditing ? (
               <>
                 <button
                   onClick={handleCancel}
@@ -131,7 +158,6 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                 <div className="grid grid-cols-2 gap-4">
                   <InfoField label="Email" value={editedGuard?.guard?.email} field="email" />
                   <InfoField label="Mobile Number" value={editedGuard?.guard?.phoneNumber || editedGuard?.phoneNumber} field="phoneNumber" />
-                  <InfoField label="Phone Number" value={editedGuard?.guard?.alternatePhone} field="alternatePhone" />
                 </div>
               </InfoCard>
 
@@ -143,20 +169,6 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                   <InfoField label="Relation to Guard" value={editedGuard?.emergencyContactRelation} field="emergencyContactRelation" />
                 </div>
               </InfoCard>
-
-              {/* More Information */}
-              <InfoCard title="More Information">
-                <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="Driver License" value={editedGuard?.driverLicense} field="driverLicense" />
-                  <InfoField label="Employee Number" value={editedGuard?.employeeCode || editedGuard?.guardNumber} field="employeeCode" />
-                  <InfoField label="Hire Date" value={editedGuard?.hireDate ? new Date(editedGuard.hireDate).toLocaleDateString('en-US') : null} field="hireDate" />
-                  <InfoField label="Payroll Number" value={editedGuard?.payrollNumber} field="payrollNumber" />
-                  <InfoField label="Payment Type" value={editedGuard?.paymentType || 'Hourly'} field="paymentType" />
-                  <InfoField label="Hourly Rate" value={editedGuard?.hourlyRate} field="hourlyRate" />
-                  <InfoField label="deed" value={editedGuard?.deed} field="deed" />
-                </div>
-              </InfoCard>
-
               {/* Personal Information */}
               <InfoCard title="Personal Information">
                 <div className="grid grid-cols-2 gap-4">
@@ -168,6 +180,22 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                   <InfoField label="Government ID" value={editedGuard?.governmentId} field="governmentId" />
                 </div>
               </InfoCard>
+              {/* More Information */}
+           { /*  <InfoCard title="More Information">
+                <div className="grid grid-cols-2 gap-4">
+                  <InfoField label="Driver License" value={editedGuard?.driverLicense} field="driverLicense" />
+                  <InfoField label="Employee Number" value={editedGuard?.employeeCode || editedGuard?.guardNumber} field="employeeCode" />
+                  <InfoField label="Hire Date" value={editedGuard?.hireDate ? new Date(editedGuard.hireDate).toLocaleDateString('en-US') : null} field="hireDate" />
+                  <InfoField label="Hiring Contract Date" value={editedGuard?.hiringContractDate ? new Date(editedGuard.hiringContractDate).toLocaleDateString('en-US') : null} field="hiringContractDate" />
+                  <InfoField label="Payroll Number" value={editedGuard?.payrollNumber} field="payrollNumber" />
+                  <InfoField label="Payment Type" value={editedGuard?.paymentType || 'Hourly'} field="paymentType" />
+                  <InfoField label="Hourly Rate" value={editedGuard?.hourlyRate} field="hourlyRate" />
+                  <InfoField label="deed" value={editedGuard?.deed} field="deed" />
+                </div>
+              </InfoCard>*/}
+
+
+
             </div>
 
             {/* Right Column */}

@@ -20,7 +20,14 @@ export const securityGuardService = {
 
   async invite(entries: any[]) {
     const tenantId = getTenantId();
-    const { data } = await api.post(`/tenant/${tenantId}/security-guard`, { entries });
+    // Use the dedicated invite endpoint so the server sends invitation emails/SMS
+    const { data } = await api.post(`/tenant/${tenantId}/security-guard/invite`, { entries });
+    return data;
+  },
+
+  async resendInvite(input: any) {
+    const tenantId = getTenantId();
+    const { data } = await api.post(`/tenant/${tenantId}/security-guard/invite`, input);
     return data;
   },
 
@@ -53,14 +60,15 @@ export const securityGuardService = {
 
   async update(id: string, input: any) {
     const tenantId = getTenantId();
-    const { data } = await api.put(`/tenant/${tenantId}/security-guard/${id}`, input);
+    const { data } = await api.patch(`/tenant/${tenantId}/security-guard/${id}`, input);
 
     return data;
   },
 
   async destroy(ids: string[]) {
     const tenantId = getTenantId();
-    const { data } = await api.delete(`/tenant/${tenantId}/security-guard`, { data: { ids }, toast: { silentError: true } });
+    // Do not silence errors here; let the global interceptor show a helpful message
+    const { data } = await api.delete(`/tenant/${tenantId}/security-guard`, { data: { ids } });
 
     return data;
   },

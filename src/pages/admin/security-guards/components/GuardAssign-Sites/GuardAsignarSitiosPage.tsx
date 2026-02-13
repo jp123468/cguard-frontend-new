@@ -32,6 +32,25 @@ export default function GuardAsignarSitiosPage() {
         if (!mounted) return;
         setLoading(false);
       });
+    // Fetch assigned post-sites for this guard
+    (async () => {
+      try {
+        const tenantId = localStorage.getItem('tenantId');
+        if (!tenantId) return;
+        const resp = await api.get(`/tenant/${tenantId}/security-guard/${id}/assignments`);
+        const data = resp?.data ?? resp;
+        const rows = Array.isArray(data?.rows) ? data.rows : (Array.isArray(data) ? data : []);
+        if (!mounted) return;
+        const mapped = rows.map((r: any) => ({
+          id: r.id || `${r.businessInfoId}_${r.tenantUserId}`,
+          client: r.clientFullName || r.clientName || r.clientAccountName || '-',
+          site: r.postSiteName || r.businessInfoId,
+        }));
+        setMappings(mapped);
+      } catch (err) {
+        console.error('Failed to load assigned sites for guard', err);
+      }
+    })();
     return () => { mounted = false; };
   }, [id]);
 
@@ -40,14 +59,8 @@ export default function GuardAsignarSitiosPage() {
   const [actionSelection, setActionSelection] = useState<string>('Action');
 
   const [assignModalOpen, setAssignModalOpen] = useState(false);
-  const [clients, setClients] = useState<Array<{ id: string; name: string }>>([
-    { id: 'c1', name: 'Jose Pasante' },
-    { id: 'c2', name: 'Acme Corp' },
-  ]);
-  const [postSites, setPostSites] = useState<Array<{ id: string; name: string }>>([
-    { id: 'p1', name: 'josePasante' },
-    { id: 'p2', name: 'Central Office' },
-  ]);
+  const [clients, setClients] = useState<Array<{ id: string; name: string }>>([]);
+  const [postSites, setPostSites] = useState<Array<{ id: string; name: string }>>([]);
 
   const [mappings, setMappings] = useState<Array<{ id: string; client: string; site: string }>>([
     { id: 'm1', client: 'Jose Pasante', site: 'josePasante' },
@@ -75,12 +88,14 @@ export default function GuardAsignarSitiosPage() {
         const tenantId = localStorage.getItem('tenantId');
         let mappingId = Date.now().toString();
         if (tenantId) {
+          // Determine a securityGuard identifier to send: prefer underlying user id
+          const securityGuardIdentifier = guard?.guard?.id ?? (guard && (guard.guardId || guard.userId || guard.id)) ?? id;
           const payload = {
-            tenantUserId: id, // current guard id from route
-            businessInfoId: selectedPostSite,
+            securityGuardId: securityGuardIdentifier,
             clientAccountId: selectedClient,
           } as any;
-          const { data } = await api.post(`/tenant/${tenantId}/tenant-user-post-sites`, payload, { toast: { success: 'Assigned' } } as any);
+          // Use the post-site assign endpoint which now also creates client pivot when provided
+          const { data } = await api.post(`/tenant/${tenantId}/post-site/${selectedPostSite}/assign-guard`, payload, { toast: { success: 'Assigned' } } as any);
           mappingId = data?.id ?? mappingId;
         }
         const newMapping = { id: mappingId, client: clientName, site: siteName, tenantUserId: id, businessInfoId: selectedPostSite };
@@ -94,6 +109,59 @@ export default function GuardAsignarSitiosPage() {
       }
     })();
   };
+
+  // Load clients when opening assign modal
+  useEffect(() => {
+    if (!assignModalOpen) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const tenantId = localStorage.getItem('tenantId');
+        if (!tenantId) return;
+        // Use full list endpoint so we receive name + lastName fields
+        const resp = await api.get(`/tenant/${tenantId}/client-account?limit=200&offset=0`);
+        const data = resp?.data ?? resp;
+        const rows = Array.isArray(data?.rows) ? data.rows : (Array.isArray(data) ? data : []);
+        if (!mounted) return;
+        const items = rows.map((r: any) => {
+          const given = r.name ?? r.firstName ?? '';
+          const family = r.lastName ?? r.surname ?? '';
+          const display = (given || family) ? `${given}${family ? ' ' + family : ''}`.trim() : (r.fullName ?? r.label ?? r.id);
+          return { id: r.id, name: display };
+        });
+        setClients(items);
+      } catch (err) {
+        console.error('Failed to load clients for assign modal', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [assignModalOpen]);
+
+  // When a client is selected, load their post sites
+  useEffect(() => {
+    if (!selectedClient) {
+      setPostSites([]);
+      return;
+    }
+    let mounted = true;
+    (async () => {
+      try {
+        const tenantId = localStorage.getItem('tenantId');
+        if (!tenantId) return;
+        // Prefer specific client post-sites endpoint
+        const resp = await api.get(`/tenant/${tenantId}/client-account/${selectedClient}/post-sites`);
+        const data = resp?.data ?? resp;
+        const rows = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
+        if (!mounted) return;
+        const items = rows.map((r: any) => ({ id: r.id, name: r.companyName || r.postSiteName || r.name || r.label || r.businessInfoName || r.id }));
+        setPostSites(items);
+      } catch (err) {
+        console.error('Failed to load post sites for client', err);
+        setPostSites([]);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [selectedClient]);
 
   return (
     <AppLayout>

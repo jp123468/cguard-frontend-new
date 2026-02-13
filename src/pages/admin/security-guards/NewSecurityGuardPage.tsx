@@ -112,14 +112,19 @@ export default function NewSecurityGuardPage() {
         postSiteIds: Array.isArray(e.postSiteId) ? e.postSiteId : (e.postSiteId ? [e.postSiteId] : []),
         clientId: Array.isArray(e.clientId) ? e.clientId[0] : e.clientId,
         postSiteId: Array.isArray(e.postSiteId) ? e.postSiteId[0] : e.postSiteId,
-        // backend may expect `phoneNumber` or `email` fields rather than a generic `contact`
+        // backend expects a generic `contact` field for invite flows
+        // keep explicit `phoneNumber`/`email` as well for compatibility
+        contact: e.contact,
         phoneNumber: e.inviteBy === "SMS" ? e.contact : undefined,
         email: e.inviteBy === "Correo Electrónico" ? e.contact : undefined,
+        // Do not include `roles` here — backend sets securityGuard role server-side
         inviteBy: e.inviteBy,
       }));
       await securityGuardService.invite(payload);
       console.log('[NewSecurityGuardPage] invite response: sent')
       toast.success("Invitaciones enviadas");
+      // After successful invite, navigate back to the security guards list
+      navigate('/security-guards');
     } catch (e: any) {
       console.error('[NewSecurityGuardPage] invite error <-', e)
       try {
