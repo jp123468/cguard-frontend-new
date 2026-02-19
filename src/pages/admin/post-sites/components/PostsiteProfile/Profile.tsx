@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 import IncidentMap from "@/components/IncidentMap/IncidentMap";
+import { categoryService } from '@/lib/api/categoryService';
 
 function formatDate(d?: string) {
     if (!d) return '-';
@@ -24,9 +25,61 @@ export default function PostSiteProfile({ site }: { site?: any }) {
     const contactEmail = site?.contactEmail || site?.email || site?.contact_email || '-';
     const fax = site?.fax || '-';
 
-    const categories = Array.isArray(site?.categoryIds) && site.categoryIds.length > 0
-        ? site.categoryIds.join(', ')
-        : '-';
+    const [categoryNames, setCategoryNames] = useState<string[] | null>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        async function loadCategoryNames() {
+            try {
+                if (site?.categoryNames && Array.isArray(site.categoryNames) && site.categoryNames.length) {
+                    if (mounted) setCategoryNames(site.categoryNames.map(String));
+                    return;
+                }
+
+                const ids = site?.categoryIds;
+                if (!ids || !Array.isArray(ids) || ids.length === 0) {
+                    if (mounted) setCategoryNames([]);
+                    return;
+                }
+
+                const resp = await categoryService.list({ filter: { module: 'postSite' }, limit: 1000 });
+                const map = new Map<string, string>();
+                (resp.rows || []).forEach((c: any) => map.set(String(c.id), c.name));
+                const names = ids.map((id: any) => map.get(String(id)) || String(id));
+                if (mounted) setCategoryNames(names);
+            } catch (e) {
+                if (mounted) setCategoryNames((site?.categoryNames && Array.isArray(site.categoryNames)) ? site.categoryNames.map(String) : []);
+            }
+        }
+
+        loadCategoryNames();
+        return () => { mounted = false; };
+    }, [site]);
+
+    const categories = (() => {
+        if (Array.isArray(site?.categories) && site.categories.length > 0) {
+            return site.categories
+                .map((c: any) => c?.name || c?.label || c?.title || String(c))
+                .join(', ');
+        }
+
+        if (categoryNames && categoryNames.length) {
+            return categoryNames.join(', ');
+        }
+
+        if (Array.isArray(site?.categoryNames) && site.categoryNames.length > 0) {
+            return site.categoryNames.join(', ');
+        }
+
+        if (Array.isArray(site?.categoryIds) && site.categoryIds.length > 0) {
+            if (site.categoryLookup && typeof site.categoryLookup === 'object') {
+                return site.categoryIds.map((id: any) => site.categoryLookup[id] ?? id).join(', ');
+            }
+            return site.categoryIds.join(', ');
+        }
+
+        return '-';
+    })();
 
     const postalCode = site?.postalCode || site?.zipCode || '-';
     const city = site?.city || '-';

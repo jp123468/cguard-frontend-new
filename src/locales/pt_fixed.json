@@ -200,6 +200,7 @@
         "hoursWorked": "Horas trabalhadas (últimos 7 dias)"
       },
       "generalInfo": {
+        "notfoundclient": "Cliente não encontrado",
         "title": "Informação Geral",
         "clientName": "Nome do cliente",
         "address": "Endereço",
@@ -245,8 +246,10 @@
       "status": "Status"
     },
     "status": {
-      "active": "Ativo",
-      "archived": "Arquivado"
+      "active": "Activo",
+      "archived": "Archivado",
+      "pending": "Pendiente",
+      "invitate": "Invitado"
     },
     "actions": {
       "action": "Ação",

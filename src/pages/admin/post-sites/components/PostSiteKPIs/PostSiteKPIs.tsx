@@ -3,14 +3,15 @@ import { Search, ChevronDown, ChevronUp, Plus, X, Mail, MessageCircle, ChevronLe
 import { toast } from 'sonner';
 import KpiService from '@/services/kpi.service';
 import KpiBarChart from '@/components/KpiBarChart';
-
+import { useTranslation } from "react-i18next";
 type Props = {
   site?: any;
 };
 
 export default function PostSiteKPIs({ site }: Props) {
+  const { t } = useTranslation();
   const [actionOpen, setActionOpen] = useState(false);
-  const [actionSelection, setActionSelection] = useState<string>('Acción');
+  const [actionSelection, setActionSelection] = useState<string>(t('actions.action', 'Actions'));
   const [searchQuery, setSearchQuery] = useState('');
   const [kpiData, setKpiData] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -149,7 +150,7 @@ export default function PostSiteKPIs({ site }: Props) {
       // If KPI provides a direct URL to the PDF, open it
       if (kpi?.pdfUrl) {
         window.open(kpi.pdfUrl, '_blank');
-        toast.success('PDF abierto');
+        toast.success(t('postSites.KPI.toasts.pdfOpened', 'PDF opened'));
         setMenuOpenId(null);
         return;
       }
@@ -165,7 +166,7 @@ export default function PostSiteKPIs({ site }: Props) {
         const blob = new Blob([byteArray], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
-        toast.success('PDF generado');
+        toast.success(t('postSites.KPI.toasts.pdfGenerated', 'PDF generated'));
         setMenuOpenId(null);
         return;
       }
@@ -176,17 +177,17 @@ export default function PostSiteKPIs({ site }: Props) {
           const blob = await KpiService.getPdf(kpi.id);
           const url = URL.createObjectURL(blob);
           window.open(url, '_blank');
-          toast.success('PDF generado');
+          toast.success(t('postSites.KPI.toasts.pdfGenerated', 'PDF generated'));
         } catch (err) {
           console.error('Error fetching PDF from backend', err);
-          toast.error('No se pudo generar/obtener el PDF');
+          toast.error(t('postSites.KPI.toasts.pdfError', 'Could not generate/get PDF'));
         } finally {
           setMenuOpenId(null);
         }
       })();
     } catch (e) {
       console.error('Error opening PDF', e);
-      toast.error('Error al abrir el PDF');
+      toast.error(t('postSites.KPI.toasts.pdfOpenError', 'Error opening PDF'));
       setMenuOpenId(null);
     }
   };
@@ -204,17 +205,17 @@ export default function PostSiteKPIs({ site }: Props) {
           a.click();
           a.remove();
           URL.revokeObjectURL(url);
-          toast.success('Excel descargado');
+          toast.success(t('postSites.KPI.toasts.excelDownloaded', 'Excel downloaded'));
         } catch (err) {
           console.error('Error fetching Excel from backend', err);
-          toast.error('No se pudo generar/obtener el Excel');
+          toast.error(t('postSites.KPI.toasts.excelError', 'Could not generate/get Excel'));
         } finally {
           setMenuOpenId(null);
         }
       })();
     } catch (e) {
       console.error('Error exporting Excel', e);
-      toast.error('Error al exportar Excel');
+      toast.error(t('postSites.KPI.toasts.excelExportError', 'Error exporting Excel'));
       setMenuOpenId(null);
     }
   };
@@ -318,13 +319,13 @@ export default function PostSiteKPIs({ site }: Props) {
                   onClick={() => {
                     setActionOpen(false);
                     if (!selectedIds || selectedIds.length === 0) {
-                      toast.error('Debes seleccionar al menos un KPI');
+                      toast.error(t('postSites.KPI.toasts.selectAtLeastOne', 'You must select at least one KPI'));
                       return;
                     }
                     setDeleteModalOpen(true);
                   }}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >Eliminar</button>
+                >{t('actions.delete', 'Eliminar')}</button>
               </div>
             )}
           </div>
@@ -334,7 +335,7 @@ export default function PostSiteKPIs({ site }: Props) {
               <Search size={16} className="absolute left-3 top-3 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar KPI"
+                placeholder={t('postSites.KPI.kpisearch', 'Buscar KPI')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -347,7 +348,7 @@ export default function PostSiteKPIs({ site }: Props) {
             className="ml-2 px-3 py-2 bg-orange-600 text-white rounded-md text-sm font-medium flex items-center gap-2 hover:bg-orange-700 transition-colors"
           >
             <Plus size={16} />
-            Añadir Nuevo KPI
+            {t('postSites.KPI.kpiadded', 'Añadir Nuevo KPI')}
           </button>
         </div>
 
@@ -366,9 +367,9 @@ export default function PostSiteKPIs({ site }: Props) {
                     }}
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tipo</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Fecha/Hora</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Agregado por</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('postSites.KPI.kpitable.kpitype', 'Tipo')}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('postSites.KPI.kpitable.kpidate', 'Fecha/Hora')}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('postSites.KPI.kpitable.kpicreatedfor', 'Agregado por')}</th>
                 <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                   <button className="hover:text-gray-900">↕</button>
                 </th>
@@ -389,8 +390,8 @@ export default function PostSiteKPIs({ site }: Props) {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">No se encontraron resultados</h3>
-                        <p className="text-sm text-gray-500 mt-1">No pudimos encontrar<br />ningún elemento que<br />coincida con su búsqueda</p>
+                        <h3 className="text-lg font-semibold text-gray-700">{t('clients.empty.title', 'No se encontraron resultados')}</h3>
+                        <p className="text-sm text-gray-500 mt-1">{t('clients.empty.description', 'No pudimos encontrar ningún elemento que coincida con su búsqueda')}</p>
                       </div>
                     </div>
                   </td>
@@ -449,25 +450,22 @@ export default function PostSiteKPIs({ site }: Props) {
                               emailNotification: !!kpi.emailNotification,
                               emails: kpi.emails || [],
                             }); setShowModal(true); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                              <div className="flex items-center gap-2 text-sm text-gray-700"><Edit size={16} />Edit</div>
+                              <div className="flex items-center gap-2 text-sm text-gray-700"><Edit size={16} />{t('actions.edit', 'Edit')}</div>
                             </button>
 
                             <button onClick={() => { setToDeleteId(kpi.id); setDeleteModalOpen(true); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                              <div className="flex items-center gap-2 text-sm text-red-600"><Trash size={16} />Delete</div>
+                              <div className="flex items-center gap-2 text-sm text-red-600"><Trash size={16} />{t('actions.delete', 'Delete')}</div>
                             </button>
 
                             <button onClick={() => { handleExportPdf(kpi); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                              <div className="flex items-center gap-2 text-sm text-gray-700"><FileText size={16} /> Export as PDF</div>
+                              <div className="flex items-center gap-2 text-sm text-gray-700"><FileText size={16} /> {t('postSites.KPI.exportPdf', 'Export as PDF')}</div>
                             </button>
 
                             <button onClick={() => { handleExportExcel(kpi); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                              <div className="flex items-center gap-2 text-sm text-gray-700"><File size={16} /> Export as Excel</div>
+                              <div className="flex items-center gap-2 text-sm text-gray-700"><File size={16} /> {t('postSites.KPI.exportExcel', 'Export as Excel')}</div>
                             </button>
-
-                            
-
-                            <button onClick={() => { toast.success('Email report not implemented'); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                              <div className="flex items-center gap-2 text-sm text-gray-700"><Mail size={16} /> Email Report</div>
+                            <button onClick={() => { toast.success(t('postSites.KPI.emailNotImplemented', 'Email report not implemented')); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
+                              <div className="flex items-center gap-2 text-sm text-gray-700"><Mail size={16} /> {t('postSites.KPI.emailReport', 'Email Report')}</div>
                             </button>
                           </div>
                         )}
@@ -480,7 +478,7 @@ export default function PostSiteKPIs({ site }: Props) {
                         <td colSpan={5} className="p-4">
                           <div className="space-y-4 min-h-[360px]">
                             <div className="flex items-start justify-between">
-                              <div><strong>DESCRIPTION :</strong> <span className="ml-4">{kpi.description}</span></div>
+                              <div><strong>{t('postSites.KPI.descriptionLabel', 'DESCRIPTION :')}</strong> <span className="ml-4">{kpi.description}</span></div>
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <button onClick={(e) => { e.stopPropagation(); prevMonth(); loadKpis(); }} className="p-1 rounded hover:bg-gray-100"><ChevronLeft size={16} /></button>
                                 <div className="px-3 py-1 border rounded">{formatMonth(selectedMonth)}</div>
@@ -493,19 +491,19 @@ export default function PostSiteKPIs({ site }: Props) {
                                 const metrics: any[] = [];
                                 const actualVal = Number(kpi.actual || 0);
                                 if (kpi.standardReportsNumber !== undefined && kpi.standardReportsNumber !== null && Number(kpi.standardReportsNumber) > 0) {
-                                  metrics.push({ name: 'Standard Reports', target: Number(kpi.standardReportsNumber), actual: actualVal });
+                                  metrics.push({ key: 'standardReports', name: t('postSites.KPI.metrics.standardReports', 'Standard Reports'), target: Number(kpi.standardReportsNumber), actual: actualVal });
                                 }
                                 if (kpi.taskReportsNumber !== undefined && kpi.taskReportsNumber !== null && Number(kpi.taskReportsNumber) > 0) {
-                                  metrics.push({ name: 'Task Reports', target: Number(kpi.taskReportsNumber), actual: actualVal });
+                                  metrics.push({ key: 'taskReports', name: t('postSites.KPI.metrics.taskReports', 'Task Reports'), target: Number(kpi.taskReportsNumber), actual: actualVal });
                                 }
                                 if (kpi.incidentReportsNumber !== undefined && kpi.incidentReportsNumber !== null && Number(kpi.incidentReportsNumber) > 0) {
-                                  metrics.push({ name: 'Incident Reports', target: Number(kpi.incidentReportsNumber), actual: actualVal });
+                                  metrics.push({ key: 'incidentReports', name: t('postSites.KPI.metrics.incidentReports', 'Incident Reports'), target: Number(kpi.incidentReportsNumber), actual: actualVal });
                                 }
                                 if (kpi.routeReportsNumber !== undefined && kpi.routeReportsNumber !== null && Number(kpi.routeReportsNumber) > 0) {
-                                  metrics.push({ name: 'Route Reports', target: Number(kpi.routeReportsNumber), actual: actualVal });
+                                  metrics.push({ key: 'routeReports', name: t('postSites.KPI.metrics.routeReports', 'Route Reports'), target: Number(kpi.routeReportsNumber), actual: actualVal });
                                 }
                                 if (kpi.verificationReportsNumber !== undefined && kpi.verificationReportsNumber !== null && Number(kpi.verificationReportsNumber) > 0) {
-                                  metrics.push({ name: 'Checklist Reports', target: Number(kpi.verificationReportsNumber), actual: actualVal });
+                                  metrics.push({ key: 'verificationReports', name: t('postSites.KPI.metrics.verificationReports', 'Checklist Reports'), target: Number(kpi.verificationReportsNumber), actual: actualVal });
                                 }
 
                                 return (
@@ -513,25 +511,25 @@ export default function PostSiteKPIs({ site }: Props) {
                                     <table className="w-full border-collapse border">
                                       <thead>
                                         <tr className="bg-gray-50">
-                                          <th className="border px-4 py-2">Name</th>
-                                          <th className="border px-4 py-2">Target</th>
-                                          <th className="border px-4 py-2">Actual</th>
-                                          <th className="border px-4 py-2">Status</th>
+                                          <th className="border px-4 py-2">{t('postSites.KPI.table.name', 'Name')}</th>
+                                          <th className="border px-4 py-2">{t('postSites.KPI.table.target', 'Target')}</th>
+                                          <th className="border px-4 py-2">{t('postSites.KPI.table.actual', 'Actual')}</th>
+                                          <th className="border px-4 py-2">{t('postSites.KPI.table.status', 'Status')}</th>
                                         </tr>
                                       </thead>
                                       <tbody>
                                         {metrics.length === 0 ? (
                                           <tr>
-                                            <td className="border px-4 py-2" colSpan={4}>No targets defined</td>
+                                            <td className="border px-4 py-2" colSpan={4}>{t('postSites.KPI.table.noTargets', 'No targets defined')}</td>
                                           </tr>
                                         ) : (
                                           metrics.map((m) => (
-                                            <tr key={m.name}>
-                                              <td className="border px-4 py-2 font-semibold">{m.name.toUpperCase()}</td>
-                                              <td className="border px-4 py-2">{m.target}</td>
-                                              <td className="border px-4 py-2">{m.actual}</td>
-                                              <td className={`border px-4 py-2 ${m.actual >= m.target ? 'text-green-600' : 'text-red-600'}`}>{m.actual >= m.target ? 'Achieved' : 'Not Achieved'}</td>
-                                            </tr>
+                                            <tr key={m.key}>
+                                                <td className="border px-4 py-2 font-semibold">{m.name.toUpperCase()}</td>
+                                                <td className="border px-4 py-2">{m.target}</td>
+                                                <td className="border px-4 py-2">{m.actual}</td>
+                                                <td className={`border px-4 py-2 ${m.actual >= m.target ? 'text-green-600' : 'text-red-600'}`}>{m.actual >= m.target ? t('postSites.KPI.status.achieved', 'Achieved') : t('postSites.KPI.status.notAchieved', 'Not Achieved')}</td>
+                                              </tr>
                                           ))
                                         )}
                                       </tbody>
@@ -559,30 +557,30 @@ export default function PostSiteKPIs({ site }: Props) {
         <div className="fixed inset-0 z-50" onClick={handleCloseModal}>
           <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-              <h2 className="text-lg font-semibold text-gray-800">Añadir Nuevos KPIs (Indicadores Clave de Rendimiento)</h2>
+              <h2 className="text-lg font-semibold text-gray-800">{t('postSites.KPI.modal.title', 'Add New KPIs (Key Performance Indicators)')}</h2>
             </div>
 
             <div className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Frecuencia <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('postSites.KPI.modal.frequency', 'Frequency')} <span className="text-red-500">*</span></label>
                 <select
                   value={formData.frequency}
                   onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
                   className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                 >
-                  <option value="">Seleccionar frecuencia</option>
-                  <option value="diario">Diario</option>
-                  <option value="semanal">Semanal</option>
-                  <option value="mensual">Mensual</option>
+                  <option value="">{t('postSites.KPI.modal.frequencyOptions.select', 'Select frequency')}</option>
+                  <option value="diario">{t('postSites.KPI.modal.frequencyOptions.daily', 'Daily')}</option>
+                  <option value="semanal">{t('postSites.KPI.modal.frequencyOptions.weekly', 'Weekly')}</option>
+                  <option value="mensual">{t('postSites.KPI.modal.frequencyOptions.monthly', 'Monthly')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Descripción <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('postSites.KPI.modal.description', 'Description')} <span className="text-red-500">*</span></label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Ingrese la descripción"
+                  placeholder={t('postSites.KPI.modal.descriptionPlaceholder', 'Enter description')}
                   className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
                   rows={4}
                 />
@@ -590,7 +588,7 @@ export default function PostSiteKPIs({ site }: Props) {
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                  <label className="text-sm font-medium text-gray-700">Informes Estándar</label>
+                  <label className="text-sm font-medium text-gray-700">{t('postSites.KPI.modal.standardReports', 'Standard Reports')}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -608,14 +606,14 @@ export default function PostSiteKPIs({ site }: Props) {
                             setFormData({ ...formData, standardReportsNumber: sanitized });
                           }}
                           disabled={!formData.standardReports}
-                          placeholder="Definir un Número"
+                          placeholder={t('postSites.KPI.modal.defineNumber', 'Define a Number')}
                           className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                         />
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                  <label className="text-sm font-medium text-gray-700">Informes de Incidentes</label>
+                  <label className="text-sm font-medium text-gray-700">{t('postSites.KPI.modal.incidentReports', 'Incident Reports')}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -633,14 +631,14 @@ export default function PostSiteKPIs({ site }: Props) {
                             setFormData({ ...formData, incidentReportsNumber: sanitized });
                           }}
                           disabled={!formData.incidentReports}
-                          placeholder="Definir un Número"
+                          placeholder={t('postSites.KPI.modal.defineNumber', 'Define a Number')}
                           className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                         />
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                  <label className="text-sm font-medium text-gray-700">Informes de Recorridos por el Sitio</label>
+                  <label className="text-sm font-medium text-gray-700">{t('postSites.KPI.modal.routeReports', 'Route Reports')}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -658,14 +656,14 @@ export default function PostSiteKPIs({ site }: Props) {
                             setFormData({ ...formData, routeReportsNumber: sanitized });
                           }}
                           disabled={!formData.routeReports}
-                          placeholder="Definir un Número"
+                          placeholder={t('postSites.KPI.modal.defineNumber', 'Define a Number')}
                           className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                         />
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                  <label className="text-sm font-medium text-gray-700">Informes de Tareas</label>
+                  <label className="text-sm font-medium text-gray-700">{t('postSites.KPI.modal.taskReports', 'Task Reports')}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -683,14 +681,14 @@ export default function PostSiteKPIs({ site }: Props) {
                             setFormData({ ...formData, taskReportsNumber: sanitized });
                           }}
                           disabled={!formData.taskReports}
-                          placeholder="Definir un Número"
+                          placeholder={t('postSites.KPI.modal.defineNumber', 'Define a Number')}
                           className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                         />
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                  <label className="text-sm font-medium text-gray-700">Informes de Listas de Verificación</label>
+                  <label className="text-sm font-medium text-gray-700">{t('postSites.KPI.modal.verificationReports', 'Checklist Reports')}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -708,7 +706,7 @@ export default function PostSiteKPIs({ site }: Props) {
                             setFormData({ ...formData, verificationReportsNumber: sanitized });
                           }}
                           disabled={!formData.verificationReports}
-                          placeholder="Definir un Número"
+                          placeholder={t('postSites.KPI.modal.defineNumber', 'Define a Number')}
                           className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                         />
                   </div>
@@ -717,7 +715,7 @@ export default function PostSiteKPIs({ site }: Props) {
 
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <label className="text-sm font-medium text-gray-700">Enviar Informe KPI por Correo Electrónico</label>
+                  <label className="text-sm font-medium text-gray-700">{t('postSites.KPI.modal.emailNotification', 'Send KPI report by email')}</label>
                   <input
                     type="checkbox"
                     checked={formData.emailNotification}
@@ -748,14 +746,14 @@ export default function PostSiteKPIs({ site }: Props) {
                           value={currentEmail}
                           onChange={(e) => { setCurrentEmail(e.target.value); setEmailError(''); }}
                           onKeyPress={handleKeyPress}
-                          placeholder="Nuevo Correo Electrónico..."
+                          placeholder={t('postSites.KPI.modal.newEmailPlaceholder', 'New email...')}
                           className={`flex-1 px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${emailError ? 'border-red-500 focus:ring-red-500' : 'focus:ring-orange-500'}`}
                         />
                         <button
                           onClick={handleAddEmail}
                           className="px-4 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700 transition-colors"
                         >
-                          Agregar
+                          {t('postSites.KPI.modal.addEmail', 'Add')}
                         </button>
                       </div>
                       {emailError && (<p className="text-xs text-red-500">{emailError}</p>)}
@@ -766,7 +764,7 @@ export default function PostSiteKPIs({ site }: Props) {
             </div>
 
             <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-white">
-              <button onClick={handleSubmitKPI} className="px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700">AÑADIR</button>
+              <button onClick={handleSubmitKPI} className="px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700">{t('postSites.KPI.modal.add', 'ADD')}</button>
             </div>
           </div>
         </div>
@@ -777,35 +775,35 @@ export default function PostSiteKPIs({ site }: Props) {
           <div className="absolute inset-0 bg-black opacity-30" />
           <div className="relative w-96 bg-white rounded shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 border-b flex items-center justify-center">
-                <h3 className="text-lg font-semibold text-center">Confirmar eliminación</h3>
+                <h3 className="text-lg font-semibold text-center">{t('postSites.KPI.confirmDelete.title', 'Confirm deletion')}</h3>
               </div>
             <div className="p-6">
-              <p className="text-sm text-gray-700">¿Estás seguro de que deseas eliminar {toDeleteId ? 'este KPI' : `${selectedIds.length} KPI(s)`}? Esta acción no se puede deshacer.</p>
+              <p className="text-sm text-gray-700">{toDeleteId ? t('postSites.KPI.confirmDelete.messageSingle', 'Are you sure you want to delete this KPI? This action cannot be undone.') : t('postSites.KPI.confirmDelete.messageMultiple', 'Are you sure you want to delete {{count}} KPI(s)? This action cannot be undone.', { count: selectedIds.length })}</p>
             </div>
             <div className="flex items-center justify-end gap-3 p-6 border-t bg-white">
-              <button onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">Cancelar</button>
+              <button onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">{t('actions.cancel', 'Cancel')}</button>
               <button onClick={async () => {
                 try {
                   if (toDeleteId) {
                     await KpiService.destroy(toDeleteId);
-                    toast.success('KPI eliminado');
+                    toast.success(t('postSites.KPI.toasts.kpiDeleted', 'KPI deleted'));
                   } else if (selectedIds.length > 0) {
                     await Promise.all(selectedIds.map((id) => KpiService.destroy(id)));
-                    toast.success('KPIs eliminados');
+                    toast.success(t('postSites.KPI.toasts.kpisDeleted', 'KPIs deleted'));
                   } else {
-                    toast.error('No hay elementos seleccionados');
+                    toast.error(t('postSites.KPI.toasts.noSelected', 'No items selected'));
                     return;
                   }
                   await loadKpis();
                 } catch (e) {
                   console.error(e);
-                  toast.error('Error al eliminar KPI(s)');
+                  toast.error(t('postSites.KPI.toasts.deleteError', 'Error deleting KPI(s)'));
                 } finally {
                   setDeleteModalOpen(false);
                   setToDeleteId(null);
                   setSelectedIds([]);
                 }
-              }} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Eliminar</button>
+              }} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">{t('actions.delete', 'Delete')}</button>
             </div>
           </div>
         </div>

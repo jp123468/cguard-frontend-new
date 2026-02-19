@@ -532,7 +532,9 @@ export default function Estimates() {
                                             {(() => {
                                                 const c = previewEstimate.rawClient;
                                                 const s = previewEstimate.rawSite;
-                                                const clientName = c?.name || c?.companyName || c?.fullName || previewEstimate.client || '—';
+                                                const clientName = (c)
+                                                    ? ((c.fullName && String(c.fullName).trim()) || ((String(c.firstName || '').trim() + ' ' + String(c.lastName || '').trim()).trim()) || c.name || c.companyName || previewEstimate.client || '—')
+                                                    : (previewEstimate.client || '—');
                                                 const siteName = s?.name || s?.label || '—';
                                                 const postRaw = s;
                                                 const postAddrParts: string[] = [];

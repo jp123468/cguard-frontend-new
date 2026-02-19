@@ -47,20 +47,39 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
-  Tag,
+  Copy,
+  Send,
   Archive,
   RotateCw,
-  Send,
-  Copy,
   Trash,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import Breadcrumb from "@/components/ui/breadcrumb";
-import securityGuardService from "@/lib/api/securityGuardService";
-import { toast } from "sonner";
 import * as XLSX from 'xlsx';
 import { usePermissions } from '@/hooks/usePermissions';
-
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import securityGuardService from '@/lib/api/securityGuardService';
+import { clientService } from '@/lib/api/clientService';
+import { postSiteService } from '@/lib/api/postSiteService';
+import { categoryService } from '@/lib/api/categoryService';
+// Fallback local Breadcrumb component (avoid missing module error)
+interface BreadcrumbItem { label: string; path?: string; }
+const Breadcrumb: React.FC<{ items: BreadcrumbItem[] }> = ({ items }) => (
+  <nav className="py-2" aria-label="breadcrumb">
+    <ol className="flex flex-wrap gap-2 text-sm text-gray-600">
+      {items.map((it, idx) => (
+        <li key={idx} className="flex items-center">
+          {it.path ? (
+            <a href={it.path} className="text-blue-600 hover:underline">{it.label}</a>
+          ) : (
+            <span>{it.label}</span>
+          )}
+          {idx < items.length - 1 && <span className="mx-2">/</span>}
+        </li>
+      ))}
+    </ol>
+  </nav>
+);
 // Tipos para los security-guards
 type GuardStatus = "Activo" | "Pendiente" | "Archivado" | "Invitado";
 
@@ -74,6 +93,7 @@ interface SecurityGuard {
 }
 
 export default function SecurityGuardsPage() {
+  const { t } = useTranslation();
   const { hasPermission } = usePermissions();
   const [openFilter, setOpenFilter] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -88,6 +108,11 @@ export default function SecurityGuardsPage() {
   const [filterSite, setFilterSite] = useState<string>("todos");
   const [filterSkills, setFilterSkills] = useState<string>("todos");
   const [filterDepartment, setFilterDepartment] = useState<string>("todos");
+  // Options loaded from backend for filters
+  const [availableCategories, setAvailableCategories] = useState<any[]>([]);
+  const [availableClients, setAvailableClients] = useState<any[]>([]);
+  const [availablePostSites, setAvailablePostSites] = useState<any[]>([]);
+  const [loadingFilters, setLoadingFilters] = useState(false);
 
   // Estado principal SIN datos de prueba
   const [guards, setGuards] = useState<SecurityGuard[]>([]);
@@ -149,7 +174,7 @@ export default function SecurityGuardsPage() {
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Guardias</title><style>table{width:100%;border-collapse:collapse}td,th{border:1px solid #ddd;padding:8px}</style></head><body><h2>Guardias</h2><table><thead><tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Estado</th></tr></thead><tbody>${htmlRows}</tbody></table></body></html>`;
     const w = window.open("", "_blank");
     if (!w) {
-      toast.error("No se pudo abrir la ventana de impresión");
+      toast.error(t('guards.list.toasts.printWindowOpenError', 'No se pudo abrir la ventana de impresión'));
       return;
     }
     w.document.open();
@@ -192,7 +217,7 @@ export default function SecurityGuardsPage() {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  // Ejemplo de dónde cargar datos reales:
+  // Ejemplo de dónde cargar datos reales: carga lista desde backend cuando cambian filtros relevantes
   useEffect(() => {
     let mounted = true;
     setLoading(true);
@@ -214,9 +239,18 @@ export default function SecurityGuardsPage() {
       params = { "filter[status]": "invited" };
     }
 
+    // Additional filters
+    if (!params) params = {};
+    if (filterCategory && filterCategory !== "todas") params["filter[categoryIds]"] = filterCategory;
+    if (filterClient && filterClient !== "todos") params["filter[clientId]"] = filterClient;
+    if (filterSite && filterSite !== "todos") params["filter[postSiteId]"] = filterSite;
+    if (filterSkills && filterSkills !== "todos") params["filter[skills]"] = filterSkills;
+    if (filterDepartment && filterDepartment !== "todos") params["filter[department]"] = filterDepartment;
+    if (searchQuery) params["q"] = searchQuery;
+
     securityGuardService
       .list(params)
-      .then((data) => {
+      .then((data: any) => {
         // Debugging: log raw response to help diagnose status mismatches
         try {
           console.debug('[SecurityGuardsPage] raw list response:', data);
@@ -278,7 +312,7 @@ export default function SecurityGuardsPage() {
 
         setGuards(normalizedList);
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (!mounted) return;
         console.error("Error cargando guardias:", err);
         setError(String(err?.message || err));
@@ -291,7 +325,30 @@ export default function SecurityGuardsPage() {
     return () => {
       mounted = false;
     };
-  }, [filterStatus]);
+  }, [filterStatus, filterCategory, filterClient, filterSite, filterSkills, filterDepartment, searchQuery]);
+
+  // Load filter options when sheet opens
+  useEffect(() => {
+    if (openFilter) {
+      setLoadingFilters(true);
+      Promise.all([
+        clientService.getClients(),
+        postSiteService.list({}, { limit: 100, offset: 0 }),
+        categoryService.list(),
+      ])
+        .then(([clientsRes, postSitesRes, categoriesRes]) => {
+          setAvailableClients(clientsRes.rows ?? []);
+          // postSiteService.list returns { rows, count }
+          setAvailablePostSites(postSitesRes.rows ?? []);
+          // categoryService.list returns { rows }
+          setAvailableCategories(categoriesRes.rows ?? []);
+        })
+        .catch((err) => {
+          console.error('Error loading filter options', err);
+        })
+        .finally(() => setLoadingFilters(false));
+    }
+  }, [openFilter]);
 
   // Reiniciar página cuando cambie criterio de búsqueda o tamaño de página
   useEffect(() => {
@@ -391,10 +448,15 @@ export default function SecurityGuardsPage() {
     <AppLayout>
       <Breadcrumb
         items={[
-          { label: "Panel de control", path: "/dashboard" },
-          { label: "security-guards" },
+          { label: t('sidebar.panel', 'Panel de control'), path: "/dashboard" },
+          { label: t('guards.list.pageTitle', 'Guardias') },
         ]}
       />
+      {error && (
+        <div className="p-4 my-2 rounded-md bg-red-50 text-red-800">
+          {t('guards.list.error.loading', 'Error cargando guardias: {{msg}}', { msg: error })}
+        </div>
+      )}
       <div className="p-4">
         <section className="">
           {/* Acciones superiores */}
@@ -406,19 +468,19 @@ export default function SecurityGuardsPage() {
                   // set and immediately clear to avoid leaving the option selected
                   setBulkActionValue(v);
                   if (selectedGuards.length === 0) {
-                    toast.error("Selecciona al menos un guardia");
+                    toast.error(t('guards.list.toasts.selectAtLeastOne', 'Selecciona al menos un guardia'));
                     setBulkActionValue("");
                     return;
                   }
 
                   // Permission checks for bulk actions
                   if (v === 'eliminar' && !hasPermission('securityGuardDestroy')) {
-                    toast.error('No tienes permiso para eliminar guardias');
+                    toast.error(t('guards.list.toasts.noPermissionDelete', 'No tienes permiso para eliminar guardias'));
                     setBulkActionValue("");
                     return;
                   }
                   if ((v === 'archivar' || v === 'restaurar' || v === 'mover') && !hasPermission('securityGuardEdit')) {
-                    toast.error('No tienes permiso para modificar guardias');
+                    toast.error(t('guards.list.toasts.noPermissionEdit', 'No tienes permiso para modificar guardias'));
                     setBulkActionValue("");
                     return;
                   }
@@ -437,17 +499,17 @@ export default function SecurityGuardsPage() {
                 disabled={bulkActionLoading}
               >
                 <SelectTrigger className="w-40" disabled={selectedGuards.length === 0}>
-                  <SelectValue placeholder="Acción" />
+                  <SelectValue placeholder={t('actions.action', 'Acción')} />
                 </SelectTrigger>
                 <SelectContent>
                   {selectedGuards.length > 0 && selectedGuards.some((sid) => (guards.find((g) => g.id === sid)?.status === "Archivado")) ? (
                     <>
-                      <SelectItem value="restaurar">Restaurar</SelectItem>
-                      <SelectItem value="eliminar">Eliminar</SelectItem>
+                      <SelectItem value="restaurar">{t('guards.list.actions.restore', 'Restaurar')}</SelectItem>
+                      <SelectItem value="eliminar">{t('actions.delete', 'Eliminar')}</SelectItem>
                     </>
                   ) : (
                     <>
-                      <SelectItem value="archivar">Archivar</SelectItem>
+                      <SelectItem value="archivar">{t('guards.list.actions.archive', 'Archivar')}</SelectItem>
                     </>
                   )}
                 </SelectContent>
@@ -458,7 +520,7 @@ export default function SecurityGuardsPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar guardia"
+                  placeholder={t('guards.list.searchPlaceholder', 'Buscar guardia')}
                   className="pl-9 w-64"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -466,8 +528,8 @@ export default function SecurityGuardsPage() {
               </div>
 
               {hasPermission('securityGuardCreate') && (
-                <Button className="bg-orange-500 hover:bg-orange-600 text-white" asChild>
-                  <Link to="/security-guards/new">Nuevo Guardia</Link>
+                  <Button className="bg-orange-500 hover:bg-orange-600 text-white" asChild>
+                  <Link to="/security-guards/new">{t('guards.list.newGuard', 'Nuevo Guardia')}</Link>
                 </Button>
               )}
 
@@ -479,77 +541,100 @@ export default function SecurityGuardsPage() {
                     className="text-orange-600 border-orange-200"
                   >
                     <Filter className="mr-2 h-4 w-4" />
-                    Filtros
+                    {t('guards.list.filters', 'Filtros')}
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[400px] sm:w-[460px]">
                   <SheetHeader>
-                    <SheetTitle>Filtros</SheetTitle>
+                    <SheetTitle>{t('guards.list.filters', 'Filtros')}</SheetTitle>
                   </SheetHeader>
 
                   <div className="mt-6 space-y-4">
                     <div className="space-y-2">
-                      <Label>Categorías</Label>
+                      <Label>{t('guards.list.filter.categories', 'Categorías')}</Label>
                       <Select value={filterCategory} onValueChange={(v) => setFilterCategory(v)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Categorías" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="todas">Todas</SelectItem>
+                            <SelectItem value="todas">{t('guards.list.filter.categoriesAll', 'Todas')}</SelectItem>
+                            {availableCategories.map((c) => (
+                              <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Cliente</Label>
+                      <Label>{t('guards.list.filter.client', 'Cliente')}</Label>
                       <Select value={filterClient} onValueChange={(v) => setFilterClient(v)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Cliente" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="todos">Todos</SelectItem>
+                          <SelectItem value="todos">{t('guards.list.filter.clientAll', 'Todos')}</SelectItem>
+                          {availableClients.map((c) => (
+                            <SelectItem key={c.id} value={String(c.id)}>
+                              {(() => {
+                                const fullFromFields = c.fullName ?? c.full_name ?? c.fullname;
+                                if (fullFromFields && String(fullFromFields).trim()) return String(fullFromFields).trim();
+                                const first = c.firstName ?? c.first_name ?? '';
+                                const last = c.lastName ?? c.last_name ?? '';
+                                if (first && last) return `${first} ${last}`.trim();
+                                if (!first && last && c.name) return `${c.name} ${last}`.trim();
+                                if (first && !last) return first;
+                                if (!first && last) return last;
+                                // If `name` looks like a full name (contains space), prefer it
+                                if (c.name && String(c.name).includes(' ')) return c.name;
+                                return c.name ?? c.companyName ?? c.fullName ?? c.label ?? c.email ?? c.id;
+                              })()}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Sitio de publicación</Label>
+                      <Label>{t('guards.list.filter.site', 'Sitio de publicación')}</Label>
                       <Select value={filterSite} onValueChange={(v) => setFilterSite(v)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Sitio de publicación" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="todos">Todos</SelectItem>
+                          <SelectItem value="todos">{t('guards.list.filter.siteAll', 'Todos')}</SelectItem>
+                          {availablePostSites.map((s) => (
+                            <SelectItem key={s.id} value={String(s.id)}>{s.name ?? s.companyName ?? s.id}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Conjunto de Habilidades</Label>
+                      <Label>{t('guards.list.filter.skills', 'Conjunto de Habilidades')}</Label>
                       <Select value={filterSkills} onValueChange={(v) => setFilterSkills(v)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Conjunto de Habilidades" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="todos">Todos</SelectItem>
+                          <SelectItem value="todos">{t('guards.list.filter.skillsAll', 'Todos')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Departamento</Label>
+                      <Label>{t('guards.list.filter.department', 'Departamento')}</Label>
                       <Select value={filterDepartment} onValueChange={(v) => setFilterDepartment(v)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Departamento" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="todos">Todos</SelectItem>
+                          <SelectItem value="todos">{t('guards.list.filter.departmentAll', 'Todos')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Estado*</Label>
+                      <Label>{t('guards.list.filter.status', 'Estado*')}</Label>
                       <Select
                         value={filterStatus}
                         onValueChange={(v) => {
@@ -558,14 +643,14 @@ export default function SecurityGuardsPage() {
                           setOpenFilter(false);
                         }}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Todos los Guardias" />
+                          <SelectTrigger>
+                          <SelectValue placeholder={t('guards.list.filter.statusAllPlaceholder', 'Todos los Guardias')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="todos">Todos los Guardias</SelectItem>
-                          <SelectItem value="activos">Activos</SelectItem>
-                          <SelectItem value="pendientes">Pendientes</SelectItem>
-                          <SelectItem value="archivados">Archivados</SelectItem>
+                          <SelectItem value="todos">{t('guards.list.filter.statusAll', 'Todos los Guardias')}</SelectItem>
+                          <SelectItem value="activos">{t('guards.list.filter.statusActive', 'Activos')}</SelectItem>
+                          <SelectItem value="pendientes">{t('guards.list.filter.statusPending', 'Pendientes')}</SelectItem>
+                          <SelectItem value="archivados">{t('guards.list.filter.statusArchived', 'Archivados')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -579,7 +664,7 @@ export default function SecurityGuardsPage() {
                         setOpenFilter(false);
                       }}
                     >
-                      Filtro
+                      {t('guards.list.applyFilters', 'Filtro')}
                     </Button>
                     <Button
                       className="w-full bg-white text-black border hover:bg-gray-50"
@@ -593,7 +678,7 @@ export default function SecurityGuardsPage() {
                         setFilterStatus("activos");
                       }}
                     >
-                      Limpiar filtros
+                      {t('guards.list.clearFilters', 'Limpiar filtros')}
                     </Button>
                   </div>
                 </SheetContent>
@@ -608,14 +693,14 @@ export default function SecurityGuardsPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuItem onClick={async () => { if (!(await exportFromBackend('pdf'))) downloadFallback('pdf', filteredGuards); }}>
-                      <FileDown className="mr-2 h-4 w-4" /> Exportar como PDF
+                      <FileDown className="mr-2 h-4 w-4" /> {t('guards.list.export.pdf', 'Exportar como PDF')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={async () => { if (!(await exportFromBackend('excel'))) downloadFallback('excel', filteredGuards); }}>
-                      <FileSpreadsheet className="mr-2 h-4 w-4" /> Exportar como Excel
+                      <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('guards.list.export.excel', 'Exportar como Excel')}
                     </DropdownMenuItem>
                     {hasPermission('securityGuardImport') && (
                       <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
-                        <ArrowDownUp className="mr-2 h-4 w-4" /> Importar
+                        <ArrowDownUp className="mr-2 h-4 w-4" /> {t('guards.list.import', 'Importar')}
                       </DropdownMenuItem>
                     )}
                 </DropdownMenuContent>
@@ -634,13 +719,13 @@ export default function SecurityGuardsPage() {
                       onCheckedChange={(v) =>
                         handleSelectAllGuards(Boolean(v))
                       }
-                      aria-label="Seleccionar todos los guardias de esta página"
+                      aria-label={t('guards.list.selectAllAria', 'Seleccionar todos los guardias de esta página')}
                     />
                   </th>
-                  <th className="px-4 py-3 font-semibold">Nombre</th>
-                  <th className="px-4 py-3 font-semibold">Correo Electrónico</th>
-                  <th className="px-4 py-3 font-semibold">Número de Móvil</th>
-                  <th className="px-4 py-3 font-semibold">Estado</th>
+                  <th className="px-4 py-3 font-semibold">{t('guards.list.table.name', 'Nombre')}</th>
+                  <th className="px-4 py-3 font-semibold">{t('guards.list.table.email', 'Correo Electrónico')}</th>
+                  <th className="px-4 py-3 font-semibold">{t('guards.list.table.phone', 'Número de Móvil')}</th>
+                  <th className="px-4 py-3 font-semibold">{t('guards.list.table.status', 'Estado')}</th>
                   <th />
                 </tr>
               </thead>
@@ -655,7 +740,7 @@ export default function SecurityGuardsPage() {
                           onCheckedChange={(v) =>
                             handleSelectGuard(guard.id, Boolean(v))
                           }
-                          aria-label={`Seleccionar ${guard.name}`}
+                          aria-label={t('guards.list.selectAria', 'Seleccionar {{name}}', { name: guard.name })}
                         />
                       </td>
                       <td className="px-4 py-3 flex items-center gap-3">
@@ -677,7 +762,7 @@ export default function SecurityGuardsPage() {
                               navigate(`/guards/${realId}/overview`);
                             }
                           }}
-                          aria-label={`Abrir resumen de ${guard.name}`}
+                          aria-label={t('guards.list.openOverviewAria', 'Abrir resumen de {{name}}', { name: guard.name })}
                         >
                           {guard.name}
                         </div>
@@ -716,7 +801,7 @@ export default function SecurityGuardsPage() {
                                       }
 
                                       await securityGuardService.resendInvite(payload);
-                                      toast.success("Invitación reenviada");
+                                      toast.success(t('guards.list.toasts.inviteResent', 'Invitación reenviada'));
                                       // Refresh list
                                       try {
                                         const refreshed = await securityGuardService.list();
@@ -757,11 +842,11 @@ export default function SecurityGuardsPage() {
                                       }
                                     } catch (err) {
                                       console.error(err);
-                                      toast.error("Error reenviando invitación");
+                                      toast.error(t('guards.list.toasts.inviteResendError', 'Error reenviando invitación'));
                                     }
                                   }}
                                 >
-                                  <Send className="mr-2 h-4 w-4" /> Reenviar Invitación
+                                  <Send className="mr-2 h-4 w-4" /> {t('guards.list.actions.resendInvite','Reenviar Invitación')}
                                 </DropdownMenuItem>
 
                                 <DropdownMenuItem
@@ -790,7 +875,7 @@ export default function SecurityGuardsPage() {
                                       setDeleteDialogOpen(true);
                                     }}
                                   >
-                                    <Trash className="mr-2 h-4 w-4" /> Remover
+                                    <Trash className="mr-2 h-4 w-4" /> {t('guards.list.actions.remove','Remover')}
                                   </DropdownMenuItem>
                                 )}
                               </>
@@ -803,7 +888,7 @@ export default function SecurityGuardsPage() {
                                       navigate(`/guards/${realId}/overview`);
                                     }}
                                   >
-                                    <Eye className="mr-2 h-4 w-4" /> Ver Detalles
+                                    <Eye className="mr-2 h-4 w-4" /> {t('guards.list.actions.viewDetails','Ver Detalles')}
                                   </DropdownMenuItem>
                                 )}
                                 {guard.status === "Archivado" ? (
@@ -815,7 +900,7 @@ export default function SecurityGuardsPage() {
                                           setRestoreDialogOpen(true);
                                         }}
                                       >
-                                        <RotateCw className="mr-2 h-4 w-4" /> Restaurar
+                                        <RotateCw className="mr-2 h-4 w-4" /> {t('guards.list.actions.restore','Restaurar')}
                                       </DropdownMenuItem>
                                     )}
                                     {hasPermission('securityGuardDestroy') && (
@@ -825,7 +910,7 @@ export default function SecurityGuardsPage() {
                                           setDeleteDialogOpen(true);
                                         }}
                                       >
-                                        <Archive className="mr-2 h-4 w-4" /> Eliminar permanentemente
+                                        <Archive className="mr-2 h-4 w-4" /> {t('guards.list.actions.deletePermanently','Eliminar permanentemente')}
                                       </DropdownMenuItem>
                                     )}
                                   </>
@@ -838,7 +923,7 @@ export default function SecurityGuardsPage() {
                                           setArchiveDialogOpen(true);
                                         }}
                                       >
-                                        <Archive className="mr-2 h-4 w-4" /> Archivar
+                                        <Archive className="mr-2 h-4 w-4" /> {t('guards.list.actions.archive','Archivar')}
                                       </DropdownMenuItem>
                                     )}
                                   </>
@@ -860,11 +945,10 @@ export default function SecurityGuardsPage() {
                           className="h-36 mb-4"
                         />
                         <h3 className="text-lg font-semibold">
-                          No se encontraron resultados
+                          {t('guards.list.empty.title', 'No se encontraron resultados')}
                         </h3>
                         <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-                          No pudimos encontrar ningún elemento que coincida con
-                          su búsqueda
+                          {t('guards.list.empty.description', 'No pudimos encontrar ningún elemento que coincida con su búsqueda')}
                         </p>
                       </div>
                     </td>
@@ -876,7 +960,7 @@ export default function SecurityGuardsPage() {
             {/* Paginación (única) */}
             <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50">
               <div className="flex items-center gap-2">
-                <span>Elementos por página</span>
+                <span>{t('guards.list.pagination.itemsPerPage', 'Elementos por página')}</span>
                 <Select
                   value={String(itemsPerPage)}
                   onValueChange={(value) => setItemsPerPage(Number(value))}
@@ -894,12 +978,15 @@ export default function SecurityGuardsPage() {
               </div>
               <div className="flex items-center gap-2">
                 <div>
-                  {filteredGuards.length > 0
-                    ? `${(currentPage - 1) * itemsPerPage + 1} - ${Math.min(
-                        currentPage * itemsPerPage,
-                        filteredGuards.length
-                      )} de ${filteredGuards.length}`
-                    : "0 – 0 de 0"}
+                  {filteredGuards.length > 0 ? (
+                    t('guards.list.pagination.range', '{{start}} - {{end}} de {{total}}', {
+                      start: (currentPage - 1) * itemsPerPage + 1,
+                      end: Math.min(currentPage * itemsPerPage, filteredGuards.length),
+                      total: filteredGuards.length,
+                    })
+                  ) : (
+                    t('guards.list.pagination.emptyRange', '0 – 0 de 0')
+                  )}
                 </div>
                 <div className="flex items-center">
                   <Button
@@ -933,20 +1020,20 @@ export default function SecurityGuardsPage() {
       <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Archivar guardia</DialogTitle>
+            <DialogTitle>{t('guards.list.dialog.archive.title', 'Archivar guardia')}</DialogTitle>
           </DialogHeader>
           <DialogDescription>
-            ¿Estás seguro que deseas archivar este guardia? Esta acción se puede revertir desde el filtro.
+            {t('guards.list.dialog.archive.description', '¿Estás seguro que deseas archivar este guardia? Esta acción se puede revertir desde el filtro.')}
           </DialogDescription>
           <div className="mt-4">
             <div className="text-sm text-gray-700">
-              <strong>Nombre:</strong> {guardToArchive?.name ?? "-"}
+              <strong>{t('guards.list.labels.name', 'Nombre')}:</strong> {guardToArchive?.name ?? "-"}
             </div>
             <div className="text-sm text-gray-700">{guardToArchive?.email ?? ""}</div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setArchiveDialogOpen(false)} disabled={archiveLoading}>
-              Cancelar
+              {t('actions.cancel', 'Cancelar')}
             </Button>
             <Button
               className="bg-orange-500 hover:bg-orange-600 text-white"
@@ -958,7 +1045,7 @@ export default function SecurityGuardsPage() {
                   // Prevent archiving if guard is currently on duty
                   const isOnDuty = guardToArchive.raw?.isOnDuty ?? guardToArchive.raw?.onDuty ?? false;
                   if (isOnDuty) {
-                    toast.error("No se puede archivar: el guardia está actualmente en servicio.");
+                    toast.error(t('guards.list.toasts.archiveOnDutyError', 'No se puede archivar: el guardia está actualmente en servicio.'));
                     setArchiveLoading(false);
                     return;
                   }
@@ -969,18 +1056,18 @@ export default function SecurityGuardsPage() {
                       g.id === guardToArchive.id ? { ...g, status: "Archivado", raw: { ...g.raw, status: "archived" } } : g
                     )
                   );
-                  toast.success("Guardia archivado");
+                  toast.success(t('guards.list.toasts.archived', 'Guardia archivado'));
                   setArchiveDialogOpen(false);
                 } catch (err: any) {
                   console.error("Error archivando guardia:", err);
-                  toast.error("Error archivando guardia: " + (err?.message || String(err)));
+                  toast.error(t('guards.list.toasts.archiveError', 'Error archivando guardia: {{msg}}', { msg: err?.message || String(err) }));
                 } finally {
                   setArchiveLoading(false);
                 }
               }}
               disabled={archiveLoading}
             >
-              {archiveLoading ? "Archivando…" : "Archivar"}
+              {archiveLoading ? t('guards.list.buttons.archiving', 'Archivando…') : t('guards.list.actions.archive', 'Archivar')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -989,28 +1076,24 @@ export default function SecurityGuardsPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar guardia permanentemente</DialogTitle>
+            <DialogTitle>{t('guards.list.dialog.delete.title', 'Eliminar guardia permanentemente')}</DialogTitle>
           </DialogHeader>
           <DialogDescription>
             {guardToDelete?.status === "Pendiente" ? (
-              <>
-                Esta acción eliminará permanentemente al guardia pendiente. No podrá recuperarse después de eliminarlo.
-              </>
+              <>{t('guards.list.dialog.delete.description.pending', 'Esta acción eliminará permanentemente al guardia pendiente. No podrá recuperarse después de eliminarlo.')}</>
             ) : (
-              <>
-                Esta acción eliminará permanentemente al guardia. Asegúrate de que el guardia esté archivado y no esté en servicio.
-              </>
+              <>{t('guards.list.dialog.delete.description.default', 'Esta acción eliminará permanentemente al guardia. Asegúrate de que el guardia esté archivado y no esté en servicio.')}</>
             )}
           </DialogDescription>
           <div className="mt-4">
             <div className="text-sm text-gray-700">
-              <strong>Nombre:</strong> {guardToDelete?.name ?? "-"}
+              <strong>{t('guards.list.labels.name', 'Nombre')}:</strong> {guardToDelete?.name ?? "-"}
             </div>
             <div className="text-sm text-gray-700">{guardToDelete?.email ?? ""}</div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleteLoading}>
-              Cancelar
+              {t('actions.cancel', 'Cancelar')}
             </Button>
             <Button
               className="bg-red-600 hover:bg-red-700 text-white"
@@ -1037,13 +1120,13 @@ export default function SecurityGuardsPage() {
                   }
 
                   setGuards((prev) => prev.filter((g) => g.id !== guardToDelete.id));
-                  toast.success("Guardia eliminado permanentemente");
+                  toast.success(t('guards.list.toasts.deleteSuccess', 'Guardia eliminado permanentemente'));
                   setDeleteDialogOpen(false);
                 } catch (err: any) {
                   console.error("Error eliminando guardia:", err);
                   // Show user-friendly error
                   try {
-                    toast.error("No se pudo eliminar el guardia: " + (err?.message || String(err)));
+                    toast.error(t('guards.list.toasts.deleteError', 'No se pudo eliminar el guardia: {{msg}}', { msg: err?.message || String(err) }));
                   } catch (e) {
                     // ignore toast failures
                   }
@@ -1053,7 +1136,7 @@ export default function SecurityGuardsPage() {
               }}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Eliminando…" : "Eliminar"}
+              {deleteLoading ? t('guards.list.buttons.deleting', 'Eliminando…') : t('actions.delete', 'Eliminar')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1062,20 +1145,20 @@ export default function SecurityGuardsPage() {
       <Dialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Restaurar guardia</DialogTitle>
+            <DialogTitle>{t('guards.list.dialog.restore.title', 'Restaurar guardia')}</DialogTitle>
           </DialogHeader>
           <DialogDescription>
-            ¿Deseas restaurar este guardia? La acción lo devolverá al estado activo.
+            {t('guards.list.dialog.restore.description', '¿Deseas restaurar este guardia? La acción lo devolverá al estado activo.')}
           </DialogDescription>
           <div className="mt-4">
             <div className="text-sm text-gray-700">
-              <strong>Nombre:</strong> {guardToRestore?.name ?? "-"}
+              <strong>{t('guards.list.labels.name', 'Nombre')}:</strong> {guardToRestore?.name ?? "-"}
             </div>
             <div className="text-sm text-gray-700">{guardToRestore?.email ?? ""}</div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRestoreDialogOpen(false)} disabled={restoreLoading}>
-              Cancelar
+              {t('actions.cancel', 'Cancelar')}
             </Button>
             <Button
               className="bg-green-600 hover:bg-green-700 text-white"
@@ -1089,18 +1172,18 @@ export default function SecurityGuardsPage() {
                   setGuards((prev) =>
                     prev.map((g) => (g.id === guardToRestore.id ? { ...g, status: "Activo", raw: { ...g.raw, status: "active" } } : g))
                   );
-                  toast.success("Guardia restaurado");
+                  toast.success(t('guards.list.toasts.restoreSuccess', 'Guardia restaurado'));
                   setRestoreDialogOpen(false);
                 } catch (err: any) {
                   console.error("Error restaurando guardia:", err);
-                  toast.error("Error restaurando guardia: " + (err?.message || String(err)));
+                  toast.error(t('guards.list.toasts.restoreError', 'Error restaurando guardia: {{msg}}', { msg: err?.message || String(err) }));
                 } finally {
                   setRestoreLoading(false);
                 }
               }}
               disabled={restoreLoading}
             >
-              {restoreLoading ? "Restaurando…" : "Restaurar"}
+              {restoreLoading ? t('guards.list.buttons.restoring', 'Restaurando…') : t('guards.list.actions.restore', 'Restaurar')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1111,39 +1194,34 @@ export default function SecurityGuardsPage() {
           <DialogHeader>
             <DialogTitle>
               {bulkActionType === "archivar"
-                ? "Archivar guardias"
+                ? t('guards.list.dialog.bulk.archiveTitle', 'Archivar guardias')
                 : bulkActionType === "restaurar"
-                ? "Restaurar guardias"
+                ? t('guards.list.dialog.bulk.restoreTitle', 'Restaurar guardias')
                 : bulkActionType === "eliminar"
-                ? "Eliminar guardias"
-                : "Confirmar acción"}
+                ? t('guards.list.dialog.bulk.deleteTitle', 'Eliminar guardias')
+                : t('guards.list.dialog.bulk.confirmTitle', 'Confirmar acción')}
             </DialogTitle>
           </DialogHeader>
           <DialogDescription>
             {bulkActionType === "archivar" && (
-              <>
-                ¿Estás seguro de que deseas archivar {selectedGuards.length} guardia(s)? Esta acción se puede revertir desde el filtro de archivados.
-              </>
+              <>{t('guards.list.dialog.bulk.archiveDescription', '¿Estás seguro de que deseas archivar {{count}} guardia(s)? Esta acción se puede revertir desde el filtro de archivados.', { count: selectedGuards.length })}</>
             )}
             {bulkActionType === "restaurar" && (
-              <>
-                ¿Deseas restaurar {selectedGuards.length} guardia(s)? Estos guardias volverán al estado activo.
-              </>
+              <>{t('guards.list.dialog.bulk.restoreDescription', '¿Deseas restaurar {{count}} guardia(s)? Estos guardias volverán al estado activo.', { count: selectedGuards.length })}</>
             )}
             {bulkActionType === "eliminar" && (
-              <>
-                Esta acción eliminará permanentemente {selectedGuards.length} guardia(s). ¿Deseas continuar?
-              </>
+              <>{t('guards.list.dialog.bulk.deleteDescription', 'Esta acción eliminará permanentemente {{count}} guardia(s). ¿Deseas continuar?', { count: selectedGuards.length })}</>
             )}
           </DialogDescription>
           <div className="mt-4">
             <div className="text-sm text-gray-700">
-              <strong>Guardias seleccionados:</strong> {selectedGuards.length}
+              <strong>{t('guards.list.labels.selectedGuards', 'Guardias seleccionados')}: </strong>
+              {selectedGuards.length}
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkActionDialogOpen(false)} disabled={bulkActionLoading}>
-              Cancelar
+              {t('actions.cancel', 'Cancelar')}
             </Button>
             <Button
               className={bulkActionType === "eliminar" ? "bg-red-600 hover:bg-red-700 text-white" : "bg-orange-500 hover:bg-orange-600 text-white"}
@@ -1156,17 +1234,17 @@ export default function SecurityGuardsPage() {
                     setGuards((prev) =>
                       prev.map((g) => (selectedGuards.includes(g.id) ? { ...g, status: "Archivado", raw: { ...g.raw, status: "archived" } } : g))
                     );
-                    toast.success("Guardias archivados");
+                    toast.success(t('guards.list.toasts.bulkArchived', 'Guardias archivados'));
                   } else if (bulkActionType === "restaurar") {
                     await securityGuardService.restore(ids);
                     setGuards((prev) =>
                       prev.map((g) => (selectedGuards.includes(g.id) ? { ...g, status: "Activo", raw: { ...g.raw, status: "active" } } : g))
                     );
-                    toast.success("Guardias restaurados");
+                    toast.success(t('guards.list.toasts.bulkRestored', 'Guardias restaurados'));
                   } else if (bulkActionType === "eliminar") {
                     await securityGuardService.destroy(ids);
                     setGuards((prev) => prev.filter((g) => !selectedGuards.includes(g.id)));
-                    toast.success("Guardias eliminados permanentemente");
+                    toast.success(t('guards.list.toasts.bulkDeleted', 'Guardias eliminados permanentemente'));
                   }
                   setSelectedGuards([]);
                   setBulkActionDialogOpen(false);
@@ -1181,7 +1259,7 @@ export default function SecurityGuardsPage() {
               }}
               disabled={bulkActionLoading}
             >
-              {bulkActionLoading ? "Procesando…" : bulkActionType === "eliminar" ? "Eliminar" : "Confirmar"}
+              {bulkActionLoading ? t('guards.list.buttons.processing', 'Procesando…') : bulkActionType === "eliminar" ? t('actions.delete', 'Eliminar') : t('actions.confirm', 'Confirmar')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1191,7 +1269,7 @@ export default function SecurityGuardsPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           role="button"
           tabIndex={0}
-          aria-label="Cerrar modal"
+          aria-label={t('guards.list.aria.closeModal', 'Cerrar modal')}
           onClick={(e) => {
             // Solo cerrar si el click es en el fondo, no en el modal
             if (e.target === e.currentTarget) setDetailsOpen(false);
@@ -1220,68 +1298,68 @@ export default function SecurityGuardsPage() {
             <button
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl font-bold"
               onClick={() => setDetailsOpen(false)}
-              aria-label="Cerrar"
+              aria-label={t('actions.close', 'Cerrar')}
               style={{ lineHeight: 1 }}
             >
               ×
             </button>
-            <h2 className="text-xl sm:text-2xl font-bold mb-1 text-center">Detalles del Guardia</h2>
-            <div className="mb-4 text-xs sm:text-sm text-gray-500 text-center">Información detallada del guardia seleccionado.</div>
+            <h2 className="text-xl sm:text-2xl font-bold mb-1 text-center">{t('guards.list.details.title', 'Detalles del Guardia')}</h2>
+            <div className="mb-4 text-xs sm:text-sm text-gray-500 text-center">{t('guards.list.details.description', 'Información detallada del guardia seleccionado.')}</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-6">
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Nombre</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.firstName', 'Nombre')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.firstName ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Apellidos</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.lastName', 'Apellidos')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.lastName ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Correo</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.email', 'Correo')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.email ?? detailsGuard.email ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Teléfono</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.phone', 'Teléfono')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.phoneNumber ?? detailsGuard.phone ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Cédula</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.governmentId', 'Cédula')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.governmentId ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Credencial Guardia</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.guardCredentials', 'Credencial Guardia')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guardCredentials ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Dirección</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.address', 'Dirección')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.address ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Fecha de nacimiento</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.birthDate', 'Fecha de nacimiento')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.birthDate ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Lugar de nacimiento</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.birthPlace', 'Lugar de nacimiento')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.birthPlace ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Estado civil</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.maritalStatus', 'Estado civil')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.maritalStatus ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Tipo de sangre</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.bloodType', 'Tipo de sangre')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.bloodType ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Instrucción académica</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.academicInstruction', 'Instrucción académica')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.academicInstruction ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">Contrato</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.hiringContractDate', 'Contrato')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.hiringContractDate ?? "-"}</div>
               </div>
               <div className="sm:col-span-2">
-                <div className="font-semibold text-gray-700 text-sm">Género</div>
+                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.gender', 'Género')}</div>
                 <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.gender ?? "-"}</div>
               </div>
             </div>
@@ -1291,7 +1369,7 @@ export default function SecurityGuardsPage() {
                 onClick={() => setDetailsOpen(false)}
                 className="text-sm px-4 py-1"
               >
-                Cerrar
+                {t('actions.close', 'Cerrar')}
               </Button>
               {hasPermission('securityGuardEdit') && (
                 <Button
@@ -1302,7 +1380,7 @@ export default function SecurityGuardsPage() {
                     navigate(`/security-guards/edit/${realId}`);
                   }}
                 >
-                  Editar
+                  {t('actions.edit', 'Editar')}
                 </Button>
               )}
             </div>
@@ -1314,17 +1392,17 @@ export default function SecurityGuardsPage() {
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Importar Guardias desde Excel</DialogTitle>
-            <DialogDescription>Sube un archivo .xlsx/.xls/.csv para importar guardias.</DialogDescription>
+            <DialogTitle>{t('guards.list.importDialog.title', 'Importar Guardias desde Excel')}</DialogTitle>
+            <DialogDescription>{t('guards.list.importDialog.description', 'Sube un archivo .xlsx/.xls/.csv para importar guardias.')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-muted-foreground mb-2">Antes de cargar, asegúrese de:</p>
+              <p className="text-sm text-muted-foreground mb-2">{t('guards.list.import.howTo', 'Antes de cargar, asegúrese de:')}</p>
               <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                <li>El archivo debe ser formato .xlsx, .xls o .csv</li>
+                <li>{t('guards.list.importDialog.fileFormat', 'El archivo debe ser formato .xlsx, .xls o .csv')}</li>
                 <li>
-                  <strong>Columnas obligatorias:</strong> Nombre, Correo, Teléfono, Estado, Cédula, Fecha Contrato, Género, Tipo Sangre, Credenciales, Fecha Nac., Lugar Nac., Estado Civ., Educación, Dirección
+                  <strong>{t('guards.list.importDialog.requiredColumnsLabel', 'Columnas obligatorias:')}</strong> {t('guards.list.importDialog.requiredColumns', 'Nombre, Correo, Teléfono, Estado, Cédula, Fecha Contrato, Género, Tipo Sangre, Credenciales, Fecha Nac., Lugar Nac., Estado Civ., Educación, Dirección')}
                 </li>
               </ul>
               <Button
@@ -1339,10 +1417,10 @@ export default function SecurityGuardsPage() {
                   link.download = 'plantilla-guardias.csv';
                   link.click();
                   window.URL.revokeObjectURL(url);
-                  toast.success('Plantilla descargada');
+                  toast.success(t('guards.list.importDialog.templateDownloaded', 'Plantilla descargada'));
                 }}
               >
-                Descargar plantilla de ejemplo
+                {t('guards.list.importDialog.downloadTemplate', 'Descargar plantilla de ejemplo')}
               </Button>
             </div>
 
@@ -1358,24 +1436,24 @@ export default function SecurityGuardsPage() {
                 <svg className="mx-auto h-12 w-12 text-gray-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-8m0 0l-3 3m3-3 3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-sm text-muted-foreground font-medium">{importFile ? importFile.name : 'Explorar tu archivo Excel aquí....'}</p>
-                <p className="text-xs text-muted-foreground mt-1">Click para seleccionar</p>
+                <p className="text-sm text-muted-foreground font-medium">{importFile ? importFile.name : t('guards.list.importDialog.browsePlaceholder', 'Explorar tu archivo Excel aquí....')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('guards.list.importDialog.clickToSelect', 'Click para seleccionar')}</p>
               </label>
             </div>
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setImportDialogOpen(false)} disabled={importLoading}>
-                Cancelar
+                {t('actions.cancel', 'Cancelar')}
               </Button>
               <Button
                 onClick={async () => {
                   if (!importFile) {
-                    toast.error('Selecciona un archivo');
+                    toast.error(t('guards.list.importDialog.errors.selectFile', 'Selecciona un archivo'));
                     return;
                   }
 
                   if (importFile.size === 0) {
-                    toast.error('El archivo está vacío');
+                    toast.error(t('guards.list.importDialog.errors.emptyFile', 'El archivo está vacío'));
                     return;
                   }
 
@@ -1420,7 +1498,7 @@ export default function SecurityGuardsPage() {
 
                       const lines = text.split(/\r?\n/).filter((l) => l.trim() !== '');
                       if (lines.length <= 1) {
-                        toast.error('El CSV no contiene filas de datos');
+                        toast.error(t('guards.list.importDialog.errors.emptyCsvRows', 'El CSV no contiene filas de datos'));
                         return;
                       }
                       const firstLine = (lines[0] || '').trim();
@@ -1428,13 +1506,13 @@ export default function SecurityGuardsPage() {
                       const missing = requiredHeaders.filter((h) => !headers.some((hh) => hh.toLowerCase() === h.toLowerCase()));
                       if (missing.length > 0) {
                         console.debug('CSV headers found:', headers);
-                        toast.error(`Faltan columnas obligatorias: ${missing.join(', ')}. Si tu archivo contiene acentos, guarda como UTF-8 o intenta abrirlo en Excel y volver a exportar en UTF-8.`);
+                        toast.error(t('guards.list.importDialog.errors.missingColumns', 'Faltan columnas obligatorias: {{columns}}. Si tu archivo contiene acentos, guarda como UTF-8 o intenta abrirlo en Excel y volver a exportar en UTF-8.', { columns: missing.join(', ') }));
                         return;
                       }
                       console.debug('CSV preview lines:', lines.slice(0, 5));
                     } catch (err) {
                       console.error('Error leyendo CSV para validación:', err);
-                      toast.error('No se pudo validar el archivo CSV antes de subir. Asegúrate del formato.');
+                        toast.error(t('guards.list.importDialog.errors.csvValidationFailed', 'No se pudo validar el archivo CSV antes de subir. Asegúrate del formato.'));
                       return;
                     }
                   } else if (lowerName.endsWith('.xls') || lowerName.endsWith('.xlsx')) {
@@ -1450,13 +1528,13 @@ export default function SecurityGuardsPage() {
                       const sheet = wb.Sheets[sheetName];
                       const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[];
                       if (!rows || rows.length <= 1) {
-                        toast.error('El archivo Excel no contiene filas de datos válidas');
+                        toast.error(t('guards.list.importDialog.errors.emptyExcelRows', 'El archivo Excel no contiene filas de datos válidas'));
                         return;
                       }
                       console.debug('Excel preview rows:', rows.slice(0, 5));
-                    } catch (err) {
+                      } catch (err) {
                       console.error('Error leyendo Excel para validación:', err);
-                      toast.error('No se pudo validar el archivo Excel antes de subir. Asegúrate del formato.');
+                      toast.error(t('guards.list.importDialog.errors.excelValidationFailed', 'No se pudo validar el archivo Excel antes de subir. Asegúrate del formato.'));
                       return;
                     }
                   } else {
@@ -1464,7 +1542,7 @@ export default function SecurityGuardsPage() {
                   }
 
                   setImportLoading(true);
-                  const toastId = toast.loading('Procesando archivo...');
+                  const toastId = toast.loading(t('guards.list.importDialog.processing', 'Procesando archivo...'));
                   try {
                     // Prepare file to upload: normalize headers (remove accents, trim, lowercase)
                     const normalizeHeader = (h: string) =>
@@ -1611,7 +1689,7 @@ export default function SecurityGuardsPage() {
                     // Pass filename explicitly so backend receives a proper file name when a Blob was used
                     const result = await securityGuardService.import(uploadFile as any, importFile?.name);
                     toast.dismiss(toastId);
-                    toast.success('Importación completada');
+                    toast.success(t('guards.list.importDialog.completed', 'Importación completada'));
                     // Optionally process result if backend returns details
                     setImportDialogOpen(false);
                     setImportFile(null);
@@ -1654,7 +1732,7 @@ export default function SecurityGuardsPage() {
                 }}
                 disabled={!importFile || importLoading}
               >
-                {importLoading ? 'Importando...' : 'Importar'}
+                {importLoading ? t('guards.list.importDialog.importing', 'Importando...') : t('guards.list.importDialog.import', 'Importar')}
               </Button>
             </div>
           </div>

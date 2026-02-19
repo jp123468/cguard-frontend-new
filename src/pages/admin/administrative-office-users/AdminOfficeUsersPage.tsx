@@ -58,6 +58,10 @@ function useDebounced<T>(value: T, delay = 400) {
 
 export default function AdminOfficeUsersPage() {
   const [openFilter, setOpenFilter] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [filterClient, setFilterClient] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [clientOptions, setClientOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [query, setQuery] = useState("");
   const [pageSize, setPageSize] = useState(25);
   const [bulkAction, setBulkAction] = useState<string | null>(null);
@@ -133,6 +137,24 @@ export default function AdminOfficeUsersPage() {
     }
   };
 
+  const loadClients = async () => {
+    try {
+      const tenantId = localStorage.getItem('tenantId') || '';
+      if (!tenantId) return;
+      const resp = await ApiService.get(`/tenant/${tenantId}/client-account`);
+      const rows = Array.isArray(resp) ? resp : (resp && resp.rows) ? resp.rows : [];
+      const mapped = (rows || []).map((c: any) => {
+        const first = c.name || c.firstName || c.label || c.companyName || c.clientName || c.clientAccountName || '';
+        const last = c.lastName || c.last_name || c.surname || c.lastname || '';
+        const display = [first, last].filter(Boolean).join(' ');
+        return { id: c.id ?? c._id ?? String(c.id), name: display || first || last || '' };
+      });
+      setClientOptions(mapped);
+    } catch (e) {
+      console.error('Error cargando clientes para filtros', e);
+    }
+  };
+
   const loadCurrentUser = async () => {
     try {
       const me = await userService.fetchCurrentUser();
@@ -175,6 +197,7 @@ export default function AdminOfficeUsersPage() {
   useEffect(() => {
     loadUsers();
     loadCurrentUser();
+    loadClients();
   }, []);
 
   const navigate = useNavigate();
@@ -243,14 +266,86 @@ export default function AdminOfficeUsersPage() {
 
 
   const filteredRows = useMemo(() => {
-    if (!debouncedQuery) return rows;
-    const q = debouncedQuery.toLowerCase();
-    return rows.filter((r) => {
-      const name = (r.firstName || r.name || "").toString().toLowerCase();
-      const email = (r.email || "").toString().toLowerCase();
-      return name.includes(q) || email.includes(q);
-    });
-  }, [rows, debouncedQuery]);
+    let out = rows || [];
+
+    // Apply search query
+    if (debouncedQuery) {
+      const q = debouncedQuery.toLowerCase();
+      out = out.filter((r) => {
+        const name = (r.firstName || r.name || "").toString().toLowerCase();
+        const email = (r.email || "").toString().toLowerCase();
+        return name.includes(q) || email.includes(q);
+      });
+    }
+
+    // Apply client filter: be permissive to many possible shapes returned by backend
+    if (filterClient && filterClient !== 'all') {
+      const clientIdStr = String(filterClient);
+      const userHasClient = (u: any) => {
+        // direct fields
+        const candidates = [
+          u.clientId,
+          u.clientAccountId,
+          u.clientIds,
+          u.assignedClients,
+          u.clients,
+          u.client,
+        ];
+
+        for (const cand of candidates) {
+          if (!cand) continue;
+          if (Array.isArray(cand)) {
+            if (cand.map(String).includes(clientIdStr)) return true;
+          } else if (typeof cand === 'object') {
+            // object or nested shape
+            if ((cand.id && String(cand.id) === clientIdStr) || (cand._id && String(cand._id) === clientIdStr)) return true;
+            // sometimes it's an array under object
+            const vals = Object.values(cand).flat ? Object.values(cand).flat() : Object.values(cand);
+            if (Array.isArray(vals) && vals.map(String).includes(clientIdStr)) return true;
+          } else if (String(cand) === clientIdStr) {
+            return true;
+          }
+        }
+
+        // tenant-scoped assignments: check tenants array for assignedClients/postSiteIds
+        if (Array.isArray(u.tenants)) {
+          for (const t of u.tenants) {
+            const asg = t.assignedClients || t.clientIds || t.clientIds || t.assignedClientIds || null;
+            if (!asg) continue;
+            if (Array.isArray(asg) && asg.map(String).includes(clientIdStr)) return true;
+            if (String(asg) === clientIdStr) return true;
+          }
+        }
+
+        return false;
+      };
+
+      out = out.filter((r) => userHasClient(r));
+    }
+
+    // Apply status filter
+    if (filterStatus && filterStatus !== 'all') {
+      out = out.filter((r) => {
+        const status = (r.status || '').toString().toLowerCase();
+        if (filterStatus === 'Activo') {
+          // Exclude archived and invitation/pending statuses
+          if (status === 'archived' || status === 'archivado') return false;
+          if (status === 'invited' || status === 'pending') return false;
+          if (r.active === false) return false;
+          return true;
+        }
+        if (filterStatus === 'Inactivo') {
+          return r.active === false;
+        }
+        if (filterStatus === 'Suspendido') {
+          return status === 'archived' || status === 'archivado' || (r.active === false && (status === 'archived' || status === 'archivado'));
+        }
+        return true;
+      });
+    }
+
+    return out;
+  }, [rows, debouncedQuery, filterClient, filterStatus]);
 
   const handleSelectUser = (userId: string, checked: boolean) => {
     setSelectedUsers((prev) => {
@@ -425,12 +520,11 @@ export default function AdminOfficeUsersPage() {
                 <div className="mt-6 space-y-4">
                   <div className="space-y-2">
                     <Label>Categorías</Label>
-                    <Select>
+                    <Select value={filterCategory ?? 'all'} onValueChange={(v) => setFilterCategory(v === 'all' ? null : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Categorías" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* llena con tus categorías reales */}
                         <SelectItem value="all">Todas</SelectItem>
                       </SelectContent>
                     </Select>
@@ -438,25 +532,26 @@ export default function AdminOfficeUsersPage() {
 
                   <div className="space-y-2">
                     <Label>Cliente</Label>
-                    <Select>
+                    <Select value={filterClient ?? 'all'} onValueChange={(v) => setFilterClient(v === 'all' ? null : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Cliente" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* llena con tus clientes reales */}
                         <SelectItem value="all">Todos</SelectItem>
+                        {clientOptions.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Estado</Label>
-                    <Select>
+                    <Select value={filterStatus ?? 'all'} onValueChange={(v) => setFilterStatus(v === 'all' ? null : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Todos los Usuarios" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* estados reales */}
                         <SelectItem value="all">Todos los Usuarios</SelectItem>
                         <SelectItem value="Activo">Activo</SelectItem>
                         <SelectItem value="Inactivo">Inactivo</SelectItem>

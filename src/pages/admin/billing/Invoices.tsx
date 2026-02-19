@@ -221,7 +221,10 @@ export default function Invoices() {
                 const date = r.date ? parseDateOnly(r.date) ?? (r.createdAt ? parseDateOnly(r.createdAt) ?? new Date() : new Date()) : (r.createdAt ? parseDateOnly(r.createdAt) ?? new Date() : new Date());
                 const dueDate = r.dueDate ? parseDateOnly(r.dueDate) ?? (r.due_date ? parseDateOnly(r.due_date) ?? date : date) : (r.due_date ? parseDateOnly(r.due_date) ?? date : date);
                 const invoiceNumber = r.invoiceNumber ?? r.number ?? r.invoice_no ?? '';
-                const clientName = (r.client && (r.client.companyName || r.client.name)) || r.clientName || (typeof r.client === 'string' ? r.client : '');
+                                const client = r.client && typeof r.client === 'object' ? r.client : null;
+                                const clientName = client
+                                    ? ((client.fullName && String(client.fullName).trim()) || ((String(client.firstName || '').trim() + ' ' + String(client.lastName || '').trim()).trim()) || client.companyName || client.name || r.clientName || (typeof r.client === 'string' ? r.client : ''))
+                                    : (r.clientName || (typeof r.client === 'string' ? r.client : ''));
                 const total = Number(r.total ?? r.amount ?? r.subtotal ?? 0);
                 const amountDue = Number(r.amountDue ?? r.balance ?? (r.total ? r.total : 0));
                 const status = (r.status && String(r.status)) || 'Borrador';
@@ -374,30 +377,30 @@ export default function Invoices() {
                     {/* Acciones superiores */}
                     <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-2">
-                                    <Select value={actionValue} onValueChange={(val) => {
-                                        // If the user selects the batch-delete action, open confirmation
-                                        if (val === 'eliminar') {
-                                            if (!selectedInvoices || selectedInvoices.length === 0) {
-                                                toast.error('No hay facturas seleccionadas');
-                                                setActionValue('');
-                                                return;
-                                            }
-                                            setPendingBatchDeleteIds(selectedInvoices);
-                                            setIsDeleteDialogOpen(true);
-                                            // Reset the combobox to show the placeholder again
-                                            setActionValue('');
-                                        } else {
-                                            // For other values, set normally
-                                            setActionValue(val);
-                                        }
-                                    }}>
-                                    <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Acción" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="eliminar">Eliminar</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                            <Select value={actionValue} onValueChange={(val) => {
+                                // If the user selects the batch-delete action, open confirmation
+                                if (val === 'eliminar') {
+                                    if (!selectedInvoices || selectedInvoices.length === 0) {
+                                        toast.error('No hay facturas seleccionadas');
+                                        setActionValue('');
+                                        return;
+                                    }
+                                    setPendingBatchDeleteIds(selectedInvoices);
+                                    setIsDeleteDialogOpen(true);
+                                    // Reset the combobox to show the placeholder again
+                                    setActionValue('');
+                                } else {
+                                    // For other values, set normally
+                                    setActionValue(val);
+                                }
+                            }}>
+                                <SelectTrigger className="w-40">
+                                    <SelectValue placeholder="Acción" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="eliminar">Eliminar</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -493,7 +496,7 @@ export default function Invoices() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onClick={() => {
+                                                        <DropdownMenuItem onClick={() => {
                                                             try {
                                                                 navigate(`/billing/invoices/${invoice.id}?preview=1`);
                                                             } catch (e) {
@@ -545,29 +548,29 @@ export default function Invoices() {
                                                     <div className="flex-1">
                                                         <p className="text-xs text-gray-400">Cliente</p>
                                                         <p className="font-semibold text-slate-800 text-lg">{(clientDetails && (clientDetails.companyName || clientDetails.name)) || previewInvoice.client || '—'}</p>
-                                                        { (clientDetails?.address || clientDetails?.location || clientDetails?.postalCode) ? (
+                                                        {(clientDetails?.address || clientDetails?.location || clientDetails?.postalCode) ? (
                                                             <p className="text-sm text-slate-500 mt-1">{clientDetails.address || clientDetails.location || clientDetails.postalCode}</p>
-                                                        ) : null }
-                                                        { (clientDetails?.phone || clientDetails?.phoneNumber || clientDetails?.telephone) ? (
+                                                        ) : null}
+                                                        {(clientDetails?.phone || clientDetails?.phoneNumber || clientDetails?.telephone) ? (
                                                             <p className="text-sm text-slate-500">Tel: {clientDetails.phone || clientDetails.phoneNumber || clientDetails.telephone}</p>
-                                                        ) : null }
-                                                        { clientDetails?.email ? (
+                                                        ) : null}
+                                                        {clientDetails?.email ? (
                                                             <p className="text-sm text-slate-500">{clientDetails.email}</p>
-                                                        ) : null }
+                                                        ) : null}
                                                     </div>
 
                                                     <div className="flex-1">
                                                         <p className="text-xs text-gray-400">Sitio</p>
                                                         <p className="font-medium text-slate-700">{(siteDetails && (siteDetails.companyName || siteDetails.name)) || '—'}</p>
-                                                        { (siteDetails?.address || siteDetails?.location || siteDetails?.secondAddress) ? (
+                                                        {(siteDetails?.address || siteDetails?.location || siteDetails?.secondAddress) ? (
                                                             <p className="text-sm text-slate-500 mt-1">{siteDetails.address || siteDetails.location || siteDetails.secondAddress}</p>
-                                                        ) : null }
-                                                        { (siteDetails?.phone || siteDetails?.contactPhone || siteDetails?.contactPhoneNumber) ? (
+                                                        ) : null}
+                                                        {(siteDetails?.phone || siteDetails?.contactPhone || siteDetails?.contactPhoneNumber) ? (
                                                             <p className="text-sm text-slate-500">Tel: {siteDetails.phone || siteDetails.contactPhone || siteDetails.contactPhoneNumber}</p>
-                                                        ) : null }
-                                                        { (siteDetails?.email || siteDetails?.contactEmail || siteDetails?.contactEmailAddress) ? (
+                                                        ) : null}
+                                                        {(siteDetails?.email || siteDetails?.contactEmail || siteDetails?.contactEmailAddress) ? (
                                                             <p className="text-sm text-slate-500">{siteDetails.email || siteDetails.contactEmail || siteDetails.contactEmailAddress}</p>
-                                                        ) : null }
+                                                        ) : null}
                                                     </div>
                                                 </div>
 

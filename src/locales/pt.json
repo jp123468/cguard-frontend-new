@@ -259,8 +259,10 @@
       "status": "Status"
     },
     "status": {
-      "active": "Ativo",
-      "archived": "Arquivado"
+      "active": "Activo",
+      "archived": "Archivado",
+      "pending": "Pendiente",
+      "invitate": "Invitado"
     },
     "errorArchiveClient": "Erro ao arquivar cliente",
     "breadcrumb": {
@@ -584,15 +586,16 @@
         "NoCoordinates": "No coordinates available for this site"
       },
       "GeneralInformation": {
-        "title": "General Information",
-        "client": "Client",
-        "siteName": "Site Name",
-        "address": "Address",
-        "addedOn": "Added On"
+        "notfoundclient": "Cliente não encontrado",
+        "title": "Informação Geral",
+        "client": "Cliente",
+        "siteName": "Nome do site",
+        "address": "Endereço",
+        "addedOn": "Adicionado em"
       },
       "ContactDetails": {
-        "title": "Contact Details",
-        "phoneNumber": "Phone Number",
+        "title": "Detalhes de Contato",
+        "phoneNumber": "Número de telefone",
         "fax": "Fax",
         "email": "Email",
         "website": "Website"

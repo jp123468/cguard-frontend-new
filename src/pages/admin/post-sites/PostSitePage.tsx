@@ -331,14 +331,14 @@ export default function PostSitePage() {
 
     return [
       {
-        label: "Ver Detalles",
+        label: t('actions.viewDetails', 'Ver Detalles'),
         icon: <Eye className="h-4 w-4" />,
         onClick: () => {
           navigate(`/post-sites/${site.id}`);
         },
       },
       {
-        label: "Eliminar",
+        label: t('actions.delete', 'Eliminar'),
         icon: <Trash className="h-4 w-4" />,
         onClick: () => {
           setDeleteTargetIds([site.id]);
@@ -346,15 +346,15 @@ export default function PostSitePage() {
         },
       },
       {
-        label: "Restaurar",
+        label: t('actions.restore', 'Restaurar'),
         icon: <RotateCcw className="h-4 w-4" />,
         onClick: async () => {
           try {
             await postSiteService.update(site.id, { status: "active" } as any);
-            toast.success("Sitio restaurado");
+            toast.success(t('postSites.postsiterestore', 'Sitio restaurado'));
             loadPostSites();
           } catch (e) {
-            toast.error("Error al restaurar");
+            toast.error(t('postSites.postsiterestoreerror', 'Error al restaurar el sitio'));
           }
         },
       },
@@ -855,36 +855,36 @@ export default function PostSitePage() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                Eliminar sitio{deleteTargetIds.length > 1 ? 's' : ''}
+                {t('postSites.postsitesttiledelete', 'Eliminar sitio')}{deleteTargetIds.length > 1 ? 's' : ''}
               </AlertDialogTitle>
             </AlertDialogHeader>
 
             <AlertDialogDescription>
-              ¿Estás seguro de que deseas eliminar {deleteTargetIds.length} sitio{deleteTargetIds.length > 1 ? 's' : ''}? Esta acción no se puede deshacer.
+              {t('postSites.postesitedeleteconfirm', { count: deleteTargetIds.length })}
             </AlertDialogDescription>
 
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteTargetIds([])}>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel onClick={() => setDeleteTargetIds([])}>{t('actions.cancel', 'Cancelar')}</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-red-600 hover:bg-red-700"
                 onClick={async () => {
                   try {
                     setDeleting(true);
                     await postSiteService.delete(deleteTargetIds);
-                    toast.success(deleteTargetIds.length > 1 ? 'Sitios eliminados' : 'Sitio eliminado');
+                    toast.success(deleteTargetIds.length > 1 ? t('postSites.postsitedeletedPlural', 'Post Sites Deleted') : t('postSites.postsitedeleted', 'Post Site Deleted'));
                     setSelectedIds([]);
                     setDeleteTargetIds([]);
                     setOpenDeleteDialog(false);
                     await loadPostSites();
                   } catch (e) {
                     console.error(e);
-                    toast.error('Error al eliminar');
+                    toast.error(t('postSites.postsitedeleteerror', 'Error deleting post site'));
                   } finally {
                     setDeleting(false);
                   }
                 }}
               >
-                {deleting ? 'Eliminando...' : 'Eliminar'}
+                {deleting ? t('actions.deleting', 'Eliminando...') : t('actions.delete', 'Eliminar')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

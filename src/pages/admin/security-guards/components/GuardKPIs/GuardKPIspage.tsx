@@ -5,6 +5,7 @@ import GuardsLayout from '@/layouts/GuardsLayout';
 import { toast } from 'sonner';
 import KpiBarChart from '@/components/KpiBarChart';
 import KpiService from '@/services/kpi.service';
+import { useTranslation } from 'react-i18next';
 
 
 type Props = {
@@ -12,8 +13,9 @@ type Props = {
 };
 
 export default function GuardIndicators({ guard }: Props) {
+  const { t } = useTranslation();
   const [actionOpen, setActionOpen] = useState(false);
-  const [actionSelection, setActionSelection] = useState<string>('Acción');
+  const [actionSelection, setActionSelection] = useState<string>(t('actions.action', 'Acción'));
   const [searchQuery, setSearchQuery] = useState('');
   const [kpiData, setKpiData] = useState<any[]>([]); // Vacío inicialmente, sin resultados
   const [showModal, setShowModal] = useState(false);
@@ -51,17 +53,17 @@ export default function GuardIndicators({ guard }: Props) {
 
   const handleAddEmail = () => {
     if (!currentEmail.trim()) {
-      setEmailError('Por favor ingresa un correo electrónico');
+      setEmailError(t('guards.KPI.modal.errors.emailRequired', 'Por favor ingresa un correo electrónico'));
       return;
     }
 
     if (!validateEmail(currentEmail)) {
-      setEmailError('Correo electrónico no válido');
+      setEmailError(t('guards.KPI.modal.errors.emailInvalid', 'Correo electrónico no válido'));
       return;
     }
 
     if (formData.emails.includes(currentEmail)) {
-      setEmailError('Este correo ya ha sido agregado');
+      setEmailError(t('guards.KPI.modal.errors.emailAlreadyAdded', 'Este correo ya ha sido agregado'));
       return;
     }
 
@@ -176,7 +178,7 @@ export default function GuardIndicators({ guard }: Props) {
       // If KPI provides a direct URL to the PDF, open it
       if (kpi?.pdfUrl) {
         window.open(kpi.pdfUrl, '_blank');
-        toast.success('PDF abierto');
+        toast.success(t('guards.KPI.toasts.pdfOpened', 'PDF opened'));
         setMenuOpenId(null);
         return;
       }
@@ -192,7 +194,7 @@ export default function GuardIndicators({ guard }: Props) {
         const blob = new Blob([byteArray], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
-        toast.success('PDF generado');
+        toast.success(t('guards.KPI.toasts.pdfGenerated', 'PDF generado'));
         setMenuOpenId(null);
         return;
       }
@@ -203,17 +205,17 @@ export default function GuardIndicators({ guard }: Props) {
           const blob = await KpiService.getPdf(kpi.id);
           const url = URL.createObjectURL(blob);
           window.open(url, '_blank');
-          toast.success('PDF generado');
+          toast.success(t('guards.KPI.toasts.pdfGenerated', 'PDF generated'));
         } catch (err) {
           console.error('Error fetching PDF', err);
-          toast.error('No se pudo generar/obtener el PDF');
+          toast.error(t('guards.KPI.toasts.pdfError', 'Could not generate/get PDF'));
         } finally {
           setMenuOpenId(null);
         }
       })();
     } catch (e) {
       console.error('Error opening PDF', e);
-      toast.error('Error al abrir el PDF');
+      toast.error(t('guards.KPI.toasts.pdfOpenError', 'Error al abrir el PDF'));
       setMenuOpenId(null);
     }
   };
@@ -231,17 +233,17 @@ export default function GuardIndicators({ guard }: Props) {
           a.click();
           a.remove();
           URL.revokeObjectURL(url);
-          toast.success('Excel descargado');
+          toast.success(t('guards.KPI.toasts.excelDownloaded', 'Excel downloaded'));
         } catch (err) {
           console.error('Error fetching Excel', err);
-          toast.error('No se pudo generar/obtener el Excel');
+          toast.error(t('guards.KPI.toasts.excelError', 'Could not generate/get Excel'));
         } finally {
           setMenuOpenId(null);
         }
       })();
-    } catch (e) {
+      } catch (e) {
       console.error('Error exporting Excel', e);
-      toast.error('Error al exportar Excel');
+      toast.error(t('guards.KPI.toasts.excelExportError', 'Error exporting Excel'));
       setMenuOpenId(null);
     }
   };
@@ -272,16 +274,16 @@ export default function GuardIndicators({ guard }: Props) {
     try {
       if (editingId) {
         await KpiService.update(editingId, { data: payload });
-        toast.success('KPI actualizado correctamente');
+        toast.success(t('guards.KPI.toasts.updated', 'KPI actualizado correctamente'));
       } else {
         await KpiService.create({ data: payload });
-        toast.success('KPI creado correctamente');
+        toast.success(t('guards.KPI.toasts.created', 'KPI creado correctamente'));
       }
       await loadKpis();
       handleCloseModal();
     } catch (error) {
       console.error('Error saving KPI', error);
-      toast.error('Error al guardar el KPI');
+      toast.error(t('guards.KPI.toasts.saveError', 'Error al guardar el KPI'));
     }
   };
 
@@ -333,7 +335,7 @@ export default function GuardIndicators({ guard }: Props) {
                       onClick={() => {
                         setActionOpen(false);
                         if (!selectedIds || selectedIds.length === 0) {
-                          toast.error('Debes seleccionar al menos un KPI');
+                          toast.error(t('guards.KPI.toasts.selectAtLeastOne', 'Debes seleccionar al menos un KPI'));
                           return;
                         }
                         setDeleteModalOpen(true);
@@ -352,7 +354,7 @@ export default function GuardIndicators({ guard }: Props) {
                   <Search size={16} className="absolute left-3 top-3 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Buscar KPI"
+                    placeholder={t('guards.KPI.kpisearch', 'Buscar KPI')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -366,7 +368,7 @@ export default function GuardIndicators({ guard }: Props) {
                 className="ml-2 px-3 py-2 bg-orange-600 text-white rounded-md text-sm font-medium flex items-center gap-2 hover:bg-orange-700 transition-colors"
               >
                 <Plus size={16} />
-                Añadir Nuevo KPI
+                {t('guards.KPI.kpiadded', 'Añadir Nuevo KPI')}
               </button>
             </div>
 
@@ -374,7 +376,7 @@ export default function GuardIndicators({ guard }: Props) {
             <div className="overflow-x-auto min-h-[520px] pb-12">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-gray-50">
+                    <tr className="border-b bg-gray-50">
                     <th className="px-4 py-3 text-left">
                       <input
                         type="checkbox"
@@ -386,9 +388,9 @@ export default function GuardIndicators({ guard }: Props) {
                         }}
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tipo</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Fecha/Hora</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Agregado por</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.KPI.kpitable.kpitype', 'Tipo')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.KPI.kpitable.kpidate', 'Fecha/Hora')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.KPI.kpitable.kpicreatedfor', 'Agregado por')}</th>
                     <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                       <button className="hover:text-gray-900">↕</button>
                     </th>
@@ -409,8 +411,8 @@ export default function GuardIndicators({ guard }: Props) {
                             </svg>
                           </div>
                           <div className="text-center">
-                            <h3 className="text-lg font-semibold text-gray-700">No se encontraron resultados</h3>
-                            <p className="text-sm text-gray-500 mt-1">No pudimos encontrar<br />ningún elemento que<br />coincida con su búsqueda</p>
+                            <h3 className="text-lg font-semibold text-gray-700">{t('clients.empty.title', 'No se encontraron resultados')}</h3>
+                            <p className="text-sm text-gray-500 mt-1">{t('clients.empty.description', 'No pudimos encontrar ningún elemento que coincida con su búsqueda')}</p>
                           </div>
                         </div>
                       </td>
@@ -470,23 +472,23 @@ export default function GuardIndicators({ guard }: Props) {
                                 emailNotification: !!kpi.emailNotification,
                                 emails: kpi.emails || [],
                               }); setShowModal(true); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                                <div className="flex items-center gap-2 text-sm text-gray-700"><Edit size={16} />Edit</div>
+                                    <div className="flex items-center gap-2 text-sm text-gray-700"><Edit size={16} />{t('actions.edit', 'Edit')}</div>
                               </button>
 
-                              <button onClick={() => { setToDeleteId(kpi.id); setDeleteModalOpen(true); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                                <div className="flex items-center gap-2 text-sm text-red-600"><Trash size={16} />Delete</div>
-                              </button>
+                                  <button onClick={() => { setToDeleteId(kpi.id); setDeleteModalOpen(true); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
+                                    <div className="flex items-center gap-2 text-sm text-red-600"><Trash size={16} />{t('actions.delete', 'Delete')}</div>
+                                  </button>
 
                               <button onClick={() => { handleExportPdf(kpi); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                                <div className="flex items-center gap-2 text-sm text-gray-700"><FileText size={16} /> Export as PDF</div>
+                                <div className="flex items-center gap-2 text-sm text-gray-700"><FileText size={16} /> {t('guards.KPI.exportPdf', 'Export as PDF')}</div>
                               </button>
 
                               <button onClick={() => { handleExportExcel(kpi); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                                <div className="flex items-center gap-2 text-sm text-gray-700"><File size={16} /> Export as Excel</div>
+                                <div className="flex items-center gap-2 text-sm text-gray-700"><File size={16} /> {t('guards.KPI.exportExcel', 'Export as Excel')}</div>
                               </button>
 
-                              <button onClick={() => { toast.success('Email report not implemented'); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                                <div className="flex items-center gap-2 text-sm text-gray-700"><Mail size={16} /> Email Report</div>
+                              <button onClick={() => { toast.success(t('guards.KPI.emailNotImplemented', 'Email report not implemented')); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
+                                <div className="flex items-center gap-2 text-sm text-gray-700"><Mail size={16} /> {t('guards.KPI.menu.email', 'Email Report')}</div>
                               </button>
                             </div>
                             )}
@@ -499,7 +501,7 @@ export default function GuardIndicators({ guard }: Props) {
                             <td colSpan={5} className="p-4">
                               <div className="space-y-4 min-h-[360px]">
                                 <div className="flex items-start justify-between">
-                                  <div><strong>DESCRIPTION :</strong> <span className="ml-4">{kpi.description}</span></div>
+                                  <div><strong>{t('guards.KPI.descriptionLabel', 'DESCRIPTION :')}</strong> <span className="ml-4">{kpi.description}</span></div>
                                   <div className="flex items-center gap-2 text-sm text-gray-600">
                                     <button onClick={(e) => { e.stopPropagation(); prevMonth(); loadKpis(); }} className="p-1 rounded hover:bg-gray-100"><ChevronLeft size={16} /></button>
                                     <div className="px-3 py-1 border rounded">{formatMonth(selectedMonth)}</div>
@@ -512,19 +514,19 @@ export default function GuardIndicators({ guard }: Props) {
                                     const metrics: any[] = [];
                                     const actualVal = Number(kpi.actual || 0);
                                     if (kpi.standardReportsNumber !== undefined && kpi.standardReportsNumber !== null && Number(kpi.standardReportsNumber) > 0) {
-                                      metrics.push({ name: 'Standard Reports', target: Number(kpi.standardReportsNumber), actual: actualVal });
+                                      metrics.push({ key: 'standardReports', name: t('guards.KPI.metrics.standardReports', 'Standard Reports'), target: Number(kpi.standardReportsNumber), actual: actualVal });
                                     }
                                     if (kpi.taskReportsNumber !== undefined && kpi.taskReportsNumber !== null && Number(kpi.taskReportsNumber) > 0) {
-                                      metrics.push({ name: 'Task Reports', target: Number(kpi.taskReportsNumber), actual: actualVal });
+                                      metrics.push({ key: 'taskReports', name: t('guards.KPI.metrics.taskReports', 'Task Reports'), target: Number(kpi.taskReportsNumber), actual: actualVal });
                                     }
                                     if (kpi.incidentReportsNumber !== undefined && kpi.incidentReportsNumber !== null && Number(kpi.incidentReportsNumber) > 0) {
-                                      metrics.push({ name: 'Incident Reports', target: Number(kpi.incidentReportsNumber), actual: actualVal });
+                                      metrics.push({ key: 'incidentReports', name: t('guards.KPI.metrics.incidentReports', 'Incident Reports'), target: Number(kpi.incidentReportsNumber), actual: actualVal });
                                     }
                                     if (kpi.routeReportsNumber !== undefined && kpi.routeReportsNumber !== null && Number(kpi.routeReportsNumber) > 0) {
-                                      metrics.push({ name: 'Route Reports', target: Number(kpi.routeReportsNumber), actual: actualVal });
+                                      metrics.push({ key: 'routeReports', name: t('guards.KPI.metrics.routeReports', 'Route Reports'), target: Number(kpi.routeReportsNumber), actual: actualVal });
                                     }
                                     if (kpi.verificationReportsNumber !== undefined && kpi.verificationReportsNumber !== null && Number(kpi.verificationReportsNumber) > 0) {
-                                      metrics.push({ name: 'Checklist Reports', target: Number(kpi.verificationReportsNumber), actual: actualVal });
+                                      metrics.push({ key: 'verificationReports', name: t('guards.KPI.metrics.verificationReports', 'Checklist Reports'), target: Number(kpi.verificationReportsNumber), actual: actualVal });
                                     }
 
                                     return (
@@ -532,24 +534,24 @@ export default function GuardIndicators({ guard }: Props) {
                                         <table className="w-full border-collapse border">
                                           <thead>
                                             <tr className="bg-gray-50">
-                                              <th className="border px-4 py-2">Name</th>
-                                              <th className="border px-4 py-2">Target</th>
-                                              <th className="border px-4 py-2">Actual</th>
-                                              <th className="border px-4 py-2">Status</th>
+                                              <th className="border px-4 py-2">{t('guards.KPI.table.name', 'Name')}</th>
+                                              <th className="border px-4 py-2">{t('guards.KPI.table.target', 'Target')}</th>
+                                              <th className="border px-4 py-2">{t('guards.KPI.table.actual', 'Actual')}</th>
+                                              <th className="border px-4 py-2">{t('guards.KPI.table.status', 'Status')}</th>
                                             </tr>
                                           </thead>
                                           <tbody>
                                             {metrics.length === 0 ? (
                                               <tr>
-                                                <td className="border px-4 py-2" colSpan={4}>No targets defined</td>
+                                                <td className="border px-4 py-2" colSpan={4}>{t('guards.KPI.table.noTargets', 'No targets defined')}</td>
                                               </tr>
                                             ) : (
                                               metrics.map((m) => (
-                                                <tr key={m.name}>
+                                                <tr key={m.key}>
                                                   <td className="border px-4 py-2 font-semibold">{m.name.toUpperCase()}</td>
                                                   <td className="border px-4 py-2">{m.target}</td>
                                                   <td className="border px-4 py-2">{m.actual}</td>
-                                                  <td className={`border px-4 py-2 ${m.actual >= m.target ? 'text-green-600' : 'text-red-600'}`}>{m.actual >= m.target ? 'Achieved' : 'Not Achieved'}</td>
+                                                  <td className={`border px-4 py-2 ${m.actual >= m.target ? 'text-green-600' : 'text-red-600'}`}>{m.actual >= m.target ? t('guards.KPI.status.achieved', 'Achieved') : t('guards.KPI.status.notAchieved', 'Not Achieved')}</td>
                                                 </tr>
                                               ))
                                             )}
@@ -587,7 +589,7 @@ export default function GuardIndicators({ guard }: Props) {
               >
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-                  <h2 className="text-lg font-semibold text-gray-800">Añadir Nuevos KPIs (Indicadores Clave de Rendimiento)</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">{t('guards.KPI.modal.title', 'Añadir Nuevos KPIs (Indicadores Clave de Rendimiento)')}</h2>
                 </div>
 
                 {/* Body */}
@@ -595,29 +597,29 @@ export default function GuardIndicators({ guard }: Props) {
                   {/* Frecuencia */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Frecuencia <span className="text-red-500">*</span>
+                      {t('guards.KPI.modal.frequency', 'Frecuencia')} <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={formData.frequency}
                       onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
                       className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                     >
-                      <option value="">Seleccionar frecuencia</option>
-                      <option value="diario">Diario</option>
-                      <option value="semanal">Semanal</option>
-                      <option value="mensual">Mensual</option>
+                      <option value="">{t('guards.KPI.modal.frequencyOptions.select', 'Seleccionar frecuencia')}</option>
+                      <option value="diario">{t('guards.KPI.modal.frequencyOptions.daily', 'Diario')}</option>
+                      <option value="semanal">{t('guards.KPI.modal.frequencyOptions.weekly', 'Semanal')}</option>
+                      <option value="mensual">{t('guards.KPI.modal.frequencyOptions.monthly', 'Mensual')}</option>
                     </select>
                   </div>
 
                   {/* Descripción */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Descripción <span className="text-red-500">*</span>
+                      {t('guards.KPI.modal.description', 'Descripción')} <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Ingrese la descripción"
+                      placeholder={t('guards.KPI.modal.descriptionPlaceholder', 'Ingrese la descripción')}
                       className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
                       rows={4}
                     />
@@ -627,7 +629,7 @@ export default function GuardIndicators({ guard }: Props) {
                   <div className="space-y-3">
                     {/* Informes Estándar */}
                     <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                      <label className="text-sm font-medium text-gray-700">Informes Estándar</label>
+                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.standardReports', 'Informes Estándar')}</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
@@ -645,7 +647,7 @@ export default function GuardIndicators({ guard }: Props) {
                             setFormData({ ...formData, standardReportsNumber: sanitized });
                           }}
                           disabled={!formData.standardReports}
-                          placeholder="Definir un Número"
+                          placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
                           className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                         />
                       </div>
@@ -653,7 +655,7 @@ export default function GuardIndicators({ guard }: Props) {
 
                     {/* Informes de Incidentes */}
                     <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                      <label className="text-sm font-medium text-gray-700">Informes de Incidentes</label>
+                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.incidentReports', 'Informes de Incidentes')}</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
@@ -671,7 +673,7 @@ export default function GuardIndicators({ guard }: Props) {
                             setFormData({ ...formData, incidentReportsNumber: sanitized });
                           }}
                           disabled={!formData.incidentReports}
-                          placeholder="Definir un Número"
+                          placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
                           className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                         />
                       </div>
@@ -679,7 +681,7 @@ export default function GuardIndicators({ guard }: Props) {
 
                     {/* Informes de Recorridos */}
                     <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                      <label className="text-sm font-medium text-gray-700">Informes de Recorridos por el Sitio</label>
+                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.routeReports', 'Informes de Recorridos por el Sitio')}</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
@@ -697,7 +699,7 @@ export default function GuardIndicators({ guard }: Props) {
                             setFormData({ ...formData, routeReportsNumber: sanitized });
                           }}
                           disabled={!formData.routeReports}
-                          placeholder="Definir un Número"
+                          placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
                           className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                         />
                       </div>
@@ -705,7 +707,7 @@ export default function GuardIndicators({ guard }: Props) {
 
                     {/* Informes de Tareas */}
                     <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                      <label className="text-sm font-medium text-gray-700">Informes de Tareas</label>
+                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.taskReports', 'Informes de Tareas')}</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
@@ -723,7 +725,7 @@ export default function GuardIndicators({ guard }: Props) {
                             setFormData({ ...formData, taskReportsNumber: sanitized });
                           }}
                           disabled={!formData.taskReports}
-                          placeholder="Definir un Número"
+                          placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
                           className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                         />
                       </div>
@@ -731,7 +733,7 @@ export default function GuardIndicators({ guard }: Props) {
 
                     {/* Informes de Listas de Verificación */}
                     <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                      <label className="text-sm font-medium text-gray-700">Informes de Listas de Verificación</label>
+                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.verificationReports', 'Informes de Listas de Verificación')}</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
@@ -749,7 +751,7 @@ export default function GuardIndicators({ guard }: Props) {
                             setFormData({ ...formData, verificationReportsNumber: sanitized });
                           }}
                           disabled={!formData.verificationReports}
-                          placeholder="Definir un Número"
+                          placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
                           className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                         />
                       </div>
@@ -759,7 +761,7 @@ export default function GuardIndicators({ guard }: Props) {
                   {/* Email Notification */}
                   <div>
                     <div className="flex items-center gap-2 mb-3">
-                      <label className="text-sm font-medium text-gray-700">Enviar Informe KPI por Correo Electrónico</label>
+                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.emailNotificationLabel', 'Enviar Informe KPI por Correo Electrónico')}</label>
                       <input
                         type="checkbox"
                         checked={formData.emailNotification}
@@ -789,7 +791,7 @@ export default function GuardIndicators({ guard }: Props) {
 
                         {/* Email input with add button */}
                         <div className="space-y-1">
-                          <div className="flex gap-2">
+                            <div className="flex gap-2">
                             <input
                               type="email"
                               value={currentEmail}
@@ -798,7 +800,7 @@ export default function GuardIndicators({ guard }: Props) {
                                 setEmailError('');
                               }}
                               onKeyPress={handleKeyPress}
-                              placeholder="Nuevo Correo Electrónico..."
+                              placeholder={t('guards.KPI.modal.newEmailPlaceholder', 'Nuevo Correo Electrónico...')}
                               className={`flex-1 px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${emailError ? 'border-red-500 focus:ring-red-500' : 'focus:ring-orange-500'
                                 }`}
                             />
@@ -806,7 +808,7 @@ export default function GuardIndicators({ guard }: Props) {
                               onClick={handleAddEmail}
                               className="px-4 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700 transition-colors"
                             >
-                              Agregar
+                              {t('guards.KPI.modal.addEmail', 'Agregar')}
                             </button>
                           </div>
                           {emailError && (
@@ -824,13 +826,13 @@ export default function GuardIndicators({ guard }: Props) {
                     onClick={handleCloseModal}
                     className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50"
                   >
-                    Cancelar
+                    {t('actions.cancel', 'Cancelar')}
                   </button>
                   <button
                     onClick={handleSubmitKPI}
                     className="px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700"
                   >
-                    AÑADIR
+                    {t('guards.KPI.modal.addButton', 'AÑADIR')}
                   </button>
                 </div>
               </div>
@@ -841,35 +843,35 @@ export default function GuardIndicators({ guard }: Props) {
               <div className="absolute inset-0 bg-black opacity-30" />
               <div className="relative w-96 bg-white rounded shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
                 <div className="p-6 border-b">
-                  <h3 className="text-lg font-semibold">Confirmar eliminación</h3>
+                  <h3 className="text-lg font-semibold">{t('guards.KPI.modal.confirmDeleteTitle', 'Confirmar eliminación')}</h3>
                 </div>
                 <div className="p-6">
-                  <p className="text-sm text-gray-700">¿Estás seguro de que deseas eliminar {toDeleteId ? 'este KPI' : `${selectedIds.length} KPI(s)`}? Esta acción no se puede deshacer.</p>
+                  <p className="text-sm text-gray-700">{t('guards.KPI.modal.confirmDeleteMessage', '¿Estás seguro de que deseas eliminar {toDeleteId ? "este KPI" : `${selectedIds.length} KPI(s)`}? Esta acción no se puede deshacer.')}</p>
                 </div>
                 <div className="flex items-center justify-end gap-3 p-6 border-t bg-white">
-                  <button onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">Cancelar</button>
+                  <button onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">{t('actions.cancel', 'Cancelar')}</button>
                   <button onClick={async () => {
                     try {
                       if (toDeleteId) {
                         await KpiService.destroy(toDeleteId);
-                        toast.success('KPI eliminado');
+                        toast.success(t('guards.KPI.toasts.deleted', 'KPI eliminado'));
                       } else if (selectedIds.length > 0) {
                         await Promise.all(selectedIds.map((id) => KpiService.destroy(id)));
-                        toast.success('KPIs eliminados');
+                        toast.success(t('guards.KPI.toasts.deletedMultiple', 'KPIs eliminados'));
                       } else {
-                        toast.error('No hay elementos seleccionados');
+                        toast.error(t('guards.KPI.toasts.deleteNoneSelected', 'No hay elementos seleccionados'));
                         return;
                       }
                       await loadKpis();
                     } catch (e) {
                       console.error(e);
-                      toast.error('Error al eliminar KPI(s)');
+                      toast.error(t('guards.KPI.toasts.deleteError', 'Error al eliminar KPI(s)'));
                     } finally {
                       setDeleteModalOpen(false);
                       setToDeleteId(null);
                       setSelectedIds([]);
                     }
-                  }} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Eliminar</button>
+                  }} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">{t('actions.delete', 'Eliminar')}</button>
                 </div>
               </div>
             </div>

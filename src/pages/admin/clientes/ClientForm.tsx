@@ -118,7 +118,7 @@ export default function ClientForm({
             setCategories(categoryList);
         } catch (e) {
             console.error("Error loading categories:", e);
-            console.warn("No se pudieron cargar las categorías");
+            console.error(t('categoriesnotloaded', "No se pudieron cargar las categorías"));
         } finally {
             setLoadingCategories(false);
         }
@@ -156,7 +156,7 @@ export default function ClientForm({
                     console.error(e);
                     if (!redirecting) {
                         setRedirecting(true);
-                        showToastOnce('edit-client-not-found', 'Cliente no encontrado o error al cargar los datos.');
+                        showToastOnce('clients.generalInfo.notfoundclient', t('clients.generalInfo.notfoundclient', 'Cliente no encontrado o error al cargar los datos.'));
                         navigate('/clients', { replace: true });
                     }
                 }
@@ -352,7 +352,7 @@ export default function ClientForm({
                                     <FormControl>
                                         <input
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                            placeholder="Opcional"
+                                            placeholder={t('postSites.form.addressLine2Placeholder', 'Opcional')}
                                             {...field}
                                             value={typeof field.value === "string" ? field.value : ""}
                                             maxLength={100}
@@ -568,7 +568,7 @@ export default function ClientForm({
                                                     options={cats}
                                                     value={Array.isArray(field.value) ? field.value : []}
                                                     onChange={(val) => field.onChange(Array.isArray(val) ? val : [])}
-                                                    placeholder={loadingCategories ? "Cargando..." : "Selecciona categorías"}
+                                                    placeholder={loadingCategories ? t('clients.loading', 'Cargando...') : t('clients.selectCategories', 'Selecciona categorías')}
                                                     module="clientAccount"
                                                     onCategoryCreated={handleCategoryCreated}
                                                     multiple
