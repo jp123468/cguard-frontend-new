@@ -18,8 +18,9 @@ const LANGUAGES = {
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
     const [language, setLanguageState] = useState<Language>(() => {
-        const stored = localStorage.getItem('app_language');
-        return (stored as Language) || 'es';
+        const app = localStorage.getItem('app_language');
+        const legacy = localStorage.getItem('language');
+        return ((app || legacy) as Language) || 'es';
     });
 
     const setLanguage = (lang: Language) => {
@@ -31,8 +32,25 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     };
 
     useEffect(() => {
-        // ensure i18n is using the stored language on mount
-        try { i18n.changeLanguage(language); } catch {}
+        // On mount, prefer `app_language` but fall back to legacy `language`.
+        try {
+            const app = localStorage.getItem('app_language');
+            const legacy = localStorage.getItem('language');
+            const chosen = (app || legacy || language) as Language;
+
+            // If keys are out of sync, normalize them so both contain the same value
+            if (app !== chosen) {
+                try { localStorage.setItem('app_language', chosen); } catch {}
+            }
+            if (legacy !== chosen) {
+                try { localStorage.setItem('language', chosen); } catch {}
+            }
+
+            setLanguageState(chosen);
+            i18n.changeLanguage(chosen);
+        } catch (e) {
+            // ignore
+        }
     }, []);
 
     return (

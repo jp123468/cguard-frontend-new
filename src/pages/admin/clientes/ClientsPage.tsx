@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from '@/i18n';
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -440,18 +441,18 @@ export default function ClientesPage() {
   const bulkActions: BulkAction[] = useMemo(() => {
     const actions: BulkAction[] = [];
     // mover (cambiar categoría) requires edit
-    if (hasPermission('clientAccountEdit')) actions.push({ value: "mover", label: t('clients.bulk.move') });
+    if (hasPermission('clientAccountEdit')) actions.push({ value: "mover", label: t('actions.move') });
     if (filters.active === true) {
-      if (hasPermission('clientAccountEdit')) actions.push({ value: "archivar", label: t('clients.bulk.archive') });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "archivar", label: t('actions.archive') });
     } else if (filters.active === false) {
-      if (hasPermission('clientAccountEdit')) actions.push({ value: "restaurar", label: t('clients.bulk.restore') });
-      if (hasPermission('clientAccountDestroy')) actions.push({ value: "eliminar", label: t('clients.bulk.delete') });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "restaurar", label: t('actions.restore') });
+      if (hasPermission('clientAccountDestroy')) actions.push({ value: "eliminar", label: t('actions.delete') });
     } else {
-      if (hasPermission('clientAccountEdit')) actions.push({ value: "archivar", label: t('clients.bulk.archive') });
-      if (hasPermission('clientAccountEdit')) actions.push({ value: "restaurar", label: t('clients.bulk.restore') });
-      if (hasPermission('clientAccountDestroy')) actions.push({ value: "eliminar", label: t('clients.bulk.delete') });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "archivar", label: t('actions.archive') });
+      if (hasPermission('clientAccountEdit')) actions.push({ value: "restaurar", label: t('actions.restore') });
+      if (hasPermission('clientAccountDestroy')) actions.push({ value: "eliminar", label: t('actions.delete') });
     }
-    if (hasPermission('clientAccountEdit')) actions.push({ value: "gestionar-categorias", label: t('clients.bulk.manageCategories') });
+    if (hasPermission('clientAccountEdit')) actions.push({ value: "gestionar-categorias", label: t('actions.manageCategories') });
     return actions;
   }, [filters.active]);
 
@@ -748,14 +749,14 @@ export default function ClientesPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem disabled={!hasPermission('clientAccountRead')} onClick={async () => { if (!hasPermission('clientAccountRead')) return; await handleExportPDF(); }}>
-                  <FileDown className="mr-2 h-4 w-4" /> {t('clients.export.pdf')}
+                  <FileDown className="mr-2 h-4 w-4" /> {t('actions.exportPdf')}
                 </DropdownMenuItem>
                 <DropdownMenuItem disabled={!hasPermission('clientAccountRead')} onClick={async () => { if (!hasPermission('clientAccountRead')) return; await handleExportExcel(); }}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('clients.export.excel')}
+                  <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('actions.exportExcel')}
                 </DropdownMenuItem>
                 {hasPermission('clientAccountImport') && (
                   <DropdownMenuItem onClick={() => setOpenImport(true)}>
-                    <ArrowDownUp className="mr-2 h-4 w-4" /> {t('clients.import')}
+                    <ArrowDownUp className="mr-2 h-4 w-4" /> {t('actions.import')}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -861,7 +862,8 @@ export default function ClientesPage() {
               multiple
               value={moveCategories}
               onChange={(val) => setMoveCategories(Array.isArray(val) ? val : [])}
-              placeholder={categories.length === 0 ? t('clients.loading') : t('clients.selectCategories')}
+              // Use category-specific loading key to avoid returning the whole clients resource
+              placeholder={categories.length === 0 ? t('categories.loading') : t('clients.selectCategories')}
               options={categories.map((c) => ({ id: c.id, name: c.name }))}
               onCategoryCreated={loadCategories}
             />
@@ -1002,7 +1004,7 @@ export default function ClientesPage() {
                   loadClients();
                   setOpenDeleteBulkDialog(false);
                 } catch (error: any) {
-                  // backend handles errors
+                  toast.error(getServerErrorMessage(error, t('clients.deleteError')));
                 }
               }}
             >
@@ -1032,7 +1034,7 @@ export default function ClientesPage() {
                   toast.success(t('clients.clientDeleted'));
                   loadClients();
                 } catch (error: any) {
-                  // backend handles errors
+                  toast.error(getServerErrorMessage(error, t('clients.deleteError')));
                 }
               }}
             >

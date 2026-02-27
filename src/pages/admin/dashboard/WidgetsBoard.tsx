@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent } from "@/components/ui/popover";
@@ -83,6 +84,7 @@ export default function WidgetsBoard({
   data?: DashboardData;           // { clientes: 2, sitios: 3, ... }
   defaultEnabled?: WidgetId[];    // cuáles arrancan visibles
 }) {
+  const { t } = useTranslation();
   const [enabled, setEnabled] = useState<Set<WidgetId>>(new Set(defaultEnabled));
 
   const items = useMemo(
@@ -109,7 +111,7 @@ export default function WidgetsBoard({
                     checked={enabled.has(w.id)}
                     onCheckedChange={(v) => toggle(w.id, v)}
                   />
-                  <span className="text-sm">{w.title}</span>
+                  <span className="text-sm">{t(`dashboard.widgets.${w.id}.title`, w.title)}</span>
                 </label>
               ))}
             </div>
@@ -120,17 +122,17 @@ export default function WidgetsBoard({
       {/* Estado vacío */}
       {items.length === 0 ? (
         <div className="py-20 text-center text-muted-foreground">
-          <p className="text-lg">No hay widgets habilitados.</p>
-          <p className="text-sm">Por favor, habilita al menos un widget para ver datos en la pantalla.</p>
+          <p className="text-lg">{t('dashboard.noWidgets.title', 'No widgets enabled')}</p>
+          <p className="text-sm">{t('dashboard.noWidgets.desc', 'Please enable at least one widget to see data on the board.')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {items.map(w => (
             <StatCard
               key={w.id}
-              title={w.title}
+              title={t(`dashboard.widgets.${w.id}.title`, w.title)}
               value={data[w.id] ?? 0}
-              subtitle={w.subtitle}
+              subtitle={t(`dashboard.widgets.${w.id}.subtitle`, w.subtitle)}
               Icon={w.Icon}
               colorText={w.color.text}
               iconBg={w.color.iconBg}

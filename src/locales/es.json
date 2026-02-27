@@ -1348,6 +1348,59 @@
       "hoursLogged": "Horas registradas (últimos 7 días)"
     }
   },
+  "activity": {
+    "title": "Actividad",
+    "latest": "Actividad reciente",
+    "recent": "Actividad reciente",
+    "noActivity": "Sin actividad reciente",
+    "showMore": "Mostrar más",
+    "markAllRead": "Marcar todo como leído",
+    "filters": "Filtros",
+    "savedFilters": "Filtros guardados",
+    "filter": {
+      "client": "Cliente",
+      "postSite": "Sitio de publicación",
+      "guard": "Guardia",
+      "type": "Tipo",
+      "type": {
+        "all": "Todos",
+        "checkin": "Registro",
+        "checkout": "Salida",
+        "incident": "Incidente"
+      },
+      "dateFrom": "Desde la fecha",
+      "dateTo": "Hasta la fecha",
+      "time": "Hora",
+      "showArchived": "Mostrar datos archivados",
+      "apply": "Aplicar filtro"
+    },
+    "any": "Cualquiera",
+    "noResults": {
+      "title": "No se encontraron resultados",
+      "description": "No pudimos encontrar ningún elemento que coincida con su búsqueda"
+    },
+    "empty": {
+      "alt": "Sin resultados"
+    }
+  },
+  "dashboard": {
+    "title": "Panel de control",
+    "welcome": "Bienvenido al panel",
+    "cards": "Tarjetas de resumen"
+    ,
+    "noWidgets": {
+      "title": "No hay widgets habilitados",
+      "desc": "Por favor, habilita al menos un widget para ver datos en la pantalla."
+    },
+    "widgets": {
+      "clientes": { "title": "Clientes", "subtitle": "Clientes activos" },
+      "sitios": { "title": "Sitios de publicación", "subtitle": "Sitios activos" },
+      "guardias": { "title": "Guardias", "subtitle": "Guardias activos" },
+      "equipo": { "title": "Equipo administrativo", "subtitle": "Usuarios activos" },
+      "registros": { "title": "Registros", "subtitle": "Hoy" },
+      "fichados": { "title": "Fichados", "subtitle": "Hoy" }
+    }
+  },
   "header": {
     "openMenu": "Abrir menú",
     "feedback": "Enviar comentario",
@@ -1519,7 +1572,12 @@
     "deleting": "Eliminando...",
     "restore": "Restaurar",
     "save": "Guardar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "manageCategories": "Gestionar Categorías",
+    "exportPdf": "Exportar como PDF",
+    "exportExcel": "Exportar como Excel",
+    "import": "Importar",
+    "move": "Mover Cat"
   },
   "components": {
     "addRemove": {
@@ -1683,15 +1741,52 @@
         "status": "Estado"
       }
     },
-    "rowActions": { "resendInvitation": "Reenviar Invitación", "suspend": "Suspender", "restore": "Restaurar", "delete": "Eliminar", "edit": "Editar" },
-    "statuses": { "archived": "Archivado", "pending": "Pendiente", "inactive": "Inactivo", "active": "Activo" },
-    "footer": { "itemsPerPage": "Elementos por página" },
-    "pagination": { "zero": "0 – 0 de 0", "range": "1 – {{end}} de {{total}}" },
+    "rowActions": {
+      "resendInvitation": "Reenviar Invitación",
+      "suspend": "Suspender",
+      "restore": "Restaurar",
+      "delete": "Eliminar",
+      "edit": "Editar"
+    },
+    "statuses": {
+      "archived": "Archivado",
+      "pending": "Pendiente",
+      "inactive": "Inactivo",
+      "active": "Activo"
+    },
+    "footer": {
+      "itemsPerPage": "Elementos por página"
+    },
+    "pagination": {
+      "zero": "0 – 0 de 0",
+      "range": "1 – {{end}} de {{total}}"
+    },
     "dialogs": {
-      "common": { "cancel": "Cancelar", "sending": "Enviando...", "processing": "Procesando...", "processingDelete": "Eliminando..." },
-      "resend": { "title": "Reenviar invitación", "description": "¿Deseas reenviar la invitación a {{user}}?", "confirm": "Reenviar", "success": "Invitación reenviada", "error": "Error reenviando invitación" },
-      "restore": { "title": "Restaurar usuario", "description": "¿Deseas restaurar al usuario {{user}}? Esto devolverá el usuario a estado activo.", "confirm": "Restaurar", "success": "Usuario restaurado", "error": "Error restaurando usuario" },
-      "delete": { "title": "Eliminar usuario", "description": "¿Estás seguro que deseas eliminar permanentemente a {{user}}? Esta acción no se puede deshacer.", "confirm": "Eliminar" }
+      "common": {
+        "cancel": "Cancelar",
+        "sending": "Enviando...",
+        "processing": "Procesando...",
+        "processingDelete": "Eliminando..."
+      },
+      "resend": {
+        "title": "Reenviar invitación",
+        "description": "¿Deseas reenviar la invitación a {{user}}?",
+        "confirm": "Reenviar",
+        "success": "Invitación reenviada",
+        "error": "Error reenviando invitación"
+      },
+      "restore": {
+        "title": "Restaurar usuario",
+        "description": "¿Deseas restaurar al usuario {{user}}? Esto devolverá el usuario a estado activo.",
+        "confirm": "Restaurar",
+        "success": "Usuario restaurado",
+        "error": "Error restaurando usuario"
+      },
+      "delete": {
+        "title": "Eliminar usuario",
+        "description": "¿Estás seguro que deseas eliminar permanentemente a {{user}}? Esta acción no se puede deshacer.",
+        "confirm": "Eliminar"
+      }
     },
     "toasts": {
       "selectAtLeastOne": "Selecciona al menos un usuario",
@@ -1710,7 +1805,10 @@
       "activateAllError": "No se pudo activar a todos los usuarios"
     },
     "newUser": {
-      "breadcrumb": { "dashboard": "Panel de control", "new": "Nuevo Usuario" },
+      "breadcrumb": {
+        "dashboard": "Panel de control",
+        "new": "Nuevo Usuario"
+      },
       "form": {
         "nameLabel": "Nombre*",
         "namePlaceholder": "Nombre*",
@@ -1754,7 +1852,11 @@
       }
     },
     "editUser": {
-      "breadcrumb": { "dashboard": "Panel de control", "edit": "Editar Usuario", "new": "Nuevo Usuario" },
+      "breadcrumb": {
+        "dashboard": "Panel de control",
+        "edit": "Editar Usuario",
+        "new": "Nuevo Usuario"
+      },
       "form": {
         "nameLabel": "Nombre*",
         "namePlaceholder": "Nombre*",
@@ -1776,12 +1878,74 @@
         "savingEdit": "Guardando...",
         "savingNew": "Enviando..."
       },
-      "toasts": { "updated": "Usuario actualizado", "created": "Usuario creado" },
-      "errors": { "loadError": "No se pudo cargar el usuario" }
+      "toasts": {
+        "updated": "Usuario actualizado",
+        "created": "Usuario creado"
+      },
+      "errors": {
+        "loadError": "No se pudo cargar el usuario"
+      }
     },
     "noData": {
       "title": "No se encontraron resultados",
       "message": "No pudimos encontrar ningún elemento que coincida con tu búsqueda"
+    }
+  },
+  "dashboard": {
+    "title": "Panel de control",
+    "manageWidgets": "Gestionar Widgets",
+    "popover": {
+      "widgets": {
+        "stats": "Cuadro de Estadísticas",
+        "tracker": "Guardias Activos",
+        "activity": "Última Actividad",
+        "timeLog": "Reloj de Tiempo",
+        "checkIn": "Registros",
+        "checkOut": "Salidas registradas",
+        "incidents": "Últimos Incidentes",
+        "reports": "Informes Estándar",
+        "tours": "Últimos Recorridos por el Sitio",
+        "scans": "Últimas etiquetas escaneadas"
+      }
+    },
+    "page": {
+      "liveTracker": "Rastreador en Vivo",
+      "showGeofence": "Mostrar Geovalla",
+      "hideGeofence": "Ocultar Geovalla",
+      "roadmap": "Roadmap",
+      "satellite": "Satélite",
+      "lastActivity": "Última Actividad",
+      "viewAll": "Ver Todo",
+      "timeLog": "Reloj de Tiempo",
+      "entriesCount": "{{count}} Entradas",
+      "checkIns": "Registros",
+      "checkOuts": "Salidas registradas",
+      "incidents": "Últimos Incidentes",
+      "reports": "Informes Estándar",
+      "tours": "Últimos Recorridos por el Sitio",
+      "scans": "Últimas etiquetas escaneadas"
+    },
+    "table": {
+      "headers": {
+        "index": "#",
+        "image": "Imagen",
+        "guard": "Guardia",
+        "postSite": "Sitio de publicación",
+        "lastUpdate": "Última Actualización",
+        "battery": "Estado de la Batería",
+        "speed": "Velocidad (MPH)",
+        "lastLocation": "Última Ubicación",
+        "type": "Tipo",
+        "shiftName": "Turno/Descanso Nombre",
+        "time": "Hora de Fichaje"
+      }
+    }
+  },
+  "activity": {
+    "title": "Actividades",
+    "empty": {
+      "title": "Sin actividad",
+      "description": "No hay actividad reciente para mostrar"
     }
   }
 }

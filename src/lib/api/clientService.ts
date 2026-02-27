@@ -215,7 +215,9 @@ export const clientService = {
      */
     async deleteClient(id: string): Promise<void> {
         const tenantId = getTenantId();
-        await api.delete(`/tenant/${tenantId}/client-account/${id}`, { toast: { silentError: true } });
+        // Backend routes delete requests to the base path and expects ids via query or body.
+        // axios supports sending a body with DELETE via the `data` config field.
+        await api.delete(`/tenant/${tenantId}/client-account`, { data: { ids: [id] }, toast: { silentError: true } } as any);
     },
 
     /**

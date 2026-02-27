@@ -28,8 +28,12 @@ function setCookie(name: string, value: string, days = 365, domain?: string) {
 }
 
 function getSelectedLang(): string {
-  const stored = typeof window !== "undefined" ? localStorage.getItem("language") : null
-  return stored || "es"
+  // Prefer `app_language` (used by the app/i18n). Fallback to legacy `language` (used by Google Translate page).
+  if (typeof window === "undefined") return 'es';
+  const app = localStorage.getItem('app_language');
+  if (app) return app;
+  const legacy = localStorage.getItem('language');
+  return legacy || 'es';
 }
 
 /* ---------- HOOK: CARGAR GOOGLE TRANSLATE ---------- */
@@ -108,6 +112,9 @@ function changeLanguage(code: string) {
   }
 
   localStorage.setItem("language", code)
+
+  // Persist app_language as well so LanguageProvider/i18n picks it up
+  try { localStorage.setItem('app_language', code); } catch {}
 
   // Recargar la página para aplicar la traducción
   window.location.reload()

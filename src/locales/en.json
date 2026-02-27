@@ -190,28 +190,50 @@
       "conjuntoHabilidades": "Skill Set",
       "departamento": "Department",
       "configuracion": "Settings"
-    }
-    ,
+    },
     "notes": {
-      "actions": { "default": "Action", "delete": "Delete" },
+      "actions": {
+        "default": "Action",
+        "delete": "Delete"
+      },
       "searchPlaceholder": "Search note",
       "addButton": "New Note",
-      "table": { "title": "Title", "date": "Date", "addedBy": "Added By" },
-      "empty": { "title": "No results found", "message": "We couldn't find<br />any items matching<br />your search" },
-      "modal": { "title": "Add New Note", "cancel": "Cancel", "save": "Save" },
+      "table": {
+        "title": "Title",
+        "date": "Date",
+        "addedBy": "Added By"
+      },
+      "empty": {
+        "title": "No results found",
+        "message": "We couldn't find<br />any items matching<br />your search"
+      },
+      "modal": {
+        "title": "Add New Note",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
       "form": {
-        "title": { "label": "Title", "placeholder": "Enter note title" },
-        "description": { "label": "Description", "placeholder": "Enter note description" },
-        "date": { "label": "Date" },
-        "attachments": { "label": "Attachments", "noFiles": "No files selected" }
+        "title": {
+          "label": "Title",
+          "placeholder": "Enter note title"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Enter note description"
+        },
+        "date": {
+          "label": "Date"
+        },
+        "attachments": {
+          "label": "Attachments",
+          "noFiles": "No files selected"
+        }
       }
-    }
-    ,
+    },
     "overview": {
       "loading": "Loading...",
       "loadError": "Could not load guard"
-    }
-    ,
+    },
     "summary": {
       "roleDefault": "Security Guard",
       "header": {
@@ -250,79 +272,76 @@
       "badge": {
         "joined": "Guard joined"
       }
-    }
-      ,
-      "profile": {
-        "actions": {
-          "edit": "Edit",
-          "cancel": "Cancel",
-          "save": "Save",
-          "saving": "Saving..."
-        },
-        "toasts": {
-          "updated": "Guard updated successfully",
-          "updateError": "Error updating guard"
-        },
-        "cards": {
-          "general": "General Information",
-          "contact": "Contact Details",
-          "emergency": "Emergency Contact Details",
-          "personal": "Personal Information",
-          "deviceInfo": "Device Information",
-          "devicePermissions": "Device Permissions",
-          "languagesSkills": "Languages & Skills",
-          "licenseDetails": "License Details"
-        },
-        "fields": {
-          "firstName": "First Name",
-          "lastName": "Last Name",
-          "id1": "ID #1",
-          "id2": "ID #2",
-          "birthDate": "Birth Date",
-          "address": "Address",
-          "email": "Email",
-          "mobile": "Mobile Number",
-          "emergencyContact": "Emergency Contact",
-          "emergencyContactNumber": "Emergency Contact Number",
-          "emergencyRelation": "Relation",
-          "birthPlace": "Birth Place",
-          "maritalStatus": "Marital Status",
-          "bloodType": "Blood Type",
-          "education": "Education",
-          "gender": "Gender",
-          "governmentId": "Government ID",
-          "deviceType": "Device Type",
-          "deviceModel": "Device Model",
-          "osVersion": "OS Version",
-          "appVersion": "App Version",
-          "pushNotifications": "Push Notifications",
-          "gpsPermission": "GPS Permission",
-          "camera": "Camera",
-          "microphone": "Microphone",
-          "languages": "Languages",
-          "skills": "Skills",
-          "licenseType": "License Type",
-          "licenseNumber": "Number",
-          "issueDate": "Issue Date",
-          "expiryDate": "Expiry Date"
-        },
-        "values": {
-          "enabled": "Enabled",
-          "disabled": "Disabled",
-          "background": "Background"
-        },
-        "placeholders": {
-          "languages": "Eg: Spanish, English",
-          "skills": "Eg: First aid, Self-defense"
-        },
-        "noLicense": "No license found"
-      }
-    ,
+    },
+    "profile": {
+      "actions": {
+        "edit": "Edit",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving..."
+      },
+      "toasts": {
+        "updated": "Guard updated successfully",
+        "updateError": "Error updating guard"
+      },
+      "cards": {
+        "general": "General Information",
+        "contact": "Contact Details",
+        "emergency": "Emergency Contact Details",
+        "personal": "Personal Information",
+        "deviceInfo": "Device Information",
+        "devicePermissions": "Device Permissions",
+        "languagesSkills": "Languages & Skills",
+        "licenseDetails": "License Details"
+      },
+      "fields": {
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "id1": "ID #1",
+        "id2": "ID #2",
+        "birthDate": "Birth Date",
+        "address": "Address",
+        "email": "Email",
+        "mobile": "Mobile Number",
+        "emergencyContact": "Emergency Contact",
+        "emergencyContactNumber": "Emergency Contact Number",
+        "emergencyRelation": "Relation",
+        "birthPlace": "Birth Place",
+        "maritalStatus": "Marital Status",
+        "bloodType": "Blood Type",
+        "education": "Education",
+        "gender": "Gender",
+        "governmentId": "Government ID",
+        "deviceType": "Device Type",
+        "deviceModel": "Device Model",
+        "osVersion": "OS Version",
+        "appVersion": "App Version",
+        "pushNotifications": "Push Notifications",
+        "gpsPermission": "GPS Permission",
+        "camera": "Camera",
+        "microphone": "Microphone",
+        "languages": "Languages",
+        "skills": "Skills",
+        "licenseType": "License Type",
+        "licenseNumber": "Number",
+        "issueDate": "Issue Date",
+        "expiryDate": "Expiry Date"
+      },
+      "values": {
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "background": "Background"
+      },
+      "placeholders": {
+        "languages": "Eg: Spanish, English",
+        "skills": "Eg: First aid, Self-defense"
+      },
+      "noLicense": "No license found"
+    },
     "tabs": {
       "invite": "Invite via SMS or Email",
       "create_profile": "Create profile"
-    }
-    ,
+    },
     "availability": {
       "title": "Availability",
       "table": {
@@ -344,8 +363,7 @@
       "toasts": {
         "saved": "Availability saved"
       }
-    }
-    ,
+    },
     "licenses": {
       "action": {
         "default": "Action"
@@ -388,24 +406,44 @@
         "backImageLabel": "Back License Image",
         "chooseFile": "Choose file"
       }
-    }
-    ,
+    },
     "reminders": {
-      "action": { "default": "Action" },
-      "actions": { "archive": "Archive" },
+      "action": {
+        "default": "Action"
+      },
+      "actions": {
+        "archive": "Archive"
+      },
       "searchPlaceholder": "Search reminders",
       "filters": {
         "button": "Filters",
         "title": "Filters",
         "status": "Status",
-        "options": { "all": "All", "pending": "Pending", "completed": "Completed", "archived": "Archived" },
+        "options": {
+          "all": "All",
+          "pending": "Pending",
+          "completed": "Completed",
+          "archived": "Archived"
+        },
         "cancel": "Cancel",
         "apply": "Apply"
       },
       "addReminder": "Add Reminder",
-      "table": { "title": "Title", "datetime": "Reminder Date/Time", "createdBy": "Created By", "priority": "Priority", "status": "Status" },
-      "empty": { "title": "No Result Found", "description": "We can't find any item matching your search" },
-      "modal": { "title": "Add Reminder", "save": "Save" },
+      "table": {
+        "title": "Title",
+        "datetime": "Reminder Date/Time",
+        "createdBy": "Created By",
+        "priority": "Priority",
+        "status": "Status"
+      },
+      "empty": {
+        "title": "No Result Found",
+        "description": "We can't find any item matching your search"
+      },
+      "modal": {
+        "title": "Add Reminder",
+        "save": "Save"
+      },
       "form": {
         "title": "Title",
         "titlePlaceholder": "Title*",
@@ -419,7 +457,11 @@
         "attachment": "Attachment",
         "attachmentPlaceholder": "Attachment"
       },
-      "priority": { "low": "Low", "medium": "Medium", "high": "High" },
+      "priority": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
       "remindOptions": {
         "30_Minutes_Before": "30 Minutes Before",
         "1_Hour_Before": "1 Hour Before",
@@ -433,32 +475,65 @@
         "2_Weeks_Before": "2 Weeks Before",
         "4_Weeks_Before": "4 Weeks Before"
       },
-      "repeat": { "never": "Never", "1_week": "1 Week", "2_weeks": "2 Weeks", "3_weeks": "3 Weeks", "monthly": "Monthly", "yearly": "Yearly" },
-      "toasts": { "loadError": "Could not load guard" }
-    }
-    ,
+      "repeat": {
+        "never": "Never",
+        "1_week": "1 Week",
+        "2_weeks": "2 Weeks",
+        "3_weeks": "3 Weeks",
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      },
+      "toasts": {
+        "loadError": "Could not load guard"
+      }
+    },
     "assignSites": {
       "loading": "Loading...",
-      "action": { "default": "Action" },
-      "actions": { "delete": "Delete" },
+      "action": {
+        "default": "Action"
+      },
+      "actions": {
+        "delete": "Delete"
+      },
       "searchPlaceholder": "Search Post Sites",
       "assignButton": "Assign Post Sites",
-      "table": { "client": "Client", "postSites": "Post Sites" },
+      "table": {
+        "client": "Client",
+        "postSites": "Post Sites"
+      },
       "loadError": "Could not load guard",
-      "modal": { "title": "Assign Sites", "cancel": "Cancel", "assign": "Assign" },
-      "form": { "client": "Client", "selectClient": "Select client", "postSite": "Post Site", "selectPostSite": "Select post site" },
+      "modal": {
+        "title": "Assign Sites",
+        "cancel": "Cancel",
+        "assign": "Assign"
+      },
+      "form": {
+        "client": "Client",
+        "selectClient": "Select client",
+        "postSite": "Post Site",
+        "selectPostSite": "Select post site"
+      },
       "noPostSites": "No post sites found"
-    }
-    ,
-    "assignSites_no_postsites": "No post sites found"
-    ,
+    },
+    "assignSites_no_postsites": "No post sites found",
     "files": {
-      "action": { "default": "Action" },
-      "actions": { "delete": "Delete" },
+      "action": {
+        "default": "Action"
+      },
+      "actions": {
+        "delete": "Delete"
+      },
       "searchPlaceholder": "Search files",
       "uploadButton": "Upload",
-      "table": { "date": "Date", "file": "File", "addedBy": "Added By" },
-      "empty": { "title": "No Files Found", "description": "Upload files using the button on the right" },
+      "table": {
+        "date": "Date",
+        "file": "File",
+        "addedBy": "Added By"
+      },
+      "empty": {
+        "title": "No Files Found",
+        "description": "Upload files using the button on the right"
+      },
       "loadError": "Could not load guard",
       "modal": {
         "title": "Upload Files",
@@ -470,20 +545,45 @@
       }
     },
     "skills": {
-      "action": { "default": "Action" },
-      "actions": { "delete": "Delete" },
+      "action": {
+        "default": "Action"
+      },
+      "actions": {
+        "delete": "Delete"
+      },
       "searchPlaceholder": "Search skill sets",
       "assignButton": "Assign Skill Set",
-      "table": { "name": "Name", "description": "Description" },
-      "empty": { "title": "No Result Found", "description": "We can't find any item matching your search" },
-      "toasts": { "loadError": "Could not load guard", "selectAtLeastOne": "Please select at least one skill set", "provideName": "Please provide a skill name" },
-      "modal": { "title": "Assign Skill Set", "cancel": "Cancel", "assign": "Assign" },
-      "form": { "skillSet": "Skill Set*", "selectPlaceholder": "Select skill sets..." },
-      "dropdown": { "searchPlaceholder": "Search..." }
+      "table": {
+        "name": "Name",
+        "description": "Description"
+      },
+      "empty": {
+        "title": "No Result Found",
+        "description": "We can't find any item matching your search"
+      },
+      "toasts": {
+        "loadError": "Could not load guard",
+        "selectAtLeastOne": "Please select at least one skill set",
+        "provideName": "Please provide a skill name"
+      },
+      "modal": {
+        "title": "Assign Skill Set",
+        "cancel": "Cancel",
+        "assign": "Assign"
+      },
+      "form": {
+        "skillSet": "Skill Set*",
+        "selectPlaceholder": "Select skill sets..."
+      },
+      "dropdown": {
+        "searchPlaceholder": "Search..."
+      }
     },
     "new": {
       "title": "New Guard",
-      "breadcrumb": { "dashboard": "Dashboard" },
+      "breadcrumb": {
+        "dashboard": "Dashboard"
+      },
       "invite": {
         "description": "Enter the guard's name and email/mobile number. A message with a link will be sent."
       },
@@ -498,9 +598,9 @@
         "invite_sent": "Invitation by link sent",
         "invite_error": "Error sending invitation by link"
       },
-        "create": {
-          "description": "Create the guard's profile manually. They will need to verify their email and mobile number before signing in."
-        },
+      "create": {
+        "description": "Create the guard's profile manually. They will need to verify their email and mobile number before signing in."
+      },
       "form": {
         "firstName": "First name*",
         "firstNamePlaceholder": "First name *",
@@ -510,10 +610,10 @@
         "selectMethodPlaceholder": "Select method",
         "contactEmail": "Email Address *",
         "contactSms": "Mobile Number *",
-          "password": "Password *",
-          "passwordPlaceholder": "Password *",
-          "confirmPassword": "Confirm Password *",
-          "confirmPasswordPlaceholder": "Confirm Password *",
+        "password": "Password *",
+        "passwordPlaceholder": "Password *",
+        "confirmPassword": "Confirm Password *",
+        "confirmPasswordPlaceholder": "Confirm Password *",
         "contactPhEmail": "e.g. person@email.com",
         "contactPhSms": "e.g. +12015550123",
         "selectClient": "Select Client",
@@ -535,14 +635,13 @@
       "actions": {
         "copy": "Copy",
         "regenerate": "Regenerate",
-        "create": "Create"
-          ,"show_password":"Show password",
-          "hide_password":"Hide password",
-          "show_confirm_password":"Show password",
-          "hide_confirm_password":"Hide password"
+        "create": "Create",
+        "show_password": "Show password",
+        "hide_password": "Hide password",
+        "show_confirm_password": "Show password",
+        "hide_confirm_password": "Hide password"
       }
-    }
-    ,
+    },
     "KPI": {
       "modal": {
         "title": "Add New KPIs (Key Performance Indicators)",
@@ -791,64 +890,6 @@
         "excelError": "Could not generate/get Excel",
         "excelExportError": "Error exporting Excel"
       }
-    }
-    },
-    "overview": {
-      "cards": {
-        "postSites": "Post Sites",
-        "guardsAssigned": "Guards Assigned",
-        "toursCompleted": "Tour Completed (Last 7 Days)",
-        "tasksCompleted": "Task Completed (Last 7 Days)",
-        "incidents": "Incident Reports",
-        "hoursWorked": "Hrs Worked (Last 7 Days)"
-      },
-      "generalInfo": {
-        "notfoundclient": "Client not found",
-        "title": "General Information",
-        "clientName": "Client Name",
-        "address": "Address",
-        "addedOn": "Added On"
-      },
-      "contactDetails": {
-        "title": "Contact Details",
-        "phoneNumber": "Phone Number",
-        "fax": "Fax",
-        "email": "Email",
-        "website": "Website"
-      }
-    },
-    "contacts": {
-      "addcontact": "Add Contact",
-      "searchcontact": "Search Contacts",
-      "contactName": "Name",
-      "contactEmail": "Email",
-      "contactPhone": "Mobile Number",
-      "contactPostSites": "Post Sites",
-      "editcontact": "Edit Contact",
-      "contactCreated": "Contact created successfully",
-      "contactUpdated": "Contact updated successfully",
-      "contactDeleted": "Contact deleted successfully",
-      "contactCreateFailed": "Could not create contact",
-      "contactDeleteFailed": "Could not delete contact",
-      "confirmDeleteTitle": "Delete contact(s)?",
-      "confirmDeleteMessage": "Are you sure you want to permanently delete the selected contact(s)? This action cannot be undone.",
-      "deleteContactButton": "Delete",
-      "form": {
-        "AddClientContact": "Add Client Contact",
-        "Name": "Name *",
-        "Email": "Email *",
-        "Mobile Number": "Mobile Number *",
-        "Description": "Description",
-        "descriptioninput": "Enter contact description",
-        "AssignPostSite": "Assign Post Site",
-        "checkbox": "Allow guard to view contact",
-        "Addcontact": "ADD"
-      },
-      "errors": {
-        "invalidEmail": "Invalid email address",
-        "invalidPhone": "Invalid phone number",
-        "requiredName": "Name is required"
-      }
     },
     "loadError": "Error loading clients",
     "loadClientError": "Could not load client",
@@ -1036,7 +1077,66 @@
         "Description": "Description",
         "AddedBy": "Added by"
       }
+    }
+  },
+  "overview": {
+    "cards": {
+      "postSites": "Post Sites",
+      "guardsAssigned": "Guards Assigned",
+      "toursCompleted": "Tour Completed (Last 7 Days)",
+      "tasksCompleted": "Task Completed (Last 7 Days)",
+      "incidents": "Incident Reports",
+      "hoursWorked": "Hrs Worked (Last 7 Days)"
     },
+    "generalInfo": {
+      "notfoundclient": "Client not found",
+      "title": "General Information",
+      "clientName": "Client Name",
+      "address": "Address",
+      "addedOn": "Added On"
+    },
+    "contactDetails": {
+      "title": "Contact Details",
+      "phoneNumber": "Phone Number",
+      "fax": "Fax",
+      "email": "Email",
+      "website": "Website"
+    }
+  },
+  "contacts": {
+    "addcontact": "Add Contact",
+    "searchcontact": "Search Contacts",
+    "contactName": "Name",
+    "contactEmail": "Email",
+    "contactPhone": "Mobile Number",
+    "contactPostSites": "Post Sites",
+    "editcontact": "Edit Contact",
+    "contactCreated": "Contact created successfully",
+    "contactUpdated": "Contact updated successfully",
+    "contactDeleted": "Contact deleted successfully",
+    "contactCreateFailed": "Could not create contact",
+    "contactDeleteFailed": "Could not delete contact",
+    "confirmDeleteTitle": "Delete contact(s)?",
+    "confirmDeleteMessage": "Are you sure you want to permanently delete the selected contact(s)? This action cannot be undone.",
+    "deleteContactButton": "Delete",
+    "form": {
+      "AddClientContact": "Add Client Contact",
+      "Name": "Name *",
+      "Email": "Email *",
+      "Mobile Number": "Mobile Number *",
+      "Description": "Description",
+      "descriptioninput": "Enter contact description",
+      "AssignPostSite": "Assign Post Site",
+      "checkbox": "Allow guard to view contact",
+      "Addcontact": "ADD"
+    },
+    "errors": {
+      "invalidEmail": "Invalid email address",
+      "invalidPhone": "Invalid phone number",
+      "requiredName": "Name is required"
+    }
+  },
+  
   "postSites": {
     "postsitdash": "Dashboard",
     "postsite": "Post Site",
@@ -1251,7 +1351,7 @@
       "title": "KPI Indicators",
       "kpisearch": "Search KPIs",
       "kpiadded": "KPI added",
-      "kpitable":{
+      "kpitable": {
         "kpitype": "Type",
         "kpidate": "Date/Hour",
         "kpicreatedfor": "Created for"
@@ -1326,6 +1426,60 @@
       "tasksCompleted": "Tasks Completed (Last 7 Days)",
       "incidentsReported": "Incidents Reported",
       "hoursLogged": "Hrs Logged (Last 7 Days)"
+    }
+  },
+  "activity": {
+    "title": "Activity",
+    "latest": "Latest Activity",
+    "recent": "Recent Activity",
+    "noActivity": "No recent activity",
+    "showMore": "Show more"
+  ,
+    "markAllRead": "Mark all as read",
+    "filters": "Filters",
+    "savedFilters": "Saved filters",
+    "filter": {
+      "client": "Client",
+      "postSite": "Post Site",
+      "guard": "Guard",
+      "type": "Type",
+      "type": {
+        "all": "All",
+        "checkin": "Check-in",
+        "checkout": "Check-out",
+        "incident": "Incident"
+      },
+      "dateFrom": "From date",
+      "dateTo": "To date",
+      "time": "Time",
+      "showArchived": "Show archived data",
+      "apply": "Apply filter"
+    },
+    "any": "Any",
+    "noResults": {
+      "title": "No results found",
+      "description": "We couldn't find any items matching your search"
+    },
+    "empty": {
+      "alt": "No data"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to the dashboard",
+    "cards": "Overview Cards"
+    ,
+    "noWidgets": {
+      "title": "No widgets enabled",
+      "desc": "Please enable at least one widget to see data on the board."
+    },
+    "widgets": {
+      "clientes": { "title": "Clients", "subtitle": "Active clients" },
+      "sitios": { "title": "Post Sites", "subtitle": "Active publishing sites" },
+      "guardias": { "title": "Guards", "subtitle": "Active guards" },
+      "equipo": { "title": "Admin team", "subtitle": "Active users" },
+      "registros": { "title": "Records", "subtitle": "Today" },
+      "fichados": { "title": "Clock-ins", "subtitle": "Today" }
     }
   },
   "header": {
@@ -1499,7 +1653,12 @@
     "deleting": "Deleting...",
     "restore": "Restore",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "manageCategories": "Manage Categories",
+    "exportPdf": "Export as PDF",
+    "exportExcel": "Export as Excel",
+    "import": "Import",
+    "move": "Move Cat"
   },
   "components": {
     "addRemove": {
@@ -1514,12 +1673,17 @@
       "primary": "Send",
       "sending": "Sending..."
     }
-  }
-  ,
+  },
   "adminOfficeUsers": {
-    "breadcrumb": { "dashboard": "Dashboard" },
+    "breadcrumb": {
+      "dashboard": "Dashboard"
+    },
     "title": "Administrative Office Users",
-    "bulkAction": { "placeholder": "Action", "suspend": "Suspend", "activate": "Activate" },
+    "bulkAction": {
+      "placeholder": "Action",
+      "suspend": "Suspend",
+      "activate": "Activate"
+    },
     "searchPlaceholder": "Search user",
     "newUser": "New User",
     "filters": {
@@ -1536,7 +1700,11 @@
       "statusSuspended": "Suspended",
       "apply": "Apply filters"
     },
-    "actions": { "exportPdf": "Export as PDF", "exportExcel": "Export as Excel", "import": "Import" },
+    "actions": {
+      "exportPdf": "Export as PDF",
+      "exportExcel": "Export as Excel",
+      "import": "Import"
+    },
     "table": {
       "headers": {
         "contactName": "Contact Name",
@@ -1546,15 +1714,52 @@
         "status": "Status"
       }
     },
-    "rowActions": { "resendInvitation": "Resend Invitation", "suspend": "Suspend", "restore": "Restore", "delete": "Delete", "edit": "Edit" },
-    "statuses": { "archived": "Archived", "pending": "Pending", "inactive": "Inactive", "active": "Active" },
-    "footer": { "itemsPerPage": "Items per page" },
-    "pagination": { "zero": "0 – 0 of 0", "range": "1 – {{end}} of {{total}}" },
+    "rowActions": {
+      "resendInvitation": "Resend Invitation",
+      "suspend": "Suspend",
+      "restore": "Restore",
+      "delete": "Delete",
+      "edit": "Edit"
+    },
+    "statuses": {
+      "archived": "Archived",
+      "pending": "Pending",
+      "inactive": "Inactive",
+      "active": "Active"
+    },
+    "footer": {
+      "itemsPerPage": "Items per page"
+    },
+    "pagination": {
+      "zero": "0 – 0 of 0",
+      "range": "1 – {{end}} of {{total}}"
+    },
     "dialogs": {
-      "common": { "cancel": "Cancel", "sending": "Sending...", "processing": "Processing...", "processingDelete": "Deleting..." },
-      "resend": { "title": "Resend invitation", "description": "Resend invitation to {{user}}?", "confirm": "Resend", "success": "Invitation resent", "error": "Error resending invitation" },
-      "restore": { "title": "Restore user", "description": "Restore user {{user}} to active state?", "confirm": "Restore", "success": "User restored", "error": "Error restoring user" },
-      "delete": { "title": "Delete user", "description": "Permanently delete {{user}}? This cannot be undone.", "confirm": "Delete" }
+      "common": {
+        "cancel": "Cancel",
+        "sending": "Sending...",
+        "processing": "Processing...",
+        "processingDelete": "Deleting..."
+      },
+      "resend": {
+        "title": "Resend invitation",
+        "description": "Resend invitation to {{user}}?",
+        "confirm": "Resend",
+        "success": "Invitation resent",
+        "error": "Error resending invitation"
+      },
+      "restore": {
+        "title": "Restore user",
+        "description": "Restore user {{user}} to active state?",
+        "confirm": "Restore",
+        "success": "User restored",
+        "error": "Error restoring user"
+      },
+      "delete": {
+        "title": "Delete user",
+        "description": "Permanently delete {{user}}? This cannot be undone.",
+        "confirm": "Delete"
+      }
     },
     "toasts": {
       "selectAtLeastOne": "Select at least one user",
@@ -1573,7 +1778,10 @@
       "activateAllError": "Could not activate all users"
     },
     "newUser": {
-      "breadcrumb": { "dashboard": "Dashboard", "new": "New User" },
+      "breadcrumb": {
+        "dashboard": "Dashboard",
+        "new": "New User"
+      },
       "form": {
         "nameLabel": "Name*",
         "namePlaceholder": "Name*",
@@ -1617,7 +1825,11 @@
       }
     },
     "editUser": {
-      "breadcrumb": { "dashboard": "Dashboard", "edit": "Edit User", "new": "New User" },
+      "breadcrumb": {
+        "dashboard": "Dashboard",
+        "edit": "Edit User",
+        "new": "New User"
+      },
       "form": {
         "nameLabel": "Name*",
         "namePlaceholder": "Name*",
@@ -1639,9 +1851,74 @@
         "savingEdit": "Saving...",
         "savingNew": "Sending..."
       },
-      "toasts": { "updated": "User updated", "created": "User created" },
-      "errors": { "loadError": "Could not load user" }
+      "toasts": {
+        "updated": "User updated",
+        "created": "User created"
+      },
+      "errors": {
+        "loadError": "Could not load user"
+      }
     },
-    "noData": { "title": "No results found", "message": "We couldn't find any items matching your search" }
+    "noData": {
+      "title": "No results found",
+      "message": "We couldn't find any items matching your search"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "manageWidgets": "Manage Widgets",
+    "popover": {
+      "widgets": {
+        "stats": "Statistics Board",
+        "tracker": "Active Guards",
+        "activity": "Latest Activity",
+        "timeLog": "Time Clock",
+        "checkIn": "Check Ins",
+        "checkOut": "Check Outs",
+        "incidents": "Recent Incidents",
+        "reports": "Standard Reports",
+        "tours": "Recent Site Tours",
+        "scans": "Recent Tag Scans"
+      }
+    },
+    "page": {
+      "liveTracker": "Live Tracker",
+      "showGeofence": "Show Geofence",
+      "hideGeofence": "Hide Geofence",
+      "roadmap": "Roadmap",
+      "satellite": "Satellite",
+      "lastActivity": "Latest Activity",
+      "viewAll": "View All",
+      "timeLog": "Time Clock",
+      "entriesCount": "{{count}} Entries",
+      "checkIns": "Check Ins",
+      "checkOuts": "Check Outs",
+      "incidents": "Recent Incidents",
+      "reports": "Standard Reports",
+      "tours": "Recent Site Tours",
+      "scans": "Recent Tag Scans"
+    },
+    "table": {
+      "headers": {
+        "index": "#",
+        "image": "Image",
+        "guard": "Guard",
+        "postSite": "Post Site",
+        "lastUpdate": "Last Update",
+        "battery": "Battery Status",
+        "speed": "Speed (MPH)",
+        "lastLocation": "Last Location",
+        "type": "Type",
+        "shiftName": "Shift/Break Name",
+        "time": "Time"
+      }
+    }
+  },
+  "activity": {
+    "title": "Activity",
+    "empty": {
+      "title": "No activity",
+      "description": "No recent activity to show"
+    }
   }
 }
