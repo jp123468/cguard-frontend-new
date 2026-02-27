@@ -191,6 +191,281 @@
       "departamento": "Departamento",
       "configuracion": "Configuración"
     },
+    "notes": {
+      "actions": {
+        "default": "Acción",
+        "delete": "Eliminar"
+      },
+      "searchPlaceholder": "Buscar nota",
+      "addButton": "Nueva Nota",
+      "table": {
+        "title": "Título",
+        "date": "Fecha",
+        "addedBy": "Añadido por"
+      },
+      "empty": {
+        "title": "No se encontraron resultados",
+        "message": "No pudimos encontrar<br />elementos que coincidan<br />con tu búsqueda"
+      },
+      "modal": {
+        "title": "Agregar nueva nota",
+        "cancel": "Cancelar",
+        "save": "Guardar"
+      },
+      "form": {
+        "title": {
+          "label": "Título",
+          "placeholder": "Ingrese el título de la nota"
+        },
+        "description": {
+          "label": "Descripción",
+          "placeholder": "Ingrese la descripción de la nota"
+        },
+        "date": {
+          "label": "Fecha"
+        },
+        "attachments": {
+          "label": "Adjuntos",
+          "noFiles": "No se seleccionaron archivos"
+        }
+      }
+    },
+    "availability": {
+      "title": "Disponibilidad",
+      "table": {
+        "day": "Día",
+        "available": "Disponible",
+        "from": "Desde",
+        "to": "Hasta"
+      },
+      "days": {
+        "Monday": "Lunes",
+        "Tuesday": "Martes",
+        "Wednesday": "Miércoles",
+        "Thursday": "Jueves",
+        "Friday": "Viernes",
+        "Saturday": "Sábado",
+        "Sunday": "Domingo"
+      },
+      "save": "Guardar",
+      "toasts": {
+        "saved": "Disponibilidad guardada"
+      }
+    },
+    "licenses": {
+      "action": {
+        "default": "Acción"
+      },
+      "actions": {
+        "delete": "Eliminar"
+      },
+      "searchPlaceholder": "Buscar licencia",
+      "newLicense": "Nueva licencia",
+      "table": {
+        "type": "Tipo de licencia",
+        "number": "Número de licencia",
+        "expires": "Vence el",
+        "addedBy": "Añadido por"
+      },
+      "empty": {
+        "title": "No se encontraron resultados",
+        "description": "No pudimos encontrar<br />elementos que coincidan<br />con tu búsqueda"
+      },
+      "modal": {
+        "title": "Agregar nueva licencia",
+        "cancel": "Cancelar",
+        "save": "Guardar"
+      },
+      "form": {
+        "licenseType": "Tipo de licencia",
+        "selectLicenseType": "Seleccionar tipo de licencia",
+        "option": {
+          "driver": "Licencia de conducir",
+          "weapons": "Licencia de armas",
+          "security": "Licencia de seguridad",
+          "other": "Otra"
+        },
+        "customLicenseName": "Nombre de la licencia",
+        "customLicensePlaceholder": "Ingrese el nombre de la licencia",
+        "licenseNumber": "Número de licencia",
+        "licenseNumberPlaceholder": "Ingrese el número de licencia",
+        "expiryDate": "Fecha de vencimiento",
+        "frontImageLabel": "Imagen frontal de la licencia",
+        "backImageLabel": "Imagen trasera de la licencia",
+        "chooseFile": "Elegir archivo"
+      }
+    },
+    "reminders": {
+      "action": {
+        "default": "Acción"
+      },
+      "actions": {
+        "archive": "Archivar"
+      },
+      "searchPlaceholder": "Buscar recordatorios",
+      "filters": {
+        "button": "Filtros",
+        "title": "Filtros",
+        "status": "Estado",
+        "options": {
+          "all": "Todos",
+          "pending": "Pendiente",
+          "completed": "Completado",
+          "archived": "Archivado"
+        },
+        "cancel": "Cancelar",
+        "apply": "Aplicar"
+      },
+      "addReminder": "Agregar recordatorio",
+      "table": {
+        "title": "Título",
+        "datetime": "Fecha/Hora del recordatorio",
+        "createdBy": "Creado por",
+        "priority": "Prioridad",
+        "status": "Estado"
+      },
+      "empty": {
+        "title": "No se encontraron resultados",
+        "description": "No pudimos encontrar ningún elemento que coincida con tu búsqueda"
+      },
+      "modal": {
+        "title": "Agregar recordatorio",
+        "save": "Guardar"
+      },
+      "form": {
+        "title": "Título",
+        "titlePlaceholder": "Título*",
+        "description": "Descripción",
+        "descriptionPlaceholder": "Descripción",
+        "selectedDate": "Fecha seleccionada",
+        "at": "A las",
+        "createdFor": "Creado para",
+        "selectGuards": "Seleccionar guardias",
+        "priority": "Prioridad",
+        "attachment": "Adjunto",
+        "attachmentPlaceholder": "Adjunto"
+      },
+      "priority": {
+        "low": "Baja",
+        "medium": "Media",
+        "high": "Alta"
+      },
+      "remindOptions": {
+        "30_Minutes_Before": "30 minutos antes",
+        "1_Hour_Before": "1 hora antes",
+        "2_Hours_Before": "2 horas antes",
+        "4_Hours_Before": "4 horas antes",
+        "8_Hours_Before": "8 horas antes",
+        "1_Day_Before": "1 día antes",
+        "2_Days_Before": "2 días antes",
+        "4_Days_Before": "4 días antes",
+        "8_Days_Before": "8 días antes",
+        "2_Weeks_Before": "2 semanas antes",
+        "4_Weeks_Before": "4 semanas antes"
+      },
+      "repeat": {
+        "never": "Nunca",
+        "1_week": "1 semana",
+        "2_weeks": "2 semanas",
+        "3_weeks": "3 semanas",
+        "monthly": "Mensual",
+        "yearly": "Anual"
+      },
+      "toasts": {
+        "loadError": "No se pudo cargar el guardia"
+      }
+    },
+    "assignSites": {
+      "loading": "Cargando...",
+      "action": {
+        "default": "Acción"
+      },
+      "actions": {
+        "delete": "Eliminar"
+      },
+      "searchPlaceholder": "Buscar sitios",
+      "assignButton": "Asignar Sitios",
+      "table": {
+        "client": "Cliente",
+        "postSites": "Sitios"
+      },
+      "loadError": "No se pudo cargar el guardia",
+      "modal": {
+        "title": "Asignar Sitios",
+        "cancel": "Cancelar",
+        "assign": "Asignar"
+      },
+      "form": {
+        "client": "Cliente",
+        "selectClient": "Seleccionar cliente",
+        "postSite": "Sitio",
+        "selectPostSite": "Seleccionar sitio"
+      },
+      "noPostSites": "No se encontraron sitios"
+    },
+    "files": {
+      "action": {
+        "default": "Acción"
+      },
+      "actions": {
+        "delete": "Eliminar"
+      },
+      "searchPlaceholder": "Buscar archivos",
+      "uploadButton": "Subir",
+      "table": {
+        "date": "Fecha",
+        "file": "Archivo",
+        "addedBy": "Añadido por"
+      },
+      "empty": {
+        "title": "No se encontraron archivos",
+        "description": "Sube archivos usando el botón a la derecha"
+      },
+      "loadError": "No se pudo cargar el guardia",
+      "modal": {
+        "title": "Subir archivos",
+        "dropHere": "Suelta los archivos aquí..",
+        "orSelect": "O seleccionar",
+        "chooseFilesPlaceholder": "Seleccionar archivos No hay archivos seleccionados",
+        "filesToUpload": "Archivos para subir",
+        "upload": "Subir"
+      }
+    },
+    "skills": {
+      "action": {
+        "default": "Acción"
+      },
+      "actions": {
+        "delete": "Eliminar"
+      },
+      "searchPlaceholder": "Buscar conjuntos de habilidades",
+      "assignButton": "Asignar conjunto de habilidades",
+      "table": {
+        "name": "Nombre",
+        "description": "Descripción"
+      },
+      "empty": {
+        "title": "No se encontraron resultados",
+        "description": "No pudimos encontrar ningún elemento que coincida con tu búsqueda"
+      },
+      "toasts": {
+        "loadError": "No se pudo cargar el guardia",
+        "selectAtLeastOne": "Por favor selecciona al menos un conjunto de habilidades",
+        "provideName": "Por favor proporciona un nombre de habilidad"
+      },
+      "modal": {
+        "title": "Asignar conjunto de habilidades",
+        "cancel": "Cancelar",
+        "assign": "Asignar"
+      },
+      "form": {
+        "skillSet": "Conjunto de habilidades*",
+        "selectPlaceholder": "Seleccionar conjuntos de habilidades..."
+      },
+      "dropdown": {
+        "searchPlaceholder": "Buscar..."
+      }
+    },
     "KPI": {
       "modal": {
         "title": "Añadir Nuevos KPIs (Indicadores Clave de Rendimiento)",
@@ -224,6 +499,73 @@
       "emailNotImplemented": "Reporte por correo no implementado",
       "menu": {
         "email": "Reporte por Correo"
+      },
+      "tabs": {
+        "invite": "Invitar usando SMS o correo electrónico",
+        "create_profile": "Crear perfil"
+      },
+      "new": {
+        "title": "Nuevo Guardia",
+        "breadcrumb": {
+          "dashboard": "Panel de control"
+        },
+        "invite": {
+          "description": "Ingrese el nombre, correo electrónico/número de móvil del guardia. Se enviará un mensaje con un enlace."
+        },
+        "join_code": {
+          "description": "Comparta el código único de la compañía junto con el enlace para descargar la aplicación.",
+          "copied": "Código copiado",
+          "invite_sent": "Invitación enviada por código",
+          "invite_error": "Error al enviar invitación por código"
+        },
+        "link": {
+          "description": "Comparta este enlace para unirse a la empresa.",
+          "invite_sent": "Invitación por enlace enviada",
+          "invite_error": "Error al enviar invitación por enlace"
+        },
+        "create": {
+          "description": "Cree manualmente el perfil del guardia. Deberá validar su correo y número móvil antes de iniciar sesión."
+        },
+        "form": {
+          "firstName": "Nombre*",
+          "firstNamePlaceholder": "Nombre *",
+          "lastName": "Apellido*",
+          "lastNamePlaceholder": "Apellido *",
+          "inviteBy": "Invitar Por*",
+          "selectMethodPlaceholder": "Seleccionar método",
+          "contactEmail": "Correo Electrónico *",
+          "contactSms": "Número de Móvil *",
+          "password": "Contraseña *",
+          "passwordPlaceholder": "Contraseña *",
+          "confirmPassword": "Confirmar Contraseña *",
+          "confirmPasswordPlaceholder": "Confirmar Contraseña *",
+          "contactPhEmail": "e.g. persona@correo.com",
+          "contactPhSms": "e.g. +12015550123",
+          "selectClient": "Seleccionar Cliente",
+          "assignPostSite": "Asignar Sitio de Publicación",
+          "create_and_send": "Crear y Enviar",
+          "send": "Enviar"
+        },
+        "toasts": {
+          "clients_sites_load_error": "No se pudieron cargar clientes o sitios",
+          "invites_sent": "Invitaciones enviadas",
+          "invite_error": "Error al enviar invitaciones",
+          "profile_created": "Perfil creado",
+          "profile_created_sent": "Perfil creado y enviado"
+        },
+        "errors": {
+          "no_permission_create": "No tienes permiso para crear guardias",
+          "error_create_profile": "Error al crear perfil"
+        },
+        "actions": {
+          "copy": "Copiar",
+          "regenerate": "Regenerar",
+          "create": "Crear",
+          "show_password": "Mostrar contraseña",
+          "hide_password": "Ocultar contraseña",
+          "show_confirm_password": "Mostrar contraseña",
+          "hide_confirm_password": "Ocultar contraseña"
+        }
       }
     },
     "list": {
@@ -402,716 +744,1044 @@
     "pdfError": "No se pudo generar/obtener el PDF",
     "excelDownloaded": "Excel descargado",
     "excelError": "No se pudo generar/obtener el Excel",
-    "excelExportError": "Error al exportar Excel"
+    "excelExportError": "Error al exportar Excel",
+    "profile": {
+      "actions": {
+        "edit": "Editar",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "saving": "Guardando..."
+      },
+      "toasts": {
+        "updated": "Guardia actualizado correctamente",
+        "updateError": "Error al actualizar la guardia"
+      },
+      "cards": {
+        "general": "Información general",
+        "contact": "Detalles de contacto",
+        "emergency": "Contacto de emergencia",
+        "personal": "Información personal",
+        "deviceInfo": "Información del dispositivo",
+        "devicePermissions": "Permisos del dispositivo",
+        "languagesSkills": "Idiomas y habilidades",
+        "licenseDetails": "Detalles de la licencia"
+      },
+      "fields": {
+        "firstName": "Nombre",
+        "lastName": "Apellido",
+        "id1": "ID #1",
+        "id2": "ID #2",
+        "birthDate": "Fecha de nacimiento",
+        "address": "Dirección",
+        "email": "Correo electrónico",
+        "mobile": "Número móvil",
+        "emergencyContact": "Contacto de emergencia",
+        "emergencyContactNumber": "Número de contacto de emergencia",
+        "emergencyRelation": "Relación",
+        "birthPlace": "Lugar de nacimiento",
+        "maritalStatus": "Estado civil",
+        "bloodType": "Tipo de sangre",
+        "education": "Educación",
+        "gender": "Género",
+        "governmentId": "ID gubernamental",
+        "deviceType": "Tipo de dispositivo",
+        "deviceModel": "Modelo del dispositivo",
+        "osVersion": "Versión del SO",
+        "appVersion": "Versión de la app",
+        "pushNotifications": "Notificaciones Push",
+        "gpsPermission": "Permiso GPS",
+        "camera": "Cámara",
+        "microphone": "Micrófono",
+        "languages": "Idiomas",
+        "skills": "Habilidades",
+        "licenseType": "Tipo de licencia",
+        "licenseNumber": "Número",
+        "issueDate": "Fecha de emisión",
+        "expiryDate": "Fecha de vencimiento"
+      },
+      "values": {
+        "enabled": "Habilitado",
+        "disabled": "Deshabilitado",
+        "background": "Background"
+      },
+      "placeholders": {
+        "languages": "Ej: Español, Inglés",
+        "skills": "Ej: Primeros auxilios, Defensa personal"
+      },
+      "noLicense": "No se encontró ninguna licencia"
+    }
   },
-"clients": {
-"nav": {
-  "title": "Clientes",
-  "overview": "Resumen",
-  "profile": "Perfil",
-  "contacts": "Contactos",
-  "notes": "Notas",
-  "files": "Archivos",
-  "postSites": "Post Sites",
-  "clientPortal": "Portal del cliente",
-  "userAccess": "Acceso de usuarios",
-  "emailReports": "Reportes por correo"
-},
-"overview": {
-  "cards": {
-    "postSites": "Sitios publicados",
-    "guardsAssigned": "Guardias asignados",
-    "toursCompleted": "Recorridos completados (últimos 7 días)",
-    "tasksCompleted": "Tareas completadas (últimos 7 días)",
-    "incidents": "Informes de incidentes",
-    "hoursWorked": "Horas trabajadas (últimos 7 días)"
-  },
-  "generalInfo": {
-    "notfoundclient": "No se encontró el cliente",
-    "title": "Información general",
-    "clientName": "Nombre del cliente",
-    "address": "Dirección",
-    "addedOn": "Añadido el"
-  },
-  "contactDetails": {
-    "title": "Detalles de contacto",
-    "phoneNumber": "Teléfono",
-    "fax": "Fax",
-    "email": "Correo electrónico",
-    "website": "Sitio web"
-  }
-},
-"loadError": "Error al cargar clientes",
-"loadClientError": "No se pudo cargar el cliente",
-"selectAtLeastOne": "Selecciona al menos un cliente",
-"selectOnlyActiveToArchive": "Selecciona solo clientes activos para archivar",
-"selectOnlyArchivedToRestore": "Selecciona solo clientes archivados para restaurar",
-"selectOnlyArchivedToDelete": "Selecciona solo clientes archivados para eliminar",
-"actionNotImplemented": "Acción \"{{action}}\" aún no implementada",
-"generatingPDF": "Generando PDF...",
-"pdfDownloaded": "PDF descargado",
-"errorExportPDF": "Error al exportar PDF",
-"generatingExcel": "Generando Excel...",
-"excelDownloaded": "Excel descargado",
-"errorExportExcel": "Error al exportar Excel",
-"categoriesUpdated": "Categorías actualizadas",
-"errorUpdateCategories": "Error al actualizar categorías",
-"selectAtLeastOneCategory": "Selecciona al menos una categoría",
-"errorMoveCategories": "Error al mover categorías",
-"bulk": {
-  "move": "Mover",
-  "archive": "Archivar",
-  "restore": "Restaurar",
-  "delete": "Eliminar",
-  "manageCategories": "Gestionar categorías"
-},
-"columns": {
-  "name": "Cliente",
-  "address": "Dirección",
-  "email": "Correo electrónico",
-  "phone": "Teléfono",
-  "status": "Estado"
-},
-"status": {
-  "active": "Activo",
-  "archived": "Archivado",
-  "pending": "Pendiente",
-  "invitate": "Invitado"
-},
-"errorArchiveClient": "Error al archivar cliente",
-"breadcrumb": {
-  "dashboard": "Panel de control",
-  "clients": "Clientes"
-},
-"contacts": {
-  "addcontact": "Agregar contacto",
-  "searchcontact": "Buscar contactos",
-  "contactName": "Nombre",
-  "contactEmail": "Correo electrónico",
-  "contactPhone": "Número móvil",
-  "contactPostSites": "Sitios publicados",
-  "editcontact": "Editar contacto",
-  "contactCreated": "Contacto creado exitosamente",
-  "contactUpdated": "Contacto actualizado exitosamente",
-  "contactDeleted": "Contacto eliminado exitosamente",
-  "contactCreateFailed": "No se pudo crear el contacto",
-  "contactDeleteFailed": "No se pudo eliminar el contacto",
-  "confirmDeleteTitle": "¿Eliminar contacto(s)?",
-  "confirmDeleteMessage": "¿Estás seguro de que deseas eliminar permanentemente el(los) contacto(s) seleccionado(s)? Esta acción no se puede deshacer.",
-  "form": {
-    "AddClientContact": "Agregar contacto",
-    "Name": "Nombre *",
-    "Email": "Correo electrónico *",
-    "Mobile Number": "Número móvil *",
-    "Description": "Descripción",
-    "descriptioninput": "Ingresa la descripción del contacto",
-    "AssignPostSite": "Asignar sitio publicado",
-    "checkbox": "Permitir que el guardia vea el contacto",
-    "Addcontact": "AGREGAR"
-  },
-  "errors": {
-    "invalidEmail": "Correo inválido",
-    "invalidPhone": "Número inválido",
-    "requiredName": "Nombre requerido"
-  }
-},
-"notes": {
-  "Title": "Título",
-  "addNote": "Agregar nota",
-  "editNote": "Editar",
-  "deleteNote": "Eliminar",
-  "Date": "Fecha",
-  "Added By": "Añadido por",
-  "noteCreated": "Nota creada correctamente",
-  "noteUpdated": "Nota actualizada correctamente",
-  "noteDeleted": "Nota eliminada correctamente",
-  "noteCreateFailed": "No se pudo crear la nota",
-  "noteUpdateFailed": "No se pudo actualizar la nota",
-  "deleteFailed": "No se pudo eliminar la nota",
-  "notesearchPlaceholder": "Buscar notas",
-  "confirmDeleteTitle": "¿Eliminar nota(s)?",
-  "confirmDeleteMessage": "¿Estás seguro de que deseas eliminar permanentemente la(s) nota(s) seleccionada(s)? Esta acción no se puede deshacer.",
-  "form": {
-    "Title": "Agregar nueva nota",
-    "Titlenote": "Título *",
-    "Titleinput": "Ingresa el título de la nota",
-    "Description": "Descripción *",
-    "Descriptioninput": "Ingresa la descripción de la nota",
-    "Date": "Fecha * ",
-    "AttachFile": "Archivos adjuntos",
-    "AttachFileinput": "No se seleccionaron archivos",
-    "Save": "GUARDAR"
-  },
-  "Details": {
-    "detailsTitle": "Detalles Nota ",
-    "Title": "Título",
-    "Date": "Fecha",
-    "Description": "Descripción",
-    "AddedBy": "Añadido por"
-  }
-},
-"searchPlaceholder": "Buscar cliente",
-"newClient": "Nuevo cliente",
-"editClient": "Editar cliente",
-"clientCreated": "Cliente creado con éxito",
-"clientUpdated": "Cliente actualizado con éxito",
-"form": {
-  "name": "Nombre *",
-  "lastName": "Apellidos *",
-  "email": "Correo electrónico *",
-  "phone": "Teléfono *",
-  "address": "Dirección *",
-  "addressLine2": "Dirección (línea 2)",
-  "addressLine2Placeholder": "Opcional",
-  "postalCode": "Código postal/ZIP *",
-  "city": "Ciudad *",
-  "country": "País *",
-  "latitude": "Latitud *",
-  "longitude": "Longitud *",
-  "locationSet": "Ubicación establecida",
-  "useMyLocation": "Usar mi ubicación",
-  "moreInfo": "Más información",
-  "fax": "Fax",
-  "website": "Sitio web",
-  "categories": "Categorías",
-  "active": "Activo"
-},
-"filters": {
-  "title": "Filtros",
-  "email": "Correo electrónico",
-  "phone": "Teléfono",
-  "city": "Ciudad",
-  "country": "País",
-  "categories": "Categorías",
-  "status": "Estado",
-  "all": "Todos",
-  "active": "Activo",
-  "archived": "Archivado"
-},
-"placeholders": {
-  "emailExample": "ejemplo@correo.com",
-  "phoneExample": "+593 123456789",
-  "cityExample": "Quito",
-  "countryExample": "Ecuador"
-},
-"applyFilters": "Aplicar filtros",
-"clearFilters": "Limpiar filtros",
-"export": {
-  "pdf": "Exportar a PDF",
-  "excel": "Exportar a Excel"
-},
-"import": "Importar",
-"empty": {
-  "alt": "Sin datos",
-  "title": "No se encontraron resultados",
-  "description": "No pudimos encontrar elementos que coincidan con tu búsqueda."
-},
-"pagination": {
-  "itemsPerPage": "Elementos por página",
-  "of": "de",
-  "prev": "Anterior",
-  "next": "Siguiente"
-},
-"dialogs": {
-  "changeCategories": {
-    "title": "Cambiar categorías",
-    "desc": "Aplica a {{count}} cliente(s) seleccionados.",
-    "newCategories": "Nuevas categorías"
-  },
-  "categorize": {
-    "title": "Categorizar cliente"
-  }
-},
-"client": "Cliente",
-"loading": "Cargando...",
-"selectCategories": "Selecciona categorías",
-"cancel": "Cancelar",
-"save": "Guardar",
-"saving": "Guardando...",
-"accept": "Aceptar",
-"alerts": {
-  "archiveClients": {
-    "title": "¿Archivar clientes?",
-    "desc": "¿Estás seguro de archivar {{count}} cliente(s)? Esta acción los marcará como inactivos."
-  },
-  "restoreClients": {
-    "title": "¿Restaurar clientes?",
-    "desc": "¿Estás seguro de restaurar {{count}} cliente(s)? Volverán a estar activos."
-  },
-  "deleteClients": {
-    "title": "¿Eliminar clientes?",
-    "desc": "¿Estás seguro de eliminar permanentemente {{count}} cliente(s)? Esta acción no se puede deshacer."
-  },
-  "deleteClient": {
-    "title": "¿Eliminar cliente?",
-    "desc": "¿Estás seguro de eliminar permanentemente a {{name}}? Esta acción no se puede deshacer."
-  },
-  "restoreClient": {
-    "title": "¿Restaurar cliente?",
-    "desc": "¿Estás seguro de restaurar a {{name}}? El cliente volverá a estar activo."
-  }
-},
-"clientsArchived": "Clientes archivados",
-"clientsRestored": "Clientes restaurados",
-"clientsDeleted": "Clientes eliminados",
-"clientDeleted": "Cliente eliminado",
-"clientRestored": "Cliente restaurado",
-"clientArchived": "Cliente archivado",
-"errorArchive": "Error al archivar",
-"errorRestore": "Error al restaurar",
-"errorDelete": "Error al eliminar"
-},
-"postSites": {
-"postsitdash": "Panel de control",
-"postsite": "Sitio de publicación",
-"searchPlaceholder": "Buscar sitios de publicación",
-"newPostSite": "Nuevo sitio de publicación",
-"editPostSite": "Editar sitio de publicación",
-"filtersTitle": "Filtros",
-"action": "Acción",
-"move": "Mover",
-"archive": "Archivar",
-"restore": "Restaurar",
-"delete": "Eliminar",
-"manageCategories": "Gestionar Categorías",
-"filters": {
-  "email": "Correo electrónico",
-  "phone": "Teléfono",
-  "city": "Ciudad",
-  "country": "País",
-  "categories": "Categorías",
-  "all": "Todos",
-  "active": "Activo",
-  "archived": "Archivado",
-  "status": "Estado",
-  "applyFilters": "Aplicar filtros",
-  "clearFilters": "Limpiar filtros"
-},
-"clients": "Cliente",
-"emails": "Email",
-"phones": "Teléfono",
-"actions": "Acciones",
-"viewDetails": "Ver Detalles",
-"categorize": "Categorizar",
-"notsearch": "No se encontraron resultados que coincidan con tu búsqueda",
-"pdfexport": "Exportar a PDF",
-"excelexport": "Exportar a Excel",
-"import": "Importar",
-"selectAtLeastOne": "Selecciona al menos un sitio",
-"generatingPDF": "Generando PDF...",
-"pdfDownloaded": "PDF descargado",
-"generatingExcel": "Generando Excel...",
-"excelDownloaded": "Excel descargado",
-"sitesArchived": "Sitios archivados",
-"form": {
-  "client": "Cliente *",
-  "selectClient": "Selecciona un cliente",
-  "siteName": "Nombre del sitio *",
-  "address": "Dirección *",
-  "addressLine2": "Dirección línea 2",
-  "addressLine2Placeholder": "Opcional",
-  "postalCode": "Código postal/Zip *",
-  "city": "Ciudad *",
-  "country": "País *",
-  "latitude": "Latitud *",
-  "longitude": "Longitud *",
-  "locationSet": "Ubicación establecida",
-  "useMyLocation": "Usar mi ubicación",
-  "moreInfo": "Más información",
-  "geolocationNotSupported": "La geolocalización no es compatible con este navegador",
-  "unableToRetrieveLocation": "No se pudo obtener la ubicación",
-  "phone": "Número de teléfono *",
-  "email": "Correo electrónico *",
-  "description": "Descripción *",
-  "descriptionPlaceholder": "Descripción del sitio",
-  "fax": "Fax",
-  "category": "Categoría",
-  "slectcategory": "Seleccionar categoría",
-  "cancel": "Cancelar",
-  "submit": "Enviar"
-},
-"overview": {
-  "Stats": {
-    "title": "Estadísticas del sitio",
-    "guardsAssigned": "Guardias asignados",
-    "guardOnSite": "Guardias en el sitio",
-    "toursCompleted": "Recorridos completados (últimos 7 días)",
-    "tasksCompleted": "Tareas completadas (últimos 7 días)",
-    "incidentsReported": "Incidentes reportados",
-    "hoursLogged": "Horas registradas (últimos 7 días)"
-  },
-  "Map": {
-    "title": "Mapa",
-    "MapType": "Tipo de mapa",
-    "Roadmap": "Mapa de carreteras",
-    "Satellite": "Satélite",
-    "Hybrid": "íbrido",
-    "GeoFence": "Mostrar Geo-Cerca"
-  },
-  "LatestActivity": "Última actividad",
-  "Filters": "Filtros",
-  "FilterHelp": "Selecciona filtros para la vista",
-  "fromDate": "Desde la fecha",
-  "toDate": "Hasta la fecha",
-  "Type": "Tipo",
-  "types": {
-    "callOffRequest": "Solicitud de baja",
-    "checkList": "Lista de verificación",
-    "checkedIn": "Registrado",
-    "checkedOut": "Salida registrada",
-    "clockedIn": "Hora de entrada",
-    "clockedOut": "Hora de salida",
-    "companyPolicy": "Política de la empresa",
-    "dispatch": "Despacho",
-    "exchangeShift": "Intercambio de turno",
-    "geoFence": "Geo Fence",
-    "guardAvailability": "Disponibilidad de guardia",
-    "guardIdle": "Guardia inactivo",
-    "guardDeviceFall": "Fallo guardia/dispositivo",
-    "incidentReport": "Informe de incidente",
-    "lowBattery": "Batería baja",
-    "openShiftConfirmation": "Confirmación de turno abierto",
-    "panicAlert": "Alerta de pánico",
-    "parkingManager": "Gestor de parking",
-    "passdownReport": "Informe Passdown",
-    "postOrder": "Orden del puesto",
-    "shiftConfirmation": "Confirmación de turno",
-    "siteTour": "Recorrido del sitio",
-    "standardReport": "Informe estándar",
-    "taskReport": "Informe de tarea",
-    "timeOff": "Tiempo libre",
-    "vehiclePatrol": "Patrulla vehicular",
-    "watchModeReport": "Informe modo vigilancia"
-  },
-  "apply": "Filtrar",
-  "noActivity": "No hay actividad aún."
-},
-"Details": {
-  "title": "Sitios de Publicación",
-  "unexpected": "Ocurrió un error inesperado",
-  "Overview": "Resumen",
-  "Profile": "Perfil",
-  "PostSites": "Sitios de publicación",
-  "Contacts": "Contactos",
-  "KPIs": "KPIs",
-  "Notes": "Notas",
-  "Files": "Archivos",
-  "AssignGuards": "Asignar guardias",
-  "Tasks": "Tareas",
-  "SiteTours": "Recorridos del sitio",
-  "SiteTourTags": "Etiquetas de recorrido del sitio",
-  "GeoFence": "Geo-Cerca",
-  "AssignReports": "Asignar informes",
-  "Checklists": "Listas de verificación",
-  "EmailReports": "Informes por correo electrónico",
-  "Settings": "Configuración",
-  "notfoundpostsite": "No se encontraron sitios de publicación",
-  "detailserror": "No se pudieron cargar los detalles del sitio de publicación",
-  "description": "Descripción",
-  "category": "Categoría",
-  "categories": "Categorías"
-},
-"profile": {
-  "title": "Perfil del sitio de publicación",
-  "editProfile": "Editar perfil",
-  "profileUpdated": "Perfil del sitio de publicación actualizado",
-  "errorUpdatingProfile": "Error al actualizar el perfil del sitio de publicación",
-  "Map": {
-    "title": "Mapa",
-    "MapType": "Tipo de mapa",
-    "Roadmap": "Mapa de carreteras",
-    "Satellite": "Satélite",
-    "Hybrid": "Híbrido",
-    "GeoFence": "Mostrar Geo-Cerca",
-    "NoCoordinates": "No hay coordenadas disponibles para este sitio"
-  },
-  "GeneralInformation": {
-    "title": "Información general",
-    "client": "Cliente",
-    "siteName": "Nombre del sitio",
-    "address": "Dirección",
-    "addedOn": "Agregado en"
-  },
-  "ContactDetails": {
-    "title": "Detalles de contacto",
-    "phoneNumber": "Número de teléfono",
-    "fax": "Fax",
-    "email": "Correo electrónico",
-    "website": "Sitio web"
-  },
-  "MoreInformation": {
-    "title": "Más información",
-    "categories": "Categorías",
-    "postalCode": "Código postal",
-    "city": "Ciudad",
-    "country": "País",
-    "latitude": "Latitud",
-    "longitude": "Longitud",
-    "postSiteChargeRate": "Tarifa de cargo del sitio de publicación",
-    "postSitePayRate": "Tarifa de pago del sitio de publicación"
-  },
-  "Edit": "Editar"
-},
-"postsiterestore": "Sitio Restaurado",
-"postsitesttiledelete": "Eliminar sitio",
-"postsitesttiledeletePlural": "Eliminar sitios",
-"postesitedeleteconfirm": "¿Estás seguro de que deseas eliminar {{count}} sitio(s)? Esta acción no se puede deshacer.",
-"postsitedeleted": "Sitio Eliminado",
-"postsitedeletedPlural": "Sitios eliminados",
-"postsiterestoreerror": "Error al restaurar el sitio",
-"postsitedeleteerror": "Error al eliminar el sitio",
-"KPI": {
-  "title": "Indicadores KPI",
-  "kpisearch": "Buscar KPIs",
-  "kpiadded": "KPI agregado",
-  "kpitable": {
-    "kpitype": "Tipo",
-    "kpidate": "Fecha/Hora",
-    "kpicreatedfor": "Creado por"
-  },
-  "table": {
-    "name": "Nombre",
-    "target": "Objetivo",
-    "actual": "Actual",
-    "status": "Estado",
-    "noTargets": "No hay objetivos definidos"
-  },
-  "status": {
-    "achieved": "Alcanzado",
-    "notAchieved": "No alcanzado"
-  },
-  "metrics": {
-    "standardReports": "Informes estándar",
-    "taskReports": "Informes de tareas",
-    "incidentReports": "Informes de incidentes",
-    "routeReports": "Informes de rutas",
-    "verificationReports": "Informes de verificación"
-  },
-  "descriptionLabel": "DESCRIPCIÓN :",
-  "exportPdf": "Exportar como PDF",
-  "exportExcel": "Exportar como Excel",
-  "emailReport": "Informe por correo electrónico",
-  "emailNotImplemented": "Reporte por correo no implementado",
-  "modal": {
-    "title": "Agregar nuevos KPIs (Indicadores clave de rendimiento)",
-    "frequency": "Frecuencia",
-    "frequencyOptions": {
-      "select": "Seleccionar frecuencia",
-      "daily": "Diario",
-      "weekly": "Semanal",
-      "monthly": "Mensual"
+  "clients": {
+    "nav": {
+      "title": "Clientes",
+      "overview": "Resumen",
+      "profile": "Perfil",
+      "contacts": "Contactos",
+      "notes": "Notas",
+      "files": "Archivos",
+      "postSites": "Post Sites",
+      "clientPortal": "Portal del cliente",
+      "userAccess": "Acceso de usuarios",
+      "emailReports": "Reportes por correo"
     },
-    "description": "Descripción",
-    "descriptionPlaceholder": "Ingrese descripción",
-    "standardReports": "Informes estándar",
-    "incidentReports": "Informes de incidentes",
-    "routeReports": "Informes de rutas",
-    "taskReports": "Informes de tareas",
-    "verificationReports": "Informes de verificación",
-    "defineNumber": "Definir un número",
-    "emailNotification": "Enviar informe KPI por correo electrónico",
-    "newEmailPlaceholder": "Nuevo correo electrónico...",
-    "addEmail": "Agregar",
-    "add": "Agregar"
-  },
-  "confirmDelete": {
-    "title": "Confirmar eliminación",
-    "messageSingle": "¿Estás seguro de que deseas eliminar este KPI? Esta acción no se puede deshacer.",
-    "messageMultiple": "¿Estás seguro de que deseas eliminar {{count}} KPI(s)? Esta acción no se puede deshacer."
-  },
-  "toasts": {
-    "selectAtLeastOne": "Debes seleccionar al menos un KPI",
-    "kpiDeleted": "KPI eliminado",
-    "kpisDeleted": "KPIs eliminados",
-    "noSelected": "No se seleccionaron elementos",
-    "deleteError": "Error al eliminar KPI(s)",
-    "pdfOpened": "PDF abierto",
-    "pdfGenerated": "PDF generado",
-    "pdfError": "No se pudo generar/obtener el PDF",
-    "pdfOpenError": "Error al abrir el PDF",
+    "overview": {
+      "cards": {
+        "postSites": "Sitios publicados",
+        "guardsAssigned": "Guardias asignados",
+        "toursCompleted": "Recorridos completados (últimos 7 días)",
+        "tasksCompleted": "Tareas completadas (últimos 7 días)",
+        "incidents": "Informes de incidentes",
+        "hoursWorked": "Horas trabajadas (últimos 7 días)"
+      },
+      "generalInfo": {
+        "notfoundclient": "No se encontró el cliente",
+        "title": "Información general",
+        "clientName": "Nombre del cliente",
+        "address": "Dirección",
+        "addedOn": "Añadido el"
+      },
+      "contactDetails": {
+        "title": "Detalles de contacto",
+        "phoneNumber": "Teléfono",
+        "fax": "Fax",
+        "email": "Correo electrónico",
+        "website": "Sitio web"
+      }
+    },
+    "loadError": "Error al cargar clientes",
+    "loadClientError": "No se pudo cargar el cliente",
+    "selectAtLeastOne": "Selecciona al menos un cliente",
+    "selectOnlyActiveToArchive": "Selecciona solo clientes activos para archivar",
+    "selectOnlyArchivedToRestore": "Selecciona solo clientes archivados para restaurar",
+    "selectOnlyArchivedToDelete": "Selecciona solo clientes archivados para eliminar",
+    "actionNotImplemented": "Acción \"{{action}}\" aún no implementada",
+    "generatingPDF": "Generando PDF...",
+    "pdfDownloaded": "PDF descargado",
+    "errorExportPDF": "Error al exportar PDF",
+    "generatingExcel": "Generando Excel...",
     "excelDownloaded": "Excel descargado",
-    "excelError": "No se pudo generar/obtener el Excel",
-    "excelExportError": "Error al exportar Excel"
+    "errorExportExcel": "Error al exportar Excel",
+    "categoriesUpdated": "Categorías actualizadas",
+    "errorUpdateCategories": "Error al actualizar categorías",
+    "selectAtLeastOneCategory": "Selecciona al menos una categoría",
+    "errorMoveCategories": "Error al mover categorías",
+    "bulk": {
+      "move": "Mover",
+      "archive": "Archivar",
+      "restore": "Restaurar",
+      "delete": "Eliminar",
+      "manageCategories": "Gestionar categorías"
+    },
+    "columns": {
+      "name": "Cliente",
+      "address": "Dirección",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "status": "Estado"
+    },
+    "status": {
+      "active": "Activo",
+      "archived": "Archivado",
+      "pending": "Pendiente",
+      "invitate": "Invitado"
+    },
+    "errorArchiveClient": "Error al archivar cliente",
+    "breadcrumb": {
+      "dashboard": "Panel de control",
+      "clients": "Clientes"
+    },
+    "contacts": {
+      "addcontact": "Agregar contacto",
+      "searchcontact": "Buscar contactos",
+      "contactName": "Nombre",
+      "contactEmail": "Correo electrónico",
+      "contactPhone": "Número móvil",
+      "contactPostSites": "Sitios publicados",
+      "editcontact": "Editar contacto",
+      "contactCreated": "Contacto creado exitosamente",
+      "contactUpdated": "Contacto actualizado exitosamente",
+      "contactDeleted": "Contacto eliminado exitosamente",
+      "contactCreateFailed": "No se pudo crear el contacto",
+      "contactDeleteFailed": "No se pudo eliminar el contacto",
+      "confirmDeleteTitle": "¿Eliminar contacto(s)?",
+      "confirmDeleteMessage": "¿Estás seguro de que deseas eliminar permanentemente el(los) contacto(s) seleccionado(s)? Esta acción no se puede deshacer.",
+      "form": {
+        "AddClientContact": "Agregar contacto",
+        "Name": "Nombre *",
+        "Email": "Correo electrónico *",
+        "Mobile Number": "Número móvil *",
+        "Description": "Descripción",
+        "descriptioninput": "Ingresa la descripción del contacto",
+        "AssignPostSite": "Asignar sitio publicado",
+        "checkbox": "Permitir que el guardia vea el contacto",
+        "Addcontact": "AGREGAR"
+      },
+      "errors": {
+        "invalidEmail": "Correo inválido",
+        "invalidPhone": "Número inválido",
+        "requiredName": "Nombre requerido"
+      }
+    },
+    "notes": {
+      "Title": "Título",
+      "addNote": "Agregar nota",
+      "editNote": "Editar",
+      "deleteNote": "Eliminar",
+      "Date": "Fecha",
+      "Added By": "Añadido por",
+      "noteCreated": "Nota creada correctamente",
+      "noteUpdated": "Nota actualizada correctamente",
+      "noteDeleted": "Nota eliminada correctamente",
+      "noteCreateFailed": "No se pudo crear la nota",
+      "noteUpdateFailed": "No se pudo actualizar la nota",
+      "deleteFailed": "No se pudo eliminar la nota",
+      "notesearchPlaceholder": "Buscar notas",
+      "confirmDeleteTitle": "¿Eliminar nota(s)?",
+      "confirmDeleteMessage": "¿Estás seguro de que deseas eliminar permanentemente la(s) nota(s) seleccionada(s)? Esta acción no se puede deshacer.",
+      "form": {
+        "Title": "Agregar nueva nota",
+        "Titlenote": "Título *",
+        "Titleinput": "Ingresa el título de la nota",
+        "Description": "Descripción *",
+        "Descriptioninput": "Ingresa la descripción de la nota",
+        "Date": "Fecha * ",
+        "AttachFile": "Archivos adjuntos",
+        "AttachFileinput": "No se seleccionaron archivos",
+        "Save": "GUARDAR"
+      },
+      "Details": {
+        "detailsTitle": "Detalles Nota ",
+        "Title": "Título",
+        "Date": "Fecha",
+        "Description": "Descripción",
+        "AddedBy": "Añadido por"
+      }
+    },
+    "searchPlaceholder": "Buscar cliente",
+    "newClient": "Nuevo cliente",
+    "editClient": "Editar cliente",
+    "clientCreated": "Cliente creado con éxito",
+    "clientUpdated": "Cliente actualizado con éxito",
+    "form": {
+      "name": "Nombre *",
+      "lastName": "Apellidos *",
+      "email": "Correo electrónico *",
+      "phone": "Teléfono *",
+      "address": "Dirección *",
+      "addressLine2": "Dirección (línea 2)",
+      "addressLine2Placeholder": "Opcional",
+      "postalCode": "Código postal/ZIP *",
+      "city": "Ciudad *",
+      "country": "País *",
+      "latitude": "Latitud *",
+      "longitude": "Longitud *",
+      "locationSet": "Ubicación establecida",
+      "useMyLocation": "Usar mi ubicación",
+      "moreInfo": "Más información",
+      "fax": "Fax",
+      "website": "Sitio web",
+      "categories": "Categorías",
+      "active": "Activo"
+    },
+    "filters": {
+      "title": "Filtros",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "city": "Ciudad",
+      "country": "País",
+      "categories": "Categorías",
+      "status": "Estado",
+      "all": "Todos",
+      "active": "Activo",
+      "archived": "Archivado"
+    },
+    "placeholders": {
+      "emailExample": "ejemplo@correo.com",
+      "phoneExample": "+593 123456789",
+      "cityExample": "Quito",
+      "countryExample": "Ecuador"
+    },
+    "applyFilters": "Aplicar filtros",
+    "clearFilters": "Limpiar filtros",
+    "export": {
+      "pdf": "Exportar a PDF",
+      "excel": "Exportar a Excel"
+    },
+    "import": "Importar",
+    "empty": {
+      "alt": "Sin datos",
+      "title": "No se encontraron resultados",
+      "description": "No pudimos encontrar elementos que coincidan con tu búsqueda."
+    },
+    "pagination": {
+      "itemsPerPage": "Elementos por página",
+      "of": "de",
+      "prev": "Anterior",
+      "next": "Siguiente"
+    },
+    "dialogs": {
+      "changeCategories": {
+        "title": "Cambiar categorías",
+        "desc": "Aplica a {{count}} cliente(s) seleccionados.",
+        "newCategories": "Nuevas categorías"
+      },
+      "categorize": {
+        "title": "Categorizar cliente"
+      }
+    },
+    "client": "Cliente",
+    "loading": "Cargando...",
+    "selectCategories": "Selecciona categorías",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "accept": "Aceptar",
+    "alerts": {
+      "archiveClients": {
+        "title": "¿Archivar clientes?",
+        "desc": "¿Estás seguro de archivar {{count}} cliente(s)? Esta acción los marcará como inactivos."
+      },
+      "restoreClients": {
+        "title": "¿Restaurar clientes?",
+        "desc": "¿Estás seguro de restaurar {{count}} cliente(s)? Volverán a estar activos."
+      },
+      "deleteClients": {
+        "title": "¿Eliminar clientes?",
+        "desc": "¿Estás seguro de eliminar permanentemente {{count}} cliente(s)? Esta acción no se puede deshacer."
+      },
+      "deleteClient": {
+        "title": "¿Eliminar cliente?",
+        "desc": "¿Estás seguro de eliminar permanentemente a {{name}}? Esta acción no se puede deshacer."
+      },
+      "restoreClient": {
+        "title": "¿Restaurar cliente?",
+        "desc": "¿Estás seguro de restaurar a {{name}}? El cliente volverá a estar activo."
+      }
+    },
+    "clientsArchived": "Clientes archivados",
+    "clientsRestored": "Clientes restaurados",
+    "clientsDeleted": "Clientes eliminados",
+    "clientDeleted": "Cliente eliminado",
+    "clientRestored": "Cliente restaurado",
+    "clientArchived": "Cliente archivado",
+    "errorArchive": "Error al archivar",
+    "errorRestore": "Error al restaurar",
+    "errorDelete": "Error al eliminar"
   },
-  "guardsAssigned": "Guardias asignados",
-  "guardOnSite": "Guardia en el sitio",
-  "toursCompleted": "Recorridos completados (últimos 7 días)",
-  "tasksCompleted": "Tareas completadas (últimos 7 días)",
-  "incidentsReported": "Incidentes reportados",
-  "hoursLogged": "Horas registradas (últimos 7 días)"
-}
-},
-"header": {
-"openMenu": "Abrir menú",
-"feedback": "Enviar comentario",
-"search": "Buscar",
-"help": "Ayuda",
-"notifications": "Notificaciones",
-"account": "Cuenta de usuario",
-"select_rating": "Por favor selecciona una calificación",
-"feedback_thanks": "¡Gracias por tu comentario!",
-"connected_as": "Conectado como",
-"settings": "Configuración",
-"subscription": "Suscripción",
-"branches": "Sucursales",
-"system_logs": "Registros del sistema",
-"login_history": "Historial de inicio de sesión",
-"light_mode": "Modo claro",
-"dark_mode": "Modo oscuro",
-"logout": "Cerrar sesión",
-"feedback_modal_title": "¿Cómo calificarías tu experiencia con GuardsPro?",
-"feedback_modal_desc": "Califica tu experiencia con GuardsPro.",
-"feedback_placeholder": "Cuéntanos un poco más sobre tu experiencia",
-"send": "Enviar"
-},
-"dispatcher": {
-"noPermissionViewToast": "No tienes permiso para ver despachos",
-"noPermissionViewBanner": "No tienes permiso para ver la lista de despachos. Contacta a un administrador.",
-"tenantUnavailable": "Tenant no disponible",
-"share_link_copied": "Enlace compartible copiado",
-"share_link_failed": "No se pudo generar el enlace compartible",
-"share_error": "Error al generar enlace compartible",
-"select_at_least_one_export": "Selecciona al menos un despacho para exportar",
-"export_excel_error": "Error al generar Excel",
-"select_at_least_one_print": "Selecciona al menos un despacho para imprimir",
-"pdf_generate_failed": "No se pudo generar el PDF",
-"pdf_invalid_response": "Respuesta inválida del servidor al generar el PDF",
-"print_error": "Error al imprimir el PDF",
-"select_at_least_one_send": "Selecciona al menos un despacho para enviar",
-"email_sent": "Correo enviado",
-"email_send_error": "Error al enviar correo",
-"select_at_least_one_delete": "Selecciona al menos un despacho para eliminar",
-"newDispatch": "Nuevo despacho",
-"no_permission_create": "No tienes permiso para crear despachos",
-"deleted_success": "Despachos eliminados",
-"deleted_error": "Error al eliminar despachos",
-"searchPlaceholder": "Buscar por cliente o sitio",
-"breadcrumbDashboard": "Panel de control",
-"breadcrumbList": "Lista de despachos",
-"actionPlaceholder": "Acción",
-"action_delete": "Eliminar",
-"filters": "Filtros",
-"client": "Cliente",
-"select_client": "Seleccionar cliente",
-"no_clients": "No hay clientes",
-"post_site": "Sitio",
-"select_site": "Seleccionar sitio",
-"no_sites": "No hay sitios",
-"status": "Estado",
-"status_all": "Todos",
-"status_open": "Abierto",
-"status_closed": "Cerrado",
-"created_date": "Fecha de creación",
-"incident_date": "Fecha del incidente",
-"show_archived": "Mostrar archivados",
-"apply_filters": "Aplicar filtros",
-"clear_filters": "Limpiar filtros",
-"export_pdf": "Exportar a PDF",
-"export_excel": "Exportar a Excel",
-"print": "Imprimir",
-"send_report_email": "Enviar informe por correo",
-"no_results_title": "No se encontraron resultados",
-"no_results_subtitle": "No pudimos encontrar elementos que coincidan con tu búsqueda.",
-"view_details": "Ver detalles",
-"open_new_tab": "Abrir en nueva pestaña",
-"generate_share_link": "Generar enlace compartible",
-"edit": "Editar",
-"ticket_closed": "Ticket cerrado",
-"ticket_close_failed": "No se pudo cerrar el ticket",
-"items_per_page": "Elementos por página",
-"prev": "Anterior",
-"next": "Siguiente",
-"send_report_title": "Enviar informe por correo",
-"send_report_desc": "Rellena los campos para enviar el informe por correo.",
-"sending": "Enviando...",
-"generate_shareable_link": "Generar enlace compartible",
-"confirm_delete_title": "Confirmar eliminación",
-"confirm_delete_desc": "¿Estás seguro de eliminar {{count}} despacho(s)? Esta acción no se puede deshacer.",
-"close_ticket": "Cerrar ticket",
-"action_delete_label": "Eliminar",
-"header_ticket_id": "ID del ticket",
-"header_datetime": "Fecha/Hora",
-"header_client": "Cliente",
-"header_post_site": "Sitio",
-"header_caller_type": "Tipo de llamante",
-"header_incident_type": "Tipo de incidente",
-"header_status": "Estado"
-},
-"auth": {
-"login_title": "Iniciar sesión | Cguard",
-"reset_title": "Restablecer contraseña | Cguard",
-"reset_title_short": "Restablecer contraseña",
-"token_missing": "Token de restablecimiento no encontrado en la URL.",
-"password_min_length": "La contraseña debe tener al menos 8 caracteres",
-"passwords_mismatch": "Las contraseñas no coinciden",
-"reset_success": "Contraseña restablecida correctamente. Por favor inicia sesión.",
-"reset_failed": "No fue posible restablecer la contraseña",
-"register_title": "Registro | Cguard",
-"verify_email_success": "Verificación de correo exitosa",
-"login_prompt": "Inicia sesión en tu cuenta",
-"register_prompt": "Crea tu cuenta",
-"email_label": "Correo electrónico",
-"email_placeholder": "tu@empresa.com",
-"password_label": "Contraseña",
-"password_placeholder": "Introduce tu contraseña",
-"forgot_password": "¿Olvidaste tu contraseña?",
-"no_account_text": "¿No tienes una cuenta?",
-"name_label": "Nombre completo",
-"name_placeholder": "Tu nombre",
-"confirm_password_label": "Confirmar contraseña",
-"confirm_password_placeholder": "Confirmar contraseña",
-"old_password_label": "Contraseña Antigua",
-"new_password_label": "Nueva Contraseña",
-"confirm_new_password_label": "Confirmar Nueva Contraseña",
-"save_changes": "Guardar Cambios",
-"validation_min6": "Mínimo 6 caracteres",
-"validation_min8": "Mínimo 8 caracteres",
-"validation_uppercase": "Debe incluir una mayúscula",
-"validation_lowercase": "Debe incluir una minúscula",
-"validation_number": "Debe incluir un número",
-"validation_confirm_required": "Confirma tu contraseña",
-"validation_passwords_not_match": "Las contraseñas no coinciden",
-"already_have_account": "¿Ya tienes una cuenta?",
-"fill_all_fields": "Por favor rellena todos los campos",
-"passwords_not_match": "Las contraseñas no coinciden",
-"account_created_verify_email": "Cuenta creada. Verifica tu correo para iniciar sesión.",
-"login_success": "Inicio de sesión correcto",
-"login_failed": "Error al iniciar sesión",
-"could_not_open_auth_window": "No se pudo abrir la ventana de autenticación",
-"signing_in": "Iniciando sesión...",
-"login": "Iniciar sesión",
-"resetting": "Restableciendo...",
-"reset_password": "Restablecer contraseña",
-"back_to_login": "Volver al inicio",
-"change_password_title": "Cambiar Contraseña",
-"change_password_success": "Contraseña actualizada",
-"change_password_error": "Error al cambiar la contraseña",
-"creating_account": "Creando cuenta...",
-"create_account": "Crear cuenta",
-"logout_success": "Sesión cerrada correctamente",
-"logout_failed": "No se pudo cerrar sesión",
-"landing": {
-  "title_part1": "Lleva tus operaciones de seguridad",
-  "title_part2": "al siguiente nivel",
-  "desc": "Usando la plataforma de gestión de seguridad física {{product}}.",
-  "tag_cloud": "Basado en la nube",
-  "tag_realtime": "Seguimiento en tiempo real",
-  "tag_analytics": "Analíticas",
-  "logo_alt": "Logotipo CGUARD",
-  "copyright": "© 2025-{{year}} CGUARD. Todos los derechos reservados."
-}
-},
-"actions": {
-"action": "Acción",
-"viewDetails": "Ver detalles",
-"edit": "Editar",
-"categorize": "Categorizar",
-"categorize_label": "Categorizar",
-"archive": "Archivar",
-"delete": "Eliminar",
-"deleting": "Eliminando...",
-"restore": "Restaurar",
-"save": "Guardar",
-"cancel": "Cancelar"
-}
+  "postSites": {
+    "postsitdash": "Panel de control",
+    "postsite": "Sitio de publicación",
+    "searchPlaceholder": "Buscar sitios de publicación",
+    "newPostSite": "Nuevo sitio de publicación",
+    "editPostSite": "Editar sitio de publicación",
+    "filtersTitle": "Filtros",
+    "action": "Acción",
+    "move": "Mover",
+    "archive": "Archivar",
+    "restore": "Restaurar",
+    "delete": "Eliminar",
+    "manageCategories": "Gestionar Categorías",
+    "filters": {
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "city": "Ciudad",
+      "country": "País",
+      "categories": "Categorías",
+      "all": "Todos",
+      "active": "Activo",
+      "archived": "Archivado",
+      "status": "Estado",
+      "applyFilters": "Aplicar filtros",
+      "clearFilters": "Limpiar filtros"
+    },
+    "clients": "Cliente",
+    "emails": "Email",
+    "phones": "Teléfono",
+    "actions": "Acciones",
+    "viewDetails": "Ver Detalles",
+    "categorize": "Categorizar",
+    "notsearch": "No se encontraron resultados que coincidan con tu búsqueda",
+    "pdfexport": "Exportar a PDF",
+    "excelexport": "Exportar a Excel",
+    "import": "Importar",
+    "selectAtLeastOne": "Selecciona al menos un sitio",
+    "generatingPDF": "Generando PDF...",
+    "pdfDownloaded": "PDF descargado",
+    "generatingExcel": "Generando Excel...",
+    "excelDownloaded": "Excel descargado",
+    "sitesArchived": "Sitios archivados",
+    "form": {
+      "client": "Cliente *",
+      "selectClient": "Selecciona un cliente",
+      "siteName": "Nombre del sitio *",
+      "address": "Dirección *",
+      "addressLine2": "Dirección línea 2",
+      "addressLine2Placeholder": "Opcional",
+      "postalCode": "Código postal/Zip *",
+      "city": "Ciudad *",
+      "country": "País *",
+      "latitude": "Latitud *",
+      "longitude": "Longitud *",
+      "locationSet": "Ubicación establecida",
+      "useMyLocation": "Usar mi ubicación",
+      "moreInfo": "Más información",
+      "geolocationNotSupported": "La geolocalización no es compatible con este navegador",
+      "unableToRetrieveLocation": "No se pudo obtener la ubicación",
+      "phone": "Número de teléfono *",
+      "email": "Correo electrónico *",
+      "description": "Descripción *",
+      "descriptionPlaceholder": "Descripción del sitio",
+      "fax": "Fax",
+      "category": "Categoría",
+      "slectcategory": "Seleccionar categoría",
+      "cancel": "Cancelar",
+      "submit": "Enviar"
+    },
+    "overview": {
+      "Stats": {
+        "title": "Estadísticas del sitio",
+        "guardsAssigned": "Guardias asignados",
+        "guardOnSite": "Guardias en el sitio",
+        "toursCompleted": "Recorridos completados (últimos 7 días)",
+        "tasksCompleted": "Tareas completadas (últimos 7 días)",
+        "incidentsReported": "Incidentes reportados",
+        "hoursLogged": "Horas registradas (últimos 7 días)"
+      },
+      "Map": {
+        "title": "Mapa",
+        "MapType": "Tipo de mapa",
+        "Roadmap": "Mapa de carreteras",
+        "Satellite": "Satélite",
+        "Hybrid": "íbrido",
+        "GeoFence": "Mostrar Geo-Cerca"
+      },
+      "LatestActivity": "Última actividad",
+      "Filters": "Filtros",
+      "FilterHelp": "Selecciona filtros para la vista",
+      "fromDate": "Desde la fecha",
+      "toDate": "Hasta la fecha",
+      "Type": "Tipo",
+      "types": {
+        "callOffRequest": "Solicitud de baja",
+        "checkList": "Lista de verificación",
+        "checkedIn": "Registrado",
+        "checkedOut": "Salida registrada",
+        "clockedIn": "Hora de entrada",
+        "clockedOut": "Hora de salida",
+        "companyPolicy": "Política de la empresa",
+        "dispatch": "Despacho",
+        "exchangeShift": "Intercambio de turno",
+        "geoFence": "Geo Fence",
+        "guardAvailability": "Disponibilidad de guardia",
+        "guardIdle": "Guardia inactivo",
+        "guardDeviceFall": "Fallo guardia/dispositivo",
+        "incidentReport": "Informe de incidente",
+        "lowBattery": "Batería baja",
+        "openShiftConfirmation": "Confirmación de turno abierto",
+        "panicAlert": "Alerta de pánico",
+        "parkingManager": "Gestor de parking",
+        "passdownReport": "Informe Passdown",
+        "postOrder": "Orden del puesto",
+        "shiftConfirmation": "Confirmación de turno",
+        "siteTour": "Recorrido del sitio",
+        "standardReport": "Informe estándar",
+        "taskReport": "Informe de tarea",
+        "timeOff": "Tiempo libre",
+        "vehiclePatrol": "Patrulla vehicular",
+        "watchModeReport": "Informe modo vigilancia"
+      },
+      "apply": "Filtrar",
+      "noActivity": "No hay actividad aún."
+    },
+    "Details": {
+      "title": "Sitios de Publicación",
+      "unexpected": "Ocurrió un error inesperado",
+      "Overview": "Resumen",
+      "Profile": "Perfil",
+      "PostSites": "Sitios de publicación",
+      "Contacts": "Contactos",
+      "KPIs": "KPIs",
+      "Notes": "Notas",
+      "Files": "Archivos",
+      "AssignGuards": "Asignar guardias",
+      "Tasks": "Tareas",
+      "SiteTours": "Recorridos del sitio",
+      "SiteTourTags": "Etiquetas de recorrido del sitio",
+      "GeoFence": "Geo-Cerca",
+      "AssignReports": "Asignar informes",
+      "Checklists": "Listas de verificación",
+      "EmailReports": "Informes por correo electrónico",
+      "Settings": "Configuración",
+      "notfoundpostsite": "No se encontraron sitios de publicación",
+      "detailserror": "No se pudieron cargar los detalles del sitio de publicación",
+      "description": "Descripción",
+      "category": "Categoría",
+      "categories": "Categorías"
+    },
+    "profile": {
+      "title": "Perfil del sitio de publicación",
+      "editProfile": "Editar perfil",
+      "profileUpdated": "Perfil del sitio de publicación actualizado",
+      "errorUpdatingProfile": "Error al actualizar el perfil del sitio de publicación",
+      "Map": {
+        "title": "Mapa",
+        "MapType": "Tipo de mapa",
+        "Roadmap": "Mapa de carreteras",
+        "Satellite": "Satélite",
+        "Hybrid": "Híbrido",
+        "GeoFence": "Mostrar Geo-Cerca",
+        "NoCoordinates": "No hay coordenadas disponibles para este sitio"
+      },
+      "GeneralInformation": {
+        "title": "Información general",
+        "client": "Cliente",
+        "siteName": "Nombre del sitio",
+        "address": "Dirección",
+        "addedOn": "Agregado en"
+      },
+      "ContactDetails": {
+        "title": "Detalles de contacto",
+        "phoneNumber": "Número de teléfono",
+        "fax": "Fax",
+        "email": "Correo electrónico",
+        "website": "Sitio web"
+      },
+      "MoreInformation": {
+        "title": "Más información",
+        "categories": "Categorías",
+        "postalCode": "Código postal",
+        "city": "Ciudad",
+        "country": "País",
+        "latitude": "Latitud",
+        "longitude": "Longitud",
+        "postSiteChargeRate": "Tarifa de cargo del sitio de publicación",
+        "postSitePayRate": "Tarifa de pago del sitio de publicación"
+      },
+      "Edit": "Editar"
+    },
+    "postsiterestore": "Sitio Restaurado",
+    "postsitesttiledelete": "Eliminar sitio",
+    "postsitesttiledeletePlural": "Eliminar sitios",
+    "postesitedeleteconfirm": "¿Estás seguro de que deseas eliminar {{count}} sitio(s)? Esta acción no se puede deshacer.",
+    "postsitedeleted": "Sitio Eliminado",
+    "postsitedeletedPlural": "Sitios eliminados",
+    "postsiterestoreerror": "Error al restaurar el sitio",
+    "postsitedeleteerror": "Error al eliminar el sitio",
+    "KPI": {
+      "title": "Indicadores KPI",
+      "kpisearch": "Buscar KPIs",
+      "kpiadded": "KPI agregado",
+      "kpitable": {
+        "kpitype": "Tipo",
+        "kpidate": "Fecha/Hora",
+        "kpicreatedfor": "Creado por"
+      },
+      "table": {
+        "name": "Nombre",
+        "target": "Objetivo",
+        "actual": "Actual",
+        "status": "Estado",
+        "noTargets": "No hay objetivos definidos"
+      },
+      "status": {
+        "achieved": "Alcanzado",
+        "notAchieved": "No alcanzado"
+      },
+      "metrics": {
+        "standardReports": "Informes estándar",
+        "taskReports": "Informes de tareas",
+        "incidentReports": "Informes de incidentes",
+        "routeReports": "Informes de rutas",
+        "verificationReports": "Informes de verificación"
+      },
+      "descriptionLabel": "DESCRIPCIÓN :",
+      "exportPdf": "Exportar como PDF",
+      "exportExcel": "Exportar como Excel",
+      "emailReport": "Informe por correo electrónico",
+      "emailNotImplemented": "Reporte por correo no implementado",
+      "modal": {
+        "title": "Agregar nuevos KPIs (Indicadores clave de rendimiento)",
+        "frequency": "Frecuencia",
+        "frequencyOptions": {
+          "select": "Seleccionar frecuencia",
+          "daily": "Diario",
+          "weekly": "Semanal",
+          "monthly": "Mensual"
+        },
+        "description": "Descripción",
+        "descriptionPlaceholder": "Ingrese descripción",
+        "standardReports": "Informes estándar",
+        "incidentReports": "Informes de incidentes",
+        "routeReports": "Informes de rutas",
+        "taskReports": "Informes de tareas",
+        "verificationReports": "Informes de verificación",
+        "defineNumber": "Definir un número",
+        "emailNotification": "Enviar informe KPI por correo electrónico",
+        "newEmailPlaceholder": "Nuevo correo electrónico...",
+        "addEmail": "Agregar",
+        "add": "Agregar"
+      },
+      "confirmDelete": {
+        "title": "Confirmar eliminación",
+        "messageSingle": "¿Estás seguro de que deseas eliminar este KPI? Esta acción no se puede deshacer.",
+        "messageMultiple": "¿Estás seguro de que deseas eliminar {{count}} KPI(s)? Esta acción no se puede deshacer."
+      },
+      "toasts": {
+        "selectAtLeastOne": "Debes seleccionar al menos un KPI",
+        "kpiDeleted": "KPI eliminado",
+        "kpisDeleted": "KPIs eliminados",
+        "noSelected": "No se seleccionaron elementos",
+        "deleteError": "Error al eliminar KPI(s)",
+        "pdfOpened": "PDF abierto",
+        "pdfGenerated": "PDF generado",
+        "pdfError": "No se pudo generar/obtener el PDF",
+        "pdfOpenError": "Error al abrir el PDF",
+        "excelDownloaded": "Excel descargado",
+        "excelError": "No se pudo generar/obtener el Excel",
+        "excelExportError": "Error al exportar Excel"
+      },
+      "guardsAssigned": "Guardias asignados",
+      "guardOnSite": "Guardia en el sitio",
+      "toursCompleted": "Recorridos completados (últimos 7 días)",
+      "tasksCompleted": "Tareas completadas (últimos 7 días)",
+      "incidentsReported": "Incidentes reportados",
+      "hoursLogged": "Horas registradas (últimos 7 días)"
+    }
+  },
+  "header": {
+    "openMenu": "Abrir menú",
+    "feedback": "Enviar comentario",
+    "search": "Buscar",
+    "help": "Ayuda",
+    "notifications": "Notificaciones",
+    "account": "Cuenta de usuario",
+    "select_rating": "Por favor selecciona una calificación",
+    "feedback_thanks": "¡Gracias por tu comentario!",
+    "connected_as": "Conectado como",
+    "settings": "Configuración",
+    "subscription": "Suscripción",
+    "branches": "Sucursales",
+    "system_logs": "Registros del sistema",
+    "login_history": "Historial de inicio de sesión",
+    "light_mode": "Modo claro",
+    "dark_mode": "Modo oscuro",
+    "logout": "Cerrar sesión",
+    "feedback_modal_title": "¿Cómo calificarías tu experiencia con GuardsPro?",
+    "feedback_modal_desc": "Califica tu experiencia con GuardsPro.",
+    "feedback_placeholder": "Cuéntanos un poco más sobre tu experiencia",
+    "send": "Enviar"
+  },
+  "dispatcher": {
+    "noPermissionViewToast": "No tienes permiso para ver despachos",
+    "noPermissionViewBanner": "No tienes permiso para ver la lista de despachos. Contacta a un administrador.",
+    "tenantUnavailable": "Tenant no disponible",
+    "share_link_copied": "Enlace compartible copiado",
+    "share_link_failed": "No se pudo generar el enlace compartible",
+    "share_error": "Error al generar enlace compartible",
+    "select_at_least_one_export": "Selecciona al menos un despacho para exportar",
+    "export_excel_error": "Error al generar Excel",
+    "select_at_least_one_print": "Selecciona al menos un despacho para imprimir",
+    "pdf_generate_failed": "No se pudo generar el PDF",
+    "pdf_invalid_response": "Respuesta inválida del servidor al generar el PDF",
+    "print_error": "Error al imprimir el PDF",
+    "select_at_least_one_send": "Selecciona al menos un despacho para enviar",
+    "email_sent": "Correo enviado",
+    "email_send_error": "Error al enviar correo",
+    "select_at_least_one_delete": "Selecciona al menos un despacho para eliminar",
+    "newDispatch": "Nuevo despacho",
+    "no_permission_create": "No tienes permiso para crear despachos",
+    "deleted_success": "Despachos eliminados",
+    "deleted_error": "Error al eliminar despachos",
+    "searchPlaceholder": "Buscar por cliente o sitio",
+    "breadcrumbDashboard": "Panel de control",
+    "breadcrumbList": "Lista de despachos",
+    "actionPlaceholder": "Acción",
+    "action_delete": "Eliminar",
+    "filters": "Filtros",
+    "client": "Cliente",
+    "select_client": "Seleccionar cliente",
+    "no_clients": "No hay clientes",
+    "post_site": "Sitio",
+    "select_site": "Seleccionar sitio",
+    "no_sites": "No hay sitios",
+    "status": "Estado",
+    "status_all": "Todos",
+    "status_open": "Abierto",
+    "status_closed": "Cerrado",
+    "created_date": "Fecha de creación",
+    "incident_date": "Fecha del incidente",
+    "show_archived": "Mostrar archivados",
+    "apply_filters": "Aplicar filtros",
+    "clear_filters": "Limpiar filtros",
+    "export_pdf": "Exportar a PDF",
+    "export_excel": "Exportar a Excel",
+    "print": "Imprimir",
+    "send_report_email": "Enviar informe por correo",
+    "no_results_title": "No se encontraron resultados",
+    "no_results_subtitle": "No pudimos encontrar elementos que coincidan con tu búsqueda.",
+    "view_details": "Ver detalles",
+    "open_new_tab": "Abrir en nueva pestaña",
+    "generate_share_link": "Generar enlace compartible",
+    "edit": "Editar",
+    "ticket_closed": "Ticket cerrado",
+    "ticket_close_failed": "No se pudo cerrar el ticket",
+    "items_per_page": "Elementos por página",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "send_report_title": "Enviar informe por correo",
+    "send_report_desc": "Rellena los campos para enviar el informe por correo.",
+    "sending": "Enviando...",
+    "generate_shareable_link": "Generar enlace compartible",
+    "confirm_delete_title": "Confirmar eliminación",
+    "confirm_delete_desc": "¿Estás seguro de eliminar {{count}} despacho(s)? Esta acción no se puede deshacer.",
+    "close_ticket": "Cerrar ticket",
+    "action_delete_label": "Eliminar",
+    "header_ticket_id": "ID del ticket",
+    "header_datetime": "Fecha/Hora",
+    "header_client": "Cliente",
+    "header_post_site": "Sitio",
+    "header_caller_type": "Tipo de llamante",
+    "header_incident_type": "Tipo de incidente",
+    "header_status": "Estado"
+  },
+  "auth": {
+    "login_title": "Iniciar sesión | Cguard",
+    "reset_title": "Restablecer contraseña | Cguard",
+    "reset_title_short": "Restablecer contraseña",
+    "token_missing": "Token de restablecimiento no encontrado en la URL.",
+    "password_min_length": "La contraseña debe tener al menos 8 caracteres",
+    "passwords_mismatch": "Las contraseñas no coinciden",
+    "reset_success": "Contraseña restablecida correctamente. Por favor inicia sesión.",
+    "reset_failed": "No fue posible restablecer la contraseña",
+    "register_title": "Registro | Cguard",
+    "verify_email_success": "Verificación de correo exitosa",
+    "login_prompt": "Inicia sesión en tu cuenta",
+    "register_prompt": "Crea tu cuenta",
+    "email_label": "Correo electrónico",
+    "email_placeholder": "tu@empresa.com",
+    "password_label": "Contraseña",
+    "password_placeholder": "Introduce tu contraseña",
+    "forgot_password": "¿Olvidaste tu contraseña?",
+    "no_account_text": "¿No tienes una cuenta?",
+    "name_label": "Nombre completo",
+    "name_placeholder": "Tu nombre",
+    "confirm_password_label": "Confirmar contraseña",
+    "confirm_password_placeholder": "Confirmar contraseña",
+    "old_password_label": "Contraseña Antigua",
+    "new_password_label": "Nueva Contraseña",
+    "confirm_new_password_label": "Confirmar Nueva Contraseña",
+    "save_changes": "Guardar Cambios",
+    "validation_min6": "Mínimo 6 caracteres",
+    "validation_min8": "Mínimo 8 caracteres",
+    "validation_uppercase": "Debe incluir una mayúscula",
+    "validation_lowercase": "Debe incluir una minúscula",
+    "validation_number": "Debe incluir un número",
+    "validation_confirm_required": "Confirma tu contraseña",
+    "validation_passwords_not_match": "Las contraseñas no coinciden",
+    "already_have_account": "¿Ya tienes una cuenta?",
+    "fill_all_fields": "Por favor rellena todos los campos",
+    "passwords_not_match": "Las contraseñas no coinciden",
+    "account_created_verify_email": "Cuenta creada. Verifica tu correo para iniciar sesión.",
+    "login_success": "Inicio de sesión correcto",
+    "login_failed": "Error al iniciar sesión",
+    "could_not_open_auth_window": "No se pudo abrir la ventana de autenticación",
+    "signing_in": "Iniciando sesión...",
+    "login": "Iniciar sesión",
+    "resetting": "Restableciendo...",
+    "reset_password": "Restablecer contraseña",
+    "back_to_login": "Volver al inicio",
+    "change_password_title": "Cambiar Contraseña",
+    "change_password_success": "Contraseña actualizada",
+    "change_password_error": "Error al cambiar la contraseña",
+    "creating_account": "Creando cuenta...",
+    "create_account": "Crear cuenta",
+    "logout_success": "Sesión cerrada correctamente",
+    "logout_failed": "No se pudo cerrar sesión",
+    "landing": {
+      "title_part1": "Lleva tus operaciones de seguridad",
+      "title_part2": "al siguiente nivel",
+      "desc": "Usando la plataforma de gestión de seguridad física {{product}}.",
+      "tag_cloud": "Basado en la nube",
+      "tag_realtime": "Seguimiento en tiempo real",
+      "tag_analytics": "Analíticas",
+      "logo_alt": "Logotipo CGUARD",
+      "copyright": "© 2025-{{year}} CGUARD. Todos los derechos reservados."
+    }
+  },
+  "actions": {
+    "action": "Acción",
+    "viewDetails": "Ver detalles",
+    "edit": "Editar",
+    "categorize": "Categorizar",
+    "categorize_label": "Categorizar",
+    "archive": "Archivar",
+    "delete": "Eliminar",
+    "deleting": "Eliminando...",
+    "restore": "Restaurar",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
+  "components": {
+    "addRemove": {
+      "add": "Agregar otro",
+      "remove": "Eliminar",
+      "confirmTitle": "Eliminar bloque",
+      "confirmDesc": "Esta acción no se puede deshacer.",
+      "cancel": "Cancelar",
+      "confirmAction": "Eliminar"
+    },
+    "submitBar": {
+      "primary": "Enviar",
+      "sending": "Enviando..."
+    },
+    "overview": {
+      "loading": "Cargando...",
+      "loadError": "No se pudo cargar el guardia"
+    },
+    "summary": {
+      "roleDefault": "Guardia de Seguridad",
+      "header": {
+        "guardNumber": "Número del Guardia",
+        "addedOn": "Añadido el",
+        "lastShift": "Última Jornada",
+        "about": "Acerca de"
+      },
+      "previous": "Anterior",
+      "stats": {
+        "title": "Estadísticas",
+        "last7Days": "Últimos 7 días",
+        "compareWith": "Comparar con",
+        "compareOptions": {
+          "previous": "Período anterior",
+          "none": "Ninguno"
+        },
+        "metrics": {
+          "assignedSites": "Sitios Asignados",
+          "completedRoutes": "Recorridos Completados",
+          "tasksCompleted": "Tareas Completadas",
+          "reportsSent": "Informes Enviados",
+          "inactivityAlerts": "Alertas de Inactividad",
+          "noShows": "No asistió",
+          "lateArrivals": "Llegada Tardía",
+          "hoursWorked": "Horas Trabajadas"
+        }
+      },
+      "recentActivity": {
+        "title": "Última Actividad",
+        "filter": "Filtro"
+      },
+      "sampleActivity": {
+        "message": "Este mensaje notifica que 'José Alejo Pinos' ha aceptado la solicitud de la empresa y pasó a la lista activa"
+      },
+      "badge": {
+        "joined": "Guardia unido"
+      }
+    },
+    "profile": {
+      "actions": {
+        "edit": "Editar",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "saving": "Guardando..."
+      },
+      "toasts": {
+        "updated": "Guardia actualizado exitosamente",
+        "updateError": "Error al actualizar el guardia"
+      },
+      "cards": {
+        "general": "Información general",
+        "contact": "Detalles de contacto",
+        "emergency": "Contacto de emergencia",
+        "personal": "Información personal",
+        "deviceInfo": "Información del dispositivo",
+        "devicePermissions": "Permisos del dispositivo",
+        "languagesSkills": "Idiomas y habilidades",
+        "licenseDetails": "Detalles de la licencia"
+      },
+      "fields": {
+        "firstName": "Nombre",
+        "lastName": "Apellido",
+        "id1": "ID #1",
+        "id2": "ID #2",
+        "birthDate": "Fecha de Nacimiento",
+        "address": "Dirección",
+        "email": "Correo electrónico",
+        "mobile": "Número móvil",
+        "emergencyContact": "Contacto de emergencia",
+        "emergencyContactNumber": "Número contacto emergencia",
+        "emergencyRelation": "Relación",
+        "birthPlace": "Lugar de nacimiento",
+        "maritalStatus": "Estado civil",
+        "bloodType": "Tipo de sangre",
+        "education": "Educación",
+        "gender": "Género",
+        "governmentId": "ID gubernamental",
+        "deviceType": "Tipo de dispositivo",
+        "deviceModel": "Modelo del dispositivo",
+        "osVersion": "Versión OS",
+        "appVersion": "Versión App",
+        "pushNotifications": "Notificaciones Push",
+        "gpsPermission": "Permiso GPS",
+        "camera": "Cámara",
+        "microphone": "Micrófono",
+        "languages": "Idiomas",
+        "skills": "Habilidades",
+        "licenseType": "Tipo de licencia",
+        "licenseNumber": "Número",
+        "issueDate": "Fecha de emisión",
+        "expiryDate": "Fecha de expiración"
+      },
+      "values": {
+        "enabled": "Habilitado",
+        "disabled": "Deshabilitado",
+        "background": "Background"
+      },
+      "placeholders": {
+        "languages": "Ej: Español, Inglés",
+        "skills": "Ej: Primeros auxilios, Defensa personal"
+      },
+      "noLicense": "No se encontró licencia"
+    }
+  },
+  "adminOfficeUsers": {
+    "breadcrumb": {
+      "dashboard": "Panel de control"
+    },
+    "title": "Usuarios de Oficina Administrativa",
+    "bulkAction": {
+      "placeholder": "Acción",
+      "suspend": "Suspender",
+      "activate": "Activar"
+    },
+    "searchPlaceholder": "Buscar usuario",
+    "newUser": "Nuevo Usuario",
+    "filters": {
+      "title": "Filtros",
+      "categories": "Categorías",
+      "categoriesAll": "Todas",
+      "client": "Cliente",
+      "clientAll": "Todos",
+      "status": "Estado",
+      "statusAllLabel": "Todos los Usuarios",
+      "statusAll": "Todos los Usuarios",
+      "statusActive": "Activo",
+      "statusInactive": "Inactivo",
+      "statusSuspended": "Suspendido",
+      "apply": "Aplicar filtros"
+    },
+    "actions": {
+      "exportPdf": "Exportar como PDF",
+      "exportExcel": "Exportar como Excel",
+      "import": "Importar"
+    },
+    "table": {
+      "headers": {
+        "contactName": "Nombre de Contacto",
+        "email": "Correo Electrónico",
+        "accessLevel": "Nivel de Acceso",
+        "lastLogin": "Último Inicio de Sesión",
+        "status": "Estado"
+      }
+    },
+    "rowActions": { "resendInvitation": "Reenviar Invitación", "suspend": "Suspender", "restore": "Restaurar", "delete": "Eliminar", "edit": "Editar" },
+    "statuses": { "archived": "Archivado", "pending": "Pendiente", "inactive": "Inactivo", "active": "Activo" },
+    "footer": { "itemsPerPage": "Elementos por página" },
+    "pagination": { "zero": "0 – 0 de 0", "range": "1 – {{end}} de {{total}}" },
+    "dialogs": {
+      "common": { "cancel": "Cancelar", "sending": "Enviando...", "processing": "Procesando...", "processingDelete": "Eliminando..." },
+      "resend": { "title": "Reenviar invitación", "description": "¿Deseas reenviar la invitación a {{user}}?", "confirm": "Reenviar", "success": "Invitación reenviada", "error": "Error reenviando invitación" },
+      "restore": { "title": "Restaurar usuario", "description": "¿Deseas restaurar al usuario {{user}}? Esto devolverá el usuario a estado activo.", "confirm": "Restaurar", "success": "Usuario restaurado", "error": "Error restaurando usuario" },
+      "delete": { "title": "Eliminar usuario", "description": "¿Estás seguro que deseas eliminar permanentemente a {{user}}? Esta acción no se puede deshacer.", "confirm": "Eliminar" }
+    },
+    "toasts": {
+      "selectAtLeastOne": "Selecciona al menos un usuario",
+      "exportError": "No se pudo exportar usuarios",
+      "cannotSuspendAdmin": "No se puede suspender a un usuario administrador",
+      "suspendedArchivedSuccess": "Usuario suspendido y archivado",
+      "errorSuspendingUser": "Error suspendiendo usuario",
+      "cannotDeleteAdmin": "No se puede eliminar a un usuario administrador",
+      "deletedSuccess": "Usuario eliminado",
+      "deleteError": "Error eliminando usuario",
+      "noValidUsersToSuspend": "Ningún usuario válido para suspender (los administradores no pueden suspenderse)",
+      "skippedAdminsWarning": "Se omitieron administradores del proceso de suspensión",
+      "suspendedCount": "Suspendidos {{count}} usuario(s)",
+      "suspendAllError": "No se pudo suspender a todos los usuarios",
+      "activatedCount": "Activados {{count}} usuario(s)",
+      "activateAllError": "No se pudo activar a todos los usuarios"
+    },
+    "newUser": {
+      "breadcrumb": { "dashboard": "Panel de control", "new": "Nuevo Usuario" },
+      "form": {
+        "nameLabel": "Nombre*",
+        "namePlaceholder": "Nombre*",
+        "emailLabel": "Correo Electrónico*",
+        "emailPlaceholder": "Correo Electrónico*",
+        "accessLevelLabel": "Nivel de Acceso*",
+        "accessLevelPlaceholder": "Seleccionar nivel de acceso",
+        "selectDefault": "Seleccionar…",
+        "searchPlaceholder": "opción",
+        "deselectAll": "Deseleccionar todos",
+        "selectAll": "Seleccionar todos",
+        "noOptions": "Sin opciones",
+        "assignClientsPlaceholder": "Asignar Clientes",
+        "assignSitesPlaceholder": "Asignar Sitios de Publicación",
+        "assignClientsLabel": "Asignar Clientes",
+        "assignSitesLabel": "Asignar Sitios de Publicación",
+        "create": "Crear",
+        "creating": "Creando..."
+      },
+      "invite": {
+        "createTrigger": "Crear código de invitación",
+        "title": "Generar código de invitación",
+        "description": "Cree un código temporal para invitar a un usuario (expira en 1 hora).",
+        "placeholderToken": "------",
+        "expiresLabel": "Expira:",
+        "generating": "Generando...",
+        "regen": "Regenerar",
+        "generate": "Generar código"
+      },
+      "toasts": {
+        "codeCopied": "Código copiado",
+        "inviteCreated": "Código de invitación creado",
+        "inviteGeneratedLocal": "Código generado localmente (no guardado en servidor)",
+        "created": "Usuario creado",
+        "updated": "Usuario actualizado"
+      },
+      "errors": {
+        "invalidIds": "IDs inválidos detectados en asignaciones",
+        "unknown": "Error desconocido",
+        "createCode": "Error creando código"
+      }
+    },
+    "editUser": {
+      "breadcrumb": { "dashboard": "Panel de control", "edit": "Editar Usuario", "new": "Nuevo Usuario" },
+      "form": {
+        "nameLabel": "Nombre*",
+        "namePlaceholder": "Nombre*",
+        "emailLabel": "Correo Electrónico*",
+        "emailPlaceholder": "Correo Electrónico*",
+        "accessLevelLabel": "Nivel de Acceso*",
+        "accessLevelPlaceholder": "Seleccionar nivel de acceso",
+        "selectDefault": "Seleccionar…",
+        "searchPlaceholder": "opción",
+        "deselectAll": "Deseleccionar todos",
+        "selectAll": "Seleccionar todos",
+        "noOptions": "Sin opciones",
+        "assignClientsPlaceholder": "Asignar Clientes*",
+        "assignSitesPlaceholder": "Asignar Sitios de Publicación",
+        "assignClientsLabel": "Asignar Clientes*",
+        "assignSitesLabel": "Asignar Sitios de Publicación",
+        "save": "Guardar",
+        "send": "Enviar",
+        "savingEdit": "Guardando...",
+        "savingNew": "Enviando..."
+      },
+      "toasts": { "updated": "Usuario actualizado", "created": "Usuario creado" },
+      "errors": { "loadError": "No se pudo cargar el usuario" }
+    },
+    "noData": {
+      "title": "No se encontraron resultados",
+      "message": "No pudimos encontrar ningún elemento que coincida con tu búsqueda"
+    }
+  }
 }

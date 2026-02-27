@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { subDays, startOfDay, endOfDay } from 'date-fns';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   guard: any;
 };
 
 export default function GuardSummary({ guard }: Props) {
+  const { t } = useTranslation()
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfDay(subDays(new Date(), 6)),
     to: endOfDay(new Date()),
@@ -84,7 +86,7 @@ export default function GuardSummary({ guard }: Props) {
     return (
       <div className="bg-white border rounded-lg p-4 shadow-sm">
         <div className={`text-sm font-medium mb-2 ${colorClasses[color as keyof typeof colorClasses]}`}>
-          {title}
+          {t(title)}
         </div>
         <div className={`text-3xl font-bold mb-3 ${colorClasses[color as keyof typeof colorClasses]}`}>
           {isTime ? value : value}
@@ -92,7 +94,7 @@ export default function GuardSummary({ guard }: Props) {
         {compareWith === 'previous' && (
           <div className="flex items-center justify-between text-xs">
             <span className="text-gray-500">
-              Anterior<br />
+              {t('guards.summary.previous')}<br />
               {isTime ? (previous || '00:00') : previous}
             </span>
             <span className="text-green-600 font-medium">
@@ -119,14 +121,14 @@ export default function GuardSummary({ guard }: Props) {
           <div className="flex-1 grid grid-cols-3 gap-8">
             <div>
               <div className="text-xl font-semibold mb-1">{guard?.fullName ?? '—'}</div>
-              <div className="text-sm text-gray-600">{guard?.role ?? 'Guardia de Seguridad'}</div>
+              <div className="text-sm text-gray-600">{guard?.role ?? t('guards.summary.roleDefault')}</div>
               <div className="mt-3">
-                <div className="text-xs text-gray-500">Número del Guardia</div>
+                <div className="text-xs text-gray-500">{t('guards.summary.header.guardNumber')}</div>
                 <div className="font-semibold">{guard?.guardNumber ?? guard?.employeeCode ?? '100447'}</div>
               </div>
             </div>
             <div>
-              <div className="text-xs text-gray-500 mb-1">Añadido el</div>
+              <div className="text-xs text-gray-500 mb-1">{t('guards.summary.header.addedOn')}</div>
               <div className="font-medium">
                 {guard?.createdAt ? new Date(guard.createdAt).toLocaleDateString('es-ES', { 
                   year: 'numeric', 
@@ -135,12 +137,12 @@ export default function GuardSummary({ guard }: Props) {
                 }) : 'Oct 07, 2025'}
               </div>
               <div className="mt-3">
-                <div className="text-xs text-gray-500">Última Jornada</div>
+                <div className="text-xs text-gray-500">{t('guards.summary.header.lastShift')}</div>
                 <div className="font-medium">--</div>
               </div>
             </div>
             <div>
-              <div className="text-xs text-gray-500 mb-1">Acerca de</div>
+              <div className="text-xs text-gray-500 mb-1">{t('guards.summary.header.about')}</div>
               <div className="font-medium">--</div>
             </div>
           </div>
@@ -149,24 +151,24 @@ export default function GuardSummary({ guard }: Props) {
 
       {/* Statistics Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Estadísticas</h2>
+        <h2 className="text-xl font-semibold">{t('guards.summary.stats.title')}</h2>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
-            <span>Últimos 7 días</span>
+            <span>{t('guards.summary.stats.last7Days')}</span>
             <DateRangePicker
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Comparar con</span>
+            <span className="text-sm text-gray-600">{t('guards.summary.stats.compareWith')}</span>
             <select 
               value={compareWith}
               onChange={(e) => setCompareWith(e.target.value)}
               className="px-3 py-1.5 border rounded-md text-sm"
             >
-              <option value="previous">Período anterior</option>
-              <option value="none">Ninguno</option>
+              <option value="previous">{t('guards.summary.stats.compareOptions.previous')}</option>
+              <option value="none">{t('guards.summary.stats.compareOptions.none')}</option>
             </select>
           </div>
         </div>
@@ -175,25 +177,25 @@ export default function GuardSummary({ guard }: Props) {
       {/* Statistics Grid - First Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Sitios Asignados"
+          title="guards.summary.stats.metrics.assignedSites"
           value={metricsCurrent.assignedSites}
           previous={metricsPrevious.assignedSites}
           color="blue"
         />
         <StatCard
-          title="Recorridos Completados"
+          title="guards.summary.stats.metrics.completedRoutes"
           value={metricsCurrent.completedRoutes}
           previous={metricsPrevious.completedRoutes}
           color="orange"
         />
         <StatCard
-          title="Tareas Completadas"
+          title="guards.summary.stats.metrics.tasksCompleted"
           value={metricsCurrent.tasksCompleted}
           previous={metricsPrevious.tasksCompleted}
           color="gray"
         />
         <StatCard
-          title="Informes Enviados"
+          title="guards.summary.stats.metrics.reportsSent"
           value={metricsCurrent.reportsSent}
           previous={metricsPrevious.reportsSent}
           color="blue"
@@ -203,25 +205,25 @@ export default function GuardSummary({ guard }: Props) {
       {/* Statistics Grid - Second Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Alertas de Inactividad"
+          title="guards.summary.stats.metrics.inactivityAlerts"
           value={metricsCurrent.inactivityAlerts}
           previous={metricsPrevious.inactivityAlerts}
           color="orange"
         />
         <StatCard
-          title="No asistió"
+          title="guards.summary.stats.metrics.noShows"
           value={metricsCurrent.noShows}
           previous={metricsPrevious.noShows}
           color="red"
         />
         <StatCard
-          title="Llegada Tardía"
+          title="guards.summary.stats.metrics.lateArrivals"
           value={metricsCurrent.lateArrivals}
           previous={metricsPrevious.lateArrivals}
           color="orange"
         />
         <StatCard
-          title="Horas Trabajadas"
+          title="guards.summary.stats.metrics.hoursWorked"
           value={formatHours(metricsCurrent.hoursWorkedSeconds)}
           previous={formatHours(metricsPrevious.hoursWorkedSeconds)}
           isTime={true}
@@ -232,8 +234,8 @@ export default function GuardSummary({ guard }: Props) {
       {/* Recent Activity */}
       <div className="bg-white border rounded-lg p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Última Actividad</h3>
-          <button className="text-sm text-blue-600 hover:underline">Filtro</button>
+          <h3 className="text-lg font-semibold">{t('guards.summary.recentActivity.title')}</h3>
+            <button className="text-sm text-blue-600 hover:underline">{t('guards.summary.recentActivity.filter')}</button>
         </div>
         <div className="space-y-4">
           {guard?.recentActivity && guard.recentActivity.length > 0 ? (
@@ -260,12 +262,12 @@ export default function GuardSummary({ guard }: Props) {
               </div>
               <div className="flex-1">
                 <p className="text-sm text-gray-700">
-                  This message is to notify you that 'José Alejo Pinos' has accepted the company request and moved to active list
+                  {t('guards.summary.sampleActivity.message')}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Oct 07, 2025 14:59, Ecuador Time</p>
               </div>
               <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
-                Guardia unido
+                {t('guards.summary.badge.joined')}
               </span>
             </div>
           )}

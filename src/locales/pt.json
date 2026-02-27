@@ -190,8 +190,163 @@
       "departamento": "Departamento",
       "configuracion": "Configurações"
     }
-  },
-  "clients": {
+    ,
+    "availability": {
+      "title": "Disponibilidade",
+      "table": {
+        "day": "Dia",
+        "available": "Disponível",
+        "from": "Desde",
+        "to": "Até"
+      },
+      "days": {
+        "Monday": "Segunda-feira",
+        "Tuesday": "Terça-feira",
+        "Wednesday": "Quarta-feira",
+        "Thursday": "Quinta-feira",
+        "Friday": "Sexta-feira",
+        "Saturday": "Sábado",
+        "Sunday": "Domingo"
+      },
+      "save": "Salvar",
+      "toasts": { "saved": "Disponibilidade salva" }
+    },
+    "licenses": {
+      "action": { "default": "Ação" },
+      "actions": { "delete": "Excluir" },
+      "searchPlaceholder": "Buscar licença",
+      "newLicense": "Nova licença",
+      "table": {
+        "type": "Tipo de licença",
+        "number": "Número da licença",
+        "expires": "Vence em",
+        "addedBy": "Adicionado por"
+      },
+      "empty": {
+        "title": "Nenhum resultado encontrado",
+        "description": "Não encontramos<br />itens que correspondam<br />à sua pesquisa"
+      },
+      "modal": { "title": "Adicionar nova licença", "cancel": "Cancelar", "save": "Salvar" },
+      "form": {
+        "licenseType": "Tipo de licença",
+        "selectLicenseType": "Selecionar tipo de licença",
+        "option": { "driver": "Carteira de motorista", "weapons": "Licença de armas", "security": "Licença de segurança", "other": "Outra" },
+        "customLicenseName": "Nome da licença",
+        "customLicensePlaceholder": "Digite o nome da licença",
+        "licenseNumber": "Número da licença",
+        "licenseNumberPlaceholder": "Digite o número da licença",
+        "expiryDate": "Data de validade",
+        "frontImageLabel": "Imagem frontal da licença",
+        "backImageLabel": "Imagem traseira da licença",
+        "chooseFile": "Escolher arquivo"
+      }
+    }
+    ,
+    "notes": {
+      "actions": { "default": "Ação", "delete": "Excluir" },
+      "searchPlaceholder": "Pesquisar nota",
+      "addButton": "Nova Nota",
+      "table": { "title": "Título", "date": "Data", "addedBy": "Adicionado por" },
+      "empty": { "title": "Nenhum resultado encontrado", "message": "Não encontramos<br />itens correspondentes<br />à sua pesquisa" },
+      "modal": { "title": "Adicionar nova nota", "cancel": "Cancelar", "save": "Salvar" },
+      "form": {
+        "title": { "label": "Título", "placeholder": "Insira o título da nota" },
+        "description": { "label": "Descrição", "placeholder": "Insira a descrição da nota" },
+        "date": { "label": "Data" },
+        "attachments": { "label": "Anexos", "noFiles": "Nenhum arquivo selecionado" }
+      }
+    },
+    "reminders": {
+      "action": { "default": "Ação" },
+      "actions": { "archive": "Arquivar" },
+      "searchPlaceholder": "Buscar lembretes",
+      "filters": {
+        "button": "Filtros",
+        "title": "Filtros",
+        "status": "Status",
+        "options": { "all": "Todos", "pending": "Pendente", "completed": "Concluído", "archived": "Arquivado" },
+        "cancel": "Cancelar",
+        "apply": "Aplicar"
+      },
+      "addReminder": "Adicionar lembrete",
+      "table": { "title": "Título", "datetime": "Data/Hora do lembrete", "createdBy": "Criado por", "priority": "Prioridade", "status": "Status" },
+      "empty": { "title": "Nenhum resultado", "description": "Não encontramos nenhum item correspondendo à sua pesquisa" },
+      "modal": { "title": "Adicionar lembrete", "save": "Salvar" },
+      "form": {
+        "title": "Título",
+        "titlePlaceholder": "Título*",
+        "description": "Descrição",
+        "descriptionPlaceholder": "Descrição",
+        "selectedDate": "Data selecionada",
+        "at": "Às",
+        "createdFor": "Criado para",
+        "selectGuards": "Selecionar guardas",
+        "priority": "Prioridade",
+        "attachment": "Anexo",
+        "attachmentPlaceholder": "Anexo"
+      },
+      "priority": { "low": "Baixa", "medium": "Média", "high": "Alta" },
+      "remindOptions": {
+        "30_Minutes_Before": "30 minutos antes",
+        "1_Hour_Before": "1 hora antes",
+        "2_Hours_Before": "2 horas antes",
+        "4_Hours_Before": "4 horas antes",
+        "8_Hours_Before": "8 horas antes",
+        "1_Day_Before": "1 dia antes",
+        "2_Days_Before": "2 dias antes",
+        "4_Days_Before": "4 dias antes",
+        "8_Days_Before": "8 dias antes",
+        "2_Weeks_Before": "2 semanas antes",
+        "4_Weeks_Before": "4 semanas antes"
+      },
+      "repeat": { "never": "Nunca", "1_week": "1 semana", "2_weeks": "2 semanas", "3_weeks": "3 semanas", "monthly": "Mensal", "yearly": "Anual" },
+      "toasts": { "loadError": "Não foi possível carregar o guarda" }
+    }
+    ,
+    "assignSites": {
+      "loading": "Carregando...",
+      "action": { "default": "Ação" },
+      "actions": { "delete": "Excluir" },
+      "searchPlaceholder": "Buscar Post Sites",
+      "assignButton": "Atribuir Sites",
+      "table": { "client": "Cliente", "postSites": "Sites" },
+      "loadError": "Não foi possível carregar o guarda",
+      "modal": { "title": "Atribuir Sites", "cancel": "Cancelar", "assign": "Atribuir" },
+      "form": { "client": "Cliente", "selectClient": "Selecionar cliente", "postSite": "Site", "selectPostSite": "Selecionar site" },
+      "noPostSites": "Nenhum site encontrado"
+    }
+    ,
+    "files": {
+      "action": { "default": "Ação" },
+      "actions": { "delete": "Excluir" },
+      "searchPlaceholder": "Pesquisar arquivos",
+      "uploadButton": "Carregar",
+      "table": { "date": "Data", "file": "Arquivo", "addedBy": "Adicionado por" },
+      "empty": { "title": "Nenhum arquivo encontrado", "description": "Carregue arquivos usando o botão à direita" },
+      "loadError": "Não foi possível carregar o guarda",
+      "modal": {
+        "title": "Carregar arquivos",
+        "dropHere": "Solte os arquivos aqui..",
+        "orSelect": "Ou selecionar",
+        "chooseFilesPlaceholder": "Selecionar arquivos Nenhum arquivo selecionado",
+        "filesToUpload": "Arquivos para carregar",
+        "upload": "Carregar"
+      }
+      },
+      "skills": {
+        "action": { "default": "Ação" },
+        "actions": { "delete": "Excluir" },
+        "searchPlaceholder": "Pesquisar conjuntos de habilidades",
+        "assignButton": "Atribuir conjunto de habilidades",
+        "table": { "name": "Nome", "description": "Descrição" },
+        "empty": { "title": "Nenhum resultado encontrado", "description": "Não encontramos nenhum item correspondente à sua pesquisa" },
+        "toasts": { "loadError": "Não foi possível carregar o guarda", "selectAtLeastOne": "Por favor selecione pelo menos um conjunto de habilidades", "provideName": "Por favor forneça um nome de habilidade" },
+        "modal": { "title": "Atribuir conjunto de habilidades", "cancel": "Cancelar", "assign": "Atribuir" },
+        "form": { "skillSet": "Conjunto de habilidades*", "selectPlaceholder": "Selecionar conjuntos de habilidades..." },
+        "dropdown": { "searchPlaceholder": "Pesquisar..." }
+      },
+    },
+    "clients": {
     "nav": {
       "title": "Clientes",
       "overview": "Visão geral",
@@ -625,5 +780,123 @@
     "restore": "Restaurar",
     "save": "Salvar",
     "cancel": "Cancelar"
+  }
+  ,
+  "adminOfficeUsers": {
+    "breadcrumb": { "dashboard": "Painel" },
+    "title": "Usuários do Escritório Administrativo",
+    "bulkAction": { "placeholder": "Ação", "suspend": "Suspender", "activate": "Ativar" },
+    "searchPlaceholder": "Pesquisar usuário",
+    "newUser": {
+      "breadcrumb": { "dashboard": "Painel", "new": "Novo Usuário" },
+      "form": {
+        "nameLabel": "Nome*",
+        "namePlaceholder": "Nome*",
+        "emailLabel": "Endereço de e-mail*",
+        "emailPlaceholder": "Endereço de e-mail*",
+        "accessLevelLabel": "Nível de Acesso*",
+        "accessLevelPlaceholder": "Selecionar nível de acesso",
+        "selectDefault": "Selecionar…",
+        "searchPlaceholder": "opção",
+        "deselectAll": "Deselecionar todos",
+        "selectAll": "Selecionar todos",
+        "noOptions": "Sem opções",
+        "assignClientsPlaceholder": "Atribuir Clientes",
+        "assignSitesPlaceholder": "Atribuir Sites de Publicação",
+        "assignClientsLabel": "Atribuir Clientes",
+        "assignSitesLabel": "Atribuir Sites de Publicação",
+        "create": "Criar",
+        "creating": "Criando..."
+      },
+      "invite": {
+        "createTrigger": "Criar código de convite",
+        "title": "Gerar código de convite",
+        "description": "Crie um código temporário para convidar um usuário (expira em 1 hora).",
+        "placeholderToken": "------",
+        "expiresLabel": "Expira:",
+        "generating": "Gerando...",
+        "regen": "Regerar",
+        "generate": "Gerar código"
+      },
+      "toasts": {
+        "codeCopied": "Código copiado",
+        "inviteCreated": "Código de convite criado",
+        "inviteGeneratedLocal": "Código gerado localmente (não salvo no servidor)",
+        "created": "Usuário criado",
+        "updated": "Usuário atualizado"
+      },
+      "errors": {
+        "invalidIds": "IDs inválidos detectados em atribuições",
+        "unknown": "Erro desconhecido",
+        "createCode": "Erro ao criar código"
+      }
+    },
+    "filters": {
+      "title": "Filtros",
+      "categories": "Categorias",
+      "categoriesAll": "Todas",
+      "client": "Cliente",
+      "clientAll": "Todos",
+      "status": "Status",
+      "statusAllLabel": "Todos os Usuários",
+      "statusAll": "Todos os Usuários",
+      "statusActive": "Ativo",
+      "statusInactive": "Inativo",
+      "statusSuspended": "Suspenso",
+      "apply": "Aplicar filtros"
+    },
+    "actions": { "exportPdf": "Exportar como PDF", "exportExcel": "Exportar como Excel", "import": "Importar" },
+    "table": { "headers": { "contactName": "Nome de Contato", "email": "E-mail", "accessLevel": "Nível de Acesso", "lastLogin": "Último Login", "status": "Status" } },
+    "rowActions": { "resendInvitation": "Reenviar Convite", "suspend": "Suspender", "restore": "Restaurar", "delete": "Excluir", "edit": "Editar" },
+    "statuses": { "archived": "Arquivado", "pending": "Pendente", "inactive": "Inativo", "active": "Ativo" },
+    "footer": { "itemsPerPage": "Itens por página" },
+    "pagination": { "zero": "0 – 0 de 0", "range": "1 – {{end}} de {{total}}" },
+    "dialogs": {
+      "common": { "cancel": "Cancelar", "sending": "Enviando...", "processing": "Processando...", "processingDelete": "Excluindo..." },
+      "resend": { "title": "Reenviar convite", "description": "Reenviar convite para {{user}}?", "confirm": "Reenviar", "success": "Convite reenviado", "error": "Erro reenviando convite" },
+      "restore": { "title": "Restaurar usuário", "description": "Restaurar o usuário {{user}} para estado ativo?", "confirm": "Restaurar", "success": "Usuário restaurado", "error": "Erro ao restaurar usuário" },
+      "delete": { "title": "Excluir usuário", "description": "Excluir permanentemente {{user}}? Esta ação não pode ser desfeita.", "confirm": "Excluir" }
+    },
+    "noData": { "title": "Nenhum resultado encontrado", "message": "Não encontramos nenhum item que corresponda à sua pesquisa" },
+    "toasts": {
+      "resendSuccess": "Convite reenviado",
+      "resendError": "Erro reenviando convite",
+      "restoreSuccess": "Usuário restaurado",
+      "restoreError": "Erro ao restaurar usuário",
+      "deleteSuccess": "Usuário excluído",
+      "deleteError": "Erro ao excluir usuário",
+      "bulkActionNoSelection": "Por favor selecione pelo menos um usuário",
+      "bulkSuspendSuccess": "{{count}} usuários suspensos",
+      "bulkActivateSuccess": "{{count}} usuários ativados",
+      "exportSuccess": "Export iniciado",
+      "exportError": "Erro ao exportar"
+    }
+    ,
+    "editUser": {
+      "breadcrumb": { "dashboard": "Painel", "edit": "Editar Usuário", "new": "Novo Usuário" },
+      "form": {
+        "nameLabel": "Nome*",
+        "namePlaceholder": "Nome*",
+        "emailLabel": "Endereço de e-mail*",
+        "emailPlaceholder": "Endereço de e-mail*",
+        "accessLevelLabel": "Nível de Acesso*",
+        "accessLevelPlaceholder": "Selecionar nível de acesso",
+        "selectDefault": "Selecionar…",
+        "searchPlaceholder": "opção",
+        "deselectAll": "Deselecionar todos",
+        "selectAll": "Selecionar todos",
+        "noOptions": "Sem opções",
+        "assignClientsLabel": "Atribuir Clientes*",
+        "assignClientsPlaceholder": "Atribuir Clientes*",
+        "assignSitesLabel": "Atribuir Sites de Publicação",
+        "assignSitesPlaceholder": "Atribuir Sites de Publicação",
+        "save": "Salvar",
+        "send": "Enviar",
+        "savingEdit": "Salvando...",
+        "savingNew": "Enviando..."
+      },
+      "toasts": { "updated": "Usuário atualizado", "created": "Usuário criado" },
+      "errors": { "loadError": "Não foi possível carregar o usuário" }
+    }
   }
 }

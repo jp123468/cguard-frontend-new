@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, Plus, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
 
@@ -11,7 +12,8 @@ type Props = {
 export default function GuardNotes({ guard }: Props) {
     const actionRef = useRef<HTMLDivElement>(null);
     const [actionOpen, setActionOpen] = useState(false);
-    const [actionSelection, setActionSelection] = useState<string>('Action');
+    const [actionSelection, setActionSelection] = useState<string>('default');
+    const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const [notesData, setNotesData] = useState<any[]>([]); // Vacío inicialmente
     const [showModal, setShowModal] = useState(false);
@@ -90,16 +92,16 @@ export default function GuardNotes({ guard }: Props) {
                                     onClick={() => setActionOpen(!actionOpen)}
                                     className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]"
                                 >
-                                    {actionSelection}
+                                    {t(`guards.notes.actions.${actionSelection}`, { defaultValue: actionSelection === 'default' ? 'Action' : actionSelection })}
                                     <ChevronDown size={16} />
                                 </button>
                                 {actionOpen && (
                                     <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
                                         <button
-                                            onClick={() => { setActionSelection('Eliminar'); setActionOpen(false); }}
+                                            onClick={() => { setActionSelection('delete'); setActionOpen(false); }}
                                             className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                                         >
-                                            Eliminar
+                                            {t('guards.notes.actions.delete', { defaultValue: 'Delete' })}
                                         </button>
                                     </div>
                                 )}
@@ -111,7 +113,7 @@ export default function GuardNotes({ guard }: Props) {
                                     <Search size={16} className="absolute left-3 top-3 text-gray-400" />
                                         <input
                                         type="text"
-                                        placeholder="Search note"
+                                        placeholder={t('guards.notes.searchPlaceholder', { defaultValue: 'Search note' })}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -125,7 +127,7 @@ export default function GuardNotes({ guard }: Props) {
                                 className="px-6 py-2 bg-orange-600 text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors"
                             >
                                 <Plus size={18} />
-                                Nueva Nota
+                                {t('guards.notes.addButton', { defaultValue: 'New Note' })}
                             </button>
                         </div>
 
@@ -137,9 +139,9 @@ export default function GuardNotes({ guard }: Props) {
                                         <th className="px-4 py-3 text-left">
                                             <input type="checkbox" className="rounded" />
                                         </th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Title</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Added By</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.notes.table.title', { defaultValue: 'Title' })}</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.notes.table.date', { defaultValue: 'Date' })}</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.notes.table.addedBy', { defaultValue: 'Added By' })}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -157,8 +159,8 @@ export default function GuardNotes({ guard }: Props) {
                                                         </svg>
                                                     </div>
                                                     <div className="text-center">
-                                                        <h3 className="text-lg font-semibold text-gray-700">No results found</h3>
-                                                        <p className="text-sm text-gray-500 mt-1">We couldn't find<br />any items matching<br />your search</p>
+                                                        <h3 className="text-lg font-semibold text-gray-700">{t('guards.notes.empty.title', { defaultValue: 'No results found' })}</h3>
+                                                        <p className="text-sm text-gray-500 mt-1" dangerouslySetInnerHTML={{ __html: t('guards.notes.empty.message', { defaultValue: "We couldn't find<br />any items matching<br />your search" }) }} />
                                                     </div>
                                                 </div>
                                             </td>
@@ -189,7 +191,7 @@ export default function GuardNotes({ guard }: Props) {
                             >
                                 {/* Header */}
                                 <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-                                    <h2 className="text-lg font-semibold text-gray-800">Add New Note</h2>
+                                    <h2 className="text-lg font-semibold text-gray-800">{t('guards.notes.modal.title', { defaultValue: 'Add New Note' })}</h2>
                                 </div>
 
                                 {/* Body */}
@@ -197,13 +199,13 @@ export default function GuardNotes({ guard }: Props) {
                                     {/* Título */}
                                     <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Title <span className="text-red-500">*</span>
+                                            {t('guards.notes.form.title.label', { defaultValue: 'Title' })} <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            placeholder="Enter note title"
+                                            placeholder={t('guards.notes.form.title.placeholder', { defaultValue: 'Enter note title' })}
                                             className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
                                         />
                                     </div>
@@ -211,12 +213,12 @@ export default function GuardNotes({ guard }: Props) {
                                     {/* Descripción */}
                                     <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Description <span className="text-red-500">*</span>
+                                            {t('guards.notes.form.description.label', { defaultValue: 'Description' })} <span className="text-red-500">*</span>
                                         </label>
                                         <textarea
                                             value={formData.description}
                                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                            placeholder="Enter note description"
+                                            placeholder={t('guards.notes.form.description.placeholder', { defaultValue: 'Enter note description' })}
                                             className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
                                             rows={6}
                                         />
@@ -225,7 +227,7 @@ export default function GuardNotes({ guard }: Props) {
                                     {/* Fecha */}
                                     <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Date <span className="text-red-500">*</span>
+                                            {t('guards.notes.form.date.label', { defaultValue: 'Date' })} <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="date"
@@ -237,7 +239,7 @@ export default function GuardNotes({ guard }: Props) {
 
                                     {/* Attachments */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('guards.notes.form.attachments.label', { defaultValue: 'Attachments' })}</label>
 
                                         <label className="w-full border border-gray-300 rounded-md p-3 flex items-center justify-between gap-3 cursor-pointer hover:border-gray-400">
                                             <div className="flex-1">
@@ -256,7 +258,7 @@ export default function GuardNotes({ guard }: Props) {
                                                             ))}
                                                         </div>
                                                     ) : (
-                                                        <span className="text-sm text-gray-500">No files selected</span>
+                                                        <span className="text-sm text-gray-500">{t('guards.notes.form.attachments.noFiles', { defaultValue: 'No files selected' })}</span>
                                                     )}
                                                 </div>
                                             </div>
@@ -281,13 +283,13 @@ export default function GuardNotes({ guard }: Props) {
                                         onClick={handleCloseModal}
                                         className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50"
                                     >
-                                        Cancel
+                                        {t('guards.notes.modal.cancel', { defaultValue: 'Cancel' })}
                                     </button>
                                     <button
                                         onClick={handleSubmitNote}
                                         className="px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700"
                                     >
-                                        Save
+                                        {t('guards.notes.modal.save', { defaultValue: 'Save' })}
                                     </button>
                                 </div>
                             </div>

@@ -8,9 +8,11 @@ import GuardAvailability from './components/GuardAvailability/GuardAvailabilityp
 import GuardIndicators from './components/GuardKPIs/GuardKPIspage';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next'
 
 export default function GuardOverview() {
     const { id, tab } = useParams();
+    const { t } = useTranslation()
     const [guard, setGuard] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<'Resumen' | 'Perfil' | 'Disponibilidad' | 'Indicadores'>(
@@ -31,7 +33,7 @@ export default function GuardOverview() {
             })
             .catch((err) => {
                 console.error('Error cargando guardia:', err);
-                toast.error('No se pudo cargar guardia');
+                toast.error(t('guards.overview.loadError'));
             })
             .finally(() => {
                 if (!mounted) return;
@@ -42,11 +44,11 @@ export default function GuardOverview() {
 
     return (
         <AppLayout>
-            <GuardsLayout navKey="keep-safe" title="settings.configuracion.keep-safe">
+            <GuardsLayout navKey="keep-safe" title={t('guards.nav.resumen')}>
                 <div className="flex-1 flex flex-col">
                     {loading ? (
                         <div className="flex items-center justify-center h-32">
-                            <div className="text-gray-500">Cargando...</div>
+                            <div className="text-gray-500">{t('guards.overview.loading')}</div>
                         </div>
                     ) : guard ? (
                         <>

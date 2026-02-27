@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, Plus, X, Upload, Paperclip } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
 import { useParams } from 'react-router-dom';
@@ -11,9 +12,10 @@ type Props = {
 };
 
 export default function GuardLicenses({ guard }: Props) {
+  const { t } = useTranslation();
   const actionRef = useRef<HTMLDivElement>(null);
   const [actionOpen, setActionOpen] = useState(false);
-  const [actionSelection, setActionSelection] = useState<string>('Action');
+  const [actionSelection, setActionSelection] = useState<string>(() => t('guards.licenses.action.default', { defaultValue: 'Action' }));
   const [searchQuery, setSearchQuery] = useState('');
   const [licenseData, setLicenseData] = useState<any[]>([]); // Vacío inicialmente
   const [showModal, setShowModal] = useState(false);
@@ -85,10 +87,10 @@ export default function GuardLicenses({ guard }: Props) {
                 {actionOpen && (
                   <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
                     <button
-                      onClick={() => { setActionSelection('Delete'); setActionOpen(false); }}
+                      onClick={() => { setActionSelection(t('guards.licenses.actions.delete', { defaultValue: 'Delete' })); setActionOpen(false); }}
                       className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                     >
-                      Delete
+                      {t('guards.licenses.actions.delete', { defaultValue: 'Delete' })}
                     </button>
                   </div>
                 )}
@@ -100,7 +102,7 @@ export default function GuardLicenses({ guard }: Props) {
                   <Search size={16} className="absolute left-3 top-3 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search license"
+                    placeholder={t('guards.licenses.searchPlaceholder', { defaultValue: 'Search license' })}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -114,7 +116,7 @@ export default function GuardLicenses({ guard }: Props) {
                 className="px-6 py-2 bg-orange-600 text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors"
               >
                 <Plus size={18} />
-                New License
+                {t('guards.licenses.newLicense', { defaultValue: 'New License' })}
               </button>
             </div>
 
@@ -126,10 +128,10 @@ export default function GuardLicenses({ guard }: Props) {
                     <th className="px-4 py-3 text-left">
                       <input type="checkbox" className="rounded" />
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">License Type</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">License Number</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Expires On</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Added By</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.licenses.table.type', { defaultValue: 'License Type' })}</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.licenses.table.number', { defaultValue: 'License Number' })}</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.licenses.table.expires', { defaultValue: 'Expires On' })}</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.licenses.table.addedBy', { defaultValue: 'Added By' })}</th>
                     <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                       <button className="hover:text-gray-900">↕</button>
                     </th>
@@ -150,8 +152,8 @@ export default function GuardLicenses({ guard }: Props) {
                             </svg>
                           </div>
                           <div className="text-center">
-                            <h3 className="text-lg font-semibold text-gray-700">No results found</h3>
-                            <p className="text-sm text-gray-500 mt-1">We couldn't find<br />any items matching<br />your search</p>
+                            <h3 className="text-lg font-semibold text-gray-700">{t('guards.licenses.empty.title', { defaultValue: 'No results found' })}</h3>
+                            <p className="text-sm text-gray-500 mt-1" dangerouslySetInnerHTML={{ __html: t('guards.licenses.empty.description', { defaultValue: "We couldn't find<br />any items matching<br />your search" }) }} />
                           </div>
                         </div>
                       </td>
@@ -189,7 +191,7 @@ export default function GuardLicenses({ guard }: Props) {
               >
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-                  <h2 className="text-lg font-semibold text-gray-800">Add New License</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">{t('guards.licenses.modal.title', { defaultValue: 'Add New License' })}</h2>
                 </div>
 
                 {/* Body */}
@@ -197,18 +199,18 @@ export default function GuardLicenses({ guard }: Props) {
                   {/* Tipo de Licencia */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      License Type <span className="text-red-500">*</span>
+                      {t('guards.licenses.form.licenseType', { defaultValue: 'License Type' })} <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={formData.licenseType}
                       onChange={(e) => setFormData({ ...formData, licenseType: e.target.value, customLicenseName: '' })}
                       className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                     >
-                      <option value="">Select license type</option>
-                      <option value="conducir">Driver License</option>
-                      <option value="armas">Weapons License</option>
-                      <option value="seguridad">Security License</option>
-                      <option value="otra">Other</option>
+                      <option value="">{t('guards.licenses.form.selectLicenseType', { defaultValue: 'Select license type' })}</option>
+                      <option value="conducir">{t('guards.licenses.form.option.driver', { defaultValue: 'Driver License' })}</option>
+                      <option value="armas">{t('guards.licenses.form.option.weapons', { defaultValue: 'Weapons License' })}</option>
+                      <option value="seguridad">{t('guards.licenses.form.option.security', { defaultValue: 'Security License' })}</option>
+                      <option value="otra">{t('guards.licenses.form.option.other', { defaultValue: 'Other' })}</option>
                     </select>
                   </div>
 
@@ -216,13 +218,13 @@ export default function GuardLicenses({ guard }: Props) {
                   {formData.licenseType === 'otra' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Nombre de la Licencia <span className="text-red-500">*</span>
+                        {t('guards.licenses.form.customLicenseName', { defaultValue: 'License Name' })} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         value={formData.customLicenseName}
                         onChange={(e) => setFormData({ ...formData, customLicenseName: e.target.value })}
-                        placeholder="Ingrese el nombre de la licencia"
+                        placeholder={t('guards.licenses.form.customLicensePlaceholder', { defaultValue: 'Enter license name' })}
                         className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
@@ -231,13 +233,13 @@ export default function GuardLicenses({ guard }: Props) {
                   {/* Número de Licencia */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      License Number <span className="text-red-500">*</span>
+                      {t('guards.licenses.form.licenseNumber', { defaultValue: 'License Number' })} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.licenseNumber}
                       onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-                      placeholder="Enter license number"
+                      placeholder={t('guards.licenses.form.licenseNumberPlaceholder', { defaultValue: 'Enter license number' })}
                       className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
@@ -245,7 +247,7 @@ export default function GuardLicenses({ guard }: Props) {
                   {/* Fecha de Expiración */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Expires On <span className="text-red-500">*</span>
+                      {t('guards.licenses.form.expiryDate', { defaultValue: 'Expires On' })} <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -261,7 +263,7 @@ export default function GuardLicenses({ guard }: Props) {
                   {/* Imagen Frontal de la Licencia */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                      Imagen Frontal de la Licencia
+                      {t('guards.licenses.form.frontImageLabel', { defaultValue: 'Front License Image' })}
                       <Paperclip size={16} className="text-gray-400" />
                     </label>
                     <div className="relative">
@@ -278,7 +280,7 @@ export default function GuardLicenses({ guard }: Props) {
                       >
                         <Paperclip size={16} className="text-gray-400" />
                           <span className="text-sm text-gray-600">
-                          {formData.frontImage ? formData.frontImage.name : 'Choose file'}
+                          {formData.frontImage ? formData.frontImage.name : t('guards.licenses.form.chooseFile', { defaultValue: 'Choose file' })}
                         </span>
                       </label>
                     </div>
@@ -287,7 +289,7 @@ export default function GuardLicenses({ guard }: Props) {
                   {/* Imagen Trasera de la Licencia */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                      Imagen Trasera de la Licencia
+                      {t('guards.licenses.form.backImageLabel', { defaultValue: 'Back License Image' })}
                       <Paperclip size={16} className="text-gray-400" />
                     </label>
                     <div className="relative">
@@ -304,7 +306,7 @@ export default function GuardLicenses({ guard }: Props) {
                       >
                         <Paperclip size={16} className="text-gray-400" />
                         <span className="text-sm text-gray-600">
-                          {formData.backImage ? formData.backImage.name : 'Choose file'}
+                          {formData.backImage ? formData.backImage.name : t('guards.licenses.form.chooseFile', { defaultValue: 'Choose file' })}
                         </span>
                       </label>
                     </div>
@@ -317,13 +319,13 @@ export default function GuardLicenses({ guard }: Props) {
                     onClick={handleCloseModal}
                     className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50"
                   >
-                    Cancel
+                    {t('guards.licenses.modal.cancel', { defaultValue: 'Cancel' })}
                   </button>
                   <button
                     onClick={handleSubmitLicense}
                     className="px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700"
                   >
-                    Save
+                    {t('guards.licenses.modal.save', { defaultValue: 'Save' })}
                   </button>
                 </div>
               </div>

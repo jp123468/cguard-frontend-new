@@ -22,6 +22,7 @@ import { ApiService } from "@/services/api/apiService";
 import userService from "@/lib/api/userService";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 import { newAdminUserSchema, type NewAdminUserValues } from "@/lib/validators/new-admin-user.schema";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -49,6 +50,7 @@ function ClientMultiSelect({
   options: Array<{ id: string; name: string }>;
   placeholder?: string;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const picked = options.filter((o) => value.includes(o.id));
 
@@ -59,14 +61,14 @@ function ClientMultiSelect({
           {picked.length ? (
             <span className="truncate">{picked.map((p) => p.name).join(", ")}</span>
           ) : (
-            <span className="text-muted-foreground">{placeholder || "Seleccionar…"}</span>
+            <span className="text-muted-foreground">{placeholder || t('adminOfficeUsers.newUser.form.selectDefault', { defaultValue: 'Seleccionar…' })}</span>
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[360px]">
         <div className="p-2">
           <Command>
-            <CommandInput placeholder={`Buscar ${placeholder || "opción"}…`} />
+            <CommandInput placeholder={`Buscar ${placeholder || t('adminOfficeUsers.newUser.form.searchPlaceholder', { defaultValue: 'opción' })}…`} />
             <CommandList>
               <CommandGroup>
                 {/* Select / Deselect all as first item under the search input */}
@@ -83,7 +85,7 @@ function ClientMultiSelect({
                       return (
                         <>
                           <input className="mr-2" type="checkbox" readOnly checked={allSelected} />
-                          {allSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                          {allSelected ? t('adminOfficeUsers.newUser.form.deselectAll', { defaultValue: 'Deseleccionar todos' }) : t('adminOfficeUsers.newUser.form.selectAll', { defaultValue: 'Seleccionar todos' })}
                         </>
                       );
                     })()
@@ -91,7 +93,7 @@ function ClientMultiSelect({
                 </CommandItem>
 
                 {options.length === 0 && (
-                  <div className="p-3 text-sm text-muted-foreground">Sin opciones</div>
+                  <div className="p-3 text-sm text-muted-foreground">{t('adminOfficeUsers.newUser.form.noOptions', { defaultValue: 'Sin opciones' })}</div>
                 )}
 
                 {options.map((opt) => {
@@ -122,6 +124,7 @@ function ClientMultiSelect({
 const CLIENT_OPTIONS_PLACEHOLDER: Array<{ id: string; name: string }> = [];
 
 export default function NewAdminUserPage() {
+  const { t } = useTranslation();
   const form = useForm<NewAdminUserValues>({
     resolver: zodResolver(newAdminUserSchema),
     defaultValues: {
@@ -377,7 +380,7 @@ export default function NewAdminUserPage() {
       const invalidClient = (values.clientIds || []).find((id) => !uuidRegex.test(id));
       const invalidSite = (values.postSiteIds || []).find((id) => !uuidRegex.test(id));
       if (invalidClient || invalidSite) {
-        toast.error('IDs inválidos detectados en asignaciones');
+        toast.error(t('adminOfficeUsers.newUser.errors.invalidIds', { defaultValue: 'IDs inválidos detectados en asignaciones' }));
         return;
       }
 
@@ -403,7 +406,7 @@ export default function NewAdminUserPage() {
       }
 
       console.log("[NewAdminUserPage] response ->", resp);
-      toast.success(editUserId ? "Usuario actualizado correctamente" : "Usuario creado correctamente");
+      toast.success(editUserId ? t('adminOfficeUsers.newUser.toasts.updated', { defaultValue: 'Usuario actualizado correctamente' }) : t('adminOfficeUsers.newUser.toasts.created', { defaultValue: 'Usuario creado correctamente' }));
       navigate("/back-office");
     } catch (err) {
       const e = err as any;
@@ -414,13 +417,13 @@ export default function NewAdminUserPage() {
         const result = applyValidationErrorsToForm(e, setError as any);
         const msgs = Array.isArray(result) ? result : result.messages;
         if (msgs && msgs.length > 0) msgs.forEach((m) => toast.error(m));
-        else {
+          else {
           const backendErrors = e?.response?.data?.errors || e?.response?.data?.user?.errors || e?.response?.data || null;
           if (backendErrors?.message) toast.error(backendErrors.message);
-          else toast.error(e?.message || 'Error desconocido');
+          else toast.error(e?.message || t('adminOfficeUsers.newUser.errors.unknown', { defaultValue: 'Error desconocido' }));
         }
       } catch (ex) {
-        const msg = e?.message || e?.toString() || "Error desconocido";
+        const msg = e?.message || e?.toString() || t('adminOfficeUsers.newUser.errors.unknown', { defaultValue: 'Error desconocido' });
         toast.error(`${msg}`);
       }
     }
@@ -443,7 +446,7 @@ export default function NewAdminUserPage() {
         if (token) {
           setGeneratedToken(String(token));
           setGeneratedExpiresAt(expiresAt ? String(expiresAt) : new Date(Date.now() + 3600 * 1000).toISOString());
-          toast.success("Código de invitación creado");
+          toast.success(t('adminOfficeUsers.newUser.toasts.inviteCreated', { defaultValue: 'Código de invitación creado' }));
           return;
         }
         throw new Error("No token in response");
@@ -452,10 +455,10 @@ export default function NewAdminUserPage() {
         const token = generateNumericCode(6);
         setGeneratedToken(token);
         setGeneratedExpiresAt(new Date(Date.now() + 3600 * 1000).toISOString());
-        toast.success("Código generado localmente (no guardado en servidor)");
+        toast.success(t('adminOfficeUsers.newUser.toasts.inviteGeneratedLocal', { defaultValue: 'Código generado localmente (no guardado en servidor)' }));
       }
     } catch (err: any) {
-      toast.error(err?.message || "Error creando código");
+      toast.error(err?.message || t('adminOfficeUsers.newUser.errors.createCode', { defaultValue: 'Error creando código' }));
     } finally {
       setInviteLoading(false);
     }
@@ -507,8 +510,8 @@ export default function NewAdminUserPage() {
     <AppLayout>
       <Breadcrumb
         items={[
-          { label: "Panel de control", path: "/dashboard" },
-          { label: "Nuevo Usuario" },
+              { label: t('adminOfficeUsers.newUser.breadcrumb.dashboard', { defaultValue: 'Panel de control' }), path: "/dashboard" },
+              { label: t('adminOfficeUsers.newUser.breadcrumb.new', { defaultValue: 'Nuevo Usuario' }) },
         ]}
       />
 
@@ -522,9 +525,9 @@ export default function NewAdminUserPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre*</FormLabel>
+                    <FormLabel>{t('adminOfficeUsers.newUser.form.nameLabel', { defaultValue: 'Nombre*' })}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nombre*" {...field} />
+                      <Input placeholder={t('adminOfficeUsers.newUser.form.namePlaceholder', { defaultValue: 'Nombre*' })} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -536,9 +539,9 @@ export default function NewAdminUserPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Correo Electrónico*</FormLabel>
+                    <FormLabel>{t('adminOfficeUsers.newUser.form.emailLabel', { defaultValue: 'Correo Electrónico*' })}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Correo Electrónico*" {...field} />
+                      <Input placeholder={t('adminOfficeUsers.newUser.form.emailPlaceholder', { defaultValue: 'Correo Electrónico*' })} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -553,14 +556,14 @@ export default function NewAdminUserPage() {
                 name="accessLevel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nivel de Acceso*</FormLabel>
+                    <FormLabel>{t('adminOfficeUsers.newUser.form.accessLevelLabel', { defaultValue: 'Nivel de Acceso*' })}</FormLabel>
                     <Select
                       value={field.value}
                       onValueChange={field.onChange}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Nivel de Acceso*" />
+                          <SelectValue placeholder={t('adminOfficeUsers.newUser.form.accessLevelPlaceholder', { defaultValue: 'Nivel de Acceso*' })} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -581,13 +584,13 @@ export default function NewAdminUserPage() {
                 name="clientIds"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Asignar Clientes</FormLabel>
+                    <FormLabel>{t('adminOfficeUsers.newUser.form.assignClientsLabel', { defaultValue: 'Asignar Clientes' })}</FormLabel>
                     <FormControl>
                       <ClientMultiSelect
                         value={(field.value as string[]) || []}
                         onChange={(ids: string[]) => field.onChange(ids)}
                         options={clientOptions}
-                        placeholder="Asignar Clientes"
+                        placeholder={t('adminOfficeUsers.newUser.form.assignClientsPlaceholder', { defaultValue: 'Asignar Clientes' })}
                       />
                     </FormControl>
                     <FormMessage />
@@ -603,13 +606,13 @@ export default function NewAdminUserPage() {
                 name="postSiteIds"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>Asignar Sitios de Publicación</FormLabel>
+                    <FormLabel>{t('adminOfficeUsers.newUser.form.assignSitesLabel', { defaultValue: 'Asignar Sitios de Publicación' })}</FormLabel>
                     <FormControl>
                       <ClientMultiSelect
                         value={(field.value as string[]) || []}
                         onChange={(ids: string[]) => field.onChange(ids)}
                         options={siteOptions}
-                        placeholder="Asignar Sitios de Publicación"
+                        placeholder={t('adminOfficeUsers.newUser.form.assignSitesPlaceholder', { defaultValue: 'Asignar Sitios de Publicación' })}
                       />
                     </FormControl>
                     <FormMessage />
@@ -620,13 +623,13 @@ export default function NewAdminUserPage() {
             <div className="flex justify-between items-center">
               <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
                 <DialogTrigger asChild>
-                  <Button className="border border-orange-500 text-orange-500 bg-transparent hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 transition duration-200 px-4 py-2 rounded-md" variant="outline">Crear código de invitación</Button>
+                  <Button className="border border-orange-500 text-orange-500 bg-transparent hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 transition duration-200 px-4 py-2 rounded-md" variant="outline">{t('adminOfficeUsers.newUser.invite.createTrigger', { defaultValue: 'Crear código de invitación' })}</Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle className="textalign-center ">Generar código de invitación</DialogTitle>
+                    <DialogTitle className="textalign-center ">{t('adminOfficeUsers.newUser.invite.title', { defaultValue: 'Generar código de invitación' })}</DialogTitle>
                     <DialogDescription>
-                      Cree un código temporal para invitar a un usuario (expira en 1 hora).
+                      {t('adminOfficeUsers.newUser.invite.description', { defaultValue: 'Cree un código temporal para invitar a un usuario (expira en 1 hora).' })}
                     </DialogDescription>
                   </DialogHeader>
 
@@ -634,28 +637,30 @@ export default function NewAdminUserPage() {
                     <div className="flex flex-col items-center gap-3">
                       <div className="flex items-center gap-3">
                         <div className="border-2 border-dashed border-muted px-6 py-3 rounded text-2xl font-mono tracking-wider">
-                          {generatedToken || '------'}
+                          {generatedToken || t('adminOfficeUsers.newUser.invite.placeholderToken', { defaultValue: '------' })}
                         </div>
                         <div className="flex flex-col gap-2">
-                          <Button type="button" variant="ghost" onClick={async () => { if (generatedToken) { await navigator.clipboard.writeText(generatedToken); toast.success('Código copiado'); } }}>
+                          <Button type="button" variant="ghost" onClick={async () => { if (generatedToken) { await navigator.clipboard.writeText(generatedToken); toast.success(t('adminOfficeUsers.newUser.toasts.codeCopied', { defaultValue: 'Código copiado' })); } }}>
                             <Copy className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
 
-                      {generatedExpiresAt && <div className="text-xs text-muted-foreground mt-1">Expira: {generatedExpiresAt}</div>}
+                      {generatedExpiresAt && <div className="text-xs text-muted-foreground mt-1">{t('adminOfficeUsers.newUser.invite.expiresLabel', { defaultValue: 'Expira:' })} {generatedExpiresAt}</div>}
                     </div>
                   </div>
 
                   <DialogFooter>
-                    <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={createInvitationToken} disabled={inviteLoading}>{inviteLoading ? 'Generando...' : (generatedToken ? 'Regenerar' : 'Generar código')}</Button>
+                    <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={createInvitationToken} disabled={inviteLoading}>
+                      {inviteLoading ? t('adminOfficeUsers.newUser.invite.generating', { defaultValue: 'Generando...' }) : (generatedToken ? t('adminOfficeUsers.newUser.invite.regen', { defaultValue: 'Regenerar' }) : t('adminOfficeUsers.newUser.invite.generate', { defaultValue: 'Generar código' }))}
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
               <Button className="bg-orange-500 text-white hover:bg-orange-600" type="submit" disabled={formState.isSubmitting}>
-                {formState.isSubmitting ? "Creando..." : "Crear"}
+                {formState.isSubmitting ? t('adminOfficeUsers.newUser.form.creating', { defaultValue: 'Creando...' }) : t('adminOfficeUsers.newUser.form.create', { defaultValue: 'Crear' })}
               </Button>
-            </div>
+              </div>
           </form>
         </Form>
       </div>

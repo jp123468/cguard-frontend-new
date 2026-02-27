@@ -7,6 +7,7 @@ import { postSiteService } from "@/lib/api/postSiteService";
 import securityGuardService from "@/lib/api/securityGuardService";
 import userService from "@/lib/api/userService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import GoogleMapEmbed from '@/components/GoogleMap/GoogleMapEmbed';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -47,6 +48,8 @@ function EmptyState() {
 }
 
 export default function DashboardPage() {
+  const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
+  const [showGeofence, setShowGeofence] = useState(false);
   const [visibleWidgets, setVisibleWidgets] = useState({
     stats: true,
     tracker: true,
@@ -62,6 +65,7 @@ export default function DashboardPage() {
 
   const [data, setData] = useState({ clientes: 0, sitios: 0, guardias: 0, equipo: 0, registros: 0, fichados: 0 });
   const [loadingStats, setLoadingStats] = useState(false);
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const toggleWidget = (key: string, checked: boolean) => {
     setVisibleWidgets((prev) => ({ ...prev, [key]: checked }));
@@ -100,6 +104,23 @@ export default function DashboardPage() {
       }
     })();
 
+    return () => { mounted = false; };
+  }, []);
+
+  // Try to obtain the user's current position (for dashboard map centering)
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+    let mounted = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (!mounted) return;
+        setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      (err) => {
+        console.warn('Geolocation not available or permission denied', err);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
     return () => { mounted = false; };
   }, []);
 
@@ -219,18 +240,32 @@ export default function DashboardPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-medium">Rastreador en Vivo</CardTitle>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
-                  Mostrar Geovalla
+                <Button
+                  variant={showGeofence ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setShowGeofence((s) => !s)}
+                >
+                  {showGeofence ? 'Ocultar Geovalla' : 'Mostrar Geovalla'}
                 </Button>
-                <Button variant="outline" size="sm">
-                  Satélite
+                <Button
+                  variant={mapType === 'satellite' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setMapType((t) => (t === 'roadmap' ? 'satellite' : 'roadmap'))}
+                >
+                  {mapType === 'satellite' ? 'Roadmap' : 'Satélite'}
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              {/* Google Maps Placeholder */}
-              <div className="w-full h-[400px] bg-gray-100 rounded-lg flex items-center justify-center">
-                <p className="text-gray-500">Mapa de Google Maps aquí</p>
+              {/* Google Maps */}
+              <div className="w-full h-[400px] rounded-lg overflow-hidden">
+                <GoogleMapEmbed
+                  className="w-full h-full"
+                  mapType={mapType}
+                  showGeofence={showGeofence}
+                  lat={userCoords?.lat}
+                  lng={userCoords?.lng}
+                />
               </div>
 
               {/* Tracker Table */}

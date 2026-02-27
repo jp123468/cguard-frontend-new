@@ -269,7 +269,7 @@ const postSiteService = {
         longitud: (payload as any).longitud ?? (payload as any).longitude ?? existing.longitud ?? existing.longitude,
       } as any;
 
-      const { data } = await api.put(`/tenant/${tenantId}/business-info/${id}`, body);
+      const { data } = await api.patch(`/tenant/${tenantId}/business-info/${id}`, body);
       return data;
     } catch (error) {
       console.error('Error updating post site:', error);
@@ -387,9 +387,7 @@ const postSiteService = {
       const formData = new FormData();
       formData.append('file', file);
 
-      const { data } = await api.post(`/tenant/${tenantId}/business-info/import-file`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const { data } = await api.post(`/tenant/${tenantId}/business-info/import-file`, formData);
       return data;
     } catch (error) {
       console.error('Error importing post sites:', error);

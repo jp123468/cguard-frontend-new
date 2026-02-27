@@ -21,6 +21,7 @@ import { ApiService } from "@/services/api/apiService";
 import userService from "@/lib/api/userService";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 import { newAdminUserSchema, type NewAdminUserValues } from "@/lib/validators/new-admin-user.schema";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -37,6 +38,7 @@ function ClientMultiSelect({
   options: Array<{ id: string; name: string }>;
   placeholder?: string;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const picked = options.filter((o) => value.includes(o.id));
 
@@ -47,14 +49,14 @@ function ClientMultiSelect({
           {picked.length ? (
             <span className="truncate">{picked.map((p) => p.name).join(", ")}</span>
           ) : (
-            <span className="text-muted-foreground">{placeholder || "Seleccionar…"}</span>
+            <span className="text-muted-foreground">{placeholder || t('adminOfficeUsers.editUser.form.selectDefault', { defaultValue: 'Seleccionar…' })}</span>
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[360px]">
         <div className="p-2">
           <Command>
-            <CommandInput placeholder={`Buscar ${placeholder || "opción"}…`} />
+            <CommandInput placeholder={`Buscar ${placeholder || t('adminOfficeUsers.editUser.form.searchPlaceholder', { defaultValue: 'opción' })}…`} />
             <CommandList>
               <CommandGroup>
                 <CommandItem
@@ -70,7 +72,7 @@ function ClientMultiSelect({
                       return (
                         <>
                           <input className="mr-2" type="checkbox" readOnly checked={allSelected} />
-                          {allSelected ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                          {allSelected ? t('adminOfficeUsers.editUser.form.deselectAll', { defaultValue: 'Deseleccionar todos' }) : t('adminOfficeUsers.editUser.form.selectAll', { defaultValue: 'Seleccionar todos' })}
                         </>
                       );
                     })()
@@ -78,7 +80,7 @@ function ClientMultiSelect({
                 </CommandItem>
 
                 {options.length === 0 && (
-                  <div className="p-3 text-sm text-muted-foreground">Sin opciones</div>
+                  <div className="p-3 text-sm text-muted-foreground">{t('adminOfficeUsers.editUser.form.noOptions', { defaultValue: 'Sin opciones' })}</div>
                 )}
 
                 {options.map((opt) => {
@@ -108,6 +110,7 @@ function ClientMultiSelect({
 const CLIENT_OPTIONS_PLACEHOLDER: Array<{ id: string; name: string }> = [];
 
 export default function EditAdminUserPage() {
+  const { t } = useTranslation();
   const params = useParams();
   const id = params.id;
 
@@ -138,7 +141,7 @@ export default function EditAdminUserPage() {
       try {
         const clients = await clientService.getClients({});
         setClientOptions((clients as any).rows || []);
-      } catch (err) {
+        } catch (err) {
         setClientOptions([]);
       }
     })();
@@ -151,7 +154,7 @@ export default function EditAdminUserPage() {
         const rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
         const opts = rows.map((r: any) => ({ id: r.id ?? r._id ?? String(r.id), name: r.name ?? r.label ?? "" }));
         setRoleOptions(opts);
-      } catch (e) {
+        } catch (e) {
         setRoleOptions([]);
       }
     })();
@@ -242,8 +245,8 @@ export default function EditAdminUserPage() {
         const postSiteIds = Array.isArray(postSiteSource) ? postSiteSource.map((p: any) => (p && (p.id || p)) || p).filter(Boolean) : [];
         if (clientIds && clientIds.length) setValue('clientIds', clientIds);
         if (postSiteIds && postSiteIds.length) setValue('postSiteIds', postSiteIds);
-      } catch (err) {
-        toast.error('No se pudo cargar la información del usuario');
+        } catch (err) {
+        toast.error(t('adminOfficeUsers.editUser.errors.loadError', { defaultValue: 'No se pudo cargar la información del usuario' }));
       }
     })();
   }, [id, setValue]);
@@ -346,10 +349,10 @@ export default function EditAdminUserPage() {
             throw e;
           }
         }
-        toast.success("Usuario actualizado correctamente");
+        toast.success(t('adminOfficeUsers.editUser.toasts.updated', { defaultValue: 'Usuario actualizado correctamente' }));
       } else {
         await userService.createUser({ ...payload, invited: true, pending: true } as any);
-        toast.success("Usuario creado correctamente");
+        toast.success(t('adminOfficeUsers.editUser.toasts.created', { defaultValue: 'Usuario creado correctamente' }));
       }
 
       navigate("/back-office");
@@ -374,8 +377,8 @@ export default function EditAdminUserPage() {
     <AppLayout>
       <Breadcrumb
         items={[
-          { label: "Panel de control", path: "/dashboard" },
-          { label: id ? "Editar Usuario" : "Nuevo Usuario" },
+          { label: t('adminOfficeUsers.editUser.breadcrumb.dashboard', { defaultValue: 'Panel de control' }), path: "/dashboard" },
+          { label: id ? t('adminOfficeUsers.editUser.breadcrumb.edit', { defaultValue: 'Editar Usuario' }) : t('adminOfficeUsers.editUser.breadcrumb.new', { defaultValue: 'Nuevo Usuario' }) },
         ]}
       />
 
@@ -388,9 +391,9 @@ export default function EditAdminUserPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre*</FormLabel>
+                    <FormLabel>{t('adminOfficeUsers.editUser.form.nameLabel', { defaultValue: 'Nombre*' })}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nombre*" {...field} />
+                      <Input placeholder={t('adminOfficeUsers.editUser.form.namePlaceholder', { defaultValue: 'Nombre*' })} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -402,9 +405,9 @@ export default function EditAdminUserPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Correo Electrónico*</FormLabel>
+                    <FormLabel>{t('adminOfficeUsers.editUser.form.emailLabel', { defaultValue: 'Correo Electrónico*' })}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Correo Electrónico*" {...field} />
+                      <Input placeholder={t('adminOfficeUsers.editUser.form.emailPlaceholder', { defaultValue: 'Correo Electrónico*' })} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -418,14 +421,14 @@ export default function EditAdminUserPage() {
                 name="accessLevel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nivel de Acceso*</FormLabel>
+                    <FormLabel>{t('adminOfficeUsers.editUser.form.accessLevelLabel', { defaultValue: 'Nivel de Acceso*' })}</FormLabel>
                     <Select
                       value={field.value}
                       onValueChange={field.onChange}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Nivel de Acceso*" />
+                          <SelectValue placeholder={t('adminOfficeUsers.editUser.form.accessLevelPlaceholder', { defaultValue: 'Nivel de Acceso*' })} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -446,13 +449,13 @@ export default function EditAdminUserPage() {
                 name="clientIds"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Asignar Clientes*</FormLabel>
+                    <FormLabel>{t('adminOfficeUsers.editUser.form.assignClientsLabel', { defaultValue: 'Asignar Clientes*' })}</FormLabel>
                     <FormControl>
                       <ClientMultiSelect
                         value={(field.value as string[]) || []}
                         onChange={(ids: string[]) => field.onChange(ids)}
                         options={clientOptions}
-                        placeholder="Asignar Clientes*"
+                        placeholder={t('adminOfficeUsers.editUser.form.assignClientsPlaceholder', { defaultValue: 'Asignar Clientes*' })}
                       />
                     </FormControl>
                     <FormMessage />
@@ -467,13 +470,13 @@ export default function EditAdminUserPage() {
                 name="postSiteIds"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>Asignar Sitios de Publicación</FormLabel>
+                    <FormLabel>{t('adminOfficeUsers.editUser.form.assignSitesLabel', { defaultValue: 'Asignar Sitios de Publicación' })}</FormLabel>
                     <FormControl>
                       <ClientMultiSelect
                         value={(field.value as string[]) || []}
                         onChange={(ids: string[]) => field.onChange(ids)}
                         options={siteOptions}
-                        placeholder="Asignar Sitios de Publicación"
+                        placeholder={t('adminOfficeUsers.editUser.form.assignSitesPlaceholder', { defaultValue: 'Asignar Sitios de Publicación' })}
                       />
                     </FormControl>
                     <FormMessage />
@@ -484,7 +487,7 @@ export default function EditAdminUserPage() {
 
             <div className="flex justify-end">
               <Button type="submit" disabled={formState.isSubmitting}>
-                {formState.isSubmitting ? (id ? "Guardando..." : "Enviando...") : (id ? "Guardar" : "Enviar")}
+                {formState.isSubmitting ? (id ? t('adminOfficeUsers.editUser.form.savingEdit', { defaultValue: 'Guardando...' }) : t('adminOfficeUsers.editUser.form.savingNew', { defaultValue: 'Enviando...' })) : (id ? t('adminOfficeUsers.editUser.form.save', { defaultValue: 'Guardar' }) : t('adminOfficeUsers.editUser.form.send', { defaultValue: 'Enviar' }))}
               </Button>
             </div>
           </form>

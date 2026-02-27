@@ -203,7 +203,22 @@ export default function ClientForm({
                 if (!keepOnSave) navigate("/clients");
             }
         } catch (e: any) {
-            toast.error(e?.response?.data?.message || e?.message || "Error al guardar");
+            // Debug: log full error object to help diagnose 400 payloads from the backend
+            try { console.error('[ClientForm.onSubmit] save error:', e); } catch (err) {}
+            // The backend now includes `errors.existingId` when a duplicate email/phone is found.
+            const message = e?.message || (e?.response && e.response?.data && e.response.data.message) || "Error al guardar";
+            // Try multiple paths where the backend error details may appear
+            const existingId = e?.details?.errors?.existingId || e?.response?.data?.errors?.existingId || (e?.details && e.details.errors && e.details.errors.existingId);
+            try { console.debug('[ClientForm.onSubmit] backend errors:', e?.details ?? e?.response?.data); } catch (err) {}
+            toast.error(message);
+            if (existingId) {
+                // Navigate the user to the existing conflicting client without blocking alert
+                try {
+                    navigate(`/clients/${existingId}/profile`);
+                } catch (navErr) {
+                    // ignore navigation errors
+                }
+            }
         }
     }
 

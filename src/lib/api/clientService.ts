@@ -198,7 +198,7 @@ export const clientService = {
                 // ignore logging errors
             }
 
-            const { data } = await api.put<any>(
+            const { data } = await api.patch<any>(
                 `/tenant/${tenantId}/client-account/${id}`,
                 payload
             );
@@ -281,20 +281,46 @@ export const clientService = {
         // Generar un hash único para la importación
         const importHash = `import-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
         
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("importHash", importHash);
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("importHash", importHash);
 
-        const { data } = await api.post(
-            `/tenant/${tenantId}/client-account/import`,
-            formData,
-            {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            }
-        );
-        return data;
+                // Debug: log file info before sending
+                try {
+                    console.debug('[clientService.importExcel] file:', { name: file.name, size: file.size, type: file.type });
+                } catch (e) {}
+
+                // Try using fetch first to avoid axios multipart boundary issues observed in some environments.
+                const base = (import.meta.env.VITE_API_URL as string) || '';
+                const url = `${base}/tenant/${tenantId}/client-account/import`;
+                const token = typeof getAuthToken === 'function' ? getAuthToken() : null;
+
+                try {
+                    const headers: Record<string, string> = {};
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    const resp = await fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers,
+                        credentials: 'include',
+                    });
+                    const text = await resp.text();
+                    let json: any = null;
+                    try { json = text ? JSON.parse(text) : null; } catch (_) { json = text; }
+                    if (!resp.ok) {
+                        const err: any = json || { message: `HTTP ${resp.status}` };
+                        throw err;
+                    }
+                    return json;
+                } catch (fetchErr) {
+                    // If fetch fails, fallback to axios post (keeps previous behavior)
+                    console.warn('[clientService.importExcel] fetch upload failed, falling back to axios', fetchErr);
+                    const { data } = await api.post(
+                        `/tenant/${tenantId}/client-account/import`,
+                        formData
+                    );
+                    return data;
+                }
     },
 
     /**

@@ -154,9 +154,263 @@
       "conjuntoHabilidades": "Conjunto de Habilidades",
       "departamento": "Departamento",
       "configuracion": "Configurações"
+    },
+    "overview": {
+      "loading": "Carregando...",
+      "loadError": "Não foi possível carregar o segurança"
+    },
+    "summary": {
+      "roleDefault": "Segurança",
+      "header": {
+        "guardNumber": "Número do guarda",
+        "addedOn": "Adicionado em",
+        "lastShift": "Último turno",
+        "about": "Sobre"
+      },
+      "previous": "Anterior",
+      "stats": {
+        "title": "Estatísticas",
+        "last7Days": "Últimos 7 dias",
+        "compareWith": "Comparar com",
+        "compareOptions": {
+          "previous": "Período anterior",
+          "none": "Nenhum"
+        },
+        "metrics": {
+          "assignedSites": "Locais atribuídos",
+          "completedRoutes": "Rotas concluídas",
+          "tasksCompleted": "Tarefas concluídas",
+          "reportsSent": "Relatórios enviados",
+          "inactivityAlerts": "Alertas de inatividade",
+          "noShows": "Faltas",
+          "lateArrivals": "Chegadas atrasadas",
+          "hoursWorked": "Horas trabalhadas"
+        }
+      },
+      "recentActivity": {
+        "title": "Atividade recente",
+        "filter": "Filtro"
+      },
+      "sampleActivity": {
+        "message": "Esta mensagem notifica que 'José Alejo Pinos' aceitou a solicitação da empresa e passou para a lista ativa"
+      },
+      "badge": {
+        "joined": "Guarda entrou"
+      }
+    },
+    "profile": {
+      "actions": {
+        "edit": "Editar",
+        "cancel": "Cancelar",
+        "save": "Salvar",
+        "saving": "Salvando..."
+      },
+      "toasts": {
+        "updated": "Guarda atualizado com sucesso",
+        "updateError": "Erro ao atualizar guarda"
+      },
+      "cards": {
+        "general": "Informação geral",
+        "contact": "Detalhes de contato",
+        "emergency": "Contato de emergência",
+        "personal": "Informação pessoal",
+        "deviceInfo": "Informação do dispositivo",
+        "devicePermissions": "Permissões do dispositivo",
+        "languagesSkills": "Idiomas e habilidades",
+        "licenseDetails": "Detalhes da licença"
+      },
+      "fields": {
+        "firstName": "Nome",
+        "lastName": "Sobrenome",
+        "id1": "ID #1",
+        "id2": "ID #2",
+        "birthDate": "Data de nascimento",
+        "address": "Endereço",
+        "email": "E-mail",
+        "mobile": "Número móvel",
+        "emergencyContact": "Contato de emergência",
+        "emergencyContactNumber": "Número do contato de emergência",
+        "emergencyRelation": "Relação",
+        "birthPlace": "Local de nascimento",
+        "maritalStatus": "Estado civil",
+        "bloodType": "Tipo sanguíneo",
+        "education": "Educação",
+        "gender": "Gênero",
+        "governmentId": "ID do governo",
+        "deviceType": "Tipo de dispositivo",
+        "deviceModel": "Modelo do dispositivo",
+        "osVersion": "Versão do SO",
+        "appVersion": "Versão do app",
+        "pushNotifications": "Notificações Push",
+        "gpsPermission": "Permissão GPS",
+        "camera": "Câmera",
+        "microphone": "Microfone",
+        "languages": "Idiomas",
+        "skills": "Habilidades",
+        "licenseType": "Tipo de licença",
+        "licenseNumber": "Número",
+        "issueDate": "Data de emissão",
+        "expiryDate": "Data de validade"
+      },
+      "values": {
+        "enabled": "Habilitado",
+        "disabled": "Desabilitado",
+        "background": "Background"
+      },
+      "placeholders": {
+        "languages": "Ex: Spanish, English",
+        "skills": "Ex: First aid, Self-defense"
+      },
+      "noLicense": "Nenhuma licença encontrada"
+    },
+    "tabs": {
+      "invite": "Convidar via SMS ou Email",
+      "create_profile": "Criar perfil"
+    },
+    "availability": {
+      "title": "Disponibilidade",
+      "table": {
+        "day": "Dia",
+        "available": "Disponível",
+        "from": "Desde",
+        "to": "Até"
+      },
+      "days": {
+        "Monday": "Segunda-feira",
+        "Tuesday": "Terça-feira",
+        "Wednesday": "Quarta-feira",
+        "Thursday": "Quinta-feira",
+        "Friday": "Sexta-feira",
+        "Saturday": "Sábado",
+        "Sunday": "Domingo"
+      },
+      "save": "Salvar",
+      "toasts": {
+        "saved": "Disponibilidade salva"
+      }
+    },
+    "new": {
+      "title": "Novo Segurança",
+      "breadcrumb": {
+        "dashboard": "Painel"
+      },
+      "invite": {
+        "description": "Insira o nome e o e-mail/número de celular do segurança. Uma mensagem com um link será enviada."
+      },
+      "join_code": {
+        "description": "Compartilhe o código único da empresa junto com o link para baixar o aplicativo.",
+        "copied": "Código copiado",
+        "invite_sent": "Convite enviado por código",
+        "invite_error": "Erro ao enviar convite por código"
+      },
+      "link": {
+        "description": "Compartilhe este link para ingressar na empresa.",
+        "invite_sent": "Convite por link enviado",
+        "invite_error": "Erro ao enviar convite por link"
+      },
+      "create": {
+        "description": "Crie manualmente o perfil do segurança. Eles precisarão verificar o e-mail e o número de celular antes de entrar."
+      },
+      "form": {
+        "firstName": "Nome*",
+        "firstNamePlaceholder": "Nome *",
+        "lastName": "Sobrenome*",
+        "lastNamePlaceholder": "Sobrenome *",
+        "inviteBy": "Convidar Por*",
+        "selectMethodPlaceholder": "Selecionar método",
+        "contactEmail": "Endereço de e-mail *",
+        "contactSms": "Número de celular *",
+        "password": "Senha *",
+        "passwordPlaceholder": "Senha *",
+        "confirmPassword": "Confirmar Senha *",
+        "confirmPasswordPlaceholder": "Confirmar Senha *",
+        "contactPhEmail": "e.g. pessoa@email.com",
+        "contactPhSms": "e.g. +12015550123",
+        "selectClient": "Selecionar Cliente",
+        "assignPostSite": "Atribuir Local",
+        "create_and_send": "Criar e Enviar",
+        "send": "Enviar"
+      },
+      "toasts": {
+        "clients_sites_load_error": "Não foi possível carregar clientes ou locais",
+        "invites_sent": "Convites enviados",
+        "invite_error": "Erro ao enviar convites",
+        "profile_created": "Perfil criado",
+        "profile_created_sent": "Perfil criado e enviado"
+      },
+      "errors": {
+        "no_permission_create": "Você não tem permissão para criar seguranças",
+        "error_create_profile": "Erro ao criar perfil"
+      },
+      "actions": {
+        "copy": "Copiar",
+        "regenerate": "Regenerar",
+        "create": "Criar",
+        "show_password": "Mostrar senha",
+        "hide_password": "Ocultar senha",
+        "show_confirm_password": "Mostrar senha",
+        "hide_confirm_password": "Ocultar senha"
+      }
+    },
+    "assignSites": {
+      "loading": "Carregando...",
+      "action": {
+        "default": "Ação"
+      },
+      "actions": {
+        "delete": "Excluir"
+      },
+      "searchPlaceholder": "Buscar Post Sites",
+      "assignButton": "Atribuir Sites",
+      "table": {
+        "client": "Cliente",
+        "postSites": "Sites"
+      },
+      "loadError": "Não foi possível carregar o guarda",
+      "modal": {
+        "title": "Atribuir Sites",
+        "cancel": "Cancelar",
+        "assign": "Atribuir"
+      },
+      "form": {
+        "client": "Cliente",
+        "selectClient": "Selecionar cliente",
+        "postSite": "Site",
+        "selectPostSite": "Selecionar site"
+      },
+      "noPostSites": "Nenhum site encontrado"
+    },
+    "files": {
+      "action": { "default": "Ação" },
+      "actions": { "delete": "Excluir" },
+      "searchPlaceholder": "Pesquisar arquivos",
+      "uploadButton": "Carregar",
+      "table": { "date": "Data", "file": "Arquivo", "addedBy": "Adicionado por" },
+      "empty": { "title": "Nenhum arquivo encontrado", "description": "Carregue arquivos usando o botão à direita" },
+      "loadError": "Não foi possível carregar o guarda",
+      "modal": {
+        "title": "Carregar arquivos",
+        "dropHere": "Solte os arquivos aqui..",
+        "orSelect": "Ou selecionar",
+        "chooseFilesPlaceholder": "Selecionar arquivos Nenhum arquivo selecionado",
+        "filesToUpload": "Arquivos para carregar",
+        "upload": "Carregar"
+      }
+    },
+    "skills": {
+      "action": { "default": "Ação" },
+      "actions": { "delete": "Excluir" },
+      "searchPlaceholder": "Pesquisar conjuntos de habilidades",
+      "assignButton": "Atribuir conjunto de habilidades",
+      "table": { "name": "Nome", "description": "Descrição" },
+      "empty": { "title": "Nenhum resultado encontrado", "description": "Não encontramos nenhum item correspondente à sua pesquisa" },
+      "toasts": { "loadError": "Não foi possível carregar o guarda", "selectAtLeastOne": "Por favor selecione pelo menos um conjunto de habilidades", "provideName": "Por favor forneça um nome de habilidade" },
+      "modal": { "title": "Atribuir conjunto de habilidades", "cancel": "Cancelar", "assign": "Atribuir" },
+      "form": { "skillSet": "Conjunto de habilidades*", "selectPlaceholder": "Selecionar conjuntos de habilidades..." },
+      "dropdown": { "searchPlaceholder": "Pesquisar..." }
     }
-  },
-  "clients": {
+    },
+    "clients": {
     "nav": {
       "title": "Clientes",
       "overview": "Visão geral",
@@ -388,5 +642,19 @@
     "invalidEmail": "E-mail inválido",
     "invalidPhone": "Número inválido",
     "requiredName": "Nome obrigatório"
+  },
+  "components": {
+    "addRemove": {
+      "add": "Adicionar outro",
+      "remove": "Remover",
+      "confirmTitle": "Excluir bloco",
+      "confirmDesc": "Esta ação não pode ser desfeita.",
+      "cancel": "Cancelar",
+      "confirmAction": "Excluir"
+    },
+    "submitBar": {
+      "primary": "Enviar",
+      "sending": "Enviando..."
+    }
   }
 }

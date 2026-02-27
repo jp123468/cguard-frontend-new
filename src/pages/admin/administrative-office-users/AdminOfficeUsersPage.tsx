@@ -40,6 +40,7 @@ import {
   Archive,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { usePermissions } from '@/hooks/usePermissions';
@@ -57,6 +58,7 @@ function useDebounced<T>(value: T, delay = 400) {
 }
 
 export default function AdminOfficeUsersPage() {
+  const { t } = useTranslation();
   const [openFilter, setOpenFilter] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [filterClient, setFilterClient] = useState<string | null>(null);
@@ -217,25 +219,25 @@ export default function AdminOfficeUsersPage() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Error exportando usuarios:', err);
-      toast.error('No se pudo exportar usuarios');
+      toast.error(t('adminOfficeUsers.toasts.exportError', { defaultValue: 'No se pudo exportar usuarios' }));
     }
   };
 
   const handleSuspendUser = async (user: any) => {
     if (!user) return;
     if (isUserAdmin(user)) {
-      toast.error('No se puede suspender a un usuario administrador');
+      toast.error(t('adminOfficeUsers.toasts.cannotSuspendAdmin', { defaultValue: 'No se puede suspender a un usuario administrador' }));
       return;
     }
     try {
       setActionLoading(true);
       await userService.suspendUser(user.id);
       setRows((prev) => prev.map((g) => (g.id === user.id ? { ...g, status: "Archivado", active: false, raw: { ...(g.raw || {}), status: "archived" } } : g)));
-      toast.success("Usuario suspendido y archivado");
+      toast.success(t('adminOfficeUsers.toasts.suspendedArchivedSuccess', { defaultValue: 'Usuario suspendido y archivado' }));
     } catch (err: any) {
         console.error(err);
         const serverMsg = err?.response?.data?.message || err?.message || (typeof err === 'string' ? err : null);
-        toast.error(serverMsg || "Error suspendiendo usuario");
+        toast.error(serverMsg || t('adminOfficeUsers.toasts.errorSuspendingUser', { defaultValue: 'Error suspendiendo usuario' }));
       } finally {
       setActionLoading(false);
       setSelectedUserToAct(null);
@@ -246,18 +248,18 @@ export default function AdminOfficeUsersPage() {
     if (!userId) return;
     const row = rows.find((r) => String(r.id || r._id || r.raw?.id) === String(userId));
     if (isUserAdmin(row)) {
-      toast.error('No se puede eliminar a un usuario administrador');
+      toast.error(t('adminOfficeUsers.toasts.cannotDeleteAdmin', { defaultValue: 'No se puede eliminar a un usuario administrador' }));
       return;
     }
     try {
       setActionLoading(true);
       await userService.deleteUser(userId);
       setRows((prev) => prev.filter((g) => g.id !== userId));
-      toast.success("Usuario eliminado");
+      toast.success(t('adminOfficeUsers.toasts.deletedSuccess', { defaultValue: 'Usuario eliminado' }));
       setDeleteDialogOpen(false);
     } catch (err) {
       console.error(err);
-      toast.error("Error eliminando usuario");
+      toast.error(t('adminOfficeUsers.toasts.deleteError', { defaultValue: 'Error eliminando usuario' }));
     } finally {
       setActionLoading(false);
       setSelectedUserToAct(null);
@@ -385,11 +387,11 @@ export default function AdminOfficeUsersPage() {
         return !isUserAdmin(r);
       });
       if (idsToSuspend.length === 0) {
-        toast.error('Ningún usuario válido para suspender (los administradores no pueden suspenderse)');
+        toast.error(t('adminOfficeUsers.toasts.noValidUsersToSuspend', { defaultValue: 'Ningún usuario válido para suspender (los administradores no pueden suspenderse)' }));
         return;
       }
       if (idsToSuspend.length < ids.length) {
-        toast.warning('Se omitieron administradores del proceso de suspensión');
+        toast.warning(t('adminOfficeUsers.toasts.skippedAdminsWarning', { defaultValue: 'Se omitieron administradores del proceso de suspensión' }));
       }
       await userService.suspendUsers(idsToSuspend);
       // update local rows to reflect archived status
@@ -400,11 +402,11 @@ export default function AdminOfficeUsersPage() {
         }
         return r;
       }));
-      toast.success(`Suspendidos ${idsToSuspend.length} usuario(s)`);
+      toast.success(t('adminOfficeUsers.toasts.suspendedCount', { defaultValue: 'Suspendidos {{count}} usuario(s)', count: idsToSuspend.length }));
       setSelectedUsers([]);
     } catch (err) {
       console.error('Error al suspender en bloque:', err);
-      toast.error('No se pudo suspender a todos los usuarios');
+      toast.error(t('adminOfficeUsers.toasts.suspendAllError', { defaultValue: 'No se pudo suspender a todos los usuarios' }));
     } finally {
       setActionLoading(false);
       // force Select to remount so it resets its internal selection state
@@ -424,11 +426,11 @@ export default function AdminOfficeUsersPage() {
         }
         return r;
       }));
-      toast.success(`Activados ${ids.length} usuario(s)`);
+      toast.success(t('adminOfficeUsers.toasts.activatedCount', { defaultValue: 'Activados {{count}} usuario(s)', count: ids.length }));
       setSelectedUsers([]);
     } catch (err) {
       console.error('Error al activar en bloque:', err);
-      toast.error('No se pudo activar a todos los usuarios');
+      toast.error(t('adminOfficeUsers.toasts.activateAllError', { defaultValue: 'No se pudo activar a todos los usuarios' }));
     } finally {
       setActionLoading(false);
       setSelectKey((k) => k + 1);
@@ -439,8 +441,8 @@ export default function AdminOfficeUsersPage() {
     <AppLayout>
       <Breadcrumb
         items={[
-          { label: "Panel de control", path: "/dashboard" },
-          { label: "Usuarios de Oficina Administrativa" },
+          { label: t('adminOfficeUsers.breadcrumb.dashboard', { defaultValue: 'Panel de control' }), path: '/dashboard' },
+          { label: t('adminOfficeUsers.title', { defaultValue: 'Usuarios de Oficina Administrativa' }) },
         ]}
       />
 
@@ -454,7 +456,7 @@ export default function AdminOfficeUsersPage() {
               setBulkAction(null);
               (async () => {
                 if (!selectedUsers || selectedUsers.length === 0) {
-                  toast.error('Selecciona al menos un usuario');
+                  toast.error(t('adminOfficeUsers.toasts.selectAtLeastOne', { defaultValue: 'Selecciona al menos un usuario' }));
                   return;
                 }
 
@@ -470,15 +472,15 @@ export default function AdminOfficeUsersPage() {
               })();
             }}>
               <SelectTrigger className="w-40" disabled={selectedUsers.length === 0 || !canManageUsers}>
-                <SelectValue placeholder="Acción" />
+                <SelectValue placeholder={t('adminOfficeUsers.bulkAction.placeholder', { defaultValue: 'Acción' })} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="suspender">Suspender</SelectItem>
+                <SelectItem value="suspender">{t('adminOfficeUsers.bulkAction.suspend', { defaultValue: 'Suspender' })}</SelectItem>
                 {/** show activate if any selected user is archived */}
                 {selectedUsers.length > 0 && (() => {
                   const selectedSet = new Set(selectedUsers.map(String));
                   const anyArchived = rows.some((r) => selectedSet.has(String(r.id || r._id || r.raw?.id)) && ((String(r.status || '').toLowerCase() === 'archived') || (String(r.status || '').toLowerCase() === 'archivado') || r.active === false));
-                  if (anyArchived) return <SelectItem value="activar">Activar</SelectItem>;
+                  if (anyArchived) return <SelectItem value="activar">{t('adminOfficeUsers.bulkAction.activate', { defaultValue: 'Activar' })}</SelectItem>;
                   return null;
                 })()}
               </SelectContent>
@@ -489,16 +491,16 @@ export default function AdminOfficeUsersPage() {
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar usuario"
+                placeholder={t('adminOfficeUsers.searchPlaceholder', { defaultValue: 'Buscar usuario' })}
                 className="w-64 pl-9"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                aria-label="Buscar usuario"
+                aria-label={t('adminOfficeUsers.searchPlaceholder', { defaultValue: 'Buscar usuario' })}
               />
             </div>
 
             <PermissionedButton permission="userCreate" asChild className="bg-orange-500 text-white hover:bg-orange-600">
-              <Link to="/back-office/new">Nuevo Usuario</Link>
+              <Link to="/back-office/new">{t('adminOfficeUsers.newUser.breadcrumb.new', { defaultValue: 'Nuevo Usuario' })}</Link>
             </PermissionedButton>
 
             {/* Filtros */}
@@ -509,35 +511,35 @@ export default function AdminOfficeUsersPage() {
                   className="border-orange-200 text-orange-600"
                 >
                   <Filter className="mr-2 h-4 w-4" />
-                  Filtros
+                  {t('adminOfficeUsers.filters.title', { defaultValue: 'Filtros' })}
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[400px] sm:w-[460px]">
                 <SheetHeader>
-                  <SheetTitle>Filtros</SheetTitle>
+                  <SheetTitle>{t('adminOfficeUsers.filters.title', { defaultValue: 'Filtros' })}</SheetTitle>
                 </SheetHeader>
 
                 <div className="mt-6 space-y-4">
                   <div className="space-y-2">
-                    <Label>Categorías</Label>
+                    <Label>{t('adminOfficeUsers.filters.categories', { defaultValue: 'Categorías' })}</Label>
                     <Select value={filterCategory ?? 'all'} onValueChange={(v) => setFilterCategory(v === 'all' ? null : v)}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Categorías" />
+                        <SelectValue placeholder={t('adminOfficeUsers.filters.categories', { defaultValue: 'Categorías' })} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todas</SelectItem>
+                        <SelectItem value="all">{t('adminOfficeUsers.filters.categoriesAll', { defaultValue: 'Todas' })}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Cliente</Label>
+                    <Label>{t('adminOfficeUsers.filters.client', { defaultValue: 'Cliente' })}</Label>
                     <Select value={filterClient ?? 'all'} onValueChange={(v) => setFilterClient(v === 'all' ? null : v)}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Cliente" />
+                        <SelectValue placeholder={t('adminOfficeUsers.filters.client', { defaultValue: 'Cliente' })} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="all">{t('adminOfficeUsers.filters.clientAll', { defaultValue: 'Todos' })}</SelectItem>
                         {clientOptions.map((c) => (
                           <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                         ))}
@@ -546,29 +548,29 @@ export default function AdminOfficeUsersPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Estado</Label>
+                    <Label>{t('adminOfficeUsers.filters.status', { defaultValue: 'Estado' })}</Label>
                     <Select value={filterStatus ?? 'all'} onValueChange={(v) => setFilterStatus(v === 'all' ? null : v)}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Todos los Usuarios" />
+                        <SelectValue placeholder={t('adminOfficeUsers.filters.statusAllLabel', { defaultValue: 'Todos los Usuarios' })} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos los Usuarios</SelectItem>
-                        <SelectItem value="Activo">Activo</SelectItem>
-                        <SelectItem value="Inactivo">Inactivo</SelectItem>
-                        <SelectItem value="Suspendido">Suspendido</SelectItem>
+                        <SelectItem value="all">{t('adminOfficeUsers.filters.statusAll', { defaultValue: 'Todos los Usuarios' })}</SelectItem>
+                        <SelectItem value="Activo">{t('adminOfficeUsers.filters.statusActive', { defaultValue: 'Activo' })}</SelectItem>
+                        <SelectItem value="Inactivo">{t('adminOfficeUsers.filters.statusInactive', { defaultValue: 'Inactivo' })}</SelectItem>
+                        <SelectItem value="Suspendido">{t('adminOfficeUsers.filters.statusSuspended', { defaultValue: 'Suspendido' })}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <Button
-                    className="w-full bg-orange-500 text-white hover:bg-orange-600"
-                    onClick={() => {
-                      // aplica filtros y cierra
-                      setOpenFilter(false);
-                    }}
-                  >
-                    Filtro
-                  </Button>
+                      className="w-full bg-orange-500 text-white hover:bg-orange-600"
+                      onClick={() => {
+                        // aplica filtros y cierra
+                        setOpenFilter(false);
+                      }}
+                    >
+                      {t('adminOfficeUsers.filters.apply', { defaultValue: 'Filtro' })}
+                    </Button>
                 </div>
               </SheetContent>
             </Sheet>
@@ -582,13 +584,13 @@ export default function AdminOfficeUsersPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem disabled={!hasPermission('userExport')} onClick={async () => { if (!hasPermission('userExport')) return; await exportUsersFile('pdf'); }}>
-                    <FileDown className="mr-2 h-4 w-4" /> Exportar como PDF
+                    <FileDown className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.actions.exportPdf', { defaultValue: 'Exportar como PDF' })}
                   </DropdownMenuItem>
                   <DropdownMenuItem disabled={!hasPermission('userExport')} onClick={async () => { if (!hasPermission('userExport')) return; await exportUsersFile('excel'); }}>
-                    <FileSpreadsheet className="mr-2 h-4 w-4" /> Exportar como Excel
+                    <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.actions.exportExcel', { defaultValue: 'Exportar como Excel' })}
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled={!hasPermission('userImport')} onClick={() => { if (!hasPermission('userImport')) return; console.log("Importar") }}>
-                    <ArrowDownUp className="mr-2 h-4 w-4" /> Importar
+                  <DropdownMenuItem disabled={!hasPermission('userImport')} onClick={() => { if (!hasPermission('userImport')) return; console.log('Importar') }}>
+                    <ArrowDownUp className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.actions.import', { defaultValue: 'Importar' })}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -604,11 +606,11 @@ export default function AdminOfficeUsersPage() {
                 <th className="px-4 py-3">
                   <Checkbox disabled={!canManageUsers} checked={allOnPageSelected} onCheckedChange={(v) => handleSelectAllUsers(Boolean(v))} aria-label="Seleccionar todos" />
                 </th>
-                <th className="px-4 py-3 font-semibold">Nombre de Contacto</th>
-                <th className="px-4 py-3 font-semibold">Correo Electrónico</th>
-                <th className="px-4 py-3 font-semibold">Nivel de Acceso</th>
-                <th className="px-4 py-3 font-semibold">Último Inicio de Sesión</th>
-                <th className="px-4 py-3 font-semibold">Estado</th>
+                <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.contactName', { defaultValue: 'Nombre de Contacto' })}</th>
+                <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.email', { defaultValue: 'Correo Electrónico' })}</th>
+                <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.accessLevel', { defaultValue: 'Nivel de Acceso' })}</th>
+                <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.lastLogin', { defaultValue: 'Último Inicio de Sesión' })}</th>
+                <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.status', { defaultValue: 'Estado' })}</th>
                 <th />
               </tr>
             </thead>
@@ -623,9 +625,9 @@ export default function AdminOfficeUsersPage() {
                         alt="Sin datos"
                         className="mb-4 h-36"
                       />
-                      <h3 className="text-lg font-semibold">No se encontraron resultados</h3>
+                      <h3 className="text-lg font-semibold">{t('adminOfficeUsers.noData.title', { defaultValue: 'No se encontraron resultados' })}</h3>
                       <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-                        No pudimos encontrar ningún elemento que coincida con su búsqueda
+                        {t('adminOfficeUsers.noData.message', { defaultValue: 'No pudimos encontrar ningún elemento que coincida con su búsqueda' })}
                       </p>
                     </div>
                   </td>
@@ -659,7 +661,7 @@ export default function AdminOfficeUsersPage() {
                         if (status === "archived" || status === "archivado") {
                           return (
                             <Badge variant="outline" className="bg-red-50 text-red-700">
-                              Archivado
+                              {t('adminOfficeUsers.statuses.archived', { defaultValue: 'Archivado' })}
                             </Badge>
                           );
                         }
@@ -667,7 +669,7 @@ export default function AdminOfficeUsersPage() {
                         if (status === "invited" || status === "pending") {
                           return (
                             <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-                              Pendiente
+                              {t('adminOfficeUsers.statuses.pending', { defaultValue: 'Pendiente' })}
                             </Badge>
                           );
                         }
@@ -675,14 +677,14 @@ export default function AdminOfficeUsersPage() {
                         if (u.active === false) {
                           return (
                             <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
-                              Inactivo
+                              {t('adminOfficeUsers.statuses.inactive', { defaultValue: 'Inactivo' })}
                             </Badge>
                           );
                         }
 
                         return (
                           <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                            Activo
+                            {t('adminOfficeUsers.statuses.active', { defaultValue: 'Activo' })}
                           </Badge>
                         );
                       })()}
@@ -705,7 +707,7 @@ export default function AdminOfficeUsersPage() {
                                         setResendDialogOpen(true);
                                       }}
                                     >
-                                      <Send className="mr-2 h-4 w-4" /> Reenviar Invitación
+                                      <Send className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.rowActions.resendInvitation', { defaultValue: 'Reenviar Invitación' })}
                                     </DropdownMenuItem>
 
                                   <DropdownMenuItem disabled={!hasPermission('userEdit')}
@@ -715,7 +717,7 @@ export default function AdminOfficeUsersPage() {
                                       handleSuspendUser(u);
                                     }}
                                   >
-                                    <Archive className="mr-2 h-4 w-4" /> Suspender
+                                    <Archive className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.rowActions.suspend', { defaultValue: 'Suspender' })}
                                   </DropdownMenuItem>
                                   
                                 </>
@@ -732,7 +734,7 @@ export default function AdminOfficeUsersPage() {
                                       setRestoreDialogOpen(true);
                                     }}
                                   >
-                                    Restaurar
+                                    {t('adminOfficeUsers.rowActions.restore', { defaultValue: 'Restaurar' })}
                                   </DropdownMenuItem>
 
                                   <DropdownMenuItem disabled={!hasPermission('userDestroy')}
@@ -742,7 +744,7 @@ export default function AdminOfficeUsersPage() {
                                       setDeleteDialogOpen(true);
                                     }}
                                   >
-                                    Eliminar
+                                    {t('adminOfficeUsers.rowActions.delete', { defaultValue: 'Eliminar' })}
                                   </DropdownMenuItem>
                                 </>
                               );
@@ -750,7 +752,7 @@ export default function AdminOfficeUsersPage() {
 
                             return (
                                 <>
-                                <DropdownMenuItem disabled={!hasPermission('userEdit')} onClick={() => { if (!hasPermission('userEdit')) return; navigate(`/back-office/edit/${u.id}`); }}>Editar</DropdownMenuItem>
+                                <DropdownMenuItem disabled={!hasPermission('userEdit')} onClick={() => { if (!hasPermission('userEdit')) return; navigate(`/back-office/edit/${u.id}`); }}>{t('adminOfficeUsers.rowActions.edit', { defaultValue: 'Editar' })}</DropdownMenuItem>
                                 <DropdownMenuItem disabled={!hasPermission('userEdit')}
                                   onClick={() => {
                                     if (!hasPermission('userEdit')) return;
@@ -758,7 +760,7 @@ export default function AdminOfficeUsersPage() {
                                     handleSuspendUser(u);
                                   }}
                                 >
-                                  Suspender
+                                  {t('adminOfficeUsers.rowActions.suspend', { defaultValue: 'Suspender' })}
                                 </DropdownMenuItem>
                               </>
                             );
@@ -775,7 +777,7 @@ export default function AdminOfficeUsersPage() {
           {/* Footer de tabla */}
           <div className="flex items-center justify-between bg-gray-50 px-4 py-3 text-sm text-gray-600">
             <div className="flex items-center gap-2">
-              <span>Elementos por página</span>
+              <span>{t('adminOfficeUsers.footer.itemsPerPage', { defaultValue: 'Elementos por página' })}</span>
               <Select
                 value={String(pageSize)}
                 onValueChange={(v) => setPageSize(Number(v))}
@@ -791,7 +793,7 @@ export default function AdminOfficeUsersPage() {
               </Select>
             </div>
             <div>
-              {filteredRows.length === 0 ? "0 – 0 de 0" : `1 – ${filteredRows.length} de ${filteredRows.length}`}
+              {filteredRows.length === 0 ? t('adminOfficeUsers.pagination.zero', { defaultValue: '0 – 0 de 0' }) : t('adminOfficeUsers.pagination.range', { defaultValue: '1 – {{end}} de {{total}}', start: 1, end: filteredRows.length, total: filteredRows.length })}
             </div>
           </div>
         </div>
@@ -799,13 +801,13 @@ export default function AdminOfficeUsersPage() {
         <AlertDialog open={resendDialogOpen} onOpenChange={setResendDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Reenviar invitación</AlertDialogTitle>
+              <AlertDialogTitle>{t('adminOfficeUsers.dialogs.resend.title', { defaultValue: 'Reenviar invitación' })}</AlertDialogTitle>
             </AlertDialogHeader>
             <AlertDialogDescription>
-              ¿Deseas reenviar la invitación a {formatUserDisplay(selectedUserToAct)}?
+              {t('adminOfficeUsers.dialogs.resend.description', { defaultValue: '¿Deseas reenviar la invitación a {{user}}?', user: formatUserDisplay(selectedUserToAct) })}
             </AlertDialogDescription>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setSelectedUserToAct(null)}>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel onClick={() => setSelectedUserToAct(null)}>{t('adminOfficeUsers.dialogs.common.cancel', { defaultValue: 'Cancelar' })}</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-orange-500 text-white hover:bg-orange-600"
                 onClick={async () => {
@@ -813,18 +815,18 @@ export default function AdminOfficeUsersPage() {
                     try {
                       setActionLoading(true);
                       await userService.resendInvitation(selectedUserToAct.id);
-                      toast.success("Invitación reenviada");
+                      toast.success(t('adminOfficeUsers.dialogs.resend.success', { defaultValue: 'Invitación reenviada' }));
                       setResendDialogOpen(false);
                     } catch (err) {
                       console.error(err);
-                      toast.error("Error reenviando invitación");
+                      toast.error(t('adminOfficeUsers.dialogs.resend.error', { defaultValue: 'Error reenviando invitación' }));
                     } finally {
                       setActionLoading(false);
                       setSelectedUserToAct(null);
                     }
                 }}
               >
-                {actionLoading ? "Enviando…" : "Reenviar"}
+                {actionLoading ? t('adminOfficeUsers.dialogs.common.sending', { defaultValue: 'Enviando…' }) : t('adminOfficeUsers.dialogs.resend.confirm', { defaultValue: 'Reenviar' })}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -834,13 +836,13 @@ export default function AdminOfficeUsersPage() {
         <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Restaurar usuario</AlertDialogTitle>
+              <AlertDialogTitle>{t('adminOfficeUsers.dialogs.restore.title', { defaultValue: 'Restaurar usuario' })}</AlertDialogTitle>
             </AlertDialogHeader>
             <AlertDialogDescription>
-              ¿Deseas restaurar al usuario {formatUserDisplay(selectedUserToAct)}? Esto devolverá el usuario a estado activo.
+              {t('adminOfficeUsers.dialogs.restore.description', { defaultValue: '¿Deseas restaurar al usuario {{user}}? Esto devolverá el usuario a estado activo.', user: formatUserDisplay(selectedUserToAct) })}
             </AlertDialogDescription>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setSelectedUserToAct(null)}>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel onClick={() => setSelectedUserToAct(null)}>{t('adminOfficeUsers.dialogs.common.cancel', { defaultValue: 'Cancelar' })}</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-orange-500 text-white hover:bg-orange-600"
                 onClick={async () => {
@@ -857,18 +859,18 @@ export default function AdminOfficeUsersPage() {
                       // refresh list to keep UI in sync
                       await loadUsers();
 
-                      toast.success("Usuario restaurado");
+                      toast.success(t('adminOfficeUsers.dialogs.restore.success', { defaultValue: 'Usuario restaurado' }));
                       setRestoreDialogOpen(false);
                     } catch (err) {
                       console.error(err);
-                      toast.error("Error restaurando usuario");
+                      toast.error(t('adminOfficeUsers.dialogs.restore.error', { defaultValue: 'Error restaurando usuario' }));
                     } finally {
                       setActionLoading(false);
                       setSelectedUserToAct(null);
                     }
                 }}
               >
-                {actionLoading ? "Restaurando…" : "Restaurar"}
+                {actionLoading ? t('adminOfficeUsers.dialogs.common.processing', { defaultValue: 'Restaurando…' }) : t('adminOfficeUsers.dialogs.restore.confirm', { defaultValue: 'Restaurar' })}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -877,13 +879,13 @@ export default function AdminOfficeUsersPage() {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Eliminar usuario</AlertDialogTitle>
+              <AlertDialogTitle>{t('adminOfficeUsers.dialogs.delete.title', { defaultValue: 'Eliminar usuario' })}</AlertDialogTitle>
             </AlertDialogHeader>
             <AlertDialogDescription>
-              ¿Estás seguro que deseas eliminar permanentemente a {formatUserDisplay(selectedUserToAct)}? Esta acción no se puede deshacer.
+              {t('adminOfficeUsers.dialogs.delete.description', { defaultValue: '¿Estás seguro que deseas eliminar permanentemente a {{user}}? Esta acción no se puede deshacer.', user: formatUserDisplay(selectedUserToAct) })}
             </AlertDialogDescription>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setSelectedUserToAct(null)}>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel onClick={() => setSelectedUserToAct(null)}>{t('adminOfficeUsers.dialogs.common.cancel', { defaultValue: 'Cancelar' })}</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-red-600 hover:bg-red-700"
                 onClick={async () => {
@@ -891,7 +893,7 @@ export default function AdminOfficeUsersPage() {
                   await handleDeleteUser(selectedUserToAct.id);
                 }}
               >
-                {actionLoading ? "Eliminando…" : "Eliminar"}
+                {actionLoading ? t('adminOfficeUsers.dialogs.common.processingDelete', { defaultValue: 'Eliminando…' }) : t('adminOfficeUsers.dialogs.delete.confirm', { defaultValue: 'Eliminar' })}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

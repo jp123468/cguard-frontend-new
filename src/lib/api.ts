@@ -65,6 +65,16 @@ api.interceptors.request.use((config) => {
       // fallback: ignore
     }
   }
+  // If sending FormData, remove Content-Type so browser sets the multipart boundary
+  try {
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      if (config.headers) {
+        delete (config.headers as any)['Content-Type'];
+      }
+    }
+  } catch (e) {
+    // ignore environments without FormData
+  }
   if (config.toast?.loading) {
     const id = toast.loading(config.toast.loading)
       ; (config as unknown as MutableConfig).__toastId = id

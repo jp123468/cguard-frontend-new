@@ -6,9 +6,10 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
-  name: z.string().min(1, "Requerido"),
+  name: z.string().min(1, 'Requerido'),
 });
 
 export type LicenseTypeDialogValues = z.infer<typeof schema>;
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export default function LicenseTypeDialog({ open, onOpenChange, title = "Nuevo Tipo de Licencia", defaultValues, onSubmit }: Props) {
+  const { t } = useTranslation();
   const form = useForm<LicenseTypeDialogValues>({
     resolver: zodResolver(schema),
     defaultValues: { name: "" },
@@ -41,7 +43,7 @@ export default function LicenseTypeDialog({ open, onOpenChange, title = "Nuevo T
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>Formulario para crear o editar un tipo de licencia.</DialogDescription>
+          <DialogDescription>{t('licenseTypes.dialog.description', { defaultValue: 'Formulario para crear o editar un tipo de licencia.' })}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -50,16 +52,16 @@ export default function LicenseTypeDialog({ open, onOpenChange, title = "Nuevo T
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nombre del Tipo de Licencia</FormLabel>
+                  <FormLabel>{t('licenseTypes.dialog.form.nameLabel', { defaultValue: 'Nombre del Tipo de Licencia' })}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Escribe un nombre" {...field} />
+                    <Input placeholder={t('licenseTypes.dialog.form.namePlaceholder', { defaultValue: 'Escribe un nombre' })} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="submit">Guardar</Button>
+              <Button type="submit" className="bg-orange-500 text-white hover:bg-orange-600">{t('licenseTypes.dialog.save', { defaultValue: 'Guardar' })}</Button>
             </DialogFooter>
           </form>
         </Form>

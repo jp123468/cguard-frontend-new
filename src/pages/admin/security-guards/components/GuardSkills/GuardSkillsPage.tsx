@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import { useEffect, useState, useRef } from 'react';
 import { Search, ChevronDown, Plus, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
 
@@ -13,7 +14,8 @@ export default function GuardSkillsPage() {
 
   const actionRef = useRef<HTMLDivElement | null>(null);
   const [actionOpen, setActionOpen] = useState(false);
-  const [actionSelection, setActionSelection] = useState<string>('Action');
+  const { t } = useTranslation();
+  const [actionSelection, setActionSelection] = useState<string>(() => t('guards.skills.action.default', { defaultValue: 'Action' }));
 
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [skillSets, setSkillSets] = useState<Array<{ id: string; name: string; description?: string }>>([]);
@@ -26,7 +28,7 @@ export default function GuardSkillsPage() {
   const [dropdownQuery, setDropdownQuery] = useState('');
 
   const handleAssignFromDropdown = () => {
-    if (selectedIds.length === 0) { toast.error('Please select at least one skill set'); return; }
+    if (selectedIds.length === 0) { toast.error(t('guards.skills.toasts.selectAtLeastOne', { defaultValue: 'Please select at least one skill set' })); return; }
     const items = skillSets.filter(s => selectedIds.includes(s.id)).map(s => ({ id: Date.now().toString() + Math.random().toString(36).slice(2,6), name: s.name, description: s.description }));
     setMappings((prev) => [...items, ...prev]);
     setSelectedIds([]);
@@ -49,7 +51,7 @@ export default function GuardSkillsPage() {
       })
       .catch((err: any) => {
         console.error('Error cargando guardia:', err);
-        toast.error('No se pudo cargar guardia');
+        toast.error(t('guards.skills.toasts.loadError', { defaultValue: 'Could not load guard' }));
       })
       .finally(() => {
         if (!mounted) return;
@@ -72,7 +74,7 @@ export default function GuardSkillsPage() {
       })
       .catch((err: any) => {
         console.error('Error cargando guardia:', err);
-        toast.error('No se pudo cargar guardia');
+        toast.error(t('guards.skills.toasts.loadError', { defaultValue: 'Could not load guard' }));
       })
       .finally(() => {
         if (!mounted) return;
@@ -95,7 +97,7 @@ export default function GuardSkillsPage() {
   };
 
   const assignSkill = () => {
-    if (!formName) { toast.error('Please provide a skill name'); return; }
+    if (!formName) { toast.error(t('guards.skills.toasts.provideName', { defaultValue: 'Please provide a skill name' })); return; }
     const newItem = { id: Date.now().toString(), name: formName, description: formDescription };
     setMappings((prev) => [newItem, ...prev]);
     setFormName(''); setFormDescription(''); setAssignModalOpen(false);
@@ -123,10 +125,10 @@ export default function GuardSkillsPage() {
                   {actionOpen && (
                     <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
                       <button
-                        onClick={() => { setActionSelection('Delete'); setActionOpen(false); }}
+                        onClick={() => { setActionSelection(t('guards.skills.actions.delete', { defaultValue: 'Delete' })); setActionOpen(false); }}
                         className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                       >
-                        Delete
+                        {t('guards.skills.actions.delete', { defaultValue: 'Delete' })}
                       </button>
                     </div>
                   )}
@@ -137,7 +139,7 @@ export default function GuardSkillsPage() {
                     <Search size={16} className="absolute left-3 top-3 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search skill sets"
+                      placeholder={t('guards.skills.searchPlaceholder', { defaultValue: 'Search skill sets' })}
                       value={''}
                       onChange={() => {}}
                       className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -146,9 +148,9 @@ export default function GuardSkillsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setAssignModalOpen(true)} className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-orange-700">
+                    <button onClick={() => setAssignModalOpen(true)} className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-orange-700">
                     <Plus size={14} />
-                    Assign Skill Set
+                    {t('guards.skills.assignButton', { defaultValue: 'Assign Skill Set' })}
                   </button>
                 </div>
               </div>
@@ -184,8 +186,8 @@ export default function GuardSkillsPage() {
                               </svg>
                             </div>
                             <div className="text-center">
-                              <h3 className="text-lg font-semibold text-gray-700">No Result Found</h3>
-                              <p className="text-sm text-gray-500 mt-1">We can't find any item matching your search</p>
+                              <h3 className="text-lg font-semibold text-gray-700">{t('guards.skills.empty.title', { defaultValue: 'No Result Found' })}</h3>
+                              <p className="text-sm text-gray-500 mt-1">{t('guards.skills.empty.description', { defaultValue: "We can't find any item matching your search" })}</p>
                             </div>
                           </div>
                         </td>
@@ -210,7 +212,7 @@ export default function GuardSkillsPage() {
           </div>
         ) : (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">No se pudo cargar el guardia</div>
+            <div className="text-gray-500">{t('guards.skills.toasts.loadError', { defaultValue: 'Could not load guard' })}</div>
           </div>
         )}
 
@@ -218,14 +220,14 @@ export default function GuardSkillsPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4" onClick={() => setAssignModalOpen(false)}>
             <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between p-4 border-b bg-white">
-                <h3 className="text-lg font-semibold">Assign Skill Set</h3>
+                <h3 className="text-lg font-semibold">{t('guards.skills.modal.title', { defaultValue: 'Assign Skill Set' })}</h3>
                 <button onClick={() => setAssignModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
               </div>
 
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
-                    <label className={`text-sm block mb-2 ${selectedIds.length === 0 ? 'text-red-600' : 'text-gray-600'}`}>Skill Set*</label>
+                    <label className={`text-sm block mb-2 ${selectedIds.length === 0 ? 'text-red-600' : 'text-gray-600'}`}>{t('guards.skills.form.skillSet', { defaultValue: 'Skill Set*' })}</label>
 
                     {/* custom dropdown box */}
                     <div className={`border rounded-md ${selectedIds.length === 0 ? 'border-red-500' : 'border-gray-200'} bg-white`}>
@@ -233,7 +235,7 @@ export default function GuardSkillsPage() {
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="min-w-0">
                             <span className="block text-sm text-gray-700 truncate">
-                              {selectedIds.length === 0 ? 'Select skill sets...' : `${selectedIds.length} selected`}
+                              {selectedIds.length === 0 ? t('guards.skills.form.selectPlaceholder', { defaultValue: 'Select skill sets...' }) : `${selectedIds.length} selected`}
                             </span>
                           </div>
                         </div>
@@ -244,7 +246,7 @@ export default function GuardSkillsPage() {
                           <div className="mb-2">
                             <input
                               type="text"
-                              placeholder="Search..."
+                              placeholder={t('guards.skills.dropdown.searchPlaceholder', { defaultValue: 'Search...' })}
                               className="w-full px-3 py-2 border rounded-md text-sm"
                               value={dropdownQuery}
                               onChange={(e) => setDropdownQuery(e.target.value)}
@@ -270,9 +272,9 @@ export default function GuardSkillsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 p-4 border-t bg-white">
-                <button onClick={() => setAssignModalOpen(false)} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">Cancel</button>
-                <button onClick={handleAssignFromDropdown} className="px-4 py-2 bg-orange-600 text-white rounded-md">Assign</button>
+                <div className="flex items-center justify-end gap-3 p-4 border-t bg-white">
+                <button onClick={() => setAssignModalOpen(false)} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">{t('guards.skills.modal.cancel', { defaultValue: 'Cancel' })}</button>
+                <button onClick={handleAssignFromDropdown} className="px-4 py-2 bg-orange-600 text-white rounded-md">{t('guards.skills.modal.assign', { defaultValue: 'Assign' })}</button>
               </div>
             </div>
           </div>

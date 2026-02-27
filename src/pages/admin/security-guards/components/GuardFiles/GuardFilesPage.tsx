@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import { useEffect, useState, useRef } from 'react';
 import { Search, ChevronDown, Plus, X, Paperclip } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
 
@@ -15,7 +16,8 @@ export default function GuardFilesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const actionRef = useRef<HTMLDivElement | null>(null);
   const [actionOpen, setActionOpen] = useState(false);
-  const [actionSelection, setActionSelection] = useState<string>('Action');
+  const { t } = useTranslation();
+  const [actionSelection, setActionSelection] = useState<string>(() => t('guards.files.action.default', { defaultValue: 'Action' }));
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
@@ -34,7 +36,7 @@ export default function GuardFilesPage() {
       })
       .catch((err: any) => {
         console.error('Error cargando guardia:', err);
-        toast.error('No se pudo cargar guardia');
+        toast.error(t('guards.files.toasts.loadError', { defaultValue: 'Could not load guard' }));
       })
       .finally(() => {
         if (!mounted) return;
@@ -55,43 +57,40 @@ export default function GuardFilesPage() {
             <div className="bg-white border rounded-lg p-6 shadow-sm">
               <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="relative" ref={actionRef}>
-                  <button
-                    onClick={() => setActionOpen(!actionOpen)}
-                    className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]"
-                  >
-                    {actionSelection}
-                    <ChevronDown size={16} />
-                  </button>
-                  {actionOpen && (
-                    <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
-                      <button
-                        onClick={() => { setActionSelection('Delete'); setActionOpen(false); }}
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
+                    <button
+                      onClick={() => setActionOpen(!actionOpen)}
+                      className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]"
+                    >
+                      {actionSelection}
+                      <ChevronDown size={16} />
+                    </button>
+                    {actionOpen && (
+                      <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
+                        <button
+                          onClick={() => { setActionSelection(t('guards.files.actions.delete', { defaultValue: 'Delete' })); setActionOpen(false); }}
+                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                        >
+                          {t('guards.files.actions.delete', { defaultValue: 'Delete' })}
+                        </button>
+                      </div>
+                    )}
                 </div>
 
                 <div className="flex-1 max-w-md">
                   <div className="relative">
                     <Search size={16} className="absolute left-3 top-3 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search Files"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={t('guards.files.searchPlaceholder', { defaultValue: 'Search files...' })}
+                        className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none"
+                      />
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setShowUploadModal(true)} className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-orange-700">
-                    <Plus size={14} />
-                    Upload New Files
-                  </button>
+                    <button onClick={() => setShowUploadModal(true)} className="px-4 py-2 bg-orange-600 text-white rounded-md">{t('guards.files.uploadButton', { defaultValue: 'Upload' })}</button>
                 </div>
               </div>
 
@@ -108,9 +107,9 @@ export default function GuardFilesPage() {
                           className="h-4 w-4"
                         />
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">File</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Added By</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.files.table.date', { defaultValue: 'Date' })}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.files.table.file', { defaultValue: 'File' })}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.files.table.addedBy', { defaultValue: 'Added By' })}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -127,8 +126,8 @@ export default function GuardFilesPage() {
                               </svg>
                             </div>
                             <div className="text-center">
-                              <h3 className="text-lg font-semibold text-gray-700">No Files Found</h3>
-                              <p className="text-sm text-gray-500 mt-1">Upload files using the button on the right</p>
+                              <h3 className="text-lg font-semibold text-gray-700">{t('guards.files.empty.title', { defaultValue: 'No Files Found' })}</h3>
+                              <p className="text-sm text-gray-500 mt-1">{t('guards.files.empty.description', { defaultValue: 'Upload files using the button on the right' })}</p>
                             </div>
                           </div>
                         </td>
@@ -154,7 +153,7 @@ export default function GuardFilesPage() {
           </div>
         ) : (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">No se pudo cargar el guardia</div>
+            <div className="text-gray-500">{t('guards.files.loadError', { defaultValue: 'Could not load guard' })}</div>
           </div>
         )}
           {/* Upload Files Modal */}
@@ -162,7 +161,7 @@ export default function GuardFilesPage() {
             <div className="fixed inset-0 z-50" onClick={() => setShowUploadModal(false)}>
               <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
-                  <h3 className="text-lg font-semibold">Upload Files</h3>
+                  <h3 className="text-lg font-semibold">{t('guards.files.modal.title', { defaultValue: 'Upload Files' })}</h3>
                   <button onClick={() => setShowUploadModal(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
                 </div>
 
@@ -184,16 +183,16 @@ export default function GuardFilesPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-sm text-gray-500">Drop files here..</div>
+                      <div className="text-sm text-gray-500">{t('guards.files.modal.dropHere', { defaultValue: 'Drop files here..' })}</div>
                     )}
                   </div>
 
-                  <div className="text-center my-6 text-gray-500">Or Select</div>
+                  <div className="text-center my-6 text-gray-500">{t('guards.files.modal.orSelect', { defaultValue: 'Or Select' })}</div>
 
                   <div className="flex items-center gap-3 mt-6">
                     <div className="flex-1 relative min-w-0">
                       <div className="w-full border rounded-md px-3 py-2 text-sm flex items-center justify-between min-w-0">
-                        <span className="block truncate text-sm text-gray-700">{uploadFiles.length > 0 ? uploadFiles.map((f) => f.name).join(', ') : 'Elegir archivos Sin archivos seleccionados'}</span>
+                        <span className="block truncate text-sm text-gray-700">{uploadFiles.length > 0 ? uploadFiles.map((f) => f.name).join(', ') : t('guards.files.modal.chooseFilesPlaceholder', { defaultValue: 'Choose files No files selected' })}</span>
                         <span className="text-gray-400 ml-3"><Paperclip /></span>
                       </div>
                       <input type="file" multiple onChange={(e) => { const files = e.target.files ? Array.from(e.target.files) : []; setUploadFiles((prev) => [...prev, ...files]); }} className="absolute inset-0 opacity-0 cursor-pointer" />
@@ -202,7 +201,7 @@ export default function GuardFilesPage() {
 
                   {uploadFiles.length > 0 && (
                     <div className="mt-4">
-                      <h4 className="text-sm font-medium mb-2">Files to upload</h4>
+                      <h4 className="text-sm font-medium mb-2">{t('guards.files.modal.filesToUpload', { defaultValue: 'Files to upload' })}</h4>
                       <ul className="space-y-2 max-h-40 overflow-y-auto">
                         {uploadFiles.map((f, i) => (
                           <li key={i} className="flex items-center justify-between text-sm min-w-0">
@@ -228,7 +227,7 @@ export default function GuardFilesPage() {
                     setFilesData((prev) => [...newFiles, ...prev]);
                     setUploadFiles([]);
                     setShowUploadModal(false);
-                  }} className="px-4 py-2 bg-orange-600 text-white rounded-md">Upload</button>
+                  }} className="px-4 py-2 bg-orange-600 text-white rounded-md">{t('guards.files.modal.upload', { defaultValue: 'Upload' })}</button>
                 </div>
               </div>
             </div>

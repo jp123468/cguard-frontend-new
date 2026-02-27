@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, ChevronDown, Plus, X } from 'lucide-react';
 import securityGuardService from '@/lib/api/securityGuardService';
 import api from '@/lib/api';
@@ -11,6 +12,7 @@ export default function GuardAsignarSitiosPage() {
   const { id } = useParams();
   const [guard, setGuard] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!id) return;
@@ -56,7 +58,7 @@ export default function GuardAsignarSitiosPage() {
 
   const actionRef = useRef<HTMLDivElement | null>(null);
   const [actionOpen, setActionOpen] = useState(false);
-  const [actionSelection, setActionSelection] = useState<string>('Action');
+  const [actionSelection, setActionSelection] = useState<string>(() => t('guards.assignSites.action.default', { defaultValue: 'Action' }));
 
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([]);
@@ -150,10 +152,12 @@ export default function GuardAsignarSitiosPage() {
         if (!tenantId) return;
         // Prefer specific client post-sites endpoint
         const resp = await api.get(`/tenant/${tenantId}/client-account/${selectedClient}/post-sites`);
+        console.debug('post-sites resp:', resp);
         const data = resp?.data ?? resp;
         const rows = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
+        console.debug('post-sites rows:', rows);
         if (!mounted) return;
-        const items = rows.map((r: any) => ({ id: r.id, name: r.companyName || r.postSiteName || r.name || r.label || r.businessInfoName || r.id }));
+        const items = (Array.isArray(rows) ? rows : []).map((r: any) => ({ id: r.id, name: r.companyName || r.postSiteName || r.name || r.label || r.businessInfoName || r.id }));
         setPostSites(items);
       } catch (err) {
         console.error('Failed to load post sites for client', err);
@@ -168,7 +172,7 @@ export default function GuardAsignarSitiosPage() {
       <GuardsLayout navKey="keep-safe" title="guards.nav.asignarSitios">
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">Cargando...</div>
+              <div className="text-gray-500">{t('guards.assignSites.loading', { defaultValue: 'Loading...' })}</div>
           </div>
         ) : guard ? (
           <div className="space-y-4">
@@ -185,10 +189,10 @@ export default function GuardAsignarSitiosPage() {
                   {actionOpen && (
                     <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
                       <button
-                        onClick={() => { setActionSelection('Delete'); setActionOpen(false); }}
+                        onClick={() => { setActionSelection(t('guards.assignSites.actions.delete', { defaultValue: 'Delete' })); setActionOpen(false); }}
                         className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                       >
-                        Delete
+                        {t('guards.assignSites.actions.delete', { defaultValue: 'Delete' })}
                       </button>
                     </div>
                   )}
@@ -199,7 +203,7 @@ export default function GuardAsignarSitiosPage() {
                     <Search size={16} className="absolute left-3 top-3 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search Post Sites"
+                      placeholder={t('guards.assignSites.searchPlaceholder', { defaultValue: 'Search Post Sites' })}
                       value={''}
                       onChange={() => {}}
                       className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -208,9 +212,9 @@ export default function GuardAsignarSitiosPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setAssignModalOpen(true)} className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-orange-700">
+                    <button onClick={() => setAssignModalOpen(true)} className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-orange-700">
                     <Plus size={14} />
-                    Assign Post Sites
+                    {t('guards.assignSites.assignButton', { defaultValue: 'Assign Post Sites' })}
                   </button>
                 </div>
               </div>
@@ -228,8 +232,8 @@ export default function GuardAsignarSitiosPage() {
                           className="h-4 w-4"
                         />
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Client</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Post Sites</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.assignSites.table.client', { defaultValue: 'Client' })}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.assignSites.table.postSites', { defaultValue: 'Post Sites' })}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -251,7 +255,7 @@ export default function GuardAsignarSitiosPage() {
           </div>
         ) : (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">No se pudo cargar el guardia</div>
+            <div className="text-gray-500">{t('guards.assignSites.loadError', { defaultValue: 'Could not load guard' })}</div>
           </div>
         )}
 
@@ -259,34 +263,37 @@ export default function GuardAsignarSitiosPage() {
         {assignModalOpen && (
           <div className="fixed inset-0 z-50" onClick={() => setAssignModalOpen(false)}>
             <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
-                <h3 className="text-lg font-semibold">Assign Sites</h3>
+                <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+                <h3 className="text-lg font-semibold">{t('guards.assignSites.modal.title', { defaultValue: 'Assign Sites' })}</h3>
                 <button onClick={() => setAssignModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
               </div>
 
               <div className="p-6 overflow-y-auto flex-1">
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm text-gray-600 block mb-2">Client*</label>
+                    <label className="text-sm text-gray-600 block mb-2">{t('guards.assignSites.form.client', { defaultValue: 'Client' })}<span className="text-red-500">*</span></label>
                     <select value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm">
-                      <option value="">Select client</option>
+                      <option value="">{t('guards.assignSites.form.selectClient', { defaultValue: 'Select client' })}</option>
                       {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
 
                   <div>
-                    <label className="text-sm text-gray-600 block mb-2">Post Site*</label>
+                    <label className="text-sm text-gray-600 block mb-2">{t('guards.assignSites.form.postSite', { defaultValue: 'Post Site' })}<span className="text-red-500">*</span></label>
                     <select value={selectedPostSite} onChange={(e) => setSelectedPostSite(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm">
-                      <option value="">Select post site</option>
+                      <option value="">{t('guards.assignSites.form.selectPostSite', { defaultValue: 'Select post site' })}</option>
+                      {postSites.length === 0 && selectedClient && (
+                        <option disabled value="">{t('guards.assignSites.noPostSites', { defaultValue: 'No post sites found' })}</option>
+                      )}
                       {postSites.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 p-4 border-t bg-white">
-                <button onClick={() => setAssignModalOpen(false)} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">Cancel</button>
-                <button onClick={assignSite} className="px-4 py-2 bg-orange-600 text-white rounded-md">Assign</button>
+                <div className="flex items-center justify-end gap-3 p-4 border-t bg-white">
+                <button onClick={() => setAssignModalOpen(false)} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancel' })}</button>
+                <button onClick={assignSite} className="px-4 py-2 bg-orange-600 text-white rounded-md">{t('guards.assignSites.modal.assign', { defaultValue: 'Assign' })}</button>
               </div>
             </div>
           </div>

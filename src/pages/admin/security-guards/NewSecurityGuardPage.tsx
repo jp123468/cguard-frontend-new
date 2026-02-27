@@ -45,6 +45,7 @@ import { securityGuardService } from "@/lib/api/securityGuardService";
 import { postSiteService } from "@/lib/api/postSiteService";
 import { usePermissions } from '@/hooks/usePermissions';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next'
 
 // Helpers
 const blankInviteEntry = (inviteBy: GuardEntryValues["inviteBy"] = "Correo Electrónico"): any => ({
@@ -59,10 +60,11 @@ type TabKey = "invite" | "join_code" | "invite_link" | "create_profile";
 export default function NewSecurityGuardPage() {
   const { hasPermission } = usePermissions();
   const navigate = useNavigate();
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (!hasPermission('securityGuardCreate')) {
-      toast.error('No tienes permiso para crear guardias');
+      toast.error(t('guards.new.errors.no_permission_create'));
       navigate('/security-guards');
     }
   }, [hasPermission, navigate]);
@@ -84,7 +86,7 @@ export default function NewSecurityGuardPage() {
         setSites(sitesResp.rows || []);
       } catch (error) {
         console.error(error);
-        toast.error("No se pudieron cargar clientes o sitios");
+        toast.error(t('guards.new.toasts.clients_sites_load_error'));
       }
     };
 
@@ -123,7 +125,7 @@ export default function NewSecurityGuardPage() {
       }));
       await securityGuardService.invite(payload);
       console.log('[NewSecurityGuardPage] invite response: sent')
-      toast.success("Invitaciones enviadas");
+      toast.success(t('guards.new.toasts.invites_sent'));
       // After successful invite, navigate back to the security guards list
       navigate('/security-guards');
     } catch (e: any) {
@@ -133,9 +135,9 @@ export default function NewSecurityGuardPage() {
         const result = applyValidationErrorsToForm(e, setInviteError as any);
         const msgs = Array.isArray(result) ? result : result.messages;
         if (msgs && msgs.length > 0) msgs.forEach((m) => toast.error(m));
-        else toast.error(e?.message ?? "Error al enviar invitaciones");
+        else toast.error(e?.message ?? t('guards.new.toasts.invite_error'));
       } catch (ex) {
-        toast.error(e?.message ?? "Error al enviar invitaciones");
+        toast.error(e?.message ?? t('guards.new.toasts.invite_error'));
       }
     }
   };
@@ -158,7 +160,7 @@ export default function NewSecurityGuardPage() {
       const payload = v.entries.map((e) => ({ phoneNumber: e.phone }));
       await securityGuardService.joinByCode(v.code, payload);
       console.log('[NewSecurityGuardPage] joinByCode response: sent')
-      toast.success("Invitación enviada por código");
+      toast.success(t('guards.new.join_code.invite_sent'));
     } catch (e: any) {
       console.error('[NewSecurityGuardPage] joinByCode error <-', e)
       try {
@@ -166,9 +168,9 @@ export default function NewSecurityGuardPage() {
         const result = applyValidationErrorsToForm(e, setJoinError as any);
         const msgs = Array.isArray(result) ? result : result.messages;
         if (msgs && msgs.length > 0) msgs.forEach((m) => toast.error(m));
-        else toast.error(e?.message ?? "Error al enviar invitación por código");
+        else toast.error(e?.message ?? t('guards.new.join_code.invite_error'));
       } catch (ex) {
-        toast.error(e?.message ?? "Error al enviar invitación por código");
+        toast.error(e?.message ?? t('guards.new.join_code.invite_error'));
       }
     }
   };
@@ -191,7 +193,7 @@ export default function NewSecurityGuardPage() {
       const payload = v.entries.map((e) => ({ phoneNumber: e.phone }));
       await securityGuardService.inviteByLink(v.link, payload);
       console.log('[NewSecurityGuardPage] inviteByLink response: sent')
-      toast.success("Invitación por enlace enviada");
+      toast.success(t('guards.new.link.invite_sent'));
     } catch (e: any) {
       console.error('[NewSecurityGuardPage] inviteByLink error <-', e)
       try {
@@ -199,9 +201,9 @@ export default function NewSecurityGuardPage() {
         const result = applyValidationErrorsToForm(e, setLinkError as any);
         const msgs = Array.isArray(result) ? result : result.messages;
         if (msgs && msgs.length > 0) msgs.forEach((m) => toast.error(m));
-        else toast.error(e?.message ?? "Error al enviar invitación por enlace");
+        else toast.error(e?.message ?? t('guards.new.link.invite_error'));
       } catch (ex) {
-        toast.error(e?.message ?? "Error al enviar invitación por enlace");
+        toast.error(e?.message ?? t('guards.new.link.invite_error'));
       }
     }
   };
@@ -222,9 +224,9 @@ export default function NewSecurityGuardPage() {
       await securityGuardService.create(payload);
       console.log('[NewSecurityGuardPage] createProfile response: created')
       if (createIntentRef.current === "create_send") {
-        toast.success("Perfil creado y enviado");
+        toast.success(t('guards.new.toasts.profile_created_sent'));
       } else {
-        toast.success("Perfil creado");
+        toast.success(t('guards.new.toasts.profile_created'));
       }
       // Reset the create form after successful creation so fields are cleared
       try { createForm.reset(); } catch (_) {}
@@ -235,9 +237,9 @@ export default function NewSecurityGuardPage() {
         const result = applyValidationErrorsToForm(e, setCreateError as any);
         const msgs = Array.isArray(result) ? result : result.messages;
         if (msgs && msgs.length > 0) msgs.forEach((m) => toast.error(m));
-        else toast.error(e?.message ?? "Error al crear perfil");
+        else toast.error(e?.message ?? t('guards.new.errors.error_create_profile'));
       } catch (ex) {
-        toast.error(e?.message ?? "Error al crear perfil");
+        toast.error(e?.message ?? t('guards.new.errors.error_create_profile'));
       }
     }
   };
@@ -272,9 +274,11 @@ export default function NewSecurityGuardPage() {
     ? sites.filter((s: any) => createClientIds.some((cid) => matchesClient(s, cid))).map((s: any) => ({ value: s.id, label: s.name }))
     : [];
 
+  const translateInviteByLabel = (val: string) => val === "SMS" ? t('guards.new.form.contactSms') : t('guards.new.form.contactEmail')
+
   return (
     <AppLayout>
-      <Breadcrumb items={[{ label: "Panel de control", path: "/dashboard" }, { label: "Nuevo Guardia" }]} />
+      <Breadcrumb items={[{ label: t('guards.new.breadcrumb.dashboard'), path: "/dashboard" }, { label: t('guards.new.title') }]} />
 
       <div className="p-4">
         <GuardTabsHeader value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)}>
@@ -282,30 +286,30 @@ export default function NewSecurityGuardPage() {
           {activeTab === "invite" && (
             <>
               <p className="mt-8 max-w-5xl text-sm text-muted-foreground">
-                Ingrese el nombre, correo electrónico/número de móvil del guardia. Se enviará un mensaje con un enlace.
+                {t('guards.new.invite.description')}
               </p>
               <Form {...inviteForm}>
                 <form className="mt-6 grid gap-8" onSubmit={submitInvite(onSubmitInvite)}>
                   {inviteFields.map((f, idx) => {
                     const inviteBy = inviteEntries?.[idx]?.inviteBy ?? "Correo Electrónico";
-                    const contactLabel = inviteBy === "SMS" ? "Número de Móvil *" : "Correo Electrónico *";
-                    const contactPh = inviteBy === "SMS" ? "e.g. +12015550123" : "e.g. persona@correo.com";
+                    const contactLabel = translateInviteByLabel(inviteBy);
+                    const contactPh = inviteBy === "SMS" ? t('guards.new.form.contactPhSms') : t('guards.new.form.contactPhEmail');
 
                     return (
                       <FormBlock key={f.id}>
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                           <FormField control={inviteCtrl} name={`entries.${idx}.firstName`} render={({ field }) => (
-                            <FormItem><FormLabel>Nombre*</FormLabel><FormControl><Input placeholder="Nombre*" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>{t('guards.new.form.firstName')}</FormLabel><FormControl><Input placeholder={t('guards.new.form.firstNamePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
                           )} />
                           <FormField control={inviteCtrl} name={`entries.${idx}.lastName`} render={({ field }) => (
-                            <FormItem><FormLabel>Apellido*</FormLabel><FormControl><Input placeholder="Apellido*" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>{t('guards.new.form.lastName')}</FormLabel><FormControl><Input placeholder={t('guards.new.form.lastNamePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
                           )} />
                           <FormField control={inviteCtrl} name={`entries.${idx}.inviteBy`} render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Invitar Por*</FormLabel>
+                              <FormLabel>{t('guards.new.form.inviteBy')}</FormLabel>
                               <Select value={field.value} onValueChange={(v) => { field.onChange(v); setInviteValue(`entries.${idx}.contact`, ""); }}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Seleccionar método" /></SelectTrigger></FormControl>
-                                <SelectContent>{inviteByOptions.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                <FormControl><SelectTrigger><SelectValue placeholder={t('guards.new.form.selectMethodPlaceholder')} /></SelectTrigger></FormControl>
+                                <SelectContent>{inviteByOptions.map((o) => <SelectItem key={o} value={o}>{translateInviteByLabel(o)}</SelectItem>)}</SelectContent>
                               </Select>
                               <FormMessage />
                             </FormItem>
@@ -317,14 +321,14 @@ export default function NewSecurityGuardPage() {
                             <FormItem>
                               <FormLabel>{contactLabel}</FormLabel>
                               <FormControl><Input placeholder={contactPh} {...field} /></FormControl>
-                              {inviteBy === "SMS" && <FormDescription>e.g. +12015550123</FormDescription>}
+                              {inviteBy === "SMS" && <FormDescription>{t('guards.new.form.contactPhSms')}</FormDescription>}
                               <FormMessage />
                             </FormItem>
                           )} />
                           <FormField control={inviteCtrl} name={`entries.${idx}.clientId`} render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Seleccionar Cliente</FormLabel>
-                              <MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={clientOptions} placeholder="Seleccionar Cliente" aria-label="Seleccionar Cliente" />
+                              <FormLabel>{t('guards.new.form.selectClient')}</FormLabel>
+                              <MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={clientOptions} placeholder={t('guards.new.form.selectClient')} aria-label={t('guards.new.form.selectClient')} />
                               <FormMessage />
                             </FormItem>
                           )} />
@@ -340,8 +344,8 @@ export default function NewSecurityGuardPage() {
                               : [];
                             return (
                               <FormItem>
-                                <FormLabel>Asignar Sitio de Publicación</FormLabel>
-                                <MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={optionsForEntry} placeholder="Asignar Sitio de Publicación" aria-label="Asignar Sitio de Publicación" />
+                                  <FormLabel>{t('guards.new.form.assignPostSite')}</FormLabel>
+                                  <MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={optionsForEntry} placeholder={t('guards.new.form.assignPostSite')} aria-label={t('guards.new.form.assignPostSite')} />
                                 <FormMessage />
                               </FormItem>
                             );
@@ -356,7 +360,7 @@ export default function NewSecurityGuardPage() {
                     );
                   })}
 
-                  <SubmitBar primaryLabel="Enviar" loading={inviteState.isSubmitting} onPrimary={submitInvite(onSubmitInvite)} />
+                  <SubmitBar primaryLabel={t('guards.new.form.send')} loading={inviteState.isSubmitting} onPrimary={submitInvite(onSubmitInvite)} primaryClassName="bg-orange-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50" />
                 </form>
               </Form>
             </>
@@ -366,7 +370,7 @@ export default function NewSecurityGuardPage() {
           {activeTab === "join_code" && (
             <>
               <p className="mt-8 max-w-5xl text-sm text-muted-foreground">
-                Comparta el código único de la compañía junto con el enlace para descargar la aplicación.
+                {t('guards.new.join_code.description')}
               </p>
 
               {/* OTP + copiar/regenerar */}
@@ -376,8 +380,8 @@ export default function NewSecurityGuardPage() {
                     {[0, 1, 2, 3, 4, 5].map((i) => <InputOTPSlot key={i} index={i} />)}
                   </InputOTPGroup>
                 </InputOTP>
-                <Button type="button" variant="ghost" onClick={async () => { await navigator.clipboard.writeText(codeValue); toast.success("Código copiado"); }}>
-                  Copiar
+                <Button type="button" variant="ghost" onClick={async () => { await navigator.clipboard.writeText(codeValue); toast.success(t('guards.new.join_code.copied')); }}>
+                  {t('guards.new.actions.copy')}
                 </Button>
                 <Button type="button" variant="ghost" onClick={regenCode}><RefreshCcw className="h-5 w-5" /></Button>
               </div>
@@ -388,9 +392,9 @@ export default function NewSecurityGuardPage() {
                     <FormBlock key={f.id}>
                       <FormField control={joinCtrl} name={`entries.${idx}.phone`} render={({ field }) => (
                         <FormItem className="max-w-2xl">
-                          <FormLabel>Número de Móvil *</FormLabel>
-                          <FormControl><Input placeholder="e.g. +12015550123" {...field} /></FormControl>
-                          <FormDescription>e.g. +12015550123</FormDescription>
+                          <FormLabel>{t('guards.new.form.contactSms')}</FormLabel>
+                          <FormControl><Input placeholder={t('guards.new.form.contactPhSms')} {...field} /></FormControl>
+                          <FormDescription>{t('guards.new.form.contactPhSms')}</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -401,7 +405,7 @@ export default function NewSecurityGuardPage() {
                     </FormBlock>
                   ))}
 
-                  <SubmitBar primaryLabel="Enviar" loading={joinState.isSubmitting} onPrimary={submitJoin(onSubmitJoin)} />
+                  <SubmitBar primaryLabel={t('guards.new.form.send')} loading={joinState.isSubmitting} onPrimary={submitJoin(onSubmitJoin)} primaryClassName="bg-orange-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50" />
                 </form>
               </Form>
             </>
@@ -410,7 +414,7 @@ export default function NewSecurityGuardPage() {
           {/* ------- TAB 3 ------- */}
           {activeTab === "invite_link" && (
             <>
-              <p className="mt-8 text-center text-sm text-muted-foreground">Comparta este enlace para unirse a la empresa.</p>
+              <p className="mt-8 text-center text-sm text-muted-foreground">{t('guards.new.link.description')}</p>
 
               <div className="mt-4 flex items-center justify-center">
                 <Copyable text={linkValue} />
@@ -422,9 +426,9 @@ export default function NewSecurityGuardPage() {
                     <FormBlock key={f.id}>
                       <FormField control={linkCtrl} name={`entries.${idx}.phone`} render={({ field }) => (
                         <FormItem className="max-w-2xl">
-                          <FormLabel>Número de Móvil *</FormLabel>
-                          <FormControl><Input placeholder="e.g. +12015550123" {...field} /></FormControl>
-                          <FormDescription>e.g. +12015550123</FormDescription>
+                          <FormLabel>{t('guards.new.form.contactSms')}</FormLabel>
+                          <FormControl><Input placeholder={t('guards.new.form.contactPhSms')} {...field} /></FormControl>
+                          <FormDescription>{t('guards.new.form.contactPhSms')}</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -435,7 +439,7 @@ export default function NewSecurityGuardPage() {
                     </FormBlock>
                   ))}
 
-                  <SubmitBar primaryLabel="Enviar" loading={linkState.isSubmitting} onPrimary={submitLink(onSubmitLink)} />
+                  <SubmitBar primaryLabel={t('guards.new.form.send')} loading={linkState.isSubmitting} onPrimary={submitLink(onSubmitLink)} primaryClassName="bg-orange-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50" />
                 </form>
               </Form>
             </>
@@ -445,7 +449,7 @@ export default function NewSecurityGuardPage() {
           {activeTab === "create_profile" && (
             <>
               <p className="mt-8 max-w-5xl text-sm text-muted-foreground">
-                Cree manualmente el perfil del guardia. Deberá validar su correo y número móvil antes de iniciar sesión.
+                {t('guards.new.create.description')}
               </p>
 
               <Form {...createForm}>
@@ -454,28 +458,28 @@ export default function NewSecurityGuardPage() {
 
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <FormField control={createCtrl} name="firstName" render={({ field }) => (
-                      <FormItem><FormLabel>Nombre *</FormLabel><FormControl><Input placeholder="Nombre *" {...field} /></FormControl><FormMessage /></FormItem>
+                      <FormItem><FormLabel>{t('guards.new.form.firstName')}</FormLabel><FormControl><Input placeholder={t('guards.new.form.firstNamePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField control={createCtrl} name="lastName" render={({ field }) => (
-                      <FormItem><FormLabel>Apellido *</FormLabel><FormControl><Input placeholder="Apellido *" {...field} /></FormControl><FormMessage /></FormItem>
+                      <FormItem><FormLabel>{t('guards.new.form.lastName')}</FormLabel><FormControl><Input placeholder={t('guards.new.form.lastNamePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                   </div>
 
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <FormField control={createCtrl} name="email" render={({ field }) => (
-                      <FormItem><FormLabel>Correo Electrónico *</FormLabel><FormControl><Input placeholder="Correo Electrónico *" {...field} /></FormControl><FormMessage /></FormItem>
+                      <FormItem><FormLabel>{t('guards.new.form.contactEmail')}</FormLabel><FormControl><Input placeholder={t('guards.new.form.contactPhEmail')} {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField control={createCtrl} name="phone" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Número de Móvil *</FormLabel>
+                        <FormLabel>{t('guards.new.form.contactSms')}</FormLabel>
                         <FormControl>
                           <PhoneInput
                             value={field.value || ""}
                             onChange={(val: string) => field.onChange(val)}
-                            placeholder="e.g. +12015550123"
+                            placeholder={t('guards.new.form.contactPhSms')}
                           />
                         </FormControl>
-                        <FormDescription>e.g. +12015550123</FormDescription>
+                        <FormDescription>{t('guards.new.form.contactPhSms')}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -484,19 +488,19 @@ export default function NewSecurityGuardPage() {
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <FormField control={createCtrl} name="password" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Contraseña *</FormLabel>
+                        <FormLabel>{t('guards.new.form.password')}</FormLabel>
                         <div className="relative">
                           <FormControl>
                             <Input
                               type={showCreatePassword ? "text" : "password"}
-                              placeholder="Contraseña *"
+                              placeholder={t('guards.new.form.passwordPlaceholder')}
                               {...field}
                               className="w-full h-12 rounded-lg border border-slate-200 px-4 pr-10"
                             />
                           </FormControl>
                           <button
                             type="button"
-                            aria-label={showCreatePassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                            aria-label={showCreatePassword ? t('guards.new.actions.hide_password') : t('guards.new.actions.show_password')}
                             onClick={() => setShowCreatePassword((s) => !s)}
                             className="absolute right-3 top-0 bottom-0 h-12 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
                           >
@@ -509,19 +513,19 @@ export default function NewSecurityGuardPage() {
 
                     <FormField control={createCtrl} name="confirmPassword" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirmar Contraseña *</FormLabel>
+                        <FormLabel>{t('guards.new.form.confirmPassword')}</FormLabel>
                         <div className="relative">
                           <FormControl>
                             <Input
                               type={showCreateConfirm ? "text" : "password"}
-                              placeholder="Confirmar Contraseña *"
+                              placeholder={t('guards.new.form.confirmPasswordPlaceholder')}
                               {...field}
                               className="w-full h-12 rounded-lg border border-slate-200 px-4 pr-10"
                             />
                           </FormControl>
                           <button
                             type="button"
-                            aria-label={showCreateConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+                            aria-label={showCreateConfirm ? t('guards.new.actions.hide_confirm_password') : t('guards.new.actions.show_confirm_password')}
                             onClick={() => setShowCreateConfirm((s) => !s)}
                             className="absolute right-3 top-0 bottom-0 h-12 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
                           >
@@ -535,15 +539,15 @@ export default function NewSecurityGuardPage() {
 
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <FormField control={createCtrl} name="clientId" render={({ field }) => (
-                      <FormItem><FormLabel>Seleccionar Cliente</FormLabel><MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={clientOptions} placeholder="Seleccionar Cliente" aria-label="Seleccionar Cliente" /><FormMessage /></FormItem>
+                      <FormItem><FormLabel>{t('guards.new.form.selectClient')}</FormLabel><MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={clientOptions} placeholder={t('guards.new.form.selectClient')} aria-label={t('guards.new.form.selectClient')} /><FormMessage /></FormItem>
                     )} />
                     <FormField control={createCtrl} name="postSiteId" render={({ field }) => (
-                      <FormItem><FormLabel>Asignar Sitio de Publicación</FormLabel><MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={createSiteOptions} placeholder="Asignar Sitio de Publicación" aria-label="Asignar Sitio de Publicación" /><FormMessage /></FormItem>
+                      <FormItem><FormLabel>{t('guards.new.form.assignPostSite')}</FormLabel><MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={createSiteOptions} placeholder={t('guards.new.form.assignPostSite')} aria-label={t('guards.new.form.assignPostSite')} /><FormMessage /></FormItem>
                     )} />
                   </div>
 
                   <SubmitBar
-                    primaryLabel="Crear y Enviar"
+                    primaryLabel={t('guards.new.form.create_and_send')}
                     loading={createState.isSubmitting}
                     onPrimary={() => { createIntentRef.current = "create_send"; submitCreate(onSubmitCreate)(); }}
                     primaryClassName="bg-orange-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50"

@@ -86,6 +86,13 @@ export default function PostSiteImportDialog({ open, onOpenChange, onSuccess }: 
       }
 
       // Map Spanish/alias site headers to internal names
+      // If the primary token already matches a required header (english canonical), map directly.
+      const canonicalFromRequired = requiredHeaders.find(r => r.toLowerCase() === key);
+      if (canonicalFromRequired) {
+        map[raw] = canonicalFromRequired;
+        return canonicalFromRequired;
+      }
+
       if (headerAliases[key]) {
         map[raw] = headerAliases[key];
         return headerAliases[key];

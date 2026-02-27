@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { MoreVertical, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,7 @@ export default function LicenseTypesTable({
   onToggleStatus,
   onBulkDelete,
 }: Props) {
+  const { t } = useTranslation();
   const [allChecked, idsChecked] = useMemo(() => {
     return [false, [] as string[]];
   }, [rows]);
@@ -56,18 +58,18 @@ export default function LicenseTypesTable({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" disabled={!idsChecked.length} onClick={() => onBulkDelete(idsChecked)}>
-            Eliminar
+          <div className="flex items-center gap-2">
+          <Button className="border border-orange-500 text-orange-500 bg-transparent hover:bg-orange-50 hover:text-orange-600 transition duration-200 px-3" disabled={!idsChecked.length} onClick={() => onBulkDelete(idsChecked)}>
+            {t('licenseTypes.table.bulkDelete', { defaultValue: 'Eliminar' })}
           </Button>
         </div>
         <div className="relative flex-1 max-w-xl">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar tipo de licencia" className="pl-9" value={query} onChange={(e) => onQueryChange(e.target.value)} />
+          <Input placeholder={t('licenseTypes.table.searchPlaceholder', { defaultValue: 'Buscar tipo de licencia' })} className="pl-9" value={query} onChange={(e) => onQueryChange(e.target.value)} />
         </div>
-        <Button onClick={onCreate}>
+        <Button onClick={onCreate} className="bg-orange-500 text-white hover:bg-orange-600 px-4 py-2">
           <Plus className="mr-2 h-4 w-4" />
-          Nuevo Tipo de Licencia
+          {t('licenseTypes.table.create', { defaultValue: 'Nuevo Tipo de Licencia' })}
         </Button>
       </div>
 
@@ -78,8 +80,8 @@ export default function LicenseTypesTable({
               <TableHead className="w-[44px]">
                 <Checkbox checked={allChecked} onCheckedChange={() => {}} />
               </TableHead>
-              <TableHead>Tipo de Licencia</TableHead>
-              <TableHead>Estado</TableHead>
+              <TableHead>{t('licenseTypes.table.column.name', { defaultValue: 'Tipo de Licencia' })}</TableHead>
+              <TableHead>{t('licenseTypes.table.column.status', { defaultValue: 'Estado' })}</TableHead>
               <TableHead className="w-[56px]" />
             </TableRow>
           </TableHeader>
@@ -87,13 +89,13 @@ export default function LicenseTypesTable({
             {loading ? (
               <TableRow>
                 <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                  Cargando…
+                  {t('licenseTypes.table.loading', { defaultValue: 'Cargando…' })}
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="py-16 text-center text-muted-foreground">
-                  No se encontraron resultados
+                  {t('licenseTypes.table.noResults', { defaultValue: 'No se encontraron resultados' })}
                 </TableCell>
               </TableRow>
             ) : (
@@ -103,7 +105,7 @@ export default function LicenseTypesTable({
                     <Checkbox checked={false} onCheckedChange={() => {}} />
                   </TableCell>
                   <TableCell className="font-medium">{r.name}</TableCell>
-                  <TableCell>{r.status === "active" ? "Activo" : "Inactivo"}</TableCell>
+                  <TableCell>{r.status === "active" ? t('licenseTypes.table.status.active', { defaultValue: 'Activo' }) : t('licenseTypes.table.status.inactive', { defaultValue: 'Inactivo' })}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -112,9 +114,9 @@ export default function LicenseTypesTable({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem onClick={() => onEdit(r)}>Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEdit(r)}>{t('licenseTypes.table.actions.edit', { defaultValue: 'Editar' })}</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onToggleStatus(r)}>
-                          {r.status === "active" ? "Desactivar" : "Activar"}
+                          {r.status === "active" ? t('licenseTypes.table.actions.deactivate', { defaultValue: 'Desactivar' }) : t('licenseTypes.table.actions.activate', { defaultValue: 'Activar' })}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -126,29 +128,33 @@ export default function LicenseTypesTable({
         </Table>
       </div>
 
-      <div className="flex items-center justify-end gap-6">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          Elementos por página
-          <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
-            <SelectTrigger className="w-[90px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="25">25</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="text-sm text-muted-foreground">{total === 0 ? "0 de 0" : `${from} – ${to} de ${total}`}</div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(Math.max(1, page - 1))}>
-            Anterior
-          </Button>
-          <Button variant="outline" size="sm" disabled={page >= maxPage} onClick={() => onPageChange(Math.min(maxPage, page + 1))}>
-            Siguiente
-          </Button>
+      <div className="flex items-center gap-6">
+        <div className="flex-1" />
+        <div className="flex-1 text-center text-sm text-muted-foreground">{total === 0 ? t('licenseTypes.table.zeroOfZero', { defaultValue: '0 de 0' }) : `${from} – ${to} de ${total}`}</div>
+        <div className="flex-1 flex items-center justify-end gap-4">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(Math.max(1, page - 1))}>
+              {t('licenseTypes.table.pagination.prev', { defaultValue: 'Anterior' })}
+            </Button>
+            <Button variant="outline" size="sm" disabled={page >= maxPage} onClick={() => onPageChange(Math.min(maxPage, page + 1))}>
+              {t('licenseTypes.table.pagination.next', { defaultValue: 'Siguiente' })}
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {t('licenseTypes.table.itemsPerPage', { defaultValue: 'Elementos por página' })}
+            <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
+              <SelectTrigger className="w-[90px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
     </div>

@@ -34,6 +34,8 @@ export default function ForgotPassword() {
       setEmail("");
     } catch (err: any) {
       console.error("Error al enviar enlace:", err);
+      const errorMessage = err?.message || (err?.response && err.response.data && err.response.data.message) || String(err);
+      toast.error(errorMessage || t('auth.reset_error', { defaultValue: 'Error al enviar enlace. Intenta nuevamente' }));
     } finally {
       setIsLoading(false);
     }

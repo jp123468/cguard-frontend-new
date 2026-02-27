@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
+import { useTranslation } from 'react-i18next';
 import LicenseTypesTable, { LicenseTypeRow } from "./LicensesTypeTable";
 import LicenseTypeDialog, { LicenseTypeDialogValues } from "./LicensesTypeDialog";
 
 export default function LicenseTypePage() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<LicenseTypeRow | null>(null);
   const [query, setQuery] = useState("");
@@ -16,7 +18,7 @@ export default function LicenseTypePage() {
 
   return (
     <AppLayout>
-      <SettingsLayout navKey="configuracion" title="Tipos de Licencia">
+      <SettingsLayout navKey="configuracion" title={t('licenseTypes.page.title', { defaultValue: 'Tipos de Licencia' })}>
         <LicenseTypesTable
           rows={rows}
           total={total}
@@ -35,7 +37,7 @@ export default function LicenseTypePage() {
         <LicenseTypeDialog
           open={open}
           onOpenChange={setOpen}
-          title={edit ? "Editar Tipo de Licencia" : "Nuevo Tipo de Licencia"}
+          title={edit ? t('licenseTypes.dialog.title.edit', { defaultValue: 'Editar Tipo de Licencia' }) : t('licenseTypes.dialog.title.create', { defaultValue: 'Nuevo Tipo de Licencia' })}
           defaultValues={edit ? { name: edit.name } : null}
           onSubmit={async (_values: LicenseTypeDialogValues) => {
             setOpen(false);

@@ -17,10 +17,10 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
     const [loading, setLoading] = useState(false);
 
     function downloadTemplate() {
-        const csvContent = `name,lastName,email,phoneNumber,address,addressLine2,zipCode,city,country,faxNumber,website,categoryId
-Cliente Ejemplo 1,García,cliente1@ejemplo.com,+593987654321,Calle Principal 123,Edificio A - Piso 3,170123,Quito,Ecuador,+593987654322,https://ejemplo1.com,
-Cliente Ejemplo 2,Rodríguez,cliente2@ejemplo.com,+12025551234,Av. Secundaria 456,Oficina 205,10001,New York,USA,,,`;
-        
+        // Prepend UTF-8 BOM so Excel opens accented characters correctly
+        const bom = '\uFEFF';
+        const csvContent = `${bom}name,lastName,email,phoneNumber,address,addressLine2,zipCode,city,country,faxNumber,website,categoryName\nCliente Ejemplo 1,García,cliente1@ejemplo.com,+593987654321,Calle Principal 123,Edificio A - Piso 3,170123,Quito,Ecuador,+593987654322,https://ejemplo1.com,\nCliente Ejemplo 2,Rodríguez,cliente2@ejemplo.com,+12025551234,Av. Secundaria 456,Oficina 205,10001,New York,USA,,,`;
+
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -58,8 +58,17 @@ Cliente Ejemplo 2,Rodríguez,cliente2@ejemplo.com,+12025551234,Av. Secundaria 45
             setFile(null);
         } catch (error: any) {
             toast.dismiss(toastId);
-            const errorMessage = error?.details || error?.response?.data?.message || error?.message || "Error al importar";
-            
+            let errorMessage: string = "Error al importar";
+            const candidate = error?.details ?? error?.response?.data?.message ?? error?.message ?? error;
+            try {
+                errorMessage = typeof candidate === 'string' ? candidate : JSON.stringify(candidate);
+            } catch (e) {
+                try { errorMessage = String(candidate); } catch { errorMessage = 'Error al importar'; }
+            }
+
+            // Ensure primitive string so .includes is safe
+            try { errorMessage = typeof errorMessage === 'string' ? errorMessage : String(errorMessage); } catch (e) { errorMessage = 'Error al importar'; }
+
             if (errorMessage.includes("cannot be null")) {
                 toast.error("Algunos campos obligatorios están vacíos. Verifica: name, lastName, email, phoneNumber, address, zipCode, city, country.");
             } else {
@@ -67,8 +76,6 @@ Cliente Ejemplo 2,Rodríguez,cliente2@ejemplo.com,+12025551234,Av. Secundaria 45
             }
         } finally {
             setLoading(false);
-                toast.success(`Clientes importados por exito.`);
-
         }
     }
 

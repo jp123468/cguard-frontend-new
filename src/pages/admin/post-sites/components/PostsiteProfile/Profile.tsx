@@ -138,12 +138,12 @@ export default function PostSiteProfile({ site }: { site?: any }) {
                         }
 
                         if (address) {
-                            const search = `https://www.openstreetmap.org/search?query=${encodeURIComponent(address)}`;
+                            const search = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
                             return (
                                 <div className="h-72 bg-gray-100 rounded-md overflow-hidden mb-2 flex items-center justify-center text-gray-500">
                                     <div className="text-center">
                                         <div>{t('postSites.profile.Map.NoCoordinates')}</div>
-                                        <a href={search} target="_blank" rel="noreferrer" className="text-blue-600 underline mt-2 inline-block">Open in OpenStreetMap</a>
+                                        <a href={search} target="_blank" rel="noreferrer" className="text-blue-600 underline mt-2 inline-block">Open in Google Maps</a>
                                     </div>
                                 </div>
                             );

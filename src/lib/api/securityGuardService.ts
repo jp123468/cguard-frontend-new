@@ -14,35 +14,35 @@ const getTenantId = (): string => {
 export const securityGuardService = {
   async create(input: any) {
     const tenantId = getTenantId();
-    const { data } = await api.post(`/tenant/${tenantId}/security-guard`, input);
-    return data;
+    const resp = await api.post(`/tenant/${tenantId}/security-guard`, input);
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   async invite(entries: any[]) {
     const tenantId = getTenantId();
     // Use the dedicated invite endpoint so the server sends invitation emails/SMS
-    const { data } = await api.post(`/tenant/${tenantId}/security-guard/invite`, { entries });
-    return data;
+    const resp = await api.post(`/tenant/${tenantId}/security-guard/invite`, { entries });
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   async resendInvite(input: any) {
     const tenantId = getTenantId();
-    const { data } = await api.post(`/tenant/${tenantId}/security-guard/invite`, input);
-    return data;
+    const resp = await api.post(`/tenant/${tenantId}/security-guard/invite`, input);
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   async joinByCode(code: string, entries: any[]) {
     const tenantId = getTenantId();
-    const { data } = await api.post(`/tenant/${tenantId}/security-guard`, { code, entries });
+    const resp = await api.post(`/tenant/${tenantId}/security-guard`, { code, entries });
 
-    return data;
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   async inviteByLink(link: string, entries: any[]) {
     const tenantId = getTenantId();
-    const { data } = await api.post(`/tenant/${tenantId}/security-guard`, { link, entries });
+    const resp = await api.post(`/tenant/${tenantId}/security-guard`, { link, entries });
 
-    return data;
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   async import(file: File | Blob, filename?: string) {
@@ -51,54 +51,52 @@ export const securityGuardService = {
     // If caller passed a filename, use it; if file is a File, use its name; otherwise fallback
     const nameToUse = filename ?? (file instanceof File ? file.name : undefined) ?? "upload.csv";
     formData.append("file", file as Blob, nameToUse);
-    const { data } = await api.post(`/tenant/${tenantId}/security-guard/import`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    } as any);
+    const resp = await api.post(`/tenant/${tenantId}/security-guard/import`, formData);
 
-    return data;
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   async update(id: string, input: any) {
     const tenantId = getTenantId();
-    const { data } = await api.patch(`/tenant/${tenantId}/security-guard/${id}`, input);
+    const resp = await api.patch(`/tenant/${tenantId}/security-guard/${id}`, input);
 
-    return data;
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   async destroy(ids: string[]) {
     const tenantId = getTenantId();
     // Do not silence errors here; let the global interceptor show a helpful message
-    const { data } = await api.delete(`/tenant/${tenantId}/security-guard`, { data: { ids } });
+    const resp = await api.delete(`/tenant/${tenantId}/security-guard`, { data: { ids } });
 
-    return data;
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   async archive(ids: string[]) {
     const tenantId = getTenantId();
-    const { data } = await api.post(`/tenant/${tenantId}/security-guard/archive`, { ids }, { toast: { silentError: true } });
+    const resp = await api.post(`/tenant/${tenantId}/security-guard/archive`, { ids }, { toast: { silentError: true } });
 
-    return data;
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
   async restore(ids: string[]) {
     const tenantId = getTenantId();
-    const { data } = await api.post(`/tenant/${tenantId}/security-guard/restore`, { ids }, { toast: { silentError: true } });
+    const resp = await api.post(`/tenant/${tenantId}/security-guard/restore`, { ids }, { toast: { silentError: true } });
 
-    return data;
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   async autocomplete(query: string, limit = 10) {
     const tenantId = getTenantId();
-    const { data } = await api.get(`/tenant/${tenantId}/security-guard/autocomplete?query=${encodeURIComponent(query)}&limit=${limit}`);
+    const resp = await api.get(`/tenant/${tenantId}/security-guard/autocomplete?query=${encodeURIComponent(query)}&limit=${limit}`);
 
-    return data;
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   async list(params?: Record<string, any>) {
     const tenantId = getTenantId();
     const qs = params ? `?${new URLSearchParams(params).toString()}` : "";
-    const { data } = await api.get(`/tenant/${tenantId}/security-guard${qs}`);
+    const resp = await api.get(`/tenant/${tenantId}/security-guard${qs}`);
 
-    return data;
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   async export(format: "excel" | "pdf" | "csv", params?: Record<string, any>) {
@@ -109,17 +107,17 @@ export const securityGuardService = {
       // prevent global error toast; page will show its own
       toast: { silentError: true },
     } as any);
-    return response.data;
+    return response && (response as any).data !== undefined ? (response as any).data : response;
   },
 
   async find(id: string) {
     const tenantId = getTenantId();
-    const { data } = await api.get(`/tenant/${tenantId}/security-guard/${id}`, {
+    const resp = await api.get(`/tenant/${tenantId}/security-guard/${id}`, {
       // Prevent the global API interceptor from showing its own toast for this call.
       // The component will display a user-friendly toast once.
       toast: { silentError: true },
     } as any);
-    return data;
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
   // Alias para compatibilidad

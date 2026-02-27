@@ -22,7 +22,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  if (!ctx) {
+    // Guard: instead of throwing (which crashes the whole React tree),
+    // return a safe fallback so the app can continue running while we
+    // diagnose why the AuthProvider is not present. This should be
+    // reverted once the root cause is fixed.
+    // eslint-disable-next-line no-console
+    console.error('useAuth called but no AuthProvider found in the tree');
+    return {
+      user: null,
+      loading: false,
+      error: null,
+      signIn: async () => ({ success: false, error: 'Auth unavailable' }),
+      signUp: async () => ({ success: false, error: 'Auth unavailable' }),
+      signOut: async () => {},
+      signInWithToken: async () => ({ success: false, error: 'Auth unavailable' }),
+      isAuthenticated: false,
+      hasPermission: () => false,
+      hasAny: () => false,
+    } as AuthContextType;
+  }
   return ctx;
 };
 

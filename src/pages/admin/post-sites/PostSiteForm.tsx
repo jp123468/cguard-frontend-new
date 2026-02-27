@@ -59,7 +59,6 @@ export default function PostSiteForm({
     onSaved,
 }: PostSiteFormProps) {
     const navigate = useNavigate();
-    const redirectUrl = "/post-sites/fa6e52cc-7842-43a2-aba6-977e44ba082b/profile";
     const [categories, setCategories] = useState<Category[]>(initialCategories || []);
     const [loadingCategories, setLoadingCategories] = useState(false);
     // Deduplicate toasts across mounts and avoid duplicate navigation
@@ -165,7 +164,11 @@ export default function PostSiteForm({
     }, [mode, id, baseUrl, form]);
 
     const handleCancel = () => {
-        navigate(redirectUrl);
+        if (mode === 'edit' && id) {
+            navigate(`/post-sites/${id}/profile`);
+        } else {
+            navigate('/post-sites');
+        }
     };
 
     async function onSubmit(values: PostSiteInput) {
@@ -180,12 +183,12 @@ export default function PostSiteForm({
                 const data = await postSiteService.create(payload);
                 toast.success("Sitio de publicación creado");
                 onSaved?.({ id: data.id, data: payload });
-                navigate(redirectUrl);
+                navigate(`/post-sites/${data.id}/profile`);
             } else if (mode === "edit" && id) {
                 await postSiteService.update(id, payload);
                 toast.success("Cambios guardados");
                 onSaved?.({ id, data: payload });
-                navigate(redirectUrl);
+                navigate(`/post-sites/${id}/profile`);
             }
         } catch (e: any) {
             console.error(e);

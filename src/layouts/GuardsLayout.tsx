@@ -5,6 +5,7 @@ import { Link, useParams, useLocation } from 'react-router-dom';
 import Breadcrumb from '@/components/ui/breadcrumb';
 import { Menu} from 'lucide-react';
 
+import securityGuardService from '@/lib/api/securityGuardService';
 type Props = {
   navKey: string;
   title?: string;
@@ -15,6 +16,7 @@ export default function GuardsLayout({ navKey, title, children }: Props) {
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const cfg: any = (guardsNav as any)[navKey] || null;
+  const [guardFullName, setGuardFullName] = useState<string>('');
   const { id } = useParams();
   const location = useLocation();
 
@@ -32,7 +34,7 @@ export default function GuardsLayout({ navKey, title, children }: Props) {
         className={`shrink-0 overflow-y-auto transition-all duration-300  ${sidebarOpen ? 'w-64 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}
       >
         <div className="bg-white border rounded-md p-3 sticky top-0">
-          <div className="text-sm font-semibold mb-3">{cfg?.title ?? title}</div>
+          <div className="text-sm font-semibold mb-3">{guardFullName || (title ? t(title) : (cfg?.title ? t(cfg.title) : ''))}</div>
           <nav className="text-sm">
             {cfg?.sections?.map((section: any, idx: number) => (
               <div key={idx} className="mb-3">

@@ -3,8 +3,10 @@ import { Clipboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next'
 
 export function Copyable({ text }: { text: string }) {
+  const { t } = useTranslation()
   return (
     <div className="flex items-center gap-2">
       <div className="max-w-[70vw] truncate rounded-md border-2 border-dashed border-orange-400 px-6 py-3 text-lg font-medium">
@@ -13,11 +15,11 @@ export function Copyable({ text }: { text: string }) {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={async () => { await navigator.clipboard.writeText(text); toast.success("Copiado"); }}>
+            <Button variant="ghost" size="icon" onClick={async () => { await navigator.clipboard.writeText(text); toast.success(t('components.copyable.copied')); }}>
               <Clipboard className="h-5 w-5" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Copiar</TooltipContent>
+          <TooltipContent>{t('components.copyable.copy')}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>
