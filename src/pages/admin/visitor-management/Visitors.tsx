@@ -49,6 +49,7 @@ type VisitorFilters = {
     client: string;
     site: string;
     guard: string;
+    placeType: string;
     tag: string;
     archived: boolean;
 };
@@ -57,6 +58,8 @@ type NewVisitor = {
     client: string;
     site: string;
     guard: string;
+    placeTypeKind?: string;
+    placeTypeValue?: string;
     firstName: string;
     lastName: string;
     idNumber: string;
@@ -74,6 +77,7 @@ export default function Visitors() {
         client: "",
         site: "",
         guard: "",
+        placeType: "",
         tag: "",
         archived: false,
     });
@@ -81,6 +85,8 @@ export default function Visitors() {
         client: "",
         site: "",
         guard: "",
+        placeTypeKind: '',
+        placeTypeValue: '',
         firstName: "",
         lastName: "",
         idNumber: "",
@@ -128,7 +134,10 @@ export default function Visitors() {
 
     const getClientLabelFromRecord = (rec: any) => {
         if (!rec) return '-';
-        if (rec.client) return clientDisplayName(rec.client);
+        if (rec.client) {
+            if (typeof rec.client === 'string' || typeof rec.client === 'number') return String(rec.client);
+            return clientDisplayName(rec.client);
+        }
         // common id fields
         const id = rec.clientId || rec.clientAccountId || rec.clientAccount || rec.client_id || rec.clientIdAccount;
         if (id && clients && clients.length) {
@@ -136,7 +145,10 @@ export default function Visitors() {
             if (found) return clientDisplayName(found);
         }
         // fallback to any names present on the record
-        return rec.clientName || rec.clientAccountName || (rec.postSite && (rec.postSite.clientAccountName || rec.postSite.clientName)) || '-';
+        const fallback = rec.clientName || rec.clientAccountName || (rec.postSite && (rec.postSite.clientAccountName || rec.postSite.clientName));
+        if (fallback) return fallback;
+        if (id) return String(id);
+        return '-';
     };
 
     const getPostSiteLabelFromRecord = (rec: any) => {
@@ -295,84 +307,84 @@ export default function Visitors() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `bitacoras_export_${new Date().toISOString().slice(0,10)}.csv`;
+        a.download = `bitacoras_export_${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
     };
 
-        const handleExportExcel = () => {
-                                const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
-                                if (!ids || ids.length === 0) {
-                                    toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
-                                    return;
-                                }
+    const handleExportExcel = () => {
+        const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
+        if (!ids || ids.length === 0) {
+            toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
+            return;
+        }
 
-                                const rowsToExport = logs.filter((r) => ids.includes(String(r.id)));
-                                if (!rowsToExport.length) {
-                                    toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
-                                    return;
-                                }
+        const rowsToExport = logs.filter((r) => ids.includes(String(r.id)));
+        if (!rowsToExport.length) {
+            toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
+            return;
+        }
 
-                                // Build array of objects with desired column order
-                                const data = rowsToExport.map((r) => ({
-                                    Date: formatDateTime(r.visitDate),
-                                    'Last name': r.lastName ?? '',
-                                    'First name': r.firstName ?? '',
-                                    ID: r.idNumber ?? '',
-                                    'Reason of visit': r.reason ?? '',
-                                    'Exit Time': formatDateTime(r.exitTime),
-                                    'Number of people': r.numPeople ?? '',
-                                    Client: getClientLabelFromRecord(r) || '',
-                                    Site: getPostSiteLabelFromRecord(r) || '',
-                                }));
+        // Build array of objects with desired column order
+        const data = rowsToExport.map((r) => ({
+            Date: formatDateTime(r.visitDate),
+            'Last name': r.lastName ?? '',
+            'First name': r.firstName ?? '',
+            ID: r.idNumber ?? '',
+            'Reason of visit': r.reason ?? '',
+            'Exit Time': formatDateTime(r.exitTime),
+            'Number of people': r.numPeople ?? '',
+            Client: getClientLabelFromRecord(r) || '',
+            Site: getPostSiteLabelFromRecord(r) || '',
+        }));
 
-                                try {
-                                    const header = ['Date','Last name','First name','ID','Reason of visit','Exit Time','Number of people','Client','Site'];
-                                    const worksheet = XLSX.utils.json_to_sheet(data, { header });
-                                    const workbook = XLSX.utils.book_new();
-                                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Bitacoras');
-                                    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-                                    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                                    const url = URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = url;
-                                    a.download = `bitacoras_export_${new Date().toISOString().slice(0,10)}.xlsx`;
-                                    a.click();
-                                    URL.revokeObjectURL(url);
-                                } catch (e) {
-                                    console.error('Excel export failed', e);
-                                    toast.error(t('visitantes.exportError') || 'Error exportando a Excel');
-                                }
-        };
+        try {
+            const header = ['Date', 'Last name', 'First name', 'ID', 'Reason of visit', 'Exit Time', 'Number of people', 'Client', 'Site'];
+            const worksheet = XLSX.utils.json_to_sheet(data, { header });
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Bitacoras');
+            const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bitacoras_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error('Excel export failed', e);
+            toast.error(t('visitantes.exportError') || 'Error exportando a Excel');
+        }
+    };
 
-        const handleExportPDF = () => {
-                const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
-                if (!ids || ids.length === 0) {
-                    toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
-                    return;
-                }
+    const handleExportPDF = () => {
+        const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
+        if (!ids || ids.length === 0) {
+            toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
+            return;
+        }
 
-                const rowsToExport = logs.filter((r) => ids.includes(String(r.id)));
-                if (!rowsToExport.length) {
-                    toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
-                    return;
-                }
+        const rowsToExport = logs.filter((r) => ids.includes(String(r.id)));
+        if (!rowsToExport.length) {
+            toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
+            return;
+        }
 
-                const tableRows = rowsToExport.map((r) => `
+        const tableRows = rowsToExport.map((r) => `
                     <tr>
                         <td>${formatDateTime(r.visitDate)}</td>
-                        <td>${(r.lastName||'')}</td>
-                        <td>${(r.firstName||'')}</td>
-                        <td>${(r.idNumber||'')}</td>
-                        <td>${(r.reason||'')}</td>
-                        <td>${(formatDateTime(r.exitTime)||'')}</td>
+                        <td>${(r.lastName || '')}</td>
+                        <td>${(r.firstName || '')}</td>
+                        <td>${(r.idNumber || '')}</td>
+                        <td>${(r.reason || '')}</td>
+                        <td>${(formatDateTime(r.exitTime) || '')}</td>
                         <td>${(r.numPeople ?? '')}</td>
-                        <td>${(getClientLabelFromRecord(r)||'')}</td>
-                        <td>${(getPostSiteLabelFromRecord(r)||'')}</td>
+                        <td>${(getClientLabelFromRecord(r) || '')}</td>
+                        <td>${(getPostSiteLabelFromRecord(r) || '')}</td>
                     </tr>
                 `).join('');
 
-                const html = `
+        const html = `
                         <html>
                         <head>
                             <title>Bitácoras</title>
@@ -387,7 +399,7 @@ export default function Visitors() {
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>ID</th><th>${t('visitantes.logTable.firstName')||'Nombre'}</th><th>${t('visitantes.logTable.lastName')||'Apellidos'}</th><th>${t('visitantes.logTable.idNumber')||'ID'}</th><th>${t('visitantes.logTable.date')||'Fecha'}</th><th>${t('visitantes.logTable.site')||'Sitio'}</th>
+                                        <th>ID</th><th>${t('visitantes.logTable.firstName') || 'Nombre'}</th><th>${t('visitantes.logTable.lastName') || 'Apellidos'}</th><th>${t('visitantes.logTable.idNumber') || 'ID'}</th><th>${t('visitantes.logTable.date') || 'Fecha'}</th><th>${t('visitantes.logTable.site') || 'Sitio'}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -398,16 +410,16 @@ export default function Visitors() {
                         </html>
                 `;
 
-                const w = window.open('', '_blank');
-                if (w) {
-                        w.document.write(html);
-                        w.document.close();
-                        w.focus();
-                        setTimeout(() => { w.print(); }, 500);
-                } else {
-                        toast.error(t('visitantes.printError') || 'No se pudo abrir ventana para imprimir');
-                }
-        };
+        const w = window.open('', '_blank');
+        if (w) {
+            w.document.write(html);
+            w.document.close();
+            w.focus();
+            setTimeout(() => { w.print(); }, 500);
+        } else {
+            toast.error(t('visitantes.printError') || 'No se pudo abrir ventana para imprimir');
+        }
+    };
 
     const handlePrintSelected = () => {
         const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
@@ -425,14 +437,14 @@ export default function Visitors() {
         const tableRows = rowsToPrint.map((r) => `
             <tr>
                 <td>${formatDateTime(r.visitDate)}</td>
-                <td>${(r.lastName||'')}</td>
-                <td>${(r.firstName||'')}</td>
-                <td>${(r.idNumber||'')}</td>
-                <td>${(r.reason||'')}</td>
-                <td>${(formatDateTime(r.exitTime)||'')}</td>
+                <td>${(r.lastName || '')}</td>
+                <td>${(r.firstName || '')}</td>
+                <td>${(r.idNumber || '')}</td>
+                <td>${(r.reason || '')}</td>
+                <td>${(formatDateTime(r.exitTime) || '')}</td>
                 <td>${(r.numPeople ?? '')}</td>
-                <td>${(getClientLabelFromRecord(r)||'')}</td>
-                <td>${(getPostSiteLabelFromRecord(r)||'')}</td>
+                <td>${(getClientLabelFromRecord(r) || '')}</td>
+                <td>${(getPostSiteLabelFromRecord(r) || '')}</td>
             </tr>
         `).join('');
 
@@ -486,7 +498,7 @@ export default function Visitors() {
                     f.idNumber = s;
                 } else {
                     // search both first and last name for non-numeric queries
-                        f.query = s;
+                    f.query = s;
                 }
             }
 
@@ -494,6 +506,7 @@ export default function Visitors() {
             if (filters.client) f.clientId = filters.client;
             if (filters.site) f.postSiteId = filters.site;
             if (filters.guard) f.guardId = filters.guard;
+            if (filters.placeType) f.placeType = filters.placeType;
             if (filters.tag) f.tag = filters.tag;
             if (typeof filters.archived === 'boolean') f.archived = filters.archived;
 
@@ -671,6 +684,8 @@ export default function Visitors() {
                 clientId: newVisitor.client,
                 postSiteId: newVisitor.site,
                 guardId: newVisitor.guard,
+                // combine type and value into a single string, e.g. "DEPARTAMENTO - 24"
+                placeType: newVisitor.placeTypeKind && newVisitor.placeTypeValue ? `${newVisitor.placeTypeKind.toUpperCase()} - ${newVisitor.placeTypeValue}` : (newVisitor.placeTypeValue || undefined),
             };
 
             const created = await visitorLogService.create(payload);
@@ -681,7 +696,7 @@ export default function Visitors() {
 
             toast.success(t('visitantes.created') || 'Visitante creado');
             setOpenAddVisitor(false);
-            setNewVisitor((s) => ({ ...s, firstName: '', lastName: '', idNumber: '', mobile: '', client: '', site: '', guard: '', numPeople: 1, reason: '' } as any));
+            setNewVisitor((s) => ({ ...s, firstName: '', lastName: '', idNumber: '', mobile: '', client: '', site: '', guard: '', placeTypeKind: '', placeTypeValue: '', numPeople: 1, reason: '' } as any));
             fetchLogs();
 
             // Internal logging only: do not display visitDate information to the user
@@ -717,8 +732,8 @@ export default function Visitors() {
                                 <SelectValue placeholder={t('actions.action') || 'Acción'} />
                             </SelectTrigger>
                             <SelectContent>
-                               {/* <SelectItem value="activar">{t('actions.activate') || 'Activar'}</SelectItem> */}
-                               {/* <SelectItem value="inactivar">{t('actions.desactivate') || 'Inactivar'}</SelectItem> */}
+                                {/* <SelectItem value="activar">{t('actions.activate') || 'Activar'}</SelectItem> */}
+                                {/* <SelectItem value="inactivar">{t('actions.desactivate') || 'Inactivar'}</SelectItem> */}
                                 <SelectItem value="eliminar">{t('actions.delete') || 'Eliminar'}</SelectItem>
                             </SelectContent>
                         </Select>
@@ -753,32 +768,32 @@ export default function Visitors() {
                                     {t('visitantes.filters') || 'Filtros'}
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent side="right" className="w-full max-w-md">
+                            <SheetContent side="right" className="w-full max-w-md h-full sm:h-auto">
                                 <SheetHeader>
                                     <SheetTitle>{t('visitantes.filters') || 'Filtros'}</SheetTitle>
                                 </SheetHeader>
 
-                                    <form className="mt-6 space-y-5" onSubmit={onSubmitFilters}>
-                                        <div className="space-y-2">
+                                <form className="mt-6 space-y-5" onSubmit={onSubmitFilters}>
+                                    <div className="space-y-2">
                                         <Label>{t('visitantes.client') || 'Cliente*'}</Label>
-                                                <Select
-                                                    value={filters.client}
-                                                    onValueChange={(v) =>
-                                                        setFilters((s) => ({ ...s, client: v }))
-                                                    }
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder={t('visitantes.selectClient') || 'Selecciona un cliente'} />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {clients.map((c) => (
-                                                            <SelectItem key={c.id} value={c.id}>{clientDisplayName(c)}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
+                                        <Select
+                                            value={filters.client}
+                                            onValueChange={(v) =>
+                                                setFilters((s) => ({ ...s, client: v }))
+                                            }
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={t('visitantes.selectClient') || 'Selecciona un cliente'} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {clients.map((c) => (
+                                                    <SelectItem key={c.id} value={c.id}>{clientDisplayName(c)}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
 
-                                        <div className="space-y-2">
+                                    <div className="space-y-2">
                                         <Label>{t('visitantes.site') || 'Sitio de publicación*'}</Label>
                                         <Select
                                             value={filters.site}
@@ -817,7 +832,15 @@ export default function Visitors() {
                                             </SelectContent>
                                         </Select>
                                     </div>
-{/*
+                                    <div className="space-y-2">
+                                        <Label>{t('visitantes.placeType') || 'Tipo de lugar'}</Label>
+                                        <Input
+                                            value={filters.placeType}
+                                            onChange={(e) => setFilters((s) => ({ ...s, placeType: e.target.value }))}
+                                            placeholder={t('visitantes.placeTypeFilterPlaceholder') || 'Ej: DEPARTAMENTO - 24'}
+                                        />
+                                    </div>
+                                    {/*
                                     <div className="space-y-2">
                                         <Label>{t('visitantes.tag') || 'Etiqueta'}</Label>
                                         <Select
@@ -872,7 +895,7 @@ export default function Visitors() {
                                     <MoreVertical className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuContent align="end" className="w-56">
                                 <DropdownMenuItem onClick={handleExportCSV}>
                                     <FileDown className="mr-2 h-4 w-4" />
                                     {t('visitantes.exportCSV') || 'Exportar CSV'}
@@ -896,13 +919,14 @@ export default function Visitors() {
                 </div>
 
                 <div className="mt-4 overflow-hidden rounded-lg border">
-                    <div className="bg-white border rounded p-4">
+                    {/* Desktop table (hidden on small screens) */}
+                    <div className="bg-white border rounded p-4 md:block hidden">
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50 text-left text-sm text-gray-600">
                                     <tr>
                                         <th className="px-4 py-2">
-                                            <input type="checkbox" onChange={(e) => selectAllLogs(e.target.checked)} checked={logs.length>0 && Object.keys(selectedLogs).length>0 && logs.every(l=>selectedLogs[l.id])} />
+                                            <input type="checkbox" onChange={(e) => selectAllLogs(e.target.checked)} checked={logs.length > 0 && Object.keys(selectedLogs).length > 0 && logs.every(l => selectedLogs[l.id])} />
                                         </th>
                                         <th className="px-4 py-2">{t('visitantes.logTable.firstName') || 'Nombre'}</th>
                                         <th className="px-4 py-2">{t('visitantes.logTable.lastName') || 'Apellidos'}</th>
@@ -956,287 +980,345 @@ export default function Visitors() {
                         </div>
                     </div>
 
-                        <div className="flex items-center justify-between mt-4">
-                            <div className="flex items-center gap-3">
-                                <span className="text-sm text-gray-600">{t('clients.pagination.itemsPerPage') || 'Elementos por página'}</span>
-                                <select
-                                    className="rounded border px-2 py-1 text-sm"
-                                    value={logsLimit}
-                                    onChange={(e) => { setLogsLimit(Number(e.target.value)); setLogsOffset(0); }}
-                                >
-                                    <option value={10}>10</option>
-                                    <option value={25}>25</option>
-                                    <option value={50}>50</option>
-                                    <option value={100}>100</option>
-                                </select>
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                                <div className="text-sm text-gray-600">
-                                    {logsCount === 0
-                                        ? `0 - 0 de 0`
-                                        : `${Math.min(logsOffset + 1, logsCount)} - ${Math.min(logsOffset + logsLimit, logsCount)} de ${logsCount}`}
-                                </div>
-
-                                <div className="flex items-center space-x-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={logsOffset === 0}
-                                        onClick={() => setLogsOffset(Math.max(0, logsOffset - logsLimit))}
-                                    >
-                                        ◀
-                                    </Button>
-
-                                    <div className="text-sm text-gray-600">
-                                        {Math.floor(logsOffset / logsLimit) + 1} / {Math.max(1, Math.ceil(logsCount / logsLimit))}
+                    {/* Mobile list (cards) visible on small screens */}
+                    <div className="md:hidden p-2 space-y-3">
+                        {logsLoading ? (
+                            <div className="p-4 bg-white rounded text-center">{t('visitantes.loading') || 'Cargando...'}</div>
+                        ) : logs.length === 0 ? (
+                            <div className="p-4 bg-white rounded text-center text-muted-foreground">{t('visitantes.noLogs') || 'No se encontraron registros de bitácoras'}</div>
+                        ) : (
+                            logs.map((r) => (
+                                <div key={r.id} className="bg-white rounded-lg border p-3 flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-base font-medium">{r.firstName} {r.lastName}</div>
+                                        <div className="text-sm text-gray-500">{formatDateTime(r.visitDate)}</div>
                                     </div>
-
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={logsOffset + logsLimit >= logsCount}
-                                        onClick={() => setLogsOffset(Math.min(logsOffset + logsLimit, (Math.ceil(logsCount / logsLimit) - 1) * logsLimit))}
-                                    >
-                                        ▶
-                                    </Button>
+                                    <div className="text-sm text-gray-600">{t('visitantes.logTable.idNumber') || 'ID'}: {r.idNumber || '-'}</div>
+                                    <div className="text-sm text-gray-600">{t('visitantes.logTable.client') || 'Cliente'}: {getClientLabelFromRecord(r)}</div>
+                                    <div className="text-sm text-gray-600">{t('visitantes.logTable.postSite') || 'Post Site'}: {r.postSite?.companyName || r.postSite?.name || r.postSiteName || '-'}</div>
+                                    <div className="flex items-center justify-end mt-2 space-x-2">
+                                        <Button size="sm" variant="ghost" onClick={() => viewLog(r.id)}>{t('actions.viewDetails') || 'Ver'}</Button>
+                                        <Button size="sm" variant="ghost" onClick={() => markExit(r.id)} disabled={!!r.exitTime}>{t('visitantes.markExit') || 'Salida'}</Button>
+                                        <Button size="sm" className="bg-red-600 text-white" onClick={() => deleteLog(r.id)}>{t('actions.delete') || 'Eliminar'}</Button>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            ))
+                        )}
                     </div>
-            </section>
 
-            {confirmDeleteOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div className="fixed inset-0 bg-black opacity-40" onClick={() => setConfirmDeleteOpen(false)} />
-                    <div className="bg-white rounded-lg shadow-lg max-w-md w-full z-10 p-6">
-                        <h3 className="text-lg font-medium text-gray-900">{t('visitantes.confirmDeleteTitle') || 'Confirmar eliminación'}</h3>
-                        <p className="mt-2 text-sm text-gray-600">{t('visitantes.confirmDeleteMessage') || `¿Estás seguro de que deseas eliminar ${confirmDeleteIds.length} registro(s)? Esta acción no se puede deshacer.`}</p>
-                        <div className="mt-4 flex justify-end gap-2">
-                            <Button variant="ghost" onClick={() => { setConfirmDeleteOpen(false); setConfirmDeleteIds([]); }}> {t('actions.cancel') || 'Cancelar'} </Button>
-                            <Button className="bg-red-600 text-white hover:bg-red-700" onClick={performDeleteConfirmed}>{t('actions.delete') || 'Eliminar'}</Button>
+                </div>
+
+                <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm text-gray-600">{t('clients.pagination.itemsPerPage') || 'Elementos por página'}</span>
+                        <select
+                            className="rounded border px-2 py-1 text-sm"
+                            value={logsLimit}
+                            onChange={(e) => { setLogsLimit(Number(e.target.value)); setLogsOffset(0); }}
+                        >
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <div className="text-sm text-gray-600">
+                            {logsCount === 0
+                                ? `0 - 0 de 0`
+                                : `${Math.min(logsOffset + 1, logsCount)} - ${Math.min(logsOffset + logsLimit, logsCount)} de ${logsCount}`}
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={logsOffset === 0}
+                                onClick={() => setLogsOffset(Math.max(0, logsOffset - logsLimit))}
+                            >
+                                ◀
+                            </Button>
+
+                            <div className="text-sm text-gray-600">
+                                {Math.floor(logsOffset / logsLimit) + 1} / {Math.max(1, Math.ceil(logsCount / logsLimit))}
+                            </div>
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={logsOffset + logsLimit >= logsCount}
+                                onClick={() => setLogsOffset(Math.min(logsOffset + logsLimit, (Math.ceil(logsCount / logsLimit) - 1) * logsLimit))}
+                            >
+                                ▶
+                            </Button>
                         </div>
                     </div>
                 </div>
-                )}
-                <>
-                    <Sheet open={viewLogOpen} onOpenChange={setViewLogOpen}>
-                        <SheetContent side="right" className="w-full max-w-lg">
-                            <SheetHeader>
-                                <SheetTitle>{t('visitantes.logDetails') || 'Detalles del registro'}</SheetTitle>
-                            </SheetHeader>
-                            <div className="mt-4 space-y-4">
-                                {!selectedLog ? (
-                                    <div className="text-gray-500">{t('visitantes.loading') || 'Cargando...'}</div>
-                                ) : (
-                                    <dl className="grid grid-cols-1 gap-3">
-                                        <div>
-                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.date') || 'Fecha'}</dt>
-                                            <dd className="text-base text-gray-800">{formatDateTime(selectedLog.visitDate)}</dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.lastName') || 'Apellidos'}</dt>
-                                            <dd className="text-base text-gray-800">{selectedLog.lastName || '-'}</dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.firstName') || 'Nombre'}</dt>
-                                            <dd className="text-base text-gray-800">{selectedLog.firstName || '-'}</dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.idNumber') || 'ID'}</dt>
-                                            <dd className="text-base text-gray-800">{selectedLog.idNumber || '-'}</dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.reason') || 'Motivo'}</dt>
-                                            <dd className="text-base text-gray-800">{selectedLog.reason || selectedLog.visitReason || '-'}</dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.exitTime') || 'Hora de salida'}</dt>
-                                            <dd className="text-base text-gray-800">{formatDateTime(selectedLog.exitTime || selectedLog.exitAt || selectedLog.leaveTime)}</dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.numPeople') || 'Número de personas'}</dt>
-                                            <dd className="text-base text-gray-800">{selectedLog.numPeople || selectedLog.peopleCount || selectedLog.numberPeople || '-'}</dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.client') || 'Cliente'}</dt>
-                                            <dd className="text-base text-gray-800">{getClientLabelFromRecord(selectedLog)}</dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.postSite') || 'Post Site'}</dt>
-                                            <dd className="text-base text-gray-800">{getPostSiteLabelFromRecord(selectedLog)}</dd>
-                                        </div>
-                                    </dl>
-                                )}
+        </section>
+
+            {
+        confirmDeleteOpen && (
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+                <div className="fixed inset-0 bg-black opacity-40" onClick={() => setConfirmDeleteOpen(false)} />
+                <div className="bg-white rounded-t-lg sm:rounded-lg shadow-lg w-full sm:max-w-md z-10 p-4 sm:p-6">
+                    <h3 className="text-lg font-medium text-gray-900">{t('visitantes.confirmDeleteTitle') || 'Confirmar eliminación'}</h3>
+                    <p className="mt-2 text-sm text-gray-600">{t('visitantes.confirmDeleteMessage') || `¿Estás seguro de que deseas eliminar ${confirmDeleteIds.length} registro(s)? Esta acción no se puede deshacer.`}</p>
+                    <div className="mt-4 flex justify-end gap-2">
+                        <Button variant="ghost" onClick={() => { setConfirmDeleteOpen(false); setConfirmDeleteIds([]); }}> {t('actions.cancel') || 'Cancelar'} </Button>
+                        <Button className="bg-red-600 text-white hover:bg-red-700" onClick={performDeleteConfirmed}>{t('actions.delete') || 'Eliminar'}</Button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+    <>
+        <Sheet open={viewLogOpen} onOpenChange={setViewLogOpen}>
+            <SheetContent side="right" className="w-full max-w-lg h-full sm:h-auto">
+                <SheetHeader>
+                    <SheetTitle>{t('visitantes.logDetails') || 'Detalles del registro'}</SheetTitle>
+                </SheetHeader>
+                <div className="mt-4 space-y-4">
+                    {!selectedLog ? (
+                        <div className="text-gray-500">{t('visitantes.loading') || 'Cargando...'}</div>
+                    ) : (
+                        <dl className="grid grid-cols-1 gap-3">
+                            <div>
+                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.date') || 'Fecha'}</dt>
+                                <dd className="text-base text-gray-800">{formatDateTime(selectedLog.visitDate)}</dd>
                             </div>
-                        </SheetContent>
-                    </Sheet>
+                            <div>
+                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.lastName') || 'Apellidos'}</dt>
+                                <dd className="text-base text-gray-800">{selectedLog.lastName || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.firstName') || 'Nombre'}</dt>
+                                <dd className="text-base text-gray-800">{selectedLog.firstName || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.idNumber') || 'ID'}</dt>
+                                <dd className="text-base text-gray-800">{selectedLog.idNumber || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.reason') || 'Motivo'}</dt>
+                                <dd className="text-base text-gray-800">{selectedLog.reason || selectedLog.visitReason || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.exitTime') || 'Hora de salida'}</dt>
+                                <dd className="text-base text-gray-800">{formatDateTime(selectedLog.exitTime || selectedLog.exitAt || selectedLog.leaveTime)}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.numPeople') || 'Número de personas'}</dt>
+                                <dd className="text-base text-gray-800">{selectedLog.numPeople || selectedLog.peopleCount || selectedLog.numberPeople || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.client') || 'Cliente'}</dt>
+                                <dd className="text-base text-gray-800">{getClientLabelFromRecord(selectedLog)}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.postSite') || 'Post Site'}</dt>
+                                <dd className="text-base text-gray-800">{getPostSiteLabelFromRecord(selectedLog)}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.placeType') || 'Tipo de lugar'}</dt>
+                                <dd className="text-base text-gray-800">{selectedLog.placeType || '-'}</dd>
+                            </div>
+                        </dl>
+                    )}
+                </div>
+            </SheetContent>
+        </Sheet>
 
-                    <Sheet open={openAddVisitor} onOpenChange={setOpenAddVisitor}>
-                        <SheetContent side="right" className="w-full max-w-xl">
-                            <SheetHeader className="mb-4">
-                                <SheetTitle>{t('visitantes.newVisitor') || 'Nuevo Visitante'}</SheetTitle>
-                            </SheetHeader>
+        <Sheet open={openAddVisitor} onOpenChange={setOpenAddVisitor}>
+            <SheetContent side="right" className="w-full max-w-xl h-full sm:h-auto">
+                <SheetHeader className="mb-4">
+                    <SheetTitle>{t('visitantes.newVisitor') || 'Nuevo Visitante'}</SheetTitle>
+                </SheetHeader>
 
-                            <form className="space-y-4" onSubmit={onSubmitVisitor}>
-                                
+                <form className="space-y-4" onSubmit={onSubmitVisitor}>
 
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <div className="space-y-1.5">
-                                        <Label>{t('visitantes.client') || 'Cliente'}<span className="text-red-600">*</span></Label>
-                                        <Select
-                                            value={newVisitor.client}
-                                            onValueChange={(v) =>
-                                                setNewVisitor((s) => ({ ...s, client: v }))
-                                            }
-                                            aria-required="true"
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={t('visitantes.selectClient') || 'Selecciona un cliente'} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {clients.map((c) => (
-                                                    <SelectItem key={c.id} value={c.id}>{clientDisplayName(c)}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
 
-                                    <div className="space-y-1.5">
-                                        <Label>{t('visitantes.site') || 'Sitio de publicación'}<span className="text-red-600">*</span></Label>
-                                        <Select
-                                            value={newVisitor.site}
-                                            onValueChange={(v) =>
-                                                setNewVisitor((s) => ({ ...s, site: v }))
-                                            }
-                                            disabled={postSitesForNewVisitor.length === 0}
-                                            aria-required="true"
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={t('visitantes.selectSite') || 'Selecciona un sitio'} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {postSitesForNewVisitor.map((p) => (
-                                                    <SelectItem key={p.id} value={p.id}>{p.companyName || p.name || p.id}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="space-y-1.5">
+                            <Label>{t('visitantes.client') || 'Cliente'}<span className="text-red-600">*</span></Label>
+                            <Select
+                                value={newVisitor.client}
+                                onValueChange={(v) =>
+                                    setNewVisitor((s) => ({ ...s, client: v }))
+                                }
+                                aria-required="true"
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={t('visitantes.selectClient') || 'Selecciona un cliente'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {clients.map((c) => (
+                                        <SelectItem key={c.id} value={c.id}>{clientDisplayName(c)}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                                    <div className="space-y-1.5">
-                                        <Label>{t('visitantes.guard') || 'Guardia'}<span className="text-red-600">*</span></Label>
-                                        <Select
-                                            value={newVisitor.guard}
-                                            onValueChange={(v) =>
-                                                setNewVisitor((s) => ({ ...s, guard: v }))
-                                            }
-                                            disabled={guardsForNewVisitor.length === 0}
-                                            aria-required="true"
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={t('visitantes.selectGuard') || 'Selecciona un guardia'} />
-                                            </SelectTrigger>
-                                                    <SelectContent>
-                                                {guardsForNewVisitor.map((g) => (
-                                                    <SelectItem key={g.id} value={g.id}>{g.fullName || g.displayName || g.name || g.id}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                        <div className="space-y-1.5">
+                            <Label>{t('visitantes.site') || 'Sitio de publicación'}<span className="text-red-600">*</span></Label>
+                            <Select
+                                value={newVisitor.site}
+                                onValueChange={(v) =>
+                                    setNewVisitor((s) => ({ ...s, site: v }))
+                                }
+                                disabled={postSitesForNewVisitor.length === 0}
+                                aria-required="true"
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={t('visitantes.selectSite') || 'Selecciona un sitio'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {postSitesForNewVisitor.map((p) => (
+                                        <SelectItem key={p.id} value={p.id}>{p.companyName || p.name || p.id}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                                    <div className="space-y-1.5">
-                                        <Label>{t('visitantes.form.name') || 'Nombre'}<span className="text-red-600">*</span></Label>
-                                        <Input
-                                            value={newVisitor.firstName}
-                                            onChange={(e) =>
-                                                setNewVisitor((s) => ({ ...s, firstName: e.target.value }))
-                                            }
-                                            placeholder={t('visitantes.placeholder.name') || 'Nombre'}
-                                            required
-                                        />
-                                    </div>
+                        <div className="space-y-1.5">
+                            <Label>{t('visitantes.guard') || 'Guardia'}<span className="text-red-600">*</span></Label>
+                            <Select
+                                value={newVisitor.guard}
+                                onValueChange={(v) =>
+                                    setNewVisitor((s) => ({ ...s, guard: v }))
+                                }
+                                disabled={guardsForNewVisitor.length === 0}
+                                aria-required="true"
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={t('visitantes.selectGuard') || 'Selecciona un guardia'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {guardsForNewVisitor.map((g) => (
+                                        <SelectItem key={g.id} value={g.id}>{g.fullName || g.displayName || g.name || g.id}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                                    <div className="space-y-1.5">
-                                        <Label>{t('visitantes.form.lastName') || 'Apellidos'}<span className="text-red-600">*</span></Label>
-                                        <Input
-                                            value={newVisitor.lastName}
-                                            onChange={(e) =>
-                                                setNewVisitor((s) => ({ ...s, lastName: e.target.value }))
-                                            }
-                                            placeholder={t('visitantes.placeholder.lastName') || 'Apellidos'}
-                                            required
-                                        />
-                                    </div>
+                        <div className="space-y-1.5">
+                            <Label>{t('visitantes.placeTypeSelect') || 'Tipo de lugar'}</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <Select
+                                    value={newVisitor.placeTypeKind}
+                                    onValueChange={(v) => setNewVisitor((s) => ({ ...s, placeTypeKind: v }))}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('visitantes.placeTypeSelect') || 'Selecciona tipo'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Casa">{t('visitantes.placeType.house') || 'Casa'}</SelectItem>
+                                        <SelectItem value="Departamento">{t('visitantes.placeType.apartment') || 'Departamento'}</SelectItem>
+                                        <SelectItem value="Oficina">{t('visitantes.placeType.office') || 'Oficina'}</SelectItem>
+                                    </SelectContent>
+                                </Select>
 
-                                    <div className="space-y-1.5">
-                                        <Label>{t('visitantes.form.idNumber') || 'Número de identificación'}<span className="text-red-600">*</span></Label>
-                                        <Input
-                                            value={newVisitor.idNumber}
-                                            onChange={(e) =>
-                                                setNewVisitor((s) => ({ ...s, idNumber: e.target.value }))
-                                            }
-                                            placeholder={t('visitantes.placeholder.idNumber') || 'e.g. 12015550123'}
-                                            required
-                                        />
-                                    </div>
+                                <Input
+                                    value={newVisitor.placeTypeValue}
+                                    onChange={(e) => setNewVisitor((s) => ({ ...s, placeTypeValue: e.target.value }))}
+                                    placeholder={t('visitantes.placeTypeValue') || 'Nro/Detalle (24)'}
+                                />
+                            </div>
+                        </div>
 
-                                    <div className="space-y-1.5">
-                                        <Label>{t('visitantes.form.idImage') || 'Imagen del ID'}</Label>
-                                        <Input type="file" />
-                                    </div>
+                        <div className="space-y-1.5">
+                            <Label>{t('visitantes.form.name') || 'Nombre'}<span className="text-red-600">*</span></Label>
+                            <Input
+                                value={newVisitor.firstName}
+                                onChange={(e) =>
+                                    setNewVisitor((s) => ({ ...s, firstName: e.target.value }))
+                                }
+                                placeholder={t('visitantes.placeholder.name') || 'Nombre'}
+                                required
+                            />
+                        </div>
 
-                                    <div className="space-y-1.5">
-                                        <Label>{t('visitantes.form.mobile') || 'Número de Móvil'}<span className="text-red-600">*</span></Label>
-                                        <Input
-                                            value={newVisitor.mobile}
-                                            onChange={(e) =>
-                                                setNewVisitor((s) => ({ ...s, mobile: e.target.value }))
-                                            }
-                                            placeholder={t('visitantes.placeholder.mobile') || 'e.g. +12015550123'}
-                                            required
-                                        />
-                                    </div>
-                                    
-                                    <div className="space-y-1.5">
-                                        <Label>{t('visitantes.form.numPeople') || 'Número de personas'}<span className="text-red-600">*</span></Label>
-                                        <Input
-                                            type="number"
-                                            min={1}
-                                            value={newVisitor.numPeople ?? ''}
-                                            onChange={(e) =>
-                                                setNewVisitor((s) => ({ ...s, numPeople: e.target.value ? Number(e.target.value) : undefined }))
-                                            }
-                                            placeholder={t('visitantes.placeholder.numPeople') || '1'}
-                                            required
-                                        />
-                                    </div>
+                        <div className="space-y-1.5">
+                            <Label>{t('visitantes.form.lastName') || 'Apellidos'}<span className="text-red-600">*</span></Label>
+                            <Input
+                                value={newVisitor.lastName}
+                                onChange={(e) =>
+                                    setNewVisitor((s) => ({ ...s, lastName: e.target.value }))
+                                }
+                                placeholder={t('visitantes.placeholder.lastName') || 'Apellidos'}
+                                required
+                            />
+                        </div>
 
-                                    <div className="space-y-1.5 md:col-span-2">
-                                        <Label>{t('visitantes.form.reason') || 'Motivo'}</Label>
-                                        <textarea
-                                            className="w-full rounded border px-3 py-2"
-                                            value={newVisitor.reason ?? ''}
-                                            onChange={(e) =>
-                                                setNewVisitor((s) => ({ ...s, reason: e.target.value }))
-                                            }
-                                            placeholder={t('visitantes.placeholder.reason') || 'Motivo de la visita'}
-                                            rows={3}
-                                        />
-                                    </div>
-                                </div>
+                        <div className="space-y-1.5">
+                            <Label>{t('visitantes.form.idNumber') || 'Número de identificación'}<span className="text-red-600">*</span></Label>
+                            <Input
+                                value={newVisitor.idNumber}
+                                onChange={(e) =>
+                                    setNewVisitor((s) => ({ ...s, idNumber: e.target.value }))
+                                }
+                                placeholder={t('visitantes.placeholder.idNumber') || 'e.g. 12015550123'}
+                                required
+                            />
+                        </div>
 
-                                <div className="flex justify-end pt-4">
-                                    <Button
-                                        type="submit"
-                                        className="bg-orange-500 text-white hover:bg-orange-600"
-                                    >
-                                        {t('visitantes.save') || 'Guardar'}
-                                    </Button>
-                                </div>
-                            </form>
-                        </SheetContent>
-                    </Sheet>
-                </>
-        </AppLayout>
+                        <div className="space-y-1.5">
+                            <Label>{t('visitantes.form.idImage') || 'Imagen del ID'}</Label>
+                            <Input type="file" />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label>{t('visitantes.form.mobile') || 'Número de Móvil'}<span className="text-red-600">*</span></Label>
+                            <Input
+                                value={newVisitor.mobile}
+                                onChange={(e) =>
+                                    setNewVisitor((s) => ({ ...s, mobile: e.target.value }))
+                                }
+                                placeholder={t('visitantes.placeholder.mobile') || 'e.g. +12015550123'}
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label>{t('visitantes.form.numPeople') || 'Número de personas'}<span className="text-red-600">*</span></Label>
+                            <Input
+                                type="number"
+                                min={1}
+                                value={newVisitor.numPeople ?? ''}
+                                onChange={(e) =>
+                                    setNewVisitor((s) => ({ ...s, numPeople: e.target.value ? Number(e.target.value) : undefined }))
+                                }
+                                placeholder={t('visitantes.placeholder.numPeople') || '1'}
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-1.5 md:col-span-2">
+                            <Label>{t('visitantes.form.reason') || 'Motivo'}</Label>
+                            <textarea
+                                className="w-full rounded border px-3 py-2"
+                                value={newVisitor.reason ?? ''}
+                                onChange={(e) =>
+                                    setNewVisitor((s) => ({ ...s, reason: e.target.value }))
+                                }
+                                placeholder={t('visitantes.placeholder.reason') || 'Motivo de la visita'}
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end pt-4">
+                        <Button
+                            type="submit"
+                            className="bg-orange-500 text-white hover:bg-orange-600"
+                        >
+                            {t('visitantes.save') || 'Guardar'}
+                        </Button>
+                    </div>
+                </form>
+            </SheetContent>
+        </Sheet>
+    </>
+        </AppLayout >
     );
 }

@@ -46,6 +46,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { usePermissions } from '@/hooks/usePermissions';
 import { PermissionedButton } from '@/components/permissions/Permissioned';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 /* Debounce helper */
 function useDebounced<T>(value: T, delay = 400) {
@@ -75,7 +76,7 @@ export default function AdminOfficeUsersPage() {
   const [rows, setRows] = useState<any[]>([]);
   const [isAdminUser, setIsAdminUser] = useState(false);
   const { hasPermission, hasAny } = usePermissions();
-  const canManageUsers = hasAny(['userEdit','userDestroy','userImport','userCreate','userExport']);
+  const canManageUsers = hasAny(['userEdit', 'userDestroy', 'userImport', 'userCreate', 'userExport']);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [resendDialogOpen, setResendDialogOpen] = useState(false);
   const [selectedUserToAct, setSelectedUserToAct] = useState<any | null>(null);
@@ -208,7 +209,7 @@ export default function AdminOfficeUsersPage() {
     try {
       const blob = await userService.exportFile(format);
       const ext = format === 'excel' ? 'xlsx' : format === 'csv' ? 'csv' : 'pdf';
-      const filename = `usuarios_${new Date().toISOString().slice(0,10)}.${ext}`;
+      const filename = `usuarios_${new Date().toISOString().slice(0, 10)}.${ext}`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -235,10 +236,10 @@ export default function AdminOfficeUsersPage() {
       setRows((prev) => prev.map((g) => (g.id === user.id ? { ...g, status: "Archivado", active: false, raw: { ...(g.raw || {}), status: "archived" } } : g)));
       toast.success(t('adminOfficeUsers.toasts.suspendedArchivedSuccess', { defaultValue: 'Usuario suspendido y archivado' }));
     } catch (err: any) {
-        console.error(err);
-        const serverMsg = err?.response?.data?.message || err?.message || (typeof err === 'string' ? err : null);
-        toast.error(serverMsg || t('adminOfficeUsers.toasts.errorSuspendingUser', { defaultValue: 'Error suspendiendo usuario' }));
-      } finally {
+      console.error(err);
+      const serverMsg = err?.response?.data?.message || err?.message || (typeof err === 'string' ? err : null);
+      toast.error(serverMsg || t('adminOfficeUsers.toasts.errorSuspendingUser', { defaultValue: 'Error suspendiendo usuario' }));
+    } finally {
       setActionLoading(false);
       setSelectedUserToAct(null);
     }
@@ -563,14 +564,14 @@ export default function AdminOfficeUsersPage() {
                   </div>
 
                   <Button
-                      className="w-full bg-orange-500 text-white hover:bg-orange-600"
-                      onClick={() => {
-                        // aplica filtros y cierra
-                        setOpenFilter(false);
-                      }}
-                    >
-                      {t('adminOfficeUsers.filters.apply', { defaultValue: 'Filtro' })}
-                    </Button>
+                    className="w-full bg-orange-500 text-white hover:bg-orange-600"
+                    onClick={() => {
+                      // aplica filtros y cierra
+                      setOpenFilter(false);
+                    }}
+                  >
+                    {t('adminOfficeUsers.filters.apply', { defaultValue: 'Filtro' })}
+                  </Button>
                 </div>
               </SheetContent>
             </Sheet>
@@ -583,16 +584,16 @@ export default function AdminOfficeUsersPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem disabled={!hasPermission('userExport')} onClick={async () => { if (!hasPermission('userExport')) return; await exportUsersFile('pdf'); }}>
-                    <FileDown className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.actions.exportPdf', { defaultValue: 'Exportar como PDF' })}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem disabled={!hasPermission('userExport')} onClick={async () => { if (!hasPermission('userExport')) return; await exportUsersFile('excel'); }}>
-                    <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.actions.exportExcel', { defaultValue: 'Exportar como Excel' })}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem disabled={!hasPermission('userImport')} onClick={() => { if (!hasPermission('userImport')) return; console.log('Importar') }}>
-                    <ArrowDownUp className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.actions.import', { defaultValue: 'Importar' })}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
+                <DropdownMenuItem disabled={!hasPermission('userExport')} onClick={async () => { if (!hasPermission('userExport')) return; await exportUsersFile('pdf'); }}>
+                  <FileDown className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.actions.exportPdf', { defaultValue: 'Exportar como PDF' })}
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={!hasPermission('userExport')} onClick={async () => { if (!hasPermission('userExport')) return; await exportUsersFile('excel'); }}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.actions.exportExcel', { defaultValue: 'Exportar como Excel' })}
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={!hasPermission('userImport')} onClick={() => { if (!hasPermission('userImport')) return; console.log('Importar') }}>
+                  <ArrowDownUp className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.actions.import', { defaultValue: 'Importar' })}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
             </DropdownMenu>
 
           </div>
@@ -600,106 +601,107 @@ export default function AdminOfficeUsersPage() {
 
         {/* Tabla */}
         <div className="mt-4 overflow-hidden rounded-lg border">
-          <table className="min-w-full border-collapse text-left text-sm">
-            <thead className="bg-gray-50">
-              <tr className="border-b">
-                <th className="px-4 py-3">
-                  <Checkbox disabled={!canManageUsers} checked={allOnPageSelected} onCheckedChange={(v) => handleSelectAllUsers(Boolean(v))} aria-label="Seleccionar todos" />
-                </th>
-                <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.contactName', { defaultValue: 'Nombre de Contacto' })}</th>
-                <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.email', { defaultValue: 'Correo Electrónico' })}</th>
-                <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.accessLevel', { defaultValue: 'Nivel de Acceso' })}</th>
-                <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.lastLogin', { defaultValue: 'Último Inicio de Sesión' })}</th>
-                <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.status', { defaultValue: 'Estado' })}</th>
-                <th />
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredRows.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-20">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <img
-                        src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
-                        alt="Sin datos"
-                        className="mb-4 h-36"
-                      />
-                      <h3 className="text-lg font-semibold">{t('adminOfficeUsers.noData.title', { defaultValue: 'No se encontraron resultados' })}</h3>
-                      <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-                        {t('adminOfficeUsers.noData.message', { defaultValue: 'No pudimos encontrar ningún elemento que coincida con su búsqueda' })}
-                      </p>
-                    </div>
-                  </td>
+          <div className="md:block hidden">
+            <table className="min-w-full border-collapse text-left text-sm">
+              <thead className="bg-gray-50">
+                <tr className="border-b">
+                  <th className="px-4 py-3">
+                    <Checkbox disabled={!canManageUsers} checked={allOnPageSelected} onCheckedChange={(v) => handleSelectAllUsers(Boolean(v))} aria-label="Seleccionar todos" />
+                  </th>
+                  <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.contactName', { defaultValue: 'Nombre de Contacto' })}</th>
+                  <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.email', { defaultValue: 'Correo Electrónico' })}</th>
+                  <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.accessLevel', { defaultValue: 'Nivel de Acceso' })}</th>
+                  <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.lastLogin', { defaultValue: 'Último Inicio de Sesión' })}</th>
+                  <th className="px-4 py-3 font-semibold">{t('adminOfficeUsers.table.headers.status', { defaultValue: 'Estado' })}</th>
+                  <th />
                 </tr>
-              ) : (
-                filteredRows.map((u, i) => (
-                  <tr key={u.id || i} className="border-b">
-                  <td className="px-4 py-3"><Checkbox disabled={!canManageUsers || isUserAdmin(u)} checked={selectedUsers.includes(String(u.id || u._id || u.raw?.id))} onCheckedChange={(v) => handleSelectUser(String(u.id || u._id || u.raw?.id), Boolean(v))} /></td>
-                    <td className="px-4 py-3">{[u.firstName, u.lastName].filter(Boolean).join(" ") || u.name || "-"}</td>
-                    <td className="px-4 py-3">{u.email || "-"}</td>
-                    <td className="px-4 py-3">{
-                      (() => {
-                        if (u._rolesDisplay) return u._rolesDisplay;
-                        const roles = u.roles ?? u.role ?? [];
-                        if (Array.isArray(roles)) {
-                          return roles
-                            .map((r: any) => (typeof r === 'string' ? r : (r && (r.name || r.role) ? (r.name || r.role) : '')))
-                            .filter(Boolean)
-                            .join(', ');
-                        }
-                        if (typeof roles === 'string') return roles;
-                        if (roles && typeof roles === 'object') return roles.name || roles.role || '';
-                        return '-';
-                      })()
-                    }</td>
-                    <td className="px-4 py-3">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : "-"}</td>
-                    <td className="px-4 py-3">
-                      {(() => {
-                        const status = (u.status || "").toString().toLowerCase();
-                        // archived (backend) or archivado (spanish) => show red Archivado
-                        if (status === "archived" || status === "archivado") {
-                          return (
-                            <Badge variant="outline" className="bg-red-50 text-red-700">
-                              {t('adminOfficeUsers.statuses.archived', { defaultValue: 'Archivado' })}
-                            </Badge>
-                          );
-                        }
+              </thead>
 
-                        if (status === "invited" || status === "pending") {
-                          return (
-                            <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-                              {t('adminOfficeUsers.statuses.pending', { defaultValue: 'Pendiente' })}
-                            </Badge>
-                          );
-                        }
-
-                        if (u.active === false) {
-                          return (
-                            <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
-                              {t('adminOfficeUsers.statuses.inactive', { defaultValue: 'Inactivo' })}
-                            </Badge>
-                          );
-                        }
-
-                        return (
-                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                            {t('adminOfficeUsers.statuses.active', { defaultValue: 'Activo' })}
-                          </Badge>
-                        );
-                      })()}
+              <tbody>
+                {filteredRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-20">
+                      <div className="flex flex-col items-center justify-center text-center">
+                        <img
+                          src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
+                          alt="Sin datos"
+                          className="mb-4 h-36"
+                        />
+                        <h3 className="text-lg font-semibold">{t('adminOfficeUsers.noData.title', { defaultValue: 'No se encontraron resultados' })}</h3>
+                        <p className="mt-1 max-w-xs text-sm text-muted-foreground">
+                          {t('adminOfficeUsers.noData.message', { defaultValue: 'No pudimos encontrar ningún elemento que coincida con su búsqueda' })}
+                        </p>
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon"><EllipsisVertical className="h-5 w-5" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {(() => {
-                            const status = (u.status || "").toString().toLowerCase();
-                            if (status === "invited" || status === "pending") {
-                              return (
-                                <>
+                  </tr>
+                ) : (
+                  filteredRows.map((u, i) => (
+                    <tr key={u.id || i} className="border-b">
+                      <td className="px-4 py-3"><Checkbox disabled={!canManageUsers || isUserAdmin(u)} checked={selectedUsers.includes(String(u.id || u._id || u.raw?.id))} onCheckedChange={(v) => handleSelectUser(String(u.id || u._id || u.raw?.id), Boolean(v))} /></td>
+                      <td className="px-4 py-3">{[u.firstName, u.lastName].filter(Boolean).join(" ") || u.name || "-"}</td>
+                      <td className="px-4 py-3">{u.email || "-"}</td>
+                      <td className="px-4 py-3">{
+                        (() => {
+                          if (u._rolesDisplay) return u._rolesDisplay;
+                          const roles = u.roles ?? u.role ?? [];
+                          if (Array.isArray(roles)) {
+                            return roles
+                              .map((r: any) => (typeof r === 'string' ? r : (r && (r.name || r.role) ? (r.name || r.role) : '')))
+                              .filter(Boolean)
+                              .join(', ');
+                          }
+                          if (typeof roles === 'string') return roles;
+                          if (roles && typeof roles === 'object') return roles.name || roles.role || '';
+                          return '-';
+                        })()
+                      }</td>
+                      <td className="px-4 py-3">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : "-"}</td>
+                      <td className="px-4 py-3">
+                        {(() => {
+                          const status = (u.status || "").toString().toLowerCase();
+                          // archived (backend) or archivado (spanish) => show red Archivado
+                          if (status === "archived" || status === "archivado") {
+                            return (
+                              <Badge variant="outline" className="bg-red-50 text-red-700">
+                                {t('adminOfficeUsers.statuses.archived', { defaultValue: 'Archivado' })}
+                              </Badge>
+                            );
+                          }
+
+                          if (status === "invited" || status === "pending") {
+                            return (
+                              <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                                {t('adminOfficeUsers.statuses.pending', { defaultValue: 'Pendiente' })}
+                              </Badge>
+                            );
+                          }
+
+                          if (u.active === false) {
+                            return (
+                              <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
+                                {t('adminOfficeUsers.statuses.inactive', { defaultValue: 'Inactivo' })}
+                              </Badge>
+                            );
+                          }
+
+                          return (
+                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                              {t('adminOfficeUsers.statuses.active', { defaultValue: 'Activo' })}
+                            </Badge>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon"><EllipsisVertical className="h-5 w-5" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {(() => {
+                              const status = (u.status || "").toString().toLowerCase();
+                              if (status === "invited" || status === "pending") {
+                                return (
+                                  <>
                                     <DropdownMenuItem disabled={!hasPermission('userEdit')}
                                       onClick={() => {
                                         if (!hasPermission('userEdit')) return;
@@ -710,6 +712,49 @@ export default function AdminOfficeUsersPage() {
                                       <Send className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.rowActions.resendInvitation', { defaultValue: 'Reenviar Invitación' })}
                                     </DropdownMenuItem>
 
+                                    <DropdownMenuItem disabled={!hasPermission('userEdit')}
+                                      onClick={() => {
+                                        if (!hasPermission('userEdit')) return;
+                                        setSelectedUserToAct(u);
+                                        handleSuspendUser(u);
+                                      }}
+                                    >
+                                      <Archive className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.rowActions.suspend', { defaultValue: 'Suspender' })}
+                                    </DropdownMenuItem>
+
+                                  </>
+                                );
+                              }
+
+                              if (status === "archived" || status === "archivado") {
+                                return (
+                                  <>
+                                    <DropdownMenuItem disabled={!hasPermission('userEdit')}
+                                      onClick={() => {
+                                        if (!hasPermission('userEdit')) return;
+                                        setSelectedUserToAct(u);
+                                        setRestoreDialogOpen(true);
+                                      }}
+                                    >
+                                      {t('adminOfficeUsers.rowActions.restore', { defaultValue: 'Restaurar' })}
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem disabled={!hasPermission('userDestroy')}
+                                      onClick={() => {
+                                        if (!hasPermission('userDestroy')) return;
+                                        setSelectedUserToAct(u);
+                                        setDeleteDialogOpen(true);
+                                      }}
+                                    >
+                                      {t('adminOfficeUsers.rowActions.delete', { defaultValue: 'Eliminar' })}
+                                    </DropdownMenuItem>
+                                  </>
+                                );
+                              }
+
+                              return (
+                                <>
+                                  <DropdownMenuItem disabled={!hasPermission('userEdit')} onClick={() => { if (!hasPermission('userEdit')) return; navigate(`/back-office/edit/${u.id}`); }}>{t('adminOfficeUsers.rowActions.edit', { defaultValue: 'Editar' })}</DropdownMenuItem>
                                   <DropdownMenuItem disabled={!hasPermission('userEdit')}
                                     onClick={() => {
                                       if (!hasPermission('userEdit')) return;
@@ -717,122 +762,109 @@ export default function AdminOfficeUsersPage() {
                                       handleSuspendUser(u);
                                     }}
                                   >
-                                    <Archive className="mr-2 h-4 w-4" /> {t('adminOfficeUsers.rowActions.suspend', { defaultValue: 'Suspender' })}
-                                  </DropdownMenuItem>
-                                  
-                                </>
-                              );
-                            }
-
-                            if (status === "archived" || status === "archivado") {
-                              return (
-                                <>
-                                  <DropdownMenuItem disabled={!hasPermission('userEdit')}
-                                    onClick={() => {
-                                      if (!hasPermission('userEdit')) return;
-                                      setSelectedUserToAct(u);
-                                      setRestoreDialogOpen(true);
-                                    }}
-                                  >
-                                    {t('adminOfficeUsers.rowActions.restore', { defaultValue: 'Restaurar' })}
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem disabled={!hasPermission('userDestroy')}
-                                    onClick={() => {
-                                      if (!hasPermission('userDestroy')) return;
-                                      setSelectedUserToAct(u);
-                                      setDeleteDialogOpen(true);
-                                    }}
-                                  >
-                                    {t('adminOfficeUsers.rowActions.delete', { defaultValue: 'Eliminar' })}
+                                    {t('adminOfficeUsers.rowActions.suspend', { defaultValue: 'Suspender' })}
                                   </DropdownMenuItem>
                                 </>
                               );
-                            }
+                            })()}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-                            return (
-                                <>
-                                <DropdownMenuItem disabled={!hasPermission('userEdit')} onClick={() => { if (!hasPermission('userEdit')) return; navigate(`/back-office/edit/${u.id}`); }}>{t('adminOfficeUsers.rowActions.edit', { defaultValue: 'Editar' })}</DropdownMenuItem>
-                                <DropdownMenuItem disabled={!hasPermission('userEdit')}
-                                  onClick={() => {
-                                    if (!hasPermission('userEdit')) return;
-                                    setSelectedUserToAct(u);
-                                    handleSuspendUser(u);
-                                  }}
-                                >
-                                  {t('adminOfficeUsers.rowActions.suspend', { defaultValue: 'Suspender' })}
-                                </DropdownMenuItem>
-                              </>
-                            );
-                          })()}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))
+          <div className="md:hidden">
+            <MobileCardList
+              items={filteredRows || []}
+              loading={false}
+              emptyMessage={t('adminOfficeUsers.noData.title', { defaultValue: 'No se encontraron resultados' }) as string}
+              renderCard={(u: any) => (
+                <div className="p-4 bg-white border rounded-lg">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold">{[u.firstName, u.lastName].filter(Boolean).join(' ') || u.name || u.email || '-'}</div>
+                      <div className="text-xs text-gray-500">{u.email || '-'}</div>
+                      <div className="text-xs text-gray-400 mt-1">{(u._rolesDisplay) || (Array.isArray(u.roles) ? u.roles.join(', ') : (u.roles || u.role || '-'))}</div>
+                    </div>
+                    <div className="text-xs text-gray-500 text-right">
+                      {(() => {
+                        const status = (u.status || '').toString().toLowerCase();
+                        if (status === 'archived' || status === 'archivado') return t('adminOfficeUsers.statuses.archived', { defaultValue: 'Archivado' });
+                        if (status === 'invited' || status === 'pending') return t('adminOfficeUsers.statuses.pending', { defaultValue: 'Pendiente' });
+                        if (u.active === false) return t('adminOfficeUsers.statuses.inactive', { defaultValue: 'Inactivo' });
+                        return t('adminOfficeUsers.statuses.active', { defaultValue: 'Activo' });
+                      })()}
+                      <div className="text-xs text-gray-400">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : '-'}</div>
+                    </div>
+                  </div>
+                </div>
               )}
-            </tbody>
-          </table>
-
-          {/* Footer de tabla */}
-          <div className="flex items-center justify-between bg-gray-50 px-4 py-3 text-sm text-gray-600">
-            <div className="flex items-center gap-2">
-              <span>{t('adminOfficeUsers.footer.itemsPerPage', { defaultValue: 'Elementos por página' })}</span>
-              <Select
-                value={String(pageSize)}
-                onValueChange={(v) => setPageSize(Number(v))}
-              >
-                <SelectTrigger className="h-8 w-20">
-                  <SelectValue placeholder="25" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              {filteredRows.length === 0 ? t('adminOfficeUsers.pagination.zero', { defaultValue: '0 – 0 de 0' }) : t('adminOfficeUsers.pagination.range', { defaultValue: '1 – {{end}} de {{total}}', start: 1, end: filteredRows.length, total: filteredRows.length })}
-            </div>
+            />
           </div>
         </div>
-        {/* Confirm dialogs for resend and suspend */}
-        <AlertDialog open={resendDialogOpen} onOpenChange={setResendDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t('adminOfficeUsers.dialogs.resend.title', { defaultValue: 'Reenviar invitación' })}</AlertDialogTitle>
-            </AlertDialogHeader>
-            <AlertDialogDescription>
-              {t('adminOfficeUsers.dialogs.resend.description', { defaultValue: '¿Deseas reenviar la invitación a {{user}}?', user: formatUserDisplay(selectedUserToAct) })}
-            </AlertDialogDescription>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setSelectedUserToAct(null)}>{t('adminOfficeUsers.dialogs.common.cancel', { defaultValue: 'Cancelar' })}</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-orange-500 text-white hover:bg-orange-600"
-                onClick={async () => {
-                  if (!selectedUserToAct) return;
-                    try {
-                      setActionLoading(true);
-                      await userService.resendInvitation(selectedUserToAct.id);
-                      toast.success(t('adminOfficeUsers.dialogs.resend.success', { defaultValue: 'Invitación reenviada' }));
-                      setResendDialogOpen(false);
-                    } catch (err) {
-                      console.error(err);
-                      toast.error(t('adminOfficeUsers.dialogs.resend.error', { defaultValue: 'Error reenviando invitación' }));
-                    } finally {
-                      setActionLoading(false);
-                      setSelectedUserToAct(null);
-                    }
-                }}
-              >
-                {actionLoading ? t('adminOfficeUsers.dialogs.common.sending', { defaultValue: 'Enviando…' }) : t('adminOfficeUsers.dialogs.resend.confirm', { defaultValue: 'Reenviar' })}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {/* Footer de tabla */}
+        <div className="flex items-center justify-between bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <span>{t('adminOfficeUsers.footer.itemsPerPage', { defaultValue: 'Elementos por página' })}</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => setPageSize(Number(v))}
+            >
+              <SelectTrigger className="h-8 w-20">
+                <SelectValue placeholder="25" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            {filteredRows.length === 0 ? t('adminOfficeUsers.pagination.zero', { defaultValue: '0 – 0 de 0' }) : t('adminOfficeUsers.pagination.range', { defaultValue: '1 – {{end}} de {{total}}', start: 1, end: filteredRows.length, total: filteredRows.length })}
+          </div>
+        </div>
 
-        {/* Suspend confirmation removed: suspender ahora actúa de inmediato desde el menú */}
+        {/* Confirm dialogs for resend and suspend */ }
+  <AlertDialog open={resendDialogOpen} onOpenChange={setResendDialogOpen}>
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>{t('adminOfficeUsers.dialogs.resend.title', { defaultValue: 'Reenviar invitación' })}</AlertDialogTitle>
+      </AlertDialogHeader>
+      <AlertDialogDescription>
+        {t('adminOfficeUsers.dialogs.resend.description', { defaultValue: '¿Deseas reenviar la invitación a {{user}}?', user: formatUserDisplay(selectedUserToAct) })}
+      </AlertDialogDescription>
+      <AlertDialogFooter>
+        <AlertDialogCancel onClick={() => setSelectedUserToAct(null)}>{t('adminOfficeUsers.dialogs.common.cancel', { defaultValue: 'Cancelar' })}</AlertDialogCancel>
+        <AlertDialogAction
+          className="bg-orange-500 text-white hover:bg-orange-600"
+          onClick={async () => {
+            if (!selectedUserToAct) return;
+            try {
+              setActionLoading(true);
+              await userService.resendInvitation(selectedUserToAct.id);
+              toast.success(t('adminOfficeUsers.dialogs.resend.success', { defaultValue: 'Invitación reenviada' }));
+              setResendDialogOpen(false);
+            } catch (err) {
+              console.error(err);
+              toast.error(t('adminOfficeUsers.dialogs.resend.error', { defaultValue: 'Error reenviando invitación' }));
+            } finally {
+              setActionLoading(false);
+              setSelectedUserToAct(null);
+            }
+          }}
+        >
+          {actionLoading ? t('adminOfficeUsers.dialogs.common.sending', { defaultValue: 'Enviando…' }) : t('adminOfficeUsers.dialogs.resend.confirm', { defaultValue: 'Reenviar' })}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+
+  {/* Suspend confirmation removed: suspender ahora actúa de inmediato desde el menú */ }
         <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -898,7 +930,7 @@ export default function AdminOfficeUsersPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </section>
-    </AppLayout>
+      </section >
+    </AppLayout >
   );
 }

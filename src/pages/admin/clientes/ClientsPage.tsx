@@ -63,6 +63,8 @@ import CategoryManagerDialog from "@/components/categories/CategoryManagerDialog
 import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActionsSelect";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import type { RowAction } from "@/components/table/RowActionsMenu";
+import { RowActionsMenu } from "@/components/table/RowActionsMenu";
+import MobileCardList from '@/components/responsive/MobileCardList';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { CategorySelect } from "@/components/categories/CategorySelect";
@@ -602,7 +604,7 @@ export default function ClientesPage() {
                   {t('clients.filters.title')}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[400px] sm:w-[460px]">
+              <SheetContent side="right" className="w-[400px] sm:w-[460px] h-full sm:h-auto">
                 <SheetHeader>
                   <SheetTitle>{t('clients.filters.title')}</SheetTitle>
                 </SheetHeader>
@@ -764,7 +766,7 @@ export default function ClientesPage() {
           </div>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 md:block hidden">
           <DataTable<Client>
             columns={columns}
             data={clients}
@@ -842,6 +844,39 @@ export default function ClientesPage() {
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="mt-4 md:hidden">
+          <MobileCardList
+            items={clients}
+            loading={loading}
+            emptyMessage={t('clients.empty.title') as string}
+            renderCard={(client: any) => (
+              <div className="flex flex-col">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="font-medium text-sm">{client.name}{client.lastName ? ` ${client.lastName}` : ''}</div>
+                    <div className="text-xs text-muted-foreground">{client.email || '-'}</div>
+                  </div>
+                  <div className="text-right">
+                    <div>
+                      <span className={`px-2 py-1 text-xs rounded-full ${client.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {client.active ? t('clients.status.active') : t('clients.status.archived')}
+                      </span>
+                    </div>
+                    <div className="mt-2">
+                      <RowActionsMenu actions={rowActions(client)} />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  <div>{client.phoneNumber || '-'}</div>
+                  <div>{client.address || '-'}</div>
+                </div>
+              </div>
+            )}
+          />
         </div>
       </section>
 

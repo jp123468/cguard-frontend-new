@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, Plus, X } from 'lucide-react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 export default function Tasks({ site }: { site?: any }) {
     const [actionOpen, setActionOpen] = useState(false);
@@ -60,8 +61,9 @@ export default function Tasks({ site }: { site?: any }) {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full">
+                <div>
+                    <div className="md:block hidden overflow-x-auto">
+                        <table className="w-full">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-4 py-3"><input type="checkbox" /></th>
@@ -90,14 +92,29 @@ export default function Tasks({ site }: { site?: any }) {
                                 </td>
                             </tr>
                         </tbody>
-                    </table>
+                        </table>
+                    </div>
+
+                    <div className="md:hidden">
+                        <MobileCardList items={[]} renderCard={(task: any) => (
+                            <div className="p-4 bg-white border rounded-lg">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <div className="text-sm font-semibold">{task.name || 'Task'}</div>
+                                        <div className="text-xs text-gray-500">{task.type || 'Type'}</div>
+                                    </div>
+                                    <div className="text-sm text-gray-600">{task.duration || '-'}</div>
+                                </div>
+                            </div>
+                        )} />
+                    </div>
                 </div>
 
                 {showNewTaskModal && (
                     <div className="fixed inset-0 z-50 flex">
                         <div className="absolute inset-0 bg-black/40" onClick={() => setShowNewTaskModal(false)} />
 
-                        <aside className="relative ml-auto w-full max-w-md h-full bg-white shadow-xl overflow-hidden">
+                        <aside className="relative w-full sm:ml-auto sm:max-w-md bg-white shadow-xl overflow-hidden rounded-t-lg sm:rounded-lg">
                             <div className="flex items-center justify-between p-4 border-b">
                                 <h3 className="text-lg font-semibold">New Task</h3>
                                 <button onClick={() => setShowNewTaskModal(false)} className="p-2 text-gray-500 hover:text-gray-700">
@@ -105,7 +122,7 @@ export default function Tasks({ site }: { site?: any }) {
                                 </button>
                             </div>
 
-                            <div className="p-6 overflow-y-auto h-[calc(100vh-160px)] space-y-4">
+                            <div className="p-6 overflow-y-auto max-h-[90vh] space-y-4">
                                 <div>
                                     <input value={taskName} onChange={e => setTaskName(e.target.value)} placeholder="Task Name*" className="w-full border rounded-lg h-12 px-3" />
                                 </div>

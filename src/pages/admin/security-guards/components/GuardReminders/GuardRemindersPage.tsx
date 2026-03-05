@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Search, ChevronDown, Plus, X, Paperclip, Filter } from 'lucide-react';
 import TimeInput from '@/components/TimeInput';
 import MultiCombobox from '@/components/app/multicombobox';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 
 export default function GuardRemindersPage() {
@@ -199,8 +200,9 @@ export default function GuardRemindersPage() {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div>
+              <div className="md:block hidden overflow-x-auto">
+                <table className="w-full">
                 <thead>
                   <tr className="border-b bg-gray-50">
                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
@@ -265,7 +267,22 @@ export default function GuardRemindersPage() {
                     ))
                   )}
                 </tbody>
-              </table>
+                </table>
+              </div>
+
+              <div className="md:hidden">
+                <MobileCardList
+                  items={remindersData || []}
+                  loading={false}
+                  emptyMessage={t('guards.reminders.empty.title', { defaultValue: 'No Result Found' }) as string}
+                  renderCard={(r: any) => (
+                    <div className="p-4 bg-white border rounded-lg">
+                      <div className="text-sm font-semibold">{r.title}</div>
+                      <div className="text-xs text-gray-500">{r.datetime} • {r.createdBy}</div>
+                    </div>
+                  )}
+                />
+              </div>
             </div>
           </div>
 

@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import MobileCardList from '@/components/responsive/MobileCardList';
 import AppLayout from "@/layouts/app-layout";
 
 import { Button } from "@/components/ui/button";
@@ -710,7 +711,9 @@ export default function SecurityGuardsPage() {
 
           {/* Tabla */}
           <div className="mt-4 border rounded-lg overflow-hidden">
-            <table className="min-w-full text-sm text-left border-collapse">
+            <div className="mt-2">
+              <div className="md:block hidden">
+                <table className="min-w-full text-sm text-left border-collapse">
               <thead className="bg-gray-50">
                 <tr className="border-b">
                   <th className="px-4 py-3">
@@ -955,7 +958,29 @@ export default function SecurityGuardsPage() {
                   </tr>
                 )}
               </tbody>
-            </table>
+                </table>
+              </div>
+
+              <div className="md:hidden">
+                <MobileCardList
+                  items={paginatedGuards || []}
+                  loading={false}
+                  emptyMessage={t('guards.list.noData', { defaultValue: 'No guards found' }) as string}
+                  renderCard={(g: any) => (
+                    <div className="p-4 bg-white border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">{(g.name?.trim()?.[0] ?? 'G').toUpperCase()}</div>
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold">{g.name}</div>
+                          <div className="text-xs text-gray-500">{g.email}</div>
+                        </div>
+                        <div className="text-xs text-gray-500 text-right">{g.status}</div>
+                      </div>
+                    </div>
+                  )}
+                />
+              </div>
+            </div>
 
             {/* Paginación (única) */}
             <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50">

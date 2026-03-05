@@ -3,6 +3,7 @@ import { Search, ChevronDown, Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 
 type Props = {
@@ -132,8 +133,9 @@ export default function GuardNotes({ guard }: Props) {
                         </div>
 
                         {/* Table */}
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
+                        <div>
+                            <div className="md:block hidden overflow-x-auto">
+                                <table className="w-full">
                                 <thead>
                                     <tr className="border-b bg-gray-50">
                                         <th className="px-4 py-3 text-left">
@@ -176,6 +178,21 @@ export default function GuardNotes({ guard }: Props) {
                                     )}
                                 </tbody>
                             </table>
+                            </div>
+
+                            <div className="md:hidden">
+                                <MobileCardList
+                                    items={notesData || []}
+                                    loading={false}
+                                    emptyMessage={t('guards.notes.empty.title', { defaultValue: 'No results found' }) as string}
+                                    renderCard={(note: any) => (
+                                        <div className="p-4 bg-white border rounded-lg">
+                                            <div className="text-sm font-semibold">{note.title}</div>
+                                            <div className="text-xs text-gray-500">{note.date} • {note.addedBy}</div>
+                                        </div>
+                                    )}
+                                />
+                            </div>
                         </div>
                     </div>
 

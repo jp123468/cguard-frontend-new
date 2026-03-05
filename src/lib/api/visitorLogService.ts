@@ -16,6 +16,7 @@ export interface VisitorLogFilters {
   clientId?: string;
   postSiteId?: string;
   guardId?: string;
+  placeType?: string;
   tag?: string;
   archived?: boolean;
 }
@@ -39,6 +40,7 @@ export const visitorLogService = {
     if ((filters as any).clientId) params.append('filter[clientId]', (filters as any).clientId);
     if ((filters as any).postSiteId) params.append('filter[postSiteId]', (filters as any).postSiteId);
     if ((filters as any).guardId) params.append('filter[guardId]', (filters as any).guardId);
+    if ((filters as any).placeType) params.append('filter[placeType]', (filters as any).placeType);
     if ((filters as any).tag) params.append('filter[tag]', (filters as any).tag);
     if (typeof (filters as any).archived === 'boolean') params.append('filter[archived]', (filters as any).archived ? 'true' : 'false');
 

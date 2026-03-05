@@ -4,6 +4,7 @@ import { postSiteService } from '@/lib/api/postSiteService';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 export default function ClientPostSites({ client }: { client: any }) {
   const actionRef = useRef<HTMLDivElement | null>(null);
@@ -88,7 +89,7 @@ export default function ClientPostSites({ client }: { client: any }) {
           </Link>
         </div>
 
-        <div className="mt-6 flex-1 min-h-0 overflow-y-auto overflow-x-auto">
+        <div className="mt-6 md:block hidden flex-1 min-h-0 overflow-y-auto overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b bg-gray-50">
@@ -172,12 +173,51 @@ export default function ClientPostSites({ client }: { client: any }) {
             </tbody>
           </table>
         </div>
+        {/* Mobile cards */}
+        <div className="mt-6 md:hidden">
+          <MobileCardList
+            items={filtered}
+            loading={false}
+            emptyMessage={'No Result Found'}
+            renderCard={(s: any) => (
+              <div>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="font-medium">{s.companyName ?? s.name}</div>
+                    <div className="text-xs text-muted-foreground">{(s.client && (s.client.name || s.client.companyName)) || (s.clientAccount && (s.clientAccount.name || s.clientAccount.companyName)) || '-'}</div>
+                    <div className="text-xs text-muted-foreground">{s.contactEmail ?? s.email ?? '-'}</div>
+                  </div>
+                  <div className="text-right">
+                    <div>
+                      {s.status === 'active' ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">Active</span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">Inactive</span>
+                      )}
+                    </div>
+                    <div className="mt-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button aria-label="Open menu" className="p-2 rounded-full hover:bg-gray-100"><EllipsisVertical className="h-5 w-5 text-slate-400" /></button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-44 p-1 rounded-md shadow-lg z-50">
+                          <Link to={`/post-sites/${s.id}`} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Eye className="h-4 w-4" />{` ${'View Details'}`}</Link>
+                          <button onClick={() => { setArchiveTargetIds([s.id]); (document.activeElement as HTMLElement | null)?.blur(); setSelectedIds((p) => p.filter((id) => id !== s.id)); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Archive className="h-4 w-4" />{` ${'Archive'}`}</button>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          />
+        </div>
 
-        {/* Archive confirmation modal */}
+        {/* Archive confirmation modal (bottom-sheet on mobile) */}
         {archiveTargetIds.length > 0 && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="absolute inset-0 bg-black opacity-30" onClick={() => setArchiveTargetIds([])} />
-            <div className="bg-white rounded-md shadow-xl p-6 z-70 w-full max-w-md mx-auto max-h-[90vh] overflow-auto">
+            <div className="bg-white rounded-t-lg sm:rounded-md shadow-xl p-4 sm:p-6 z-70 w-full sm:max-w-md max-h-full sm:max-h-[90vh] overflow-auto">
               <h3 className="text-lg font-semibold mb-2 text-center">{`Archive ${archiveTargetIds.length > 1 ? 'Post Sites' : 'Post Site'}?`}</h3>
               <p className="text-sm text-gray-600 mb-4 text-center">{`Are you sure you want to archive the selected ${archiveTargetIds.length} site(s)? This will mark them as inactive.`}</p>
               <div className="flex justify-end gap-3">

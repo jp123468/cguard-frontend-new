@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, Plus, X, EllipsisVertical, Eye, Trash } from 'lucide-react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { ApiService } from '@/services/api/apiService';
@@ -174,8 +175,9 @@ export default function AssignGuards({ site }: { site?: any }) {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full">
+                <div>
+                    <div className="md:block hidden overflow-x-auto">
+                        <table className="w-full">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-4 py-3"><input type="checkbox" /></th>
@@ -235,7 +237,17 @@ export default function AssignGuards({ site }: { site?: any }) {
                                 ))
                             )}
                         </tbody>
-                    </table>
+                        </table>
+                    </div>
+
+                    <div className="md:hidden">
+                        <MobileCardList items={assignedGuards} renderCard={(g: any) => (
+                            <div>
+                                <div className="text-sm font-semibold">{(g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.fullName || g.label || g.email || g.userId || '-')}</div>
+                                <div className="text-xs text-gray-500">{g.phoneNumber || g.email || '-'}</div>
+                            </div>
+                        )} loading={false} />
+                    </div>
                 </div>
 
                 {viewModalOpen && (
@@ -324,17 +336,17 @@ export default function AssignGuards({ site }: { site?: any }) {
 
 
                 {showAssignModal && (
-                    <div className="fixed inset-0 z-50 flex">
+                    <div className="fixed inset-0 z-50 flex items-end sm:items-center">
                         <div className="absolute inset-0 bg-black/40" onClick={() => setShowAssignModal(false)} />
 
-                        <aside className="relative ml-auto w-full max-w-md h-full bg-white shadow-xl overflow-hidden">
+                        <aside className="relative w-full sm:ml-auto sm:max-w-md bg-white shadow-xl overflow-hidden rounded-t-lg sm:rounded-lg">
                             <div className="flex items-center justify-between p-4 border-b">
                                 <h3 className="text-lg font-semibold">Assign Guard</h3>
                                 <button onClick={() => setShowAssignModal(false)} className="p-2 text-gray-500 hover:text-gray-700">
                                     <X size={18} />
                                 </button>
                             </div>
-                            <div className="p-6 overflow-y-auto h-[calc(100vh-160px)] space-y-4">
+                            <div className="p-6 overflow-y-auto max-h-[80vh] space-y-4">
                                 <div>
                                     <label className="block text-sm text-gray-600 mb-2">Skill Set</label>
                                     <select value={skillSet} onChange={e => setSkillSet(e.target.value)} className="w-full border rounded-lg h-12 px-3">

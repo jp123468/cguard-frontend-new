@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Search, Plus, X, ChevronDown } from 'lucide-react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 type Props = { client?: any };
 export default function ClientEmailReports({ client }: { client: any }) {

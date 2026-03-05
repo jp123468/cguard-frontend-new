@@ -1595,7 +1595,7 @@
     "exportPdf": "Exportar como PDF",
     "exportExcel": "Exportar como Excel",
     "import": "Importar",
-    "move": "Mover Cat",
+    "move": "Mover Categoría",
     "desactivate": "Desactivar",
     "activate": "Activar"
   },
@@ -1929,6 +1929,16 @@
       }
     },
     "page": {
+      "noData": "No hay datos disponibles",
+      "noTrackerData": "No hay datos de rastreo disponibles",
+      "noTimeLogData": "No hay datos de reloj de tiempo disponibles",
+      "noActivityData": "No hay datos de actividad disponibles",
+      "noCheckInData": "No hay datos de registros disponibles",
+      "noCheckOutData": "No hay datos de salidas registradas disponibles",
+      "noIncidentsData": "No hay datos de incidentes disponibles",
+      "noReportsData": "No hay datos de informes disponibles",
+      "noToursData": "No hay datos de recorridos por el sitio disponibles",
+      "noScansData": "No hay datos de etiquetas escaneadas disponibles",
       "liveTracker": "Rastreador en Vivo",
       "showGeofence": "Mostrar Geovalla",
       "hideGeofence": "Ocultar Geovalla",
@@ -2030,7 +2040,8 @@
       "guard": "Guardia",
       "numPeople": "Número de personas",
       "reason": "Motivo de la visita",
-      "exitTime": "Hora de salida"
+      "exitTime": "Hora de salida",
+      "placeType": "Tipo de lugar y número"
     },
     "form": {
       "name": "Nombre",
@@ -2063,7 +2074,14 @@
     "notprint": "No hay elementos seleccionados para imprimir",
     "created": "Visitante creado",
     "updated": "Visitante actualizado",
-    "deleted": "Visitante(s) eliminado(s)"
+    "deleted": "Visitante(s) eliminado(s)",
+    "placeTypeSelect": "Selecciona un lugar y el numero",
+    "placeType": {
+      "house": "Casa",
+      "apartment": "Apartamento",
+      "office": "Oficina"
+    },
+    "placeTypeValue": "Número lugar"
   },
   "billing": {
     "common": {
@@ -2265,6 +2283,106 @@
         "subtotal": "Subtotal",
         "total": "Total"
       }
+    }
+  },
+  "siteTour": {
+    "searchPlaceholder": "Buscar Recorridos",
+    "newTour": "Nuevo Recorrido",
+    "table": {
+      "name": "Nombre del Recorrido",
+      "duration": "Duración",
+      "type": "Tipo"
+    },
+    "placeholders": {
+      "tourNameFallback": "Nombre del recorrido"
+    },
+    "empty": {
+      "title": "No se encontraron resultados",
+      "message": "No pudimos encontrar elementos que coincidan con tu búsqueda"
+    },
+    "modal": {
+      "title": "Nuevo Recorrido",
+      "refresh": "Recargar"
+    },
+    "form": {
+      "tourName": "Nombre del Recorrido*",
+      "tourDescription": "Descripción del Recorrido",
+      "scheduledDays": "Días Programados*",
+      "options": {
+        "monFri": "Lun - Vie",
+        "sat": "Sáb"
+      },
+      "continuous": "Continuo",
+      "timeMode": {
+        "specific": "Hora específica",
+        "any": "Cualquier hora"
+      },
+      "selectTime": "Seleccionar hora",
+      "maxDuration": {
+        "placeholder": "Duración máxima",
+        "15": "15 min",
+        "30": "30 min"
+      },
+      "tagType": "Seleccionar tipo de etiqueta*",
+      "tagTypeOptionA": "Tipo A",
+      "tags": "Seleccionar etiquetas*",
+      "tagsOption1": "Etiqueta 1",
+      "assignGuard": "Asignar Guardia*",
+      "enableNotes": "Permitir notas en el recorrido",
+      "forceMedia": "Forzar adjuntar varios archivos multimedia"
+    },
+    "buttons": {
+      "saveDraft": "Guardar como borrador",
+      "submit": "Enviar"
+    },
+    "options": {
+      "monFri": "Lun - Vie",
+      "weekend": "Fin de semana"
+    }
+  },
+  "siteTourTag": {
+    "tabs": {
+      "qr": "Etiquetas QR",
+      "nfc": "Etiquetas NFC",
+      "virtual": "Etiquetas Virtuales",
+      "ble": "Beacons BLE"
+    },
+    "action": "Acción",
+    "searchPlaceholder": "Buscar Etiquetas",
+    "actions": {
+      "delete": "Eliminar",
+      "print": "Imprimir"
+    },
+    "table": {
+      "name": "Nombre",
+      "tagId": "ID de Etiqueta",
+      "geofenceRadius": "Radio de Geo-cerca"
+    },
+    "empty": {
+      "title": "No se encontraron resultados",
+      "message": "No pudimos encontrar elementos que coincidan con tu búsqueda"
+    },
+    "placeholders": {
+      "tagName": "Nombre de la etiqueta"
+    },
+    "modal": {
+      "title": "Nueva Etiqueta",
+      "refresh": "Recargar"
+    },
+    "form": {
+      "name": "Nombre*",
+      "tagId": "ID de Etiqueta*",
+      "location": "Ubicación",
+      "instructions": "Instrucciones para los guardias*",
+      "askQuestionsLabel": "Pedir preguntas al guardia tras escanear",
+      "latitude": "Latitud*",
+      "longitude": "Longitud*",
+      "mapLocation": "Ubicar en mapa",
+      "showGeoFence": "Mostrar Geo-cerca"
+    },
+    "buttons": {
+      "saveDraft": "Guardar como borrador",
+      "submit": "Enviar"
     }
   }
 }

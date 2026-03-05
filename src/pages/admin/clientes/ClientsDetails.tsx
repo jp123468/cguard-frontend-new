@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
+import MobileCardList from '@/components/responsive/MobileCardList';
 import ClientsLayout from '@/layouts/ClientsLayout';
 import { clientService } from '@/lib/api/clientService';
 import ClientOverview from './components/ClientOverview/ClientOverview';

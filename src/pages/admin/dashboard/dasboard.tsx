@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 // Empty state component
 function EmptyState({ title, description, alt }: { title: string; description: string; alt?: string }) {
@@ -272,27 +273,52 @@ export default function DashboardPage() {
 
               {/* Tracker Table */}
               <div className="mt-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('dashboard.table.headers.index')}</TableHead>
-                      <TableHead>{t('dashboard.table.headers.image')}</TableHead>
-                      <TableHead>{t('dashboard.table.headers.guard')}</TableHead>
-                      <TableHead>{t('dashboard.table.headers.postSite')}</TableHead>
-                      <TableHead>{t('dashboard.table.headers.lastUpdate')}</TableHead>
-                      <TableHead>{t('dashboard.table.headers.battery')}</TableHead>
-                      <TableHead>{t('dashboard.table.headers.speed')}</TableHead>
-                      <TableHead>{t('dashboard.table.headers.lastLocation')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={8}>
-                        <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noTrackerData')} />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
+                <div className="md:block hidden overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('dashboard.table.headers.index')}</TableHead>
+                        <TableHead>{t('dashboard.table.headers.image')}</TableHead>
+                        <TableHead>{t('dashboard.table.headers.guard')}</TableHead>
+                        <TableHead>{t('dashboard.table.headers.postSite')}</TableHead>
+                        <TableHead>{t('dashboard.table.headers.lastUpdate')}</TableHead>
+                        <TableHead>{t('dashboard.table.headers.battery')}</TableHead>
+                        <TableHead>{t('dashboard.table.headers.speed')}</TableHead>
+                        <TableHead>{t('dashboard.table.headers.lastLocation')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell colSpan={8}>
+                          <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noTrackerData')} />
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="md:hidden">
+                  <MobileCardList
+                    items={[]}
+                    loading={false}
+                    emptyMessage={t('dashboard.page.noTrackerData') as string}
+                    renderCard={(it: any) => (
+                      <div className="p-4 bg-white border rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm font-semibold">{it.guard || '-'}</div>
+                            <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
+                          </div>
+                          <div className="text-xs text-gray-500 text-right">
+                            <div>{it.lastUpdate || '-'}</div>
+                            <div className="mt-1">{it.battery || '-'} • {it.speed || '-'}</div>
+                          </div>
+                        </div>
+                        <div className="mt-2 text-xs text-gray-600">{it.lastLocation || '-'}</div>
+                      </div>
+                    )}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -321,9 +347,11 @@ export default function DashboardPage() {
               <span className="text-sm text-orange-600">{t('dashboard.page.entriesCount', { count: 0 })}</span>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
+              <div>
+                <div className="md:block hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
                         <TableHead>{t('dashboard.table.headers.index')}</TableHead>
                         <TableHead>{t('dashboard.table.headers.guard')}</TableHead>
                         <TableHead>{t('dashboard.table.headers.postSite')}</TableHead>
@@ -331,15 +359,32 @@ export default function DashboardPage() {
                         <TableHead>{t('dashboard.table.headers.shiftName')}</TableHead>
                         <TableHead>{t('dashboard.table.headers.time')}</TableHead>
                       </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={6}>
-                      <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noTimeLogData')} />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell colSpan={6}>
+                          <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noTimeLogData')} />
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="md:hidden">
+                  <MobileCardList
+                    items={[]}
+                    loading={false}
+                    emptyMessage={t('dashboard.page.noTimeLogData') as string}
+                    renderCard={(it: any) => (
+                      <div className="p-4 bg-white border rounded-lg">
+                        <div className="text-sm font-semibold">{it.guard || '-'}</div>
+                        <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
+                        <div className="mt-2 text-xs text-gray-600">{it.time || '-'}</div>
+                      </div>
+                    )}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -354,23 +399,40 @@ export default function DashboardPage() {
                 <span className="text-sm text-orange-600">{t('dashboard.page.entriesCount', { count: 0 })}</span>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>#</TableHead>
-                      <TableHead>Guardia</TableHead>
-                      <TableHead>Sitio de publicación</TableHead>
-                      <TableHead>Hora de Registro</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={4}>
-                        <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noCheckInData')} />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
+                <div className="md:block hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>#</TableHead>
+                        <TableHead>Guardia</TableHead>
+                        <TableHead>Sitio de publicación</TableHead>
+                        <TableHead>Hora de Registro</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell colSpan={4}>
+                          <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noCheckInData')} />
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="md:hidden">
+                  <MobileCardList
+                    items={[]}
+                    loading={false}
+                    emptyMessage={t('dashboard.page.noCheckInData') as string}
+                    renderCard={(it: any) => (
+                      <div className="p-4 bg-white border rounded-lg">
+                        <div className="text-sm font-semibold">{it.guard || '-'}</div>
+                        <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
+                        <div className="mt-2 text-xs text-gray-600">{it.time || '-'}</div>
+                      </div>
+                    )}
+                  />
+                </div>
               </CardContent>
             </Card>
           )}
@@ -383,23 +445,40 @@ export default function DashboardPage() {
                 <span className="text-sm text-orange-600">{t('dashboard.page.entriesCount', { count: 0 })}</span>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>#</TableHead>
-                      <TableHead>Guardia</TableHead>
-                      <TableHead>Sitio de publicación</TableHead>
-                      <TableHead>Hora de Salida</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={4}>
-                        <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noCheckOutData')} />
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
+                <div className="md:block hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>#</TableHead>
+                        <TableHead>Guardia</TableHead>
+                        <TableHead>Sitio de publicación</TableHead>
+                        <TableHead>Hora de Salida</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell colSpan={4}>
+                          <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noCheckOutData')} />
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="md:hidden">
+                  <MobileCardList
+                    items={[]}
+                    loading={false}
+                    emptyMessage={t('dashboard.page.noCheckOutData') as string}
+                    renderCard={(it: any) => (
+                      <div className="p-4 bg-white border rounded-lg">
+                        <div className="text-sm font-semibold">{it.guard || '-'}</div>
+                        <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
+                        <div className="mt-2 text-xs text-gray-600">{it.time || '-'}</div>
+                      </div>
+                    )}
+                  />
+                </div>
               </CardContent>
             </Card>
           )}
@@ -415,25 +494,37 @@ export default function DashboardPage() {
               </Button>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>#</TableHead>
-                    <TableHead>Incidente</TableHead>
-                    <TableHead>Sitio de publicación</TableHead>
-                    <TableHead>Guardia</TableHead>
-                    <TableHead>Fecha/Hora del Incidente</TableHead>
-                    <TableHead>Estado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={6}>
-                      <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noIncidentsData')} />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+              <div className="md:block hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>#</TableHead>
+                      <TableHead>Incidente</TableHead>
+                      <TableHead>Sitio de publicación</TableHead>
+                      <TableHead>Guardia</TableHead>
+                      <TableHead>Fecha/Hora del Incidente</TableHead>
+                      <TableHead>Estado</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={6}>
+                        <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noIncidentsData')} />
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="md:hidden">
+                <MobileCardList items={[]} loading={false} emptyMessage={t('dashboard.page.noIncidentsData') as string} renderCard={(it:any) => (
+                  <div className="p-4 bg-white border rounded-lg">
+                    <div className="text-sm font-semibold">{it.title || '-'}</div>
+                    <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
+                    <div className="mt-2 text-xs text-gray-600">{it.date || '-'}</div>
+                  </div>
+                )} />
+              </div>
             </CardContent>
           </Card>
         )}
@@ -448,25 +539,37 @@ export default function DashboardPage() {
               </Button>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>#</TableHead>
-                    <TableHead>Sitio de publicación</TableHead>
-                    <TableHead>Guardia</TableHead>
-                    <TableHead>Informe</TableHead>
-                    <TableHead>Informe Fecha/Hora</TableHead>
-                    <TableHead>Estado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={6}>
-                      <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noReportsData')} />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+              <div className="md:block hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>#</TableHead>
+                      <TableHead>Sitio de publicación</TableHead>
+                      <TableHead>Guardia</TableHead>
+                      <TableHead>Informe</TableHead>
+                      <TableHead>Informe Fecha/Hora</TableHead>
+                      <TableHead>Estado</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={6}>
+                        <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noReportsData')} />
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="md:hidden">
+                <MobileCardList items={[]} loading={false} emptyMessage={t('dashboard.page.noReportsData') as string} renderCard={(it:any) => (
+                  <div className="p-4 bg-white border rounded-lg">
+                    <div className="text-sm font-semibold">{it.report || '-'}</div>
+                    <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
+                    <div className="mt-2 text-xs text-gray-600">{it.date || '-'}</div>
+                  </div>
+                )} />
+              </div>
             </CardContent>
           </Card>
         )}
@@ -481,26 +584,38 @@ export default function DashboardPage() {
               </Button>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>#</TableHead>
-                    <TableHead>Recorrido Nombre</TableHead>
-                    <TableHead>Sitio de publicación</TableHead>
-                    <TableHead>Guardia</TableHead>
-                    <TableHead>Hora de Inicio</TableHead>
-                    <TableHead>Hora de Fin</TableHead>
-                    <TableHead>Etiqueta Perdida</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={7}>
-                      <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noToursData')} />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+              <div className="md:block hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>#</TableHead>
+                      <TableHead>Recorrido Nombre</TableHead>
+                      <TableHead>Sitio de publicación</TableHead>
+                      <TableHead>Guardia</TableHead>
+                      <TableHead>Hora de Inicio</TableHead>
+                      <TableHead>Hora de Fin</TableHead>
+                      <TableHead>Etiqueta Perdida</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={7}>
+                        <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noToursData')} />
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="md:hidden">
+                <MobileCardList items={[]} loading={false} emptyMessage={t('dashboard.page.noToursData') as string} renderCard={(it:any) => (
+                  <div className="p-4 bg-white border rounded-lg">
+                    <div className="text-sm font-semibold">{it.name || '-'}</div>
+                    <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
+                    <div className="mt-2 text-xs text-gray-600">{it.start || '-'} — {it.end || '-'}</div>
+                  </div>
+                )} />
+              </div>
             </CardContent>
           </Card>
         )}
@@ -515,23 +630,35 @@ export default function DashboardPage() {
               </Button>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Punto de control</TableHead>
-                    <TableHead>Sitio de publicación</TableHead>
-                    <TableHead>Guardia</TableHead>
-                    <TableHead>Fecha y hora del escaneo</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={4}>
-                      <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noScansData')} />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+              <div className="md:block hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Punto de control</TableHead>
+                      <TableHead>Sitio de publicación</TableHead>
+                      <TableHead>Guardia</TableHead>
+                      <TableHead>Fecha y hora del escaneo</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={4}>
+                        <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noScansData')} />
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="md:hidden">
+                <MobileCardList items={[]} loading={false} emptyMessage={t('dashboard.page.noScansData') as string} renderCard={(it:any) => (
+                  <div className="p-4 bg-white border rounded-lg">
+                    <div className="text-sm font-semibold">{it.point || '-'}</div>
+                    <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
+                    <div className="mt-2 text-xs text-gray-600">{it.date || '-'}</div>
+                  </div>
+                )} />
+              </div>
             </CardContent>
           </Card>
         )}

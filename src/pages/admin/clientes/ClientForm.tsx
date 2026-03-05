@@ -135,7 +135,7 @@ export default function ClientForm({
             (async () => {
                 try {
                     const data = await clientService.getClient(id);
-                     form.reset({
+                    const initial = {
                         name: data.name ?? "",
                         lastName: data.lastName ?? "",
                         email: data.email ?? "",
@@ -151,7 +151,12 @@ export default function ClientForm({
                         longitude: (data as any)?.longitude !== undefined && (data as any)?.longitude !== null ? String((data as any).longitude) : "",
                         active: data.active ?? true,
                         categoryIds: (data as any).categoryIds ?? [],
-                    });
+                    } as ClientInput;
+
+                    // store initial values to compute diffs on submit
+                    initialDataRef.current = initial;
+
+                    form.reset(initial);
                 } catch (e) {
                     console.error(e);
                     if (!redirecting) {
@@ -164,9 +169,13 @@ export default function ClientForm({
         }
     }, [mode, id, form]);
 
+    // Keep a ref with the initial data loaded in edit mode to compute diffs
+    const initialDataRef = useRef<ClientInput | null>(null);
+
     async function onSubmit(values: ClientInput) {
         // Crear payload solo con los campos que el backend actual soporta
-        const apiPayload: any = {
+        // En modo edición enviaremos únicamente los campos modificados (diff)
+        const basePayload: any = {
             name: values.name,
             email: values.email,
             phoneNumber: values.phoneNumber,
@@ -174,47 +183,87 @@ export default function ClientForm({
             categoryIds: Array.isArray((values as any).categoryIds) ? (values as any).categoryIds : null,
         };
 
-        // Agregar campos opcionales (enviar aunque estén vacíos para permitir borrarlos)
-        if (values.lastName !== undefined) apiPayload.lastName = values.lastName;
-        if (values.addressLine2 !== undefined) apiPayload.addressLine2 = values.addressLine2;
-        if (values.postalCode !== undefined) apiPayload.postalCode = values.postalCode;
-        if (values.city !== undefined) apiPayload.city = values.city;
-        if (values.country !== undefined) apiPayload.country = values.country;
-        if (values.faxNumber !== undefined) apiPayload.faxNumber = values.faxNumber;
-        if (values.website !== undefined) apiPayload.website = values.website;
-        if ((values as any).latitude !== undefined) (apiPayload as any).latitude = (values as any).latitude;
-        if ((values as any).longitude !== undefined) (apiPayload as any).longitude = (values as any).longitude;
-        if (values.active !== undefined) apiPayload.active = values.active;
+        // Agregar campos opcionales al basePayload para comparación
+        if (values.lastName !== undefined) basePayload.lastName = values.lastName;
+        if (values.addressLine2 !== undefined) basePayload.addressLine2 = values.addressLine2;
+        if (values.postalCode !== undefined) basePayload.postalCode = values.postalCode;
+        if (values.city !== undefined) basePayload.city = values.city;
+        if (values.country !== undefined) basePayload.country = values.country;
+        if (values.faxNumber !== undefined) basePayload.faxNumber = values.faxNumber;
+        if (values.website !== undefined) basePayload.website = values.website;
+        if ((values as any).latitude !== undefined) basePayload.latitude = (values as any).latitude;
+        if ((values as any).longitude !== undefined) basePayload.longitude = (values as any).longitude;
+        if (values.active !== undefined) basePayload.active = values.active;
 
         try {
             if (mode === "create") {
-                const data = await clientService.createClient(apiPayload as ClientInput);
+                const data = await clientService.createClient(basePayload as ClientInput);
                 toast.success(t('clients.clientCreated') || "Cliente creado exitosamente");
                 onSaved?.({ id: data.id, data: values });
                 form.reset();
                 if (!keepOnSave) navigate("/clients");
             } else if (mode === "edit" && id) {
-                const response = await clientService.updateClient(
-                    id,
-                    apiPayload as unknown as ClientInput
-                );
+                // Compute diff against initially loaded data so we only PATCH changed fields
+                const initial = initialDataRef.current ?? {} as ClientInput;
+                const changed: any = {};
+                const keys = Object.keys(basePayload) as Array<keyof ClientInput>;
+                for (const k of keys) {
+                    const cur = (basePayload as any)[k];
+                    const init = (initial as any)[k];
+                    // Normalize arrays and primitives for comparison
+                    const curVal = Array.isArray(cur) ? JSON.stringify(cur) : (cur === undefined ? null : String(cur));
+                    const initVal = Array.isArray(init) ? JSON.stringify(init) : (init === undefined ? null : String(init));
+                    if (curVal !== initVal) {
+                        // for arrays, send actual array; for others preserve original type
+                        changed[k as string] = Array.isArray((basePayload as any)[k]) ? (basePayload as any)[k] : (basePayload as any)[k];
+                    }
+                }
+
+                if (Object.keys(changed).length === 0) {
+                    toast.success(t('clients.noChanges', 'No hubo cambios para guardar'));
+                    return;
+                }
+
+                const response = await clientService.updateClient(id, changed as ClientInput);
                 toast.success(t('clients.clientUpdated') || "Cliente actualizado exitosamente");
                 onSaved?.({ id, data: values });
                 if (!keepOnSave) navigate("/clients");
             }
         } catch (e: any) {
-            // Debug: log full error object to help diagnose 400 payloads from the backend
             try { console.error('[ClientForm.onSubmit] save error:', e); } catch (err) {}
-            // The backend now includes `errors.existingId` when a duplicate email/phone is found.
-            const message = e?.message || (e?.response && e.response?.data && e.response.data.message) || "Error al guardar";
-            // Try multiple paths where the backend error details may appear
-            const existingId = e?.details?.errors?.existingId || e?.response?.data?.errors?.existingId || (e?.details && e.details.errors && e.details.errors.existingId);
-            try { console.debug('[ClientForm.onSubmit] backend errors:', e?.details ?? e?.response?.data); } catch (err) {}
-            toast.error(message);
+
+            // Normalize backend error shapes
+            const respData = e?.response?.data ?? e?.details ?? e;
+            const message =
+                respData?.message ||
+                e?.message ||
+                'Error al guardar';
+
+            // backend may populate errors.existingId and also include email/phoneNumber
+            const existingId =
+                respData?.errors?.existingId ||
+                respData?.existingId ||
+                (respData && respData.errors && respData.errors.existingId) ||
+                null;
+
+            const duplicateFields = [] as string[];
+            try {
+                if (respData?.errors?.email || respData?.email || (respData?.errors && respData.errors.email)) duplicateFields.push('email');
+                if (respData?.errors?.phoneNumber || respData?.phoneNumber || (respData?.errors && respData.errors.phoneNumber)) duplicateFields.push('phoneNumber');
+            } catch (err) {}
+
+            // Show a clearer message mentioning duplicate fields when available
+            if (existingId && duplicateFields.length > 0) {
+                const fieldLabels = duplicateFields.map((f) => t(`clients.form.${f}`, f)).join(', ');
+                toast.error(`${message} — ${t('clients.duplicateFound', { fields: fieldLabels })}`);
+            } else {
+                toast.error(message);
+            }
+
             if (existingId) {
-                // Navigate the user to the existing conflicting client without blocking alert
+                // Navigate the user to the existing conflicting client (overview) so they can inspect/merge
                 try {
-                    navigate(`/clients/${existingId}/profile`);
+                    navigate(`/clients/${existingId}/overview`);
                 } catch (navErr) {
                     // ignore navigation errors
                 }
@@ -320,8 +369,22 @@ export default function ClientForm({
                                     <FormControl>
                                         <PhoneInput
                                             value={typeof field.value === "string" ? field.value : ""}
-                                            onChange={field.onChange}
+                                            onChange={(val) => {
+                                                // Limitar a 10 dígitos locales (excluye código de país y espacios)
+                                                const digitsOnly = val.replace(/[^\d+]/g, "");
+                                                // Mantener el prefijo +Código y luego hasta 10 dígitos
+                                                const match = digitsOnly.match(/^(\+\d+)(\d*)$/);
+                                                if (match) {
+                                                    const prefix = match[1];
+                                                    const local = match[2].slice(0, 10);
+                                                    field.onChange(prefix + local);
+                                                } else {
+                                                    // fallback
+                                                    field.onChange(val.slice(0, 1 + 3 + 10));
+                                                }
+                                            }}
                                             placeholder="e.g. +12015550123"
+                                            maxLocalDigits={10}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -545,8 +608,19 @@ export default function ClientForm({
                                                 <FormControl>
                                                     <PhoneInput
                                                         value={typeof field.value === "string" ? field.value : ""}
-                                                        onChange={field.onChange}
+                                                        onChange={(val) => {
+                                                            const digitsOnly = val.replace(/[^\d+]/g, "");
+                                                            const match = digitsOnly.match(/^(\+\d+)(\d*)$/);
+                                                            if (match) {
+                                                                const prefix = match[1];
+                                                                const local = match[2].slice(0, 10);
+                                                                field.onChange(prefix + local);
+                                                            } else {
+                                                                field.onChange(val.slice(0, 1 + 3 + 10));
+                                                            }
+                                                        }}
                                                         placeholder="e.g. +12015550123"
+                                                        maxLocalDigits={10}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />

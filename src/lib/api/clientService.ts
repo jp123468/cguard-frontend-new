@@ -190,13 +190,12 @@ export const clientService = {
             payload.addressComplement = input.addressLine2;
             delete payload.addressLine2;
         }
-            // Debug: log tenant, masked token and payload to help diagnose 403 Forbidden
+            // Debug: log tenant and payload to help diagnose 400/403 issues
             try {
-                const token = typeof getAuthToken === 'function' ? getAuthToken() : null;
-                const masked = token ? (token.length > 12 ? `${token.slice(0, 6)}...${token.slice(-4)}` : token) : null;
-            } catch (e) {
-                // ignore logging errors
-            }
+                console.debug('[clientService.updateClient] tenantId:', tenantId, 'id:', id);
+                // avoid logging sensitive tokens; only log payload keys and lengths
+                try { console.debug('[clientService.updateClient] payload preview:', Object.keys(payload).reduce((acc, k) => ({ ...acc, [k]: payload[k] && payload[k].length ? (typeof payload[k] === 'string' ? `${String(payload[k]).slice(0, 100)}` : payload[k]) : payload[k] }), {})); } catch (e) {}
+            } catch (e) {}
 
             const { data } = await api.patch<any>(
                 `/tenant/${tenantId}/client-account/${id}`,

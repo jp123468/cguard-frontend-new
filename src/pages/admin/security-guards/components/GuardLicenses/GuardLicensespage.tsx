@@ -6,6 +6,7 @@ import AppLayout from '@/layouts/app-layout';
 import { useParams } from 'react-router-dom';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 type Props = {
   guard?: any;
@@ -121,8 +122,9 @@ export default function GuardLicenses({ guard }: Props) {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div>
+              <div className="md:block hidden overflow-x-auto">
+                <table className="w-full">
                 <thead>
                     <tr className="border-b bg-gray-50">
                     <th className="px-4 py-3 text-left">
@@ -175,7 +177,27 @@ export default function GuardLicenses({ guard }: Props) {
                     ))
                   )}
                 </tbody>
-              </table>
+                </table>
+              </div>
+
+              <div className="md:hidden">
+                <MobileCardList
+                  items={licenseData || []}
+                  loading={false}
+                  emptyMessage={t('guards.licenses.empty.title', { defaultValue: 'No results found' }) as string}
+                  renderCard={(lic: any) => (
+                    <div className="p-4 bg-white border rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-semibold">{lic.type}</div>
+                          <div className="text-xs text-gray-500">{lic.number}</div>
+                        </div>
+                        <div className="text-xs text-gray-500">{lic.expiryDate}</div>
+                      </div>
+                    </div>
+                  )}
+                />
+              </div>
             </div>
           </div>
 

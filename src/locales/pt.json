@@ -1091,5 +1091,98 @@
         "loadError": "Não foi possível carregar o usuário"
       }
     }
+  },
+  "siteTour": {
+    "searchPlaceholder": "Pesquisar Passeios",
+    "newTour": "Novo Passeio",
+    "table": {
+      "name": "Nome do Passeio",
+      "duration": "Duração",
+      "type": "Tipo"
+    },
+    "placeholders": {
+      "tourNameFallback": "Nome do passeio"
+    },
+    "empty": {
+      "title": "Nenhum resultado encontrado",
+      "message": "Não encontramos itens que correspondam à sua pesquisa"
+    },
+    "modal": {
+      "title": "Novo Passeio"
+    },
+    "form": {
+      "tourName": "Nome do Passeio*",
+      "tourDescription": "Descrição do Passeio",
+      "scheduledDays": "Dias Agendados*",
+      "options": {
+        "monFri": "Seg - Sex",
+        "sat": "Sáb"
+      },
+      "continuous": "Contínuo",
+      "timeMode": {
+        "specific": "Horário específico",
+        "any": "Qualquer horário"
+      },
+      "selectTime": "Selecionar horário",
+      "maxDuration": {
+        "placeholder": "Duração máxima",
+        "15": "15 min",
+        "30": "30 min"
+      },
+      "tagType": "Selecionar tipo de etiqueta*",
+      "tagTypeOptionA": "Tipo A",
+      "tags": "Selecionar etiquetas*",
+      "assignGuard": "Atribuir Guarda*",
+      "enableNotes": "Permitir notas no passeio",
+      "forceMedia": "Forçar anexar múltiplos arquivos de mídia"
+    },
+    "buttons": {
+      "saveDraft": "Salvar como rascunho",
+      "submit": "Enviar"
+    }
+  },
+  "siteTourTag": {
+    "tabs": {
+      "qr": "Etiquetas QR",
+      "nfc": "Etiquetas NFC",
+      "virtual": "Etiquetas Virtuais",
+      "ble": "Beacons BLE"
+    },
+    "action": "Ação",
+    "searchPlaceholder": "Pesquisar Etiquetas",
+    "actions": {
+      "delete": "Excluir",
+      "print": "Imprimir"
+    },
+    "table": {
+      "name": "Nome",
+      "tagId": "ID da Etiqueta",
+      "geofenceRadius": "Raio da Geo-cerca"
+    },
+    "empty": {
+      "title": "Nenhum resultado encontrado",
+      "message": "Não encontramos itens que correspondam à sua pesquisa"
+    },
+    "placeholders": {
+      "tagName": "Nome da etiqueta"
+    },
+    "modal": {
+      "title": "Nova Etiqueta"
+    },
+    "form": {
+      "name": "Nome*",
+      "tagId": "ID da Etiqueta*",
+      "location": "Localização",
+      "instructions": "Instruções para os guardas*",
+      "askQuestionsLabel": "Fazer perguntas ao guarda após escanear",
+      "latitude": "Latitude*",
+      "longitude": "Longitude*",
+      "mapLocation": "Localizar no mapa",
+      "showGeoFence": "Mostrar Geo-cerca"
+    },
+    "buttons": {
+      "saveDraft": "Salvar como rascunho",
+      "submit": "Enviar"
+    }
   }
 }

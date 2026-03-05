@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Search, ChevronDown, Plus, X, Paperclip } from 'lucide-react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 type Props = { site?: any };
 
@@ -52,8 +53,9 @@ export default function PostSiteFiles({ site }: Props) {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div>
+          <div className="md:block hidden overflow-x-auto">
+            <table className="w-full">
             <thead>
               <tr className="border-b bg-gray-50">
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
@@ -95,19 +97,38 @@ export default function PostSiteFiles({ site }: Props) {
                 ))
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
+
+          <div className="md:hidden">
+            <MobileCardList
+              items={filesData}
+              renderCard={(f: any) => (
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold">{f.name}</div>
+                    <div className="text-xs text-gray-500">{f.date} • {f.addedBy}</div>
+                  </div>
+                  <div className="text-sm text-gray-500">...</div>
+                </div>
+              )}
+              loading={false}
+            />
+          </div>
         </div>
       </div>
 
       {showUploadModal && (
-        <div className="fixed inset-0 z-50" onClick={() => setShowUploadModal(false)}>
-          <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowUploadModal(false)} />
+
+          <div className="w-full sm:ml-auto sm:w-96 bg-white shadow-2xl flex flex-col rounded-t-lg sm:rounded-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
               <h3 className="text-lg font-semibold">Upload Files</h3>
               <button onClick={() => setShowUploadModal(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1">
+            <div className="p-6 overflow-y-auto max-h-[70vh] flex-1">
               <div
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragEnter={(e) => { e.preventDefault(); setDragOver(true); }}

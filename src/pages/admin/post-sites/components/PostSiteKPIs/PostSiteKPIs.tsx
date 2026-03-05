@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import KpiService from '@/services/kpi.service';
 import KpiBarChart from '@/components/KpiBarChart';
 import { useTranslation } from "react-i18next";
+import MobileCardList from '@/components/responsive/MobileCardList';
 type Props = {
   site?: any;
 };
@@ -352,8 +353,9 @@ export default function PostSiteKPIs({ site }: Props) {
           </button>
         </div>
 
-        <div className="overflow-x-auto relative min-h-[520px] pb-12">
-          <table className="w-full min-h-[220px]">
+        <div>
+          <div className="md:block hidden overflow-x-auto relative min-h-[520px] pb-12">
+            <table className="w-full min-h-[220px]">
             <thead>
               <tr className="border-b bg-gray-50">
                 <th className="px-4 py-3 text-left">
@@ -551,11 +553,30 @@ export default function PostSiteKPIs({ site }: Props) {
               )}
             </tbody>
           </table>
+          </div>
+
+          <div className="md:hidden">
+            <MobileCardList items={kpiData} renderCard={(kpi: any) => (
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="text-sm font-semibold">{kpi.type || 'KPI'}</div>
+                  <div className="text-xs text-gray-500">{formatDate(kpi.dateTime) || '-'}</div>
+                  <div className="text-sm text-gray-700 mt-2">{kpi.description}</div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <button onClick={(e) => { e.stopPropagation(); setEditingId(kpi.id); setShowModal(true); }} className="px-3 py-1 bg-gray-100 rounded text-sm">Edit</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleExportPdf(kpi); }} className="px-3 py-1 bg-gray-100 rounded text-sm">PDF</button>
+                </div>
+              </div>
+            )} loading={false} />
+          </div>
         </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50" onClick={handleCloseModal}>
-          <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center" onClick={handleCloseModal}>
+          <div className="absolute inset-0 bg-black/40" onClick={handleCloseModal} />
+
+          <div className="w-full sm:ml-auto sm:max-w-md bg-white shadow-2xl overflow-y-auto rounded-t-lg sm:rounded-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
               <h2 className="text-lg font-semibold text-gray-800">{t('postSites.KPI.modal.title', 'Add New KPIs (Key Performance Indicators)')}</h2>
             </div>

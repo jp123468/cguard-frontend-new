@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Search, ChevronDown, ChevronUp, Plus, X, Mail, MessageCircle, ChevronLeft, ChevronRight, Edit, Trash, FileText, File, Upload, MoreVertical } from 'lucide-react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import { toast } from 'sonner';
@@ -241,7 +242,7 @@ export default function GuardIndicators({ guard }: Props) {
           setMenuOpenId(null);
         }
       })();
-      } catch (e) {
+    } catch (e) {
       console.error('Error exporting Excel', e);
       toast.error(t('guards.KPI.toasts.excelExportError', 'Error exporting Excel'));
       setMenuOpenId(null);
@@ -317,7 +318,7 @@ export default function GuardIndicators({ guard }: Props) {
     <AppLayout>
       <GuardsLayout navKey="keep-safe" title="guards.nav.indicadores">
         <div className="space-y-4">
-          
+
           <div className="bg-white border rounded-lg p-6 shadow-sm min-h-[560px]">
             <div className="flex items-center justify-between gap-4 mb-6">
               {/* Left: Action Dropdown */}
@@ -374,510 +375,532 @@ export default function GuardIndicators({ guard }: Props) {
 
             {/* Table */}
             <div className="overflow-x-auto min-h-[520px] pb-12">
-              <table className="w-full">
-                <thead>
-                    <tr className="border-b bg-gray-50">
-                    <th className="px-4 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        className="rounded"
-                        checked={kpiData.length > 0 && selectedIds.length === kpiData.length}
-                        onChange={(e) => {
-                          if (e.target.checked) setSelectedIds(kpiData.map((k) => k.id));
-                          else setSelectedIds([]);
-                        }}
-                      />
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.KPI.kpitable.kpitype', 'Tipo')}</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.KPI.kpitable.kpidate', 'Fecha/Hora')}</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.KPI.kpitable.kpicreatedfor', 'Agregado por')}</th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
-                      <button className="hover:text-gray-900">↕</button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {kpiData.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-12">
-                        <div className="flex flex-col items-center justify-center gap-4">
-                          <div className="w-32 h-32">
-                            <svg viewBox="0 0 200 200" className="w-full h-full text-orange-100">
-                              <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                              <circle cx="85" cy="100" r="8" fill="white" />
-                              <circle cx="115" cy="100" r="8" fill="white" />
-                              <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                              <path d="M 60 60 L 70 50 M 140 60 L 150 50 M 80 40 L 90 30 M 120 40 L 110 30" stroke="currentColor" strokeWidth="2" />
-                            </svg>
-                          </div>
-                          <div className="text-center">
-                            <h3 className="text-lg font-semibold text-gray-700">{t('clients.empty.title', 'No se encontraron resultados')}</h3>
-                            <p className="text-sm text-gray-500 mt-1">{t('clients.empty.description', 'No pudimos encontrar ningún elemento que coincida con su búsqueda')}</p>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    kpiData.map((kpi, idx) => (
-                      <React.Fragment key={kpi.id || idx}>
-                        <tr onClick={() => setExpandedId(expandedId === kpi.id ? null : kpi.id)} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3">
-                            <input
-                              type="checkbox"
-                              className="rounded"
-                              checked={selectedIds.includes(kpi.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) setSelectedIds([...selectedIds, kpi.id]);
-                                else setSelectedIds(selectedIds.filter((id) => id !== kpi.id));
-                              }}
-                            />
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{kpi.type}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{formatDate(kpi.dateTime)}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{kpi.addedBy}</td>
-                          <td className="px-4 py-3 text-right relative" onClick={(e) => e.stopPropagation()}>
-                          <div className="inline-flex items-center">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === kpi.id ? null : kpi.id); }}
-                              className="text-gray-400 hover:text-gray-600 p-1 rounded mr-2"
-                              title="Options"
-                              data-kpi-menu-button
-                            >
-                              <MoreVertical size={16} />
-                            </button>
-
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setExpandedId(expandedId === kpi.id ? null : kpi.id); }}
-                              title={expandedId === kpi.id ? 'Collapse' : 'Expand'}
-                              className="text-gray-500 hover:text-gray-700 p-1 rounded"
-                            >
-                              {expandedId === kpi.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            </button>
-
-                            {menuOpenId === kpi.id && (
-                              <div data-kpi-menu={"kpi-" + (kpi.id || idx)} className="absolute right-4 top-full translate-y-2 w-44 min-w-[11rem] bg-white border rounded shadow-lg z-50 py-1 divide-y divide-gray-100 overflow-hidden">
-                              <button onClick={() => { setEditingId(kpi.id); setFormData({
-                                frequency: kpi.frequency || '',
-                                description: kpi.description || '',
-                                standardReports: !!kpi.standardReports,
-                                standardReportsNumber: kpi.standardReportsNumber || '',
-                                incidentReports: !!kpi.incidentReports,
-                                incidentReportsNumber: kpi.incidentReportsNumber || '',
-                                routeReports: !!kpi.routeReports,
-                                routeReportsNumber: kpi.routeReportsNumber || '',
-                                taskReports: !!kpi.taskReports,
-                                taskReportsNumber: kpi.taskReportsNumber || '',
-                                verificationReports: !!kpi.verificationReports,
-                                verificationReportsNumber: kpi.verificationReportsNumber || '',
-                                emailNotification: !!kpi.emailNotification,
-                                emails: kpi.emails || [],
-                              }); setShowModal(true); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                                    <div className="flex items-center gap-2 text-sm text-gray-700"><Edit size={16} />{t('actions.edit', 'Edit')}</div>
-                              </button>
-
-                                  <button onClick={() => { setToDeleteId(kpi.id); setDeleteModalOpen(true); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                                    <div className="flex items-center gap-2 text-sm text-red-600"><Trash size={16} />{t('actions.delete', 'Delete')}</div>
-                                  </button>
-
-                              <button onClick={() => { handleExportPdf(kpi); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                                <div className="flex items-center gap-2 text-sm text-gray-700"><FileText size={16} /> {t('guards.KPI.exportPdf', 'Export as PDF')}</div>
-                              </button>
-
-                              <button onClick={() => { handleExportExcel(kpi); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                                <div className="flex items-center gap-2 text-sm text-gray-700"><File size={16} /> {t('guards.KPI.exportExcel', 'Export as Excel')}</div>
-                              </button>
-
-                              <button onClick={() => { toast.success(t('guards.KPI.emailNotImplemented', 'Email report not implemented')); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                                <div className="flex items-center gap-2 text-sm text-gray-700"><Mail size={16} /> {t('guards.KPI.menu.email', 'Email Report')}</div>
-                              </button>
+              <div>
+                <div className="md:block hidden">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-gray-50">
+                        <th className="px-4 py-3 text-left">
+                          <input
+                            type="checkbox"
+                            className="rounded"
+                            checked={kpiData.length > 0 && selectedIds.length === kpiData.length}
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedIds(kpiData.map((k) => k.id));
+                              else setSelectedIds([]);
+                            }}
+                          />
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.KPI.kpitable.kpitype', 'Tipo')}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.KPI.kpitable.kpidate', 'Fecha/Hora')}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.KPI.kpitable.kpicreatedfor', 'Agregado por')}</th>
+                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                          <button className="hover:text-gray-900">↕</button>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {kpiData.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-12">
+                            <div className="flex flex-col items-center justify-center gap-4">
+                              <div className="w-32 h-32">
+                                <svg viewBox="0 0 200 200" className="w-full h-full text-orange-100">
+                                  <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
+                                  <circle cx="85" cy="100" r="8" fill="white" />
+                                  <circle cx="115" cy="100" r="8" fill="white" />
+                                  <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
+                                  <path d="M 60 60 L 70 50 M 140 60 L 150 50 M 80 40 L 90 30 M 120 40 L 110 30" stroke="currentColor" strokeWidth="2" />
+                                </svg>
+                              </div>
+                              <div className="text-center">
+                                <h3 className="text-lg font-semibold text-gray-700">{t('clients.empty.title', 'No se encontraron resultados')}</h3>
+                                <p className="text-sm text-gray-500 mt-1">{t('clients.empty.description', 'No pudimos encontrar ningún elemento que coincida con su búsqueda')}</p>
+                              </div>
                             </div>
-                            )}
-                          </div>
                           </td>
                         </tr>
+                      ) : (
+                        kpiData.map((kpi, idx) => (
+                          <React.Fragment key={kpi.id || idx}>
+                            <tr onClick={() => setExpandedId(expandedId === kpi.id ? null : kpi.id)} className="border-b hover:bg-gray-50">
+                              <td className="px-4 py-3">
+                                <input
+                                  type="checkbox"
+                                  className="rounded"
+                                  checked={selectedIds.includes(kpi.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) setSelectedIds([...selectedIds, kpi.id]);
+                                    else setSelectedIds(selectedIds.filter((id) => id !== kpi.id));
+                                  }}
+                                />
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{kpi.type}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{formatDate(kpi.dateTime)}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{kpi.addedBy}</td>
+                              <td className="px-4 py-3 text-right relative" onClick={(e) => e.stopPropagation()}>
+                                <div className="inline-flex items-center">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === kpi.id ? null : kpi.id); }}
+                                    className="text-gray-400 hover:text-gray-600 p-1 rounded mr-2"
+                                    title="Options"
+                                    data-kpi-menu-button
+                                  >
+                                    <MoreVertical size={16} />
+                                  </button>
 
-                        {expandedId === kpi.id && (
-                          <tr className="bg-white">
-                            <td colSpan={5} className="p-4">
-                              <div className="space-y-4 min-h-[360px]">
-                                <div className="flex items-start justify-between">
-                                  <div><strong>{t('guards.KPI.descriptionLabel', 'DESCRIPTION :')}</strong> <span className="ml-4">{kpi.description}</span></div>
-                                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <button onClick={(e) => { e.stopPropagation(); prevMonth(); loadKpis(); }} className="p-1 rounded hover:bg-gray-100"><ChevronLeft size={16} /></button>
-                                    <div className="px-3 py-1 border rounded">{formatMonth(selectedMonth)}</div>
-                                    <button onClick={(e) => { e.stopPropagation(); nextMonth(); loadKpis(); }} className="p-1 rounded hover:bg-gray-100"><ChevronRight size={16} /></button>
-                                  </div>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setExpandedId(expandedId === kpi.id ? null : kpi.id); }}
+                                    title={expandedId === kpi.id ? 'Collapse' : 'Expand'}
+                                    className="text-gray-500 hover:text-gray-700 p-1 rounded"
+                                  >
+                                    {expandedId === kpi.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                  </button>
+
+                                  {menuOpenId === kpi.id && (
+                                    <div data-kpi-menu={"kpi-" + (kpi.id || idx)} className="absolute right-4 top-full translate-y-2 w-44 min-w-[11rem] bg-white border rounded shadow-lg z-50 py-1 divide-y divide-gray-100 overflow-hidden">
+                                      <button onClick={() => {
+                                        setEditingId(kpi.id); setFormData({
+                                          frequency: kpi.frequency || '',
+                                          description: kpi.description || '',
+                                          standardReports: !!kpi.standardReports,
+                                          standardReportsNumber: kpi.standardReportsNumber || '',
+                                          incidentReports: !!kpi.incidentReports,
+                                          incidentReportsNumber: kpi.incidentReportsNumber || '',
+                                          routeReports: !!kpi.routeReports,
+                                          routeReportsNumber: kpi.routeReportsNumber || '',
+                                          taskReports: !!kpi.taskReports,
+                                          taskReportsNumber: kpi.taskReportsNumber || '',
+                                          verificationReports: !!kpi.verificationReports,
+                                          verificationReportsNumber: kpi.verificationReportsNumber || '',
+                                          emailNotification: !!kpi.emailNotification,
+                                          emails: kpi.emails || [],
+                                        }); setShowModal(true); setMenuOpenId(null);
+                                      }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
+                                        <div className="flex items-center gap-2 text-sm text-gray-700"><Edit size={16} />{t('actions.edit', 'Edit')}</div>
+                                      </button>
+
+                                      <button onClick={() => { setToDeleteId(kpi.id); setDeleteModalOpen(true); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
+                                        <div className="flex items-center gap-2 text-sm text-red-600"><Trash size={16} />{t('actions.delete', 'Delete')}</div>
+                                      </button>
+
+                                      <button onClick={() => { handleExportPdf(kpi); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
+                                        <div className="flex items-center gap-2 text-sm text-gray-700"><FileText size={16} /> {t('guards.KPI.exportPdf', 'Export as PDF')}</div>
+                                      </button>
+
+                                      <button onClick={() => { handleExportExcel(kpi); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
+                                        <div className="flex items-center gap-2 text-sm text-gray-700"><File size={16} /> {t('guards.KPI.exportExcel', 'Export as Excel')}</div>
+                                      </button>
+
+                                      <button onClick={() => { toast.success(t('guards.KPI.emailNotImplemented', 'Email report not implemented')); setMenuOpenId(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">
+                                        <div className="flex items-center gap-2 text-sm text-gray-700"><Mail size={16} /> {t('guards.KPI.menu.email', 'Email Report')}</div>
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
+                              </td>
+                            </tr>
 
-                                <div>
-                                  {(() => {
-                                    const metrics: any[] = [];
-                                    const actualVal = Number(kpi.actual || 0);
-                                    if (kpi.standardReportsNumber !== undefined && kpi.standardReportsNumber !== null && Number(kpi.standardReportsNumber) > 0) {
-                                      metrics.push({ key: 'standardReports', name: t('guards.KPI.metrics.standardReports', 'Standard Reports'), target: Number(kpi.standardReportsNumber), actual: actualVal });
-                                    }
-                                    if (kpi.taskReportsNumber !== undefined && kpi.taskReportsNumber !== null && Number(kpi.taskReportsNumber) > 0) {
-                                      metrics.push({ key: 'taskReports', name: t('guards.KPI.metrics.taskReports', 'Task Reports'), target: Number(kpi.taskReportsNumber), actual: actualVal });
-                                    }
-                                    if (kpi.incidentReportsNumber !== undefined && kpi.incidentReportsNumber !== null && Number(kpi.incidentReportsNumber) > 0) {
-                                      metrics.push({ key: 'incidentReports', name: t('guards.KPI.metrics.incidentReports', 'Incident Reports'), target: Number(kpi.incidentReportsNumber), actual: actualVal });
-                                    }
-                                    if (kpi.routeReportsNumber !== undefined && kpi.routeReportsNumber !== null && Number(kpi.routeReportsNumber) > 0) {
-                                      metrics.push({ key: 'routeReports', name: t('guards.KPI.metrics.routeReports', 'Route Reports'), target: Number(kpi.routeReportsNumber), actual: actualVal });
-                                    }
-                                    if (kpi.verificationReportsNumber !== undefined && kpi.verificationReportsNumber !== null && Number(kpi.verificationReportsNumber) > 0) {
-                                      metrics.push({ key: 'verificationReports', name: t('guards.KPI.metrics.verificationReports', 'Checklist Reports'), target: Number(kpi.verificationReportsNumber), actual: actualVal });
-                                    }
+                            {expandedId === kpi.id && (
+                              <tr className="bg-white">
+                                <td colSpan={5} className="p-4">
+                                  <div className="space-y-4 min-h-[360px]">
+                                    <div className="flex items-start justify-between">
+                                      <div><strong>{t('guards.KPI.descriptionLabel', 'DESCRIPTION :')}</strong> <span className="ml-4">{kpi.description}</span></div>
+                                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                                        <button onClick={(e) => { e.stopPropagation(); prevMonth(); loadKpis(); }} className="p-1 rounded hover:bg-gray-100"><ChevronLeft size={16} /></button>
+                                        <div className="px-3 py-1 border rounded">{formatMonth(selectedMonth)}</div>
+                                        <button onClick={(e) => { e.stopPropagation(); nextMonth(); loadKpis(); }} className="p-1 rounded hover:bg-gray-100"><ChevronRight size={16} /></button>
+                                      </div>
+                                    </div>
 
-                                    return (
-                                      <>
-                                        <table className="w-full border-collapse border">
-                                          <thead>
-                                            <tr className="bg-gray-50">
-                                              <th className="border px-4 py-2">{t('guards.KPI.table.name', 'Name')}</th>
-                                              <th className="border px-4 py-2">{t('guards.KPI.table.target', 'Target')}</th>
-                                              <th className="border px-4 py-2">{t('guards.KPI.table.actual', 'Actual')}</th>
-                                              <th className="border px-4 py-2">{t('guards.KPI.table.status', 'Status')}</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                            {metrics.length === 0 ? (
-                                              <tr>
-                                                <td className="border px-4 py-2" colSpan={4}>{t('guards.KPI.table.noTargets', 'No targets defined')}</td>
-                                              </tr>
-                                            ) : (
-                                              metrics.map((m) => (
-                                                <tr key={m.key}>
-                                                  <td className="border px-4 py-2 font-semibold">{m.name.toUpperCase()}</td>
-                                                  <td className="border px-4 py-2">{m.target}</td>
-                                                  <td className="border px-4 py-2">{m.actual}</td>
-                                                  <td className={`border px-4 py-2 ${m.actual >= m.target ? 'text-green-600' : 'text-red-600'}`}>{m.actual >= m.target ? t('guards.KPI.status.achieved', 'Achieved') : t('guards.KPI.status.notAchieved', 'Not Achieved')}</td>
+                                    <div>
+                                      {(() => {
+                                        const metrics: any[] = [];
+                                        const actualVal = Number(kpi.actual || 0);
+                                        if (kpi.standardReportsNumber !== undefined && kpi.standardReportsNumber !== null && Number(kpi.standardReportsNumber) > 0) {
+                                          metrics.push({ key: 'standardReports', name: t('guards.KPI.metrics.standardReports', 'Standard Reports'), target: Number(kpi.standardReportsNumber), actual: actualVal });
+                                        }
+                                        if (kpi.taskReportsNumber !== undefined && kpi.taskReportsNumber !== null && Number(kpi.taskReportsNumber) > 0) {
+                                          metrics.push({ key: 'taskReports', name: t('guards.KPI.metrics.taskReports', 'Task Reports'), target: Number(kpi.taskReportsNumber), actual: actualVal });
+                                        }
+                                        if (kpi.incidentReportsNumber !== undefined && kpi.incidentReportsNumber !== null && Number(kpi.incidentReportsNumber) > 0) {
+                                          metrics.push({ key: 'incidentReports', name: t('guards.KPI.metrics.incidentReports', 'Incident Reports'), target: Number(kpi.incidentReportsNumber), actual: actualVal });
+                                        }
+                                        if (kpi.routeReportsNumber !== undefined && kpi.routeReportsNumber !== null && Number(kpi.routeReportsNumber) > 0) {
+                                          metrics.push({ key: 'routeReports', name: t('guards.KPI.metrics.routeReports', 'Route Reports'), target: Number(kpi.routeReportsNumber), actual: actualVal });
+                                        }
+                                        if (kpi.verificationReportsNumber !== undefined && kpi.verificationReportsNumber !== null && Number(kpi.verificationReportsNumber) > 0) {
+                                          metrics.push({ key: 'verificationReports', name: t('guards.KPI.metrics.verificationReports', 'Checklist Reports'), target: Number(kpi.verificationReportsNumber), actual: actualVal });
+                                        }
+
+                                        return (
+                                          <>
+                                            <table className="w-full border-collapse border">
+                                              <thead>
+                                                <tr className="bg-gray-50">
+                                                  <th className="border px-4 py-2">{t('guards.KPI.table.name', 'Name')}</th>
+                                                  <th className="border px-4 py-2">{t('guards.KPI.table.target', 'Target')}</th>
+                                                  <th className="border px-4 py-2">{t('guards.KPI.table.actual', 'Actual')}</th>
+                                                  <th className="border px-4 py-2">{t('guards.KPI.table.status', 'Status')}</th>
                                                 </tr>
-                                              ))
-                                            )}
-                                          </tbody>
-                                        </table>
+                                              </thead>
+                                              <tbody>
+                                                {metrics.length === 0 ? (
+                                                  <tr>
+                                                    <td className="border px-4 py-2" colSpan={4}>{t('guards.KPI.table.noTargets', 'No targets defined')}</td>
+                                                  </tr>
+                                                ) : (
+                                                  metrics.map((m) => (
+                                                    <tr key={m.key}>
+                                                      <td className="border px-4 py-2 font-semibold">{m.name.toUpperCase()}</td>
+                                                      <td className="border px-4 py-2">{m.target}</td>
+                                                      <td className="border px-4 py-2">{m.actual}</td>
+                                                      <td className={`border px-4 py-2 ${m.actual >= m.target ? 'text-green-600' : 'text-red-600'}`}>{m.actual >= m.target ? t('guards.KPI.status.achieved', 'Achieved') : t('guards.KPI.status.notAchieved', 'Not Achieved')}</td>
+                                                    </tr>
+                                                  ))
+                                                )}
+                                              </tbody>
+                                            </table>
 
-                                        <div className="w-full">
-                                          <KpiBarChart data={metrics.map((m) => ({ name: m.name, target: m.target, actual: m.actual }))} width={720} height={300} />
-                                        </div>
-                                      </>
-                                    );
-                                  })()}
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                                            <div className="md:hidden">
+                                              <MobileCardList
+                                                items={kpiData || []}
+                                                loading={false}
+                                                emptyMessage={t('guards.KPI.empty', { defaultValue: 'No KPI data' }) as string}
+                                                renderCard={(k: any) => (
+                                                  <div className="p-4 bg-white border rounded-lg">
+                                                    <div className="text-sm font-semibold">{k.type}</div>
+                                                    <div className="text-xs text-gray-500">{k.date} • {k.createdBy}</div>
+                                                  </div>
+                                                )}
+                                              />
+                                            </div>
 
-          {/* Modal */}
-          {showModal && (
-            <div
-              className="fixed inset-0 z-50"
-              onClick={handleCloseModal}
-            >
-              <div
-                className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-                  <h2 className="text-lg font-semibold text-gray-800">{t('guards.KPI.modal.title', 'Añadir Nuevos KPIs (Indicadores Clave de Rendimiento)')}</h2>
+                                            <div className="w-full">
+                                              <KpiBarChart data={metrics.map((m) => ({ name: m.name, target: m.target, actual: m.actual }))} width={720} height={300} />
+                                            </div>
+                                          </>
+                                        );
+                                      })()}
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
+              </div>
 
-                {/* Body */}
-                <div className="p-6 space-y-6">
-                  {/* Frecuencia */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t('guards.KPI.modal.frequency', 'Frecuencia')} <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={formData.frequency}
-                      onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
-                    >
-                      <option value="">{t('guards.KPI.modal.frequencyOptions.select', 'Seleccionar frecuencia')}</option>
-                      <option value="diario">{t('guards.KPI.modal.frequencyOptions.daily', 'Diario')}</option>
-                      <option value="semanal">{t('guards.KPI.modal.frequencyOptions.weekly', 'Semanal')}</option>
-                      <option value="mensual">{t('guards.KPI.modal.frequencyOptions.monthly', 'Mensual')}</option>
-                    </select>
-                  </div>
+              {/* Modal */}
+              {showModal && (
+                <div
+                  className="fixed inset-0 z-50"
+                  onClick={handleCloseModal}
+                >
+                  <div
+                    className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl overflow-y-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
+                      <h2 className="text-lg font-semibold text-gray-800">{t('guards.KPI.modal.title', 'Añadir Nuevos KPIs (Indicadores Clave de Rendimiento)')}</h2>
+                    </div>
 
-                  {/* Descripción */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t('guards.KPI.modal.description', 'Descripción')} <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder={t('guards.KPI.modal.descriptionPlaceholder', 'Ingrese la descripción')}
-                      className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                      rows={4}
-                    />
-                  </div>
+                    {/* Body */}
+                    <div className="p-6 space-y-6">
+                      {/* Frecuencia */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {t('guards.KPI.modal.frequency', 'Frecuencia')} <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={formData.frequency}
+                          onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                          className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+                        >
+                          <option value="">{t('guards.KPI.modal.frequencyOptions.select', 'Seleccionar frecuencia')}</option>
+                          <option value="diario">{t('guards.KPI.modal.frequencyOptions.daily', 'Diario')}</option>
+                          <option value="semanal">{t('guards.KPI.modal.frequencyOptions.weekly', 'Semanal')}</option>
+                          <option value="mensual">{t('guards.KPI.modal.frequencyOptions.monthly', 'Mensual')}</option>
+                        </select>
+                      </div>
 
-                  {/* Checkboxes */}
-                  <div className="space-y-3">
-                    {/* Informes Estándar */}
-                    <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.standardReports', 'Informes Estándar')}</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.standardReports}
-                          onChange={(e) => setFormData({ ...formData, standardReports: e.target.checked })}
-                          className="rounded w-5 h-5"
-                        />
-                        <input
-                          type="number"
-                          min={0}
-                          value={formData.standardReportsNumber}
-                          onChange={(e: any) => {
-                            const v = e.target.value;
-                            const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
-                            setFormData({ ...formData, standardReportsNumber: sanitized });
-                          }}
-                          disabled={!formData.standardReports}
-                          placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
-                          className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      {/* Descripción */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {t('guards.KPI.modal.description', 'Descripción')} <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          value={formData.description}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          placeholder={t('guards.KPI.modal.descriptionPlaceholder', 'Ingrese la descripción')}
+                          className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                          rows={4}
                         />
                       </div>
-                    </div>
 
-                    {/* Informes de Incidentes */}
-                    <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.incidentReports', 'Informes de Incidentes')}</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.incidentReports}
-                          onChange={(e) => setFormData({ ...formData, incidentReports: e.target.checked })}
-                          className="rounded w-5 h-5"
-                        />
-                        <input
-                          type="number"
-                          min={0}
-                          value={formData.incidentReportsNumber}
-                          onChange={(e: any) => {
-                            const v = e.target.value;
-                            const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
-                            setFormData({ ...formData, incidentReportsNumber: sanitized });
-                          }}
-                          disabled={!formData.incidentReports}
-                          placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
-                          className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Informes de Recorridos */}
-                    <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.routeReports', 'Informes de Recorridos por el Sitio')}</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.routeReports}
-                          onChange={(e) => setFormData({ ...formData, routeReports: e.target.checked })}
-                          className="rounded w-5 h-5"
-                        />
-                        <input
-                          type="number"
-                          min={0}
-                          value={formData.routeReportsNumber}
-                          onChange={(e: any) => {
-                            const v = e.target.value;
-                            const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
-                            setFormData({ ...formData, routeReportsNumber: sanitized });
-                          }}
-                          disabled={!formData.routeReports}
-                          placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
-                          className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Informes de Tareas */}
-                    <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.taskReports', 'Informes de Tareas')}</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.taskReports}
-                          onChange={(e) => setFormData({ ...formData, taskReports: e.target.checked })}
-                          className="rounded w-5 h-5"
-                        />
-                        <input
-                          type="number"
-                          min={0}
-                          value={formData.taskReportsNumber}
-                          onChange={(e: any) => {
-                            const v = e.target.value;
-                            const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
-                            setFormData({ ...formData, taskReportsNumber: sanitized });
-                          }}
-                          disabled={!formData.taskReports}
-                          placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
-                          className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Informes de Listas de Verificación */}
-                    <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
-                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.verificationReports', 'Informes de Listas de Verificación')}</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.verificationReports}
-                          onChange={(e) => setFormData({ ...formData, verificationReports: e.target.checked })}
-                          className="rounded w-5 h-5"
-                        />
-                        <input
-                          type="number"
-                          min={0}
-                          value={formData.verificationReportsNumber}
-                          onChange={(e: any) => {
-                            const v = e.target.value;
-                            const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
-                            setFormData({ ...formData, verificationReportsNumber: sanitized });
-                          }}
-                          disabled={!formData.verificationReports}
-                          placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
-                          className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Email Notification */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.emailNotificationLabel', 'Enviar Informe KPI por Correo Electrónico')}</label>
-                      <input
-                        type="checkbox"
-                        checked={formData.emailNotification}
-                        onChange={(e) => setFormData({ ...formData, emailNotification: e.target.checked })}
-                        className="rounded w-5 h-5 ml-auto accent-orange-600"
-                      />
-                    </div>
-
-                    {formData.emailNotification && (
+                      {/* Checkboxes */}
                       <div className="space-y-3">
-                        {/* Email chips */}
-                        {formData.emails && formData.emails.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {formData.emails.map((email) => (
-                              <div key={email} className="flex items-center gap-2 bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm">
-                                <span>{email}</span>
-                                <button
-                                  onClick={() => handleRemoveEmail(email)}
-                                  className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                                >
-                                  <X size={14} />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Email input with add button */}
-                        <div className="space-y-1">
-                            <div className="flex gap-2">
+                        {/* Informes Estándar */}
+                        <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
+                          <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.standardReports', 'Informes Estándar')}</label>
+                          <div className="flex items-center gap-2">
                             <input
-                              type="email"
-                              value={currentEmail}
-                              onChange={(e) => {
-                                setCurrentEmail(e.target.value);
-                                setEmailError('');
-                              }}
-                              onKeyPress={handleKeyPress}
-                              placeholder={t('guards.KPI.modal.newEmailPlaceholder', 'Nuevo Correo Electrónico...')}
-                              className={`flex-1 px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${emailError ? 'border-red-500 focus:ring-red-500' : 'focus:ring-orange-500'
-                                }`}
+                              type="checkbox"
+                              checked={formData.standardReports}
+                              onChange={(e) => setFormData({ ...formData, standardReports: e.target.checked })}
+                              className="rounded w-5 h-5"
                             />
-                            <button
-                              onClick={handleAddEmail}
-                              className="px-4 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700 transition-colors"
-                            >
-                              {t('guards.KPI.modal.addEmail', 'Agregar')}
-                            </button>
+                            <input
+                              type="number"
+                              min={0}
+                              value={formData.standardReportsNumber}
+                              onChange={(e: any) => {
+                                const v = e.target.value;
+                                const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
+                                setFormData({ ...formData, standardReportsNumber: sanitized });
+                              }}
+                              disabled={!formData.standardReports}
+                              placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
+                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            />
                           </div>
-                          {emailError && (
-                            <p className="text-xs text-red-500">{emailError}</p>
-                          )}
+                        </div>
+
+                        {/* Informes de Incidentes */}
+                        <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
+                          <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.incidentReports', 'Informes de Incidentes')}</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={formData.incidentReports}
+                              onChange={(e) => setFormData({ ...formData, incidentReports: e.target.checked })}
+                              className="rounded w-5 h-5"
+                            />
+                            <input
+                              type="number"
+                              min={0}
+                              value={formData.incidentReportsNumber}
+                              onChange={(e: any) => {
+                                const v = e.target.value;
+                                const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
+                                setFormData({ ...formData, incidentReportsNumber: sanitized });
+                              }}
+                              disabled={!formData.incidentReports}
+                              placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
+                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Informes de Recorridos */}
+                        <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
+                          <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.routeReports', 'Informes de Recorridos por el Sitio')}</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={formData.routeReports}
+                              onChange={(e) => setFormData({ ...formData, routeReports: e.target.checked })}
+                              className="rounded w-5 h-5"
+                            />
+                            <input
+                              type="number"
+                              min={0}
+                              value={formData.routeReportsNumber}
+                              onChange={(e: any) => {
+                                const v = e.target.value;
+                                const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
+                                setFormData({ ...formData, routeReportsNumber: sanitized });
+                              }}
+                              disabled={!formData.routeReports}
+                              placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
+                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Informes de Tareas */}
+                        <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
+                          <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.taskReports', 'Informes de Tareas')}</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={formData.taskReports}
+                              onChange={(e) => setFormData({ ...formData, taskReports: e.target.checked })}
+                              className="rounded w-5 h-5"
+                            />
+                            <input
+                              type="number"
+                              min={0}
+                              value={formData.taskReportsNumber}
+                              onChange={(e: any) => {
+                                const v = e.target.value;
+                                const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
+                                setFormData({ ...formData, taskReportsNumber: sanitized });
+                              }}
+                              disabled={!formData.taskReports}
+                              placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
+                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Informes de Listas de Verificación */}
+                        <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
+                          <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.verificationReports', 'Informes de Listas de Verificación')}</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={formData.verificationReports}
+                              onChange={(e) => setFormData({ ...formData, verificationReports: e.target.checked })}
+                              className="rounded w-5 h-5"
+                            />
+                            <input
+                              type="number"
+                              min={0}
+                              value={formData.verificationReportsNumber}
+                              onChange={(e: any) => {
+                                const v = e.target.value;
+                                const sanitized = v === '' ? '' : String(Math.max(0, Number(v)));
+                                setFormData({ ...formData, verificationReportsNumber: sanitized });
+                              }}
+                              disabled={!formData.verificationReports}
+                              placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
+                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            />
+                          </div>
                         </div>
                       </div>
-                    )}
+
+                      {/* Email Notification */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <label className="text-sm font-medium text-gray-700">{t('guards.KPI.modal.emailNotificationLabel', 'Enviar Informe KPI por Correo Electrónico')}</label>
+                          <input
+                            type="checkbox"
+                            checked={formData.emailNotification}
+                            onChange={(e) => setFormData({ ...formData, emailNotification: e.target.checked })}
+                            className="rounded w-5 h-5 ml-auto accent-orange-600"
+                          />
+                        </div>
+
+                        {formData.emailNotification && (
+                          <div className="space-y-3">
+                            {/* Email chips */}
+                            {formData.emails && formData.emails.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {formData.emails.map((email) => (
+                                  <div key={email} className="flex items-center gap-2 bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm">
+                                    <span>{email}</span>
+                                    <button
+                                      onClick={() => handleRemoveEmail(email)}
+                                      className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                                    >
+                                      <X size={14} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Email input with add button */}
+                            <div className="space-y-1">
+                              <div className="flex gap-2">
+                                <input
+                                  type="email"
+                                  value={currentEmail}
+                                  onChange={(e) => {
+                                    setCurrentEmail(e.target.value);
+                                    setEmailError('');
+                                  }}
+                                  onKeyPress={handleKeyPress}
+                                  placeholder={t('guards.KPI.modal.newEmailPlaceholder', 'Nuevo Correo Electrónico...')}
+                                  className={`flex-1 px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${emailError ? 'border-red-500 focus:ring-red-500' : 'focus:ring-orange-500'
+                                    }`}
+                                />
+                                <button
+                                  onClick={handleAddEmail}
+                                  className="px-4 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700 transition-colors"
+                                >
+                                  {t('guards.KPI.modal.addEmail', 'Agregar')}
+                                </button>
+                              </div>
+                              {emailError && (
+                                <p className="text-xs text-red-500">{emailError}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-white">
+                      <button
+                        onClick={handleCloseModal}
+                        className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50"
+                      >
+                        {t('actions.cancel', 'Cancelar')}
+                      </button>
+                      <button
+                        onClick={handleSubmitKPI}
+                        className="px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700"
+                      >
+                        {t('guards.KPI.modal.addButton', 'AÑADIR')}
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-white">
-                  <button
-                    onClick={handleCloseModal}
-                    className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50"
-                  >
-                    {t('actions.cancel', 'Cancelar')}
-                  </button>
-                  <button
-                    onClick={handleSubmitKPI}
-                    className="px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700"
-                  >
-                    {t('guards.KPI.modal.addButton', 'AÑADIR')}
-                  </button>
+              )}
+              {deleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }}>
+                  <div className="absolute inset-0 bg-black opacity-30" />
+                  <div className="relative w-96 bg-white rounded shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                    <div className="p-6 border-b">
+                      <h3 className="text-lg font-semibold">{t('guards.KPI.modal.confirmDeleteTitle', 'Confirmar eliminación')}</h3>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-sm text-gray-700">{t('guards.KPI.modal.confirmDeleteMessage', '¿Estás seguro de que deseas eliminar {toDeleteId ? "este KPI" : `${selectedIds.length} KPI(s)`}? Esta acción no se puede deshacer.')}</p>
+                    </div>
+                    <div className="flex items-center justify-end gap-3 p-6 border-t bg-white">
+                      <button onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">{t('actions.cancel', 'Cancelar')}</button>
+                      <button onClick={async () => {
+                        try {
+                          if (toDeleteId) {
+                            await KpiService.destroy(toDeleteId);
+                            toast.success(t('guards.KPI.toasts.deleted', 'KPI eliminado'));
+                          } else if (selectedIds.length > 0) {
+                            await Promise.all(selectedIds.map((id) => KpiService.destroy(id)));
+                            toast.success(t('guards.KPI.toasts.deletedMultiple', 'KPIs eliminados'));
+                          } else {
+                            toast.error(t('guards.KPI.toasts.deleteNoneSelected', 'No hay elementos seleccionados'));
+                            return;
+                          }
+                          await loadKpis();
+                        } catch (e) {
+                          console.error(e);
+                          toast.error(t('guards.KPI.toasts.deleteError', 'Error al eliminar KPI(s)'));
+                        } finally {
+                          setDeleteModalOpen(false);
+                          setToDeleteId(null);
+                          setSelectedIds([]);
+                        }
+                      }} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">{t('actions.delete', 'Eliminar')}</button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-          )}
-          {deleteModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }}>
-              <div className="absolute inset-0 bg-black opacity-30" />
-              <div className="relative w-96 bg-white rounded shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                <div className="p-6 border-b">
-                  <h3 className="text-lg font-semibold">{t('guards.KPI.modal.confirmDeleteTitle', 'Confirmar eliminación')}</h3>
-                </div>
-                <div className="p-6">
-                  <p className="text-sm text-gray-700">{t('guards.KPI.modal.confirmDeleteMessage', '¿Estás seguro de que deseas eliminar {toDeleteId ? "este KPI" : `${selectedIds.length} KPI(s)`}? Esta acción no se puede deshacer.')}</p>
-                </div>
-                <div className="flex items-center justify-end gap-3 p-6 border-t bg-white">
-                  <button onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">{t('actions.cancel', 'Cancelar')}</button>
-                  <button onClick={async () => {
-                    try {
-                      if (toDeleteId) {
-                        await KpiService.destroy(toDeleteId);
-                        toast.success(t('guards.KPI.toasts.deleted', 'KPI eliminado'));
-                      } else if (selectedIds.length > 0) {
-                        await Promise.all(selectedIds.map((id) => KpiService.destroy(id)));
-                        toast.success(t('guards.KPI.toasts.deletedMultiple', 'KPIs eliminados'));
-                      } else {
-                        toast.error(t('guards.KPI.toasts.deleteNoneSelected', 'No hay elementos seleccionados'));
-                        return;
-                      }
-                      await loadKpis();
-                    } catch (e) {
-                      console.error(e);
-                      toast.error(t('guards.KPI.toasts.deleteError', 'Error al eliminar KPI(s)'));
-                    } finally {
-                      setDeleteModalOpen(false);
-                      setToDeleteId(null);
-                      setSelectedIds([]);
-                    }
-                  }} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">{t('actions.delete', 'Eliminar')}</button>
-                </div>
-              </div>
-            </div>
-          )}
           </div>
+          </div>
+
       </GuardsLayout>
+
     </AppLayout>
   );
 }

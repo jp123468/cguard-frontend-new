@@ -8,6 +8,7 @@ import { postSiteService } from '@/lib/api/postSiteService';
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import { toast } from "sonner";
 import { EllipsisVertical, Pencil, Trash, Plus } from 'lucide-react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 
 type Contact = {
@@ -328,8 +329,9 @@ export default function PostSiteContacts({ site }: { site?: any }) {
             </button>
           </div>
         </div>
-        <div className="mt-6 flex-1 min-h-0 overflow-y-auto overflow-x-auto">
-          <table className="w-full">
+        <div className="mt-6 flex-1 min-h-0 overflow-y-auto">
+          <div className="md:block hidden overflow-x-auto">
+            <table className="w-full">
             <thead>
               <tr className="border-b bg-gray-50">
                 <th className="px-4 py-3 text-left">
@@ -408,13 +410,35 @@ export default function PostSiteContacts({ site }: { site?: any }) {
               ))}
             </tbody>
           </table>
+          </div>
+
+          <div className="md:hidden">
+            <MobileCardList
+              items={filtered}
+              loading={loading}
+              renderCard={(c: Contact) => (
+                <div className="p-4 bg-white border rounded-lg">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-sm font-semibold">{c.name}</div>
+                      <div className="text-xs text-gray-500">{c.email || '-'}</div>
+                      <div className="text-xs text-gray-500">{c.mobile || '-'}</div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <button onClick={() => { setForm(c); setShowAdd(true); }} className="px-3 py-2 bg-gray-100 rounded-md text-sm">Edit</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
+          </div>
         </div>
       </div>
 
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center">
           <div className="absolute inset-0 bg-black opacity-30 z-40" onClick={handleCloseAdd} />
-          <div className="ml-auto w-full md:w-96 bg-white h-full shadow-xl p-6 overflow-auto z-50" onClick={e => e.stopPropagation()}>
+          <div className="w-full sm:ml-auto sm:w-96 bg-white h-full sm:h-auto shadow-xl p-6 overflow-auto z-50 rounded-t-lg sm:rounded-md" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{t('clients.contacts.form.AddClientContact') || 'Add Contact to Post Site'}</h3>
               <button onClick={handleCloseAdd} className="text-gray-500 hover:text-gray-700">✕</button>

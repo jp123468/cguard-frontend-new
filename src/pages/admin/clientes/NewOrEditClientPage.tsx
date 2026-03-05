@@ -6,6 +6,7 @@ import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useTranslation } from "react-i18next";
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 
 export default function NewOrEditClientPage() {

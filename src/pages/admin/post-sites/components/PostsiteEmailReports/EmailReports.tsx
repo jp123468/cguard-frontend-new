@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Plus, X } from 'lucide-react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 import { toast } from 'sonner';
 
 type EmailReport = {
@@ -125,8 +126,9 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div>
+          <div className="md:block hidden overflow-x-auto">
+            <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3"><input type="checkbox" checked={list.length > 0 && list.filter(i => i.email.toLowerCase().includes(query.toLowerCase())).every(i => selectedIds.includes(i.id))} onChange={toggleSelectAll} /></th>
@@ -170,16 +172,26 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
                 ))
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
+
+          <div className="md:hidden">
+            <MobileCardList items={list} renderCard={(r: any) => (
+              <div>
+                <div className="text-sm font-semibold">{r.email}</div>
+                <div className="text-xs text-gray-500">{r.frequency}</div>
+              </div>
+            )} loading={false} />
+          </div>
         </div>
       </div>
 
       {/* Drawer modal for Add Email */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center">
           <div className="absolute inset-0 bg-black/40 z-40" onClick={() => setModalOpen(false)} />
 
-          <div className="relative z-50 ml-auto w-full max-w-md h-full bg-white rounded-l-md shadow-lg pointer-events-auto flex flex-col">
+          <div className="w-full sm:ml-auto sm:w-full sm:max-w-md bg-white rounded-t-lg sm:rounded-l-md shadow-lg pointer-events-auto flex flex-col overflow-hidden relative z-50">
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-50">
               <h3 className="text-lg font-semibold">Add Email</h3>
               <button className="p-2 text-gray-500 hover:text-gray-700" onClick={() => setModalOpen(false)}><X size={18} /></button>

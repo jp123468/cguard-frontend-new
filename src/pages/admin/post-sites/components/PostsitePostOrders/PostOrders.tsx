@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, Plus } from 'lucide-react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 export default function PostSiteOrders({ site }: { site?: any }) {
   const [actionOpen, setActionOpen] = useState(false);
@@ -56,8 +57,9 @@ export default function PostSiteOrders({ site }: { site?: any }) {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div>
+          <div className="md:block hidden overflow-x-auto">
+            <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3"><input type="checkbox" /></th>
@@ -87,13 +89,23 @@ export default function PostSiteOrders({ site }: { site?: any }) {
                 </td>
               </tr>
             </tbody>
-          </table>
+            </table>
+          </div>
+
+          <div className="md:hidden">
+            <MobileCardList items={[]} renderCard={(po: any) => (
+              <div>
+                <div className="text-sm font-semibold">{po.title || 'Post Order'}</div>
+                <div className="text-xs text-gray-500">{po.date || '-'}</div>
+              </div>
+            )} />
+          </div>
         </div>
       </div>
       {showModal && (
-        <div className="fixed inset-0 z-50 flex">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center">
           <div className="absolute inset-0 bg-black opacity-30 z-40" onClick={() => setShowModal(false)} />
-          <div className="ml-auto w-full md:w-[680px] bg-white h-full shadow-2xl p-6 overflow-auto relative z-50" onClick={e => e.stopPropagation()}>
+          <div className="w-full sm:ml-auto sm:w-[680px] bg-white h-full sm:h-auto shadow-2xl p-6 overflow-auto relative z-50 rounded-t-lg sm:rounded-md" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4 border-b pb-3 sticky top-0 bg-white z-10">
               <h3 className="text-lg font-semibold">New Post Order</h3>
               <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">✕</button>

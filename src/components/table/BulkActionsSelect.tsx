@@ -32,7 +32,7 @@ export function BulkActionsSelect({ actions, onChange }: BulkActionsSelectProps)
     return (
         <Select value={value} onValueChange={handleChange}>
             <SelectTrigger className="w-44">
-                <SelectValue placeholder={t('action') || t('postSites.action') || 'Action'} />
+                <SelectValue placeholder={t('actions.action') || t('postSites.action') || 'Action'} />
             </SelectTrigger>
             <SelectContent>
                 {actions.map((a) => (

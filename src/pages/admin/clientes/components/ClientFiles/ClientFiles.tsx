@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, Plus, X, Paperclip } from 'lucide-react';
 import ClientsLayout from '@/layouts/ClientsLayout';
 import AppLayout from '@/layouts/app-layout';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 type Props = { client?: any };
 
@@ -82,7 +83,7 @@ export default function ClientFiles({ client }: Props) {
           </button>
         </div>
 
-        <div className="mt-6 flex-1 min-h-0 overflow-y-auto overflow-x-auto">
+        <div className="mt-6 md:block hidden flex-1 min-h-0 overflow-y-auto overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b bg-gray-50">
@@ -125,11 +126,31 @@ export default function ClientFiles({ client }: Props) {
             </tbody>
           </table>
         </div>
+
+        <div className="mt-6 md:hidden">
+          <MobileCardList
+            items={filesData}
+            loading={false}
+            emptyMessage={'No results found'}
+            renderCard={(f: any) => (
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="font-medium">{f.name}</div>
+                  <div className="text-xs text-muted-foreground">{f.date}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-700">{f.addedBy}</div>
+                </div>
+              </div>
+            )}
+          />
+        </div>
       </div>
 
       {showUpload && (
-        <div className="fixed inset-0 z-50" onClick={handleCloseUpload}>
-          <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center" onClick={handleCloseUpload}>
+          <div className="absolute inset-0 bg-black opacity-30" onClick={handleCloseUpload} />
+          <div className="w-full sm:w-96 bg-white rounded-t-lg sm:rounded-md flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
               <h3 className="text-lg font-semibold">Upload Files</h3>
               <button onClick={handleCloseUpload} className="text-gray-400 hover:text-gray-600"><X /></button>

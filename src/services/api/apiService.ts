@@ -14,6 +14,15 @@ export class ApiError extends Error {
 
 export class ApiService {
   static async request(endpoint: string, options: any = {}) {
+    // Global client-side rate-limit pause timestamp (ms since epoch).
+    // When backend returns 429 we set this so subsequent immediate requests
+    // fail fast until the pause expires (prevents request storms).
+    // Keep as property on the class to persist across HMR reloads.
+    if ((this as any)._rateLimitPausedUntil === undefined) (this as any)._rateLimitPausedUntil = 0;
+    const rateLimitPausedUntil: number = (this as any)._rateLimitPausedUntil || 0;
+    if (Date.now() < rateLimitPausedUntil) {
+      throw new ApiError('Client rate-limited: temporarily paused requests', 429, { pausedUntil: rateLimitPausedUntil });
+    }
     const token = localStorage.getItem("authToken");
 
     const headers: Record<string, string> = {
@@ -66,6 +75,23 @@ export class ApiService {
     }
 
     if (!response.ok) {
+      // If server replied with 429, set client-side pause to avoid immediate retry storms.
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('retry-after');
+        let pauseMs = 5000; // default 5s
+        if (retryAfter) {
+          const asInt = parseInt(retryAfter, 10);
+          if (!Number.isNaN(asInt)) pauseMs = asInt * 1000;
+          else {
+            const parsed = Date.parse(retryAfter);
+            if (!Number.isNaN(parsed)) pauseMs = Math.max(1000, parsed - Date.now());
+          }
+        }
+        // Exponential safety: if there's already a pause, extend it a bit
+        const current = (this as any)._rateLimitPausedUntil || 0;
+        const nextUntil = Math.max(current, Date.now() + pauseMs);
+        (this as any)._rateLimitPausedUntil = nextUntil;
+      }
       // Build a concise message. If the response is non-JSON and looks like an HTML error page,
       // avoid including the full HTML body in logs and thrown errors.
       let msgRaw = (data && (data.message || data.error || data.detail)) || (typeof data === "string" && data) || `Error: ${response.status} ${response.statusText}`;

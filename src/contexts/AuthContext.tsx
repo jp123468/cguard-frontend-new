@@ -20,6 +20,10 @@ interface AuthContextType {
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Prevent concurrent executions that trigger repeated API calls (which may hit backend rate limits)
+let authCheckInProgress = false;
+let signInInProgress = false;
+
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) {
@@ -113,6 +117,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem("authToken");
     if (!token) { setLoading(false); return; }
 
+    if (authCheckInProgress) return;
+    authCheckInProgress = true;
+
     // restore cached permissions/tenant quickly to avoid UI flash
     try {
       const cached = localStorage.getItem('userPermissions');
@@ -166,10 +173,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } finally {
       setLoading(false);
+      authCheckInProgress = false;
     }
   };
 
   const signIn = async (credentials: LoginCredentials) => {
+    if (signInInProgress) {
+      return { success: false, error: 'Login already in progress' };
+    }
+    signInInProgress = true;
     try {
       setError(null);
       const response = await AuthService.signIn(credentials);
@@ -222,11 +234,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw new Error("No se recibió token de autenticación");
     } catch (err: any) {
       const message = err?.message || "Error al iniciar sesión";
+      // Surface rate-limit errors more clearly
+      if (err && err.status === 429) {
+        const m = 'Demasiadas solicitudes. Intenta de nuevo en unos segundos.';
+        setError(m);
+        return { success: false, error: m };
+      }
       if (message === "auth.emailNotVerified") {
         return { success: false, error: "Tu correo no está verificado. Te enviamos un correo de verificación.", needVerification: true };
       }
       setError(message);
       return { success: false, error: message };
+    } finally {
+      signInInProgress = false;
     }
   };
 

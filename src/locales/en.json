@@ -1298,6 +1298,105 @@
       "category": "Category",
       "categories": "Categories"
     },
+    "siteTour": {
+      "searchPlaceholder": "Search Tours",
+      "newTour": "New Tour",
+      "table": {
+        "name": "Tour Name",
+        "duration": "Duration",
+        "type": "Type"
+      },
+      "placeholders": {
+        "tourNameFallback": "Tour name"
+      },
+      "empty": {
+        "title": "No Result Found",
+        "message": "We can't find any item matching your search"
+      },
+      "modal": {
+        "title": "New Tour"
+      },
+      "form": {
+        "tourName": "Tour Name*",
+        "tourDescription": "Tour Description",
+        "scheduledDays": "Scheduled Days*",
+        "options": {
+          "monFri": "Mon - Fri",
+          "sat": "Sat"
+        },
+        "continuous": "Continuous",
+        "timeMode": {
+          "specific": "Specific Time",
+          "any": "Any Time"
+        },
+        "selectTime": "Select Time",
+        "maxDuration": {
+          "placeholder": "Max Duration",
+          "15": "15 mins",
+          "30": "30 mins"
+        },
+        "tagType": "Select Tag Type*",
+        "tagTypeOptionA": "Type A",
+        "tags": "Select Tags*",
+        "tagsOption1": "Tag 1",
+        "assignGuard": "Assign Guard*",
+        "enableNotes": "Enable site tour notes",
+        "forceMedia": "Force guard to attach multiple media files"
+      },
+      "buttons": {
+        "saveDraft": "Save As Draft",
+        "submit": "Submit"
+      },
+      "options": {
+        "monFri": "Mon - Fri",
+        "weekend": "Weekend"
+      }
+    },
+    "siteTourTag": {
+      "tabs": {
+        "qr": "QR Tags",
+        "nfc": "NFC Tags",
+        "virtual": "Virtual Tags",
+        "ble": "Ble Beacons"
+      },
+      "action": "Action",
+      "searchPlaceholder": "Search Tags",
+      "actions": {
+        "delete": "Delete",
+        "print": "Print"
+      },
+      "table": {
+        "name": "Name",
+        "tagId": "Tag Id",
+        "geofenceRadius": "Geofence Radius"
+      },
+      "empty": {
+        "title": "No Result Found",
+        "message": "We can't find any item matching your search"
+      },
+      "placeholders": {
+        "tagName": "Tag name"
+      },
+      "modal": {
+        "title": "New Tag",
+        "refresh": "Refresh"
+      },
+      "form": {
+        "name": "Name*",
+        "tagId": "Tag Id*",
+        "location": "Location",
+        "instructions": "Instructions For The Guards*",
+        "askQuestionsLabel": "Ask guards specific questions after they scan the tag",
+        "latitude": "Latitude*",
+        "longitude": "Longitude*",
+        "mapLocation": "Map Location",
+        "showGeoFence": "Show Geo-Fence"
+      },
+      "buttons": {
+        "saveDraft": "Save As Draft",
+        "submit": "Submit"
+      }
+    },
     "profile": {
       "title": "Post Site Profile",
       "editProfile": "Edit Profile",
@@ -1674,7 +1773,7 @@
     "exportPdf": "Export as PDF",
     "exportExcel": "Export as Excel",
     "import": "Import",
-    "move": "Move Cat",
+    "move": "Move Category",
     "desactivate": "Desactivate",
     "activate": "Activate"
   },
@@ -1900,6 +1999,16 @@
       }
     },
     "page": {
+      "noData": "No data available",
+      "noTrackerData": "No tracker data available",
+      "noTimeLogData": "No time log data available",
+      "noActivityData": "No activity data available",
+      "noCheckInData": "No check-in data available",
+      "noCheckOutData": "No check-out data available",
+      "noIncidentsData": "No incident data available",
+      "noReportsData": "No report data available",
+      "noToursData": "No site tour data available",
+      "noScansData": "No tag scan data available",
       "liveTracker": "Live Tracker",
       "showGeofence": "Show Geofence",
       "hideGeofence": "Hide Geofence",
@@ -2001,7 +2110,8 @@
       "guard": "Guard",
       "numPeople": "Number of people",
       "reason": "Reason of visit",
-      "exitTime": "Exit Time"
+      "exitTime": "Exit Time",
+      "placeType": "Place Type and Number"
     },
     "form": {
       "name": "Name",
@@ -2037,7 +2147,14 @@
     "notprint": "This item cannot be printed",
     "created": "Visitor created",
     "updated": "Visitor updated",
-    "deleted": "Visitor deleted"
+    "deleted": "Visitor deleted",
+    "placeTypeSelect": "Select a place and number",
+    "placeType": {
+      "house": "House",
+      "apartment": "Apartment",
+      "office": "Office"
+    },
+    "placeTypeValue": "Place Number"
   },
   "billing": {
     "common": {

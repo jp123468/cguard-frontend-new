@@ -5,6 +5,7 @@ import { Clock } from 'lucide-react';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
 import TimeInput from '@/components/TimeInput';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 type Av = { day: string; available: boolean; start: string; end: string };
 
@@ -75,8 +76,9 @@ type Props = {
         <div>
           <div className="bg-white border rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">{t('guards.availability.title', { defaultValue: 'Availability' })}</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div>
+              <div className="md:block hidden overflow-x-auto">
+                <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs text-gray-500">
                     <th className="p-2">{t('guards.availability.table.day', { defaultValue: 'Day' })}</th>
@@ -105,7 +107,24 @@ type Props = {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                </table>
+              </div>
+
+              <div className="md:hidden">
+                <MobileCardList
+                  items={availability || []}
+                  loading={false}
+                  emptyMessage={t('guards.availability.empty', { defaultValue: 'No availability' }) as string}
+                  renderCard={(a: any) => (
+                    <div className="p-4 bg-white border rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-semibold">{t(`guards.availability.days.${a.day}`, { defaultValue: a.day })}</div>
+                        <div className="text-xs text-gray-500">{a.available ? `${a.start} — ${a.end}` : t('guards.availability.notAvailable', { defaultValue: 'Not available' })}</div>
+                      </div>
+                    </div>
+                  )}
+                />
+              </div>
             </div>
               <div className="mt-4 flex justify-end">
               <button onClick={handleSaveAvailability} className="px-4 py-2 bg-orange-600 text-white rounded">{t('guards.availability.save', { defaultValue: 'Save' })}</button>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { clientService } from '@/lib/api/clientService';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 export default function ClientOverview({ client }: { client: any }) {
   const { t } = useTranslation();
@@ -57,6 +58,34 @@ export default function ClientOverview({ client }: { client: any }) {
 
   return (
     <div className="space-y-6">
+      {/* Mobile compact summary */}
+      <div className="md:hidden">
+        <MobileCardList
+          items={client ? [client] : []}
+          loading={false}
+          emptyMessage={t('clients.empty.title') as string}
+          renderCard={(c: any) => (
+            <div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-gray-500">{t('clients.overview.generalInfo.clientName')}</div>
+                  <div className="font-medium">{c?.name} {c?.lastName || ''}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-gray-500">{t('clients.overview.cards.postSites')}</div>
+                  <div className="font-semibold text-orange-500">{postSitesCount}</div>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                <div>{t('clients.overview.cards.guardsAssigned')}: <span className="font-medium text-blue-600">{guardsAssigned}</span></div>
+                <div>{t('clients.overview.cards.incidents')}: <span className="font-medium text-orange-500">{incidents}</span></div>
+                <div>{t('clients.overview.cards.toursCompleted')}: <span className="font-medium">{toursCompleted}</span></div>
+                <div>{t('clients.overview.cards.hoursWorked')}: <span className="font-medium text-red-500">{hoursWorked}</span></div>
+              </div>
+            </div>
+          )}
+        />
+      </div>
       <div className="bg-white border rounded-md p-4">
         <h3 className="text-lg font-semibold mb-4">{t('clients.nav.overview') || 'Resumen'}</h3>
         <div className="mb-6">

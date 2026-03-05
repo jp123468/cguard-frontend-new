@@ -387,7 +387,18 @@ export default function Invoices() {
                                         setActionValue('');
                                         return;
                                     }
-                                    setPendingBatchDeleteIds(selectedInvoices);
+                                    // Filter out invoices that are already sent
+                                    const allowed = selectedInvoices.filter(id => {
+                                        const inv = invoices.find(i => i.id === id);
+                                        const st = String((inv?.status ?? inv?.raw?.status ?? '')).toLowerCase();
+                                        return !(st.includes('envi') || st.includes('sent'));
+                                    });
+                                    if (allowed.length === 0) {
+                                        toast.error('No se pueden eliminar facturas que ya fueron enviadas');
+                                        setActionValue('');
+                                        return;
+                                    }
+                                    setPendingBatchDeleteIds(allowed);
                                     setIsDeleteDialogOpen(true);
                                     // Reset the combobox to show the placeholder again
                                     setActionValue('');
@@ -505,10 +516,27 @@ export default function Invoices() {
                                                                 window.location.href = `${window.location.origin}/billing/invoices/${invoice.id}?preview=1`;
                                                             }
                                                         }}>Ver</DropdownMenuItem>
-                                                        <DropdownMenuItem asChild>
-                                                            <Link to={`/billing/invoices/${invoice.id}`}>Editar</Link>
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem className="text-red-600" onClick={() => { setPendingDeleteId(invoice.id); setIsDeleteDialogOpen(true); }}>Eliminar</DropdownMenuItem>
+                                                        {(() => {
+                                                            const st = String((invoice.status ?? invoice.raw?.status ?? '')).toLowerCase();
+                                                            const isSent = st.includes('envi') || st.includes('sent');
+                                                            if (isSent) {
+                                                                return (
+                                                                    <>
+                                                                        <DropdownMenuItem disabled>Editar</DropdownMenuItem>
+                                                                        <DropdownMenuItem disabled className="text-red-600">Eliminar</DropdownMenuItem>
+                                                                    </>
+                                                                );
+                                                            }
+
+                                                            return (
+                                                                <>
+                                                                    <DropdownMenuItem asChild>
+                                                                        <Link to={`/billing/invoices/${invoice.id}`}>Editar</Link>
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem className="text-red-600" onClick={() => { setPendingDeleteId(invoice.id); setIsDeleteDialogOpen(true); }}>Eliminar</DropdownMenuItem>
+                                                                </>
+                                                            );
+                                                        })()}
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </td>

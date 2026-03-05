@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Search, ChevronDown, Plus, X } from 'lucide-react';
 import securityGuardService from '@/lib/api/securityGuardService';
 import api from '@/lib/api';
+import MobileCardList from '@/components/responsive/MobileCardList';
 import { toast } from 'sonner';
 
 export default function GuardAsignarSitiosPage() {
@@ -134,6 +135,19 @@ export default function GuardAsignarSitiosPage() {
         setClients(items);
       } catch (err) {
         console.error('Failed to load clients for assign modal', err);
+          <div className="md:hidden">
+            <MobileCardList
+              items={mappings || []}
+              loading={false}
+              emptyMessage={t('guards.assignSites.empty', { defaultValue: 'No mappings' }) as string}
+              renderCard={(m: any) => (
+                <div className="p-4 bg-white border rounded-lg">
+                  <div className="text-sm font-semibold">{m.client}</div>
+                  <div className="text-xs text-gray-500">{m.site}</div>
+                </div>
+              )}
+            />
+          </div>
       }
     })();
     return () => { mounted = false; };

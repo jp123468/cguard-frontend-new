@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, Plus, X, EllipsisVertical, Eye, Pencil, Trash } from 'lucide-react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 import { useTranslation } from 'react-i18next';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ type Props = {
 
 export default function PostSiteNotes({ site }: Props) {
   const { t } = useTranslation();
+  
   const actionRef = useRef<HTMLDivElement>(null);
   const [actionOpen, setActionOpen] = useState(false);
   const [actionSelection, setActionSelection] = useState<string>('Action');
@@ -190,8 +192,9 @@ export default function PostSiteNotes({ site }: Props) {
           </button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto">
-          <table className="w-full">
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="md:block hidden overflow-x-auto">
+            <table className="w-full">
             <thead>
               <tr className="border-b bg-gray-50">
                 <th className="px-4 py-3 text-left">
@@ -283,12 +286,25 @@ export default function PostSiteNotes({ site }: Props) {
               )}
             </tbody>
           </table>
+          </div>
+
+          <div className="md:hidden">
+            <MobileCardList items={notesData} renderCard={(note: any) => (
+              <div>
+                <div className="text-sm font-semibold">{note.title}</div>
+                <div className="text-xs text-gray-500">{note.date}</div>
+                <div className="text-sm text-gray-700 mt-2">{note.description}</div>
+              </div>
+            )} loading={false} />
+          </div>
         </div>
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50" onClick={handleCloseModal}>
-          <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center" onClick={handleCloseModal}>
+          <div className="absolute inset-0 bg-black/40" onClick={handleCloseModal} />
+
+          <div className="w-full sm:ml-auto sm:w-96 bg-white shadow-2xl overflow-y-auto rounded-t-lg sm:rounded-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
               <h2 className="text-lg font-semibold text-gray-800">{t('clients.notes.form.Title', 'Add New Note')}</h2>
             </div>

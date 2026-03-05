@@ -7,6 +7,7 @@ import { clientService } from '@/lib/api/clientService';
 import { toast } from 'sonner';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import MobileCardList from '@/components/responsive/MobileCardList';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -221,8 +222,9 @@ export default function ClientNotes({ client }: Props) {
                     </button>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto">
-                    <table className="w-full">
+                                <div className="flex-1 min-h-0">
+                                        <div className="md:block hidden overflow-y-auto overflow-x-auto">
+                                            <table className="w-full">
                         <thead className="-mx-6 px-6 bg-gray-50">
                             <tr className="border-b">
                                 <th className="px-4 py-3 text-left">
@@ -302,13 +304,38 @@ export default function ClientNotes({ client }: Props) {
                                 ))
                             )}
                         </tbody>
-                    </table>
-                </div>
+                                            </table>
+                                        </div>
+
+                                        <div className="md:hidden">
+                                            <MobileCardList
+                                                items={filtered}
+                                                loading={false}
+                                                emptyMessage={t('clients.empty.title') as string}
+                                                renderCard={(note: any) => (
+                                                    <div>
+                                                        <div className="flex items-start justify-between">
+                                                            <div>
+                                                                <div className="font-medium">{note.title}</div>
+                                                                <div className="text-xs text-muted-foreground">{note.noteDate || note.createdAt?.split('T')?.[0]}</div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="mt-2">
+                                                                    <button onClick={() => { setDetailsNote(note); }} className="px-2 py-1 text-sm">{t('actions.viewDetails')}</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            />
+                                        </div>
+                                </div>
             </div>
 
             {showModal && (
-                <div className="fixed inset-0 z-50" onClick={handleCloseModal}>
-                    <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center" onClick={handleCloseModal}>
+                    <div className="absolute inset-0 bg-black opacity-30" onClick={handleCloseModal} />
+                    <div className="w-full sm:w-96 bg-white rounded-t-lg sm:rounded-md shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
                             <h2 className="text-lg font-semibold text-gray-800">{t('clients.notes.form.Title', 'Add New Note')}</h2>
                         </div>

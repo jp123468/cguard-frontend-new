@@ -59,6 +59,7 @@ import { clientService } from "@/lib/api/clientService";
 import { categoryService, type Category } from "@/lib/api/categoryService";
 import CategoryManagerDialog from "@/components/categories/CategoryManagerDialog";
 import CategoryAssignDialog from "@/components/categories/CategoryAssignDialog";
+import MobileCardList from '@/components/responsive/MobileCardList';
 // PostSiteDetailsDialog is now rendered as a full page under /post-sites/:id
 import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActionsSelect";
 import { RowActionsMenu, type RowAction } from "@/components/table/RowActionsMenu";
@@ -473,7 +474,7 @@ export default function PostSitePage() {
                   {t('postSites.filtersTitle', 'Filtros')}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[400px] sm:w-[460px]">
+              <SheetContent side="right" className="w-[400px] sm:w-[460px] h-full sm:h-auto">
                 <SheetHeader>
                   <SheetTitle>{t('postSites.filtersTitle', 'Filtros')}</SheetTitle>
                 </SheetHeader>
@@ -642,7 +643,7 @@ export default function PostSitePage() {
         </div>
 
         {/* Tabla */}
-        <div className="mt-4 border rounded-lg overflow-hidden">
+        <div className="mt-4 md:block hidden border rounded-lg overflow-hidden">
           <table className="min-w-full text-sm text-left border-collapse">
             <thead className="bg-gray-50">
               <tr className="border-b">
@@ -829,6 +830,40 @@ export default function PostSitePage() {
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="mt-4 md:hidden">
+          <MobileCardList
+            items={postSites}
+            loading={loading}
+            emptyMessage={t('postSites.notsearch') as string}
+            renderCard={(site: any) => (
+              <div className="flex flex-col">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="font-medium text-sm">{site.name}</div>
+                    <div className="text-xs text-muted-foreground">{site.client ? formatClientName(site.client) : "-"}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs">
+                      <span className={`px-2 py-1 text-xs rounded-full ${site.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                        {site.status === "active" ? t('postSites.filters.active', 'Activo') : t('postSites.filters.archived', 'Archivado')}
+                      </span>
+                    </div>
+                    <div className="mt-2">
+                      <RowActionsMenu actions={rowActions(site)} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 text-xs text-muted-foreground">
+                  <div>{site.email || '-'}</div>
+                  <div>{site.phone || '-'}</div>
+                </div>
+              </div>
+            )}
+          />
         </div>
 
         <CategoryManagerDialog

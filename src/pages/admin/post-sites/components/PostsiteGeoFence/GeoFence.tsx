@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, ChevronDown } from 'lucide-react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 
 export default function PostSiteGeoFence({ site }: { site?: any }) {
   const [addOpen, setAddOpen] = useState(false);
@@ -51,21 +52,32 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
           />
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left">Shape</th>
-                <th className="px-4 py-3 text-left">Type</th>
-                <th className="px-4 py-3 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colSpan={3} className="px-4 py-12 text-center text-gray-500">No geofences defined yet</td>
-              </tr>
-            </tbody>
-          </table>
+        <div>
+          <div className="md:block hidden overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left">Shape</th>
+                  <th className="px-4 py-3 text-left">Type</th>
+                  <th className="px-4 py-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colSpan={3} className="px-4 py-12 text-center text-gray-500">No geofences defined yet</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="md:hidden">
+            <MobileCardList items={[]} renderCard={(g: any) => (
+              <div>
+                <div className="text-sm font-semibold">{g.type || 'Geofence'}</div>
+                <div className="text-xs text-gray-500">{g.shape || '-'}</div>
+              </div>
+            )} loading={false} />
+          </div>
         </div>
       </div>
     </div>

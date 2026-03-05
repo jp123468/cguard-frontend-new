@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import { useEffect, useState, useRef } from 'react';
 import { Search, ChevronDown, Plus, X } from 'lucide-react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 import { useTranslation } from 'react-i18next';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
@@ -156,7 +157,9 @@ export default function GuardSkillsPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <div>
+                  <div className="md:block hidden">
+                    <table className="w-full">
                   <thead>
                     <tr className="border-b bg-gray-50">
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
@@ -206,7 +209,23 @@ export default function GuardSkillsPage() {
                       ))
                     )}
                   </tbody>
-                </table>
+                      </table>
+                    </div>
+
+                    <div className="md:hidden">
+                      <MobileCardList
+                        items={mappings || []}
+                        loading={false}
+                        emptyMessage={t('guards.skills.empty.title', { defaultValue: 'No Result Found' }) as string}
+                        renderCard={(m: any) => (
+                          <div className="p-4 bg-white border rounded-lg">
+                            <div className="text-sm font-semibold">{m.name}</div>
+                            <div className="text-xs text-gray-500">{m.description}</div>
+                          </div>
+                        )}
+                      />
+                    </div>
+                  </div>
               </div>
             </div>
           </div>

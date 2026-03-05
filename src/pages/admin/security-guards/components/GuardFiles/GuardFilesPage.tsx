@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import { useEffect, useState, useRef } from 'react';
+import MobileCardList from '@/components/responsive/MobileCardList';
 import { Search, ChevronDown, Plus, X, Paperclip } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import securityGuardService from '@/lib/api/securityGuardService';
@@ -95,7 +96,9 @@ export default function GuardFilesPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <div>
+                  <div className="md:block hidden">
+                    <table className="w-full">
                   <thead>
                     <tr className="border-b bg-gray-50">
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
@@ -148,9 +151,30 @@ export default function GuardFilesPage() {
                     )}
                   </tbody>
                 </table>
+                  </div>
+                </div>
+
+                <div className="md:hidden">
+                  <MobileCardList
+                    items={filesData || []}
+                    loading={false}
+                    emptyMessage={t('guards.files.empty.title', { defaultValue: 'No Files Found' }) as string}
+                    renderCard={(f: any) => (
+                      <div className="p-4 bg-white border rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm font-semibold">{f.name}</div>
+                            <div className="text-xs text-gray-500">{f.date}</div>
+                          </div>
+                          <div className="text-xs text-gray-500">{f.addedBy}</div>
+                        </div>
+                      </div>
+                    )}
+                  />
+                </div>
+              </div>
               </div>
             </div>
-          </div>
         ) : (
           <div className="flex items-center justify-center h-32">
             <div className="text-gray-500">{t('guards.files.loadError', { defaultValue: 'Could not load guard' })}</div>

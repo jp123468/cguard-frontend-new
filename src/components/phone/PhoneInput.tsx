@@ -23,6 +23,11 @@ type PhoneInputProps = {
     onChange: (value: string) => void;
     placeholder?: string;
     onCountryChange?: (country: Country) => void;
+    /**
+     * Optional override for the maximum number of local digits (excluding country code).
+     * If provided, takes precedence over the country default maxLength.
+     */
+    maxLocalDigits?: number;
 };
 
 export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
@@ -43,7 +48,7 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
     // Calcular el máximo total: código de país + espacios + dígitos
     const maxPhoneLength = useMemo(() => {
         const codeLength = country.dialCode.length + 1; // +1 para el "+"
-        const maxDigits = country.maxLength || 15;
+        const maxDigits = (arguments[0] as PhoneInputProps)?.maxLocalDigits ?? country.maxLength ?? 15;
         return codeLength + maxDigits;
     }, [country]);
 
@@ -157,7 +162,7 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
                     value={displayValue}
                     onChange={handleInputChange}
                     placeholder={placeholder ?? "e.g. +12015550123"}
-                    maxLength={maxPhoneLength}
+                                maxLength={maxPhoneLength}
                 />
             </div>
         </div>
