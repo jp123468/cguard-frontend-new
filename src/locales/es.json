@@ -120,6 +120,7 @@
       "label": "Gestión de visitantes",
       "visitantes": "Visitantes",
       "vehiculos": "Vehículos",
+      "bitacoras": "Bitácoras",
       "visitas": "Visitas"
     },
     "patrulla": {
@@ -1386,19 +1387,36 @@
   "dashboard": {
     "title": "Panel de control",
     "welcome": "Bienvenido al panel",
-    "cards": "Tarjetas de resumen"
-    ,
+    "cards": "Tarjetas de resumen",
     "noWidgets": {
       "title": "No hay widgets habilitados",
       "desc": "Por favor, habilita al menos un widget para ver datos en la pantalla."
     },
     "widgets": {
-      "clientes": { "title": "Clientes", "subtitle": "Clientes activos" },
-      "sitios": { "title": "Sitios de publicación", "subtitle": "Sitios activos" },
-      "guardias": { "title": "Guardias", "subtitle": "Guardias activos" },
-      "equipo": { "title": "Equipo administrativo", "subtitle": "Usuarios activos" },
-      "registros": { "title": "Registros", "subtitle": "Hoy" },
-      "fichados": { "title": "Fichados", "subtitle": "Hoy" }
+      "clientes": {
+        "title": "Clientes",
+        "subtitle": "Clientes activos"
+      },
+      "sitios": {
+        "title": "Sitios de publicación",
+        "subtitle": "Sitios activos"
+      },
+      "guardias": {
+        "title": "Guardias",
+        "subtitle": "Guardias activos"
+      },
+      "equipo": {
+        "title": "Equipo administrativo",
+        "subtitle": "Usuarios activos"
+      },
+      "registros": {
+        "title": "Registros",
+        "subtitle": "Hoy"
+      },
+      "fichados": {
+        "title": "Fichados",
+        "subtitle": "Hoy"
+      }
     }
   },
   "header": {
@@ -1577,7 +1595,9 @@
     "exportPdf": "Exportar como PDF",
     "exportExcel": "Exportar como Excel",
     "import": "Importar",
-    "move": "Mover Cat"
+    "move": "Mover Cat",
+    "desactivate": "Desactivar",
+    "activate": "Activar"
   },
   "components": {
     "addRemove": {
@@ -1946,6 +1966,305 @@
     "empty": {
       "title": "Sin actividad",
       "description": "No hay actividad reciente para mostrar"
+    }
+  },
+  "visitantes": {
+    "dashboard": "Panel de control",
+    "title": "Visitantes",
+    "bitacoras": "Bitácoras",
+    "loading": "Cargando...",
+    "search": "Buscar",
+    "searchVisitor": "Buscar visitante",
+    "addVisitor": "Añadir visitante",
+    "newVisitor": "Nuevo Visitante",
+    "action": "Acción",
+    "action": {
+      "activate": "Activar",
+      "deactivate": "Inactivar",
+      "delete": "Eliminar"
+    },
+    "filters": "Filtros",
+    "client": "Cliente",
+    "selectClient": "Selecciona un cliente",
+    "site": "Sitio de publicación",
+    "selectSite": "Selecciona un sitio",
+    "guard": "Guardia",
+    "selectGuard": "Selecciona un guardia",
+    "tag": "Etiqueta",
+    "selectTag": "Selecciona una etiqueta",
+    "tag": {
+      "vip": "VIP",
+      "provider": "Proveedor"
+    },
+    "showArchived": "Mostrar datos archivados",
+    "filterButton": "Filtro",
+    "importVisitors": "Importar visitantes",
+    "print": "Imprimir",
+    "email": "Correo Electrónico",
+    "table": {
+      "name": "Nombre",
+      "company": "Empresa",
+      "email": "Correo Electrónico",
+      "lastRecord": "Último registro",
+      "status": "Estado"
+    },
+    "noResultsTitle": "No se encontraron resultados",
+    "noResultsBody": "No pudimos encontrar ningún elemento que coincida con su búsqueda",
+    "perPage": "Elementos por página",
+    "paginationPlaceholder": "0 of 0",
+    "noLogs": "No se encontraron registros de bitácoras",
+    "deleteSelected": "Eliminar seleccionados",
+    "exportCSV": "Exportar CSV",
+    "exportExcel": "Exportar como Excel",
+    "exportPDF": "Exportar como PDF",
+    "searchLogs": "Buscar en bitácoras",
+    "logDetails": "Detalles del Registro",
+    "logTable": {
+      "id": "ID",
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "idNumber": "ID",
+      "date": "Fecha",
+      "postSite": "Sitio de publicación",
+      "client": "Cliente",
+      "guard": "Guardia",
+      "numPeople": "Número de personas",
+      "reason": "Motivo de la visita",
+      "exitTime": "Hora de salida"
+    },
+    "form": {
+      "name": "Nombre",
+      "lastName": "Apellido",
+      "idNumber": "Número de identificación",
+      "idImage": "Imagen del ID",
+      "mobile": "Número de Móvil",
+      "phone": "Número de Teléfono",
+      "email": "Correo Electrónico",
+      "company": "Empresa",
+      "numPeople": "Número de personas",
+      "reason": "Motivo de la visita"
+    },
+    "placeholder": {
+      "name": "e.g. John",
+      "lastName": "e.g. Doe",
+      "idNumber": "e.g. 12015550123",
+      "mobile": "e.g. +12015550123",
+      "phone": "e.g. +12015550123",
+      "email": "correo@ejemplo.com",
+      "company": "Nombre de la empresa",
+      "reason": "Motivo de la visita"
+    },
+    "save": "Guardar",
+    "markExit": "Marcar Salida",
+    "confirmDeleteTitle": "Confirmar Eliminación",
+    "confirmDeleteMessage": "¿Está seguro de que desea eliminar estos elementos?",
+    "noSelectionExport": "No hay elementos seleccionados para exportar",
+    "noSelectionDelete": "No hay elementos seleccionados para eliminar",
+    "notprint": "No hay elementos seleccionados para imprimir",
+    "created": "Visitante creado",
+    "updated": "Visitante actualizado",
+    "deleted": "Visitante(s) eliminado(s)"
+  },
+  "billing": {
+    "common": {
+      "dashboard": "Panel de control",
+      "search_placeholder": "Buscar...",
+      "no_results": "No se encontraron resultados",
+      "items_per_page": "Elementos por página",
+      "confirm_delete": "¿Está seguro de que desea eliminar estos elementos?",
+      "no_selection": "No hay elementos seleccionados",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "create": "Crear",
+      "loading": "Cargando...",
+      "sending": "Enviando...",
+      "download": "Descargar",
+      "export": "Exportar",
+      "print": "Imprimir"
+    },
+    "estimates": {
+      "title": "Estimaciones",
+      "list_title": "Estimaciones",
+      "search_placeholder": "Buscar por número o cliente",
+      "top_actions": {
+        "create": "Nueva estimación",
+        "export": "Exportar",
+        "delete": "Eliminar seleccionadas"
+      },
+      "columns": {
+        "select": "Seleccionar",
+        "date": "Fecha",
+        "estimateNumber": "Número",
+        "client": "Cliente",
+        "total": "Total",
+        "expiryDate": "Fecha de vencimiento",
+        "status": "Estado",
+        "actions": "Acciones"
+      },
+      "statuses": {
+        "draft": "Borrador",
+        "sent": "Enviado",
+        "accepted": "Aceptado",
+        "rejected": "Rechazado",
+        "expired": "Expirado"
+      },
+      "filters": {
+        "open": "Filtros",
+        "client": "Cliente",
+        "status": "Estado",
+        "date_from": "Fecha desde",
+        "date_to": "Fecha hasta",
+        "apply": "Aplicar",
+        "clear": "Limpiar"
+      },
+      "actions": {
+        "view": "Ver",
+        "preview": "Previsualizar",
+        "send": "Enviar",
+        "convert": "Convertir en factura",
+        "download": "Descargar",
+        "delete": "Eliminar"
+      },
+      "messages": {
+        "no_results": "No se encontraron estimaciones",
+        "sent_success": "Estimación enviada",
+        "convert_success": "Estimación convertida en factura",
+        "delete_success": "Estimación eliminada"
+      },
+      "preview": {
+        "title": "Previsualizar estimación",
+        "client_details": "Detalles del cliente",
+        "site_details": "Detalles del sitio",
+        "items": "Artículos",
+        "notes": "Notas",
+        "terms": "Términos",
+        "subtotal": "Subtotal",
+        "tax": "Impuestos",
+        "total": "Total",
+        "as_invoice": "Previsualizar como factura"
+      }
+    },
+    "invoices": {
+      "title": "Facturas",
+      "search_placeholder": "Buscar por número o cliente",
+      "top_actions": {
+        "create": "Nueva factura",
+        "export": "Exportar",
+        "delete": "Eliminar seleccionadas"
+      },
+      "columns": {
+        "select": "Seleccionar",
+        "date": "Fecha",
+        "invoiceNumber": "Número",
+        "client": "Cliente",
+        "total": "Total",
+        "amountDue": "Saldo",
+        "dueDate": "Vencimiento",
+        "status": "Estado",
+        "actions": "Acciones"
+      },
+      "statuses": {
+        "draft": "Borrador",
+        "sent": "Enviado",
+        "paid": "Pagado",
+        "overdue": "Vencido",
+        "partial": "Parcial"
+      },
+      "actions": {
+        "view": "Ver",
+        "preview": "Previsualizar",
+        "send": "Enviar",
+        "download": "Descargar",
+        "register_payment": "Registrar pago",
+        "delete": "Eliminar"
+      },
+      "messages": {
+        "no_results": "No se encontraron facturas",
+        "send_success": "Factura enviada",
+        "delete_success": "Factura eliminada",
+        "payment_registered": "Pago registrado"
+      },
+      "preview": {
+        "title": "Previsualizar factura",
+        "client_details": "Detalles del cliente",
+        "site_details": "Detalles del sitio",
+        "items": "Artículos",
+        "notes": "Notas",
+        "terms": "Términos",
+        "subtotal": "Subtotal",
+        "tax": "Impuestos",
+        "total": "Total",
+        "amount_due": "Saldo"
+      },
+      "payment_modal": {
+        "title": "Registrar pago",
+        "date": "Fecha",
+        "amount": "Importe",
+        "method": "Método",
+        "note": "Nota",
+        "save": "Guardar pago",
+        "saving": "Guardando...",
+        "success": "Pago registrado correctamente",
+        "error": "Error registrando el pago"
+      }
+    },
+    "items": {
+      "title": "Elementos",
+      "search_placeholder": "Buscar elementos",
+      "columns": {
+        "name": "Nombre",
+        "description": "Descripción",
+        "price": "Precio",
+        "tax": "Impuesto",
+        "actions": "Acciones"
+      },
+      "actions": {
+        "add": "Agregar elemento",
+        "edit": "Editar",
+        "delete": "Eliminar"
+      },
+      "form": {
+        "title_create": "Crear elemento",
+        "title_edit": "Editar elemento",
+        "name": "Nombre",
+        "description": "Descripción",
+        "price": "Precio",
+        "tax": "Impuesto",
+        "save": "Guardar",
+        "creating": "Creando...",
+        "updating": "Actualizando..."
+      },
+      "messages": {
+        "no_results": "No se encontraron elementos",
+        "created": "Elemento creado",
+        "updated": "Elemento actualizado",
+        "deleted": "Elemento eliminado"
+      }
+    },
+    "forms": {
+      "validation": {
+        "required": "Campo obligatorio",
+        "invalid_number": "Número inválido",
+        "select_client": "Seleccione un cliente",
+        "select_site": "Seleccione un sitio"
+      },
+      "labels": {
+        "title": "Título",
+        "summary": "Resumen",
+        "client": "Cliente",
+        "site": "Sitio",
+        "number": "Número",
+        "po_so": "PO / SO",
+        "date": "Fecha",
+        "expiry_due": "Vencimiento",
+        "notes": "Notas",
+        "item_name": "Nombre del artículo",
+        "quantity": "Cantidad",
+        "rate": "Precio unitario",
+        "tax_rate": "Tasa de impuesto",
+        "subtotal": "Subtotal",
+        "total": "Total"
+      }
     }
   }
 }

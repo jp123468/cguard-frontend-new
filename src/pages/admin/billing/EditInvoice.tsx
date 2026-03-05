@@ -33,6 +33,7 @@ import { postSiteService } from "@/lib/api/postSiteService";
 import { userService } from "@/lib/api/userService";
 import { toast } from "sonner";
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
     Dialog,
     DialogContent,
@@ -57,6 +58,7 @@ interface ClientOption { id: string; name: string; raw?: any }
 interface PostSiteOption { id: string; name: string; clientId?: string; raw?: any }
 
 export default function EditInvoice() {
+        const { t } = useTranslation();
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -385,6 +387,7 @@ export default function EditInvoice() {
             } catch (err) {
                 console.error('Error loading invoice', err);
                 toast.error('No se pudo cargar la factura');
+                            toast.error(t('billing.invoices.messages.load_error', { defaultValue: 'No se pudo cargar la factura' }));
             }
         })();
         return () => { mounted = false };
@@ -464,6 +467,7 @@ export default function EditInvoice() {
         try {
             const tenantId = localStorage.getItem('tenantId') || '';
             if (!tenantId) { toast.error('Tenant no configurado'); setCreatingService(false); return; }
+                        if (!tenantId) { toast.error(t('billing.forms.validation.required', { defaultValue: 'Tenant no configurado' })); setCreatingService(false); return; }
             const payload: any = { title: newServiceTitle, price: Number(newServicePrice) || 0 };
             if (newServiceTaxId) payload.taxId = newServiceTaxId;
             const res = await ApiService.post(`/tenant/${tenantId}/service`, { data: payload });
@@ -471,10 +475,18 @@ export default function EditInvoice() {
             const svc = { id: created.id ?? created._id ?? String(Math.random()).slice(2, 10), name: created.title ?? created.name ?? newServiceTitle, price: Number(created.price ?? created.amount ?? payload.price), taxRate: Number(created.taxRate ?? created.tax?.rate ?? 0) };
             setServices(prev => [svc, ...prev]);
             setItems(prev => prev.map(it => it.id === createForItemId ? { ...it, serviceId: svc.id, name: svc.name, rate: svc.price, tax: (svc.taxRate != null ? svc.taxRate : 0), reset: it.reset ?? 0 } : it));
-            toast.success('Artículo creado');
-            setCreateModalOpen(false); setCreateForItemId(null); setNewServiceTitle(''); setNewServicePrice(0); setNewServiceTaxId(null);
-        } catch (err: any) { console.error('Error creating service', err); toast.error(err?.message || 'Error creando servicio'); }
-        finally { setCreatingService(false); }
+            toast.success(t('billing.items.messages.created', { defaultValue: 'Artículo creado' }));
+            setCreateModalOpen(false);
+            setCreateForItemId(null);
+            setNewServiceTitle('');
+            setNewServicePrice(0);
+            setNewServiceTaxId(null);
+        } catch (err: any) {
+            console.error('Error creating service', err);
+            toast.error(err?.message || t('billing.items.messages.create_error', { defaultValue: 'Error creando servicio' }));
+        } finally {
+            setCreatingService(false);
+        }
     };
 
     const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100;
@@ -501,7 +513,7 @@ export default function EditInvoice() {
 
     const handlePreview = () => {
         if (!client || !site) {
-            toast.error("Por favor seleccione un Cliente y un Sitio de publicación para ver la vista previa.");
+            toast.error(t('billing.forms.validation.select_client', { defaultValue: 'Por favor seleccione un Cliente y un Sitio de publicación para ver la vista previa.' }));
             return;
         }
         setIsPreviewMode(true);
@@ -535,6 +547,7 @@ export default function EditInvoice() {
             if (!id) return;
             const tenantId = localStorage.getItem('tenantId') || '';
             if (!tenantId) { toast.error('Tenant no configurado'); return; }
+                        if (!tenantId) { toast.error(t('billing.forms.validation.required', { defaultValue: 'Tenant no configurado' })); return; }
             // Validate client exists before attempting to send
             const resolvedClientId = invoiceRaw?.clientId ?? (invoiceRaw?.client && (invoiceRaw.client.id || invoiceRaw.client._id)) ?? client;
             if (!resolvedClientId && !invoiceClientDetails) {
@@ -573,7 +586,7 @@ export default function EditInvoice() {
                     const payload = err.data || {};
                     const srvMsg = (payload && (payload.message || payload.error || payload.detail)) || err.message || '';
                     if (/pago|paid|not fully|not_paid|notpaid|no.*pag/i.test(String(srvMsg))) {
-                        toast.error('Complete el pago para enviar la factura');
+                        toast.error(t('billing.invoices.messages.payment_required', { defaultValue: 'Complete el pago para enviar la factura' }));
                     } else {
                         // default for 400 on send
                         toast.error('Complete el pago para enviar la factura');
@@ -583,6 +596,7 @@ export default function EditInvoice() {
                 }
             } else {
                 toast.error(err?.message || 'Error al enviar factura');
+                            toast.error(err?.message || t('billing.invoices.messages.send_error', { defaultValue: 'Error al enviar factura' }));
             }
         }
     };
@@ -591,7 +605,7 @@ export default function EditInvoice() {
         try {
             if (!id) return;
             const tenantId = localStorage.getItem('tenantId') || '';
-            if (!tenantId) { toast.error('Tenant no configurado'); return; }
+            if (!tenantId) { toast.error(t('billing.forms.validation.required', { defaultValue: 'Tenant no configurado' })); return; }
             const blobRes = await ApiService.getBlob(`/tenant/${tenantId}/invoice/${id}/download?format=pdf`);
             const blob = new Blob([blobRes], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
@@ -602,7 +616,7 @@ export default function EditInvoice() {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
-        } catch (err) { console.error('Error descargando factura', err); toast.error('No se pudo descargar la factura'); }
+        } catch (err) { console.error('Error descargando factura', err); toast.error(t('billing.invoices.messages.download_error', { defaultValue: 'No se pudo descargar la factura' })); }
     };
 
     const handleRegisterPayment = async () => {
@@ -634,6 +648,7 @@ export default function EditInvoice() {
             const remaining = Number(invoiceTotal) - Number(paymentsTotal || 0);
             if (Number(paymentAmount || 0) > remaining + 0.005) {
                 toast.error('El monto del pago excede el saldo pendiente de la factura');
+                                toast.error(t('billing.invoices.payment_modal.error_exceeds', { defaultValue: 'El monto del pago excede el saldo pendiente de la factura' }));
                 setSavingPayment(false);
                 return;
             }
@@ -647,6 +662,7 @@ export default function EditInvoice() {
             const res = await ApiService.post(`/tenant/${tenantId}/payment`, { data: payload });
             const created = res && (res.data || res) || res;
             toast.success('Pago registrado');
+                        toast.success(t('billing.invoices.payment_modal.success', { defaultValue: 'Pago registrado' }));
             setPaymentModalOpen(false);
             // append to payments list (best-effort mapping)
             const mapped = {
@@ -666,6 +682,7 @@ export default function EditInvoice() {
         } catch (err: any) {
             console.error('Error creating payment', err);
             toast.error(err?.message || 'No se pudo registrar el pago');
+                        toast.error(err?.message || t('billing.invoices.payment_modal.error', { defaultValue: 'No se pudo registrar el pago' }));
         } finally { setSavingPayment(false); }
     };
 
@@ -675,9 +692,11 @@ export default function EditInvoice() {
             try {
                 const tenantId = localStorage.getItem('tenantId') || '';
                 if (!tenantId || !id) { toast.error('Faltan datos'); return; }
+                                if (!tenantId || !id) { toast.error(t('billing.forms.validation.required', { defaultValue: 'Faltan datos' })); return; }
                 const res = await ApiService.put(`/tenant/${tenantId}/invoice/${id}`, { data: payload });
                 console.log('[EditInvoice] updated ->', res);
                 toast.success('Factura actualizada');
+                                toast.success(t('billing.invoices.messages.updated', { defaultValue: 'Factura actualizada' }));
                 navigate('/invoices');
             } catch (err: any) { console.error('Error updating invoice', err); toast.error(err?.message || 'Error actualizando factura'); }
         })();
@@ -688,15 +707,15 @@ export default function EditInvoice() {
         return (
             <AppLayout>
                 <div className="p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-xl font-semibold">Facturas</h1>
+                        <div className="flex justify-between items-center mb-6">
+                        <h1 className="text-xl font-semibold">{t('billing.invoices.title')}</h1>
                         <div className="flex gap-4">
                             <Button
                                 variant="outline"
                                 className="text-orange-500 border-orange-200 hover:bg-orange-50"
                                 onClick={() => setIsPreviewMode(false)}
                             >
-                                Editar Factura
+                                {t('billing.editInvoice.edit', { defaultValue: 'Editar Factura' })}
                             </Button>
                         </div>
                     </div>
@@ -708,14 +727,14 @@ export default function EditInvoice() {
                                 <div>
                                     <h3 className="text-lg font-semibold">{title || `Factura #${invoiceNumber}`}</h3>
                                     <div className="mt-3 flex flex-wrap gap-2">
-                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleSendInvoice} disabled={!isFullyPaid} title={!isFullyPaid ? 'Complete el pago para enviar la factura' : 'Enviar'}>Enviar</Button>
-                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleDownloadInvoice}>Descargar</Button>
-                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleRegisterPayment} disabled={isFullyPaid}>Registrar un Pago</Button>
+                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleSendInvoice} disabled={!isFullyPaid} title={!isFullyPaid ? t('billing.invoices.messages.payment_required', { defaultValue: 'Complete el pago para enviar la factura' }) : t('billing.invoices.actions.send', { defaultValue: 'Enviar' })}>{t('billing.invoices.actions.send', { defaultValue: 'Enviar' })}</Button>
+                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleDownloadInvoice}>{t('billing.common.download')}</Button>
+                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleRegisterPayment} disabled={isFullyPaid}>{t('billing.invoices.actions.register_payment', { defaultValue: 'Registrar un Pago' })}</Button>
                                     </div>
                                 </div>
 
                                 <div className="text-right">
-                                    <p className="text-sm text-slate-500">Total General:</p>
+                                    <p className="text-sm text-slate-500">{t('billing.forms.labels.total', { defaultValue: 'Total General:' })}</p>
                                     <p className="text-xl font-semibold">${calculateTotal().toFixed(2)}</p>
                                     <div className="mt-2 flex justify-end">
                                         <Badge className={statusLabel && /enviad/i.test(String(statusLabel)) ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'}>{statusLabel ?? ''}</Badge>
@@ -726,19 +745,19 @@ export default function EditInvoice() {
 
                         {/* Payments received (moved above client details) */}
                         <div className="mt-4 bg-white p-6 rounded-lg border">
-                            <h3 className="font-semibold text-lg mb-4">Pagos recibidos:</h3>
+                            <h3 className="font-semibold text-lg mb-4">{t('billing.invoices.preview.payments', { defaultValue: 'Pagos recibidos:' })}</h3>
                             <div className="min-h-[80px]">
                                 {(!payments || payments.length === 0) ? (
-                                    <div className="text-center text-slate-500 py-6">No se encontró registro de pago</div>
+                                    <div className="text-center text-slate-500 py-6">{t('billing.invoices.preview.no_payments', { defaultValue: 'No se encontró registro de pago' })}</div>
                                 ) : (
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left text-sm">
                                             <thead className="bg-gray-50">
                                                 <tr>
-                                                    <th className="px-4 py-2">Fecha</th>
-                                                    <th className="px-4 py-2">Método</th>
-                                                    <th className="px-4 py-2">Referencia</th>
-                                                    <th className="px-4 py-2 text-right">Monto</th>
+                                                    <th className="px-4 py-2">{t('billing.invoices.payment_table.date', { defaultValue: 'Fecha' })}</th>
+                                                    <th className="px-4 py-2">{t('billing.invoices.payment_table.method', { defaultValue: 'Método' })}</th>
+                                                    <th className="px-4 py-2">{t('billing.invoices.payment_table.reference', { defaultValue: 'Referencia' })}</th>
+                                                    <th className="px-4 py-2 text-right">{t('billing.invoices.payment_table.amount', { defaultValue: 'Monto' })}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>

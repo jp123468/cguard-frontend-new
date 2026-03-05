@@ -81,9 +81,11 @@
     },
     "despachador": "Despachante",
     "visitantes": {
+      "dashboard": "Panel de control",
       "label": "Gestão de Visitantes",
       "visitantes": "Visitantes",
       "vehiculos": "Veículos",
+      "bitacoras": "Registros",
       "visitas": "Visitas"
     },
     "patrulla": {
@@ -381,12 +383,23 @@
       "noPostSites": "Nenhum site encontrado"
     },
     "files": {
-      "action": { "default": "Ação" },
-      "actions": { "delete": "Excluir" },
+      "action": {
+        "default": "Ação"
+      },
+      "actions": {
+        "delete": "Excluir"
+      },
       "searchPlaceholder": "Pesquisar arquivos",
       "uploadButton": "Carregar",
-      "table": { "date": "Data", "file": "Arquivo", "addedBy": "Adicionado por" },
-      "empty": { "title": "Nenhum arquivo encontrado", "description": "Carregue arquivos usando o botão à direita" },
+      "table": {
+        "date": "Data",
+        "file": "Arquivo",
+        "addedBy": "Adicionado por"
+      },
+      "empty": {
+        "title": "Nenhum arquivo encontrado",
+        "description": "Carregue arquivos usando o botão à direita"
+      },
       "loadError": "Não foi possível carregar o guarda",
       "modal": {
         "title": "Carregar arquivos",
@@ -398,19 +411,42 @@
       }
     },
     "skills": {
-      "action": { "default": "Ação" },
-      "actions": { "delete": "Excluir" },
+      "action": {
+        "default": "Ação"
+      },
+      "actions": {
+        "delete": "Excluir"
+      },
       "searchPlaceholder": "Pesquisar conjuntos de habilidades",
       "assignButton": "Atribuir conjunto de habilidades",
-      "table": { "name": "Nome", "description": "Descrição" },
-      "empty": { "title": "Nenhum resultado encontrado", "description": "Não encontramos nenhum item correspondente à sua pesquisa" },
-      "toasts": { "loadError": "Não foi possível carregar o guarda", "selectAtLeastOne": "Por favor selecione pelo menos um conjunto de habilidades", "provideName": "Por favor forneça um nome de habilidade" },
-      "modal": { "title": "Atribuir conjunto de habilidades", "cancel": "Cancelar", "assign": "Atribuir" },
-      "form": { "skillSet": "Conjunto de habilidades*", "selectPlaceholder": "Selecionar conjuntos de habilidades..." },
-      "dropdown": { "searchPlaceholder": "Pesquisar..." }
+      "table": {
+        "name": "Nome",
+        "description": "Descrição"
+      },
+      "empty": {
+        "title": "Nenhum resultado encontrado",
+        "description": "Não encontramos nenhum item correspondente à sua pesquisa"
+      },
+      "toasts": {
+        "loadError": "Não foi possível carregar o guarda",
+        "selectAtLeastOne": "Por favor selecione pelo menos um conjunto de habilidades",
+        "provideName": "Por favor forneça um nome de habilidade"
+      },
+      "modal": {
+        "title": "Atribuir conjunto de habilidades",
+        "cancel": "Cancelar",
+        "assign": "Atribuir"
+      },
+      "form": {
+        "skillSet": "Conjunto de habilidades*",
+        "selectPlaceholder": "Selecionar conjuntos de habilidades..."
+      },
+      "dropdown": {
+        "searchPlaceholder": "Pesquisar..."
+      }
     }
-    },
-    "clients": {
+  },
+  "clients": {
     "nav": {
       "title": "Clientes",
       "overview": "Visão geral",
@@ -656,5 +692,19 @@
       "primary": "Enviar",
       "sending": "Enviando..."
     }
-  }
+  },
+"visitantes": {
+  "title": "Visitantes",
+  "bitacoras": "Registros",
+  "loading": "Carregando...",
+  "search": "Pesquisar",
+  "searchVisitor": "Pesquisar visitante",
+  "addVisitor": "Adicionar visitante",
+  "newVisitor": "Novo Visitante",
+  "exportCSV": "Exportar CSV",
+  "exportExcel": "Exportar como Excel",
+  "exportPDF": "Exportar como PDF"
+  ,
+  "searchLogs": "Pesquisar em registros"
+}
 }

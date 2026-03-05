@@ -38,6 +38,7 @@ import {
     X
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -71,6 +72,7 @@ interface Estimate {
 }
 
 export default function Estimates() {
+    const { t } = useTranslation();
     const [openFilter, setOpenFilter] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedEstimates, setSelectedEstimates] = useState<string[]>([]);
@@ -433,10 +435,12 @@ export default function Estimates() {
     return (
         <AppLayout>
             <Breadcrumb
-                items={[
-                    { label: "Panel de control", path: "/dashboard" },
-                    { label: "Estimaciones" },
-                ]}
+                items={
+                    [
+                        { label: t('billing.common.dashboard'), path: "/dashboard" },
+                        { label: t('billing.estimates.title') },
+                    ]
+                }
             />
             <div className="p-4">
                 <section>
@@ -457,7 +461,7 @@ export default function Estimates() {
                             <div className="relative">
                                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Buscar en la lista de presupuestos"
+                                    placeholder={t('billing.estimates.search_placeholder')}
                                     className="pl-9 w-80"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -465,7 +469,7 @@ export default function Estimates() {
                             </div>
 
                             <Button className="bg-orange-500 hover:bg-orange-600 text-white" asChild>
-                                <Link to="/estimates/add-new">Nuevo Presupuesto</Link>
+                                <Link to="/estimates/add-new">{t('billing.estimates.top_actions.create')}</Link>
                             </Button>
 
                             {/* Filtros */}
@@ -482,27 +486,27 @@ export default function Estimates() {
                                 setClientValue={setClientFilter}
                                 statusValue={statusFilter}
                                 setStatusValue={setStatusFilter}
-                                applyLabel="Aplicar filtros"
+                                applyLabel={t('billing.estimates.filters.apply')}
                             />
                         </div>
                     </div>
 
                     {/* Confirm delete dialog */}
                     <Dialog open={deleteModalOpen} onOpenChange={(v) => { if (!v) { setDeletingId(null); } setDeleteModalOpen(v); }}>
-                        <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                                <DialogTitle>Eliminar estimación</DialogTitle>
-                                <DialogDescription>
-                                    {deletingId
-                                        ? '¿Estás seguro de que deseas eliminar esta estimación? Esta acción no se puede deshacer.'
-                                        : `¿Estás seguro de que deseas eliminar las ${selectedEstimates.length} estimación(es) seleccionada(s)? Esta acción no se puede deshacer.`}
-                                </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter className="mt-4 flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>Cancelar</Button>
-                                <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={handleConfirmDelete}>Eliminar</Button>
-                            </DialogFooter>
-                        </DialogContent>
+                            <DialogContent className="sm:max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle>{t('billing.estimates.actions.delete', { defaultValue: 'Eliminar estimación' })}</DialogTitle>
+                                    <DialogDescription>
+                                        {deletingId
+                                            ? t('billing.estimates.delete_confirm_single', { defaultValue: '¿Estás seguro de que deseas eliminar esta estimación? Esta acción no se puede deshacer.' })
+                                            : t('billing.estimates.delete_confirm_multiple', { count: selectedEstimates.length, defaultValue: `¿Estás seguro de que deseas eliminar las ${selectedEstimates.length} estimación(es) seleccionada(s)? Esta acción no se puede deshacer.` })}
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <DialogFooter className="mt-4 flex justify-end gap-2">
+                                    <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>{t('billing.common.cancel')}</Button>
+                                    <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={handleConfirmDelete}>{t('billing.estimates.actions.delete', { defaultValue: 'Eliminar' })}</Button>
+                                </DialogFooter>
+                            </DialogContent>
                     </Dialog>
 
                     {/* Preview dialog for client/site details */}
@@ -512,11 +516,11 @@ export default function Estimates() {
                                 <>
                                         <div className="border-b pb-4 mb-4 flex items-start justify-between gap-4">
                                             <div>
-                                                <h3 className="text-lg font-semibold">{previewAsInvoice ? 'Factura' : 'Presupuesto'} #{previewEstimate.estimateNumber || previewEstimate.id}</h3>
+                                                <h3 className="text-lg font-semibold">{previewAsInvoice ? t('billing.invoices.title') : t('billing.estimates.title')} #{previewEstimate.estimateNumber || previewEstimate.id}</h3>
                                             <div className="mt-3 flex flex-wrap gap-2">
-                                                <Button variant="outline" className="bg-white" onClick={handleSendPreview}>Enviar</Button>
-                                                <Button variant="outline" className="bg-white" onClick={handleConvertPreview}>Convertir a Factura</Button>
-                                                <Button variant="outline" className="bg-white" onClick={handleDownloadPreview}>Descargar</Button>
+                                                <Button variant="outline" className="bg-white" onClick={handleSendPreview}>{t('billing.estimates.actions.send')}</Button>
+                                                <Button variant="outline" className="bg-white" onClick={handleConvertPreview}>{t('billing.estimates.actions.convert')}</Button>
+                                                <Button variant="outline" className="bg-white" onClick={handleDownloadPreview}>{t('billing.common.download')}</Button>
                                             </div>
                                         </div>
 

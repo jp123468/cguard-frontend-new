@@ -120,6 +120,7 @@
       "label": "Visitor Management",
       "visitantes": "Visitors",
       "vehiculos": "Vehicles",
+      "bitacoras": "Logs",
       "visitas": "Visits"
     },
     "patrulla": {
@@ -1136,7 +1137,6 @@
       "requiredName": "Name is required"
     }
   },
-  
   "postSites": {
     "postsitdash": "Dashboard",
     "postsite": "Post Site",
@@ -1433,8 +1433,7 @@
     "latest": "Latest Activity",
     "recent": "Recent Activity",
     "noActivity": "No recent activity",
-    "showMore": "Show more"
-  ,
+    "showMore": "Show more",
     "markAllRead": "Mark all as read",
     "filters": "Filters",
     "savedFilters": "Saved filters",
@@ -1467,19 +1466,36 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome to the dashboard",
-    "cards": "Overview Cards"
-    ,
+    "cards": "Overview Cards",
     "noWidgets": {
       "title": "No widgets enabled",
       "desc": "Please enable at least one widget to see data on the board."
     },
     "widgets": {
-      "clientes": { "title": "Clients", "subtitle": "Active clients" },
-      "sitios": { "title": "Post Sites", "subtitle": "Active publishing sites" },
-      "guardias": { "title": "Guards", "subtitle": "Active guards" },
-      "equipo": { "title": "Admin team", "subtitle": "Active users" },
-      "registros": { "title": "Records", "subtitle": "Today" },
-      "fichados": { "title": "Clock-ins", "subtitle": "Today" }
+      "clientes": {
+        "title": "Clients",
+        "subtitle": "Active clients"
+      },
+      "sitios": {
+        "title": "Post Sites",
+        "subtitle": "Active publishing sites"
+      },
+      "guardias": {
+        "title": "Guards",
+        "subtitle": "Active guards"
+      },
+      "equipo": {
+        "title": "Admin team",
+        "subtitle": "Active users"
+      },
+      "registros": {
+        "title": "Records",
+        "subtitle": "Today"
+      },
+      "fichados": {
+        "title": "Clock-ins",
+        "subtitle": "Today"
+      }
     }
   },
   "header": {
@@ -1658,7 +1674,9 @@
     "exportPdf": "Export as PDF",
     "exportExcel": "Export as Excel",
     "import": "Import",
-    "move": "Move Cat"
+    "move": "Move Cat",
+    "desactivate": "Desactivate",
+    "activate": "Activate"
   },
   "components": {
     "addRemove": {
@@ -1919,6 +1937,308 @@
     "empty": {
       "title": "No activity",
       "description": "No recent activity to show"
+    }
+  },
+  "visitantes": {
+    "dashboard": "dashboard",
+    "title": "Visitors",
+    "bitacoras": "Logs",
+    "loading": "Loading...",
+    "search": "Search",
+    "searchVisitor": "Search visitor",
+    "addVisitor": "Add visitor",
+    "newVisitor": "New Visitor",
+    "action": "Action",
+    "action": {
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "delete": "Delete"
+    },
+    "filters": "Filters",
+    "client": "Client",
+    "selectClient": "Select a client",
+    "site": "Post Site",
+    "selectSite": "Select a site",
+    "guard": "Guard",
+    "selectGuard": "Select a guard",
+    "tag": "Tag",
+    "selectTag": "Select a tag",
+    "tag": {
+      "vip": "VIP",
+      "provider": "Provider"
+    },
+    "showArchived": "Show archived data",
+    "filterButton": "Filter",
+    "importVisitors": "Import visitors",
+    "print": "Print",
+    "email": "Email",
+    "table": {
+      "name": "Name",
+      "company": "Company",
+      "email": "Email",
+      "lastRecord": "Last record",
+      "status": "Status"
+    },
+    "noResultsTitle": "No results found",
+    "noResultsBody": "We couldn't find any items matching your search",
+    "perPage": "Items per page",
+    "paginationPlaceholder": "0 of 0",
+    "noLogs": "No logs found",
+    "deleteSelected": "Delete selected",
+    "exportCSV": "Export CSV",
+    "exportExcel": "Export as Excel",
+    "exportPDF": "Export as PDF",
+    "searchLogs": "Search logs",
+    "logDetails": "Log Details",
+    "logTable": {
+      "id": "ID",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "idNumber": "ID",
+      "date": "Date",
+      "postSite": "Site",
+      "client": "Client",
+      "guard": "Guard",
+      "numPeople": "Number of people",
+      "reason": "Reason of visit",
+      "exitTime": "Exit Time"
+    },
+    "form": {
+      "name": "Name",
+      "lastName": "Last Name",
+      "idNumber": "ID Number",
+      "idImage": "ID Image",
+      "mobile": "Mobile Number",
+      "phone": "Phone Number",
+      "email": "Email",
+      "company": "Company",
+      "numPeople": "Number of people",
+      "reason": "Reason of visit"
+    },
+    "placeholder": {
+      "name": "e.g. John",
+      "lastName": "e.g. Doe",
+      "idNumber": "e.g. 12015550123",
+      "mobile": "e.g. +12015550123",
+      "phone": "e.g. +12015550123",
+      "email": "email@example.com",
+      "company": "Company name",
+      "reason": "Reason of visit"
+    },
+    "save": "Save",
+    "markExit": "Mark Exit",
+    "confirmDeleteTitle": "Confirm Delete",
+    "confirmDeleteMessage": "Are you sure you want to delete these items?",
+    "noSelectionExport": "No items selected for export",
+    "noSelectionDelete": "No items selected for deletion",
+    "exportSuccess": "Export successful",
+    "exportError": "Error exporting data",
+    "deleteSuccess": "Items deleted successfully",
+    "notprint": "This item cannot be printed",
+    "created": "Visitor created",
+    "updated": "Visitor updated",
+    "deleted": "Visitor deleted"
+  },
+  "billing": {
+    "common": {
+      "dashboard": "Dashboard",
+      "search_placeholder": "Search...",
+      "no_results": "No results found",
+      "items_per_page": "Items per page",
+      "confirm_delete": "Are you sure you want to delete these items?",
+      "no_selection": "No items selected",
+      "cancel": "Cancel",
+      "save": "Save",
+      "create": "Create",
+      "loading": "Loading...",
+      "sending": "Sending...",
+      "download": "Download",
+      "export": "Export",
+      "print": "Print"
+    },
+    "estimates": {
+      "title": "Estimates",
+      "list_title": "Estimates",
+      "search_placeholder": "Search by number or client",
+      "top_actions": {
+        "create": "New Estimate",
+        "export": "Export",
+        "delete": "Delete selected"
+      },
+      "columns": {
+        "select": "Select",
+        "date": "Date",
+        "estimateNumber": "Number",
+        "client": "Client",
+        "total": "Total",
+        "expiryDate": "Expiry Date",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "statuses": {
+        "draft": "Draft",
+        "sent": "Sent",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "expired": "Expired"
+      },
+      "filters": {
+        "open": "Filters",
+        "client": "Client",
+        "status": "Status",
+        "date_from": "Date from",
+        "date_to": "Date to",
+        "apply": "Apply",
+        "clear": "Clear"
+      },
+      "actions": {
+        "view": "View",
+        "preview": "Preview",
+        "send": "Send",
+        "convert": "Convert to invoice",
+        "download": "Download",
+        "delete": "Delete"
+      },
+      "messages": {
+        "no_results": "No estimates found",
+        "sent_success": "Estimate sent",
+        "convert_success": "Estimate converted to invoice",
+        "delete_success": "Estimate deleted"
+      },
+      "preview": {
+        "title": "Preview Estimate",
+        "client_details": "Client details",
+        "site_details": "Site details",
+        "items": "Items",
+        "notes": "Notes",
+        "terms": "Terms",
+        "subtotal": "Subtotal",
+        "tax": "Tax",
+        "total": "Total",
+        "as_invoice": "Preview as invoice"
+      }
+    },
+    "invoices": {
+      "title": "Invoices",
+      "search_placeholder": "Search by number or client",
+      "top_actions": {
+        "create": "New Invoice",
+        "export": "Export",
+        "delete": "Delete selected"
+      },
+      "columns": {
+        "select": "Select",
+        "date": "Date",
+        "invoiceNumber": "Number",
+        "client": "Client",
+        "total": "Total",
+        "amountDue": "Amount Due",
+        "dueDate": "Due Date",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "statuses": {
+        "draft": "Draft",
+        "sent": "Sent",
+        "paid": "Paid",
+        "overdue": "Overdue",
+        "partial": "Partial"
+      },
+      "actions": {
+        "view": "View",
+        "preview": "Preview",
+        "send": "Send",
+        "download": "Download",
+        "register_payment": "Register payment",
+        "delete": "Delete"
+      },
+      "messages": {
+        "no_results": "No invoices found",
+        "send_success": "Invoice sent",
+        "delete_success": "Invoice deleted",
+        "payment_registered": "Payment registered"
+      },
+      "preview": {
+        "title": "Preview Invoice",
+        "client_details": "Client details",
+        "site_details": "Site details",
+        "items": "Items",
+        "notes": "Notes",
+        "terms": "Terms",
+        "subtotal": "Subtotal",
+        "tax": "Tax",
+        "total": "Total",
+        "amount_due": "Amount Due"
+      },
+      "payment_modal": {
+        "title": "Register payment",
+        "date": "Date",
+        "amount": "Amount",
+        "method": "Method",
+        "note": "Note",
+        "save": "Save payment",
+        "saving": "Saving...",
+        "success": "Payment registered successfully",
+        "error": "Error registering payment"
+      }
+    },
+    "items": {
+      "title": "Items",
+      "search_placeholder": "Search items",
+      "columns": {
+        "name": "Name",
+        "description": "Description",
+        "price": "Price",
+        "tax": "Tax",
+        "actions": "Actions"
+      },
+      "actions": {
+        "add": "Add item",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "form": {
+        "title_create": "Create item",
+        "title_edit": "Edit item",
+        "name": "Name",
+        "description": "Description",
+        "price": "Price",
+        "tax": "Tax",
+        "save": "Save",
+        "creating": "Creating...",
+        "updating": "Updating..."
+      },
+      "messages": {
+        "no_results": "No items found",
+        "created": "Item created",
+        "updated": "Item updated",
+        "deleted": "Item deleted"
+      }
+    },
+    "forms": {
+      "validation": {
+        "required": "This field is required",
+        "invalid_number": "Invalid number",
+        "select_client": "Select a client",
+        "select_site": "Select a site"
+      },
+      "labels": {
+        "title": "Title",
+        "summary": "Summary",
+        "client": "Client",
+        "site": "Site",
+        "number": "Number",
+        "po_so": "PO / SO",
+        "date": "Date",
+        "expiry_due": "Expiry / Due",
+        "notes": "Notes",
+        "item_name": "Item name",
+        "quantity": "Quantity",
+        "rate": "Unit price",
+        "tax_rate": "Tax rate",
+        "subtotal": "Subtotal",
+        "total": "Total"
+      }
     }
   }
 }

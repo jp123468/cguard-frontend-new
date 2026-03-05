@@ -53,6 +53,7 @@ import { ApiService } from "@/services/api/apiService";
 import { toast } from "sonner";
 import { clientService } from "@/lib/api/clientService";
 import { postSiteService } from "@/lib/api/postSiteService";
+import { useTranslation } from 'react-i18next';
 
 // Tipos para las facturas
 type InvoiceStatus = "Borrador" | "Enviado" | "Pagado" | "Vencido" | "Parcial";
@@ -71,6 +72,7 @@ interface Invoice {
 }
 
 export default function Invoices() {
+    const { t } = useTranslation();
     const [openFilter, setOpenFilter] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
@@ -221,10 +223,10 @@ export default function Invoices() {
                 const date = r.date ? parseDateOnly(r.date) ?? (r.createdAt ? parseDateOnly(r.createdAt) ?? new Date() : new Date()) : (r.createdAt ? parseDateOnly(r.createdAt) ?? new Date() : new Date());
                 const dueDate = r.dueDate ? parseDateOnly(r.dueDate) ?? (r.due_date ? parseDateOnly(r.due_date) ?? date : date) : (r.due_date ? parseDateOnly(r.due_date) ?? date : date);
                 const invoiceNumber = r.invoiceNumber ?? r.number ?? r.invoice_no ?? '';
-                                const client = r.client && typeof r.client === 'object' ? r.client : null;
-                                const clientName = client
-                                    ? ((client.fullName && String(client.fullName).trim()) || ((String(client.firstName || '').trim() + ' ' + String(client.lastName || '').trim()).trim()) || client.companyName || client.name || r.clientName || (typeof r.client === 'string' ? r.client : ''))
-                                    : (r.clientName || (typeof r.client === 'string' ? r.client : ''));
+                const client = r.client && typeof r.client === 'object' ? r.client : null;
+                const clientName = client
+                    ? ((client.fullName && String(client.fullName).trim()) || ((String(client.firstName || '').trim() + ' ' + String(client.lastName || '').trim()).trim()) || client.companyName || client.name || r.clientName || (typeof r.client === 'string' ? r.client : ''))
+                    : (r.clientName || (typeof r.client === 'string' ? r.client : ''));
                 const total = Number(r.total ?? r.amount ?? r.subtotal ?? 0);
                 const amountDue = Number(r.amountDue ?? r.balance ?? (r.total ? r.total : 0));
                 const status = (r.status && String(r.status)) || 'Borrador';
@@ -522,10 +524,10 @@ export default function Invoices() {
                                                     className="h-32 mb-4 opacity-80"
                                                 />
                                                 <h3 className="text-lg font-semibold text-slate-700">
-                                                    No se encontraron resultados
+                                                    {t('billing.common.no_results', { defaultValue: 'No se encontraron resultados' })}
                                                 </h3>
                                                 <p className="mt-1 text-sm text-slate-500 max-w-xs">
-                                                    No pudimos encontrar ningún elemento que coincida con su búsqueda
+                                                    {t('billing.common.no_results_description', { defaultValue: 'No pudimos encontrar ningún elemento que coincida con su búsqueda' })}
                                                 </p>
                                             </div>
                                         </td>
@@ -538,7 +540,7 @@ export default function Invoices() {
                         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Factura</DialogTitle>
+                                    <DialogTitle>{t('billing.invoices.preview.title', { defaultValue: 'Factura' })}</DialogTitle>
                                 </DialogHeader>
                                 {previewInvoice ? (
                                     <div className="space-y-6">
@@ -546,7 +548,7 @@ export default function Invoices() {
                                             <div className="md:w-2/3 space-y-4">
                                                 <div className="flex flex-col sm:flex-row sm:justify-between gap-6">
                                                     <div className="flex-1">
-                                                        <p className="text-xs text-gray-400">Cliente</p>
+                                                        <p className="text-xs text-gray-400">{t('billing.invoices.preview.client', { defaultValue: 'Cliente' })}</p>
                                                         <p className="font-semibold text-slate-800 text-lg">{(clientDetails && (clientDetails.companyName || clientDetails.name)) || previewInvoice.client || '—'}</p>
                                                         {(clientDetails?.address || clientDetails?.location || clientDetails?.postalCode) ? (
                                                             <p className="text-sm text-slate-500 mt-1">{clientDetails.address || clientDetails.location || clientDetails.postalCode}</p>
@@ -560,7 +562,7 @@ export default function Invoices() {
                                                     </div>
 
                                                     <div className="flex-1">
-                                                        <p className="text-xs text-gray-400">Sitio</p>
+                                                        <p className="text-xs text-gray-400">{t('billing.invoices.preview.site', { defaultValue: 'Sitio' })}</p>
                                                         <p className="font-medium text-slate-700">{(siteDetails && (siteDetails.companyName || siteDetails.name)) || '—'}</p>
                                                         {(siteDetails?.address || siteDetails?.location || siteDetails?.secondAddress) ? (
                                                             <p className="text-sm text-slate-500 mt-1">{siteDetails.address || siteDetails.location || siteDetails.secondAddress}</p>
@@ -576,15 +578,15 @@ export default function Invoices() {
 
                                                 {/* Items */}
                                                 <div className="mt-2">
-                                                    <h4 className="text-sm font-medium text-slate-700 mb-2">Detalle</h4>
+                                                    <h4 className="text-sm font-medium text-slate-700 mb-2">{t('billing.invoices.preview.details', { defaultValue: 'Detalle' })}</h4>
                                                     <div className="overflow-x-auto">
                                                         <table className="w-full text-sm">
                                                             <thead className="text-left text-slate-600 text-xs border-b">
                                                                 <tr>
-                                                                    <th className="pb-2">Descripción</th>
-                                                                    <th className="pb-2">Cantidad</th>
-                                                                    <th className="pb-2">Precio Unit.</th>
-                                                                    <th className="pb-2 text-right">Total</th>
+                                                                    <th className="pb-2">{t('billing.items.table.description', { defaultValue: 'Descripción' })}</th>
+                                                                    <th className="pb-2">{t('billing.items.table.quantity', { defaultValue: 'Cantidad' })}</th>
+                                                                    <th className="pb-2">{t('billing.items.table.unit_price', { defaultValue: 'Precio Unit.' })}</th>
+                                                                    <th className="pb-2 text-right">{t('billing.items.table.total', { defaultValue: 'Total' })}</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -599,7 +601,7 @@ export default function Invoices() {
                                                                     ))
                                                                 ) : (
                                                                     <tr>
-                                                                        <td colSpan={4} className="py-6 text-center text-sm text-slate-500">Sin líneas de detalle</td>
+                                                                        <td colSpan={4} className="py-6 text-center text-sm text-slate-500">{t('billing.invoices.preview.no_items', { defaultValue: 'Sin líneas de detalle' })}</td>
                                                                     </tr>
                                                                 )}
                                                             </tbody>
@@ -611,7 +613,7 @@ export default function Invoices() {
                                             <div className="md:w-1/3 bg-gray-50 p-4 rounded-md">
                                                 <div className="flex items-start justify-between">
                                                     <div>
-                                                        <h2 className="text-xl font-bold text-slate-800">Factura</h2>
+                                                        <h2 className="text-xl font-bold text-slate-800">{t('billing.invoices.preview.invoice_label', { defaultValue: 'Factura' })}</h2>
                                                         <p className="text-sm text-slate-600">{tenantInfo?.name ?? ''}</p>
                                                     </div>
                                                     <div className="text-right">
@@ -622,37 +624,37 @@ export default function Invoices() {
 
                                                 <div className="mt-4 space-y-2 text-sm">
                                                     <div className="flex justify-between">
-                                                        <span className="text-slate-700">Número</span>
+                                                        <span className="text-slate-700">{t('billing.invoices.preview.number', { defaultValue: 'Número' })}</span>
                                                         <span className="text-slate-600">{previewInvoice.invoiceNumber || '—'}</span>
                                                     </div>
                                                     <div className="flex justify-between">
-                                                        <span className="text-slate-700">Fecha</span>
+                                                        <span className="text-slate-700">{t('billing.invoices.preview.date', { defaultValue: 'Fecha' })}</span>
                                                         <span className="text-slate-600">{format(previewInvoice.date, "MMM dd, yyyy", { locale: es })}</span>
                                                     </div>
                                                     <div className="flex justify-between">
-                                                        <span className="text-slate-700">Vencimiento</span>
+                                                        <span className="text-slate-700">{t('billing.invoices.preview.due_date', { defaultValue: 'Vencimiento' })}</span>
                                                         <span className="text-slate-600">{format(previewInvoice.dueDate, "MMM dd, yyyy", { locale: es })}</span>
                                                     </div>
 
                                                     <div className="border-t pt-2">
                                                         <div className="flex justify-between">
-                                                            <span className="text-slate-700">Subtotal</span>
+                                                            <span className="text-slate-700">{t('billing.invoices.preview.subtotal', { defaultValue: 'Subtotal' })}</span>
                                                             <span className="text-slate-600">${Number(previewInvoice.raw?.subtotal ?? previewInvoice.total ?? 0).toFixed(2)}</span>
                                                         </div>
                                                         <div className="flex justify-between">
-                                                            <span className="text-slate-700">Impuestos</span>
+                                                            <span className="text-slate-700">{t('billing.invoices.preview.taxes', { defaultValue: 'Impuestos' })}</span>
                                                             <span className="text-slate-600">${Number(previewInvoice.raw?.tax ?? previewInvoice.raw?.taxAmount ?? 0).toFixed(2)}</span>
                                                         </div>
                                                         <div className="flex justify-between font-semibold mt-2">
-                                                            <span className="text-slate-800">Total</span>
+                                                            <span className="text-slate-800">{t('billing.invoices.preview.total_label', { defaultValue: 'Total' })}</span>
                                                             <span className="text-slate-800">${Number(previewInvoice.total ?? previewInvoice.raw?.total ?? 0).toFixed(2)}</span>
                                                         </div>
                                                         <div className="flex justify-between items-center mt-2">
-                                                            <span className="text-slate-700">Estado</span>
+                                                            <span className="text-slate-700">{t('billing.invoices.preview.status', { defaultValue: 'Estado' })}</span>
                                                             <span>{renderStatus(previewInvoice.status)}</span>
                                                         </div>
                                                         <div className="flex justify-between mt-2">
-                                                            <span className="text-slate-700">Monto adeudado</span>
+                                                            <span className="text-slate-700">{t('billing.invoices.preview.amount_due', { defaultValue: 'Monto adeudado' })}</span>
                                                             <span className="text-slate-700">${Number(previewInvoice.amountDue ?? previewInvoice.raw?.balance ?? 0).toFixed(2)}</span>
                                                         </div>
                                                     </div>
@@ -661,37 +663,34 @@ export default function Invoices() {
                                         </div>
                                     </div>
                                 ) : null}
-                                <DialogFooter>
-                                    <Button onClick={() => setPreviewOpen(false)}>Cerrar</Button>
-                                </DialogFooter>
-                            </DialogContent>
+                                </DialogContent>
                         </Dialog>
 
                         {/* Delete confirmation dialog */}
                         <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => { setIsDeleteDialogOpen(open); if (!open) { setPendingDeleteId(null); setPendingBatchDeleteIds(null); } }}>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Confirmar eliminación</DialogTitle>
+                                    <DialogTitle>{t('billing.invoices.delete.confirmTitle', { defaultValue: 'Confirmar eliminación' })}</DialogTitle>
                                 </DialogHeader>
                                 <div className="py-4">
-                                    <p>¿Estás seguro que deseas eliminar esta factura? Esta acción no se puede deshacer.</p>
+                                    <p>{t('billing.invoices.delete.confirmText', { defaultValue: '¿Estás seguro que deseas eliminar esta factura? Esta acción no se puede deshacer.' })}</p>
                                 </div>
                                 <DialogFooter>
-                                    <Button variant="outline" onClick={() => { setIsDeleteDialogOpen(false); setPendingDeleteId(null); }}>Cancelar</Button>
+                                    <Button variant="outline" onClick={() => { setIsDeleteDialogOpen(false); setPendingDeleteId(null); }}>{t('billing.common.cancel', { defaultValue: 'Cancelar' })}</Button>
                                     <Button className="bg-red-600 text-white" onClick={async () => {
                                         try {
                                             const tenantId = localStorage.getItem('tenantId') || '';
-                                            if (!tenantId) { toast.error('Tenant no configurado'); return; }
+                                            if (!tenantId) { toast.error(t('billing.common.tenant_not_configured', { defaultValue: 'Tenant no configurado' })); return; }
                                             setDeleting(true);
                                             if (pendingBatchDeleteIds && pendingBatchDeleteIds.length > 0) {
                                                 // delete all selected
                                                 await Promise.all(pendingBatchDeleteIds.map(id => ApiService.delete(`/tenant/${tenantId}/invoice/${id}`)));
                                                 setInvoices(prev => prev.filter(inv => !pendingBatchDeleteIds.includes(inv.id)));
-                                                toast.success('Facturas eliminadas');
+                                                toast.success(t('billing.invoices.delete.success_plural', { defaultValue: 'Facturas eliminadas' }));
                                             } else if (pendingDeleteId) {
                                                 await ApiService.delete(`/tenant/${tenantId}/invoice/${pendingDeleteId}`);
                                                 setInvoices(prev => prev.filter(inv => inv.id !== pendingDeleteId));
-                                                toast.success('Factura eliminada');
+                                                toast.success(t('billing.invoices.delete.success', { defaultValue: 'Factura eliminada' }));
                                             }
                                             setPendingDeleteId(null);
                                             setPendingBatchDeleteIds(null);
@@ -700,11 +699,11 @@ export default function Invoices() {
                                             await fetchInvoices();
                                         } catch (err) {
                                             console.error('Error eliminando factura(s)', err);
-                                            toast.error('No se pudo eliminar la(s) factura(s)');
+                                            toast.error(t('billing.invoices.delete.error', { defaultValue: 'No se pudo eliminar la(s) factura(s)' }));
                                         } finally {
                                             setDeleting(false);
                                         }
-                                    }} disabled={deleting}>{deleting ? 'Eliminando...' : 'Eliminar'}</Button>
+                                    }} disabled={deleting}>{deleting ? t('billing.common.deleting', { defaultValue: 'Eliminando...' }) : t('billing.common.delete', { defaultValue: 'Eliminar' })}</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -712,7 +711,7 @@ export default function Invoices() {
                         {/* Paginación */}
                         <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 border-t">
                             <div className="flex items-center gap-2">
-                                <span>Elementos por página</span>
+                                <span>{t('billing.common.items_per_page', { defaultValue: 'Elementos por página' })}</span>
                                 <Select
                                     value={String(itemsPerPage)}
                                     onValueChange={(value) => setItemsPerPage(Number(value))}
@@ -734,8 +733,8 @@ export default function Invoices() {
                                         ? `${(currentPage - 1) * itemsPerPage + 1} - ${Math.min(
                                             currentPage * itemsPerPage,
                                             filteredInvoices.length
-                                        )} de ${filteredInvoices.length}`
-                                        : "0 of 0"}
+                                        )} ${t('billing.common.of', { defaultValue: 'de' })} ${filteredInvoices.length}`
+                                        : t('billing.common.zero_of_zero', { defaultValue: '0 of 0' })}
                                 </span>
                                 <div className="flex items-center gap-1">
                                     <Button

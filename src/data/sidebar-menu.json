@@ -234,12 +234,14 @@
     "name": "Gestión de Visitantes",
     "icon": "UserPlus",
     "expandable": true,
-    "subItems": [
+        "subItems": [
       {
         "id": "visitantes",
         "name": "Visitantes",
         "path": "/visitors"
-      },
+      }
+    ],
+    "commentedSubItems": [
       {
         "id": "vehiculos",
         "name": "Vehículos",

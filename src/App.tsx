@@ -1169,7 +1169,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
+           {/* <Route
               path="/visitor/vehicle-list"
               element={
                 <ProtectedRoute>
@@ -1177,6 +1177,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            
             <Route
               path="/visitor/visit-list"
               element={
@@ -1184,7 +1185,7 @@ export default function App() {
                   <Visits />
                 </ProtectedRoute>
               }
-            />
+            />*/}
             {/* FIN GESTION DE VISITANTES */}
 
 
