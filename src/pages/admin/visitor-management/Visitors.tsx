@@ -897,35 +897,37 @@ export default function Visitors() {
 
                 <div className="mt-4 overflow-hidden rounded-lg border">
                     <div className="bg-white border rounded p-4">
-                        {logsLoading ? (
-                            <div className="p-6 text-center">{t('visitantes.loading') || 'Cargando...'}</div>
-                        ) : logs.length === 0 ? (
-                            <div className="p-6 text-center text-muted-foreground">{t('visitantes.noLogs') || 'No se encontraron registros de bitácoras'}</div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50 text-left text-sm text-gray-600">
-                                            <tr>
-                                                <th className="px-4 py-2">
-                                                    <input type="checkbox" onChange={(e) => selectAllLogs(e.target.checked)} checked={logs.length>0 && Object.keys(selectedLogs).length>0 && logs.every(l=>selectedLogs[l.id])} />
-                                                </th>
-                                                
-                                                <th className="px-4 py-2">{t('visitantes.logTable.firstName') || 'Nombre'}</th>
-                                                <th className="px-4 py-2">{t('visitantes.logTable.lastName') || 'Apellidos'}</th>
-                                                <th className="px-4 py-2">{t('visitantes.logTable.idNumber') || 'ID'}</th>
-                                                <th className="px-4 py-2">{t('visitantes.logTable.client') || 'Cliente'}</th>
-                                                <th className="px-4 py-2">{t('visitantes.logTable.postSite') || 'Post Site'}</th>
-                                                <th className="px-4 py-2">{t('visitantes.logTable.date') || 'Fecha'}</th>
-                                                <th className="px-4 py-2 text-right" />
-                                            </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-100">
-                                        {logs.map((r) => (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50 text-left text-sm text-gray-600">
+                                    <tr>
+                                        <th className="px-4 py-2">
+                                            <input type="checkbox" onChange={(e) => selectAllLogs(e.target.checked)} checked={logs.length>0 && Object.keys(selectedLogs).length>0 && logs.every(l=>selectedLogs[l.id])} />
+                                        </th>
+                                        <th className="px-4 py-2">{t('visitantes.logTable.firstName') || 'Nombre'}</th>
+                                        <th className="px-4 py-2">{t('visitantes.logTable.lastName') || 'Apellidos'}</th>
+                                        <th className="px-4 py-2">{t('visitantes.logTable.idNumber') || 'ID'}</th>
+                                        <th className="px-4 py-2">{t('visitantes.logTable.client') || 'Cliente'}</th>
+                                        <th className="px-4 py-2">{t('visitantes.logTable.postSite') || 'Post Site'}</th>
+                                        <th className="px-4 py-2">{t('visitantes.logTable.date') || 'Fecha'}</th>
+                                        <th className="px-4 py-2 text-right" />
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-100">
+                                    {logsLoading ? (
+                                        <tr>
+                                            <td colSpan={12} className="p-6 text-center">{t('visitantes.loading') || 'Cargando...'}</td>
+                                        </tr>
+                                    ) : logs.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={12} className="p-6 text-center text-muted-foreground">{t('visitantes.noLogs') || 'No se encontraron registros de bitácoras'}</td>
+                                        </tr>
+                                    ) : (
+                                        logs.map((r) => (
                                             <tr key={r.id} className="text-sm">
                                                 <td className="px-4 py-3">
                                                     <input type="checkbox" checked={!!selectedLogs[r.id]} onChange={() => toggleSelectLog(r.id)} />
                                                 </td>
-                                                
                                                 <td className="px-4 py-3">{r.firstName}</td>
                                                 <td className="px-4 py-3">{r.lastName}</td>
                                                 <td className="px-4 py-3">{r.idNumber}</td>
@@ -947,11 +949,12 @@ export default function Visitors() {
                                                     </DropdownMenu>
                                                 </td>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
                         <div className="flex items-center justify-between mt-4">
                             <div className="flex items-center gap-3">
@@ -1001,7 +1004,6 @@ export default function Visitors() {
                             </div>
                         </div>
                     </div>
-                </div>
             </section>
 
             {confirmDeleteOpen && (
@@ -1016,224 +1018,225 @@ export default function Visitors() {
                         </div>
                     </div>
                 </div>
-            )}
-
-            <Sheet open={viewLogOpen} onOpenChange={setViewLogOpen}>
-                <SheetContent side="right" className="w-full max-w-lg">
-                    <SheetHeader>
-                        <SheetTitle>{t('visitantes.logDetails') || 'Detalles del registro'}</SheetTitle>
-                    </SheetHeader>
-                    <div className="mt-4 space-y-4">
-                        {!selectedLog ? (
-                            <div className="text-gray-500">{t('visitantes.loading') || 'Cargando...'}</div>
-                        ) : (
-                            <dl className="grid grid-cols-1 gap-3">
-                                <div>
-                                    <dt className="text-sm text-gray-600">{t('visitantes.logTable.date') || 'Fecha'}</dt>
-                                    <dd className="text-base text-gray-800">{formatDateTime(selectedLog.visitDate)}</dd>
-                                </div>
-                                <div>
-                                    <dt className="text-sm text-gray-600">{t('visitantes.logTable.lastName') || 'Apellidos'}</dt>
-                                    <dd className="text-base text-gray-800">{selectedLog.lastName || '-'}</dd>
-                                </div>
-                                <div>
-                                    <dt className="text-sm text-gray-600">{t('visitantes.logTable.firstName') || 'Nombre'}</dt>
-                                    <dd className="text-base text-gray-800">{selectedLog.firstName || '-'}</dd>
-                                </div>
-                                <div>
-                                    <dt className="text-sm text-gray-600">{t('visitantes.logTable.idNumber') || 'ID'}</dt>
-                                    <dd className="text-base text-gray-800">{selectedLog.idNumber || '-'}</dd>
-                                </div>
-                                <div>
-                                    <dt className="text-sm text-gray-600">{t('visitantes.logTable.reason') || 'Motivo'}</dt>
-                                    <dd className="text-base text-gray-800">{selectedLog.reason || selectedLog.visitReason || '-'}</dd>
-                                </div>
-                                <div>
-                                    <dt className="text-sm text-gray-600">{t('visitantes.logTable.exitTime') || 'Hora de salida'}</dt>
-                                    <dd className="text-base text-gray-800">{formatDateTime(selectedLog.exitTime || selectedLog.exitAt || selectedLog.leaveTime)}</dd>
-                                </div>
-                                <div>
-                                    <dt className="text-sm text-gray-600">{t('visitantes.logTable.numPeople') || 'Número de personas'}</dt>
-                                    <dd className="text-base text-gray-800">{selectedLog.numPeople || selectedLog.peopleCount || selectedLog.numberPeople || '-'}</dd>
-                                </div>
-                                <div>
-                                    <dt className="text-sm text-gray-600">{t('visitantes.logTable.client') || 'Cliente'}</dt>
-                                    <dd className="text-base text-gray-800">{getClientLabelFromRecord(selectedLog)}</dd>
-                                </div>
-                                <div>
-                                    <dt className="text-sm text-gray-600">{t('visitantes.logTable.postSite') || 'Post Site'}</dt>
-                                    <dd className="text-base text-gray-800">{getPostSiteLabelFromRecord(selectedLog)}</dd>
-                                </div>
-                            </dl>
-                        )}
-                    </div>
-                </SheetContent>
-            </Sheet>
-
-            <Sheet open={openAddVisitor} onOpenChange={setOpenAddVisitor}>
-                <SheetContent side="right" className="w-full max-w-xl">
-                    <SheetHeader className="mb-4">
-                        <SheetTitle>{t('visitantes.newVisitor') || 'Nuevo Visitante'}</SheetTitle>
-                    </SheetHeader>
-
-                    <form className="space-y-4" onSubmit={onSubmitVisitor}>
-                        
-
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div className="space-y-1.5">
-                                <Label>{t('visitantes.client') || 'Cliente'}<span className="text-red-600">*</span></Label>
-                                <Select
-                                    value={newVisitor.client}
-                                    onValueChange={(v) =>
-                                        setNewVisitor((s) => ({ ...s, client: v }))
-                                    }
-                                    aria-required="true"
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder={t('visitantes.selectClient') || 'Selecciona un cliente'} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {clients.map((c) => (
-                                            <SelectItem key={c.id} value={c.id}>{clientDisplayName(c)}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                )}
+                <>
+                    <Sheet open={viewLogOpen} onOpenChange={setViewLogOpen}>
+                        <SheetContent side="right" className="w-full max-w-lg">
+                            <SheetHeader>
+                                <SheetTitle>{t('visitantes.logDetails') || 'Detalles del registro'}</SheetTitle>
+                            </SheetHeader>
+                            <div className="mt-4 space-y-4">
+                                {!selectedLog ? (
+                                    <div className="text-gray-500">{t('visitantes.loading') || 'Cargando...'}</div>
+                                ) : (
+                                    <dl className="grid grid-cols-1 gap-3">
+                                        <div>
+                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.date') || 'Fecha'}</dt>
+                                            <dd className="text-base text-gray-800">{formatDateTime(selectedLog.visitDate)}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.lastName') || 'Apellidos'}</dt>
+                                            <dd className="text-base text-gray-800">{selectedLog.lastName || '-'}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.firstName') || 'Nombre'}</dt>
+                                            <dd className="text-base text-gray-800">{selectedLog.firstName || '-'}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.idNumber') || 'ID'}</dt>
+                                            <dd className="text-base text-gray-800">{selectedLog.idNumber || '-'}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.reason') || 'Motivo'}</dt>
+                                            <dd className="text-base text-gray-800">{selectedLog.reason || selectedLog.visitReason || '-'}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.exitTime') || 'Hora de salida'}</dt>
+                                            <dd className="text-base text-gray-800">{formatDateTime(selectedLog.exitTime || selectedLog.exitAt || selectedLog.leaveTime)}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.numPeople') || 'Número de personas'}</dt>
+                                            <dd className="text-base text-gray-800">{selectedLog.numPeople || selectedLog.peopleCount || selectedLog.numberPeople || '-'}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.client') || 'Cliente'}</dt>
+                                            <dd className="text-base text-gray-800">{getClientLabelFromRecord(selectedLog)}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-sm text-gray-600">{t('visitantes.logTable.postSite') || 'Post Site'}</dt>
+                                            <dd className="text-base text-gray-800">{getPostSiteLabelFromRecord(selectedLog)}</dd>
+                                        </div>
+                                    </dl>
+                                )}
                             </div>
+                        </SheetContent>
+                    </Sheet>
 
-                            <div className="space-y-1.5">
-                                <Label>{t('visitantes.site') || 'Sitio de publicación'}<span className="text-red-600">*</span></Label>
-                                <Select
-                                    value={newVisitor.site}
-                                    onValueChange={(v) =>
-                                        setNewVisitor((s) => ({ ...s, site: v }))
-                                    }
-                                    disabled={postSitesForNewVisitor.length === 0}
-                                    aria-required="true"
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder={t('visitantes.selectSite') || 'Selecciona un sitio'} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {postSitesForNewVisitor.map((p) => (
-                                            <SelectItem key={p.id} value={p.id}>{p.companyName || p.name || p.id}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                    <Sheet open={openAddVisitor} onOpenChange={setOpenAddVisitor}>
+                        <SheetContent side="right" className="w-full max-w-xl">
+                            <SheetHeader className="mb-4">
+                                <SheetTitle>{t('visitantes.newVisitor') || 'Nuevo Visitante'}</SheetTitle>
+                            </SheetHeader>
 
-                            <div className="space-y-1.5">
-                                <Label>{t('visitantes.guard') || 'Guardia'}<span className="text-red-600">*</span></Label>
-                                <Select
-                                    value={newVisitor.guard}
-                                    onValueChange={(v) =>
-                                        setNewVisitor((s) => ({ ...s, guard: v }))
-                                    }
-                                    disabled={guardsForNewVisitor.length === 0}
-                                    aria-required="true"
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder={t('visitantes.selectGuard') || 'Selecciona un guardia'} />
-                                    </SelectTrigger>
+                            <form className="space-y-4" onSubmit={onSubmitVisitor}>
+                                
+
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label>{t('visitantes.client') || 'Cliente'}<span className="text-red-600">*</span></Label>
+                                        <Select
+                                            value={newVisitor.client}
+                                            onValueChange={(v) =>
+                                                setNewVisitor((s) => ({ ...s, client: v }))
+                                            }
+                                            aria-required="true"
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={t('visitantes.selectClient') || 'Selecciona un cliente'} />
+                                            </SelectTrigger>
                                             <SelectContent>
-                                        {guardsForNewVisitor.map((g) => (
-                                            <SelectItem key={g.id} value={g.id}>{g.fullName || g.displayName || g.name || g.id}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                                                {clients.map((c) => (
+                                                    <SelectItem key={c.id} value={c.id}>{clientDisplayName(c)}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
 
-                            <div className="space-y-1.5">
-                                <Label>{t('visitantes.form.name') || 'Nombre'}<span className="text-red-600">*</span></Label>
-                                <Input
-                                    value={newVisitor.firstName}
-                                    onChange={(e) =>
-                                        setNewVisitor((s) => ({ ...s, firstName: e.target.value }))
-                                    }
-                                    placeholder={t('visitantes.placeholder.name') || 'Nombre'}
-                                    required
-                                />
-                            </div>
+                                    <div className="space-y-1.5">
+                                        <Label>{t('visitantes.site') || 'Sitio de publicación'}<span className="text-red-600">*</span></Label>
+                                        <Select
+                                            value={newVisitor.site}
+                                            onValueChange={(v) =>
+                                                setNewVisitor((s) => ({ ...s, site: v }))
+                                            }
+                                            disabled={postSitesForNewVisitor.length === 0}
+                                            aria-required="true"
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={t('visitantes.selectSite') || 'Selecciona un sitio'} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {postSitesForNewVisitor.map((p) => (
+                                                    <SelectItem key={p.id} value={p.id}>{p.companyName || p.name || p.id}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
 
-                            <div className="space-y-1.5">
-                                <Label>{t('visitantes.form.lastName') || 'Apellidos'}<span className="text-red-600">*</span></Label>
-                                <Input
-                                    value={newVisitor.lastName}
-                                    onChange={(e) =>
-                                        setNewVisitor((s) => ({ ...s, lastName: e.target.value }))
-                                    }
-                                    placeholder={t('visitantes.placeholder.lastName') || 'Apellidos'}
-                                    required
-                                />
-                            </div>
+                                    <div className="space-y-1.5">
+                                        <Label>{t('visitantes.guard') || 'Guardia'}<span className="text-red-600">*</span></Label>
+                                        <Select
+                                            value={newVisitor.guard}
+                                            onValueChange={(v) =>
+                                                setNewVisitor((s) => ({ ...s, guard: v }))
+                                            }
+                                            disabled={guardsForNewVisitor.length === 0}
+                                            aria-required="true"
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={t('visitantes.selectGuard') || 'Selecciona un guardia'} />
+                                            </SelectTrigger>
+                                                    <SelectContent>
+                                                {guardsForNewVisitor.map((g) => (
+                                                    <SelectItem key={g.id} value={g.id}>{g.fullName || g.displayName || g.name || g.id}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
 
-                            <div className="space-y-1.5">
-                                <Label>{t('visitantes.form.idNumber') || 'Número de identificación'}<span className="text-red-600">*</span></Label>
-                                <Input
-                                    value={newVisitor.idNumber}
-                                    onChange={(e) =>
-                                        setNewVisitor((s) => ({ ...s, idNumber: e.target.value }))
-                                    }
-                                    placeholder={t('visitantes.placeholder.idNumber') || 'e.g. 12015550123'}
-                                    required
-                                />
-                            </div>
+                                    <div className="space-y-1.5">
+                                        <Label>{t('visitantes.form.name') || 'Nombre'}<span className="text-red-600">*</span></Label>
+                                        <Input
+                                            value={newVisitor.firstName}
+                                            onChange={(e) =>
+                                                setNewVisitor((s) => ({ ...s, firstName: e.target.value }))
+                                            }
+                                            placeholder={t('visitantes.placeholder.name') || 'Nombre'}
+                                            required
+                                        />
+                                    </div>
 
-                            <div className="space-y-1.5">
-                                <Label>{t('visitantes.form.idImage') || 'Imagen del ID'}</Label>
-                                <Input type="file" />
-                            </div>
+                                    <div className="space-y-1.5">
+                                        <Label>{t('visitantes.form.lastName') || 'Apellidos'}<span className="text-red-600">*</span></Label>
+                                        <Input
+                                            value={newVisitor.lastName}
+                                            onChange={(e) =>
+                                                setNewVisitor((s) => ({ ...s, lastName: e.target.value }))
+                                            }
+                                            placeholder={t('visitantes.placeholder.lastName') || 'Apellidos'}
+                                            required
+                                        />
+                                    </div>
 
-                            <div className="space-y-1.5">
-                                <Label>{t('visitantes.form.mobile') || 'Número de Móvil'}<span className="text-red-600">*</span></Label>
-                                <Input
-                                    value={newVisitor.mobile}
-                                    onChange={(e) =>
-                                        setNewVisitor((s) => ({ ...s, mobile: e.target.value }))
-                                    }
-                                    placeholder={t('visitantes.placeholder.mobile') || 'e.g. +12015550123'}
-                                    required
-                                />
-                            </div>
-                            
-                            <div className="space-y-1.5">
-                                <Label>{t('visitantes.form.numPeople') || 'Número de personas'}<span className="text-red-600">*</span></Label>
-                                <Input
-                                    type="number"
-                                    min={1}
-                                    value={newVisitor.numPeople ?? ''}
-                                    onChange={(e) =>
-                                        setNewVisitor((s) => ({ ...s, numPeople: e.target.value ? Number(e.target.value) : undefined }))
-                                    }
-                                    placeholder={t('visitantes.placeholder.numPeople') || '1'}
-                                    required
-                                />
-                            </div>
+                                    <div className="space-y-1.5">
+                                        <Label>{t('visitantes.form.idNumber') || 'Número de identificación'}<span className="text-red-600">*</span></Label>
+                                        <Input
+                                            value={newVisitor.idNumber}
+                                            onChange={(e) =>
+                                                setNewVisitor((s) => ({ ...s, idNumber: e.target.value }))
+                                            }
+                                            placeholder={t('visitantes.placeholder.idNumber') || 'e.g. 12015550123'}
+                                            required
+                                        />
+                                    </div>
 
-                            <div className="space-y-1.5 md:col-span-2">
-                                <Label>{t('visitantes.form.reason') || 'Motivo'}</Label>
-                                <textarea
-                                    className="w-full rounded border px-3 py-2"
-                                    value={newVisitor.reason ?? ''}
-                                    onChange={(e) =>
-                                        setNewVisitor((s) => ({ ...s, reason: e.target.value }))
-                                    }
-                                    placeholder={t('visitantes.placeholder.reason') || 'Motivo de la visita'}
-                                    rows={3}
-                                />
-                            </div>
-                        </div>
+                                    <div className="space-y-1.5">
+                                        <Label>{t('visitantes.form.idImage') || 'Imagen del ID'}</Label>
+                                        <Input type="file" />
+                                    </div>
 
-                        <div className="flex justify-end pt-4">
-                            <Button
-                                type="submit"
-                                className="bg-orange-500 text-white hover:bg-orange-600"
-                            >
-                                {t('visitantes.save') || 'Guardar'}
-                            </Button>
-                        </div>
-                    </form>
-                </SheetContent>
-            </Sheet>
+                                    <div className="space-y-1.5">
+                                        <Label>{t('visitantes.form.mobile') || 'Número de Móvil'}<span className="text-red-600">*</span></Label>
+                                        <Input
+                                            value={newVisitor.mobile}
+                                            onChange={(e) =>
+                                                setNewVisitor((s) => ({ ...s, mobile: e.target.value }))
+                                            }
+                                            placeholder={t('visitantes.placeholder.mobile') || 'e.g. +12015550123'}
+                                            required
+                                        />
+                                    </div>
+                                    
+                                    <div className="space-y-1.5">
+                                        <Label>{t('visitantes.form.numPeople') || 'Número de personas'}<span className="text-red-600">*</span></Label>
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            value={newVisitor.numPeople ?? ''}
+                                            onChange={(e) =>
+                                                setNewVisitor((s) => ({ ...s, numPeople: e.target.value ? Number(e.target.value) : undefined }))
+                                            }
+                                            placeholder={t('visitantes.placeholder.numPeople') || '1'}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5 md:col-span-2">
+                                        <Label>{t('visitantes.form.reason') || 'Motivo'}</Label>
+                                        <textarea
+                                            className="w-full rounded border px-3 py-2"
+                                            value={newVisitor.reason ?? ''}
+                                            onChange={(e) =>
+                                                setNewVisitor((s) => ({ ...s, reason: e.target.value }))
+                                            }
+                                            placeholder={t('visitantes.placeholder.reason') || 'Motivo de la visita'}
+                                            rows={3}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end pt-4">
+                                    <Button
+                                        type="submit"
+                                        className="bg-orange-500 text-white hover:bg-orange-600"
+                                    >
+                                        {t('visitantes.save') || 'Guardar'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </SheetContent>
+                    </Sheet>
+                </>
         </AppLayout>
     );
 }
