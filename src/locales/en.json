@@ -137,6 +137,8 @@
       "incidentes": "Incidents",
       "tipo-incidente": "Incident Type"
     }
+
+
   },
   "settings": {
     "configuracion": {
@@ -192,6 +194,7 @@
       "departamento": "Department",
       "configuracion": "Settings"
     },
+  
     "notes": {
       "actions": {
         "default": "Action",

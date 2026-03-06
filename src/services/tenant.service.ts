@@ -16,10 +16,30 @@ export default {
   findByUrl(url: string) {
     return ApiService.get(`/tenant/url?url=${encodeURIComponent(url)}`);
   },
-  acceptInvitation(token: string, force = false) {
-    return ApiService.post(`/tenant/invitation/${token}/accept`, {
+  async acceptInvitation(token: string, force = false) {
+    const response = await ApiService.post(`/tenant/invitation/${token}/accept`, {
       data: { forceAcceptOtherEmail: force },
     });
+    
+    // ✅ NUEVO: Si el backend devuelve un nuevo token + usuario, actualizarlos
+    // Esto permite que el usuario tenga permisos inmediatamente sin cerrar sesión
+    if (response && response.token) {
+      try {
+        // Guardar el nuevo token en localStorage
+        localStorage.setItem('authToken', response.token);
+        
+        // Actualizar el usuario en el estado si está disponible
+        if (response.user) {
+          // El componente que llame a esto debería refrescar la app o redirigir
+          // para que el AuthContext recargue automáticamente con el nuevo token
+          console.log('✅ Nuevo token recibido. Usuario actualizado con permisos del tenant.');
+        }
+      } catch (e) {
+        console.warn('Error actualizando token después de aceptar invitación:', e);
+      }
+    }
+    
+    return response;
   },
   declineInvitation(token: string) {
     return ApiService.delete(`/tenant/invitation/${token}/decline`);

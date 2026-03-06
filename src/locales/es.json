@@ -192,6 +192,45 @@
       "departamento": "Departamento",
       "configuracion": "Configuración"
     },
+    "summary": {
+      "roleDefault": "Guardia de seguridad",
+      "header": {
+        "guardNumber": "Número de guardia",
+        "addedOn": "Añadido el",
+        "lastShift": "Último turno",
+        "about": "Acerca de"
+      },
+      "previous": "Anterior",
+      "stats": {
+        "title": "Estadísticas",
+        "last7Days": "Últimos 7 días",
+        "compareWith": "Comparar con",
+        "compareOptions": {
+          "previous": "Período anterior",
+          "none": "Ninguno"
+        },
+        "metrics": {
+          "assignedSites": "Sitios asignados",
+          "completedRoutes": "Rutas completadas",
+          "tasksCompleted": "Tareas completadas",
+          "reportsSent": "Informes enviados",
+          "inactivityAlerts": "Alertas de inactividad",
+          "noShows": "No presentados",
+          "lateArrivals": "Llegadas tardías",
+          "hoursWorked": "Horas trabajadas"
+        }
+      },
+      "recentActivity": {
+        "title": "Actividad reciente",
+        "filter": "Filtrar"
+      },
+      "sampleActivity": {
+        "message": "Este mensaje es para notificarle que 'José Alejo Pinos' ha aceptado la solicitud de la empresa y se ha movido a la lista activa"
+      },
+      "badge": {
+        "joined": "Guardia se unió"
+      }
+    },
     "notes": {
       "actions": {
         "default": "Acción",
