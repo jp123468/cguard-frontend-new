@@ -1,5 +1,4 @@
 import { ApiService } from './api/apiService';
-import { ApiService } from './api/apiService';
 
 const tenantService = {
   create(data: any) {
