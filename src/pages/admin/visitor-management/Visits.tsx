@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Search, Filter as FilterIcon, MoreVertical, FileDown, FileSpreadsheet, Printer, Mail } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -26,6 +26,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { tenantUserClientAccountsApi, tenantUserPostSiteApi } from '@/lib/api/tenantUserAssignments';
 
 type VisitsFilters = {
     clientId: string;
@@ -54,6 +55,14 @@ const defaultFilters: VisitsFilters = {
 export default function Visits() {
     const [openFilter, setOpenFilter] = useState(false);
     const [filters, setFilters] = useState<VisitsFilters>(defaultFilters);
+    const [clientAssignments, setClientAssignments] = useState([]);
+    const [postSiteAssignments, setPostSiteAssignments] = useState([]);
+
+    // Cargar asignaciones al montar
+    useEffect(() => {
+        tenantUserClientAccountsApi.list().then(setClientAssignments);
+        tenantUserPostSiteApi.list().then(setPostSiteAssignments);
+    }, []);
 
     const rows: Array<never> = [];
 

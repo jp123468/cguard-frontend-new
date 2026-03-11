@@ -1,6 +1,7 @@
 import { ApiService } from './api/apiService';
+import { ApiService } from './api/apiService';
 
-export default {
+const tenantService = {
   create(data: any) {
     return ApiService.post('/tenant', { data });
   },
@@ -78,4 +79,53 @@ export default {
   destroy(ids: string[] = []) {
     return ApiService.delete(`/tenant?ids=${ids.join(',')}`);
   },
+
+  /**
+   * Sube un documento legal para la empresa (tenant).
+   * Asocia el archivo al tenant bajo 'legalDocuments'.
+   */
+  uploadLegalDocument: async function (file: File, tenantId: string) {
+    const filename = file.name;
+    // Solicita credenciales de subida para este archivo
+    const creds: any = await ApiService.get(
+      `/tenant/${tenantId}/file/credentials?filename=${encodeURIComponent(filename)}&storageId=legalDocuments`
+    );
+
+    const uploadUrl = creds.uploadCredentials?.url;
+    if (!uploadUrl) throw new Error('Upload URL not available');
+
+    const form = new FormData();
+    form.append('filename', filename);
+    form.append('file', file);
+
+    const uploadResp = await fetch(uploadUrl, { method: 'POST', body: form });
+    if (!uploadResp.ok) {
+      const text = await uploadResp.text().catch(() => null);
+      throw new Error(`Upload failed: ${uploadResp.status} ${text}`);
+    }
+
+    // Componer objeto archivo para asociar en backend
+    const fileObj = {
+      new: true,
+      name: filename,
+      sizeInBytes: file.size,
+      privateUrl: creds.privateUrl,
+      publicUrl: creds.uploadCredentials?.publicUrl ?? null,
+    };
+
+    // Actualizar documentos legales del tenant (agregar)
+    return ApiService.put(`/tenant/${tenantId}/settings`, { settings: { legalDocuments: [fileObj] } });
+  },
+
+  /**
+   * Lista todos los documentos legales de un tenant (empresa).
+   * Asume que el backend retorna un array 'legalDocuments' en el objeto tenant.
+   */
+  listLegalDocuments: async function (tenantId: string) {
+    const res: any = await ApiService.get(`/tenant/${tenantId}`);
+    // Devuelve array vacío si no existe
+    return res?.legalDocuments || [];
+  },
 };
+
+export default tenantService;

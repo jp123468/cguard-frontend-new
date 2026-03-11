@@ -70,6 +70,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { CategorySelect } from "@/components/categories/CategorySelect";
 import { ImportDialog } from "@/components/clients/ImportDialog";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useClientSelection } from '@/contexts/ClientSelectionContext';
+
 // Local replacement for missing hook: useDebouncedValue
 function useDebouncedValue<T>(value: T, delay = 300): T {
   const [debounced, setDebounced] = useState<T>(value);
@@ -135,6 +137,7 @@ export default function ClientesPage() {
   const [restoreClient, setRestoreClient] = useState<Client | null>(null);
   const [openRestoreBulkDialog, setOpenRestoreBulkDialog] = useState(false);
   const [openDeleteBulkDialog, setOpenDeleteBulkDialog] = useState(false);
+  const { setSelectedClient } = useClientSelection();
 
   const debouncedSearch = useDebouncedValue(searchQuery, 500);
 
@@ -938,12 +941,14 @@ export default function ClientesPage() {
 
           <DialogFooter>
             <Button
-              variant="outline" onClick={() => setOpenCategorizeDialog(false)} disabled={categorizeSaving}>
+              variant="outline" onClick={() => setOpenCategorizeDialog(false)} disabled={categorizeSaving}
+              >
               {t('clients.cancel')}
             </Button>
             <Button
               className="bg-orange-500 hover:bg-orange-600"
-              onClick={handleCategorizeSubmit} disabled={categorizeSaving || categorizeLoading}>
+              onClick={handleCategorizeSubmit} disabled={categorizeSaving || categorizeLoading}
+              >
               {categorizeSaving ? t('clients.saving') : t('clients.save')}
             </Button>
           </DialogFooter>

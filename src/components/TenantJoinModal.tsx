@@ -7,6 +7,8 @@ import { PhoneInput } from "@/components/phone/PhoneInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import tenantService from "@/services/tenant.service";
+import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
+import OSMMapEmbed from "@/components/maps/OSMMapEmbed";
 import { AuthService } from "@/services/auth/authService";
 import { setTenantId as setClientTenantId } from "@/lib/api/clientService";
 import { useAuth } from "@/contexts/AuthContext";
@@ -115,10 +117,16 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
             try { await signInWithToken(token); } catch (e) { /* ignore */ }
         };
 
-    // Minimal create form state (only required fields at start)
+    // Minimal create form state (expanded to match tenants table)
     const [form, setForm] = useState<any>({
         name: '',
         address: '',
+        addressLine2: '',
+        city: '',
+        postalCode: '',
+        country: '',
+        latitude: '',
+        longitude: '',
         phone: '',
         email: '',
         taxNumber: '',
@@ -126,7 +134,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
     });
 
     const handleCreate = async () => {
-        if (!form.name || !form.email || !form.phone || !form.address) {
+            if (!form.name || !form.email || !form.phone || !form.address) {
             toast.error('Complete los campos obligatorios marcados con *');
             return;
         }
@@ -135,9 +143,15 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
             // Build payload matching tenant model
             const payload: any = {
                 name: form.name,
-                address: form.address || undefined,
-                phone: form.phone || undefined,
-                email: form.email || undefined,
+                    address: form.address || undefined,
+                    addressLine2: form.addressLine2 || undefined,
+                    city: form.city || undefined,
+                    postalCode: form.postalCode || undefined,
+                    country: form.country || undefined,
+                    latitude: form.latitude && form.latitude !== '' ? parseFloat(form.latitude) : undefined,
+                    longitude: form.longitude && form.longitude !== '' ? parseFloat(form.longitude) : undefined,
+                    phone: form.phone || undefined,
+                    email: form.email || undefined,
                 // Provide defaults for required tenant fields to avoid DB validation errors
                 // Use a temporary placeholder for taxNumber if user didn't provide one
                 taxNumber: (form.taxNumber && String(form.taxNumber).trim()) || 'PENDING',
@@ -306,9 +320,78 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="text-sm">Dirección *</label>
-                                <Textarea value={form.address} onChange={(e) => setForm((s: any) => ({ ...s, address: e.target.value }))} rows={2} />
+                            <div className="grid gap-3">
+                                <div>
+                                    <label className="text-sm">Buscar dirección *</label>
+                                    <AddressAutocompleteOSM
+                                        defaultValue={form.address || ''}
+                                        placeholder="Buscar dirección..."
+                                        onAddressSelect={(data: AddressComponents) => {
+                                            setForm((s: any) => ({
+                                                ...s,
+                                                address: data.address || s.address,
+                                                city: data.city || s.city,
+                                                postalCode: data.postalCode || s.postalCode,
+                                                country: data.country || s.country,
+                                                latitude: String(data.latitude),
+                                                longitude: String(data.longitude),
+                                            }));
+                                        }}
+                                    />
+                                </div>
+
+                                <div style={{ marginTop: 8 }}>
+                                    <OSMMapEmbed
+                                        lat={form.latitude && !isNaN(Number(form.latitude)) ? Number(form.latitude) : -1.831239}
+                                        lng={form.longitude && !isNaN(Number(form.longitude)) ? Number(form.longitude) : -78.183406}
+                                        zoom={form.latitude && form.longitude ? 17 : 6}
+                                        height="220px"
+                                        onMarkerMove={(lat: number, lng: number, address: string, addressDetails?: any) => {
+                                            setForm((s: any) => ({
+                                                ...s,
+                                                latitude: String(lat),
+                                                longitude: String(lng),
+                                                address: address || s.address,
+                                                city: (addressDetails && (addressDetails.city || addressDetails.town || addressDetails.village)) || s.city,
+                                                postalCode: (addressDetails && addressDetails.postcode) || s.postalCode,
+                                                country: (addressDetails && addressDetails.country) || s.country,
+                                            }));
+                                        }}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-sm">Dirección Complementaria</label>
+                                        <Input value={form.addressLine2} onChange={(e) => setForm((s: any) => ({ ...s, addressLine2: e.target.value }))} />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm">Código Postal</label>
+                                        <Input value={form.postalCode} onChange={(e) => setForm((s: any) => ({ ...s, postalCode: e.target.value }))} />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-sm">Ciudad</label>
+                                        <Input value={form.city} onChange={(e) => setForm((s: any) => ({ ...s, city: e.target.value }))} />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm">País</label>
+                                        <Input value={form.country} onChange={(e) => setForm((s: any) => ({ ...s, country: e.target.value }))} />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-sm">Latitud</label>
+                                        <Input value={form.latitude} onChange={(e) => setForm((s: any) => ({ ...s, latitude: e.target.value }))} />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm">Longitud</label>
+                                        <Input value={form.longitude} onChange={(e) => setForm((s: any) => ({ ...s, longitude: e.target.value }))} />
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="flex justify-end gap-3 mt-2">

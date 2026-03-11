@@ -1,3 +1,4 @@
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
@@ -8,6 +9,7 @@ import securityGuardService from '@/lib/api/securityGuardService';
 import api from '@/lib/api';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { toast } from 'sonner';
+import PostSiteMiniInfo from '@/components/post-sites/PostSiteMiniInfo';
 
 export default function GuardAsignarSitiosPage() {
   const { id } = useParams();
@@ -135,19 +137,6 @@ export default function GuardAsignarSitiosPage() {
         setClients(items);
       } catch (err) {
         console.error('Failed to load clients for assign modal', err);
-          <div className="md:hidden">
-            <MobileCardList
-              items={mappings || []}
-              loading={false}
-              emptyMessage={t('guards.assignSites.empty', { defaultValue: 'No mappings' }) as string}
-              renderCard={(m: any) => (
-                <div className="p-4 bg-white border rounded-lg">
-                  <div className="text-sm font-semibold">{m.client}</div>
-                  <div className="text-xs text-gray-500">{m.site}</div>
-                </div>
-              )}
-            />
-          </div>
       }
     })();
     return () => { mounted = false; };
@@ -294,13 +283,19 @@ export default function GuardAsignarSitiosPage() {
 
                   <div>
                     <label className="text-sm text-gray-600 block mb-2">{t('guards.assignSites.form.postSite', { defaultValue: 'Post Site' })}<span className="text-red-500">*</span></label>
-                    <select value={selectedPostSite} onChange={(e) => setSelectedPostSite(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm">
+                    <select value={selectedPostSite} onChange={(e) => setSelectedPostSite(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm mb-2">
                       <option value="">{t('guards.assignSites.form.selectPostSite', { defaultValue: 'Select post site' })}</option>
                       {postSites.length === 0 && selectedClient && (
                         <option disabled value="">{t('guards.assignSites.noPostSites', { defaultValue: 'No post sites found' })}</option>
                       )}
                       {postSites.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
+                    {/* Mostrar info y mapa del puesto seleccionado */}
+                    {selectedPostSite && (
+                      <React.Suspense fallback={<div className="text-xs text-gray-400">Cargando información del puesto...</div>}>
+                        <PostSiteMiniInfo postSiteId={selectedPostSite} />
+                      </React.Suspense>
+                    )}
                   </div>
                 </div>
               </div>

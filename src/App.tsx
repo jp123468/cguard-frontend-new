@@ -135,797 +135,800 @@ import GuardSkillsPage from "./pages/admin/security-guards/components/GuardSkill
 import GuardDepartamentoPage from "./pages/admin/security-guards/components/GuardDepartment/GuardDepartamentoPage";
 import GuardConfiguracionPage from "./pages/admin/security-guards/components/GuardConfiguration/GuardConfiguracionPage";
 
+import { ClientSelectionProvider } from "./contexts/ClientSelectionContext";
+
 export default function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Rutas públicas (solo accesibles si NO estás logueado) */}
-            <Route
-              path="/"
-              element={
-                <PublicOnlyRoute>
-                  <Login />
-                </PublicOnlyRoute>
-              }
-            />
-            <Route
-              path="/login"
-              element={
-                <PublicOnlyRoute>
-                  <Login />
-                </PublicOnlyRoute>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <PublicOnlyRoute>
-                  <Register />
-                </PublicOnlyRoute>
-              }
-            />
-            <Route path="/guard_registration" element={<GuardRegistration />} />
-            <Route path="/auth/invitation" element={<GuardRegistration />} />
-            <Route
-              path="/auth/verify-email"
-              element={
-                <PublicOnlyRoute>
-                  <VerifyEmail />
-                </PublicOnlyRoute>
-              }
-            />
-            <Route
-              path="/forgot-password"
-              element={
-                <PublicOnlyRoute>
-                  <ForgotPassword />
-                </PublicOnlyRoute>
-              }
-            />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/auth/password-reset" element={<ResetPassword />} />
+        <ClientSelectionProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Rutas públicas (solo accesibles si NO estás logueado) */}
+              <Route
+                path="/"
+                element={
+                  <PublicOnlyRoute>
+                    <Login />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/login"
+                element={
+                  <PublicOnlyRoute>
+                    <Login />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <PublicOnlyRoute>
+                    <Register />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route path="/guard_registration" element={<GuardRegistration />} />
+              <Route path="/auth/invitation" element={<GuardRegistration />} />
+              <Route
+                path="/auth/verify-email"
+                element={
+                  <PublicOnlyRoute>
+                    <VerifyEmail />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/forgot-password"
+                element={
+                  <PublicOnlyRoute>
+                    <ForgotPassword />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/auth/password-reset" element={<ResetPassword />} />
 
-            {/* Rutas protegidas (requieren autenticación) */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/activities"
-              element={
-                <ProtectedRoute>
-                  <ActivitiesPage />
-                </ProtectedRoute>
-              }
-            />
+              {/* Rutas protegidas (requieren autenticación) */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/activities"
+                element={
+                  <ProtectedRoute>
+                    <ActivitiesPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* CLIENTES */}
-            <Route
-              path="/clients"
-              element={
-                <ProtectedRoute>
-                  <ClientesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/add-new"
-              element={
-                <ProtectedRoute>
-                  <NewOrEditClientPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/edit/:id"
-              element={
-                <ProtectedRoute>
-                  <NewOrEditClientPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/:id/overview"
-              element={
-                <ProtectedRoute>
-                  <ClientsDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/:id/profile"
-              element={
-                <ProtectedRoute>
-                  <ClientsDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/:id/contacts"
-              element={
-                <ProtectedRoute>
-                  <ClientsDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/:id/notes"
-              element={
-                <ProtectedRoute>
-                  <ClientsDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/:id/files"
-              element={
-                <ProtectedRoute>
-                  <ClientsDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/:id/post-sites"
-              element={
-                <ProtectedRoute>
-                  <ClientsDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/:id/portal"
-              element={
-                <ProtectedRoute>
-                  <ClientsDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/:id/user-access"
-              element={
-                <ProtectedRoute>
-                  <ClientsDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients/:id/email-reports"
-              element={
-                <ProtectedRoute>
-                  <ClientsDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites"
-              element={
-                <ProtectedRoute>
-                  <PostSitePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/new"
-              element={
-                <ProtectedRoute>
-                  <NewOrEditPostSitePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/edit"
-              element={
-                <ProtectedRoute>
-                  <NewOrEditPostSitePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/overview"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/profile"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/contacts"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/kpis"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/post-orders"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/notes"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/files"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/assign-guards"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/tasks"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/site-tours"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/site-tour-tags"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/geo-fence"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/assign-reports"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/checklists"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/email-reports"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/post-sites/:id/settings"
-              element={
-                <ProtectedRoute>
-                  <PostSiteDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            {/* FIN CLIENTES */}
+              {/* CLIENTES */}
+              <Route
+                path="/clients"
+                element={
+                  <ProtectedRoute>
+                    <ClientesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/add-new"
+                element={
+                  <ProtectedRoute>
+                    <NewOrEditClientPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <NewOrEditClientPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/:id/overview"
+                element={
+                  <ProtectedRoute>
+                    <ClientsDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/:id/profile"
+                element={
+                  <ProtectedRoute>
+                    <ClientsDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/:id/contacts"
+                element={
+                  <ProtectedRoute>
+                    <ClientsDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/:id/notes"
+                element={
+                  <ProtectedRoute>
+                    <ClientsDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/:id/files"
+                element={
+                  <ProtectedRoute>
+                    <ClientsDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/:id/post-sites"
+                element={
+                  <ProtectedRoute>
+                    <ClientsDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/:id/portal"
+                element={
+                  <ProtectedRoute>
+                    <ClientsDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/:id/user-access"
+                element={
+                  <ProtectedRoute>
+                    <ClientsDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/:id/email-reports"
+                element={
+                  <ProtectedRoute>
+                    <ClientsDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites"
+                element={
+                  <ProtectedRoute>
+                    <PostSitePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/new"
+                element={
+                  <ProtectedRoute>
+                    <NewOrEditPostSitePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <NewOrEditPostSitePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/overview"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/profile"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/contacts"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/kpis"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/post-orders"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/notes"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/files"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/assign-guards"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/tasks"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/site-tours"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/site-tour-tags"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/geo-fence"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/assign-reports"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/checklists"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/email-reports"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/settings"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* FIN CLIENTES */}
 
-            {/* SUCURSALES */}
-            <Route
-              path="/branch"
-              element={
-                <ProtectedRoute>
-                  <BranchList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/branch/add-branch"
-              element={
-                <ProtectedRoute>
-                  <AddBranch />
-                </ProtectedRoute>
-              }
-            />
-            {/* FIN SUCURSALES */}
+              {/* SUCURSALES */}
+              <Route
+                path="/branch"
+                element={
+                  <ProtectedRoute>
+                    <BranchList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/branch/add-branch"
+                element={
+                  <ProtectedRoute>
+                    <AddBranch />
+                  </ProtectedRoute>
+                }
+              />
+              {/* FIN SUCURSALES */}
 
-            {/* EQUIPOS DE SEGURIDAD */}
-            <Route
-              path="/security-guards"
-              element={
-                <ProtectedRoute>
-                  <SecurityGuardsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/security-guards/new"
-              element={
-                <ProtectedRoute>
-                  <NewSecurityGuardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/overview"
-              element={
-                <ProtectedRoute>
-                  <GuardOverview />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/security-guards/edit/:id"
-              element={
-                <ProtectedRoute>
-                  <EditSecurityGuardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/resumen"
-              element={
-                <ProtectedRoute>
-                  <GuardResumenPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/perfil"
-              element={
-                <ProtectedRoute>
-                  <GuardPerfilPage {...({} as any)} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/availability"
-              element={
-                <ProtectedRoute>
-                  <GuardAvailabilityPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/indicadores"
-              element={
-                <ProtectedRoute>
-                  <GuardIndicadoresPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/licencias"
-              element={
-                <ProtectedRoute>
-                  <GuardLicenciasPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/notas"
-              element={
-                <ProtectedRoute>
-                  <GuardNotasPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/recordatorios"
-              element={
-                <ProtectedRoute>
-                  <GuardRemindersPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/archivos"
-              element={
-                <ProtectedRoute>
-                  <GuardFilesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/asignar-sitios"
-              element={
-                <ProtectedRoute>
-                  <GuardAsignarSitiosPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/habilidades"
-              element={
-                <ProtectedRoute>
-                  <GuardSkillsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/departamento"
-              element={
-                <ProtectedRoute>
-                  <GuardDepartamentoPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guards/:id/configuracion"
-              element={
-                <ProtectedRoute>
-                  <GuardConfiguracionPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/back-office"
-              element={
-                <ProtectedRoute>
-                  <AdminOfficeUsersPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/back-office/new"
-              element={
-                <ProtectedRoute>
-                  <NewAdminUserPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/back-office/edit/:id"
-              element={
-                <ProtectedRoute>
-                  <EditAdminUserPage />
-                </ProtectedRoute>
-              }
-            />
-            {/* FIN DE EQUIPOS DE SEGURIDAD */}
+              {/* EQUIPOS DE SEGURIDAD */}
+              <Route
+                path="/security-guards"
+                element={
+                  <ProtectedRoute>
+                    <SecurityGuardsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/security-guards/new"
+                element={
+                  <ProtectedRoute>
+                    <NewSecurityGuardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/overview"
+                element={
+                  <ProtectedRoute>
+                    <GuardOverview />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/security-guards/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <EditSecurityGuardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/resumen"
+                element={
+                  <ProtectedRoute>
+                    <GuardResumenPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/perfil"
+                element={
+                  <ProtectedRoute>
+                    <GuardPerfilPage {...({} as any)} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/availability"
+                element={
+                  <ProtectedRoute>
+                    <GuardAvailabilityPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/indicadores"
+                element={
+                  <ProtectedRoute>
+                    <GuardIndicadoresPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/licencias"
+                element={
+                  <ProtectedRoute>
+                    <GuardLicenciasPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/notas"
+                element={
+                  <ProtectedRoute>
+                    <GuardNotasPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/recordatorios"
+                element={
+                  <ProtectedRoute>
+                    <GuardRemindersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/archivos"
+                element={
+                  <ProtectedRoute>
+                    <GuardFilesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/asignar-sitios"
+                element={
+                  <ProtectedRoute>
+                    <GuardAsignarSitiosPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/habilidades"
+                element={
+                  <ProtectedRoute>
+                    <GuardSkillsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/departamento"
+                element={
+                  <ProtectedRoute>
+                    <GuardDepartamentoPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/configuracion"
+                element={
+                  <ProtectedRoute>
+                    <GuardConfiguracionPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/back-office"
+                element={
+                  <ProtectedRoute>
+                    <AdminOfficeUsersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/back-office/new"
+                element={
+                  <ProtectedRoute>
+                    <NewAdminUserPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/back-office/edit/:id"
+                element={
+                  <ProtectedRoute>
+                    <EditAdminUserPage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* FIN DE EQUIPOS DE SEGURIDAD */}
 
-            {/* ANALITICAS */}
-            <Route
-              path="/analytics/reporting"
-              element={
-                <ProtectedRoute>
-                  <Reporting />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/analytics/scheduling"
-              element={
-                <ProtectedRoute>
-                  <Scheduling />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/analytics/invoicer"
-              element={
-                <ProtectedRoute>
-                  <Invoicing />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/analytics/postsite"
-              element={
-                <ProtectedRoute>
-                  <PostSite />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/analytics/guard"
-              element={
-                <ProtectedRoute>
-                  <Guard />
-                </ProtectedRoute>
-              }
-            />
-            {/* FIN ANALITICAS */}
+              {/* ANALITICAS */}
+              <Route
+                path="/analytics/reporting"
+                element={
+                  <ProtectedRoute>
+                    <Reporting />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics/scheduling"
+                element={
+                  <ProtectedRoute>
+                    <Scheduling />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics/invoicer"
+                element={
+                  <ProtectedRoute>
+                    <Invoicing />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics/postsite"
+                element={
+                  <ProtectedRoute>
+                    <PostSite />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics/guard"
+                element={
+                  <ProtectedRoute>
+                    <Guard />
+                  </ProtectedRoute>
+                }
+              />
+              {/* FIN ANALITICAS */}
 
-            <Route
-              path="/live-tracking"
-              element={
-                <ProtectedRoute>
-                  <LiveTrackingPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/tracking-history"
-              element={
-                <ProtectedRoute>
-                  <TrackingHistoryPage />
-                </ProtectedRoute>
-              }
-            />
-
-
-            <Route
-              path="/messenger"
-              element={
-                <ProtectedRoute>
-                  <MessengerPage />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/time-log"
-              element={
-                <ProtectedRoute>
-                  <TimeRecorder />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/time-card"
-              element={
-                <ProtectedRoute>
-                  <TimeCard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/breaks"
-              element={
-                <ProtectedRoute>
-                  <Breaks />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* INFORMES */}
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute>
-                  <Reports />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/check-in-out"
-              element={
-                <ProtectedRoute>
-                  <CheckInOut />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/site-tour"
-              element={
-                <ProtectedRoute>
-                  <SiteTour />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/tasks"
-              element={
-                <ProtectedRoute>
-                  <Task />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/dar"
-              element={
-                <ProtectedRoute>
-                  <Dar />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/vehicle-patrol"
-              element={
-                <ProtectedRoute>
-                  <VehiclePatrol />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/checklist"
-              element={
-                <ProtectedRoute>
-                  <Checklist />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/post-kpi"
-              element={
-                <ProtectedRoute>
-                  <PostKpi />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/guard-kpi"
-              element={
-                <ProtectedRoute>
-                  <GuardKpi />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/incident/:id"
-              element={
-                <ProtectedRoute>
-                  <Incident />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/passdown"
-              element={
-                <ProtectedRoute>
-                  <Passdown />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/watch-mode"
-              element={
-                <ProtectedRoute>
-                  <WatchMode />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/tour-check-point"
-              element={
-                <ProtectedRoute>
-                  <TourCheckPoint />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/guard-idle-log"
-              element={
-                <ProtectedRoute>
-                  <GuardIdleLog />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/panic-button-log"
-              element={
-                <ProtectedRoute>
-                  <PanicButtonLog />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/geo-fence-log"
-              element={
-                <ProtectedRoute>
-                  <GeoFenceLog />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/guard-device-fall-report"
-              element={
-                <ProtectedRoute>
-                  <GuardDeviceFallReport />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/post-order-ack"
-              element={
-                <ProtectedRoute>
-                  <PostOrderAck />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/doc-policy-ack"
-              element={
-                <ProtectedRoute>
-                  <DocPolicyAck />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports/license"
-              element={
-                <ProtectedRoute>
-                  <License />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/live-tracking"
+                element={
+                  <ProtectedRoute>
+                    <LiveTrackingPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tracking-history"
+                element={
+                  <ProtectedRoute>
+                    <TrackingHistoryPage />
+                  </ProtectedRoute>
+                }
+              />
 
 
+              <Route
+                path="/messenger"
+                element={
+                  <ProtectedRoute>
+                    <MessengerPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* FIN DE INFORMES */}
+              <Route
+                path="/time-log"
+                element={
+                  <ProtectedRoute>
+                    <TimeRecorder />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/time-card"
+                element={
+                  <ProtectedRoute>
+                    <TimeCard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/breaks"
+                element={
+                  <ProtectedRoute>
+                    <Breaks />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* NOMINA */}
+              {/* INFORMES */}
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute>
+                    <Reports />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/check-in-out"
+                element={
+                  <ProtectedRoute>
+                    <CheckInOut />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/site-tour"
+                element={
+                  <ProtectedRoute>
+                    <SiteTour />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/tasks"
+                element={
+                  <ProtectedRoute>
+                    <Task />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/dar"
+                element={
+                  <ProtectedRoute>
+                    <Dar />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/vehicle-patrol"
+                element={
+                  <ProtectedRoute>
+                    <VehiclePatrol />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/checklist"
+                element={
+                  <ProtectedRoute>
+                    <Checklist />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/post-kpi"
+                element={
+                  <ProtectedRoute>
+                    <PostKpi />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/guard-kpi"
+                element={
+                  <ProtectedRoute>
+                    <GuardKpi />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/incident/:id"
+                element={
+                  <ProtectedRoute>
+                    <Incident />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/passdown"
+                element={
+                  <ProtectedRoute>
+                    <Passdown />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/watch-mode"
+                element={
+                  <ProtectedRoute>
+                    <WatchMode />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/tour-check-point"
+                element={
+                  <ProtectedRoute>
+                    <TourCheckPoint />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/guard-idle-log"
+                element={
+                  <ProtectedRoute>
+                    <GuardIdleLog />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/panic-button-log"
+                element={
+                  <ProtectedRoute>
+                    <PanicButtonLog />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/geo-fence-log"
+                element={
+                  <ProtectedRoute>
+                    <GeoFenceLog />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/guard-device-fall-report"
+                element={
+                  <ProtectedRoute>
+                    <GuardDeviceFallReport />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/post-order-ack"
+                element={
+                  <ProtectedRoute>
+                    <PostOrderAck />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/doc-policy-ack"
+                element={
+                  <ProtectedRoute>
+                    <DocPolicyAck />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports/license"
+                element={
+                  <ProtectedRoute>
+                    <License />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/payroll/generate-payroll"
-              element={
-                <ProtectedRoute>
-                  <GeneratePayroll />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/payroll/past-payroll"
-              element={
-                <ProtectedRoute>
-                  <PastPayroll />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/payroll/overtime-multiplier"
-              element={
-                <ProtectedRoute>
-                  <OvertimeMultiplier />
-                </ProtectedRoute>
-              }
-            />
-            {/* <Route
+
+
+              {/* FIN DE INFORMES */}
+
+              {/* NOMINA */}
+
+              <Route
+                path="/payroll/generate-payroll"
+                element={
+                  <ProtectedRoute>
+                    <GeneratePayroll />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payroll/past-payroll"
+                element={
+                  <ProtectedRoute>
+                    <PastPayroll />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payroll/overtime-multiplier"
+                element={
+                  <ProtectedRoute>
+                    <OvertimeMultiplier />
+                  </ProtectedRoute>
+                }
+              />
+              {/* <Route
             path="/payroll/overtime-multiplier/new-overtime-multiplier"
             element={
               <ProtectedRoute>
@@ -934,549 +937,546 @@ export default function App() {
             }
           /> */}
 
-            {/* FIN NOMINA */}
+              {/* FIN NOMINA */}
 
 
-            {/* INTEGRACIONES */}
-            <Route
-              path="/estimates"
-              element={
-                <ProtectedRoute>
-                  <Estimates />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/estimates/add-new"
-              element={
-                <ProtectedRoute>
-                  <NewEstimate />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/estimates/:id"
-              element={
-                <ProtectedRoute>
-                  <EditEstimate />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/invoices"
-              element={
-                <ProtectedRoute>
-                  <Invoices />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/billing/invoices/new"
-              element={
-                <ProtectedRoute>
-                  <NewInvoice />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/billing/invoices/:id"
-              element={
-                <ProtectedRoute>
-                  <EditInvoice />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/invoicer/items"
-              element={
-                <ProtectedRoute>
-                  <Items />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/parking-manager/parking-contact"
-              element={
-                <ProtectedRoute>
-                  <ParkingContact />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/parking-manager/parking-vehicle"
-              element={
-                <ProtectedRoute>
-                  <ParkingVehicles />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/parking-manager/parking-area"
-              element={
-                <ProtectedRoute>
-                  <ParkingArea />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/parking-manager/parking-lot"
-              element={
-                <ProtectedRoute>
-                  <ParkingLot />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/parking-manager/parking-incident"
-              element={
-                <ProtectedRoute>
-                  <ParkingIncident />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/parking-manager/incident-type"
-              element={
-                <ProtectedRoute>
-                  <ParkingIncidentType />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/parking-manager/incident-type/new"
-              element={
-                <ProtectedRoute>
-                  <NewIncidentType />
-                </ProtectedRoute>
-              }
-            />
+              {/* INTEGRACIONES */}
+              <Route
+                path="/estimates"
+                element={
+                  <ProtectedRoute>
+                    <Estimates />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/estimates/add-new"
+                element={
+                  <ProtectedRoute>
+                    <NewEstimate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/estimates/:id"
+                element={
+                  <ProtectedRoute>
+                    <EditEstimate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/invoices"
+                element={
+                  <ProtectedRoute>
+                    <Invoices />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/billing/invoices/new"
+                element={
+                  <ProtectedRoute>
+                    <NewInvoice />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/billing/invoices/:id"
+                element={
+                  <ProtectedRoute>
+                    <EditInvoice />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/invoicer/items"
+                element={
+                  <ProtectedRoute>
+                    <Items />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/parking-manager/parking-contact"
+                element={
+                  <ProtectedRoute>
+                    <ParkingContact />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/parking-manager/parking-vehicle"
+                element={
+                  <ProtectedRoute>
+                    <ParkingVehicles />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/parking-manager/parking-area"
+                element={
+                  <ProtectedRoute>
+                    <ParkingArea />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/parking-manager/parking-lot"
+                element={
+                  <ProtectedRoute>
+                    <ParkingLot />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/parking-manager/parking-incident"
+                element={
+                  <ProtectedRoute>
+                    <ParkingIncident />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/parking-manager/incident-type"
+                element={
+                  <ProtectedRoute>
+                    <ParkingIncidentType />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/parking-manager/incident-type/new"
+                element={
+                  <ProtectedRoute>
+                    <NewIncidentType />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* PROGRAMADOR */}
-            <Route
-              path="/time-off"
-              element={
-                <ProtectedRoute>
-                  <TimeOff />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/attendance"
-              element={
-                <ProtectedRoute>
-                  <Attendance />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/schedule"
-              element={
-                <ProtectedRoute>
-                  <Schedule />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/shift-exchange"
-              element={
-                <ProtectedRoute>
-                  <ShiftExchange />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/shift-status"
-              element={
-                <ProtectedRoute>
-                  <ShiftStatus />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/shift-templates"
-              element={
-                <ProtectedRoute>
-                  <ShiftTemplates />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/open-shifts"
-              element={
-                <ProtectedRoute>
-                  <OpenShifts />
-                </ProtectedRoute>
-              }
-            />
-            {/* FIN PROGRAMADOR */}
-
-
-            {/* DESPACHADOR */}
-            <Route
-              path="/dispatch-tickets"
-              element={
-                <ProtectedRoute>
-                  <DispatcherPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dispatch-tickets/new"
-              element={
-                <ProtectedRoute>
-                  <NewDispatchPage />
-                </ProtectedRoute>
-              }
-            />
-
-            
-            <Route
-              path="/dispatch-tickets/:id/edit"
-              element={
-                <ProtectedRoute>
-                  <EditDispatchPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dispatch-tickets/:id"
-              element={
-                <ProtectedRoute>
-                  <DispatchDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dispatch-tickets/:id/print"
-              element={
-                <ProtectedRoute>
-                  <DispatchPrintablePage />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Public shared dispatch view (no auth) */}
-            <Route path="/public/dispatch/:token" element={<DispatchPublicView />} />
-
-            {/* FIN DESPACHADOR */}
-
-            {/* GESTION DE VISITANTES */}
-            <Route
-              path="/visitors"
-              element={
-                <ProtectedRoute>
-                  <Visitors />
-                </ProtectedRoute>
-              }
-            />
-           {/* <Route
-              path="/visitor/vehicle-list"
-              element={
-                <ProtectedRoute>
-                  <Vehicles />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/visitor/visit-list"
-              element={
-                <ProtectedRoute>
-                  <Visits />
-                </ProtectedRoute>
-              }
-            />*/}
-            {/* FIN GESTION DE VISITANTES */}
+              {/* PROGRAMADOR */}
+              <Route
+                path="/time-off"
+                element={
+                  <ProtectedRoute>
+                    <TimeOff />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/attendance"
+                element={
+                  <ProtectedRoute>
+                    <Attendance />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/schedule"
+                element={
+                  <ProtectedRoute>
+                    <Schedule />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/shift-exchange"
+                element={
+                  <ProtectedRoute>
+                    <ShiftExchange />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/shift-status"
+                element={
+                  <ProtectedRoute>
+                    <ShiftStatus />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/shift-templates"
+                element={
+                  <ProtectedRoute>
+                    <ShiftTemplates />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/open-shifts"
+                element={
+                  <ProtectedRoute>
+                    <OpenShifts />
+                  </ProtectedRoute>
+                }
+              />
+              {/* FIN PROGRAMADOR */}
 
 
-            {/* VEHICLES */}
-            <Route
-              path="/vehicle-patrol/vehicles"
-              element={
-                <ProtectedRoute>
-                  <VehiclesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/vehicle-patrol/vehicles/add-vehicle"
-              element={
-                <ProtectedRoute>
-                  <NewVehiclePage />
-                </ProtectedRoute>
-              }
-            />
+              {/* DESPACHADOR */}
+              <Route
+                path="/dispatch-tickets"
+                element={
+                  <ProtectedRoute>
+                    <DispatcherPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dispatch-tickets/new"
+                element={
+                  <ProtectedRoute>
+                    <NewDispatchPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* RUTAS */}
-            <Route
-              path="/vehicle-patrol/routes"
-              element={
-                <ProtectedRoute>
-                  <RoutesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/vehicle-patrol/routes/add-new"
-              element={
-                <ProtectedRoute>
-                  <NewRoutePage />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/dispatch-tickets/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <EditDispatchPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dispatch-tickets/:id"
+                element={
+                  <ProtectedRoute>
+                    <DispatchDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dispatch-tickets/:id/print"
+                element={
+                  <ProtectedRoute>
+                    <DispatchPrintablePage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Public shared dispatch view (no auth) */}
+              <Route path="/public/dispatch/:token" element={<DispatchPublicView />} />
+
+              {/* FIN DESPACHADOR */}
+
+              {/* GESTION DE VISITANTES */}
+              <Route
+                path="/visitors"
+                element={
+                  <ProtectedRoute>
+                    <Visitors />
+                  </ProtectedRoute>
+                }
+              />
+              {/* <Route
+                path="/visitor/vehicle-list"
+                element={
+                  <ProtectedRoute>
+                    <Vehicles />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/visitor/visit-list"
+                element={
+                  <ProtectedRoute>
+                    <Visits />
+                  </ProtectedRoute>
+                }
+              />*/}
+              {/* FIN GESTION DE VISITANTES */}
 
 
+              {/* VEHICLES */}
+              <Route
+                path="/vehicle-patrol/vehicles"
+                element={
+                  <ProtectedRoute>
+                    <VehiclesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/vehicle-patrol/vehicles/add-vehicle"
+                element={
+                  <ProtectedRoute>
+                    <NewVehiclePage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* CONFIGURACIONES */}
-            <Route
-              path="/setting/user-profile"
-              element={
-                <ProtectedRoute>
-                  <ProfileUser />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/company-profile"
-              element={
-                <ProtectedRoute>
-                  <ProfileCompany />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/change-password"
-              element={
-                <ProtectedRoute>
-                  <PasswordChangePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/two-factor-authentication"
-              element={
-                <ProtectedRoute>
-                  <TwoFactorAuthentication />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/notifications"
-              element={
-                <ProtectedRoute>
-                  <Notification />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/politicas"
-              element={
-                <ProtectedRoute>
-                  <CompanyPoliciesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/tipos-incidentes"
-              element={
-                <ProtectedRoute>
-                  <IncidentTypesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/tipos-licencias"
-              element={
-                <ProtectedRoute>
-                  <LicenseTypePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/conjunto-habilidades"
-              element={
-                <ProtectedRoute>
-                  <SkillSetsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/Departamentos"
-              element={
-                <ProtectedRoute>
-                  <DepartmentPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/impuestos"
-              element={
-                <ProtectedRoute>
-                  <TaxesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/campos-perfil"
-              element={
-                <ProtectedRoute>
-                  <ProfileFieldsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/roles"
-              element={
-                <ProtectedRoute>
-                  <UserRolesPage />
-                </ProtectedRoute>
-              }
-            />
+              {/* RUTAS */}
+              <Route
+                path="/vehicle-patrol/routes"
+                element={
+                  <ProtectedRoute>
+                    <RoutesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/vehicle-patrol/routes/add-new"
+                element={
+                  <ProtectedRoute>
+                    <NewRoutePage />
+                  </ProtectedRoute>
+                }
+              />
 
 
 
-
-            <Route
-              path="/setting/integraciones"
-              element={
-                <ProtectedRoute>
-                  <IntegrationsList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/integracion/:slug"
-              element={
-                <ProtectedRoute>
-                  <IntegrationDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/payroll-setup"
-              element={
-                <ProtectedRoute>
-                  <PayrollSettingsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/payroll-setup"
-              element={
-                <ProtectedRoute>
-                  <PayrollSettingsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/publishing-sites"
-              element={
-                <ProtectedRoute>
-                  <PostingGlobalPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/keep-safe"
-              element={
-                <ProtectedRoute>
-                  <GuardsGlobalSettingsPage />
-                  {/* FALTA */}
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/report-configuration"
-              element={
-                <ProtectedRoute>
-                  <ReportSettingsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/other-settings"
-              element={
-                <ProtectedRoute>
-                  <OtherSettingsPage />
-                </ProtectedRoute>
-              }
-            />
+              {/* CONFIGURACIONES */}
+              <Route
+                path="/setting/user-profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfileUser />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/company-profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfileCompany />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/change-password"
+                element={
+                  <ProtectedRoute>
+                    <PasswordChangePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/two-factor-authentication"
+                element={
+                  <ProtectedRoute>
+                    <TwoFactorAuthentication />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/notifications"
+                element={
+                  <ProtectedRoute>
+                    <Notification />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/politicas"
+                element={
+                  <ProtectedRoute>
+                    <CompanyPoliciesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/tipos-incidentes"
+                element={
+                  <ProtectedRoute>
+                    <IncidentTypesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/tipos-licencias"
+                element={
+                  <ProtectedRoute>
+                    <LicenseTypePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/conjunto-habilidades"
+                element={
+                  <ProtectedRoute>
+                    <SkillSetsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/Departamentos"
+                element={
+                  <ProtectedRoute>
+                    <DepartmentPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/impuestos"
+                element={
+                  <ProtectedRoute>
+                    <TaxesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/campos-perfil"
+                element={
+                  <ProtectedRoute>
+                    <ProfileFieldsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/roles"
+                element={
+                  <ProtectedRoute>
+                    <UserRolesPage />
+                  </ProtectedRoute>
+                }
+              />
 
 
 
 
+              <Route
+                path="/setting/integraciones"
+                element={
+                  <ProtectedRoute>
+                    <IntegrationsList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/integracion/:slug"
+                element={
+                  <ProtectedRoute>
+                    <IntegrationDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/payroll-setup"
+                element={
+                  <ProtectedRoute>
+                    <PayrollSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/payroll-setup"
+                element={
+                  <ProtectedRoute>
+                    <PayrollSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/publishing-sites"
+                element={
+                  <ProtectedRoute>
+                    <PostingGlobalPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/keep-safe"
+                element={
+                  <ProtectedRoute>
+                    <GuardsGlobalSettingsPage />
+                    {/* FALTA */}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/report-configuration"
+                element={
+                  <ProtectedRoute>
+                    <ReportSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/other-settings"
+                element={
+                  <ProtectedRoute>
+                    <OtherSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/setting/access-token"
-              element={
-                <ProtectedRoute>
-                  <DeveloperTokensPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting/request-records"
-              element={
-                <ProtectedRoute>
-                  <DeveloperRequestsPage />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* SUSCIPCIONES */}
-            <Route
-              path="/billing"
-              element={
-                <ProtectedRoute>
-                  <SubscriptionDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/billing-modulos"
-              element={
-                <ProtectedRoute>
-                  <ModulesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/billing-metodos"
-              element={
-                <ProtectedRoute>
-                  <PaymentMethodsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/billing-facturas"
-              element={
-                <ProtectedRoute>
-                  <InvoicesPage />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/idioma"
-              element={
-                <ProtectedRoute>
-                  <LanguagePage />
-                </ProtectedRoute>
-              }
-            />
 
 
+              <Route
+                path="/setting/access-token"
+                element={
+                  <ProtectedRoute>
+                    <DeveloperTokensPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/request-records"
+                element={
+                  <ProtectedRoute>
+                    <DeveloperRequestsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* SUSCIPCIONES */}
+              <Route
+                path="/billing"
+                element={
+                  <ProtectedRoute>
+                    <SubscriptionDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/billing-modulos"
+                element={
+                  <ProtectedRoute>
+                    <ModulesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/billing-metodos"
+                element={
+                  <ProtectedRoute>
+                    <PaymentMethodsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/billing-facturas"
+                element={
+                  <ProtectedRoute>
+                    <InvoicesPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/idioma"
+                element={
+                  <ProtectedRoute>
+                    <LanguagePage />
+                  </ProtectedRoute>
+                }
+              />
 
 
-            {/* Ruta raíz - redirige según estado de autenticación */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-            {/* 404 - Página no encontrada */}
-            <Route path="*" element={<NotFound />} />
 
-          </Routes>
-        </BrowserRouter>
+              {/* Ruta raíz - redirige según estado de autenticación */}
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+              {/* 404 - Página no encontrada */}
+              <Route path="*" element={<NotFound />} />
+
+            </Routes>
+          </BrowserRouter>
+        </ClientSelectionProvider>
       </AuthProvider>
     </LanguageProvider>
   )

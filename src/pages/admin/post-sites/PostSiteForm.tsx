@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState, useRef } from "react";
+import { clientService } from "@/lib/api/clientService";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { categoryService } from "@/lib/api/categoryService";
 import { postSiteService } from "@/lib/api/postSiteService";
+import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +38,10 @@ import {
 } from "@/components/ui/form";
 import { PostSiteInput, postSiteSchema } from "@/lib/validators/post-site";
 import { PhoneInput } from "@/components/phone/PhoneInput";
+import OSMMapEmbed from "@/components/maps/OSMMapEmbed";
 import { t } from "i18next";
+
+import { useClientSelection } from '@/contexts/ClientSelectionContext';
 
 export type Client = { id: string; name: string; lastName?: string };
 export type Category = { id: string; name: string; description?: string };
@@ -58,9 +63,92 @@ export default function PostSiteForm({
     baseUrl = "/api/post-sites",
     onSaved,
 }: PostSiteFormProps) {
+    // Obtener cliente seleccionado del contexto (debe ir antes de cualquier uso)
+    const { selectedClient, setSelectedClient } = useClientSelection();
     const navigate = useNavigate();
     const [categories, setCategories] = useState<Category[]>(initialCategories || []);
     const [loadingCategories, setLoadingCategories] = useState(false);
+    // Estado para dirección diferente
+    const [direccionDiferente, setDireccionDiferente] = useState(false);
+    const [addressComponents, setAddressComponents] = useState<AddressComponents | null>(null);
+    // Si hay cliente seleccionado y el checkbox NO está marcado, copiar los datos de dirección del cliente al formulario y forzar validación
+    useEffect(() => {
+        if (!direccionDiferente && selectedClient && selectedClient.id) {
+            form.setValue('address', selectedClient.address || '', { shouldValidate: true, shouldDirty: true });
+            form.setValue('city', selectedClient.city || '', { shouldValidate: true, shouldDirty: true });
+            form.setValue('postalCode', selectedClient.postalCode || '', { shouldValidate: true, shouldDirty: true });
+            form.setValue('country', selectedClient.country || '', { shouldValidate: true, shouldDirty: true });
+            form.trigger(['address', 'city', 'postalCode', 'country']);
+        }
+    }, [direccionDiferente, selectedClient]);
+
+    // Manejar cambio de cliente: fetch datos completos y actualizar selectedClient
+    const handleClientChange = async (clientId: string) => {
+        if (!clientId) {
+            setSelectedClient(null);
+            return;
+        }
+        try {
+            const client = await clientService.getClient(clientId);
+            setSelectedClient(client);
+        } catch (e) {
+            toast.error("No se pudo obtener la información del cliente");
+            setSelectedClient(null);
+        }
+    };
+
+    // Antes de enviar, si el checkbox NO está marcado, forzar los datos del cliente en el payload
+    async function onSubmit(values: PostSiteInput) {
+        // Forzar los datos del cliente justo antes de enviar si el checkbox NO está marcado
+        if (!direccionDiferente && selectedClient) {
+            values.address = selectedClient.address || '';
+            values.city = selectedClient.city || '';
+            values.postalCode = selectedClient.postalCode || '';
+            values.country = selectedClient.country || '';
+            // Agregar latitud y longitud si existen en el cliente
+            values.latitud = selectedClient.latitud || selectedClient.latitude || '';
+            values.longitud = selectedClient.longitud || selectedClient.longitude || '';
+        }
+        // Forzar los valores en el form también (por si RHF hace validación interna)
+        if (!direccionDiferente && selectedClient) {
+            setFormValue('address', selectedClient.address || '');
+            setFormValue('city', selectedClient.city || '');
+            setFormValue('postalCode', selectedClient.postalCode || '');
+            setFormValue('country', selectedClient.country || '');
+        }
+        console.log('onSubmit ejecutado, valores:', values);
+        try {
+            const payload: PostSiteInput = {
+                ...values,
+                // Map empty string to null for category
+                categoryId: values.categoryId && String(values.categoryId).length > 0 ? values.categoryId : undefined,
+            };
+            if (mode === "create") {
+                const data = await postSiteService.create(payload);
+                toast.success("Sitio de publicación creado");
+                onSaved?.({ id: data.id, data: payload });
+                navigate(`/post-sites/${data.id}/profile`);
+            } else if (mode === "edit" && id) {
+                await postSiteService.update(id, payload);
+                toast.success("Cambios guardados");
+                onSaved?.({ id, data: payload });
+                navigate(`/post-sites/${id}/profile`);
+            }
+        } catch (e: any) {
+            console.error(e);
+            toast.error(e?.response?.data?.message ?? "Error al guardar");
+        }
+    }
+        // Cuando el usuario selecciona una dirección diferente con el mapa
+        const handleAddressSelect = (address: AddressComponents) => {
+            setAddressComponents(address);
+            setFormValue('address', address.address);
+            setFormValue('city', address.city);
+            setFormValue('postalCode', address.postalCode);
+            setFormValue('country', address.country);
+            setFormValue('latitud', address.latitude);
+            setFormValue('longitud', address.longitude);
+        };
     // Deduplicate toasts across mounts and avoid duplicate navigation
     const shownToasts = useRef<Set<string>>(new Set());
     const showToastOnce = (key: string, message: string) => {
@@ -127,6 +215,13 @@ export default function PostSiteForm({
         form.setValue(name as any, value, { shouldValidate: true, shouldDirty: true });
     };
 
+    // Si hay un cliente seleccionado en contexto, usarlo como valor por defecto y bloquear el campo
+    useEffect(() => {
+        if (mode === 'create' && selectedClient && selectedClient.id) {
+            form.setValue('clientId', selectedClient.id, { shouldValidate: true, shouldDirty: true });
+        }
+    }, [mode, selectedClient]);
+
     // Cargar datos en modo edición
     useEffect(() => {
         if (mode === "edit" && id) {
@@ -171,29 +266,10 @@ export default function PostSiteForm({
         }
     };
 
-    async function onSubmit(values: PostSiteInput) {
-        try {
-            const payload: PostSiteInput = {
-                ...values,
-                // Map empty string to null for category
-                categoryId: values.categoryId && String(values.categoryId).length > 0 ? values.categoryId : undefined,
-            };
 
-            if (mode === "create") {
-                const data = await postSiteService.create(payload);
-                toast.success("Sitio de publicación creado");
-                onSaved?.({ id: data.id, data: payload });
-                navigate(`/post-sites/${data.id}/profile`);
-            } else if (mode === "edit" && id) {
-                await postSiteService.update(id, payload);
-                toast.success("Cambios guardados");
-                onSaved?.({ id, data: payload });
-                navigate(`/post-sites/${id}/profile`);
-            }
-        } catch (e: any) {
-            console.error(e);
-            toast.error(e?.response?.data?.message ?? "Error al guardar");
-        }
+    // Mostrar errores de validación
+    function onError(errors: any) {
+        console.log('Errores de validación:', errors);
     }
 
     const clientsList = useMemo(() => {
@@ -206,10 +282,17 @@ export default function PostSiteForm({
         return categories.map((c) => ({ id: c.id, name: c.name }));
     }, [categories]);
 
+    // Obtener valores actuales de latitud y longitud del formulario
+    const lat = form.watch('latitud');
+    const lng = form.watch('longitud');
+
+    // Estado para tipo de mapa
+    const [mapType, setMapType] = useState<'osm' | 'satellite'>('osm');
+
     return (
         <div className="max-w-[1400px] mx-auto">
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-6">
                     {/* Fila 1 */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField<PostSiteInput>
@@ -220,7 +303,10 @@ export default function PostSiteForm({
                                     <FormLabel>{t('postSites.form.client', 'Cliente *')}</FormLabel>
                                     <Combobox
                                         value={field.value ? String(field.value) : ""}
-                                        onChange={field.onChange}
+                                        onChange={(value) => {
+                                            field.onChange(value);
+                                            handleClientChange(value);
+                                        }}
                                         options={clientsList.map((c) => ({
                                             value: c.id,
                                             label: formatClientName(c),
@@ -248,171 +334,39 @@ export default function PostSiteForm({
                         />
                     </div>
 
-                    {/* Fila 2: Dirección */}
-                    <div className="grid grid-cols-1 gap-6">
-                        <FormField<PostSiteInput>
-                            control={form.control}
-                            name="address"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{t('postSites.form.address', 'Dirección *')}</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder=""
-                                            {...field}
-                                            value={field.value ? String(field.value) : ""}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField<PostSiteInput>
-                            control={form.control}
-                            name="addressLine2"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{t('postSites.form.addressLine2', 'Dirección Complementaria')}</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder={t('postSites.form.addressLine2Placeholder', 'Opcional')}
-                                            {...field}
-                                            value={field.value ? String(field.value) : ""}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                    {/* Checkbox para dirección diferente */}
+                    <div className="my-2">
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={direccionDiferente}
+                                onChange={e => setDireccionDiferente(e.target.checked)}
+                            />
+                            ¿La dirección del sitio es diferente a la del cliente?
+                        </label>
                     </div>
 
-                    {/* Fila 3: Código postal, Ciudad, País */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField<PostSiteInput>
-                            control={form.control}
-                            name="postalCode"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{t('postSites.form.postalCode', 'Código postal/Zip *')}</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder=""
-                                            {...field}
-                                            value={field.value ? String(field.value) : ""}
-                                            maxLength={20}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField<PostSiteInput>
-                            control={form.control}
-                            name="city"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{t('postSites.form.city', 'Ciudad *')}</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder=""
-                                            {...field}
-                                            value={field.value ? String(field.value) : ""}
-                                            maxLength={100}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField<PostSiteInput>
-                            control={form.control}
-                            name="country"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{t('postSites.form.country', 'País *')}</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder=""
-                                            {...field}
-                                            value={field.value ? String(field.value) : ""}
-                                            maxLength={100}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                    <div className="md:col-span-2 flex gap-4 items-start">
-                        <FormField<PostSiteInput>
-                            control={form.control}
-                            name="latitud"
-                            render={({ field }) => (
-                                <FormItem className="flex-1">
-                                    <FormLabel>{t('postSites.form.latitude', 'Latitud *')}</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder={t('postSites.form.latitude', 'Latitud *')}
-                                            {...field}
-                                            value={field.value ? String(field.value) : ""}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField<PostSiteInput>
-                            control={form.control}
-                            name="longitud"
-                            render={({ field }) => (
-                                <FormItem className="flex-1">
-                                    <FormLabel>{t('postSites.form.longitude', 'Longitud *')}</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder={t('postSites.form.longitude', 'Longitud *')}
-                                            {...field}
-                                            value={field.value ? String(field.value) : ""}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <div className="mt-6">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => {
-                                    if (!navigator.geolocation) {
-                                        toast.error(t('postSites.form.geolocationNotSupported', 'Geolocalización no soportada en este navegador'));
-                                        return;
-                                    }
-                                    navigator.geolocation.getCurrentPosition(
-                                        (pos) => {
-                                            const lat = String(pos.coords.latitude);
-                                            const lng = String(pos.coords.longitude);
-                                            setFormValue('latitud' as any, lat);
-                                            setFormValue('longitud' as any, lng);
-                                            toast.success(t('postSites.form.locationSet', 'Ubicación actual establecida'));
-                                        },
-                                        (err) => {
-                                            console.error(err);
-                                            toast.error(t('postSites.form.unableToRetrieveLocation', 'No se pudo obtener la ubicación'));
-                                        },
-                                        { enableHighAccuracy: true, timeout: 10000 }
-                                    );
-                                }}
-                            >
-                                {t('postSites.form.useMyLocation', 'Usar mi ubicación')}
-                            </Button>
+                    {/* Dirección del sitio solo si el checkbox está activo */}
+                    {direccionDiferente && (
+                        <div className="my-2">
+                            <FormField<PostSiteInput>
+                                control={form.control}
+                                name="address"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Dirección del sitio</FormLabel>
+                                        <FormControl>
+                                            <AddressAutocompleteOSM
+                                                onAddressSelect={handleAddressSelect}
+                                                defaultValue={form.getValues('address') || ''}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
-
-                    </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <FormField<PostSiteInput>
                             control={form.control}
@@ -469,6 +423,26 @@ export default function PostSiteForm({
 
 
                     </div>
+                    {/* Mapa OSM con selector de tipo de mapa */}
+                    {(lat && lng) && (
+                        <div className="my-4">
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="block text-sm font-medium text-gray-700">Ubicación en el mapa</label>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-600">Tipo de mapa</span>
+                                    <select
+                                        className="border rounded px-2 py-1 text-xs"
+                                        value={mapType}
+                                        onChange={e => setMapType(e.target.value as 'osm' | 'satellite')}
+                                    >
+                                        <option value="osm">OpenStreetMap</option>
+                                        <option value="satellite">Satélite</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <OSMMapEmbed lat={lat} lng={lng} mapType={mapType} />
+                        </div>
+                    )}
                     {/* Más Información (Accordion) */}
                     <Accordion type="single" collapsible defaultValue="more">
                         <AccordionItem value="more" className="border rounded-md">

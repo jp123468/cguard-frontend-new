@@ -104,22 +104,7 @@ export default function PostSiteProfile({ site }: { site?: any }) {
 
                 {/* Map block replicated from Overview */}
                 <div className="mt-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-sm font-semibold">{t('postSites.profile.Map.title')}</h4>
-                        <div className="flex items-center gap-4">
-                            <div className="text-sm text-gray-600">{t('postSites.profile.Map.MapType')}</div>
-                            <select className="border rounded px-3 py-1 text-sm">
-                                <option>{t('postSites.profile.Map.Roadmap')}</option>
-                                <option>{t('postSites.profile.Map.Satellite')}</option>
-                                <option>{t('postSites.profile.Map.Hybrid')}</option>
-                            </select>
-
-                            <label className="flex items-center gap-2 text-sm text-gray-600">
-                                <input type="checkbox" className="form-checkbox h-5 w-8" />
-                                <span>{t('postSites.profile.Map.GeoFence')}</span>
-                            </label>
-                        </div>
-                    </div>
+                    {/* Controles de tipo de mapa y geo-cerca ocultos, solo se muestra el mapa */}
 
                     {(() => {
                         const lat = site?.latitud ?? site?.latitude ?? site?.lat ?? (site?.location && site.location.lat);
