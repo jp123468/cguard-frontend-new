@@ -38,6 +38,14 @@ export default function Register() {
       return;
     }
 
+    // Validación de política de contraseña en frontend
+    const { isStrongPassword, PASSWORD_POLICY_TEXT } = await import('@/lib/passwordPolicy');
+    if (!isStrongPassword(password)) {
+      const msg = t('auth.weakPassword', { defaultValue: `La contraseña es muy débil. Requisitos: ${PASSWORD_POLICY_TEXT}` })
+      toast.error(msg);
+      return;
+    }
+
     setIsLoading(true);
     const res = await signUp({ email, password, name });
     setIsLoading(false);

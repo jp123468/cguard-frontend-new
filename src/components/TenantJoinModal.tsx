@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Edit, Search } from 'lucide-react';
 import tenantService from "@/services/tenant.service";
 import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
 import OSMMapEmbed from "@/components/maps/OSMMapEmbed";
@@ -132,6 +133,8 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
         taxNumber: '',
         businessTitle: '',
     });
+    const [showAddressAutocomplete, setShowAddressAutocomplete] = useState(true);
+    const [autocompleteOpenQuery, setAutocompleteOpenQuery] = useState('');
 
     const handleCreate = async () => {
             if (!form.name || !form.email || !form.phone || !form.address) {
@@ -321,75 +324,73 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                             </div>
 
                             <div className="grid gap-3">
-                                <div>
+                                <div className="flex items-center justify-between">
                                     <label className="text-sm">Buscar dirección *</label>
-                                    <AddressAutocompleteOSM
-                                        defaultValue={form.address || ''}
-                                        placeholder="Buscar dirección..."
-                                        onAddressSelect={(data: AddressComponents) => {
-                                            setForm((s: any) => ({
-                                                ...s,
-                                                address: data.address || s.address,
-                                                city: data.city || s.city,
-                                                postalCode: data.postalCode || s.postalCode,
-                                                country: data.country || s.country,
-                                                latitude: String(data.latitude),
-                                                longitude: String(data.longitude),
-                                            }));
-                                        }}
-                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setShowAddressAutocomplete(!showAddressAutocomplete)}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Edit className="h-4 w-4" />
+                                        <span>{showAddressAutocomplete ? 'Ingresar dirección manualmente' : 'Volver a búsqueda automática'}</span>
+                                    </Button>
                                 </div>
 
-                                <div style={{ marginTop: 8 }}>
-                                    <OSMMapEmbed
-                                        lat={form.latitude && !isNaN(Number(form.latitude)) ? Number(form.latitude) : -1.831239}
-                                        lng={form.longitude && !isNaN(Number(form.longitude)) ? Number(form.longitude) : -78.183406}
-                                        zoom={form.latitude && form.longitude ? 17 : 6}
-                                        height="220px"
-                                        onMarkerMove={(lat: number, lng: number, address: string, addressDetails?: any) => {
-                                            setForm((s: any) => ({
-                                                ...s,
-                                                latitude: String(lat),
-                                                longitude: String(lng),
-                                                address: address || s.address,
-                                                city: (addressDetails && (addressDetails.city || addressDetails.town || addressDetails.village)) || s.city,
-                                                postalCode: (addressDetails && addressDetails.postcode) || s.postalCode,
-                                                country: (addressDetails && addressDetails.country) || s.country,
-                                            }));
-                                        }}
-                                    />
-                                </div>
+                                {showAddressAutocomplete && (
+                                    <div>
+                                        <AddressAutocompleteOSM
+                                            defaultValue={form.address || ''}
+                                            openWithQuery={autocompleteOpenQuery}
+                                            placeholder="Buscar dirección..."
+                                            onAddressSelect={(data: AddressComponents) => {
+                                                setForm((s: any) => ({
+                                                    ...s,
+                                                    address: data.address || s.address,
+                                                    city: data.city || s.city,
+                                                    postalCode: data.postalCode || s.postalCode,
+                                                    country: data.country || s.country,
+                                                    latitude: String(data.latitude),
+                                                    longitude: String(data.longitude),
+                                                }));
+                                            }}
+                                            showMap={true}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Se elimina el mapa secundario para evitar duplicidad. Usar el mapa integrado en AddressAutocompleteOSM para seleccionar la dirección. */}
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-sm">Dirección Complementaria</label>
-                                        <Input value={form.addressLine2} onChange={(e) => setForm((s: any) => ({ ...s, addressLine2: e.target.value }))} />
+                                        <Input value={form.addressLine2} onChange={(e) => setForm((s: any) => ({ ...s, addressLine2: e.target.value }))} disabled={showAddressAutocomplete} />
                                     </div>
                                     <div>
                                         <label className="text-sm">Código Postal</label>
-                                        <Input value={form.postalCode} onChange={(e) => setForm((s: any) => ({ ...s, postalCode: e.target.value }))} />
+                                        <Input value={form.postalCode} onChange={(e) => setForm((s: any) => ({ ...s, postalCode: e.target.value }))} disabled={showAddressAutocomplete} />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-sm">Ciudad</label>
-                                        <Input value={form.city} onChange={(e) => setForm((s: any) => ({ ...s, city: e.target.value }))} />
+                                        <Input value={form.city} onChange={(e) => setForm((s: any) => ({ ...s, city: e.target.value }))} disabled={showAddressAutocomplete} />
                                     </div>
                                     <div>
                                         <label className="text-sm">País</label>
-                                        <Input value={form.country} onChange={(e) => setForm((s: any) => ({ ...s, country: e.target.value }))} />
+                                        <Input value={form.country} onChange={(e) => setForm((s: any) => ({ ...s, country: e.target.value }))} disabled={showAddressAutocomplete} />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-sm">Latitud</label>
-                                        <Input value={form.latitude} onChange={(e) => setForm((s: any) => ({ ...s, latitude: e.target.value }))} />
+                                        <Input value={form.latitude} onChange={(e) => setForm((s: any) => ({ ...s, latitude: e.target.value }))} disabled={showAddressAutocomplete} />
                                     </div>
                                     <div>
                                         <label className="text-sm">Longitud</label>
-                                        <Input value={form.longitude} onChange={(e) => setForm((s: any) => ({ ...s, longitude: e.target.value }))} />
+                                        <Input value={form.longitude} onChange={(e) => setForm((s: any) => ({ ...s, longitude: e.target.value }))} disabled={showAddressAutocomplete} />
                                     </div>
                                 </div>
                             </div>

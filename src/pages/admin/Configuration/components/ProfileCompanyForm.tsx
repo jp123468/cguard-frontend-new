@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import CompanyPhoneField from "./profile/CompanyPhoneField";
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { toast } from "sonner";
-import { Camera } from "lucide-react";
+import { Camera, Edit, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import tenantService from '@/services/tenant.service';
 import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
@@ -51,6 +51,7 @@ export default function ProfileCompanyForm() {
   const canEdit = isAdmin;
   const [logo, setLogo] = useState<string | null>(null);
   const [showAddressAutocomplete, setShowAddressAutocomplete] = useState(true);
+  const [autocompleteOpenQuery, setAutocompleteOpenQuery] = useState('');
   const [showBillingAddressAutocomplete, setShowBillingAddressAutocomplete] = useState(true);
   // State for company legal documents
   const [companyDocuments, setCompanyDocuments] = useState<CompanyDocument[]>([]);
@@ -362,42 +363,47 @@ export default function ProfileCompanyForm() {
               <Label>Dirección de la Empresa*</Label>
               <Button
                 type="button"
-                variant="ghost"
-                size="sm"
+                variant="outline"
                 onClick={() => setShowAddressAutocomplete(!showAddressAutocomplete)}
                 disabled={!canEdit}
+                className={`flex items-center gap-2 ${!canEdit ? 'opacity-50 pointer-events-none' : ''}`}
               >
-                {showAddressAutocomplete ? 'Entrada manual' : 'Búsqueda automática'}
+                <Edit className="h-4 w-4" />
+                <span>{showAddressAutocomplete ? 'Ingresar dirección manualmente' : 'Volver a búsqueda automática'}</span>
               </Button>
             </div>
 
 
             {showAddressAutocomplete && canEdit ? (
               <>
-                <AddressAutocompleteOSM
-                  onAddressSelect={(addressData: AddressComponents) => {
-                    setForm((s) => ({
-                      ...s,
-                      address: addressData.address,
-                      city: addressData.city,
-                      postalCode: addressData.postalCode,
-                      country: addressData.country,
-                      latitude: String(addressData.latitude),
-                      longitude: String(addressData.longitude),
-                    }));
-                    toast.success('Dirección completada automáticamente');
-                  }}
-                  defaultValue={form.address || ''}
-                  placeholder="Buscar dirección..."
-                  showMap={false}
-                  mapHeight="0px"
-                />
+                <div style={{ position: 'relative', zIndex: 0 }}>
+                  <AddressAutocompleteOSM
+                    onAddressSelect={(addressData: AddressComponents) => {
+                      setForm((s) => ({
+                        ...s,
+                        address: addressData.address,
+                        city: addressData.city,
+                        postalCode: addressData.postalCode,
+                        country: addressData.country,
+                        latitude: String(addressData.latitude),
+                        longitude: String(addressData.longitude),
+                      }));
+                      toast.success('Dirección completada automáticamente');
+                    }}
+                    defaultValue={form.address || ''}
+                    openWithQuery={autocompleteOpenQuery}
+                    placeholder="Buscar dirección..."
+                    // Mostrar mapa integrado como fuente única de ubicación
+                    showMap={true}
+                    mapHeight="320px"
+                  />
+                </div>
               </>
             ) : null}
 
             {/* Mostrar el mapa solo si el usuario puede editar. Si no hay lat/lng usar coordenadas por defecto de Ecuador */}
-            {canEdit && (
-              <div style={{ marginTop: 16 }}>
+            {canEdit && !showAddressAutocomplete && (
+              <div style={{ marginTop: 16, position: 'relative', zIndex: 0 }}>
                 {(() => {
                   const defaultLat = -1.831239; // centro aproximado de Ecuador
                   const defaultLng = -78.183406;
@@ -427,16 +433,37 @@ export default function ProfileCompanyForm() {
             )}
 
             {/* Manual Address Fields */}
+            <div style={{ position: 'relative', zIndex: 2000 }}>
+              {showAddressAutocomplete && canEdit && (
+                <p className="text-xs text-gray-500 mb-2">Los campos manuales están bloqueados. Haz clic en "Ingresar dirección manualmente" para modificarlos.</p>
+              )}
+            
             <div className={showAddressAutocomplete && canEdit ? 'opacity-60 pointer-events-none' : ''}>
               <div className="space-y-4">
                 <div>
                   <Label>Dirección Principal</Label>
-                  <Input
-                    value={form.address}
-                    onChange={(e) => setForm((s) => ({ ...s, address: e.target.value }))}
-                    placeholder="Dirección"
-                    disabled={!canEdit}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={form.address}
+                      onChange={(e) => setForm((s) => ({ ...s, address: e.target.value }))}
+                      placeholder="Dirección"
+                      disabled={!canEdit || showAddressAutocomplete}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      title="Buscar con autocompletado"
+                      onClick={() => {
+                        setAutocompleteOpenQuery(form.address || '');
+                        setShowAddressAutocomplete(true);
+                      }}
+                      disabled={!canEdit}
+                      className="flex items-center gap-2"
+                    >
+                      <Search className="h-4 w-4" />
+                      <span>Buscar</span>
+                    </Button>
+                  </div>
                 </div>
 
                 <div>
@@ -445,7 +472,7 @@ export default function ProfileCompanyForm() {
                     value={form.addressLine2}
                     onChange={(e) => setForm((s) => ({ ...s, addressLine2: e.target.value }))}
                     placeholder="Opcional"
-                    disabled={!canEdit}
+                    disabled={!canEdit || showAddressAutocomplete}
                   />
                 </div>
 
@@ -456,7 +483,7 @@ export default function ProfileCompanyForm() {
                       value={form.postalCode}
                       onChange={(e) => setForm((s) => ({ ...s, postalCode: e.target.value }))}
                       placeholder="Código postal"
-                      disabled={!canEdit}
+                      disabled={!canEdit || showAddressAutocomplete}
                     />
                   </div>
 
@@ -466,7 +493,7 @@ export default function ProfileCompanyForm() {
                       value={form.city}
                       onChange={(e) => setForm((s) => ({ ...s, city: e.target.value }))}
                       placeholder="Ciudad"
-                      disabled={!canEdit}
+                      disabled={!canEdit || showAddressAutocomplete}
                     />
                   </div>
 
@@ -476,7 +503,7 @@ export default function ProfileCompanyForm() {
                       value={form.country}
                       onChange={(e) => setForm((s) => ({ ...s, country: e.target.value }))}
                       placeholder="País"
-                      disabled={!canEdit}
+                      disabled={!canEdit || showAddressAutocomplete}
                     />
                   </div>
                 </div>
@@ -488,7 +515,7 @@ export default function ProfileCompanyForm() {
                       value={form.latitude}
                       onChange={(e) => setForm((s) => ({ ...s, latitude: e.target.value }))}
                       placeholder="-90 a 90"
-                      disabled={!canEdit}
+                      disabled={!canEdit || showAddressAutocomplete}
                     />
                   </div>
 
@@ -498,7 +525,7 @@ export default function ProfileCompanyForm() {
                       value={form.longitude}
                       onChange={(e) => setForm((s) => ({ ...s, longitude: e.target.value }))}
                       placeholder="-180 a 180"
-                      disabled={!canEdit}
+                      disabled={!canEdit || showAddressAutocomplete}
                     />
                   </div>
                 </div>
@@ -561,6 +588,8 @@ export default function ProfileCompanyForm() {
               Guardar
             </Button>
           </div>
+        </div>
+
         </div>
 
         <div className="mt-6">

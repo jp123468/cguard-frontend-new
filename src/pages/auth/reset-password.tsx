@@ -27,8 +27,11 @@ export default function ResetPassword() {
       toast.error(t('auth.token_missing', { defaultValue: 'Reset token not found in URL.' }));
       return;
     }
-    if (password.length < 8) {
-      toast.error(t('auth.password_min_length', { defaultValue: 'Password must be at least 8 characters' }));
+    // Validación de política de contraseña
+    const { isStrongPassword, PASSWORD_POLICY_TEXT } = await import('@/lib/passwordPolicy');
+    if (!isStrongPassword(password)) {
+      const msg = t('auth.weakPassword', { defaultValue: `La contraseña es muy débil. Requisitos: ${PASSWORD_POLICY_TEXT}` })
+      toast.error(msg);
       return;
     }
     if (password !== confirm) {

@@ -58,6 +58,7 @@ interface Props {
   initialLng?: number;
   showMap?: boolean;
   mapHeight?: string;
+  openWithQuery?: string;
 }
 
 function DraggableMarker({ position, setPosition, onDragEnd }: { position: [number, number], setPosition: (pos: [number, number]) => void, onDragEnd: (lat: number, lng: number) => void }) {
@@ -85,6 +86,7 @@ export default function AddressAutocompleteOSM({
   initialLng = -3.7038,
   showMap = true,
   mapHeight = '300px',
+  openWithQuery,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState(defaultValue);
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
@@ -100,11 +102,13 @@ export default function AddressAutocompleteOSM({
     }
   }, [position]);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Search addresses using Nominatim (OpenStreetMap geocoding)
   const searchAddress = async (query: string) => {
-    if (query.length < 3) {
+    if (query.length < 2) {
       setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
     setLoading(true);
@@ -121,7 +125,7 @@ export default function AddressAutocompleteOSM({
 
       let data: SearchResult[] = [];
       for (const v of variants) {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=ec&limit=10&accept-language=es&q=${encodeURIComponent(
+        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=10&accept-language=es&q=${encodeURIComponent(
           v
         )}`;
         // eslint-disable-next-line no-await-in-loop
@@ -134,13 +138,30 @@ export default function AddressAutocompleteOSM({
         }
       }
       setSuggestions(data);
-      setShowSuggestions(data.length > 0);
+      setShowSuggestions(true);
     } catch (error) {
       setSuggestions([]);
     } finally {
       setLoading(false);
     }
   };
+
+  // If parent requests opening the autocomplete with a prefilled query,
+  // set the query, perform the search and show suggestions.
+  useEffect(() => {
+    if (openWithQuery && openWithQuery.length > 0) {
+      setSearchQuery(openWithQuery);
+      // trigger search immediately
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      // call searchAddress directly
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      (async () => {
+        await searchAddress(openWithQuery);
+        setShowSuggestions(true);
+        try { inputRef.current && inputRef.current.focus(); } catch (e) { }
+      })();
+    }
+  }, [openWithQuery]);
 
   const selectSuggestion = (result: SearchResult) => {
     const lat = parseFloat(result.lat);
@@ -218,6 +239,7 @@ export default function AddressAutocompleteOSM({
       <div className="flex gap-2">
         <div className="flex-1 relative">
           <Input
+            ref={inputRef}
             type="text"
             value={searchQuery}
             onChange={(e) => {
@@ -226,11 +248,17 @@ export default function AddressAutocompleteOSM({
               searchTimeoutRef.current = setTimeout(() => searchAddress(e.target.value), 500);
             }}
             placeholder={placeholder}
-            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+            onFocus={() => setShowSuggestions(true)}
           />
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-              {suggestions.map((result, index) => (
+          {showSuggestions && (
+            <div className="absolute w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto" style={{ zIndex: 3000 }}>
+              {loading && (
+                <div className="px-4 py-2 text-sm text-gray-500">Buscando...</div>
+              )}
+              {!loading && suggestions.length === 0 && (
+                <div className="px-4 py-2 text-sm text-gray-500">No se encontraron resultados</div>
+              )}
+              {!loading && suggestions.map((result, index) => (
                 <div
                   key={index}
                   className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
@@ -253,12 +281,12 @@ export default function AddressAutocompleteOSM({
         </Button>
       </div>
       {showMap && (
-        <div className="h-[350px] rounded-md border overflow-hidden relative">
+        <div className="rounded-md border overflow-hidden relative" style={{ zIndex: 0, height: mapHeight }}>
           <MapContainer
             key={position[0] + '-' + position[1]}
             center={position}
             zoom={13}
-            style={{ height: mapHeight, width: '100%' }}
+            style={{ height: '100%', width: '100%' }}
           >
             <MapClickHandler onMapClick={(lat, lng) => {
               setPosition([lat, lng]);
