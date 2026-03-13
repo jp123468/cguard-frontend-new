@@ -573,9 +573,9 @@ export default function GuardLicenses({ guard }: Props) {
               const created = await licenseTypeService.create({ name: values.name });
               const newType = created && (created.data ?? created) ? (created.data ?? created) : created;
               const added = Array.isArray(newType) ? newType[0] : newType;
-              if (added) {
+                if (added) {
                 setLicenseTypes((prev) => [...prev, added]);
-                setFormData((f) => ({ ...f, licenseType: String(added.id) }));
+                setFormData((f: any) => ({ ...f, licenseType: String(added.id) }));
               }
               setShowCreateLicenseType(false);
             } catch (err) {
