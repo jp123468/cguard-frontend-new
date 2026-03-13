@@ -129,22 +129,11 @@ export default function LicenseTypesTable({
       </div>
 
       <div className="flex items-center gap-6">
-        <div className="flex-1" />
-        <div className="flex-1 text-center text-sm text-muted-foreground">{total === 0 ? t('licenseTypes.table.zeroOfZero', { defaultValue: '0 de 0' }) : `${from} – ${to} de ${total}`}</div>
-        <div className="flex-1 flex items-center justify-end gap-4">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(Math.max(1, page - 1))}>
-              {t('licenseTypes.table.pagination.prev', { defaultValue: 'Anterior' })}
-            </Button>
-            <Button variant="outline" size="sm" disabled={page >= maxPage} onClick={() => onPageChange(Math.min(maxPage, page + 1))}>
-              {t('licenseTypes.table.pagination.next', { defaultValue: 'Siguiente' })}
-            </Button>
-          </div>
-
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             {t('licenseTypes.table.itemsPerPage', { defaultValue: 'Elementos por página' })}
             <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
-              <SelectTrigger className="w-[90px]">
+              <SelectTrigger className="h-8 w-20">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -154,6 +143,19 @@ export default function LicenseTypesTable({
                 <SelectItem value="100">100</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        </div>
+
+        <div className="flex-1 text-center text-sm text-muted-foreground">{total === 0 ? t('licenseTypes.table.zeroOfZero', { defaultValue: '0 de 0' }) : `${from} – ${to} de ${total}`}</div>
+
+        <div className="flex-1 flex items-center justify-end gap-4">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(Math.max(1, page - 1))}>
+              {t('licenseTypes.table.pagination.prev', { defaultValue: 'Anterior' })}
+            </Button>
+            <Button variant="outline" size="sm" disabled={page >= maxPage} onClick={() => onPageChange(Math.min(maxPage, page + 1))}>
+              {t('licenseTypes.table.pagination.next', { defaultValue: 'Siguiente' })}
+            </Button>
           </div>
         </div>
       </div>

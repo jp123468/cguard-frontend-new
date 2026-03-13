@@ -153,6 +153,79 @@ export const securityGuardService = {
     const { data } = await api.delete<any>(`/tenant/${tenantId}/security-guard/${guardId}/notes/${noteId}`);
     return data;
   },
+
+  // Licenses CRUD for a guard
+  async getSecurityGuardLicenses(guardId: string, pagination: { limit?: number; offset?: number } = { limit: 25, offset: 0 }) {
+    const tenantId = getTenantId();
+    const params = new URLSearchParams();
+    if (pagination.limit !== undefined) params.append('limit', String(pagination.limit));
+    if (pagination.offset !== undefined) params.append('offset', String(pagination.offset));
+
+    const { data } = await api.get<any>(`/tenant/${tenantId}/security-guard/${guardId}/licenses?${params.toString()}`);
+    return data;
+  },
+
+  async createSecurityGuardLicense(guardId: string, payload: any) {
+    const tenantId = getTenantId();
+    const { data } = await api.post<any>(`/tenant/${tenantId}/security-guard/${guardId}/licenses`, payload);
+    return data;
+  },
+
+  async getSecurityGuardLicense(guardId: string, licenseId: string) {
+    const tenantId = getTenantId();
+    const { data } = await api.get<any>(`/tenant/${tenantId}/security-guard/${guardId}/licenses/${licenseId}`);
+    return data;
+  },
+
+  async downloadSecurityGuardLicenseReport(guardId: string, licenseId: string) {
+    const tenantId = getTenantId();
+    const response = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/licenses/${licenseId}/download?format=pdf`, {
+      responseType: 'blob',
+      toast: { silentError: true },
+    } as any);
+    return response && (response as any).data !== undefined ? (response as any).data : response;
+  },
+
+  async updateSecurityGuardLicense(guardId: string, licenseId: string, payload: any) {
+    const tenantId = getTenantId();
+    const { data } = await api.put<any>(`/tenant/${tenantId}/security-guard/${guardId}/licenses/${licenseId}`, payload);
+    return data;
+  },
+
+  async destroySecurityGuardLicenses(guardId: string, ids: string[]) {
+    const tenantId = getTenantId();
+    const { data } = await api.delete<any>(`/tenant/${tenantId}/security-guard/${guardId}/licenses?ids=${ids.join(',')}`);
+    return data;
+  },
+
+  async uploadGuardLicenseImage(file: File) {
+    const tenantId = getTenantId();
+    const filename = file.name;
+    const creds: any = await api.get(`/tenant/${tenantId}/file/credentials?filename=${encodeURIComponent(filename)}&storageId=securityGuardLicenseImage`);
+
+    const uploadUrl = creds.data?.uploadCredentials?.url ?? creds.uploadCredentials?.url;
+    if (!uploadUrl) throw new Error('Upload URL not available');
+
+    const form = new FormData();
+    form.append('filename', filename);
+    form.append('file', file);
+
+    const uploadResp = await fetch(uploadUrl, { method: 'POST', body: form });
+    if (!uploadResp.ok) {
+      const text = await uploadResp.text().catch(() => null);
+      throw new Error(`Upload failed: ${uploadResp.status} ${text}`);
+    }
+
+    const fileObj = {
+      new: true,
+      name: filename,
+      sizeInBytes: file.size,
+      privateUrl: creds.data?.privateUrl ?? creds.privateUrl,
+      publicUrl: creds.data?.uploadCredentials?.publicUrl ?? creds.uploadCredentials?.publicUrl ?? null,
+    };
+
+    return fileObj;
+  },
 };
 
 export default securityGuardService;

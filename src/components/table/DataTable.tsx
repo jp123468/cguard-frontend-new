@@ -1,3 +1,4 @@
+import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RowActionsMenu, type RowAction } from "./RowActionsMenu";
 
@@ -23,6 +24,8 @@ type DataTableProps<T> = {
     sortDir?: "asc" | "desc" | null;
     onSortChange?: (key: string, dir: "asc" | "desc" | null) => void;
     onRowClick?: (row: T) => void;
+    // When true, don't render the outer container (border/background).
+    containerless?: boolean;
 };
 
 export function DataTable<T extends { id: string }>({
@@ -38,124 +41,118 @@ export function DataTable<T extends { id: string }>({
     sortDir,
     onSortChange,
     onRowClick,
+    containerless,
 }: DataTableProps<T>) {
     const allSelected = data.length > 0 && selectedIds.length === data.length;
 
-    return (
-        <div className="border rounded-lg overflow-hidden bg-white">
-            <table className="min-w-full text-sm text-left border-collapse">
-                <thead className="bg-gray-50">
-                    <tr className="border-b">
-                        <th className="px-4 py-3 w-10">
-                            <Checkbox
-                                checked={allSelected}
-                                onCheckedChange={(checked) => onSelectAll(!!checked)}
-                            />
-                        </th>
-                        {columns.map((col) => {
-                            const key = String(col.key);
-                            const isSorted = sortKey === key;
-                            const nextSort = () => {
-                                if (!onSortChange || !col.sortable) return;
-                                let next: "asc" | "desc" | null = "asc";
-                                if (!isSorted) next = "asc";
-                                else if (isSorted && sortDir === "asc") next = "desc";
-                                else next = null;
-                                onSortChange(key, next);
-                            };
+    const table = (
+        <table className="min-w-full text-sm text-left border-collapse">
+            <thead className="bg-gray-50">
+                <tr className="border-b">
+                    <th className="px-4 py-3 w-10">
+                        <Checkbox
+                            checked={allSelected}
+                            onCheckedChange={(checked) => onSelectAll(!!checked)}
+                        />
+                    </th>
+                    {columns.map((col) => {
+                        const key = String(col.key);
+                        const isSorted = sortKey === key;
+                        const nextSort = () => {
+                            if (!onSortChange || !col.sortable) return;
+                            let next: "asc" | "desc" | null = "asc";
+                            if (!isSorted) next = "asc";
+                            else if (isSorted && sortDir === "asc") next = "desc";
+                            else next = null;
+                            onSortChange(key, next);
+                        };
 
-                            return (
-                                <th
-                                    key={key}
-                                    className={`px-4 py-3 font-semibold ${col.className ?? ""}`}
-                                >
-                                    {col.sortable ? (
-                                        <button
-                                            type="button"
-                                            onClick={nextSort}
-                                            className="flex items-center gap-2"
-                                        >
-                                            <span>{col.header}</span>
-                                            <span className="text-xs text-muted-foreground">
-                                                {isSorted ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}
-                                            </span>
-                                        </button>
-                                    ) : (
-                                        col.header
-                                    )}
-                                </th>
-                            );
-                        })}
-                        {rowActions && <th className="w-12" />}
+                        return (
+                            <th
+                                key={key}
+                                className={`px-4 py-3 font-semibold ${col.className ?? ""}`}
+                            >
+                                {col.sortable ? (
+                                    <button
+                                        type="button"
+                                        onClick={nextSort}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <span>{col.header}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {isSorted ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}
+                                        </span>
+                                    </button>
+                                ) : (
+                                    col.header
+                                )}
+                            </th>
+                        );
+                    })}
+                    {rowActions && <th className="w-12" />}
+                </tr>
+            </thead>
+
+            <tbody>
+                {loading ? (
+                    <tr>
+                        <td
+                            colSpan={columns.length + (rowActions ? 2 : 1)}
+                            className="py-20 text-center"
+                        >
+                            Cargando...
+                        </td>
                     </tr>
-                </thead>
-
-                <tbody>
-                    {loading ? (
-                        <tr>
-                            <td
-                                colSpan={columns.length + (rowActions ? 2 : 1)}
-                                className="py-20 text-center"
-                            >
-                                Cargando...
+                ) : data.length === 0 ? (
+                    <tr>
+                        <td
+                            colSpan={columns.length + (rowActions ? 2 : 1)}
+                            className="py-12"
+                        >
+                            {emptyState ?? (
+                                <div className="flex flex-col items-center justify-center text-center">
+                                    <p className="text-base font-medium">No se encontraron resultados</p>
+                                    <p className="mt-1 text-sm text-muted-foreground max-w-xs">Intenta ajustar la búsqueda o los filtros.</p>
+                                </div>
+                            )}
+                        </td>
+                    </tr>
+                ) : (
+                    data.map((row) => (
+                        <tr
+                            key={row.id}
+                            className={`border-b hover:bg-gray-50 ${onRowClick ? 'cursor-pointer' : ''}`}
+                            onClick={onRowClick ? () => onRowClick(row) : undefined}
+                        >
+                            <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                                <Checkbox
+                                    checked={selectedIds.includes(row.id)}
+                                    onCheckedChange={(checked) => onSelectOne(row.id, !!checked)}
+                                />
                             </td>
-                        </tr>
-                    ) : data.length === 0 ? (
-                        <tr>
-                            <td
-                                colSpan={columns.length + (rowActions ? 2 : 1)}
-                                className="py-12"
-                            >
-                                {emptyState ?? (
-                                    <div className="flex flex-col items-center justify-center text-center">
-                                        <p className="text-base font-medium">
-                                            No se encontraron resultados
-                                        </p>
-                                        <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-                                            Intenta ajustar la búsqueda o los filtros.
-                                        </p>
-                                    </div>
-                                )}
-                            </td>
-                        </tr>
-                        ) : (
-                        data.map((row) => (
-                            <tr
-                                key={row.id}
-                                className={`border-b hover:bg-gray-50 ${onRowClick ? 'cursor-pointer' : ''}`}
-                                onClick={onRowClick ? () => onRowClick(row) : undefined}
-                            >
-                                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                                    <Checkbox
-                                        checked={selectedIds.includes(row.id)}
-                                        onCheckedChange={(checked) =>
-                                            onSelectOne(row.id, !!checked)
-                                        }
-                                    />
-                                </td>
 
-                                {columns.map((col) => {
-                                    const value = (row as any)[col.key];
-                                    return (
-                                        <td
-                                            key={String(col.key)}
-                                            className={`px-4 py-3 text-gray-600 ${col.className ?? ""}`}
-                                        >
-                                            {col.render ? col.render(value, row) : value}
-                                        </td>
-                                    );
-                                })}
-
-                                {rowActions && (
-                                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                                        <RowActionsMenu actions={rowActions(row)} />
+                            {columns.map((col) => {
+                                const value = (row as any)[col.key];
+                                return (
+                                    <td key={String(col.key)} className={`px-4 py-3 text-gray-600 ${col.className ?? ""}`}>
+                                        {col.render ? col.render(value, row) : value}
                                     </td>
-                                )}
-                            </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
-        </div>
+                                );
+                            })}
+
+                            {rowActions && (
+                                <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                                    <RowActionsMenu actions={rowActions(row)} />
+                                </td>
+                            )}
+                        </tr>
+                    ))
+                )}
+            </tbody>
+        </table>
     );
+
+    if (containerless) return table;
+
+    return <div className="border rounded-lg overflow-hidden bg-white">{table}</div>;
 }
