@@ -137,17 +137,17 @@ export default function ClientEmailReports({ client }: { client: any }) {
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/30" onClick={() => setShowInvite(false)} />
 
-          <div className="fixed right-0 top-0 bottom-0 w-[520px] bg-white shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
-              <h3 className="text-lg font-semibold">Add New Email</h3>
-              <button onClick={() => setShowInvite(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
+          <div className="fixed right-0 top-0 bottom-0 w-[520px] bg-white dark:bg-slate-800 shadow-2xl flex flex-col text-gray-900 dark:text-gray-100" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white dark:bg-slate-800 z-10">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Add New Email</h3>
+              <button onClick={() => setShowInvite(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white"><X /></button>
             </div>
 
             <div className="p-6 overflow-y-auto flex-1">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">Post Site*</label>
-                  <select value={form.postSite} onChange={(e) => setForm((p) => ({ ...p, postSite: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, postSite: true }))} className="w-full border rounded-md h-12 px-3">
+                  <label className="block text-sm text-gray-700 dark:text-gray-200 mb-2">Post Site*</label>
+                  <select value={form.postSite} onChange={(e) => setForm((p) => ({ ...p, postSite: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, postSite: true }))} className="w-full border rounded-md h-12 px-3 bg-white dark:bg-slate-900 dark:text-white dark:border-white/10">
                     <option value="">Select Post Site</option>
                     {(Array.isArray(client?.postSites) ? client.postSites : []).map((ps: any) => (
                       <option key={ps.id} value={ps.id}>{ps.name}</option>
@@ -157,14 +157,14 @@ export default function ClientEmailReports({ client }: { client: any }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">New Email</label>
-                  <input value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, email: true }))} placeholder="New Email..." className="w-full border rounded-md h-12 px-3" />
+                  <label className="block text-sm text-gray-700 dark:text-gray-200 mb-2">New Email</label>
+                  <input value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, email: true }))} placeholder="New Email..." className="w-full border rounded-md h-12 px-3 bg-white dark:bg-slate-900 dark:text-white dark:border-white/10" />
                   {touched.email && !form.email && <div className="text-red-600 text-sm mt-1">Required</div>}
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">Select Frequency*</label>
-                  <select value={form.frequency} onChange={(e) => setForm((p) => ({ ...p, frequency: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, frequency: true }))} className="w-full border rounded-md h-12 px-3">
+                  <label className="block text-sm text-gray-700 dark:text-gray-200 mb-2">Select Frequency*</label>
+                  <select value={form.frequency} onChange={(e) => setForm((p) => ({ ...p, frequency: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, frequency: true }))} className="w-full border rounded-md h-12 px-3 bg-white dark:bg-slate-900 dark:text-white dark:border-white/10">
                     <option value="">Select Frequency</option>
                     <option value="Daily">Daily</option>
                     <option value="Weekly">Weekly</option>
@@ -174,7 +174,7 @@ export default function ClientEmailReports({ client }: { client: any }) {
                 </div>
 
                 <div>
-                  <div className="text-sm text-gray-700 mb-3">Select reports to be included in DAR :</div>
+                  <div className="text-sm text-gray-700 dark:text-gray-200 mb-3">Select reports to be included in DAR :</div>
                   <div className="grid gap-3">
                     {reportsList.map((r) => {
                       const active = selectedReports.includes(r);
@@ -185,7 +185,7 @@ export default function ClientEmailReports({ client }: { client: any }) {
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             ) : null}
                           </button>
-                          <span className={`${active ? 'text-orange-600 font-semibold' : 'text-gray-700'}`}>{r}</span>
+                          <span className={`${active ? 'text-orange-600 font-semibold' : 'text-gray-700 dark:text-gray-200'}`}>{r}</span>
                         </label>
                       );
                     })}
@@ -194,7 +194,7 @@ export default function ClientEmailReports({ client }: { client: any }) {
               </div>
             </div>
 
-            <div className="p-4 bg-white sticky bottom-0 z-20">
+            <div className="p-4 bg-white dark:bg-slate-800 sticky bottom-0 z-20">
               <div className="flex items-center justify-end">
                 <button onClick={handleSaveEmail} className="ml-auto w-12 h-12 rounded-full bg-orange-600 text-white flex items-center justify-center shadow-lg hover:bg-orange-700">Save</button>
               </div>

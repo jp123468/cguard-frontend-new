@@ -219,7 +219,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         try {
             // Query tags for the post site directly (covers all tours under the site)
             const q = filterTagType ? `?tagType=${encodeURIComponent(filterTagType)}` : '';
-            const tagsResp: any = await ApiService.get(`/tenant/${tenantId}/post-site/${site.id}/site-tour-tags${q}`);
+            const tagsResp: any = await ApiService.get(`/tenant/${tenantId}/stations/${site.id}/site-tour-tags${q}`);
             // eslint-disable-next-line no-console
             console.debug('loadTagsForSite: tagsResp', tagsResp);
             const rows = tagsResp && (tagsResp.rows || tagsResp) || [];

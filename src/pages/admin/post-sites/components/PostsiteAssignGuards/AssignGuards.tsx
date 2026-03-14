@@ -64,7 +64,14 @@ export default function AssignGuards({ site }: { site?: any }) {
             const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
             const postSiteId = site?.id || '';
             if (!tenantId || !postSiteId) throw new Error('Missing tenant or post site id');
-            await ApiService.delete(`/tenant/${tenantId}/post-site/${postSiteId}/guards/${g.id}`);
+            // Support deleting assignments from different sources
+            if (g.source === 'shift') {
+                await ApiService.delete(`/tenant/${tenantId}/shift/${g.id}`);
+            } else if (g.source === 'guardShift') {
+                await ApiService.delete(`/tenant/${tenantId}/guardShift/${g.id}`);
+            } else {
+                await ApiService.delete(`/tenant/${tenantId}/post-site/${postSiteId}/guards/${g.id}`);
+            }
             setAssignedGuards((prev) => prev.filter((x) => x.id !== g.id));
             toast.success('Assignment removed');
         } catch (err: any) {
@@ -184,6 +191,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                 <th className="px-4 py-3 text-left">Name</th>
                                 <th className="px-4 py-3 text-left">Mobile Number</th>
                                 <th className="px-4 py-3 text-left">Email</th>
+                                <th className="px-4 py-3 text-left">Source</th>
                                 <th className="px-4 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -216,6 +224,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                         </td>
                                         <td className="px-4 py-3 text-left">{g.phoneNumber || '-'}</td>
                                         <td className="px-4 py-3 text-left">{g.email || '-'}</td>
+                                        <td className="px-4 py-3 text-left">{g.source || 'pivot'}</td>
                                         <td className="px-4 py-3 text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
@@ -245,6 +254,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                             <div>
                                 <div className="text-sm font-semibold">{(g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.fullName || g.label || g.email || g.userId || '-')}</div>
                                 <div className="text-xs text-gray-500">{g.phoneNumber || g.email || '-'}</div>
+                                <div className="text-xs text-gray-400">{g.source || 'pivot'}</div>
                             </div>
                         )} loading={false} />
                     </div>
@@ -275,6 +285,10 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                         <div>
                                                             <dl className="space-y-2 text-base">
+                                                                    <div>
+                                                                        <dt className="text-sm font-medium text-gray-600">Source</dt>
+                                                                        <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.source || 'pivot'}</div></dd>
+                                                                    </div>
                                                                 <div>
                                                                     <dt className="text-sm font-medium text-gray-600">Post Site</dt>
                                                                     <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.postSiteName || a.businessInfoId || '-'}</div></dd>

@@ -6,6 +6,8 @@ import GuardsLayout from '@/layouts/GuardsLayout';
 import { toast } from 'sonner';
 import KpiBarChart from '@/components/KpiBarChart';
 import KpiService from '@/services/kpi.service';
+import { ApiService } from '@/services/api/apiService';
+import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 
 
@@ -114,18 +116,62 @@ export default function GuardIndicators({ guard }: Props) {
   const loadKpis = async () => {
     try {
       const monthStr = selectedMonth ? `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}` : undefined;
-      const params: any = { scope: 'guard', guard: guard?.id, month: monthStr };
+      const guardId = guard && (guard.guard?.id || guard.guardId || guard.id || guard.userId || (guard.guard && guard.guardId));
+      // Fetch KPIs explicitly for the guard
+      const params: any = { scope: 'guard', guard: guardId, month: monthStr };
       if (searchQuery && searchQuery.trim().length > 0) {
         params.description = searchQuery.trim();
       }
-      const res: any = await KpiService.list(params);
-      setKpiData(res.rows || res);
+      const resGuard: any = await KpiService.list(params);
+      console.debug('[GuardKPIs] kpi guard response:', resGuard);
+      let combinedRows: any[] = Array.isArray(resGuard?.rows) ? resGuard.rows : (Array.isArray(resGuard) ? resGuard : []);
+
+      // Also fetch assigned post-sites for this guard and include KPIs attached to those post-sites
+      try {
+        const tenantId = localStorage.getItem('tenantId');
+        if (tenantId && guardId) {
+          const resp = await ApiService.get(`/tenant/${tenantId}/security-guard/${guardId}/assignments`);
+          console.debug('[GuardKPIs] assignments response:', resp);
+          const assignData = resp?.data ?? resp;
+          const rows = Array.isArray(assignData?.rows) ? assignData.rows : (Array.isArray(assignData) ? assignData : []);
+          const siteIds = Array.from(new Set(rows.map((r: any) => {
+            // support various shapes returned by assignments
+            if (!r) return null;
+            return r.businessInfoId || r.postSiteId || r.stationId || r.business_info_id || r.post_site_id || (r.businessInfo && (r.businessInfo.id || r.businessInfoId)) || (r.postSite && (r.postSite.id || r.postSiteId)) || null;
+          }).filter(Boolean)));
+          for (const siteId of siteIds) {
+            try {
+              const resSite: any = await KpiService.list({ scope: 'postSite', postSite: siteId, month: monthStr });
+              console.debug('[GuardKPIs] kpi postSite response for', siteId, resSite);
+              const siteRows: any[] = Array.isArray(resSite?.rows) ? resSite.rows : (Array.isArray(resSite) ? resSite : []);
+              combinedRows = combinedRows.concat(siteRows);
+            } catch (e) {
+              console.error('[GuardKPIs] error loading kpis for site', siteId, e);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load guard assignments for KPIs', e);
+      }
+
+      // Deduplicate by id
+      const seen = new Set();
+      combinedRows = combinedRows.filter((r: any) => {
+        if (!r || !r.id) return false;
+        if (seen.has(r.id)) return false;
+        seen.add(r.id);
+        return true;
+      });
+
+      setKpiData(combinedRows);
+      await computeActualsForKpis(combinedRows, selectedMonth);
     } catch (error) {
       console.error('Error loading KPIs', error);
     }
   };
 
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
+  const [assignedSitesCount, setAssignedSitesCount] = useState<number>(0);
 
   const prevMonth = () => {
     const d = new Date(selectedMonth);
@@ -293,6 +339,75 @@ export default function GuardIndicators({ guard }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [guard?.id]);
 
+  async function computeActualsForKpis(kpis: any[], monthDate?: Date) {
+    try {
+      if (!kpis || !kpis.length) return;
+      const tenantId = localStorage.getItem('tenantId');
+      if (!tenantId) return;
+      const month = monthDate || selectedMonth || new Date();
+      const year = month.getFullYear();
+      const monthIndex = month.getMonth();
+      const start = new Date(Date.UTC(year, monthIndex, 1, 0, 0, 0)).toISOString();
+      const end = new Date(Date.UTC(year, monthIndex + 1, 1, 0, 0, 0)).toISOString();
+
+      const q = `?generatedDateRange[]=${encodeURIComponent(start)}&generatedDateRange[]=${encodeURIComponent(end)}&limit=10000`;
+      const resp: any = await ApiService.get(`/tenant/${tenantId}/report${q}`);
+      console.debug('[GuardKPIs] reports response:', resp);
+      const rows = Array.isArray(resp?.rows) ? resp.rows : (Array.isArray(resp) ? resp : []);
+
+      const countsByKpi: Record<string, number> = {};
+      for (const kpi of kpis) {
+        let cnt = 0;
+        if (kpi.scope === 'guard' && kpi.guard && kpi.guard.id) {
+          cnt = rows.filter((r: any) => r.createdById === kpi.guard.id || (r.createdBy && r.createdBy.id === kpi.guard.id)).length;
+        } else if (kpi.scope === 'postSite' && kpi.postSite && kpi.postSite.id) {
+          // match report to postSite using multiple possible report fields
+          const siteId = String(kpi.postSite.id);
+          cnt = rows.filter((r: any) => {
+            if (!r) return false;
+            // direct stationId equals site id
+            if (r.stationId && String(r.stationId) === siteId) return true;
+            // nested station object
+            if (r.station && (String(r.station.id) === siteId || String(r.station.stationId) === siteId)) return true;
+            // report may include businessInfo/postSite fields
+            if (r.postSiteId && String(r.postSiteId) === siteId) return true;
+            if (r.businessInfoId && String(r.businessInfoId) === siteId) return true;
+            if (r.postSite && (r.postSite.id && String(r.postSite.id) === siteId)) return true;
+            if (r.businessInfo && (r.businessInfo.id && String(r.businessInfo.id) === siteId)) return true;
+            return false;
+          }).length;
+        } else {
+          cnt = rows.length;
+        }
+        countsByKpi[kpi.id] = cnt;
+      }
+
+      setKpiData((prev) => (prev || []).map((kk: any) => ({ ...kk, actual: countsByKpi[kk.id] ?? kk.actual ?? 0 })));
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Error computing KPI actuals client-side', e);
+    }
+  }
+
+  useEffect(() => {
+    if (!guard?.id) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const tenantId = localStorage.getItem('tenantId');
+        if (!tenantId) return;
+        const resp = await api.get(`/tenant/${tenantId}/security-guard/${guard.id}/assignments`);
+        const data = resp?.data ?? resp;
+        const rows = Array.isArray(data?.rows) ? data.rows : (Array.isArray(data) ? data : []);
+        if (!mounted) return;
+        setAssignedSitesCount(rows.length);
+      } catch (e) {
+        console.error('Failed loading guard assignments', e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [guard?.id]);
+
   // Reload when month or search query changes (debounced)
   useEffect(() => {
     const t = setTimeout(() => {
@@ -361,6 +476,10 @@ export default function GuardIndicators({ guard }: Props) {
                     className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="px-2 py-1 text-sm rounded-full bg-blue-50 text-blue-800">{t('guards.assignSites.assignedCount', { defaultValue: 'Assigned Sites' })}: {assignedSitesCount}</div>
               </div>
 
               {/* Right: Add Button */}

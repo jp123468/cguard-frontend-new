@@ -13,7 +13,9 @@ const KpiService = {
     Object.keys(params).forEach((k) => {
       if (params[k] !== undefined && params[k] !== null) qs.append(k, String(params[k]));
     });
-    return ApiService.get(`/tenant/${tenantId}/kpi?${qs.toString()}`);
+    // Add cache-busting timestamp to avoid 304 Not Modified responses
+    qs.append('_', String(Date.now()));
+    return ApiService.get(`/tenant/${tenantId}/kpi?${qs.toString()}`, { headers: { 'Cache-Control': 'no-cache' } });
   },
 
   async create(payload: any) {

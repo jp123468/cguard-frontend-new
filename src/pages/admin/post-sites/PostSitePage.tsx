@@ -53,7 +53,7 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
-import { postSiteService, PostSite, PostSiteFilters } from "@/lib/api/postSiteService";
+import { stationService, PostSite, PostSiteFilters } from "@/lib/api/stationService";
 import { useTranslation } from "react-i18next";
 import { clientService } from "@/lib/api/clientService";
 import { categoryService, type Category } from "@/lib/api/categoryService";
@@ -139,7 +139,7 @@ export default function PostSitePage() {
       }
 
       const [data, clientsResponse] = await Promise.all([
-        postSiteService.list(searchFilters, { limit, offset: (page - 1) * limit }),
+        stationService.list(searchFilters, { limit, offset: (page - 1) * limit }),
         clientService.getClients(),
       ]);
 
@@ -262,7 +262,7 @@ export default function PostSitePage() {
   const handleExportPDF = async () => {
     try {
       toast.loading(t('postSites.generatingPDF', 'Generando PDF...'));
-      const blob = await postSiteService.exportPDF(filters);
+      const blob = await stationService.exportPDF(filters);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -280,7 +280,7 @@ export default function PostSitePage() {
   const handleExportExcel = async () => {
     try {
       toast.loading(t('postSites.generatingExcel', 'Generando Excel...'));
-      const blob = await postSiteService.exportExcel(filters);
+      const blob = await stationService.exportExcel(filters);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -318,8 +318,8 @@ export default function PostSitePage() {
           label: t('postSites.archive', 'Archivo'),
           icon: <Archive className="h-4 w-4" />,
           onClick: async () => {
-            try {
-              await postSiteService.update(site.id, { status: "inactive" } as any);
+              try {
+              await stationService.update(site.id, { status: "inactive" } as any);
               toast.success("Sitio archivado");
               loadPostSites();
             } catch (e) {
@@ -349,9 +349,9 @@ export default function PostSitePage() {
       {
         label: t('actions.restore', 'Restaurar'),
         icon: <RotateCcw className="h-4 w-4" />,
-        onClick: async () => {
-          try {
-            await postSiteService.update(site.id, { status: "active" } as any);
+            onClick: async () => {
+            try {
+              await stationService.update(site.id, { status: "active" } as any);
             toast.success(t('postSites.postsiterestore', 'Sitio restaurado'));
             loadPostSites();
           } catch (e) {
@@ -403,7 +403,7 @@ export default function PostSitePage() {
                 if (action === "archivar") {
                   if (selectedIds.length === 0) { console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación')); setBulkKey((k) => k + 1); return; }
                   try {
-                    await Promise.all(selectedIds.map((id) => postSiteService.update(id, { status: "inactive" } as any)));
+                    await Promise.all(selectedIds.map((id) => stationService.update(id, { status: "inactive" } as any)));
                     toast.success(t('postSites.sitesArchived', 'Sitios archivados'));
                     setSelectedIds([]);
                     loadPostSites();
@@ -417,7 +417,7 @@ export default function PostSitePage() {
                 if (action === "restaurar") {
                   if (selectedIds.length === 0) { console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación')); setBulkKey((k) => k + 1); return; }
                   try {
-                    await Promise.all(selectedIds.map((id) => postSiteService.update(id, { status: "active" } as any)));
+                    await Promise.all(selectedIds.map((id) => stationService.update(id, { status: "active" } as any)));
                     toast.success(t('postSites.sitesRestored', 'Sitios restaurados'));
                     setSelectedIds([]);
                     loadPostSites();
@@ -734,6 +734,7 @@ export default function PostSitePage() {
                     <span className="text-xs text-muted-foreground">{sortKey === "phone" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
                   </button>
                 </th>
+                {/* Guards and Schedule columns hidden as requested */}
                 <th className="px-4 py-3 font-semibold">{t('postSites.filters.status', 'Estado')}</th>
                 <th className="px-4 py-3 font-semibold text-right">{t('postSites.actions', 'Acciones')}</th>
               </tr>
@@ -860,6 +861,7 @@ export default function PostSitePage() {
                 <div className="mt-3 text-xs text-muted-foreground">
                   <div>{site.email || '-'}</div>
                   <div>{site.phone || '-'}</div>
+                  {/* Guards and Schedule hidden in mobile view */}
                 </div>
               </div>
             )}
@@ -905,7 +907,7 @@ export default function PostSitePage() {
                 onClick={async () => {
                   try {
                     setDeleting(true);
-                    await postSiteService.delete(deleteTargetIds);
+                    await stationService.delete(deleteTargetIds);
                     toast.success(deleteTargetIds.length > 1 ? t('postSites.postsitedeletedPlural', 'Post Sites Deleted') : t('postSites.postsitedeleted', 'Post Site Deleted'));
                     setSelectedIds([]);
                     setDeleteTargetIds([]);

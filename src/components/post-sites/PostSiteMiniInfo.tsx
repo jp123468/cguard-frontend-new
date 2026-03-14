@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
-import { postSiteService } from '@/lib/api/postSiteService';
+import { stationService } from '@/lib/api/stationService';
 
 export default function PostSiteMiniInfo({ postSiteId }: { postSiteId: string }) {
   const [site, setSite] = useState<any | null>(null);
@@ -11,7 +11,7 @@ export default function PostSiteMiniInfo({ postSiteId }: { postSiteId: string })
     if (!postSiteId) return;
     let mounted = true;
     setLoading(true);
-    postSiteService.get(postSiteId)
+    stationService.get(postSiteId)
       .then((data) => { if (mounted) setSite(data); })
       .catch((e) => { if (mounted) setError('No se pudo cargar el puesto'); })
       .finally(() => { if (mounted) setLoading(false); });
@@ -30,6 +30,16 @@ export default function PostSiteMiniInfo({ postSiteId }: { postSiteId: string })
         <IncidentMap lat={parseFloat(site.latitud)} lng={parseFloat(site.longitud)} label={site.companyName || site.name} />
       )}
       <div className="text-xs text-gray-500">{site.city}, {site.country}</div>
+
+      <div className="mt-2 flex items-center gap-2">
+        <div className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-800">Guards: {site.guardsCount ?? (Array.isArray(site.assignedGuards) ? site.assignedGuards.length : site.numberOfGuardsInStation ?? 0)}</div>
+        {site.stationSchedule && (
+          <div className="px-2 py-1 text-xs rounded-full bg-yellow-50 text-yellow-800">Horario: {site.stationSchedule}</div>
+        )}
+        {site.latitud && site.longitud && (
+          <div className="px-2 py-1 text-xs rounded-full bg-gray-50 text-gray-700">{parseFloat(site.latitud).toFixed(4)}, {parseFloat(site.longitud).toFixed(4)}</div>
+        )}
+      </div>
     </div>
   );
 }

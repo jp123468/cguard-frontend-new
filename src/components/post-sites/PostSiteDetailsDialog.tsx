@@ -87,6 +87,10 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
                 <p className="text-sm">{(site as any).companyName || site.name}</p>
               </div>
               <div>
+                <p className="text-xs text-gray-600 font-semibold">Horario</p>
+                <p className="text-sm">{(site as any).stationSchedule ?? ((site as any).scheduleLabel) ?? '-'}</p>
+              </div>
+              <div>
                 <p className="text-xs text-gray-600 font-semibold">Descripción</p>
                 <p className="text-sm">{(site as any).description || "-"}</p>
               </div>
@@ -185,6 +189,10 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
                   <div>
                     <p className="text-xs text-gray-600 font-semibold">Longitud</p>
                     <p className="text-sm">{(site as any).longitud ?? "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold">Guardias asignados</p>
+                    <p className="text-sm">{(site as any).guardsCount ?? ((site as any).assignedGuards ? (site as any).assignedGuards.length : '-')}</p>
                   </div>
                 </div>
               )}

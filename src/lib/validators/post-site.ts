@@ -57,6 +57,20 @@ export const postSiteSchema = z.object({
         .refine((val) => val === undefined || val === "" || /^-?\d+(?:\.\d+)?$/.test(val), {
             message: "Longitud inválida (sólo números y punto decimal)",
         }),
+    stationSchedule: z
+        .enum(["1 hora","4 horas","8 horas","10 horas","12 horas","14 horas","16 horas","24 horas"]).optional(),
+    startingTimeInDay: z
+        .string()
+        .trim()
+        .max(20, "Máximo 20 caracteres")
+        .optional()
+        .or(z.literal("")),
+    finishTimeInDay: z
+        .string()
+        .trim()
+        .max(20, "Máximo 20 caracteres")
+        .optional()
+        .or(z.literal("")),
     fax: z
         .string()
         .trim()

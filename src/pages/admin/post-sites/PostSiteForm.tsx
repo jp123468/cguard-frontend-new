@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { categoryService } from "@/lib/api/categoryService";
-import { postSiteService } from "@/lib/api/postSiteService";
+import { stationService } from "@/lib/api/stationService";
 import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
 
 import { Button } from "@/components/ui/button";
@@ -124,12 +124,12 @@ export default function PostSiteForm({
                 categoryId: values.categoryId && String(values.categoryId).length > 0 ? values.categoryId : undefined,
             };
             if (mode === "create") {
-                const data = await postSiteService.create(payload);
+                const data = await stationService.create(payload as any);
                 toast.success("Sitio de publicación creado");
                 onSaved?.({ id: data.id, data: payload });
                 navigate(`/post-sites/${data.id}/profile`);
             } else if (mode === "edit" && id) {
-                await postSiteService.update(id, payload);
+                await stationService.update(id, payload as any);
                 toast.success("Cambios guardados");
                 onSaved?.({ id, data: payload });
                 navigate(`/post-sites/${id}/profile`);
@@ -203,6 +203,11 @@ export default function PostSiteForm({
             city: "",
             country: "",
             email: "",
+            latitud: undefined,
+            longitud: undefined,
+            stationSchedule: undefined,
+            startingTimeInDay: "",
+            finishTimeInDay: "",
             phone: "",
             fax: "",
             categoryId: "",
@@ -226,7 +231,7 @@ export default function PostSiteForm({
     useEffect(() => {
         if (mode === "edit" && id) {
             (async () => {
-                const data = await postSiteService.get(id);
+                const data = await stationService.get(id);
                 const payload: PostSiteInput = {
                     name: (data as any).companyName ?? (data as any).name ?? "",
                     description: (data as any).description ?? "",
@@ -438,6 +443,63 @@ export default function PostSiteForm({
                                         <option value="osm">OpenStreetMap</option>
                                         <option value="satellite">Satélite</option>
                                     </select>
+                                </div>
+                                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <FormField<PostSiteInput>
+                                        control={form.control}
+                                        name="stationSchedule"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Horario</FormLabel>
+                                                <FormControl>
+                                                    <Select value={field.value ?? ''} onValueChange={(v) => field.onChange(v)}>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Seleccione horario" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="1 hora">1 hora</SelectItem>
+                                                            <SelectItem value="4 horas">4 horas</SelectItem>
+                                                            <SelectItem value="8 horas">8 horas</SelectItem>
+                                                            <SelectItem value="10 horas">10 horas</SelectItem>
+                                                            <SelectItem value="12 horas">12 horas</SelectItem>
+                                                            <SelectItem value="14 horas">14 horas</SelectItem>
+                                                            <SelectItem value="16 horas">16 horas</SelectItem>
+                                                            <SelectItem value="24 horas">24 horas</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField<PostSiteInput>
+                                        control={form.control}
+                                        name="startingTimeInDay"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Hora inicio</FormLabel>
+                                                <FormControl>
+                                                    <Input type="time" {...field} value={field.value ?? ''} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField<PostSiteInput>
+                                        control={form.control}
+                                        name="finishTimeInDay"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Hora fin</FormLabel>
+                                                <FormControl>
+                                                    <Input type="time" {...field} value={field.value ?? ''} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
                                 </div>
                             </div>
                             <OSMMapEmbed lat={lat} lng={lng} mapType={mapType} />

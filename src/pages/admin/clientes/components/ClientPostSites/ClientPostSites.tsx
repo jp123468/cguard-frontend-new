@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Search, ChevronDown, Plus, EllipsisVertical, Eye, Archive } from 'lucide-react';
 import { postSiteService } from '@/lib/api/postSiteService';
+import { stationService } from '@/lib/api/stationService';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -23,8 +24,8 @@ export default function ClientPostSites({ client }: { client: any }) {
       try {
         if (client?.postSites && Array.isArray(client.postSites) && client.postSites.length > 0) {
           if (mounted) setRows(client.postSites);
-        } else if (client?.id) {
-          const resp = await postSiteService.list({ clientId: client.id }, { limit: 100, offset: 0 });
+          } else if (client?.id) {
+          const resp = await stationService.list({ clientId: client.id }, { limit: 100, offset: 0 });
           if (mounted) setRows(resp.rows || []);
         }
       } catch (e) {
@@ -225,7 +226,7 @@ export default function ClientPostSites({ client }: { client: any }) {
                 <button onClick={async () => {
                   setArchiveLoading(true);
                   try {
-                    const results = await Promise.allSettled(archiveTargetIds.map(id => postSiteService.update(id, { status: 'inactive' } as any)));
+                    const results = await Promise.allSettled(archiveTargetIds.map(id => stationService.update(id, { status: 'inactive' } as any)));
                     const successes = results.reduce((acc, r, idx) => (r.status === 'fulfilled' ? acc.concat(archiveTargetIds[idx]) : acc), [] as string[]);
                     if (successes.length > 0) {
                       setRows(prev => prev.filter(r => !successes.includes(r.id)));

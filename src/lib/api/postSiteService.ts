@@ -21,6 +21,15 @@ export interface PostSite {
   contactPhone?: string;
   contactEmail?: string;
   categoryIds?: string[] | null;
+  // Station-specific frontend fields
+  latitud?: string | number;
+  longitud?: string | number;
+  stationSchedule?: string | null;
+  startingTimeInDay?: string | null;
+  finishTimeInDay?: string | null;
+  assignedGuards?: any[];
+  guardsCount?: number;
+  numberOfGuardsInStation?: string | number | null;
 }
 
 export interface PostSiteFilters {
@@ -169,6 +178,14 @@ const postSiteService = {
         category: undefined,
         categoryIds: Array.isArray(r.categoryIds) ? r.categoryIds : [],
         status: typeof r.active === 'boolean' ? (r.active ? 'active' : 'inactive') : (r.status ?? 'inactive'),
+        // station-specific fields (backend uses business-info for post-sites)
+        latitud: r.latitud ?? r.latitude ?? undefined,
+        longitud: r.longitud ?? r.longitude ?? undefined,
+        stationSchedule: r.stationSchedule ?? undefined,
+        startingTimeInDay: r.startingTimeInDay ?? undefined,
+        finishTimeInDay: r.finishTimeInDay ?? undefined,
+        assignedGuards: Array.isArray(r.assignedGuards) ? r.assignedGuards : undefined,
+        guardsCount: typeof r.guardsCount === 'number' ? r.guardsCount : (Array.isArray(r.assignedGuards) ? r.assignedGuards.length : undefined),
       }));
 
       return { rows: mappedRows, count: data.count };
@@ -220,6 +237,10 @@ const postSiteService = {
           : true,
         latitud: (payload as any).latitud ?? (payload as any).latitude ?? undefined,
         longitud: (payload as any).longitud ?? (payload as any).longitude ?? undefined,
+        // allow creating with schedule and times if provided
+        stationSchedule: (payload as any).stationSchedule ?? undefined,
+        startingTimeInDay: (payload as any).startingTimeInDay ?? undefined,
+        finishTimeInDay: (payload as any).finishTimeInDay ?? undefined,
       } as any;
 
       // Debug log to inspect payload sent to backend (helps diagnose 400s for missing fields)
@@ -267,6 +288,10 @@ const postSiteService = {
           : existing.active,
         latitud: (payload as any).latitud ?? (payload as any).latitude ?? existing.latitud ?? existing.latitude,
         longitud: (payload as any).longitud ?? (payload as any).longitude ?? existing.longitud ?? existing.longitude,
+        // preserve or update schedule/times if provided
+        stationSchedule: (payload as any).stationSchedule ?? existing.stationSchedule,
+        startingTimeInDay: (payload as any).startingTimeInDay ?? existing.startingTimeInDay,
+        finishTimeInDay: (payload as any).finishTimeInDay ?? existing.finishTimeInDay,
       } as any;
 
       const { data } = await api.patch(`/tenant/${tenantId}/business-info/${id}`, body);

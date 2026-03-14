@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Search, ChevronDown, Plus, X } from 'lucide-react';
 import securityGuardService from '@/lib/api/securityGuardService';
 import api from '@/lib/api';
+import { stationService } from '@/lib/api/stationService';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { toast } from 'sonner';
 import PostSiteMiniInfo from '@/components/post-sites/PostSiteMiniInfo';
@@ -92,7 +93,7 @@ export default function GuardAsignarSitiosPage() {
       try {
         const tenantId = localStorage.getItem('tenantId');
         let mappingId = Date.now().toString();
-        if (tenantId) {
+          if (tenantId) {
           // Determine a securityGuard identifier to send: prefer underlying user id
           const securityGuardIdentifier = guard?.guard?.id ?? (guard && (guard.guardId || guard.userId || guard.id)) ?? id;
           const payload = {
@@ -100,7 +101,7 @@ export default function GuardAsignarSitiosPage() {
             clientAccountId: selectedClient,
           } as any;
           // Use the post-site assign endpoint which now also creates client pivot when provided
-          const { data } = await api.post(`/tenant/${tenantId}/post-site/${selectedPostSite}/assign-guard`, payload, { toast: { success: 'Assigned' } } as any);
+            const { data } = await api.post(`/tenant/${tenantId}/stations/${selectedPostSite}/assign-guard`, payload, { toast: { success: 'Assigned' } } as any);
           mappingId = data?.id ?? mappingId;
         }
         const newMapping = { id: mappingId, client: clientName, site: siteName, tenantUserId: id, businessInfoId: selectedPostSite };
@@ -154,13 +155,9 @@ export default function GuardAsignarSitiosPage() {
         const tenantId = localStorage.getItem('tenantId');
         if (!tenantId) return;
         // Prefer specific client post-sites endpoint
-        const resp = await api.get(`/tenant/${tenantId}/client-account/${selectedClient}/post-sites`);
-        console.debug('post-sites resp:', resp);
-        const data = resp?.data ?? resp;
-        const rows = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
-        console.debug('post-sites rows:', rows);
+        const list = await stationService.list({ clientId: selectedClient } as any, { limit: 200, offset: 0 });
+        const items = (list.rows || []).map((r: any) => ({ id: r.id, name: r.name || r.companyName || r.stationName || r.postSiteName || r.label || r.id }));
         if (!mounted) return;
-        const items = (Array.isArray(rows) ? rows : []).map((r: any) => ({ id: r.id, name: r.companyName || r.postSiteName || r.name || r.label || r.businessInfoName || r.id }));
         setPostSites(items);
       } catch (err) {
         console.error('Failed to load post sites for client', err);

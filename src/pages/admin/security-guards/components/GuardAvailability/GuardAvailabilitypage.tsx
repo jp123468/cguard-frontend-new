@@ -6,6 +6,7 @@ import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
 import TimeInput from '@/components/TimeInput';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import securityGuardService from '@/lib/api/securityGuardService';
 
 type Av = { day: string; available: boolean; start: string; end: string };
 
@@ -66,7 +67,19 @@ type Props = {
   };
 
     const handleSaveAvailability = () => {
-      toast.success(t('guards.availability.toasts.saved'));
+        (async () => {
+          try {
+            if (!guard || !guard.id) {
+              toast.error(t('guards.availability.toasts.saveError', 'No guard id')); 
+              return;
+            }
+            await securityGuardService.update(guard.id, { availability });
+            toast.success(t('guards.availability.toasts.saved'));
+          } catch (e) {
+            console.error('Failed saving availability', e);
+            toast.error(t('guards.availability.toasts.saveError', 'Error saving availability'));
+          }
+        })();
     };
 
 

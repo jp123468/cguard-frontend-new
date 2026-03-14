@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Search, ChevronDown, ChevronUp, Plus, X, Mail, MessageCircle, ChevronLeft, ChevronRight, Edit, Trash, FileText, File, Upload, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import KpiService from '@/services/kpi.service';
+import { ApiService } from '@/services/api/apiService';
 import KpiBarChart from '@/components/KpiBarChart';
 import { useTranslation } from "react-i18next";
 import MobileCardList from '@/components/responsive/MobileCardList';
@@ -109,6 +110,7 @@ export default function PostSiteKPIs({ site }: Props) {
       }
       const res: any = await KpiService.list(params);
       setKpiData(res.rows || res);
+      await computeActualsForKpis(res.rows || res, selectedMonth);
     } catch (error) {
       console.error('Error loading KPIs', error);
     }
@@ -279,6 +281,42 @@ export default function PostSiteKPIs({ site }: Props) {
     loadKpis();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [site?.id]);
+
+  async function computeActualsForKpis(kpis: any[], monthDate?: Date) {
+    try {
+      if (!kpis || !kpis.length) return;
+      const tenantId = localStorage.getItem('tenantId');
+      if (!tenantId) return;
+      const month = monthDate || selectedMonth || new Date();
+      const year = month.getFullYear();
+      const monthIndex = month.getMonth();
+      const start = new Date(Date.UTC(year, monthIndex, 1, 0, 0, 0)).toISOString();
+      const end = new Date(Date.UTC(year, monthIndex + 1, 1, 0, 0, 0)).toISOString();
+
+      const q = `?generatedDateRange[]=${encodeURIComponent(start)}&generatedDateRange[]=${encodeURIComponent(end)}&limit=10000`;
+      const resp: any = await ApiService.get(`/tenant/${tenantId}/report${q}`);
+      console.debug('[PostSiteKPIs] reports response:', resp);
+      const rows = Array.isArray(resp?.rows) ? resp.rows : (Array.isArray(resp) ? resp : []);
+
+      const countsByKpi: Record<string, number> = {};
+      for (const kpi of kpis) {
+        let cnt = 0;
+        if (kpi.scope === 'guard' && kpi.guard && kpi.guard.id) {
+          cnt = rows.filter((r: any) => r.createdById === kpi.guard.id || (r.createdBy && r.createdBy.id === kpi.guard.id)).length;
+        } else if (kpi.scope === 'postSite' && kpi.postSite && kpi.postSite.id) {
+          cnt = rows.filter((r: any) => String(r.stationId) === String(kpi.postSite.id) || (r.station && String(r.station.id) === String(kpi.postSite.id))).length;
+        } else {
+          cnt = rows.length;
+        }
+        countsByKpi[kpi.id] = cnt;
+      }
+
+      setKpiData((prev) => (prev || []).map((kk: any) => ({ ...kk, actual: countsByKpi[kk.id] ?? kk.actual ?? 0 })));
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Error computing KPI actuals client-side', e);
+    }
+  }
 
   // Reload when month or search query changes (debounced)
   useEffect(() => {
@@ -573,10 +611,10 @@ export default function PostSiteKPIs({ site }: Props) {
         </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center" onClick={handleCloseModal}>
-          <div className="absolute inset-0 bg-black/40" onClick={handleCloseModal} />
+        <div className="fixed inset-0 z-60 flex items-end sm:items-center" onClick={handleCloseModal}>
+          <div className="absolute inset-0 bg-black/40 z-50" onClick={handleCloseModal} />
 
-          <div className="w-full sm:ml-auto sm:max-w-md bg-white shadow-2xl overflow-y-auto rounded-t-lg sm:rounded-md" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full sm:ml-auto sm:max-w-md bg-white shadow-2xl overflow-y-auto rounded-t-lg sm:rounded-md relative z-60 pointer-events-auto max-h-[90vh] pb-28" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
               <h2 className="text-lg font-semibold text-gray-800">{t('postSites.KPI.modal.title', 'Add New KPIs (Key Performance Indicators)')}</h2>
             </div>
@@ -585,6 +623,7 @@ export default function PostSiteKPIs({ site }: Props) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('postSites.KPI.modal.frequency', 'Frequency')} <span className="text-red-500">*</span></label>
                 <select
+                  autoFocus
                   value={formData.frequency}
                   onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
                   className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
