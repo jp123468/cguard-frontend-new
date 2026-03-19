@@ -493,20 +493,20 @@ export default function Estimates() {
 
                     {/* Confirm delete dialog */}
                     <Dialog open={deleteModalOpen} onOpenChange={(v) => { if (!v) { setDeletingId(null); } setDeleteModalOpen(v); }}>
-                            <DialogContent className="sm:max-w-md">
-                                <DialogHeader>
-                                    <DialogTitle>{t('billing.estimates.actions.delete', { defaultValue: 'Eliminar estimación' })}</DialogTitle>
-                                    <DialogDescription>
-                                        {deletingId
-                                            ? t('billing.estimates.delete_confirm_single', { defaultValue: '¿Estás seguro de que deseas eliminar esta estimación? Esta acción no se puede deshacer.' })
-                                            : t('billing.estimates.delete_confirm_multiple', { count: selectedEstimates.length, defaultValue: `¿Estás seguro de que deseas eliminar las ${selectedEstimates.length} estimación(es) seleccionada(s)? Esta acción no se puede deshacer.` })}
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <DialogFooter className="mt-4 flex justify-end gap-2">
-                                    <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>{t('billing.common.cancel')}</Button>
-                                    <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={handleConfirmDelete}>{t('billing.estimates.actions.delete', { defaultValue: 'Eliminar' })}</Button>
-                                </DialogFooter>
-                            </DialogContent>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>{t('billing.estimates.actions.delete', { defaultValue: 'Eliminar estimación' })}</DialogTitle>
+                                <DialogDescription>
+                                    {deletingId
+                                        ? t('billing.estimates.delete_confirm_single', { defaultValue: '¿Estás seguro de que deseas eliminar esta estimación? Esta acción no se puede deshacer.' })
+                                        : t('billing.estimates.delete_confirm_multiple', { count: selectedEstimates.length, defaultValue: `¿Estás seguro de que deseas eliminar las ${selectedEstimates.length} estimación(es) seleccionada(s)? Esta acción no se puede deshacer.` })}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter className="mt-4 flex justify-end gap-2">
+                                <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>{t('billing.common.cancel')}</Button>
+                                <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={handleConfirmDelete}>{t('billing.estimates.actions.delete', { defaultValue: 'Eliminar' })}</Button>
+                            </DialogFooter>
+                        </DialogContent>
                     </Dialog>
 
                     {/* Preview dialog for client/site details */}
@@ -514,9 +514,9 @@ export default function Estimates() {
                         <DialogContent className="sm:max-w-3xl">
                             {previewEstimate ? (
                                 <>
-                                        <div className="border-b pb-4 mb-4 flex items-start justify-between gap-4">
-                                            <div>
-                                                <h3 className="text-lg font-semibold">{previewAsInvoice ? t('billing.invoices.title') : t('billing.estimates.title')} #{previewEstimate.estimateNumber || previewEstimate.id}</h3>
+                                    <div className="border-b pb-4 mb-4 flex items-start justify-between gap-4">
+                                        <div>
+                                            <h3 className="text-lg font-semibold">{previewAsInvoice ? t('billing.invoices.title') : t('billing.estimates.title')} #{previewEstimate.estimateNumber || previewEstimate.id}</h3>
                                             <div className="mt-3 flex flex-wrap gap-2">
                                                 <Button variant="outline" className="bg-white" onClick={handleSendPreview}>{t('billing.estimates.actions.send')}</Button>
                                                 <Button variant="outline" className="bg-white" onClick={handleConvertPreview}>{t('billing.estimates.actions.convert')}</Button>
@@ -562,7 +562,7 @@ export default function Estimates() {
                                                 return (
                                                     <>
                                                         <div className="bg-white p-4 rounded border">
-                                                            <p className="text-xs text-gray-400">Cliente</p>
+                                                            i<p className="text-xs text-gray-400">Cliente</p>
                                                             <p className="font-semibold text-slate-800">{clientName}</p>
                                                             {c?.address || c?.phone || c?.email ? (
                                                                 <div className="mt-3 text-sm text-slate-600">
