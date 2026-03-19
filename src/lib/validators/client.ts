@@ -86,7 +86,15 @@ export const clientSchema = z.object({
             message: "Longitud entre -180 y 180",
         }),
     active: z.boolean().optional(),
-    categoryIds: z.array(z.string()).optional(),
+    // Tipo de persona (Persona Natural / Persona Jurídica)
+    personType: z.enum(['PN', 'PJ']).optional(),
+    // RUC o Cédula: obligatorio según requerimiento
+    documentNumber: z
+        .string()
+        .trim()
+        .min(1, "RUC/Cédula requerido")
+        .max(50, "Máximo 50 caracteres"),
+    categoryIds: z.array(z.string()).min(1, "Selecciona al menos una categoría"),
 });
 
 export type ClientInput = z.infer<typeof clientSchema>;

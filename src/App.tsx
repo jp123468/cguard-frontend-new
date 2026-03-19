@@ -402,6 +402,14 @@ export default function App() {
                 }
               />
               <Route
+                path="/post-sites/:id/stations"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/post-sites/:id/tasks"
                 element={
                   <ProtectedRoute>

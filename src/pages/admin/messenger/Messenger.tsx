@@ -29,7 +29,7 @@ export type Site = { id: string; name: string };
 export type Conversation = {
   id: string;
   title: string;
-  isSite?: boolean;          // para el badge "Sitio de Publicación"
+  isSite?: boolean;          // para el badge "Puesto de seguridad"
   kind?: "direct" | "group"; // para el badge "Chat individual"
 };
 
@@ -145,9 +145,9 @@ function NewMessageDialog({
 
         <div className="p-6 space-y-6">
           <div className="space-y-2">
-            <Label className="text-slate-600 font-medium">Seleccione el usuario o el sitio de publicación para enviar un nuevo mensaje</Label>
+            <Label className="text-slate-600 font-medium">Seleccione el usuario o el Puesto de seguridad para enviar un nuevo mensaje</Label>
             <Input
-              placeholder="Buscar usuario o sitio de publicación..."
+              placeholder="Buscar usuario o Puesto de seguridad..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="bg-white border-slate-200"
@@ -240,10 +240,10 @@ function NewGroupDialog({
           />
 
           <div className="space-y-2 relative">
-            <Label className="text-xs text-slate-500 absolute -top-2 left-2 bg-white px-1 z-10">Seleccionar Sitio de Publicación</Label>
+            <Label className="text-xs text-slate-500 absolute -top-2 left-2 bg-white px-1 z-10">Seleccionar Puesto de seguridad</Label>
             <Select value={siteId ?? ""} onValueChange={(v) => setSiteId(v || undefined)}>
               <SelectTrigger className="w-full border-slate-200 text-slate-500 font-normal">
-                <SelectValue placeholder="Seleccionar Sitio de Publicación" />
+                <SelectValue placeholder="Seleccionar Puesto de seguridad" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">—</SelectItem>
@@ -417,7 +417,7 @@ export function Messenger({
                     <div className="flex flex-wrap gap-1 mt-1">
                       {c.isSite && (
                         <Badge className="bg-emerald-50 text-emerald-700 border-0 font-normal px-2 py-0.5 h-auto" variant="secondary">
-                          Sitio de Publicación
+                          Puesto de seguridad
                         </Badge>
                       )}
                       {c.kind === "direct" && (

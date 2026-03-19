@@ -794,7 +794,7 @@ export default function Visitors() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>{t('visitantes.site') || 'Sitio de publicación*'}</Label>
+                                        <Label>{t('visitantes.site') || 'Puesto de seguridad*'}</Label>
                                         <Select
                                             value={filters.site}
                                             onValueChange={(v) =>
@@ -1160,7 +1160,7 @@ export default function Visitors() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label>{t('visitantes.site') || 'Sitio de publicación'}<span className="text-red-600">*</span></Label>
+                            <Label>{t('visitantes.site') || 'Puesto de seguridad'}<span className="text-red-600">*</span></Label>
                             <Select
                                 value={newVisitor.site}
                                 onValueChange={(v) =>

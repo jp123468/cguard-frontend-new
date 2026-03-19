@@ -1003,7 +1003,7 @@ export default function DispatcherPage() {
                     </Select>
                   </div>
 
-                  {/* Sitio de publicación */}
+                  {/* Puesto de seguridad */}
                   <div className="space-y-2">
                     <Label>{t('dispatcher.post_site')}</Label>
                     <Select

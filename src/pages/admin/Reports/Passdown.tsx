@@ -99,7 +99,7 @@ export default function Passdown() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Sitio de publicación *</Label>
+                    <Label>Puesto de seguridad *</Label>
                     <Select>
                       <SelectTrigger className="w-full"><SelectValue placeholder="Catolica (+2 otros)" /></SelectTrigger>
                       <SelectContent><SelectItem value="1">Catolica</SelectItem></SelectContent>
@@ -185,7 +185,7 @@ export default function Passdown() {
           <div>ID</div>
           <div>Fecha/Hora</div>
           <div>Cliente</div>
-          <div>Sitio de publicación</div>
+          <div>Puesto de seguridad</div>
           <div>Guardia</div>
           <div className="flex justify-end"><MoreVertical className="h-4 w-4 opacity-0" /></div>
         </div>

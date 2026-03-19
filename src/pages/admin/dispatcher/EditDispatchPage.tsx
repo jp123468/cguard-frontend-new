@@ -428,7 +428,7 @@ export default function EditDispatchPage() {
                 name="siteId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sitio de publicación*</FormLabel>
+                    <FormLabel>Puesto de seguridad*</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value} onOpenChange={(open) => {
                       if (open) {
                         setTimeout(() => sitioInputRef.current?.focus(), 50);

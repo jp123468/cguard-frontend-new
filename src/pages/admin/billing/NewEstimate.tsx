@@ -364,7 +364,7 @@ export default function NewEstimate() {
             return;
         }
         if (!client || !site) {
-            toast.error("Por favor seleccione un Cliente y un Sitio de publicación para ver la vista previa.");
+            toast.error("Por favor seleccione un Cliente y un Puesto de seguridad para ver la vista previa.");
             return;
         }
         setIsPreviewMode(true);
@@ -715,12 +715,12 @@ export default function NewEstimate() {
                                 {/* moved: inline preview panel will render below the site selector */}
 
                                 <div className="space-y-2">
-                                    <Label className="text-xs text-gray-500">Sitio de publicación*</Label>
+                                    <Label className="text-xs text-gray-500">Puesto de seguridad*</Label>
                                     <Combobox
                                         value={site}
                                         onChange={setSite}
                                         options={postSites.filter((s) => !s.clientId || s.clientId === client).map((s) => ({ value: s.id, label: s.name }))}
-                                        placeholder="Sitio de publicación*"
+                                        placeholder="Puesto de seguridad*"
                                         empty={"No hay sitios disponibles"}
                                     />
                                 </div>

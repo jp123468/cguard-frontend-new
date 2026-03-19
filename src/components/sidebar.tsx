@@ -94,8 +94,9 @@ export default function Sidebar() {
 
         </div>
 
-        <nav className="p-2 overflow-y-auto h-[calc(100%-88px)]">
-          {menuItems.map((item) => {
+        <div className="flex flex-col h-full">
+          <nav className="p-2 flex-1 overflow-y-auto">
+            {menuItems.map((item) => {
             const isExpanded = !!expandedMenus[item.id];
             const isExpandable = !!item.expandable;
 
@@ -124,19 +125,19 @@ export default function Sidebar() {
             return (
               <div key={item.id}>
                 <ItemWrapper>
-                  <button
+                    <button
                     type="button"
                     onClick={() => {
                       if (!hasTenant && item.path !== "/dashboard") return; // block navigation when no tenant
                       if (isExpandable) toggleMenu(item.id);
                       else if (item.path) navigate(item.path);
                     }}
-                    className={`w-full hover:bg-[#F8F8F8] rounded hover:cursor-pointer font-semibold flex items-center justify-between px-3 py-2 text-[12px] ${!hasTenant && item.path !== "/dashboard" ? 'opacity-60' : ''}`}
+                    className={`w-full hover:bg-[#F8F8F8] rounded hover:cursor-pointer font-semibold flex items-center justify-between px-3 py-3 text-sm ${!hasTenant && item.path !== "/dashboard" ? 'opacity-60' : ''}`}
                     aria-disabled={!hasTenant && item.path !== "/dashboard"}
                   >
                     <div className="flex items-center gap-3">
-                      <item.icon className="w-[18px] h-[18px]" />
-                      <span className="text-start">
+                      <item.icon className="w-5 h-5" />
+                      <span className="text-start text-sm">
                         {(() => {
                           // Prefer explicit label key: sidebar.<id>.label
                           const label = t(`sidebar.${item.id}.label`, { defaultValue: '' });
@@ -163,7 +164,7 @@ export default function Sidebar() {
                           key={sub.id}
                           to={sub.path}
                           className={
-                            `block w-full rounded font-semibold px-2 py-1.5 mb-1 text-[12px] ${isActive
+                              `block w-full rounded font-semibold px-2 py-1.5 mb-1 text-sm ${isActive
                               ? "bg-gradient-to-r from-[#FFF0F0] to-[#FFEAEA] text-[#F36A6D] border-l-2 border-[#F36A6D]"
                               : "text-[#0C2459] hover:text-[#F36A6D]"
                             }`
@@ -184,8 +185,10 @@ export default function Sidebar() {
                 )}
               </div>
             );
-          })}
-        </nav>
+            })}
+          </nav>
+          <div className="px-3 py-3 text-sm text-slate-500">{/* bottom spacer / place for footer */}</div>
+        </div>
       </div>
     </aside>
   );

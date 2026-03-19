@@ -573,7 +573,7 @@ export default function Estimates() {
                                                             ) : null}
                                                         </div>
                                                         <div className="bg-white p-4 rounded border">
-                                                            <p className="text-xs text-gray-400">Sitio</p>
+                                                            <p className="text-xs text-gray-400">Puesto de seguridad</p>
                                                             <p className="font-medium text-slate-700">{siteName}</p>
                                                             {postAddress ? <p className="text-sm text-slate-500 mt-1">{postAddress}</p> : null}
                                                             {postPhone ? <p className="text-sm text-slate-500">Tel: {postPhone}</p> : null}

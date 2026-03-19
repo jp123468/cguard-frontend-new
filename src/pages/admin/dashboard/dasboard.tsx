@@ -405,7 +405,7 @@ export default function DashboardPage() {
                       <TableRow>
                         <TableHead>#</TableHead>
                         <TableHead>Guardia</TableHead>
-                        <TableHead>Sitio de publicación</TableHead>
+                        <TableHead>Puesto de seguridad</TableHead>
                         <TableHead>Hora de Registro</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -451,7 +451,7 @@ export default function DashboardPage() {
                       <TableRow>
                         <TableHead>#</TableHead>
                         <TableHead>Guardia</TableHead>
-                        <TableHead>Sitio de publicación</TableHead>
+                        <TableHead>Puesto de seguridad</TableHead>
                         <TableHead>Hora de Salida</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -500,7 +500,7 @@ export default function DashboardPage() {
                     <TableRow>
                       <TableHead>#</TableHead>
                       <TableHead>Incidente</TableHead>
-                      <TableHead>Sitio de publicación</TableHead>
+                      <TableHead>Puesto de seguridad</TableHead>
                       <TableHead>Guardia</TableHead>
                       <TableHead>Fecha/Hora del Incidente</TableHead>
                       <TableHead>Estado</TableHead>
@@ -544,7 +544,7 @@ export default function DashboardPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>#</TableHead>
-                      <TableHead>Sitio de publicación</TableHead>
+                      <TableHead>Puesto de seguridad</TableHead>
                       <TableHead>Guardia</TableHead>
                       <TableHead>Informe</TableHead>
                       <TableHead>Informe Fecha/Hora</TableHead>
@@ -590,7 +590,7 @@ export default function DashboardPage() {
                     <TableRow>
                       <TableHead>#</TableHead>
                       <TableHead>Recorrido Nombre</TableHead>
-                      <TableHead>Sitio de publicación</TableHead>
+                      <TableHead>Puesto de seguridad</TableHead>
                       <TableHead>Guardia</TableHead>
                       <TableHead>Hora de Inicio</TableHead>
                       <TableHead>Hora de Fin</TableHead>
@@ -635,7 +635,7 @@ export default function DashboardPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Punto de control</TableHead>
-                      <TableHead>Sitio de publicación</TableHead>
+                      <TableHead>Puesto de seguridad</TableHead>
                       <TableHead>Guardia</TableHead>
                       <TableHead>Fecha y hora del escaneo</TableHead>
                     </TableRow>

@@ -32,13 +32,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+// Switch removed — replaced by CategorySelect
 
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import {
     CategorySelect,
     CategoryOption,
 } from "@/components/categories/CategorySelect";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export type Category = { id: string; name: string };
@@ -82,11 +84,15 @@ export default function ClientForm({
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [showAddressAutocomplete, setShowAddressAutocomplete] = useState(true);
 
-    const form = useForm<ClientInput>({
+    type FormValues = ClientInput & { personType?: 'PN' | 'PJ'; documentNumber?: string };
+
+    const form = useForm<FormValues>({
         resolver: zodResolver(clientSchema as any),
         defaultValues: {
             name: "",
             lastName: "",
+            personType: "PN",
+            documentNumber: "",
             email: "",
             phoneNumber: "",
             address: "",
@@ -103,16 +109,15 @@ export default function ClientForm({
         },
     });
 
+    const personType = form.watch('personType' as any) || 'PN';
     // Función para cargar categorías del módulo clientAccount
     const loadCategories = async () => {
         setLoadingCategories(true);
         try {
             const response = await categoryService.list({
-                filter: {
-                    module: "clientAccount" // Filtrar por el módulo correcto
-                },
+                filter: { module: "clientAccount" }, // Filtrar por el módulo correcto
                 limit: 1000, // Ajusta según necesites
-                offset: 0
+                offset: 0,
             });
 
             // Extraer el array de categorías de la respuesta
@@ -137,9 +142,11 @@ export default function ClientForm({
             (async () => {
                 try {
                     const data = await clientService.getClient(id);
-                    const initial = {
+                    const initial: FormValues = {
                         name: data.name ?? "",
                         lastName: data.lastName ?? "",
+                        personType: (data as any)?.personType ?? 'PN',
+                        documentNumber: (data as any)?.documentNumber ?? '',
                         email: data.email ?? "",
                         phoneNumber: data.phoneNumber ?? "",
                         address: data.address ?? "",
@@ -153,7 +160,7 @@ export default function ClientForm({
                         longitude: (data as any)?.longitude !== undefined && (data as any)?.longitude !== null ? String((data as any).longitude) : "",
                         active: data.active ?? true,
                         categoryIds: (data as any).categoryIds ?? [],
-                    } as ClientInput;
+                    } as FormValues;
 
                     // store initial values to compute diffs on submit
                     initialDataRef.current = initial;
@@ -172,9 +179,9 @@ export default function ClientForm({
     }, [mode, id, form]);
 
     // Keep a ref with the initial data loaded in edit mode to compute diffs
-    const initialDataRef = useRef<ClientInput | null>(null);
+    const initialDataRef = useRef<FormValues | null>(null);
 
-    async function onSubmit(values: ClientInput) {
+    async function onSubmit(values: FormValues) {
         // Crear payload solo con los campos que el backend actual soporta
         // En modo edición enviaremos únicamente los campos modificados (diff)
         const basePayload: any = {
@@ -187,6 +194,9 @@ export default function ClientForm({
 
         // Agregar campos opcionales al basePayload para comparación
         if (values.lastName !== undefined) basePayload.lastName = values.lastName;
+        if ((values as any).personType !== undefined) basePayload.personType = (values as any).personType;
+        if ((values as any).documentNumber !== undefined) basePayload.documentNumber = (values as any).documentNumber;
+        // Ensure categoryIds is present (zod will also validate)
         if (values.addressLine2 !== undefined) basePayload.addressLine2 = values.addressLine2;
         if (values.postalCode !== undefined) basePayload.postalCode = values.postalCode;
         if (values.city !== undefined) basePayload.city = values.city;
@@ -201,7 +211,7 @@ export default function ClientForm({
             if (mode === "create") {
                 const data = await clientService.createClient(basePayload as ClientInput);
                 toast.success(t('clients.clientCreated') || "Cliente creado exitosamente");
-                onSaved?.({ id: data.id, data: values });
+                onSaved?.({ id: data.id, data: values as unknown as ClientInput });
                 form.reset();
                 if (!keepOnSave) navigate("/clients");
             } else if (mode === "edit" && id) {
@@ -228,7 +238,7 @@ export default function ClientForm({
 
                 const response = await clientService.updateClient(id, changed as ClientInput);
                 toast.success(t('clients.clientUpdated') || "Cliente actualizado exitosamente");
-                onSaved?.({ id, data: values });
+                onSaved?.({ id, data: values as unknown as ClientInput });
                 if (!keepOnSave) navigate("/clients");
             }
         } catch (e: any) {
@@ -287,7 +297,9 @@ export default function ClientForm({
         <div className="">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Category selector removed temporarily for syntax debug; will restore. */}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField<ClientInput>
                             control={form.control}
                             name="name"
@@ -392,6 +404,98 @@ export default function ClientForm({
                                     <FormMessage />
                                 </FormItem>
                             )}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField<ClientInput>
+                            control={form.control}
+                            name={"personType" as any}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{t('clients.form.personType', 'Tipo de persona')}</FormLabel>
+                                    <FormControl>
+                                        <Select value={String(field.value || 'PN')} onValueChange={(v) => field.onChange(v)}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="PN">{t('clients.form.personNatural', 'Persona natural (Cédula)')}</SelectItem>
+                                                <SelectItem value="PJ">{t('clients.form.personJuridica', 'Persona jurídica (RUC)')}</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<ClientInput>
+                            control={form.control}
+                            name={"documentNumber" as any}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</FormLabel>
+                                    <FormControl>
+                                        <input
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            {...field}
+                                            value={typeof field.value === 'string' ? field.value : ''}
+                                            maxLength={20}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    {/* Categories: moved below RUC/Cédula per request */}
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+                        <FormField<ClientInput>
+                            control={form.control}
+                            name="categoryIds"
+                            render={({ field }) => {
+                                const currentValue: string[] = Array.isArray(field.value)
+                                    ? field.value
+                                    : (typeof field.value === 'string' ? [field.value] : []);
+
+                                return (
+                                    <FormItem>
+                                        <div className="flex items-center gap-2">
+                                            <FormLabel className="flex items-center gap-2">
+                                                {t('clients.form.categoryLabel', 'Sector de seguridad')}
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <span className="text-muted-foreground cursor-help">
+                                                                <Info size={16} />
+                                                            </span>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="top">
+                                                            {t('clients.form.categoryTooltip', 'Selecciona el sector de seguridad asociado al cliente')}
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </FormLabel>
+                                        </div>
+                                        <div className="mt-2">
+                                            <FormControl>
+                                                <CategorySelect
+                                                    options={cats}
+                                                    value={currentValue}
+                                                    onChange={(v) => field.onChange(v as any)}
+                                                    module="clientAccount"
+                                                    onCategoryCreated={handleCategoryCreated}
+                                                    multiple={true}
+                                                    placeholder={t('clients.selectCategories', 'Selecciona categorías')}
+                                                />
+                                            </FormControl>
+                                        </div>
+                                        <FormMessage />
+                                    </FormItem>
+                                );
+                            }}
                         />
                     </div>
 
@@ -593,7 +697,7 @@ export default function ClientForm({
                                         name="faxNumber"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>{t('clients.form.fax', 'Fax')}</FormLabel>
+                                                <FormLabel>{t('clients.form.fax', 'Landline')}</FormLabel>
                                                 <FormControl>
                                                     <PhoneInput
                                                         value={typeof field.value === "string" ? field.value : ""}
@@ -636,25 +740,7 @@ export default function ClientForm({
                                         )}
                                     />
 
-                                    <FormField<ClientInput>
-                                        control={form.control}
-                                        name="categoryIds"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>{t('clients.form.categories', 'Categorías')}</FormLabel>
-                                                <CategorySelect
-                                                    options={cats}
-                                                    value={Array.isArray(field.value) ? field.value : []}
-                                                    onChange={(val) => field.onChange(Array.isArray(val) ? val : [])}
-                                                    placeholder={loadingCategories ? t('clients.loading', 'Cargando...') : t('clients.selectCategories', 'Selecciona categorías')}
-                                                    module="clientAccount"
-                                                    onCategoryCreated={handleCategoryCreated}
-                                                    multiple
-                                                />
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                    
                                 </div>
                             </AccordionContent>
                         </AccordionItem>

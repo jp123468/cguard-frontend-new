@@ -8,7 +8,7 @@ export default function ReportSettingsForm() {
     <div className="space-y-8">
       <div className="space-y-4">
         <RowCheck label="Eliminar el nombre del cliente de los informes al enviar por correo/exportar/imprimir" />
-        <RowCheck label="Eliminar el nombre del sitio de publicación de los informes al enviar por correo/exportar/imprimir" />
+        <RowCheck label="Eliminar el nombre del Puesto de seguridad de los informes al enviar por correo/exportar/imprimir" />
         <RowCheck label="Eliminar el nombre del guardia de los informes al enviar por correo/exportar/imprimir" />
         <RowCheck label="Agregar punto de control del recorrido al informe DAR" />
       </div>

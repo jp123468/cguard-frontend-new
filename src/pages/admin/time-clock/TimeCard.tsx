@@ -139,8 +139,8 @@ export default function TimeCard() {
                                         {/* Cliente */}
                                         <FilterSelect label="Cliente*" placeholder="central (+1 otro)" />
 
-                                        {/* Sitio de publicación */}
-                                        <FilterSelect label="Sitio de publicación*" placeholder="Catolica (+2 otros)" />
+                                        {/* Puesto de seguridad */}
+                                        <FilterSelect label="Puesto de seguridad*" placeholder="Catolica (+2 otros)" />
 
                                         {/* Guardia */}
                                         <FilterSelect label="Guardia*" placeholder="José Alejo Pinos" />

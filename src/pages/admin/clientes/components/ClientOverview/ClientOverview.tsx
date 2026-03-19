@@ -133,6 +133,14 @@ export default function ClientOverview({ client }: { client: any }) {
               <div className="font-medium">{client?.name || '-'} {client?.lastName || ''}</div>
             </div>
             <div className="mb-3">
+              <div className="text-xs text-gray-400">{t('clients.form.personType', 'Tipo de persona')}</div>
+              <div className="font-medium">{client?.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}</div>
+            </div>
+            <div className="mb-3">
+              <div className="text-xs text-gray-400">{client?.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</div>
+              <div className="font-medium">{client?.documentNumber || '-'}</div>
+            </div>
+            <div className="mb-3">
               <div className="text-xs text-gray-400">{t('clients.overview.generalInfo.address')}</div>
               <div className="font-medium">{client?.address || '-'}</div>
             </div>
@@ -152,7 +160,7 @@ export default function ClientOverview({ client }: { client: any }) {
             </div>
             <div className="mb-3">
               <div className="text-xs text-gray-400">{t('clients.overview.contactDetails.fax')}</div>
-              <div className="font-medium">{client?.fax || '--'}</div>
+              <div className="font-medium">{client?.landline || client?.faxNumber || client?.fax || '--'}</div>
             </div>
             <div className="mb-3">
               <div className="text-xs text-gray-400">{t('clients.overview.contactDetails.email')}</div>

@@ -14,6 +14,8 @@ import {
     CategorySelect,
     CategoryOption,
 } from "@/components/categories/CategorySelect";
+import { Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
     Accordion,
     AccordionContent,
@@ -39,7 +41,7 @@ import {
 import { PostSiteInput, postSiteSchema } from "@/lib/validators/post-site";
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import OSMMapEmbed from "@/components/maps/OSMMapEmbed";
-import { t } from "i18next";
+import { useTranslation } from 'react-i18next';
 
 import { useClientSelection } from '@/contexts/ClientSelectionContext';
 
@@ -63,6 +65,7 @@ export default function PostSiteForm({
     baseUrl = "/api/post-sites",
     onSaved,
 }: PostSiteFormProps) {
+    const { t } = useTranslation();
     // Obtener cliente seleccionado del contexto (debe ir antes de cualquier uso)
     const { selectedClient, setSelectedClient } = useClientSelection();
     const navigate = useNavigate();
@@ -79,6 +82,17 @@ export default function PostSiteForm({
             form.setValue('postalCode', selectedClient.postalCode || '', { shouldValidate: true, shouldDirty: true });
             form.setValue('country', selectedClient.country || '', { shouldValidate: true, shouldDirty: true });
             form.trigger(['address', 'city', 'postalCode', 'country']);
+        }
+    }, [direccionDiferente, selectedClient]);
+
+    // También completar teléfono y correo desde el cliente seleccionado cuando NO se indica dirección diferente
+    useEffect(() => {
+        if (!direccionDiferente && selectedClient && selectedClient.id) {
+            const phone = (selectedClient as any).contactPhone || (selectedClient as any).phone || (selectedClient as any).phoneNumber || (selectedClient as any).mobile || (selectedClient as any).cellPhone || (selectedClient as any).cellular || '';
+            const email = (selectedClient as any).contactEmail || (selectedClient as any).email || (selectedClient as any).mail || '';
+            form.setValue('phone', phone, { shouldValidate: true, shouldDirty: true });
+            form.setValue('email', email, { shouldValidate: true, shouldDirty: true });
+            form.trigger(['phone', 'email']);
         }
     }, [direccionDiferente, selectedClient]);
 
@@ -118,19 +132,21 @@ export default function PostSiteForm({
         }
         console.log('onSubmit ejecutado, valores:', values);
         try {
-            const payload: PostSiteInput = {
+            const payload: any = {
                 ...values,
+                // backend expects companyName
+                companyName: values.name,
                 // Map empty string to null for category
                 categoryId: values.categoryId && String(values.categoryId).length > 0 ? values.categoryId : undefined,
             };
             if (mode === "create") {
                 const data = await stationService.create(payload as any);
-                toast.success("Sitio de publicación creado");
+                toast.success(t('postSites.created', 'Puesto de vigilancia creado'));
                 onSaved?.({ id: data.id, data: payload });
                 navigate(`/post-sites/${data.id}/profile`);
             } else if (mode === "edit" && id) {
                 await stationService.update(id, payload as any);
-                toast.success("Cambios guardados");
+                toast.success(t('postSites.changesSaved', 'Cambios guardados'));
                 onSaved?.({ id, data: payload });
                 navigate(`/post-sites/${id}/profile`);
             }
@@ -254,9 +270,9 @@ export default function PostSiteForm({
                 form.reset(payload);
             })().catch((e) => {
                 console.error(e);
-                if (!redirecting) {
+                    if (!redirecting) {
                     setRedirecting(true);
-                    showToastOnce('edit-postsite-not-found', 'Sitio de publicación no encontrado o error al cargar los datos.');
+                    showToastOnce('edit-postsite-not-found', t('postSites.notFound', 'Puesto de vigilancia no encontrado o error al cargar los datos.'));
                     navigate('/post-sites', { replace: true });
                 }
             });
@@ -329,7 +345,7 @@ export default function PostSiteForm({
                             name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>{t('postSites.form.siteName', 'Sitio de publicación *')}</FormLabel>
+                                    <FormLabel>{t('postSites.form.siteName', 'Puesto de seguridad *')}</FormLabel>
                                     <FormControl>
                                         <Input placeholder="" {...field} value={field.value ? String(field.value) : ""} />
                                     </FormControl>
@@ -347,7 +363,7 @@ export default function PostSiteForm({
                                 checked={direccionDiferente}
                                 onChange={e => setDireccionDiferente(e.target.checked)}
                             />
-                            ¿La dirección del sitio es diferente a la del cliente?
+                            {t('postSites.form.addressDifferent', '¿La dirección del puesto de vigilancia es diferente a la del cliente?')}
                         </label>
                     </div>
 
@@ -534,15 +550,33 @@ export default function PostSiteForm({
                                         name="categoryId"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>{t('postSites.form.category', 'Categoría')}</FormLabel>
-                                                <CategorySelect
-                                                    options={cats}
-                                                    value={field.value ? String(field.value) : undefined}
-                                                    onChange={field.onChange}
-                                                    placeholder={loadingCategories ? "Cargando..." : t('postSites.form.slectcategory', 'Selecciona una categoría')}
-                                                    module="postSite"
-                                                    onCategoryCreated={handleCategoryCreated}
-                                                />
+                                                <div className="flex items-center gap-2">
+                                                    <FormLabel className="flex items-center gap-2">
+                                                        {t('clients.form.categoryLabel', 'Sector de seguridad')}
+                                                        <TooltipProvider>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <span className="text-muted-foreground cursor-help">
+                                                                        <Info size={16} />
+                                                                    </span>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent side="top">
+                                                                    {t('postSites.form.categoryTooltip', 'Selecciona el sector de seguridad asociado al puesto de vigilancia')}
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                    </FormLabel>
+                                                </div>
+                                                <div className="mt-2">
+                                                    <CategorySelect
+                                                        options={cats}
+                                                        value={field.value ? String(field.value) : undefined}
+                                                        onChange={field.onChange}
+                                                        placeholder={loadingCategories ? t('categories.loading', 'Cargando...') : t('postSites.form.slectcategory', 'Seleccionar categoría')}
+                                                        module="postSite"
+                                                        onCategoryCreated={handleCategoryCreated}
+                                                    />
+                                                </div>
                                                 <FormMessage />
                                             </FormItem>
                                         )}

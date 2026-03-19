@@ -157,7 +157,7 @@ export default function ParkingIncident() {
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label htmlFor="site">Sitio de publicación*</Label>
+                                            <Label htmlFor="site">Puesto de seguridad*</Label>
                                             <Select value={newIncident.site} onValueChange={(v) => setNewIncident({ ...newIncident, site: v })}>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Seleccionar sitio" />
@@ -241,7 +241,7 @@ export default function ParkingIncident() {
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label>Sitio de publicación*</Label>
+                                            <Label>Puesto de seguridad*</Label>
                                             <Select>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Catolica (+2 otros)" />
@@ -349,7 +349,7 @@ export default function ParkingIncident() {
                                 <TableHead className="font-bold text-slate-700">Creado en</TableHead>
                                 <TableHead className="font-bold text-slate-700">Tipo de Incidente</TableHead>
                                 <TableHead className="font-bold text-slate-700">Cliente</TableHead>
-                                <TableHead className="font-bold text-slate-700">Sitio de publicación</TableHead>
+                                <TableHead className="font-bold text-slate-700">Puesto de seguridad</TableHead>
                                 <TableHead className="font-bold text-slate-700">Licencia del vehículo</TableHead>
                                 <TableHead className="font-bold text-slate-700">Estacionamiento</TableHead>
                                 <TableHead className="w-[50px]"></TableHead>

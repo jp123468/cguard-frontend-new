@@ -163,7 +163,7 @@ export default function RoutesPage() {
                   <Checkbox />
                 </th>
                 <th className="px-4 py-3 font-semibold">Nombre</th>
-                <th className="px-4 py-3 font-semibold">Sitio de publicación</th>
+                <th className="px-4 py-3 font-semibold">Puesto de seguridad</th>
                 <th className="px-4 py-3 font-semibold">Guardia</th>
                 <th className="px-4 py-3 font-semibold">Vehículo</th>
                 <th className="px-4 py-3 font-semibold">Tipo</th>

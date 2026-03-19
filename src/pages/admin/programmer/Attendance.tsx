@@ -131,7 +131,7 @@ export default function Attendance() {
                     </div>
 
                     <div className="grid gap-2">
-                      <Label>Sitio de publicación*</Label>
+                      <Label>Puesto de seguridad*</Label>
                       <Select value={filters.site} onValueChange={(v) => setFilters({ ...filters, site: v })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Catolica (+2 otros)" />

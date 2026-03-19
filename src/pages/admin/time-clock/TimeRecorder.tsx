@@ -261,11 +261,11 @@ export default function TimeRecorder() {
 
                     <div>
                       <p className="text-sm font-medium mb-2">
-                        Sitio de publicación*
+                        Puesto de seguridad*
                       </p>
                       <Select>
                         <SelectTrigger>
-                          <SelectValue placeholder="Sitio de publicación" />
+                          <SelectValue placeholder="Puesto de seguridad" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="catolica">
@@ -413,7 +413,7 @@ export default function TimeRecorder() {
 
                       <div>
                         <p className="text-sm font-medium mb-2">
-                          Sitio de publicación*
+                          Puesto de seguridad*
                         </p>
                         <Select>
                           <SelectTrigger>
@@ -574,7 +574,7 @@ export default function TimeRecorder() {
                 </th>
                 <th className="px-4 py-3 font-semibold">Guardia</th>
                 <th className="px-4 py-3 font-semibold">Cliente</th>
-                <th className="px-4 py-3 font-semibold">Sitio de publicación</th>
+                <th className="px-4 py-3 font-semibold">Puesto de seguridad</th>
                 <th className="px-4 py-3 font-semibold">Tipo</th>
                 <th className="px-4 py-3 font-semibold">Fichado</th>
                 <th className="px-4 py-3 font-semibold">Desfichado</th>

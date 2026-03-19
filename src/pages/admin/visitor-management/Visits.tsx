@@ -142,7 +142,7 @@ export default function Visits() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label className="text-xs">Sitio de publicación*</Label>
+                                        <Label className="text-xs">Puesto de seguridad*</Label>
                                         <Select
                                             value={filters.siteId}
                                             onValueChange={(v) =>
@@ -299,7 +299,7 @@ export default function Visits() {
                                 <th className="px-4 py-3 font-semibold">Vehículo</th>
                                 <th className="px-4 py-3 font-semibold">Hora de entrada</th>
                                 <th className="px-4 py-3 font-semibold">Hora de salida</th>
-                                <th className="px-4 py-3 font-semibold">Sitio de publicación</th>
+                                <th className="px-4 py-3 font-semibold">Puesto de seguridad</th>
                                 <th className="px-4 py-3 font-semibold">Registrado por</th>
                                 <th className="px-4 py-3 font-semibold">Salido por</th>
                             </tr>

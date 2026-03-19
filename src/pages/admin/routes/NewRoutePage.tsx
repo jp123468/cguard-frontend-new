@@ -405,7 +405,7 @@ export default function NewRoutePage() {
                   <table className="min-w-full border-collapse text-left text-sm">
                     <thead className="bg-gray-50">
                       <tr className="border-b">
-                        <th className="px-4 py-3 font-semibold">Sitio de publicación</th>
+                        <th className="px-4 py-3 font-semibold">Puesto de seguridad</th>
                         <th className="px-4 py-3 font-semibold">Dirección</th>
                         <th className="px-4 py-3 font-semibold">Golpes</th>
                         <th className="px-4 py-3 font-semibold">Duración</th>

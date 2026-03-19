@@ -74,7 +74,7 @@ export default function ActivitiesPage() {
                       </Select>
                     </div>
 
-                    {/* Sitio de publicación */}
+                    {/* Puesto de seguridad */}
                     <div className="space-y-2">
                       <Label>{t('activity.filter.postSite')}</Label>
                       <Select>

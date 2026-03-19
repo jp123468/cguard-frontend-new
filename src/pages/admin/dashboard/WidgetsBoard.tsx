@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   Users, MapPin, Shield, UserSquare2, MapPinned, ActivitySquare,
@@ -103,15 +104,20 @@ export default function WidgetsBoard({
       {/* Barra superior */}
       <div className="flex items-center justify-end">
         <Popover>
-          <PopoverContent className="w-72 p-3">
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="px-3 py-1 text-sm">
+              {t('dashboard.widgets.manage', 'Widgets')}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-3 max-h-56 overflow-auto">
             <div className="space-y-2">
               {WIDGETS.map(w => (
-                <label key={w.id} className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
+                <label key={w.id} className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-muted cursor-pointer min-w-0">
                   <Checkbox
                     checked={enabled.has(w.id)}
                     onCheckedChange={(v) => toggle(w.id, v)}
                   />
-                  <span className="text-sm">{t(`dashboard.widgets.${w.id}.title`, w.title)}</span>
+                  <span className="text-sm truncate">{t(`dashboard.widgets.${w.id}.title`, w.title)}</span>
                 </label>
               ))}
             </div>
@@ -126,7 +132,7 @@ export default function WidgetsBoard({
           <p className="text-sm">{t('dashboard.noWidgets.desc', 'Please enable at least one widget to see data on the board.')}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {items.map(w => (
             <StatCard
               key={w.id}
@@ -156,17 +162,17 @@ function StatCard({
   iconBg: string;
 }) {
   return (
-    <Card className="rounded-2xl p-5">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <div className={cn("h-6 w-6 grid place-items-center rounded-full", iconBg)}>
-          <Icon className={cn("h-3.5 w-3.5", colorText)} />
+    <Card className="rounded-2xl p-4 md:p-5">
+      <div className="flex items-center gap-3 text-sm font-medium">
+        <div className={cn("h-8 w-8 md:h-6 md:w-6 grid place-items-center rounded-full flex-shrink-0", iconBg)}>
+          <Icon className={cn("h-4 w-4 md:h-3.5 md:w-3.5", colorText)} />
         </div>
-        <span className={cn(colorText)}>{title}</span>
+        <span className={cn(colorText, "truncate")}>{title}</span>
       </div>
 
-      <div className={cn("mt-3 text-4xl font-semibold", colorText)}>{value}</div>
+      <div className={cn("mt-3 text-2xl md:text-4xl font-semibold truncate", colorText)}>{value}</div>
 
-      <div className="mt-2 text-sm text-muted-foreground">{subtitle}</div>
+      <div className="mt-2 text-sm text-muted-foreground truncate">{subtitle}</div>
     </Card>
   );
 }

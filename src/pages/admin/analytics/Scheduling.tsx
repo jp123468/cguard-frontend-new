@@ -346,7 +346,7 @@ const Scheduling: React.FC = () => {
                         {/* Sitio */}
                         <div className="space-y-1">
                             <label className="text-xs font-semibold text-slate-700">
-                                Sitio de publicación
+                                Puesto de seguridad
                             </label>
                             <Select>
                                 <SelectTrigger className="h-10 rounded-lg border-slate-200 text-xs">

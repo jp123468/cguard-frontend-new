@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, MoreVertical } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -62,6 +63,7 @@ interface Item {
 }
 
 export default function Items() {
+    const { t } = useTranslation();
     const [items, setItems] = useState<Item[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -83,9 +85,23 @@ export default function Items() {
         (async () => {
             const tenantId = localStorage.getItem('tenantId') || '';
             const selectedTax = taxes.find((t) => t.id === newItemTax);
+            // Client-side validation
+            if (!newItemName || !newItemName.trim()) {
+                toast.error(t('billing.items.form.validation.required_name', 'Por favor indica un nombre para el servicio'));
+                return;
+            }
+            const priceVal = parseFloat(newItemPrice as any);
+            if (isNaN(priceVal) || priceVal < 0) {
+                toast.error(t('billing.items.form.validation.invalid_price', 'Por favor indica un precio válido'));
+                return;
+            }
+            if (!newItemTax || newItemTax === '' || newItemTax === 'none') {
+                toast.error(t('billing.items.form.validation.required_tax', 'Por favor selecciona un impuesto'));
+                return;
+            }
             const payload: any = {
                 title: newItemName,
-                description: newItemDescription,
+                description: newItemDescription || null,
                 price: parseFloat(newItemPrice) || 0,
             };
             if (newItemTax && newItemTax !== 'none' && selectedTax) {
@@ -100,10 +116,11 @@ export default function Items() {
                     alert('Tenant no configurado. Por favor inicia sesión o configura el tenantId.');
                     // fallback: add locally without calling backend
                     const newItemLocal: Item = {
-                        id: Math.random().toString(36).substr(2, 9),
+                        id: `local-${Math.random().toString(36).substr(2, 9)}`,
                         name: newItemName,
                         price: parseFloat(newItemPrice) || 0,
                         tax: newItemTax,
+                        description: newItemDescription || null,
                     };
                     setItems([...items, newItemLocal]);
                     setIsSheetOpen(false);
@@ -115,7 +132,7 @@ export default function Items() {
                 }
                 // If editing, call update route
                 if (editingId) {
-                    const res = await ApiService.put(`/tenant/${tenantId}/service/${editingId}`, { data: payload });
+                    const res = await ApiService.put(`/tenant/${tenantId}/service/${editingId}`, payload);
                     const updated = res && (res.data || res) || {};
                     const updatedTaxId = updated.taxId ?? (updated.tax && (updated.tax.id || updated.tax._id)) ?? payload.taxId ?? newItemTax;
                     const updatedTaxName = updated.taxName ?? (updated.tax && updated.tax.name) ?? (selectedTax ? selectedTax.name : null);
@@ -123,34 +140,34 @@ export default function Items() {
                     const newItems = items.map((it) => it.id === editingId ? ({
                         ...it,
                         name: newItemName,
-                        description: newItemDescription,
+                        description: newItemDescription || null,
                         price: parseFloat(newItemPrice) || 0,
                         tax: updatedTaxId,
                         taxName: updatedTaxName ?? null,
                         taxRate: updatedTaxRate ?? null,
                     }) : it);
                     setItems(newItems);
-                    toast.success('Elemento actualizado');
+                    toast.success(t('billing.items.messages.updated'));
                     setIsSheetOpen(false);
                     setEditingId(null);
                 } else {
-                    const res = await ApiService.post(`/tenant/${tenantId}/service`, { data: payload });
+                    const res = await ApiService.post(`/tenant/${tenantId}/service`, payload);
                     const created = res && (res.data || res);
                     const createdTaxId = created && (created.taxId || (created.tax && (created.tax.id || created.tax._id))) ? (created.taxId || (created.tax && (created.tax.id || created.tax._id))) : newItemTax;
                     const createdTaxName = created && (created.taxName || (created.tax && created.tax.name)) ? (created.taxName || (created.tax && created.tax.name)) : (selectedTax ? selectedTax.name : undefined);
                     const createdTaxRate = created && (created.taxRate || (created.tax && (created.tax.rate))) ? (created.taxRate || (created.tax && created.tax.rate)) : (selectedTax ? selectedTax.rate : undefined);
 
                     const newItem: Item = {
-                        id: created && (created.id || created._id) ? (created.id || created._id) : Math.random().toString(36).substr(2, 9),
+                        id: created && (created.id || created._id) ? (created.id || created._id) : `local-${Math.random().toString(36).substr(2, 9)}`,
                         name: newItemName,
-                        description: newItemDescription,
+                        description: newItemDescription || null,
                         price: parseFloat(newItemPrice) || 0,
                         tax: createdTaxId,
                         taxName: createdTaxName ?? null,
                         taxRate: createdTaxRate ?? null,
                     };
                     setItems([...items, newItem]);
-                    toast.success('Elemento creado');
+                    toast.success(t('billing.items.messages.created'));
                     setIsSheetOpen(false);
                 }
                 // Reset form
@@ -158,15 +175,38 @@ export default function Items() {
                 setNewItemDescription("");
                 setNewItemPrice("");
                 setNewItemTax("");
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Error creando elemento', err);
-                toast.error('No se pudo guardar el artículo.');
-                // Fallback: still add locally if backend fails
+                // If server responded with an HTTP status, show friendly message
+                if (err && typeof err.status === 'number') {
+                    const status = err.status;
+                    if (status >= 500) {
+                        toast.error(t('billing.items.messages.server_error', 'Error en el servidor. Inténtalo más tarde.'));
+                        return;
+                    }
+                    // 400/422 - validation / bad request: show server message if available, otherwise friendly hint
+                    if (status === 400 || status === 422) {
+                        const serverMsg = (err.data && (err.data.message || err.data.error)) || err.message || t('billing.items.messages.invalid_input', 'Datos inválidos. Revisa los campos.');
+                        // Map some common backend messages to friendlier ones
+                        if (/Cannot read properties of undefined/i.test(String(serverMsg))) {
+                            toast.error(t('billing.items.messages.invalid_input', 'Datos inválidos. Revisa los campos.'));
+                        } else {
+                            toast.error(serverMsg);
+                        }
+                        return;
+                    }
+                    // Other client errors: show message
+                    toast.error(err.message || t('billing.items.messages.save_error', 'No se pudo guardar el artículo.'));
+                    return;
+                }
+
+                // Network/connection error (no HTTP status): fallback to adding locally
+                toast.error(t('billing.items.messages.network_error', 'No se pudo conectar con el servidor. Se agregó localmente.'));
                 const fallbackTax = taxes.find((t) => t.id === newItemTax);
                 const newItem: Item = {
-                    id: Math.random().toString(36).substr(2, 9),
+                    id: `local-${Math.random().toString(36).substr(2, 9)}`,
                     name: newItemName,
-                    description: newItemDescription,
+                    description: newItemDescription || null,
                     price: parseFloat(newItemPrice) || 0,
                     tax: newItemTax,
                     taxName: fallbackTax ? fallbackTax.name : null,
@@ -226,20 +266,33 @@ export default function Items() {
                 return;
             }
             if (pendingBatchDeleteIds && pendingBatchDeleteIds.length > 0) {
-                const idsParam = pendingBatchDeleteIds.join(',');
-                await ApiService.delete(`/tenant/${tenantId}/service?ids=${idsParam}`);
-                setItems((prev) => prev.filter((it) => !pendingBatchDeleteIds.includes(it.id)));
-                setSelectedIds((prev) => prev.filter((id) => !pendingBatchDeleteIds.includes(id)));
-                toast.success('Elementos eliminados');
+                const batch = pendingBatchDeleteIds.slice();
+                const localIds = batch.filter((id) => String(id).startsWith('local-'));
+                const serverIds = batch.filter((id) => !String(id).startsWith('local-'));
+                if (serverIds.length > 0) {
+                    const idsParam = serverIds.join(',');
+                    await ApiService.delete(`/tenant/${tenantId}/service?ids=${idsParam}`);
+                }
+                setItems((prev) => prev.filter((it) => !batch.includes(it.id)));
+                setSelectedIds((prev) => prev.filter((id) => !batch.includes(id)));
+                toast.success(t('billing.items.messages.deleted'));
             } else if (pendingDelete) {
-                await ApiService.delete(`/tenant/${tenantId}/service?ids=${pendingDelete.id}`);
-                setItems((prev) => prev.filter((it) => it.id !== pendingDelete.id));
-                setSelectedIds((prev) => prev.filter((id) => id !== pendingDelete.id));
-                toast.success('Elemento eliminado');
+                const id = pendingDelete.id;
+                if (String(id).startsWith('local-')) {
+                    // local-only item — just remove from UI
+                    setItems((prev) => prev.filter((it) => it.id !== id));
+                    setSelectedIds((prev) => prev.filter((i) => i !== id));
+                    toast.success(t('billing.items.messages.deleted'));
+                } else {
+                    await ApiService.delete(`/tenant/${tenantId}/service?ids=${id}`);
+                    setItems((prev) => prev.filter((it) => it.id !== id));
+                    setSelectedIds((prev) => prev.filter((i) => i !== id));
+                    toast.success(t('billing.items.messages.deleted'));
+                }
             }
         } catch (e) {
             console.error('Error eliminando elemento(s)', e);
-            toast.error('No se pudieron eliminar los artículos.');
+                    toast.error(t('billing.items.messages.delete_error', 'No se pudieron eliminar los artículos.'));
         } finally {
             setIsDeleteDialogOpen(false);
             setPendingDelete(null);
@@ -350,8 +403,8 @@ export default function Items() {
         <AppLayout>
             <Breadcrumb
                 items={[
-                    { label: "Panel de control", path: "/dashboard" },
-                    { label: "Elementos" },
+                    { label: t('dashboard.title'), path: "/dashboard" },
+                    { label: t('billing.items.title') },
                 ]}
             />
             <div className="p-6 space-y-4">
@@ -360,9 +413,9 @@ export default function Items() {
                     <div className="w-full md:w-48">
                         <Select value={actionValue} onValueChange={(v) => {
                             setActionValue(v);
-                            if (v === 'delete') {
+                                if (v === 'delete') {
                                 if (!selectedIds || selectedIds.length === 0) {
-                                    toast.error('No hay artículos seleccionados.');
+                                    toast.error(t('billing.common.no_selection'));
                                     setActionValue('');
                                     return;
                                 }
@@ -370,11 +423,11 @@ export default function Items() {
                                 setIsDeleteDialogOpen(true);
                             }
                         }}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Acción" />
+                                <SelectTrigger>
+                                <SelectValue placeholder={t('actions.action')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="delete">Eliminar</SelectItem>
+                                <SelectItem value="delete">{t('actions.delete')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -383,7 +436,7 @@ export default function Items() {
                         <div className="relative w-full md:w-80">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                             <Input
-                                placeholder="Buscar un elemento"
+                                placeholder={t('billing.items.search_placeholder')}
                                 className="pl-9"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -403,16 +456,16 @@ export default function Items() {
                                             setNewItemTax("");
                                         }}
                                     >
-                                        Añadir elemento
+                                        {t('billing.items.actions.add')}
                                     </Button>
                                 </SheetTrigger>
                             <SheetContent className="w-[400px] sm:w-[540px]">
-                                <SheetHeader>
-                                    <SheetTitle>{editingId ? 'Editar Elemento' : 'Nuevo Elemento'}</SheetTitle>
+                                    <SheetHeader>
+                                    <SheetTitle>{editingId ? t('billing.items.form.title_edit') : t('billing.items.form.title_create')}</SheetTitle>
                                 </SheetHeader>
                                 <div className="grid gap-6 py-6">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="name">Nombre del elemento*</Label>
+                                        <Label htmlFor="name">{`${t('billing.items.form.name')}*`}</Label>
                                         <Input
                                             id="name"
                                             value={newItemName}
@@ -420,15 +473,16 @@ export default function Items() {
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="description">Descripción del elemento*</Label>
+                                        <Label htmlFor="description">{t('billing.items.form.description')}</Label>
                                         <Textarea
                                             id="description"
+                                            placeholder={t('billing.items.form.description_placeholder', '')}
                                             value={newItemDescription}
                                             onChange={(e) => setNewItemDescription(e.target.value)}
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="price">Precio ($)</Label>
+                                        <Label htmlFor="price">{`${t('billing.items.form.price')}*`}</Label>
                                         <Input
                                             id="price"
                                             type="number"
@@ -438,13 +492,13 @@ export default function Items() {
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="tax">Impuesto</Label>
+                                        <Label htmlFor="tax">{`${t('billing.items.form.tax','Impuesto')}*`}</Label>
                                         <Select value={newItemTax} onValueChange={setNewItemTax}>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Seleccionar impuesto" />
+                                                <SelectValue placeholder={t('billing.items.form.select_tax', 'Seleccionar impuesto')} />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="none">Ninguno</SelectItem>
+                                                <SelectItem value="none">{t('billing.items.form.no_tax', 'Ninguno')}</SelectItem>
                                                 {taxes.map((t) => (
                                                     <SelectItem key={t.id} value={t.id}>{`${t.name} (${t.rate}%)`}</SelectItem>
                                                 ))}
@@ -457,7 +511,7 @@ export default function Items() {
                                         className="w-full bg-orange-500 hover:bg-orange-600 text-white"
                                         onClick={handleAddItem}
                                     >
-                                        Enviar
+                                        {t('billing.items.form.save')}
                                     </Button>
                                 </SheetFooter>
                             </SheetContent>
@@ -482,9 +536,9 @@ export default function Items() {
                                         }}
                                     />
                                 </TableHead>
-                                <TableHead className="font-bold text-slate-700">Nombre</TableHead>
-                                <TableHead className="font-bold text-slate-700">Precio ($)</TableHead>
-                                <TableHead className="font-bold text-slate-700">Impuesto</TableHead>
+                                <TableHead className="font-bold text-slate-700">{t('billing.items.columns.name')}</TableHead>
+                                <TableHead className="font-bold text-slate-700">{`${t('billing.items.columns.price')} ($)`}</TableHead>
+                                <TableHead className="font-bold text-slate-700">{t('billing.items.columns.tax')}</TableHead>
                                 <TableHead className="w-[50px]"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -508,9 +562,9 @@ export default function Items() {
                                                     />
                                                 </svg>
                                             </div>
-                                            <h3 className="text-lg font-medium text-slate-700 mb-1">No se encontraron resultados</h3>
+                                            <h3 className="text-lg font-medium text-slate-700 mb-1">{t('billing.items.no_results', 'No se encontraron resultados')}</h3>
                                             <p className="text-sm max-w-xs">
-                                                No pudimos encontrar ningún elemento que coincida con su búsqueda
+                                                {t('billing.items.no_results_body', 'No pudimos encontrar ningún elemento que coincida con su búsqueda')}
                                             </p>
                                         </div>
                                     </TableCell>
@@ -538,11 +592,11 @@ export default function Items() {
                                                     item.taxName
                                                         ? `${item.taxName} (${Number(item.taxRate ?? 0).toFixed(2)}%)`
                                                         : (() => {
-                                                            const t = taxes.find((x) => x.id === item.tax);
-                                                            return t ? `${t.name} (${t.rate}%)` : item.tax;
+                                                            const tx = taxes.find((x) => x.id === item.tax);
+                                                            return tx ? `${tx.name} (${tx.rate}%)` : item.tax;
                                                         })()
                                                 )
-                                                : 'Ninguno'
+                                                : t('billing.items.form.no_tax', 'Ninguno')
                                         }</TableCell>
                                         <TableCell>
                                             <DropdownMenu>
@@ -551,9 +605,9 @@ export default function Items() {
                                                         <MoreVertical className="h-4 w-4 text-slate-400" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    <DropdownMenuItem onClick={() => handleEditClick(item)}>Editar</DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => { setPendingDelete(item); setIsDeleteDialogOpen(true); }}>Eliminar</DropdownMenuItem>
+                                                    <DropdownMenuContent>
+                                                    <DropdownMenuItem onClick={() => handleEditClick(item)}>{t('actions.edit')}</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => { setPendingDelete(item); setIsDeleteDialogOpen(true); }}>{t('actions.delete')}</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -566,22 +620,20 @@ export default function Items() {
 
                 {/* Delete confirmation dialog */}
                 <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => { setIsDeleteDialogOpen(open); if (!open) { setPendingDelete(null); setPendingBatchDeleteIds(null); setActionValue(''); } }}>
-                    <DialogContent>
+                        <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Eliminar elemento</DialogTitle>
+                            <DialogTitle>{t('actions.delete')}</DialogTitle>
                             <DialogDescription>
                                 {pendingBatchDeleteIds && pendingBatchDeleteIds.length > 0 ? (
-                                    <>¿Eliminar {pendingBatchDeleteIds.length} elementos seleccionados? Esta acción no se puede deshacer.</>
+                                    <>{t('billing.common.confirm_delete')}</>
                                 ) : (
-                                    <>
-                                        ¿Eliminar &apos;{pendingDelete?.name}&apos;? Esta acción no se puede deshacer.
-                                    </>
+                                    <>{t('billing.common.confirm_delete')}</>
                                 )}
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => { setIsDeleteDialogOpen(false); setPendingDelete(null); }}>Cancelar</Button>
-                            <Button className="bg-red-600 text-white" onClick={confirmDelete}>Eliminar</Button>
+                            <Button variant="outline" onClick={() => { setIsDeleteDialogOpen(false); setPendingDelete(null); }}>{t('actions.cancel')}</Button>
+                            <Button className="bg-red-600 text-white" onClick={confirmDelete}>{t('actions.delete')}</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -589,7 +641,7 @@ export default function Items() {
                 {/* Pagination (Static for now) */}
                 <div className="flex items-center justify-end space-x-2 py-4">
                     <div className="text-sm text-muted-foreground">
-                        Elementos por página
+                        {t('billing.common.items_per_page')}
                     </div>
                     <Select defaultValue="25">
                         <SelectTrigger className="w-[70px]">

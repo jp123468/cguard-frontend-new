@@ -213,7 +213,7 @@ export default function ParkingVehicles() {
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label htmlFor="site">Sitio de publicación*</Label>
+                                            <Label htmlFor="site">Puesto de seguridad*</Label>
                                             <Select value={newVehicle.site} onValueChange={(v) => setNewVehicle({ ...newVehicle, site: v })}>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Seleccionar sitio" />
@@ -293,7 +293,7 @@ export default function ParkingVehicles() {
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label>Sitio de publicación*</Label>
+                                            <Label>Puesto de seguridad*</Label>
                                             <Select>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Catolica (+2 otros)" />
@@ -377,7 +377,7 @@ export default function ParkingVehicles() {
                                     <Checkbox />
                                 </TableHead>
                                 <TableHead className="font-bold text-slate-700">Cliente</TableHead>
-                                <TableHead className="font-bold text-slate-700">Sitio de publicación</TableHead>
+                                <TableHead className="font-bold text-slate-700">Puesto de seguridad</TableHead>
                                 <TableHead className="font-bold text-slate-700">Año</TableHead>
                                 <TableHead className="font-bold text-slate-700">Marca</TableHead>
                                 <TableHead className="font-bold text-slate-700">Modelo</TableHead>

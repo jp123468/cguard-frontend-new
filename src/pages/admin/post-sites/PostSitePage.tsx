@@ -251,7 +251,7 @@ export default function PostSitePage() {
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) {
-      console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación'));
+      console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un Puesto de seguridad'));
       return;
     }
     // Open confirmation dialog for bulk delete
@@ -401,7 +401,7 @@ export default function PostSitePage() {
                   return;
                 }
                 if (action === "archivar") {
-                  if (selectedIds.length === 0) { console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación')); setBulkKey((k) => k + 1); return; }
+                  if (selectedIds.length === 0) { console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un Puesto de seguridad')); setBulkKey((k) => k + 1); return; }
                   try {
                     await Promise.all(selectedIds.map((id) => stationService.update(id, { status: "inactive" } as any)));
                     toast.success(t('postSites.sitesArchived', 'Sitios archivados'));
@@ -415,7 +415,7 @@ export default function PostSitePage() {
                   return;
                 }
                 if (action === "restaurar") {
-                  if (selectedIds.length === 0) { console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación')); setBulkKey((k) => k + 1); return; }
+                  if (selectedIds.length === 0) { console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un Puesto de seguridad')); setBulkKey((k) => k + 1); return; }
                   try {
                     await Promise.all(selectedIds.map((id) => stationService.update(id, { status: "active" } as any)));
                     toast.success(t('postSites.sitesRestored', 'Sitios restaurados'));
@@ -436,7 +436,7 @@ export default function PostSitePage() {
                   return;
                 }
                 if (action === "mover") {
-                  if (selectedIds.length === 0) { console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un sitio de publicación')); setBulkKey((k) => k + 1); return; }
+                  if (selectedIds.length === 0) { console.warn(t('postSites.selectAtLeastOne', 'Selecciona al menos un Puesto de seguridad')); setBulkKey((k) => k + 1); return; }
                   setAssignTargetIds(selectedIds.slice());
                   setOpenAssignDialog(true);
                   setBulkKey((k) => k + 1);
@@ -460,7 +460,7 @@ export default function PostSitePage() {
             <Button
               className="bg-orange-500 hover:bg-orange-600 text-white"
             >
-              <Link to="/post-sites/new">{t('postSites.newPostSite', 'Nuevo Sitio de Publicación')}</Link>
+              <Link to="/post-sites/new">{t('postSites.newPostSite', 'Nuevo Puesto de seguridad')}</Link>
             </Button>
 
             {/* Filtros */}
@@ -667,7 +667,7 @@ export default function PostSitePage() {
                       setPage(1);
                     }}
                   >
-                    <span>{t('postSites.postsite', 'Sitio de publicación')}</span>
+                    <span>{t('postSites.postsite', 'Puesto de seguridad')}</span>
                     <span className="text-xs text-muted-foreground">{sortKey === "name" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
                   </button>
                 </th>

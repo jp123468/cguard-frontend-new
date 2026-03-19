@@ -27,7 +27,8 @@ export default function SubSidebar({
     <aside
       className={[
         "w-64 shrink-0 border-r border-gray-200 bg-white",
-        "overflow-y-auto",
+        // use flex column so nav can fill remaining height and avoid bottom gaps
+        "flex flex-col",
         useSticky
           ? `sticky top-[${heightOffset}px] h-[calc(100vh-${heightOffset}px)]`
           : "h-full",
@@ -39,7 +40,7 @@ export default function SubSidebar({
         {t(`settings.${navKey}.title`, { defaultValue: nav.title ?? "Menú" })}
       </div>
 
-      <nav className="pb-6">
+      <nav className="flex-1 overflow-y-auto pb-6">
         {nav.sections.map((sec, idx) => (
           <div key={idx} className="px-2">
             {/* Si la sección tiene label, se muestra */}

@@ -394,7 +394,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-700">
-                Sitio de publicación
+                Puesto de seguridad
               </label>
               <Select>
                 <SelectTrigger className="h-10 rounded-lg border-slate-200 text-xs">

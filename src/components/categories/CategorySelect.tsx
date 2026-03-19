@@ -28,7 +28,7 @@ export function CategorySelect({
     options = [],
     value,
     onChange,
-    placeholder = "Categoría",
+    placeholder,
     module,
     onCategoryCreated,
     multiple = false,
@@ -117,18 +117,18 @@ export function CategorySelect({
     return (
         <>
             <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
+                        <PopoverTrigger asChild>
                     <Button type="button" variant="outline" className="w-full justify-between font-normal" disabled={isLoading}>
                         <span className={(multiple ? selectedMany.length > 0 : !!selectedSingle) ? "" : "text-muted-foreground"}>
                             {isLoading
-                                ? "Cargando..."
+                                ? t('categories.loading', 'Cargando...')
                                 : multiple
                                     ? selectedMany.length > 0
                                         ? selectedMany.map(s => s.name).join(", ")
-                                        : placeholder
+                                        : (placeholder ?? t('clients.form.categoryLabel', 'Sector de seguridad'))
                                     : selectedSingle
                                         ? selectedSingle.name
-                                        : placeholder}
+                                        : (placeholder ?? t('clients.form.categoryLabel', 'Sector de seguridad'))}
                         </span>
                         <ChevronDown className="h-4 w-4 opacity-60" />
                     </Button>

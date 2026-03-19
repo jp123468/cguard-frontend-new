@@ -153,6 +153,8 @@ const stationService = {
     const tenantId = getTenantId();
     const body: any = {
       stationName: (payload as any).name ?? undefined,
+      // backend requires companyName for post-site creation
+      companyName: (payload as any).companyName ?? (payload as any).name ?? undefined,
       clientAccountId: (payload as any).clientId ?? undefined,
       address: (payload as any).address ?? undefined,
       secondAddress: (payload as any).addressLine2 ?? undefined,
@@ -181,6 +183,8 @@ const stationService = {
     const existing = existingRes.data || {};
     const body: any = {
       stationName: (payload as any).name ?? existing.stationName ?? existing.name,
+      // include companyName for backend compatibility
+      companyName: (payload as any).companyName ?? (payload as any).name ?? existing.companyName ?? existing.stationName ?? existing.name,
       clientAccountId: (payload as any).clientId ?? existing.clientAccountId ?? existing.clientId,
       address: (payload as any).address ?? existing.address,
       secondAddress: (payload as any).addressLine2 ?? existing.secondAddress ?? existing.addressLine2,

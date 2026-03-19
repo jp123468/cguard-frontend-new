@@ -13,6 +13,8 @@ import PostOrders from './components/PostsitePostOrders/PostOrders';
 import Notes from './components/PostsiteNotes/Notes';
 import Files from './components/PostsiteFiles/Files';
 import AssignGuards from './components/PostsiteAssignGuards/AssignGuards';
+import Stations from './components/PostsiteStations/Stations';
+import Incidents from './components/PostsiteIncidents/Incidents';
 import Tasks from './components/PostsiteTasks/Tasks';
 import SiteTours from './components/PostsiteSiteTours/SiteTours';
 import SiteTourTags from './components/PostsiteSiteTourTags/SiteTourTags';
@@ -73,6 +75,10 @@ export default function PostSiteDetailsPage() {
         return <Files site={site} />;
       case 'assign-guards':
         return <AssignGuards site={site} />;
+      case 'stations':
+        return <Stations site={site} />;
+      case 'incidents':
+        return <Incidents site={site} />;
       case 'tasks':
         return <Tasks site={site} />;
       case 'site-tours':

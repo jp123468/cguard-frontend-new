@@ -49,7 +49,7 @@ export default function PostKpi() {
             <Breadcrumb
                 items={[
                     { label: "Panel de control", path: "/dashboard" },
-                    { label: "Informe de KPI del Sitio de Publicación" },
+                    { label: "Informe de KPI del Puesto de seguridad" },
                 ]}
             />
 
@@ -90,12 +90,12 @@ export default function PostKpi() {
                                         </Select>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Sitio de publicación *</Label>
-                                        <Select>
-                                            <SelectTrigger className="w-full"><SelectValue placeholder="Catolica (+2 otros)" /></SelectTrigger>
-                                            <SelectContent><SelectItem value="1">Catolica</SelectItem></SelectContent>
-                                        </Select>
-                                    </div>
+                                                            <Label>Puesto de seguridad *</Label>
+                                                            <Select>
+                                                                <SelectTrigger className="w-full"><SelectValue placeholder="Catolica (+2 otros)" /></SelectTrigger>
+                                                                <SelectContent><SelectItem value="1">Catolica</SelectItem></SelectContent>
+                                                            </Select>
+                                                        </div>
 
                                     <div className="space-y-2">
                                         <Label>Tipo</Label>

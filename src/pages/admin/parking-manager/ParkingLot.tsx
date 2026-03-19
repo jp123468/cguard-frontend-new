@@ -142,7 +142,7 @@ export default function ParkingLot() {
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label htmlFor="site">Sitio de publicación*</Label>
+                                            <Label htmlFor="site">Puesto de seguridad*</Label>
                                             <Select value={newLot.site} onValueChange={(v) => setNewLot({ ...newLot, site: v })}>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Seleccionar sitio" />
@@ -244,7 +244,7 @@ export default function ParkingLot() {
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label>Sitio de publicación*</Label>
+                                            <Label>Puesto de seguridad*</Label>
                                             <Select>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Catolica (+2 otros)" />
@@ -318,7 +318,7 @@ export default function ParkingLot() {
                                     <Checkbox />
                                 </TableHead>
                                 <TableHead className="font-bold text-slate-700">Cliente</TableHead>
-                                <TableHead className="font-bold text-slate-700">Sitio de publicación</TableHead>
+                                <TableHead className="font-bold text-slate-700">Puesto de seguridad</TableHead>
                                 <TableHead className="font-bold text-slate-700">Estacionamiento #</TableHead>
                                 <TableHead className="font-bold text-slate-700">Área</TableHead>
                                 <TableHead className="w-[50px]"></TableHead>

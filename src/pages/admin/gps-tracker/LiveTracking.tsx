@@ -117,7 +117,7 @@ export default function LiveTrackingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Sitio de publicación*</Label>
+                    <Label>Puesto de seguridad*</Label>
                     <Select>
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccionar sitio" />
@@ -174,7 +174,7 @@ export default function LiveTrackingPage() {
                 <tr className="border-b">
                   <th className="px-4 py-3 font-semibold">Guardia</th>
                   <th className="px-4 py-3 font-semibold">
-                    Sitio de publicación
+                    Puesto de seguridad
                   </th>
                   <th className="px-4 py-3 font-semibold">
                     Última Actualización

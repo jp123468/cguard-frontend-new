@@ -231,7 +231,7 @@ export default function ShiftTemplates() {
                     </div>
 
                     <div className="grid gap-2">
-                      <Label>Sitio de publicación</Label>
+                      <Label>Puesto de seguridad</Label>
                       <Select value={newTemplate.postSite} onValueChange={(v) => setNewTemplate({ ...newTemplate, postSite: v })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar" />
@@ -399,7 +399,7 @@ export default function ShiftTemplates() {
                 <TableHead className="font-bold text-slate-700">Nombre de la Plantilla</TableHead>
                 <TableHead className="font-bold text-slate-700">Hora de Inicio</TableHead>
                 <TableHead className="font-bold text-slate-700">Hora de Fin</TableHead>
-                <TableHead className="font-bold text-slate-700">Sitio de publicación</TableHead>
+                <TableHead className="font-bold text-slate-700">Puesto de seguridad</TableHead>
                 <TableHead className="font-bold text-slate-700">Guardia</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>

@@ -596,10 +596,10 @@ export default function SecurityGuardsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>{t('guards.list.filter.site', 'Sitio de publicación')}</Label>
+                      <Label>{t('guards.list.filter.site', 'Puesto de seguridad')}</Label>
                       <Select value={filterSite} onValueChange={(v) => setFilterSite(v)}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Sitio de publicación" />
+                          <SelectValue placeholder="Puesto de seguridad" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="todos">{t('guards.list.filter.siteAll', 'Todos')}</SelectItem>

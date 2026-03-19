@@ -80,6 +80,9 @@ export default function ClientProfile({ client }: { client: any }) {
                   <div className="font-medium text-lg">{c.name || '-'} {c.lastName ? ` ${c.lastName}` : ''}</div>
                   <div className="mt-2 text-sm text-muted-foreground">{c.email || '-'}</div>
                   <div className="mt-1 text-sm text-muted-foreground">{c.phoneNumber || '-'}</div>
+                  <div className="mt-1 text-sm text-muted-foreground">
+                    {c.personType === 'PJ' ? (t('clients.form.ruc', 'RUC') + ': ' + (c.documentNumber || '-')) : (t('clients.form.cedula', 'Cédula') + ': ' + (c.documentNumber || '-'))}
+                  </div>
                 </div>
               )}
             />
@@ -97,6 +100,14 @@ export default function ClientProfile({ client }: { client: any }) {
             <div>
               <p className="text-sm text-gray-600">{t('clients.form.email', 'Email')}</p>
               <p className="text-lg text-gray-800">{client.email || '-'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">{t('clients.form.personType', 'Tipo de persona')}</p>
+              <p className="text-lg text-gray-800">{client.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">{client.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</p>
+              <p className="text-lg text-gray-800">{client.documentNumber || '-'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">{t('clients.form.phone', 'Teléfono')}</p>
@@ -123,8 +134,8 @@ export default function ClientProfile({ client }: { client: any }) {
               <p className="text-lg text-gray-800">{client.country || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.fax', 'Fax')}</p>
-              <p className="text-lg text-gray-800">{client.faxNumber || '-'}</p>
+              <p className="text-sm text-gray-600">{t('clients.form.fax', 'Landline')}</p>
+              <p className="text-lg text-gray-800">{client.landline || client.faxNumber || '-'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">{t('clients.form.website', 'Website')}</p>

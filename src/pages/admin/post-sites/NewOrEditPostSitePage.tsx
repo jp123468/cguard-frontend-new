@@ -83,7 +83,7 @@ export default function NewOrEditPostSitePage() {
             <Breadcrumb
                 items={[
                     { label: t('postSites.postsitdash', 'Panel de control'), path: "/dashboard" },
-                    { label: id ? t('postSites.editPostSite', 'Editar sitio de publicación') : t('postSites.newPostSite', 'Nuevo sitio de publicación') },
+                    { label: id ? t('postSites.editPostSite', 'Editar Puesto de seguridad') : t('postSites.newPostSite', 'Nuevo Puesto de seguridad') },
                 ]}
             />
             <section className="p-4">

@@ -13,7 +13,9 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 1024 : true
+  );
   const { user, loading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -21,13 +23,23 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
 
+  // control body overflow when sidebar is open on mobile
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const isMobile = window.matchMedia("(max-width: 1023px)").matches;
     document.body.style.overflow = isMobile && sidebarOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [sidebarOpen]);
+
+  // Keep sidebar state in sync with breakpoint: desktop => open, mobile => closed
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleResize = () => setSidebarOpen(window.innerWidth >= 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Configurar tenantId globalmente cuando el usuario cambia
   useEffect(() => {
@@ -126,6 +138,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
   // a flash where the modal appears before the user's profile (and tenant)
   // are available and blocks the UI.
   const showTenantModal = !loading && !hasTenantNow && location.pathname === "/dashboard";
+
+  // Close sidebar on mobile when the route changes to avoid it staying open
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
 
 
   return (

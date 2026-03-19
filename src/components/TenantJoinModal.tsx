@@ -13,12 +13,14 @@ import OSMMapEmbed from "@/components/maps/OSMMapEmbed";
 import { AuthService } from "@/services/auth/authService";
 import { setTenantId as setClientTenantId } from "@/lib/api/clientService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from 'react-i18next';
 
 export default function TenantJoinModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
     const [mode, setMode] = useState<'join' | 'create'>('join');
     const [token, setToken] = useState('');
     const [loading, setLoading] = useState(false);
     const { signInWithToken, user, loading: authLoading } = useAuth();
+    const { t } = useTranslation();
     const reopenDelayMs = 25 * 1000; // 25 seconds
     const suppressReopen = useRef(false as boolean);
     const reopenTimer = useRef<number | null>(null);
@@ -53,8 +55,8 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
     }, [open, user, authLoading]);
 
     const handleAccept = async () => {
-        if (!token) {
-            toast.error('Ingrese el código de invitación');
+            if (!token) {
+            toast.error(t('tenantJoinModal.invitationPlaceholder'));
             return;
         }
         setLoading(true);
@@ -129,6 +131,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
         latitude: '',
         longitude: '',
         phone: '',
+        landline: '',
         email: '',
         taxNumber: '',
         businessTitle: '',
@@ -137,10 +140,54 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
     const [autocompleteOpenQuery, setAutocompleteOpenQuery] = useState('');
 
     const handleCreate = async () => {
+            // Validaciones según especificación del cliente
+            const digits = (v: string) => (v || '').toString().replace(/\D/g, '');
+
             if (!form.name || !form.email || !form.phone || !form.address) {
-            toast.error('Complete los campos obligatorios marcados con *');
+            toast.error(t('tenantValidations.required_fields'));
             return;
         }
+
+        // name: min6 max30
+        if ((form.name || '').trim().length < 6 || (form.name || '').trim().length > 30) {
+            toast.error(t('tenantValidations.name_length'));
+            return;
+        }
+
+        // email: basic validation
+        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRe.test((form.email || '').trim())) {
+            toast.error(t('tenantValidations.email_invalid'));
+            return;
+        }
+
+        // celular: debe tener 10 dígitos y empezar con 9 o 09
+        const mobile = digits(form.phone || '');
+        if (mobile.length !== 10 || !(mobile.startsWith('9') || mobile.startsWith('09'))) {
+            toast.error(t('tenantValidations.mobile_invalid'));
+            return;
+        }
+
+        // razón social: max 40 caracteres
+        if ((form.businessTitle || '').trim().length > 40) {
+            toast.error(t('tenantValidations.business_max'));
+            return;
+        }
+
+        // tax/RUC: 13 numeros y terminar en 001
+        const taxDigits = digits(form.taxNumber || '');
+        if (taxDigits.length !== 13 || !taxDigits.endsWith('001')) {
+            toast.error(t('tenantValidations.tax_invalid'));
+            return;
+        }
+
+        // landline optional: si presente, debe tener 7 o 9 digitos
+        const landDigits = digits(form.landline || '');
+        if (landDigits && !(landDigits.length === 7 || landDigits.length === 9)) {
+            toast.error(t('tenantValidations.landline_invalid'));
+            return;
+        }
+
         setLoading(true);
         try {
             // Build payload matching tenant model
@@ -154,6 +201,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                     latitude: form.latitude && form.latitude !== '' ? parseFloat(form.latitude) : undefined,
                     longitude: form.longitude && form.longitude !== '' ? parseFloat(form.longitude) : undefined,
                     phone: form.phone || undefined,
+                    landline: form.landline || undefined,
                     email: form.email || undefined,
                 // Provide defaults for required tenant fields to avoid DB validation errors
                 // Use a temporary placeholder for taxNumber if user didn't provide one
@@ -266,20 +314,20 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
         <Dialog open={internalOpen} onOpenChange={handleDialogOpenChange}>
             <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="text-lg text-center">Accede a una Empresa</DialogTitle>
-                    <DialogDescription>Unirte a una empresa o crear una nueva. Completa los datos para crear el tenant en la plataforma.</DialogDescription>
+                    <DialogTitle className="text-lg text-center">{t('tenantJoinModal.title')}</DialogTitle>
+                    <DialogDescription>{t('tenantJoinModal.description')}</DialogDescription>
                 </DialogHeader>
 
                 <div className="mt-4">
                     <div className="flex gap-3 mb-4">
-                        <button className={`px-4 py-2 rounded ${mode === 'join' ? 'bg-black text-white' : 'bg-transparent border'}`} onClick={() => setMode('join')}>Unirme a una empresa</button>
-                        <button className={`px-4 py-2 rounded ${mode === 'create' ? 'bg-black text-white' : 'bg-transparent border'}`} onClick={() => setMode('create')}>Registrar mi empresa</button>
+                        <button className={`px-4 py-2 rounded ${mode === 'join' ? 'bg-black text-white' : 'bg-transparent border'}`} onClick={() => setMode('join')}>{t('tenantJoinModal.joinButton')}</button>
+                        <button className={`px-4 py-2 rounded ${mode === 'create' ? 'bg-black text-white' : 'bg-transparent border'}`} onClick={() => setMode('create')}>{t('tenantJoinModal.createButton')}</button>
                     </div>
 
                     {mode === 'join' ? (
                         <div className="grid gap-3">
                             <Input
-                                placeholder="Código de invitación (6 dígitos)"
+                                placeholder={t('tenantJoinModal.invitationPlaceholder')}
                                 value={token}
                                 onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                 inputMode="numeric"
@@ -287,45 +335,49 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                 maxLength={6}
                             />
                             <div className="flex justify-end gap-2">
-                                <Button variant="ghost" onClick={() => setToken('')} disabled={loading}>Limpiar</Button>
+                                <Button variant="ghost" onClick={() => setToken('')} disabled={loading}>{t('actions.cancel') || 'Limpiar'}</Button>
                                 <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8"
-                                    onClick={handleAccept} disabled={loading}>Aceptar invitación</Button>
+                                    onClick={handleAccept} disabled={loading}>{t('tenantJoinModal.joinButton') /* reuse join text */}</Button>
                             </div>
                         </div>
                     ) : (
                         <div className="grid gap-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm">Nombre *</label>
+                                    <label className="text-sm">{t('tenantJoinModal.companyName')}</label>
                                     <Input value={form.name} onChange={(e) => setForm((s: any) => ({ ...s, name: e.target.value }))} />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
                                 <div>
-                                    <label className="text-sm">Correo *</label>
+                                    <label className="text-sm">{t('tenantJoinModal.contactEmail')}</label>
                                     <Input type="email" value={form.email} onChange={(e) => setForm((s: any) => ({ ...s, email: e.target.value }))} />
                                 </div>
                                 <div>
-                                    <label className="text-sm">Teléfono *</label>
-                                    <PhoneInput value={form.phone} onChange={(v) => setForm((s: any) => ({ ...s, phone: v }))} placeholder="Ingresa número de teléfono" />
+                                    <label className="text-sm">{t('tenantJoinModal.mobilePhone')}</label>
+                                    <PhoneInput value={form.phone} onChange={(v) => setForm((s: any) => ({ ...s, phone: v }))} placeholder="Número móvil" />
+                                </div>
+                                <div>
+                                    <label className="text-sm">{t('tenantJoinModal.landline')}</label>
+                                    <Input value={form.landline} onChange={(e) => setForm((s: any) => ({ ...s, landline: e.target.value }))} placeholder="Código + número" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm">Razón social / Business Title *</label>
+                                    <label className="text-sm">{t('tenantJoinModal.businessTitle')}</label>
                                     <Input value={form.businessTitle} onChange={(e) => setForm((s: any) => ({ ...s, businessTitle: e.target.value }))} />
                                 </div>
                                 <div>
-                                    <label className="text-sm">Nº de identificación fiscal / Tax Number *</label>
+                                    <label className="text-sm">{t('tenantJoinModal.taxNumber')}</label>
                                     <Input value={form.taxNumber} onChange={(e) => setForm((s: any) => ({ ...s, taxNumber: e.target.value }))} />
                                 </div>
                             </div>
 
                             <div className="grid gap-3">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-sm">Buscar dirección *</label>
+                                    <label className="text-sm">{t('tenantJoinModal.searchAddress')}</label>
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -396,9 +448,9 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                             </div>
 
                             <div className="flex justify-end gap-3 mt-2">
-                                <Button variant="ghost" onClick={() => closeWithoutReopen()} disabled={loading}>Cancelar</Button>
+                                <Button variant="ghost" onClick={() => closeWithoutReopen()} disabled={loading}>{t('actions.cancel')}</Button>
                                 <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8"
-                                    onClick={handleCreate} disabled={loading || !(form.name && form.email && form.phone && form.address && form.taxNumber && form.businessTitle)}>{loading ? 'Creando...' : 'Crear y vincular'}</Button>
+                                    onClick={handleCreate} disabled={loading || !(form.name && form.email && form.phone && form.address && form.taxNumber && form.businessTitle)}>{loading ? t('tenantJoinModal.creating') : t('tenantJoinModal.createAndLink')}</Button>
                             </div>
                         </div>
                     )}

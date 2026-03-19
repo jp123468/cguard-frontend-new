@@ -120,7 +120,7 @@ export default function TrackingHistoryPage() {
                   {/* Sitio publicación */}
                   <div>
                     <label className="text-sm font-medium block mb-2">
-                      Sitio de publicación*
+                      Puesto de seguridad*
                     </label>
                     <Select>
                       <SelectTrigger>

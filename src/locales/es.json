@@ -63,7 +63,7 @@
     "clientes": {
       "label": "Clientes",
       "clientes": "Clientes",
-      "sitios-publicacion": "Sitios publicados"
+      "sitios-publicacion": "Puestos de seguridad"
     },
     "equipo": {
       "label": "Equipo de seguridad",
@@ -113,7 +113,7 @@
       "label": "Facturación",
       "estimaciones": "Estimaciones",
       "facturas": "Facturas",
-      "elementos": "Elementos"
+      "elementos": "Servicios"
     },
     "despachador": "Despachador",
     "visitantes": {
@@ -157,7 +157,7 @@
       "custom-reports": "Informes personalizados",
       "integraciones": "Integraciones",
       "payroll-setup": "Configuración de nómina",
-      "publishing-sites": "Sitios publicados",
+      "publishing-sites": "Puestos vigilados",
       "keep-safe": "security-guards",
       "report-configuration": "Configuración de informes",
       "other-settings": "Otras configuraciones",
@@ -187,7 +187,7 @@
       "notas": "Notas",
       "recordatorios": "Recordatorios",
       "archivos": "Archivos",
-      "asignarSitios": "Asignar Sitios",
+      "asignarSitios": "Asignar Puestos ",
       "conjuntoHabilidades": "Conjunto de Habilidades",
       "departamento": "Departamento",
       "configuracion": "Configuración"
@@ -210,7 +210,7 @@
           "none": "Ninguno"
         },
         "metrics": {
-          "assignedSites": "Sitios asignados",
+          "assignedSites": "Puestos asignados",
           "completedRoutes": "Rutas completadas",
           "tasksCompleted": "Tareas completadas",
           "reportsSent": "Informes enviados",
@@ -423,25 +423,25 @@
       "actions": {
         "delete": "Eliminar"
       },
-      "searchPlaceholder": "Buscar sitios",
-      "assignButton": "Asignar Sitios",
+      "searchPlaceholder": "Buscar puestos de seguridad",
+      "assignButton": "Asignar puestos de seguridad",
       "table": {
         "client": "Cliente",
-        "postSites": "Sitios"
+        "postSites": "Puestos de seguridad"
       },
       "loadError": "No se pudo cargar el guardia",
       "modal": {
-        "title": "Asignar Sitios",
+        "title": "Asignar puestos de seguridad",
         "cancel": "Cancelar",
         "assign": "Asignar"
       },
       "form": {
         "client": "Cliente",
         "selectClient": "Seleccionar cliente",
-        "postSite": "Sitio",
-        "selectPostSite": "Seleccionar sitio"
+        "postSite": "Puesto de seguridad",
+        "selectPostSite": "Seleccionar puesto de seguridad"
       },
-      "noPostSites": "No se encontraron sitios"
+      "noPostSites": "No se encontraron puestos de seguridad"
     },
     "files": {
       "action": {
@@ -582,7 +582,7 @@
           "contactPhEmail": "e.g. persona@correo.com",
           "contactPhSms": "e.g. +12015550123",
           "selectClient": "Seleccionar Cliente",
-          "assignPostSite": "Asignar Sitio de Publicación",
+          "assignPostSite": "Asignar puesto de vigilancia",
           "create_and_send": "Crear y Enviar",
           "send": "Enviar"
         },
@@ -618,7 +618,7 @@
         "categoriesAll": "Todas",
         "client": "Cliente",
         "clientAll": "Todos",
-        "site": "Sitio de publicación",
+        "site": "Puesto de seguridad",
         "siteAll": "Todos",
         "skills": "Conjunto de Habilidades",
         "skillsAll": "Todos",
@@ -849,6 +849,72 @@
         "skills": "Ej: Primeros auxilios, Defensa personal"
       },
       "noLicense": "No se encontró ninguna licencia"
+    }, "tabs": {
+      "invite": "Invitar por SMS o correo electrónico",
+      "create_profile": "Crear perfil"
+    },
+   "new": {
+      "title": "Nuevo Guardia",
+      "breadcrumb": {
+        "dashboard": "Panel de control"
+      },
+      "invite": {
+        "description": "Ingrese el nombre y correo electrónico/número de móvil del guardia. Se enviará un mensaje con un enlace."
+      },
+      "join_code": {
+        "description": "Comparte el código único de la empresa junto con el enlace de descarga de la aplicación.",
+        "copied": "Código copiado",
+        "invite_sent": "Invitación enviada por código",
+        "invite_error": "Error al enviar invitación por código"
+      },
+      "link": {
+        "description": "Comparte este enlace para unirse a la empresa.",
+        "invite_sent": "Invitación enviada por enlace",
+        "invite_error": "Error al enviar invitación por enlace"
+      },
+      "create": {
+        "description": "Crea el perfil del guardia manualmente. Necesitarán verificar su correo electrónico y número de móvil antes de iniciar sesión."
+      },
+      "form": {
+        "firstName": "Nombre*",
+        "firstNamePlaceholder": "Nombre *",
+        "lastName": "Apellido*",
+        "lastNamePlaceholder": "Apellido *",
+        "inviteBy": "Invitar por*",
+        "selectMethodPlaceholder": "Seleccionar método",
+        "contactEmail": "Correo electrónico *",
+        "contactSms": "Número móvil *",
+        "password": "Contraseña *",
+        "passwordPlaceholder": "Contraseña *",
+        "confirmPassword": "Confirmar contraseña *",
+        "confirmPasswordPlaceholder": "Confirmar contraseña *",
+        "contactPhEmail": "Ej: persona@correo.com",
+        "contactPhSms": "Ej: +12015550123",
+        "selectClient": "Seleccionar cliente",
+        "assignPostSite": "Asignar puesto de vigilancia",
+        "create_and_send": "Crear y enviar",
+        "send": "Enviar"
+      },
+      "toasts": {
+        "clients_sites_load_error": "No se pudieron cargar los clientes o sitios",
+        "invites_sent": "Invitaciones enviadas",
+        "invite_error": "Error al enviar invitaciones",
+        "profile_created": "Perfil creado",
+        "profile_created_sent": "Perfil creado y enviado"
+      },
+      "errors": {
+        "no_permission_create": "No tienes permiso para crear guardias",
+        "error_create_profile": "Error al crear el perfil"
+      },
+      "actions": {
+        "copy": "Copiar",
+        "regenerate": "Regenerar",
+        "create": "Crear",
+        "show_password": "Mostrar contraseña",
+        "hide_password": "Ocultar contraseña",
+        "show_confirm_password": "Mostrar contraseña",
+        "hide_confirm_password": "Ocultar contraseña"
+      }
     }
   },
   "clients": {
@@ -859,14 +925,14 @@
       "contacts": "Contactos",
       "notes": "Notas",
       "files": "Archivos",
-      "postSites": "Post Sites",
+      "postSites": "Puestos de vigilancia",
       "clientPortal": "Portal del cliente",
       "userAccess": "Acceso de usuarios",
       "emailReports": "Reportes por correo"
     },
     "overview": {
       "cards": {
-        "postSites": "Sitios publicados",
+        "postSites": "Puestos vigilados",
         "guardsAssigned": "Guardias asignados",
         "toursCompleted": "Recorridos completados (últimos 7 días)",
         "tasksCompleted": "Tareas completadas (últimos 7 días)",
@@ -896,6 +962,27 @@
     "selectOnlyArchivedToDelete": "Selecciona solo clientes archivados para eliminar",
     "actionNotImplemented": "Acción \"{{action}}\" aún no implementada",
     "generatingPDF": "Generando PDF...",
+    "stations": {
+      "title": "Estaciones",
+      "add": "Agregar estación",
+      "placeholderName": "Nombre de la estación",
+      "create": "Crear",
+      "cancel": "Cancelar",
+      "provideName": "Proporciona un nombre",
+      "created": "Estación creada",
+      "createFailed": "Error al crear la estación",
+      "remove": "Eliminar",
+      "removed": "Estación eliminada",
+      "removeFailed": "Error al eliminar la estación",
+      "noStations": "No hay estaciones agregadas aún.",
+      "loading": "Cargando...",
+      "selectPrompt": "Selecciona una estación para ver los detalles",
+      "lat": "Latitud",
+      "lng": "Longitud",
+      "schedule": "Horario",
+      "guardsCount": "Guardias",
+      "remove": "Eliminar"
+    },
     "pdfDownloaded": "PDF descargado",
     "errorExportPDF": "Error al exportar PDF",
     "generatingExcel": "Generando Excel...",
@@ -936,7 +1023,7 @@
       "contactName": "Nombre",
       "contactEmail": "Correo electrónico",
       "contactPhone": "Número móvil",
-      "contactPostSites": "Sitios publicados",
+      "contactPostSites": "Puestos vigilados",
       "editcontact": "Editar contacto",
       "contactCreated": "Contacto creado exitosamente",
       "contactUpdated": "Contacto actualizado exitosamente",
@@ -1110,10 +1197,10 @@
   },
   "postSites": {
     "postsitdash": "Panel de control",
-    "postsite": "Sitio de publicación",
-    "searchPlaceholder": "Buscar sitios de publicación",
-    "newPostSite": "Nuevo sitio de publicación",
-    "editPostSite": "Editar sitio de publicación",
+    "postsite": "puesto de vigilancia",
+    "searchPlaceholder": "Buscar Puestos de vigilancia",
+    "newPostSite": "Nuevo puesto de vigilancia",
+    "editPostSite": "Editar puesto de vigilancia",
     "filtersTitle": "Filtros",
     "action": "Acción",
     "move": "Mover",
@@ -1149,11 +1236,11 @@
     "pdfDownloaded": "PDF descargado",
     "generatingExcel": "Generando Excel...",
     "excelDownloaded": "Excel descargado",
-    "sitesArchived": "Sitios archivados",
+    "sitesArchived": "Puestos archivados",
     "form": {
       "client": "Cliente *",
       "selectClient": "Selecciona un cliente",
-      "siteName": "Nombre del sitio *",
+      "siteName": "Nombre del puesto de seguridad *",
       "address": "Dirección *",
       "addressLine2": "Dirección línea 2",
       "addressLine2Placeholder": "Opcional",
@@ -1223,7 +1310,7 @@
         "passdownReport": "Informe Passdown",
         "postOrder": "Orden del puesto",
         "shiftConfirmation": "Confirmación de turno",
-        "siteTour": "Recorrido del sitio",
+        "siteTour": "Recorrido del puesto de seguridad",
         "standardReport": "Informe estándar",
         "taskReport": "Informe de tarea",
         "timeOff": "Tiempo libre",
@@ -1234,35 +1321,64 @@
       "noActivity": "No hay actividad aún."
     },
     "Details": {
-      "title": "Sitios de Publicación",
+      "title": "Puestos de vigilancia",
       "unexpected": "Ocurrió un error inesperado",
       "Overview": "Resumen",
       "Profile": "Perfil",
-      "PostSites": "Sitios de publicación",
+      "PostSites": "Puestos de vigilancia",
       "Contacts": "Contactos",
       "KPIs": "KPIs",
       "Notes": "Notas",
       "Files": "Archivos",
       "AssignGuards": "Asignar guardias",
       "Tasks": "Tareas",
-      "SiteTours": "Recorridos del sitio",
-      "SiteTourTags": "Etiquetas de recorrido del sitio",
+      "PostOrders": "Órdenes del puesto",
+      "Stations": "Estaciones",
+      "Incidents": "Incidentes",
+      "Stations": "Estaciones",
+      "SiteTours": "Recorridos del puesto de seguridad",
+      "SiteTourTags": "Etiquetas de recorrido del puesto de seguridad",
       "GeoFence": "Geo-Cerca",
       "AssignReports": "Asignar informes",
       "Checklists": "Listas de verificación",
       "EmailReports": "Informes por correo electrónico",
       "Settings": "Configuración",
-      "notfoundpostsite": "No se encontraron sitios de publicación",
-      "detailserror": "No se pudieron cargar los detalles del sitio de publicación",
+      "notfoundpostsite": "No se encontraron Puestos de vigilancia",
+      "detailserror": "No se pudieron cargar los detalles del puesto de vigilancia",
       "description": "Descripción",
       "category": "Categoría",
       "categories": "Categorías"
     },
+    "stations": {
+      "action": "Acción",
+      "deleteSelected": "Eliminar seleccionados",
+      "searchPlaceholder": "Buscar estaciones...",
+      "add": "Agregar estación",
+      "create": "Crear",
+      "cancel": "Cancelar",
+      "created": "Estación creada",
+      "createFailed": "Error al crear estación",
+      "removed": "Estación eliminada",
+      "removeFailed": "Error al eliminar estación",
+      "noStations": "No hay estaciones agregadas.",
+      "loading": "Cargando...",
+      "selectPrompt": "Selecciona una estación para ver detalles",
+      "table": { "name": "Nombre", "description": "Descripción" },
+      "tableActions": "Acciones",
+      "createTitle": "Crear Estación",
+      "form": { "name": "Nombre *", "description": "Descripción", "descriptionPlaceholder": "Descripción opcional", "schedule": "Horario *", "selectSchedule": "Selecciona horario", "guards": "Guardias", "startTime": "Inicio", "finishTime": "Fin" },
+      "provideSchedule": "Selecciona un horario",
+      "placeholderName": "Nombre de la estación",
+      "lat": "Latitud",
+      "lng": "Longitud",
+      "schedule": "Horario",
+      "guardsCount": "Guardias"
+    },
     "profile": {
-      "title": "Perfil del sitio de publicación",
+      "title": "Perfil del puesto de vigilancia",
       "editProfile": "Editar perfil",
-      "profileUpdated": "Perfil del sitio de publicación actualizado",
-      "errorUpdatingProfile": "Error al actualizar el perfil del sitio de publicación",
+      "profileUpdated": "Perfil del puesto de vigilancia actualizado",
+      "errorUpdatingProfile": "Error al actualizar el perfil del puesto de vigilancia",
       "Map": {
         "title": "Mapa",
         "MapType": "Tipo de mapa",
@@ -1294,8 +1410,8 @@
         "country": "País",
         "latitude": "Latitud",
         "longitude": "Longitud",
-        "postSiteChargeRate": "Tarifa de cargo del sitio de publicación",
-        "postSitePayRate": "Tarifa de pago del sitio de publicación"
+        "postSiteChargeRate": "Tarifa de cargo del puesto de vigilancia",
+        "postSitePayRate": "Tarifa de pago del puesto de vigilancia"
       },
       "Edit": "Editar"
     },
@@ -1399,7 +1515,7 @@
     "savedFilters": "Filtros guardados",
     "filter": {
       "client": "Cliente",
-      "postSite": "Sitio de publicación",
+      "postSite": "puesto de vigilancia",
       "guard": "Guardia",
       "type": "Tipo",
       "type": {
@@ -1437,7 +1553,7 @@
         "subtitle": "Clientes activos"
       },
       "sitios": {
-        "title": "Sitios de publicación",
+        "title": "Puestos de vigilancia",
         "subtitle": "Sitios activos"
       },
       "guardias": {
@@ -1511,9 +1627,9 @@
     "client": "Cliente",
     "select_client": "Seleccionar cliente",
     "no_clients": "No hay clientes",
-    "post_site": "Sitio",
-    "select_site": "Seleccionar sitio",
-    "no_sites": "No hay sitios",
+    "post_site": "Puesto de seguridad",
+    "select_site": "Seleccionar puesto de seguridad",
+    "no_sites": "No hay puestos de seguridad",
     "status": "Estado",
     "status_all": "Todos",
     "status_open": "Abierto",
@@ -1881,9 +1997,9 @@
         "selectAll": "Seleccionar todos",
         "noOptions": "Sin opciones",
         "assignClientsPlaceholder": "Asignar Clientes",
-        "assignSitesPlaceholder": "Asignar Sitios de Publicación",
+        "assignSitesPlaceholder": "Asignar Puestos de vigilancia",
         "assignClientsLabel": "Asignar Clientes",
-        "assignSitesLabel": "Asignar Sitios de Publicación",
+        "assignSitesLabel": "Asignar Puestos de vigilancia",
         "create": "Crear",
         "creating": "Creando..."
       },
@@ -1929,9 +2045,9 @@
         "selectAll": "Seleccionar todos",
         "noOptions": "Sin opciones",
         "assignClientsPlaceholder": "Asignar Clientes*",
-        "assignSitesPlaceholder": "Asignar Sitios de Publicación",
+        "assignSitesPlaceholder": "Asignar Puestos de vigilancia",
         "assignClientsLabel": "Asignar Clientes*",
-        "assignSitesLabel": "Asignar Sitios de Publicación",
+        "assignSitesLabel": "Asignar Puestos de vigilancia",
         "save": "Guardar",
         "send": "Enviar",
         "savingEdit": "Guardando...",
@@ -1999,7 +2115,7 @@
         "index": "#",
         "image": "Imagen",
         "guard": "Guardia",
-        "postSite": "Sitio de publicación",
+        "postSite": "puesto de vigilancia",
         "lastUpdate": "Última Actualización",
         "battery": "Estado de la Batería",
         "speed": "Velocidad (MPH)",
@@ -2035,7 +2151,7 @@
     "filters": "Filtros",
     "client": "Cliente",
     "selectClient": "Selecciona un cliente",
-    "site": "Sitio de publicación",
+    "site": "puesto de vigilancia",
     "selectSite": "Selecciona un sitio",
     "guard": "Guardia",
     "selectGuard": "Selecciona un guardia",
@@ -2074,7 +2190,7 @@
       "lastName": "Apellidos",
       "idNumber": "ID",
       "date": "Fecha",
-      "postSite": "Sitio de publicación",
+      "postSite": "puesto de vigilancia",
       "client": "Cliente",
       "guard": "Guardia",
       "numPeople": "Número de personas",
@@ -2191,7 +2307,7 @@
       "preview": {
         "title": "Previsualizar estimación",
         "client_details": "Detalles del cliente",
-        "site_details": "Detalles del sitio",
+        "site_details": "Detalles del puesto de seguridad",
         "items": "Artículos",
         "notes": "Notas",
         "terms": "Términos",
@@ -2266,8 +2382,8 @@
       }
     },
     "items": {
-      "title": "Elementos",
-      "search_placeholder": "Buscar elementos",
+      "title": "Servicio",
+      "search_placeholder": "Buscar servicios",
       "columns": {
         "name": "Nombre",
         "description": "Descripción",
@@ -2276,13 +2392,13 @@
         "actions": "Acciones"
       },
       "actions": {
-        "add": "Agregar elemento",
+        "add": "Agregar Servicio",
         "edit": "Editar",
         "delete": "Eliminar"
       },
       "form": {
-        "title_create": "Crear elemento",
-        "title_edit": "Editar elemento",
+        "title_create": "Crear servicio",
+        "title_edit": "Editar servicio",
         "name": "Nombre",
         "description": "Descripción",
         "price": "Precio",
@@ -2292,10 +2408,10 @@
         "updating": "Actualizando..."
       },
       "messages": {
-        "no_results": "No se encontraron elementos",
-        "created": "Elemento creado",
-        "updated": "Elemento actualizado",
-        "deleted": "Elemento eliminado"
+        "no_results": "No se encontraron Servicios",
+        "created": "Servicio creado",
+        "updated": "Servicio actualizado",
+        "deleted": "Servicio eliminado"
       }
     },
     "forms": {

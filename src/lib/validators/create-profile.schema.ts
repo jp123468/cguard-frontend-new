@@ -27,7 +27,7 @@ export const createProfileSchema = z
     confirmPassword: z.string(),
     // Support multiple assignments
     clientId: z.array(z.string().trim()).min(1, "Seleccione al menos un cliente"),
-    postSiteId: z.array(z.string().trim()).min(1, "Asigne al menos un sitio de publicación"),
+    postSiteId: z.array(z.string().trim()).min(1, "Asigne al menos un puesto de seguridad"),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Las contraseñas no coinciden",

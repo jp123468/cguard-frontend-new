@@ -120,7 +120,7 @@ export default function CheckInOut() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Sitio de publicación *</Label>
+                    <Label>Puesto de seguridad *</Label>
                     <Select>
                       <SelectTrigger className="w-full"><SelectValue placeholder="Catolica (+2 otros)" /></SelectTrigger>
                       <SelectContent><SelectItem value="1">Catolica</SelectItem></SelectContent>
@@ -209,7 +209,7 @@ export default function CheckInOut() {
                 <th className="px-4 py-3 font-semibold text-slate-700">Cliente</th>
                 <th className="px-4 py-3 font-semibold text-slate-700">
                   <div className="flex items-center gap-1 cursor-pointer">
-                    Sitio de publicación <span className="text-xs">↑</span>
+                    Puesto de seguridad <span className="text-xs">↑</span>
                   </div>
                 </th>
                 <th className="px-4 py-3 font-semibold text-slate-700">Guardia</th>
@@ -285,7 +285,7 @@ export default function CheckInOut() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-500">Sitio de publicación*</Label>
+                  <Label className="text-slate-500">Puesto de seguridad*</Label>
                   <Select>
                     <SelectTrigger className="w-full"><SelectValue placeholder="" /></SelectTrigger>
                     <SelectContent><SelectItem value="1">Sitio 1</SelectItem></SelectContent>

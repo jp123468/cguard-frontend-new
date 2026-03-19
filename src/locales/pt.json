@@ -73,7 +73,7 @@
     },
     "analiticas": {
       "label": "Análises",
-      "informe": "Relatórios",
+      "Stations": "Estações",
       "horario": "Agendamento",
       "facturador": "Faturamento",
       "sitios-publicacion": "Sites de Publicação",
@@ -94,6 +94,14 @@
     "informes": "Relatórios",
     "programador": {
       "label": "Agendador",
+      "action": "Ação",
+      "deleteSelected": "Excluir selecionados",
+      "searchPlaceholder": "Pesquisar estações...",
+      "table": { "name": "Nome", "description": "Descrição" },
+      "tableActions": "Ações",
+      "createTitle": "Criar Estação",
+      "form": { "name": "Nome *", "description": "Descrição", "descriptionPlaceholder": "Descrição opcional" },
+      "guardsCount": "Seguranças"
       "horario": "Agenda",
       "plantillas": "Modelos de turno",
       "asistencia": "Presença",
@@ -1183,6 +1191,45 @@
     "buttons": {
       "saveDraft": "Salvar como rascunho",
       "submit": "Enviar"
+    }
+  }
+  },
+  "postSites": {
+    "Details": {
+      "PostOrders": "Ordens do posto",
+      "Stations": "Estações",
+      "Incidents": "Incidentes"
+    },
+    "stations": {
+      "title": "Estações",
+      "add": "Adicionar estação",
+      "placeholderName": "Nome da estação",
+      "create": "Criar",
+      "cancel": "Cancelar",
+      "provideName": "Forneça um nome",
+      "created": "Estação criada",
+      "createFailed": "Falha ao criar estação",
+      "remove": "Remover",
+      "removed": "Estação removida",
+      "removeFailed": "Falha ao remover estação",
+      "noStations": "Nenhuma estação adicionada ainda.",
+      "loading": "Carregando...",
+      "selectPrompt": "Selecione uma estação para ver os detalhes",
+      "lat": "Latitude",
+      "lng": "Longitude",
+      "schedule": "Horário",
+      "guardsCount": "Guardas",
+      "provideSchedule": "Selecione um horário",
+      "form": {
+        "name": "Nome *",
+        "description": "Descrição",
+        "descriptionPlaceholder": "Descrição opcional",
+        "schedule": "Horário *",
+        "selectSchedule": "Selecionar horário",
+        "guards": "Guardas",
+        "startTime": "Início",
+        "finishTime": "Fim"
+      }
     }
   }
 }

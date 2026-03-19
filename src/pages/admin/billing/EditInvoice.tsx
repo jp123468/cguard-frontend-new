@@ -513,7 +513,7 @@ export default function EditInvoice() {
 
     const handlePreview = () => {
         if (!client || !site) {
-            toast.error(t('billing.forms.validation.select_client', { defaultValue: 'Por favor seleccione un Cliente y un Sitio de publicación para ver la vista previa.' }));
+            toast.error(t('billing.forms.validation.select_client', { defaultValue: 'Por favor seleccione un Cliente y un Puesto de seguridad para ver la vista previa.' }));
             return;
         }
         setIsPreviewMode(true);
@@ -727,7 +727,7 @@ export default function EditInvoice() {
                                 <div>
                                     <h3 className="text-lg font-semibold">{title || `Factura #${invoiceNumber}`}</h3>
                                     <div className="mt-3 flex flex-wrap gap-2">
-                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleSendInvoice} disabled={!isFullyPaid} title={!isFullyPaid ? t('billing.invoices.messages.payment_required', { defaultValue: 'Complete el pago para enviar la factura' }) : t('billing.invoices.actions.send', { defaultValue: 'Enviar' })}>{t('billing.invoices.actions.send', { defaultValue: 'Enviar' })}</Button>
+                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleSendInvoice} title={t('billing.invoices.actions.send', { defaultValue: 'Enviar' })}>{t('billing.invoices.actions.send', { defaultValue: 'Enviar' })}</Button>
                                         <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleDownloadInvoice}>{t('billing.common.download')}</Button>
                                         <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleRegisterPayment} disabled={isFullyPaid}>{t('billing.invoices.actions.register_payment', { defaultValue: 'Registrar un Pago' })}</Button>
                                     </div>
@@ -1062,9 +1062,9 @@ export default function EditInvoice() {
                             <Label className="text-xs text-gray-500">Cliente*</Label>
                             <Combobox value={client} onChange={(v) => { setClient(v); setSite(''); loadPostSitesForClient(v); }} options={clients.map(c => ({ value: c.id, label: c.name }))} placeholder="Seleccionar Cliente" />
                             <div className="space-y-2">
-                                <Label className="text-xs text-gray-500">Sitio de publicación*</Label>
+                                <Label className="text-xs text-gray-500">Puesto de seguridad*</Label>
                                 <Select value={site} onValueChange={setSite}>
-                                    <SelectTrigger><SelectValue placeholder="Sitio de publicación*" /></SelectTrigger>
+                                    <SelectTrigger><SelectValue placeholder="Puesto de seguridad*" /></SelectTrigger>
                                     <SelectContent>{postSites.length === 0 ? <SelectItem value="none" disabled>No hay sitios disponibles</SelectItem> : postSites.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>

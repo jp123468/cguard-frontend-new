@@ -91,6 +91,7 @@ export default function Invoices() {
     const [tenantInfo, setTenantInfo] = useState<{ name?: string; address?: string; phone?: string } | null>(null);
     const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
     const [previewOpen, setPreviewOpen] = useState(false);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
     const [clientDetails, setClientDetails] = useState<any | null>(null);
     const [siteDetails, setSiteDetails] = useState<any | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -252,6 +253,28 @@ export default function Invoices() {
 
     useEffect(() => { fetchInvoices(); }, []);
     const navigate = useNavigate();
+
+    const sendInvoice = async (invoiceId: string) => {
+        try {
+            const tenantId = localStorage.getItem('tenantId') || '';
+            if (!tenantId) throw new Error('Tenant no configurado');
+            await ApiService.post(`/tenant/${tenantId}/invoice/${invoiceId}/send`);
+            toast.success(t('billing.invoices.send.success', { defaultValue: 'Factura enviada' }));
+            // refresh
+            await fetchInvoices();
+            // update preview status locally
+            setPreviewInvoice((p) => p ? ({ ...p, status: 'Enviado' as InvoiceStatus }) : p);
+        } catch (err) {
+            console.error('Error enviando factura', err);
+            toast.error(t('billing.invoices.send.error', { defaultValue: 'No se pudo enviar la factura' }));
+        }
+    };
+
+    const onPaymentMethodChange = async (method: string) => {
+        setSelectedPaymentMethod(method);
+        // placeholder action: in a real integration call API to register payment method or open payment flow
+        toast.success(t('billing.invoices.payment.method_selected', { defaultValue: `Método seleccionado: ${method}` }));
+    };
 
     // Filtrado (incluye búsqueda, cliente, estado y rango de fechas con límites de día completos)
     const filteredInvoices = useMemo(() => {
@@ -572,6 +595,21 @@ export default function Invoices() {
                                 </DialogHeader>
                                 {previewInvoice ? (
                                     <div className="space-y-6">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button className="bg-blue-600 text-white" onClick={() => sendInvoice(previewInvoice.id)}>{t('billing.invoices.send.button', { defaultValue: 'Enviar factura' })}</Button>
+                                            <div className="w-44">
+                                                <Select value={selectedPaymentMethod ?? ''} onValueChange={(v) => onPaymentMethodChange(v)} disabled={previewInvoice.status !== 'Enviado'}>
+                                                    <SelectTrigger className="h-8 w-full" disabled={previewInvoice.status !== 'Enviado'}>
+                                                        <SelectValue placeholder={t('billing.invoices.payment.select_placeholder', { defaultValue: 'Método de pago' })} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="cash">{t('billing.invoices.payment.methods.cash', { defaultValue: 'Efectivo' })}</SelectItem>
+                                                        <SelectItem value="card">{t('billing.invoices.payment.methods.card', { defaultValue: 'Tarjeta' })}</SelectItem>
+                                                        <SelectItem value="bank">{t('billing.invoices.payment.methods.bank', { defaultValue: 'Transferencia' })}</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
                                         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                                             <div className="md:w-2/3 space-y-4">
                                                 <div className="flex flex-col sm:flex-row sm:justify-between gap-6">
@@ -590,7 +628,7 @@ export default function Invoices() {
                                                     </div>
 
                                                     <div className="flex-1">
-                                                        <p className="text-xs text-gray-400">{t('billing.invoices.preview.site', { defaultValue: 'Sitio' })}</p>
+                                                        <p className="text-xs text-gray-400">{t('billing.invoices.preview.site', { defaultValue: 'Puesto de seguridad' })}</p>
                                                         <p className="font-medium text-slate-700">{(siteDetails && (siteDetails.companyName || siteDetails.name)) || '—'}</p>
                                                         {(siteDetails?.address || siteDetails?.location || siteDetails?.secondAddress) ? (
                                                             <p className="text-sm text-slate-500 mt-1">{siteDetails.address || siteDetails.location || siteDetails.secondAddress}</p>
@@ -622,7 +660,9 @@ export default function Invoices() {
                                                                     (previewInvoice.raw?.items || previewInvoice.raw?.lineItems || (previewInvoice as any).items || []).map((it: any, idx: number) => (
                                                                         <tr key={idx} className="border-b last:border-b-0">
                                                                             <td className="py-2 align-top">{it.description || it.name || it.title || '—'}</td>
-                                                                            <td className="py-2 align-top">{it.quantity ?? it.qty ?? 1}</td>
+                                                                            <td className="py-2 align-top">
+                                                                                {it.quantity ?? it.qty ?? 1}
+                                                                            </td>
                                                                             <td className="py-2 align-top">${Number(it.unitPrice ?? it.price ?? it.rate ?? 0).toFixed(2)}</td>
                                                                             <td className="py-2 align-top text-right">${Number(it.total ?? (it.quantity ? (it.quantity * (it.unitPrice ?? it.price ?? it.rate ?? 0)) : (it.unitPrice ?? it.price ?? it.rate ?? 0))).toFixed(2)}</td>
                                                                         </tr>

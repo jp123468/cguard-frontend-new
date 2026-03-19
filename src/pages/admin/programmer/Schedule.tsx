@@ -165,7 +165,7 @@ export default function Schedule() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white border rounded-lg p-4">
               <div className="text-2xl font-bold text-purple-600">$ {estimatedIncome.postSiteHours}</div>
-              <div className="text-sm text-gray-600 mt-1">Horas del Sitio de Publicacion <span className="text-purple-600 font-medium">0</span></div>
+              <div className="text-sm text-gray-600 mt-1">Horas del puesto de vigilancia <span className="text-purple-600 font-medium">0</span></div>
               <div className="text-xs text-purple-600 font-medium mt-1">Ingreso Estimado</div>
             </div>
             <div className="bg-white border rounded-lg p-4">
@@ -274,7 +274,7 @@ export default function Schedule() {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label>Sitio de publicación*</Label>
+                    <Label>Puesto de seguridad*</Label>
                     <Select value={filters.postSite} onValueChange={(v) => setFilters({ ...filters, postSite: v })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Catolica (+2 otros)" />

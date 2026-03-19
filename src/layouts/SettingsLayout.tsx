@@ -1,6 +1,6 @@
 import SectionBar from "@/components/section-bar";
 import SubSidebar from "@/components/sub-sidebar";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function SettingsLayout({
   navKey,
@@ -11,7 +11,25 @@ export default function SettingsLayout({
   title: string;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 1024 : true
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleResize = () => setOpen(window.innerWidth >= 1024);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Al cambiar la opción (navKey) cerramos ambos en móvil; en desktop no modificamos
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.innerWidth < 1024) {
+      setOpen(false);
+    }
+  }, [navKey]);
+
+  const handleHamburger = () => setOpen((v) => !v);
 
   return (
     <div className="relative flex h-[calc(100vh-56px)] overflow-hidden bg-white">
@@ -31,7 +49,7 @@ export default function SettingsLayout({
 
       {/* Columna principal */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <SectionBar title={title} onHamburger={() => setOpen((v) => !v)} />
+        <SectionBar title={title} onHamburger={handleHamburger} />
 
         {/* ✅ scroll solo aquí */}
         <div className="flex-1 overflow-y-auto">

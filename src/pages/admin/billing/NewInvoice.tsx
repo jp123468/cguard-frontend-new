@@ -195,8 +195,8 @@ export default function NewInvoice() {
             }));
             // Ensure only sites matching the requested client are stored (defensive)
             setPostSites(mapped.filter((ps: any) => !ps.clientId || ps.clientId === clientId ? true : ps.clientId === clientId));
-        } catch (err) {
-            console.error('Error cargando sitios de publicación', err);
+            } catch (err) {
+                console.error('Error cargando puestos de seguridad', err);
             setPostSites([]);
         }
     };
@@ -306,7 +306,7 @@ export default function NewInvoice() {
 
     const handlePreview = () => {
         if (!client || !site) {
-            toast.error("Por favor seleccione un Cliente y un Sitio de publicación para ver la vista previa.");
+            toast.error("Por favor seleccione un Cliente y un Puesto de seguridad para ver la vista previa.");
             return;
         }
         setIsPreviewMode(true);
@@ -355,13 +355,33 @@ export default function NewInvoice() {
                 }
                 // Post to backend
                 const res = await ApiService.post(`/tenant/${tenantId}/invoice`, { data: payload });
+                // Normalize created object and attempt to navigate to the invoice preview so payment can be recorded before sending
+                const created = res && (res.data || res) || res;
+                const createdId = created && (created.id || created._id || created.invoiceId) ? (created.id || created._id || created.invoiceId) : null;
                 // eslint-disable-next-line no-console
-                console.log('[NewInvoice] saved ->', res);
+                console.log('[NewInvoice] saved ->', created);
                 toast.success('Factura guardada correctamente');
-                try {
-                    navigate('/invoices');
-                } catch (e) {
-                    window.location.href = '/invoices';
+                // Immediately send the invoice email to the client even if unpaid
+                if (createdId) {
+                    try {
+                        await ApiService.post(`/tenant/${tenantId}/invoice/${createdId}/send`);
+                        toast.success('Factura enviada al cliente');
+                    } catch (err) {
+                        console.error('Error enviando factura tras crearla', err);
+                        toast.error('No se pudo enviar la factura automáticamente');
+                    }
+                    // Navigate to the invoice preview/edit page so user can record payment
+                    try {
+                        navigate(`/billing/invoices/${createdId}?preview=1`);
+                    } catch (e) {
+                        window.location.href = `/billing/invoices/${createdId}?preview=1`;
+                    }
+                } else {
+                    try {
+                        navigate('/invoices');
+                    } catch (e) {
+                        window.location.href = '/invoices';
+                    }
                 }
             } catch (err: any) {
                 console.error('Error saving invoice', err);
@@ -585,14 +605,14 @@ export default function NewInvoice() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-xs text-gray-500">Sitio de publicación*</Label>
+                                    <Label className="text-xs text-gray-500">Puesto de seguridad*</Label>
                                     <Select value={site} onValueChange={setSite}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Sitio de publicación*" />
+                                            <SelectValue placeholder="Puesto de seguridad*" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {postSites.length === 0 ? (
-                                                <SelectItem value="none" disabled>No hay sitios disponibles</SelectItem>
+                                                <SelectItem value="none" disabled>No hay puestos disponibles</SelectItem>
                                             ) : (
                                                 postSites.map((s) => (
                                                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -643,7 +663,7 @@ export default function NewInvoice() {
                                                 <p className="text-xs text-gray-400">Cliente</p>
                                                 <p className="font-semibold text-slate-800">{clientName}</p>
                                                 <div className="mt-2">
-                                                    <p className="text-xs text-gray-400">Sitio</p>
+                                                    <p className="text-xs text-gray-400">Puesto de seguridad</p>
                                                     <p className="text-sm font-medium text-slate-700">{postName}</p>
                                                     {postAddress ? <p className="text-sm text-slate-500">{postAddress}</p> : null}
                                                     {postPhone ? <p className="text-sm text-slate-500">Tel: {postPhone}</p> : null}
@@ -762,15 +782,7 @@ export default function NewInvoice() {
                                                     )}
                                                     placeholder="Seleccionar o escribir artículo"
                                                 />
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => setItems(prev => prev.map(it => it.id === item.id ? ({ ...it, serviceId: undefined, name: '', reset: ((it.reset ?? 0) + 1) }) : it))}
-                                                    title="Reiniciar artículo"
-                                                    className="text-gray-400 hover:text-gray-600"
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
+                                                {/* Removed clear/reset button to avoid visual overlap with quantity column */}
                                             </div>
                                         </TableCell>
                                         <TableCell>

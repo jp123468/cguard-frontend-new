@@ -67,7 +67,7 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
           <DialogHeader>
             <DialogTitle className="text-center">Detalles del Sitio</DialogTitle>
             <DialogDescription>
-              Información detallada del sitio de publicación seleccionada.
+              Información detallada del Puesto de seguridad seleccionada.
             </DialogDescription>
           </DialogHeader>
         </div>

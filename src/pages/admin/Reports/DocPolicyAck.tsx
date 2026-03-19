@@ -99,7 +99,7 @@ export default function DocPolicyAck() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Sitio de publicación *</Label>
+                    <Label>Puesto de seguridad *</Label>
                     <Select>
                       <SelectTrigger className="w-full"><SelectValue placeholder="Catolica (+2 otros)" /></SelectTrigger>
                       <SelectContent><SelectItem value="1">Catolica</SelectItem></SelectContent>

@@ -65,8 +65,8 @@ export const REPORT_SECTIONS: ReportSection[] = [
       },
       {
         id: "post-kpi",
-        title: "Informe de KPI del Sitio de Publicación",
-        description: "Ver informe de KPI del sitio de publicación",
+        title: "Informe de KPI del Puesto de seguridad",
+        description: "Ver informe de KPI del puesto de seguridad",
         href: "/reports/post-kpi",
       },
       {
@@ -199,9 +199,9 @@ export const REPORT_SECTIONS: ReportSection[] = [
       },
       {
         id: "timecard-post",
-        title: "Horas de Tarjeta de Tiempo por Sitio de Publicación",
+        title: "Horas de Tarjeta de Tiempo por Puesto de seguridad",
         description:
-          "Ver horas de tarjeta de tiempo por sitio de publicación",
+          "Ver horas de tarjeta de tiempo por puesto de seguridad",
         href: "/reports/timecard/by-post",
       },
       {
@@ -225,9 +225,9 @@ export const REPORT_SECTIONS: ReportSection[] = [
       },
       {
         id: "payroll-post",
-        title: "Horas de Nómina por Sitio de Publicación",
+        title: "Horas de Nómina por Puesto de seguridad",
         description:
-          "Ver horas de nómina por sitio de publicación",
+          "Ver horas de nómina por puesto de seguridad",
         href: "/reports/payroll/by-post",
       },
       {

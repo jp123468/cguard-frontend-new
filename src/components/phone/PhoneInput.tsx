@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,6 +44,24 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
     }, []);
 
     const displayValue = useMemo(() => value ?? "", [value]);
+
+    // Si el valor comienza con un prefijo +<código>, detectar el país correspondiente
+    useEffect(() => {
+        if (!displayValue || !displayValue.startsWith("+")) return;
+
+        // Normalizar: tomar solo los dígitos inmediatamente después del + hasta el primer espacio
+        const normalized = displayValue.replace(/^\+/, "");
+        const local = normalized.split(" ")[0];
+
+        // Buscar la mejor coincidencia (código más largo primero)
+        const sorted = COUNTRIES.slice().sort((a, b) => b.dialCode.length - a.dialCode.length);
+        const match = sorted.find((c) => local.startsWith(c.dialCode));
+        if (match && match.code !== country.code) {
+            setCountry(match);
+            if (onCountryChange) onCountryChange(match);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [displayValue]);
 
     // Calcular el máximo total: código de país + espacios + dígitos
     const maxPhoneLength = useMemo(() => {

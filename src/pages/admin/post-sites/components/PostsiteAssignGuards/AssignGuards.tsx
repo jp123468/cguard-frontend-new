@@ -22,6 +22,11 @@ export default function AssignGuards({ site }: { site?: any }) {
 
     const [guardOptions, setGuardOptions] = useState<{ id: string; name: string }[]>([]);
     const [assignedGuards, setAssignedGuards] = useState<any[]>([]);
+    const [stations, setStations] = useState<any[]>([]);
+    const [selectedStation, setSelectedStation] = useState<string | null>(null);
+    const [showNewStation, setShowNewStation] = useState(false);
+    const [newStationName, setNewStationName] = useState('');
+    const [creatingStation, setCreatingStation] = useState(false);
     const navigate = useNavigate();
 
     const [viewAssignments, setViewAssignments] = useState<any[]>([]);
@@ -101,6 +106,25 @@ export default function AssignGuards({ site }: { site?: any }) {
         })();
 
         return () => { mountedAssigned = false; };
+    }, [site]);
+
+    // Load stations for this site so assign modal can link guard->station
+    React.useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+                const postSiteId = site?.id || '';
+                if (!postSiteId) return;
+                const data = await ApiService.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`);
+                const rows = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
+                if (mounted) setStations(rows);
+            } catch (err) {
+                console.error('Failed to load stations', err);
+            }
+        })();
+
+        return () => { mounted = false; };
     }, [site]);
 
 
@@ -191,6 +215,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                 <th className="px-4 py-3 text-left">Name</th>
                                 <th className="px-4 py-3 text-left">Mobile Number</th>
                                 <th className="px-4 py-3 text-left">Email</th>
+                                <th className="px-4 py-3 text-left">Station</th>
                                 <th className="px-4 py-3 text-left">Source</th>
                                 <th className="px-4 py-3 text-right">Actions</th>
                             </tr>
@@ -224,6 +249,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                         </td>
                                         <td className="px-4 py-3 text-left">{g.phoneNumber || '-'}</td>
                                         <td className="px-4 py-3 text-left">{g.email || '-'}</td>
+                                        <td className="px-4 py-3 text-left">{g.stationName || g.station?.name || '-'}</td>
                                         <td className="px-4 py-3 text-left">{g.source || 'pivot'}</td>
                                         <td className="px-4 py-3 text-right">
                                             <DropdownMenu>
@@ -254,6 +280,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                             <div>
                                 <div className="text-sm font-semibold">{(g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.fullName || g.label || g.email || g.userId || '-')}</div>
                                 <div className="text-xs text-gray-500">{g.phoneNumber || g.email || '-'}</div>
+                                <div className="text-xs text-gray-500">{g.stationName || g.station?.name || ''}</div>
                                 <div className="text-xs text-gray-400">{g.source || 'pivot'}</div>
                             </div>
                         )} loading={false} />
@@ -293,7 +320,10 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                                     <dt className="text-sm font-medium text-gray-600">Post Site</dt>
                                                                     <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.postSiteName || a.businessInfoId || '-'}</div></dd>
                                                                 </div>
-
+                                                                <div>
+                                                                    <dt className="text-sm font-medium text-gray-600">Station</dt>
+                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.stationName || a.station?.name || '-'}</div></dd>
+                                                                </div>
                                                                 <div>
                                                                     <dt className="text-sm font-medium text-gray-600">Security Guard</dt>
                                                                     <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{(a.guardFirstName || a.guardLastName) ? `${a.guardFirstName || ''} ${a.guardLastName || ''}`.trim() : (a.guardEmail || a.guardUserId || '-')}</div></dd>
@@ -435,6 +465,45 @@ export default function AssignGuards({ site }: { site?: any }) {
                                         <option value="checklist-1">Checklist A</option>
                                     </select>
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm text-gray-600 mb-2">Station (optional)</label>
+                                    {showNewStation ? (
+                                        <div className="flex items-center gap-2">
+                                            <input value={newStationName} onChange={e => setNewStationName(e.target.value)} placeholder="Station name" className="border rounded-lg h-12 px-3 flex-1" />
+                                            <button disabled={creatingStation} onClick={async () => {
+                                                try {
+                                                    const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+                                                    const postSiteId = site?.id || '';
+                                                    if (!newStationName || !postSiteId) { toast.error('Provide station name'); return; }
+                                                    setCreatingStation(true);
+                                                    const payload = { name: newStationName, postSiteId };
+                                                    const res = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
+                                                    const created = (res && (res.data || res)) || res;
+                                                    setStations(s => [created, ...s]);
+                                                    setSelectedStation(created.id || created._id || null);
+                                                    setNewStationName('');
+                                                    setShowNewStation(false);
+                                                    toast.success('Station created');
+                                                } catch (err: any) {
+                                                    console.error('Failed creating station', err);
+                                                    toast.error(err?.message || 'Failed creating station');
+                                                } finally { setCreatingStation(false); }
+                                            }} className="bg-orange-600 text-white px-3 py-2 rounded">Create</button>
+                                            <button onClick={() => { setShowNewStation(false); setNewStationName(''); }} className="px-3 py-2 rounded border">Cancel</button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <select value={selectedStation || ''} onChange={e => setSelectedStation(e.target.value || null)} className="w-full border rounded-lg h-12 px-3">
+                                                <option value="">-- none --</option>
+                                                {stations.map(s => (
+                                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                                ))}
+                                            </select>
+                                            <button onClick={() => setShowNewStation(true)} className="px-3 py-2 rounded border text-sm">Add Station</button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div className="sticky bottom-0 bg-white border-t p-4 flex items-center justify-end gap-3">
                                 <button onClick={async () => {
@@ -448,6 +517,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                             assignChecklists,
                                             skillSet,
                                             department,
+                                                        stationId: selectedStation,
                                         };
 
                                         const tenantId = (site && site.tenantId) ? site.tenantId : '';
