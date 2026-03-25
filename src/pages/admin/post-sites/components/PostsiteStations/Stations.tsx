@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
-import { Plus, Trash } from 'lucide-react';
+import { Plus, Trash, Eye, MoreVertical } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function Stations({ site }: { site?: any }) {
@@ -13,6 +14,20 @@ export default function Stations({ site }: { site?: any }) {
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
   const [selectedStationDetail, setSelectedStationDetail] = useState<any | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [actionSelectValue, setActionSelectValue] = useState<string>('');
+
+  const [stationShifts, setStationShifts] = useState<any[]>([]);
+  const [loadingShifts, setLoadingShifts] = useState(false);
+  const [guardsOptions, setGuardsOptions] = useState<any[]>([]);
+  const [loadingGuards, setLoadingGuards] = useState(false);
+  const [showShiftModal, setShowShiftModal] = useState(false);
+  const [shiftStart, setShiftStart] = useState<string>('');
+  const [shiftEnd, setShiftEnd] = useState<string>('');
+  const [shiftGuard, setShiftGuard] = useState<string>('');
+  const [editingShiftId, setEditingShiftId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // form state for create
   const [newName, setNewName] = useState('');
@@ -63,6 +78,185 @@ export default function Stations({ site }: { site?: any }) {
     return () => { mounted = false; };
   }, [selectedStationId, site, stations]);
 
+  useEffect(() => {
+    // no-op: guard assignment delegated to AssignGuards component
+  }, [showNew, site]);
+
+  useEffect(() => {
+    // no-op placeholder for detail modal lifecycle
+  }, [showDetailModal, selectedStationDetail]);
+
+  const openNewShift = () => {
+    setEditingShiftId(null);
+    setShiftStart('');
+    setShiftEnd('');
+    setShiftGuard('');
+    fetchGuardOptions();
+    setShowShiftModal(true);
+  };
+
+  const openEditShift = (sh: any) => {
+    setEditingShiftId(sh.id || sh.shiftId || null);
+    setShiftStart(sh.startTime || sh.punchInTime || sh.start || '');
+    setShiftEnd(sh.endTime || sh.punchOutTime || sh.end || '');
+    setShiftGuard((sh.guard && (sh.guard.id || sh.guard)) || sh.guardId || sh.guard || '');
+    fetchGuardOptions();
+    setShowShiftModal(true);
+  };
+
+  const fetchGuardOptions = async () => {
+    try {
+      setLoadingGuards(true);
+      const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+      // prefer security-guard autocomplete (more likely to include guard user info)
+      try {
+        const res = await ApiService.get(`/tenant/${tenantId}/security-guard/autocomplete?limit=200`);
+        const rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
+        const normalized = rows.map((r: any) => ({ id: r.guardId || r.id || r.value, label: r.fullName || r.name || r.label || (r.guard && (r.guard.firstName || r.guard.lastName) ? `${r.guard.firstName || ''} ${r.guard.lastName || ''}`.trim() : '') || r.email || r.guardEmail || '' }));
+        setGuardsOptions(normalized.filter((g: any) => g.id));
+        return;
+      } catch (e) {
+        // fallback to users
+      }
+
+      const res2 = await ApiService.get(`/tenant/${tenantId}/user?filter[role]=guard&limit=999`);
+      const rows2 = Array.isArray(res2) ? res2 : (res2 && res2.rows) ? res2.rows : [];
+      const normalized2 = rows2.map((u: any) => ({ id: u.id, label: u.fullName || u.name || u.email || '' }));
+      setGuardsOptions(normalized2);
+    } catch (err) {
+      console.error('Failed to fetch guards options', err);
+      setGuardsOptions([]);
+    } finally {
+      setLoadingGuards(false);
+    }
+  };
+
+  const saveShift = async () => {
+    try {
+      const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+      const postSiteId = site?.id || '';
+      if (!postSiteId || !selectedStationDetail) {
+        toast.error(t('postSites.stations.selectStationFirst', 'Select a station first'));
+        return;
+      }
+      const payload: any = {
+        startTime: shiftStart ? new Date(shiftStart).toISOString() : null,
+        endTime: shiftEnd ? new Date(shiftEnd).toISOString() : null,
+        station: selectedStationDetail.id || selectedStationDetail.stationId || selectedStationDetail.id,
+        guard: shiftGuard || null,
+        postSiteId,
+      };
+
+      if (editingShiftId) {
+        await ApiService.put(`/tenant/${tenantId}/shift/${encodeURIComponent(editingShiftId)}`, { data: payload });
+        toast.success(t('postSites.stations.shiftUpdated', 'Shift updated'));
+      } else {
+        const res = await ApiService.post(`/tenant/${tenantId}/shift`, { data: payload });
+        toast.success(t('postSites.stations.shiftCreated', 'Shift created'));
+      }
+
+      setShowShiftModal(false);
+      // refresh shifts
+      setSelectedStationId(selectedStationDetail.id || selectedStationDetail.stationId || selectedStationDetail.id);
+    } catch (err) {
+      console.error('Failed saving shift', err);
+      toast.error(t('postSites.stations.shiftSaveFailed', 'Failed saving shift'));
+    }
+  };
+
+
+  useEffect(() => {
+    if (!selectedStationId) {
+      setStationShifts([]);
+      return;
+    }
+    let mounted = true;
+    (async () => {
+      try {
+        setLoadingShifts(true);
+        const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+
+        // Try shift endpoint first
+        let res = await ApiService.get(`/tenant/${tenantId}/shift?filter[station]=${encodeURIComponent(selectedStationId)}&limit=999`);
+        let rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
+
+        // Fallback to guard-shift if no results
+        if ((!rows || rows.length === 0)) {
+          const res2 = await ApiService.get(`/tenant/${tenantId}/guard-shift?filter[stationName]=${encodeURIComponent(selectedStationId)}&limit=999`);
+          rows = Array.isArray(res2) ? res2 : (res2 && res2.rows) ? res2.rows : [];
+        }
+
+        if (mounted) setStationShifts(rows || []);
+      } catch (err) {
+        console.error('Failed to load shifts for station', err);
+        if (mounted) setStationShifts([]);
+      } finally {
+        if (mounted) setLoadingShifts(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [selectedStationId, site]);
+
+  useEffect(() => {
+    const onDocClick = (e: any) => {
+      if (!openMenuId) return;
+      const el = document.querySelector(`[data-menu-id="${openMenuId}"]`);
+      if (el && el.contains(e.target)) return;
+      setOpenMenuId(null);
+    };
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, [openMenuId]);
+
+  const formatScheduleFromTimes = (start?: string, end?: string) => {
+    if (!start || !end) return null;
+    const parseTime = (s: string) => {
+      if (!s) return null;
+      if (s.includes('T')) {
+        const d = new Date(s);
+        if (isNaN(d.getTime())) return null;
+        return { h: d.getHours(), m: d.getMinutes() };
+      }
+      const parts = s.split(':');
+      const hh = parseInt(parts[0] || '0', 10);
+      const mm = parseInt(parts[1] || '0', 10);
+      if (isNaN(hh) || isNaN(mm)) return null;
+      return { h: hh, m: mm };
+    };
+
+    const a = parseTime(start);
+    const b = parseTime(end);
+    if (!a || !b) return null;
+    let minutes = (b.h * 60 + b.m) - (a.h * 60 + a.m);
+    if (minutes < 0) minutes += 24 * 60;
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (mins === 0) return `${hrs} ${t('postSites.stations.hours', 'horas')}`;
+    return `${hrs}${t('postSites.stations.hShort', 'h')} ${mins}${t('postSites.stations.mShort', 'm')}`;
+  };
+
+  const formatTimeLocalized = (value?: string | null) => {
+    if (!value) return '-';
+    try {
+      let dt: Date | null = null;
+      if (value.includes('T')) dt = new Date(value);
+      else {
+        const parts = value.split(':');
+        if (parts.length >= 2) {
+          const now = new Date();
+          now.setHours(parseInt(parts[0] || '0', 10));
+          now.setMinutes(parseInt(parts[1] || '0', 10));
+          now.setSeconds(0);
+          dt = now;
+        }
+      }
+      if (!dt || isNaN(dt.getTime())) return value;
+      return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(dt);
+    } catch (e) {
+      return value;
+    }
+  };
+
   const createStation = async () => {
     try {
       const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
@@ -100,6 +294,8 @@ export default function Stations({ site }: { site?: any }) {
     }
   };
 
+
+
   const removeStation = async (id: string) => {
     try {
       const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
@@ -112,86 +308,155 @@ export default function Stations({ site }: { site?: any }) {
     }
   };
 
+  const removeSelected = async () => {
+    if (!selectedIds.length) return;
+    try {
+      const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+      await Promise.all(selectedIds.map(id => ApiService.delete(`/tenant/${tenantId}/station/${id}`)));
+      setStations(s => s.filter(x => !selectedIds.includes(x.id || x.stationId || '')));
+      setSelectedIds([]);
+      toast.success(t('postSites.stations.removed', 'Station(s) removed'));
+    } catch (err: any) {
+      console.error('Failed removing selected stations', err);
+      toast.error(err?.message || t('postSites.stations.removeFailed', 'Failed to remove station'));
+    }
+  };
+
+  // Assigned guards updates must be done via AssignGuards component/page.
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex-1 min-h-0 flex flex-col">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">{t('postSites.stations.title', 'Stations')}</h3>
       </div>
 
-      <div className="bg-white border rounded-lg p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <select className="border rounded px-3 py-1 text-sm text-gray-700">
-              <option>{t('postSites.stations.action', 'Action')}</option>
-              <option>{t('postSites.stations.deleteSelected', 'Delete selected')}</option>
-            </select>
+      <div className="bg-white border rounded-lg p-4 flex-1 flex flex-col">
+        <div className="flex items-center justify-between mb-4 gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="text-sm text-gray-700 truncate">{selectedIds.length > 0 ? `${selectedIds.length} selected` : ''}</div>
           </div>
 
-          <div className="flex-1 mx-4">
-            <input value={''} onChange={() => {}} placeholder={t('postSites.stations.searchPlaceholder', 'Search stations...')} className="w-full border rounded px-3 py-2 text-sm" />
-          </div>
+          <div className="flex-1 mx-2 flex items-center gap-3">
+            <div className="flex-shrink-0">
+              <select value={actionSelectValue} onChange={(e) => {
+                const v = e.target.value; setActionSelectValue(v);
+                if (v === 'delete_selected') {
+                  if (selectedIds.length > 0) removeSelected();
+                  setActionSelectValue('');
+                }
+              }} className="border border-gray-200 bg-white rounded-lg px-4 py-2 text-sm text-gray-700 shadow-sm">
+                <option value="">{t('postSites.stations.action', 'Action')}</option>
+                <option value="delete_selected">{t('postSites.stations.deleteSelected', 'Delete selected')}</option>
+              </select>
+            </div>
 
-          <div>
-            <button onClick={() => setShowNew(true)} className="px-6 py-2 bg-orange-600 text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors">
-              <Plus size={18} /> {t('postSites.stations.add', 'Add Station')}
-            </button>
+            <div className="flex-1">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.9 14.32a8 8 0 111.41-1.41l4.3 4.3a1 1 0 01-1.42 1.42l-4.3-4.3zM8 14a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" /></svg>
+                </div>
+                <input value={''} onChange={() => { }} placeholder={t('postSites.stations.searchPlaceholder', 'Search stations...')} className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm pl-10 shadow-sm focus:ring-2 focus:ring-orange-200" />
+              </div>
+            </div>
+
+            <div className="flex-shrink-0">
+              <button onClick={() => setShowNew(true)} className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors shadow">
+                <Plus size={16} /> {t('postSites.stations.add', 'Add')}
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="w-full">
+        <div className="w-full flex-1 flex flex-col min-h-0">
           {loading ? (
             <div>{t('postSites.stations.loading', 'Loading...')}</div>
           ) : stations.length === 0 ? (
-            <div className="text-sm text-gray-500">{t('postSites.stations.noStations', 'No stations added yet.')}</div>
+            <div className="min-h-[320px] flex items-center justify-center text-sm text-gray-500">{t('postSites.stations.noStations', 'No stations added yet.')}</div>
           ) : (
             <>
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('postSites.stations.table.name', 'Name')}</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('postSites.stations.table.guards', 'Guards')}</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stations.map((st) => {
-                      const id = st.id || st.stationId || '';
-                      const name = st.name || st.stationName || st.station_name || '—';
-                      const guardsCount = st.numberOfGuardsInStation || (Array.isArray(st.assignedGuards) ? String(st.assignedGuards.length) : '-');
-                      return (
-                        <tr key={id} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm text-gray-700">{name}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{guardsCount}</td>
-                          <td className="px-4 py-3 text-sm text-right">
-                            <div className="inline-flex items-center gap-2">
-                              <button onClick={() => { setSelectedStationId(id); setShowDetailModal(true); }} className="text-sm text-gray-700 hover:underline">{t('postSites.stations.view', 'Ver detalles')}</button>
-                              <button onClick={() => removeStation(id)} className="text-red-600 hover:text-red-800 text-sm inline-flex items-center gap-2"><Trash size={14} /><span className="hidden sm:inline">{t('postSites.stations.remove', 'Remove')}</span></button>
-                            </div>
-                          </td>
+              <div className="hidden md:block flex-1 min-h-0">
+                <div className="overflow-x-auto">
+                  <div className="overflow-y-auto h-[48vh]">
+                    <table className="min-w-full table-fixed">
+                      <thead>
+                        <tr className="border-b bg-gray-50">
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 w-12 sticky top-0 bg-white z-20">
+                            <input type="checkbox" className="form-checkbox h-4 w-4" checked={selectedIds.length === stations.length && stations.length > 0} onChange={() => {
+                              if (selectedIds.length === stations.length) setSelectedIds([]);
+                              else setSelectedIds(stations.map(s => s.id || s.stationId || ''));
+                            }} />
+                          </th>
+                          <th className="px-6 py-4 text-left text-base font-semibold text-gray-700 sticky top-0 bg-white z-20">{t('postSites.stations.table.name', 'Name')}</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 sticky top-0 bg-white z-20">{t('postSites.stations.table.guards', 'Guards')}</th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 sticky top-0 bg-white z-20"></th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      </thead>
+                      <tbody className="min-h-0">
+                        {stations.map((st) => {
+                          const id = st.id || st.stationId || '';
+                          const name = st.name || st.stationName || st.station_name || '—';
+                          const guardsCount = st.numberOfGuardsInStation || (Array.isArray(st.assignedGuards) ? String(st.assignedGuards.length) : '-');
+                          return (
+                            <tr key={id} className="border-b hover:bg-gray-50 h-14">
+                              <td className="px-6 py-3 text-sm text-gray-700 w-12 align-middle">
+                                <input type="checkbox" className="form-checkbox h-5 w-5" checked={selectedIds.includes(id)} onChange={() => {
+                                  setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+                                }} />
+                              </td>
+                              <td className="px-6 py-3 text-sm text-gray-700 align-middle">
+                                <div className="font-medium">{name}</div>
+                              </td>
+                              <td className="px-6 py-3 text-sm text-gray-700 align-middle">{guardsCount}</td>
+                              <td className="px-6 py-3 text-sm text-right relative w-24 align-middle">
+                                <div className="inline-flex items-center gap-2">
+                                  <div className="relative">
+                                    <button onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === id ? null : id); }} className="p-1 rounded hover:bg-gray-100">
+                                      <MoreVertical size={18} className="text-gray-600" />
+                                    </button>
+                                    {openMenuId === id && (
+                                      <div data-menu-id={id} className="absolute right-0 mt-2 w-44 bg-white border rounded-md shadow-lg py-1 z-50">
+                                        <button onClick={(e) => { e.stopPropagation(); setSelectedStationId(id); setShowDetailModal(true); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"><Eye size={14} className="text-gray-600" />{t('postSites.stations.view', 'View details')}</button>
+                                        <button onClick={(e) => { e.stopPropagation(); removeStation(id); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"><Trash size={14} className="text-red-600" />{t('postSites.stations.remove', 'Remove')}</button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
 
               <div className="block md:hidden">
-                <div className="space-y-3">
+                <div className="space-y-3 min-h-[40vh]">
                   {stations.map((st) => {
                     const id = st.id || st.stationId || '';
                     const name = st.name || st.stationName || st.station_name || '—';
                     const guardsCount = st.numberOfGuardsInStation || (Array.isArray(st.assignedGuards) ? String(st.assignedGuards.length) : '-');
                     return (
-                      <div key={id} className="border rounded-md p-3 bg-white shadow-sm">
-                        <div className="flex items-start justify-between">
+                      <div key={id} className="border rounded-md p-5 bg-white shadow-sm relative">
+                        <div className="flex items-start justify-between gap-3">
                           <div>
-                            <div className="font-medium text-gray-800">{name}</div>
-                            <div className="text-sm text-gray-500 mt-1"><strong className="text-gray-600">{t('postSites.stations.table.guards', 'Guards')}:</strong> {guardsCount}</div>
+                            <div className="flex items-center gap-3"><input type="checkbox" className="form-checkbox h-5 w-5" checked={selectedIds.includes(id)} onChange={() => setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])} />
+                              <div className="font-medium text-gray-800">{name}</div></div>
+                            <div className="text-sm text-gray-500 mt-2"><strong className="text-gray-600">{t('postSites.stations.table.guards', 'Guards')}:</strong> {guardsCount}</div>
                           </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <button onClick={() => { setSelectedStationId(id); setShowDetailModal(true); }} className="px-3 py-1 bg-orange-600 text-white rounded text-sm">{t('postSites.stations.view', 'Ver detalles')}</button>
-                            <button onClick={() => removeStation(id)} className="text-red-600 text-sm">{t('postSites.stations.remove', 'Remove')}</button>
+                          <div className="flex items-center">
+                            <div className="relative">
+                              <button onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === id ? null : id); }} className="p-1 rounded hover:bg-gray-100">
+                                <MoreVertical size={18} className="text-gray-600" />
+                              </button>
+                              {openMenuId === id && (
+                                <div data-menu-id={id} className="absolute right-0 mt-2 w-44 bg-white border rounded-md shadow-lg py-1 z-50">
+                                  <button onClick={(e) => { e.stopPropagation(); setSelectedStationId(id); setShowDetailModal(true); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"><Eye size={14} className="text-gray-600" />{t('postSites.stations.view', 'View details')}</button>
+                                  <button onClick={(e) => { e.stopPropagation(); removeStation(id); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"><Trash size={14} className="text-red-600" />{t('postSites.stations.remove', 'Remove')}</button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -252,6 +517,8 @@ export default function Stations({ site }: { site?: any }) {
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('postSites.stations.form.description', 'Description')}</label>
                 <textarea value={newDescription} onChange={e => setNewDescription(e.target.value)} placeholder={t('postSites.stations.form.descriptionPlaceholder', 'Optional description')} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 resize-none" rows={4} />
               </div>
+
+              {/* Guard assignment is handled in AssignGuards page/tab */}
             </div>
 
             <div className="flex items-center justify-end gap-3 p-6 border-t bg-white rounded-b-md">
@@ -284,24 +551,46 @@ export default function Stations({ site }: { site?: any }) {
                   {selectedStationDetail.description ? <p className="text-sm text-gray-500 mt-2">{selectedStationDetail.description || selectedStationDetail.notes}</p> : null}
 
                   <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-gray-700">
-                    <div>
-                      <dt className="text-xs font-medium text-gray-600">{t('postSites.stations.lat', 'Latitude')}</dt>
-                      <dd className="text-base text-gray-800 mt-1">{selectedStationDetail.latitud || selectedStationDetail.latitude || '-'}</dd>
-                    </div>
-
-                    <div>
-                      <dt className="text-xs font-medium text-gray-600">{t('postSites.stations.lng', 'Longitude')}</dt>
-                      <dd className="text-base text-gray-800 mt-1">{selectedStationDetail.longitud || selectedStationDetail.longitude || '-'}</dd>
-                    </div>
 
                     <div>
                       <dt className="text-xs font-medium text-gray-600">{t('postSites.stations.schedule', 'Schedule')}</dt>
-                      <dd className="text-base text-gray-800 mt-1">{selectedStationDetail.stationSchedule || '-'}</dd>
+                      <dd className="text-base text-gray-800 mt-1">{(formatScheduleFromTimes(selectedStationDetail.startingTimeInDay, selectedStationDetail.finishTimeInDay) || selectedStationDetail.stationSchedule || '-')}</dd>
                     </div>
 
                     <div>
                       <dt className="text-xs font-medium text-gray-600">{t('postSites.stations.guardsCount', 'Guards')}</dt>
                       <dd className="text-base text-gray-800 mt-1">{selectedStationDetail.numberOfGuardsInStation || (selectedStationDetail.assignedGuards ? selectedStationDetail.assignedGuards.length : '-')}</dd>
+                    </div>
+
+                    <div>
+                      <dt className="text-xs font-medium text-gray-600">{t('postSites.stations.startTime', 'Start')}</dt>
+                      <dd className="text-base text-gray-800 mt-1">{formatTimeLocalized(selectedStationDetail.startingTimeInDay)}</dd>
+                    </div>
+
+                    <div>
+                      <dt className="text-xs font-medium text-gray-600">{t('postSites.stations.endTime', 'End')}</dt>
+                      <dd className="text-base text-gray-800 mt-1">{formatTimeLocalized(selectedStationDetail.finishTimeInDay)}</dd>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium text-gray-700">{t('postSites.stations.assignedGuardsTitle', 'Assigned guards')}</h4>
+                      <div>
+                        <button onClick={() => navigate(`/post-sites/${site?.id}/assign-guards`)} className="px-2 py-1 text-sm border border-orange-100 text-orange-600 rounded">{t('postSites.stations.manageAssignments', 'Manage assignments')}</button>
+                      </div>
+                    </div>
+
+                    <div className="mt-2">
+                      {(selectedStationDetail.assignedGuards || []).length === 0 ? (
+                        <div className="text-gray-500">{t('postSites.stations.noAssignedGuards', 'No guards assigned')}</div>
+                      ) : (
+                        <ul className="list-disc pl-5 text-sm text-gray-700">
+                          {(selectedStationDetail.assignedGuards || []).map((g: any) => (
+                            <li key={g.id || g.value || JSON.stringify(g)}>{g.fullName || g.label || g.name || g.email || (g.id || g)}</li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -310,6 +599,47 @@ export default function Stations({ site }: { site?: any }) {
 
             <div className="flex items-center justify-end gap-3 p-6 border-t bg-white rounded-b-md">
               <button onClick={() => setShowDetailModal(false)} className="px-4 py-2 rounded-md border text-sm">{t('actions.close') || 'Close'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shift create/edit modal */}
+      {showShiftModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center" onClick={() => setShowShiftModal(false)}>
+          <div className="absolute inset-0 bg-black/20 z-50" onClick={() => setShowShiftModal(false)} />
+
+          <div className="relative z-70 w-full sm:w-96 bg-white shadow-2xl overflow-y-auto rounded-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b bg-white rounded-t-md">
+              <h2 className="text-lg font-semibold text-gray-800">{editingShiftId ? t('postSites.stations.editShift', 'Edit shift') : t('postSites.stations.createShift', 'Create shift')}</h2>
+              <button onClick={() => setShowShiftModal(false)} className="p-2 rounded-full hover:bg-gray-100">✕</button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('postSites.stations.form.shiftStart', 'Start')}</label>
+                <input type="datetime-local" value={shiftStart} onChange={e => setShiftStart(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('postSites.stations.form.shiftEnd', 'End')}</label>
+                <input type="datetime-local" value={shiftEnd} onChange={e => setShiftEnd(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('postSites.stations.form.guard', 'Guard')}</label>
+                <select value={shiftGuard} onChange={e => setShiftGuard(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700">
+                  <option value="">{t('postSites.stations.form.selectGuard', 'Select guard')}</option>
+                  {guardsOptions.map(g => {
+                    const id = g.id || g.value;
+                    const label = g.fullName || g.label || g.name || g.email || id;
+                    return <option key={id} value={id}>{label}</option>;
+                  })}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 p-6 border-t bg-white rounded-b-md">
+              <button onClick={() => setShowShiftModal(false)} className="px-4 py-2 rounded-md border text-sm">{t('actions.cancel') || 'Cancel'}</button>
+              <button onClick={saveShift} disabled={!shiftStart || !shiftEnd} className={`px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700 text-sm ${(!shiftStart || !shiftEnd) ? 'opacity-50 cursor-not-allowed' : ''}`}>{t('actions.save', 'Save')}</button>
             </div>
           </div>
         </div>

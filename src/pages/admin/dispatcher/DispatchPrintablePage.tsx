@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, Link } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
 import Breadcrumb from '@/components/ui/breadcrumb';
@@ -20,6 +21,7 @@ import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { toast } from 'sonner';
 
 export function DispatchDetailsContent({ requestId }: { requestId?: string | null }) {
+  const { t } = useTranslation();
   const [clients, setClients] = useState<any[]>([]);
   const [postSites, setPostSites] = useState<any[]>([]);
   const [incidentTypes, setIncidentTypes] = useState<any[]>([]);
@@ -40,10 +42,10 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
 
   // Handler extracted to avoid large inline JSX function
   const handleAddComment = async () => {
-    if (!newComment || newComment.trim() === '') { toast.error('Escribe un comentario'); return; }
+    if (!newComment || newComment.trim() === '') { toast.error(t('dispatcher.comment.write_error') || 'Escribe un comentario'); return; }
     try {
       const tenantId = localStorage.getItem('tenantId');
-      if (!tenantId) { toast.error('Tenant no disponible'); return; }
+      if (!tenantId) { toast.error(t('dispatcher.tenant_unavailable') || 'Tenant no disponible'); return; }
       setCommentsLoading(true);
       const api = (await import('@/lib/api')).default;
 
@@ -70,9 +72,9 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
           }
           if (typeof downloadUrl === 'object' && downloadUrl !== null) downloadUrl = JSON.stringify(downloadUrl);
           attachment = { url: downloadUrl, name: selectedFile.name };
-        } catch (err) {
+          } catch (err) {
           console.error('File upload failed', err);
-          toast.error('No se pudo subir el archivo, comentario enviado sin adjunto');
+          toast.error(t('dispatcher.comment.file_upload_failed') || 'No se pudo subir el archivo, comentario enviado sin adjunto');
         } finally {
           setFileUploading(false);
         }
@@ -113,22 +115,22 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
         const resp = await api.post(`/tenant/${tenantId}/request/${requestId}/comments`, body);
         const p = resp && resp.data ? resp.data : resp;
         const created = p && (p.comment || p.data || p) || { text: newComment };
-        setComments((c) => [...c, { id: Date.now(), text: created.text || newComment, createdAt: created.createdAt || new Date().toISOString(), author: created.author || author || { name: 'Tú' }, attachment: created.attachment || attachment }]);
+        setComments((c) => [...c, { id: Date.now(), text: created.text || newComment, createdAt: created.createdAt || new Date().toISOString(), author: created.author || author || { name: t('dispatcher.you') || 'Tú' }, attachment: created.attachment || attachment }]);
         setNewComment('');
         setSelectedFile(null);
         setShowCommentModal(false);
-        toast.success('Comentario agregado');
+        toast.success(t('dispatcher.comment.added') || 'Comentario agregado');
       } catch (e) {
-        setComments((c) => [...c, { id: Date.now(), text: newComment, createdAt: new Date().toISOString(), author: (typeof author !== 'undefined' && author) ? author : { name: 'Tú' }, attachment }]);
+        setComments((c) => [...c, { id: Date.now(), text: newComment, createdAt: new Date().toISOString(), author: (typeof author !== 'undefined' && author) ? author : { name: t('dispatcher.you') || 'Tú' }, attachment }]);
         setNewComment('');
         setSelectedFile(null);
         setShowCommentModal(false);
-        toast.success('Comentario agregado (local)');
+        toast.success(t('dispatcher.comment.added_local') || 'Comentario agregado (local)');
       }
 
-    } catch (err) {
+      } catch (err) {
       console.error('Error agregando comentario', err);
-      toast.error('No se pudo agregar comentario');
+      toast.error(t('dispatcher.comment.add_failed') || 'No se pudo agregar comentario');
     } finally {
       setCommentsLoading(false);
     }
@@ -189,7 +191,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
           setComments([]);
         }
       } catch (e) {
-        console.warn('No se pudieron cargar detalles del despacho', e);
+        console.warn('No se pudieron cargar detalles del Incidente', e);
       }
     };
 
@@ -322,10 +324,10 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
           )}
           <div className="bg-white border rounded-md overflow-hidden">
             <div className="bg-gray-100 px-4 py-2 text-sm font-semibold flex items-center justify-between">
-              <div>Basic Details</div>
+                <div>{t('dispatcher.basic_details') || 'Basic Details'}</div>
               <div className="flex items-center gap-2">
                 <Button className="bg-white border text-black text-sm" asChild>
-                  <Link to={`/dispatch-tickets/${requestId}/edit`}>Editar</Link>
+                    <Link to={`/dispatch-tickets/${requestId}/edit`}>{t('dispatcher.edit') || 'Editar'}</Link>
                 </Button>
 
               </div>
@@ -334,37 +336,37 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
               <table className="w-full text-sm border-collapse">
                 <tbody>
                   <tr className="border-b">
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">Ticket ID</td>
+                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.ticket_id') || 'Ticket ID'}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{ticketShort} <span className={`inline-block text-xs ml-2 px-2 py-0.5 rounded-full ${requestPayload.status === 'open' || requestPayload.status === 'abierto' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{requestPayload.status ?? ''}</span></td>
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">Date/Time</td>
+                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.date_time') || 'Date/Time'}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{requestPayload.createdAt ? new Date(requestPayload.createdAt).toLocaleString() : '-'}</td>
                   </tr>
 
                   <tr className="border-b">
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">Client Name</td>
+                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.client_name') || 'Client Name'}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{((requestPayload.client && (requestPayload.client.name || requestPayload.client.fullName)) || clients.find((c) => c.id === requestPayload.clientId)?.name || clients.find((c) => c.id === requestPayload.clientId)?.fullName || '-')}</td>
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">Post Site</td>
+                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.post_site_label') || 'Post Site'}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{((requestPayload.site && (requestPayload.site.name || requestPayload.site.companyName)) || postSites.find((s) => s.id === requestPayload.siteId)?.name || '-')}</td>
                   </tr>
 
                   <tr className="border-b">
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">Caller Type</td>
+                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.caller_type') || 'Caller Type'}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{requestPayload.callerType || '-'}</td>
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">Caller Name</td>
+                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.caller_name') || 'Caller Name'}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{requestPayload.callerName || '-'}</td>
                   </tr>
 
                   <tr className="border-b">
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">Incident Type</td>
+                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.incident_type_label') || 'Incident Type'}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{incidentTypeDisplay}</td>
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">Incident Date/Time</td>
+                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.incident_date_time_label') || 'Incident Date/Time'}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{(requestPayload.incidentAt || requestPayload.dateTime) ? new Date(requestPayload.incidentAt || requestPayload.dateTime).toLocaleString() : '-'}</td>
                   </tr>
 
                   <tr className="border-b">
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">Incident Location</td>
+                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.incident_location') || 'Incident Location'}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{requestPayload.location || requestPayload.incidentLocation || '-'}</td>
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">Dispatcher</td>
+                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.dispatcher_label') || 'Dispatcher'}</td>
                     <td className="py-3 px-4 text-sm text-gray-800">{(requestPayload.guardName && (requestPayload.guardName.fullName || requestPayload.guardName.name)) || requestPayload.guardName || '-'}</td>
                   </tr>
                 </tbody>
@@ -381,15 +383,15 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
           <div className="fixed inset-0 bg-black opacity-40" onClick={() => { setShowCommentModal(false); setNewComment(''); }} />
           <div className="bg-white rounded-md shadow-lg w-full max-w-lg mx-4 z-10">
             <div className="flex items-center justify-between px-4 py-2 border-b">
-              <div className="text-sm font-medium">Nuevo comentario</div>
+              <div className="text-sm font-medium">{t('dispatcher.comment.new_comment_title') || 'Nuevo comentario'}</div>
               <button className="p-1 rounded-full hover:bg-gray-100" onClick={() => { setShowCommentModal(false); setNewComment(''); }}>&times;</button>
             </div>
             <div className="p-4">
-              <label className="text-sm font-medium">Nota</label>
+              <label className="text-sm font-medium">{t('dispatcher.comment.note') || 'Nota'}</label>
               <textarea className="w-full border rounded p-2 text-sm mt-2" rows={6} value={newComment} onChange={(e) => setNewComment(e.target.value)} />
               <div className="mt-3">
                 <div className="border rounded px-3 py-2 bg-gray-50">
-                  <div className="text-xs text-gray-500 mb-2">Adjuntar archivo (opcional)</div>
+                  <div className="text-xs text-gray-500 mb-2">{t('dispatcher.comment.attach_file_optional') || 'Adjuntar archivo (opcional)'}</div>
                   <div className="flex items-center gap-3">
                     <input
                       type="file"
@@ -401,18 +403,18 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
                         type="button"
                         className="text-xs text-gray-500 hover:text-gray-700"
                         onClick={() => setSelectedFile(null)}
-                        aria-label="Eliminar archivo"
+                        aria-label={t('dispatcher.comment.remove_file') || 'Eliminar archivo'}
                       >
-                        Eliminar
+                        {t('dispatcher.comment.remove_file') || 'Eliminar'}
                       </button>
                     ) : null}
                   </div>
                   <div className="text-xs text-gray-700 mt-2 truncate">{selectedFile ? selectedFile.name : 'Sin archivos seleccionados'}</div>
                 </div>
               </div>
-              <div className="mt-4 flex justify-end gap-2">
-                <Button variant="outline" onClick={() => { setNewComment(''); setSelectedFile(null); setShowCommentModal(false); }}>Cancelar</Button>
-                <Button className="bg-orange-500 text-white" onClick={handleAddComment}>Agregar</Button>
+                <div className="mt-4 flex justify-end gap-2">
+                <Button variant="outline" onClick={() => { setNewComment(''); setSelectedFile(null); setShowCommentModal(false); }}>{t('dispatcher.cancel') || 'Cancelar'}</Button>
+                <Button className="bg-orange-500 text-white" onClick={handleAddComment}>{t('dispatcher.comment.add') || 'Agregar'}</Button>
               </div>
             </div>
           </div>
@@ -421,22 +423,22 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
       {/* Additional detail sections */}
       <div className="mt-4 space-y-4">
         <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Incident Details</div>
+          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.incident_details') || 'Incident Details'}</div>
           <div className="p-4 text-sm">{requestPayload?.content || requestPayload?.incidentDetails || requestPayload?.details || '-'}</div>
         </div>
 
         <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Action Taken</div>
+          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.action_taken') || 'Action Taken'}</div>
           <div className="p-4 text-sm">{requestPayload?.actionsTaken || requestPayload?.actionTaken || requestPayload?.action || '-'}</div>
         </div>
 
         <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Internal Notes</div>
+          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.internal_notes') || 'Internal Notes'}</div>
           <div className="p-4 text-sm whitespace-pre-wrap">{requestPayload?.internalNotes || requestPayload?.notes || '-'}</div>
         </div>
 
         <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Files</div>
+          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.files') || 'Files'}</div>
           <div className="p-4 text-sm">
             {requestPayload?.requestDocumentPDF && requestPayload.requestDocumentPDF.length > 0 ? (
               <ul className="list-disc pl-5">
@@ -457,7 +459,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
         </div>
 
         <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Guard Assigned</div>
+          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.guard_assigned') || 'Guard Assigned'}</div>
           <div className="p-4 text-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-sm table-fixed border-collapse">
@@ -486,10 +488,10 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
       {/* Comments list (bottom) */}
       <div className="mt-6 max-w-4xl mx-auto">
         <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Ticket Summary</div>
+          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.ticket_summary') || 'Ticket Summary'}</div>
           <div className="p-4">
             {comments.length === 0 ? (
-              <div className="text-sm text-gray-500">No hay comentarios aún</div>
+              <div className="text-sm text-gray-500">{t('dispatcher.no_comments_yet') || 'No hay comentarios aún'}</div>
             ) : (
               <div className="space-y-4">
                 {comments.map((c) => (
@@ -513,7 +515,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
 
       </div>
       <Button className="bg-orange-500 text-white text-sm" onClick={() => setShowCommentModal((s) => !s)}>
-        {showCommentModal ? 'Cerrar' : 'Agregar comentario'}
+        {showCommentModal ? (t('dispatcher.close') || 'Cerrar') : (t('dispatcher.add_comment_button') || 'Agregar comentario')}
       </Button>
     </div>
   );
@@ -527,7 +529,7 @@ export default function DispatchDetailsPage() {
       <Breadcrumb
         items={[
           { label: 'Panel de control', path: '/dashboard' },
-          { label: 'Detalle Despacho' },
+          { label: 'Detalle Incidente' },
         ]}
       />
 

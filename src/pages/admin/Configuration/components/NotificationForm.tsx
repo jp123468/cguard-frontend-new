@@ -36,7 +36,7 @@ const NOTIFICATIONS: NotificationItem[] = [
   { id: "policy-ack", label: "Política de la empresa reconocida", default: { dashboard: true } },
   { id: "site-tour-complete", label: "Recorrido del sitio completado", default: { dashboard: true } },
   { id: "site-tour-missed", label: "Recorrido del sitio perdido o retrasado", default: { dashboard: true } },
-  { id: "dispatch-updates", label: "Actualizaciones de tickets de despacho", default: { dashboard: true } },
+  { id: "dispatch-updates", label: "Actualizaciones de tickets de Incidente", default: { dashboard: true } },
   { id: "shift-status", label: "Actualizaciones del estado del turno", default: { dashboard: true } },
   { id: "late-on-shift", label: "Retraso en el turno", default: { dashboard: true } },
   { id: "vigilance-mode", label: "Entrada de modo vigilancia enviada", default: { dashboard: true } },

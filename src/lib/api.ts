@@ -75,6 +75,17 @@ api.interceptors.request.use((config) => {
   } catch (e) {
     // ignore environments without FormData
   }
+  // Debug: log outgoing incident payloads for troubleshooting
+  try {
+    const method = (config.method || '').toLowerCase();
+    const url = String(config.url || '');
+    if (method === 'post' && url.indexOf('/incident') !== -1) {
+      // eslint-disable-next-line no-console
+      console.debug('[api] outgoing incident POST', { url, data: config.data });
+    }
+  } catch (e) {
+    // ignore logging errors
+  }
   if (config.toast?.loading) {
     const id = toast.loading(config.toast.loading)
       ; (config as unknown as MutableConfig).__toastId = id

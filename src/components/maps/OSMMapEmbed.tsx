@@ -50,13 +50,24 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
   // Estado para la posición actual del marcador (movible)
   const [markerPos, setMarkerPos] = useState<[number, number]>([initialLat, initialLng]);
   const [address, setAddress] = useState<string>("");
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     const map = mapRef.current;
     if (map && (map as any).scrollWheelZoom && !(map as any).scrollWheelZoom.enabled()) {
       try { (map as any).scrollWheelZoom.enable(); } catch (e) {}
     }
+
+    // Invalidate size after mount to ensure the map is centered and sized correctly
+    const invalidate = () => {
+      try {
+        if (map && typeof (map as any).invalidateSize === 'function') (map as any).invalidateSize();
+      } catch (e) {}
+    };
+    invalidate();
+    const t = setTimeout(invalidate, 300);
+    window.addEventListener('resize', invalidate);
+    return () => { clearTimeout(t); window.removeEventListener('resize', invalidate); };
   }, []);
 
   // Botón para centrar el mapa en la ubicación del dispositivo usando la API de Geolocalización
@@ -144,6 +155,7 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
           {geoError}
         </div>
       )}
+      {/* MapContainer cast to any to avoid TS prop mismatches in different react-leaflet versions */}
       <MapContainer
         center={markerPos}
         zoom={zoom}
@@ -152,7 +164,7 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
         dragging={true}
         doubleClickZoom={true}
         zoomControl={true}
-        ref={mapRef}
+        ref={mapRef as any}
       >
         {mapType === 'satellite' ? (
           <TileLayer
@@ -177,7 +189,7 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
             },
           }}
         />
-      </MapContainer>
+        </MapContainer>
       {address && (
         <div style={{ marginTop: 8, fontSize: 13, color: '#333' }}>
           <b>Dirección actual:</b> {address}

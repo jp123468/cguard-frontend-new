@@ -79,6 +79,7 @@ import * as XLSX from 'xlsx';
 import { ApiService } from "@/services/api/apiService";
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTranslation } from 'react-i18next';
+import api from "@/lib/api";
 
 export default function DispatcherPage() {
   const { t } = useTranslation();
@@ -101,6 +102,9 @@ export default function DispatcherPage() {
   const [rows, setRows] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [postSites, setPostSites] = useState<any[]>([]);
+  const [stations, setStations] = useState<any[]>([]);
+  const [stationFilter, setStationFilter] = useState("");
+  const stationInputRef = useRef<HTMLInputElement | null>(null);
   const [allClients, setAllClients] = useState<any[] | null>(null);
   const [allPostSites, setAllPostSites] = useState<any[] | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -180,7 +184,7 @@ export default function DispatcherPage() {
         setRows(rowsData);
         setTotalCount(count);
       } catch (e: any) {
-        console.error('Error cargando despachos:', e);
+        console.error('Error cargando Incidentes:', e);
         // detect 403 forbidden and surface a friendly UI state
         const status = e?.status || e?.response?.status || e?.data?.status || (e && e.statusCode);
         if (status === 403) {
@@ -357,10 +361,24 @@ export default function DispatcherPage() {
     });
   }, [allPostSites, postSites, filters]);
 
+  // Load stations whenever the selected site in filters changes
+  useEffect(() => {
+    try {
+      const sid = (filters as any).siteId;
+      fetchStationsFor(sid);
+      // clear station filter when site changes
+      setFilters((s) => ({ ...s, stationId: undefined }));
+    } catch (e) {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.siteId]);
+
   // Apply filters by fetching rows according to current `filters`
-  const aplicarFiltros = async () => {
+  const aplicarFiltros = async (filtersParam?: DispatcherFilters) => {
+    const usedFilters = filtersParam ?? filters;
     // Validate with zod but allow fetching even when validation fails (log and warn)
-    const parse = dispatcherFiltersSchema.safeParse(filters);
+    const parse = dispatcherFiltersSchema.safeParse(usedFilters);
     if (!parse.success) {
       console.error('Errores de validación:', parse.error.flatten());
     }
@@ -374,14 +392,17 @@ export default function DispatcherPage() {
 
       const params = new URLSearchParams();
       // status as top-level param (backend expects ?status=... as used elsewhere)
-      if (filters && filters.status && String(filters.status).toLowerCase() !== 'todo') {
-        params.append('status', String(filters.status));
+      if (usedFilters && usedFilters.status && String(usedFilters.status).toLowerCase() !== 'todo') {
+        params.append('status', String(usedFilters.status));
       }
-      if (filters && filters.clientId) {
-        params.append('filter[clientId]', String(filters.clientId));
+      if (usedFilters && usedFilters.clientId) {
+        params.append('filter[clientId]', String(usedFilters.clientId));
       }
-      if (filters && filters.siteId) {
-        params.append('filter[siteId]', String(filters.siteId));
+      if (usedFilters && usedFilters.siteId) {
+        params.append('filter[siteId]', String(usedFilters.siteId));
+      }
+      if (filters && (filters as any).stationId) {
+        params.append('filter[stationId]', String((filters as any).stationId));
       }
       // single-date filters -> convert to ranges backend expects
       if (filters && (filters as any).createdDate) {
@@ -435,6 +456,76 @@ export default function DispatcherPage() {
       console.error('Error aplicando filtros:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load stations for a given post-site id when user selects a site in filters
+  const fetchStationsFor = async (siteToLoad: string | undefined | null) => {
+    try {
+      if (!siteToLoad) {
+        setStations([]);
+        return;
+      }
+      const tenantId = localStorage.getItem('tenantId');
+      if (!tenantId) return;
+
+      // Try preferred stations endpoint with postSite/postSiteId query
+      try {
+        const url = `/tenant/${tenantId}/stations?postSite=${encodeURIComponent(String(siteToLoad))}&postSiteId=${encodeURIComponent(String(siteToLoad))}&limit=999`;
+        const res = await api.get(url, { toast: { silentError: true } } as any);
+        const body = res && (res.data ?? res);
+        let rows: any[] = [];
+        if (Array.isArray(body)) rows = body;
+        else if (body && Array.isArray(body.rows)) rows = body.rows;
+        else if (body && Array.isArray(body.data)) rows = body.data;
+        if (Array.isArray(rows) && rows.length) {
+          const mapped = rows.map((s: any) => ({ id: s.id || s.stationId || s.uuid || s, name: s.name || s.stationName || s.displayName || s.label || s.address || (s.postSite && (s.postSite.businessName || s.postSite.name)) || String(s.id) }));
+          // Defensive filter: only keep stations that reference this post-site when possible
+          const filtered = mapped.filter((r: any) => {
+            const pid = (r && (r.postSiteId || r.post_site_id || r.postSite || r.post_site)) || null;
+            if (!pid) return true; // can't determine, keep
+            return String(pid) === String(siteToLoad);
+          });
+          setStations(filtered.length ? filtered : mapped);
+          return;
+        }
+      } catch (e) {
+        // continue to nested endpoint
+      }
+
+      try {
+        const res2 = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/stations`, { toast: { silentError: true } } as any);
+        const body2 = res2 && (res2.data ?? res2);
+        let rows2: any[] = [];
+        if (Array.isArray(body2)) rows2 = body2;
+        else if (body2 && Array.isArray(body2.rows)) rows2 = body2.rows;
+        else if (body2 && Array.isArray(body2.data)) rows2 = body2.data;
+        const mapped2 = rows2.map((s: any) => ({ id: s.id || s.stationId || s.uuid || s, name: s.name || s.stationName || s.displayName || s.label || s.address || String(s.id) }));
+        setStations(mapped2);
+        return;
+      } catch (e2) {
+        // fallback
+      }
+
+      try {
+        const res3 = await api.get(`/tenant/${tenantId}/stations?postSite=${encodeURIComponent(String(siteToLoad))}&postSiteId=${encodeURIComponent(String(siteToLoad))}`, { toast: { silentError: true } } as any);
+        const body3 = res3 && (res3.data ?? res3);
+        let rows3: any[] = [];
+        if (Array.isArray(body3)) rows3 = body3;
+        else if (body3 && Array.isArray(body3.rows)) rows3 = body3.rows;
+        else if (body3 && Array.isArray(body3.data)) rows3 = body3.data;
+        const mapped3 = rows3.map((s: any) => ({ id: s.id || s.stationId || s.uuid || s, name: s.name || s.stationName || s.displayName || s.label || s.address || String(s.id) }));
+        setStations(mapped3);
+        return;
+      } catch (e3) {
+        console.warn('Failed to load stations for post-site', siteToLoad, e3);
+        setStations([]);
+        return;
+      }
+    } catch (e) {
+      console.error('Error loading stations', e);
+      setStations([]);
+      return;
     }
   };
 
@@ -508,15 +599,16 @@ export default function DispatcherPage() {
 
       let lastSuccessMessage: string | null = null;
       let lastErrorMessage: string | null = null;
-      for (const id of selectedIds) {
-        try {
-          const resp = await api.delete(`/tenant/${tenantId}/request/${id}`);
-          const r = resp && (resp as any).data ? (resp as any).data : resp;
-          if (r && r.message) lastSuccessMessage = String(r.message);
-        } catch (err: any) {
-          lastErrorMessage = err?.response?.data?.message || err?.message || null;
-          console.error('Error deleting id', id, err);
-        }
+      try {
+        const resp = await api.delete(
+          `/tenant/${tenantId}/request`,
+          { params: { ids: selectedIds } } as any,
+        );
+        const r = resp && (resp as any).data ? (resp as any).data : resp;
+        if (r && r.message) lastSuccessMessage = String(r.message);
+      } catch (err: any) {
+        lastErrorMessage = err?.response?.data?.message || err?.message || null;
+        console.error('Error deleting ids', selectedIds, err);
       }
 
       setSelectedIds([]);
@@ -540,7 +632,7 @@ export default function DispatcherPage() {
         setRows(rowsData);
         setTotalCount(count);
       } catch (e) {
-        console.error('Error recargando despachos:', e);
+        console.error('Error recargando Incidentes:', e);
       }
 
       if (lastErrorMessage) {
@@ -551,7 +643,7 @@ export default function DispatcherPage() {
         toast.success(t('dispatcher.deleted_success'));
       }
     } catch (e) {
-      console.error('Error eliminando despachos:', e);
+      console.error('Error eliminando Incidentes:', e);
       const msg = (e as any)?.response?.data?.message || (e as any)?.message;
       toast.error(msg || t('dispatcher.deleted_error'));
     }
@@ -643,14 +735,14 @@ export default function DispatcherPage() {
         // json_to_sheet defaults to starting at A1; avoid passing unsupported 'origin' option
         const ws = XLSX.utils.json_to_sheet(rows);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Despachos');
+        XLSX.utils.book_append_sheet(wb, ws, 'Incidentes');
 
         const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `despachos_${new Date().toISOString().slice(0,10)}.xlsx`;
+        a.download = `Incidentes_${new Date().toISOString().slice(0,10)}.xlsx`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -934,7 +1026,7 @@ export default function DispatcherPage() {
                       setTotalCount(count);
                       setPage(1);
                     } catch (err) {
-                      console.error('Error buscando despachos:', err);
+                      console.error('Error buscando Incidentes:', err);
                     } finally {
                       setLoading(false);
                     }
@@ -981,9 +1073,11 @@ export default function DispatcherPage() {
                     <Label>{t('dispatcher.client')}</Label>
                     <Select
                       value={filters.clientId ?? ""}
-                      onValueChange={(v) =>
-                        setFilters((s) => ({ ...s, clientId: v ? v : undefined, siteId: undefined }))
-                      }
+                      onValueChange={(v) => {
+                        const newFilters = { ...filters, clientId: v ? v : undefined, siteId: undefined };
+                        setFilters(newFilters);
+                        void aplicarFiltros(newFilters);
+                      }}
                     >
                         <SelectTrigger>
                         <SelectValue placeholder={t('dispatcher.select_client')} />
@@ -1008,9 +1102,11 @@ export default function DispatcherPage() {
                     <Label>{t('dispatcher.post_site')}</Label>
                     <Select
                       value={filters.siteId ?? ""}
-                      onValueChange={(v) =>
-                        setFilters((s) => ({ ...s, siteId: v }))
-                      }
+                      onValueChange={(v) => {
+                        const newFilters = { ...filters, siteId: v, stationId: undefined };
+                        setFilters(newFilters);
+                        void aplicarFiltros(newFilters);
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder={t('dispatcher.select_site')} />
@@ -1024,6 +1120,41 @@ export default function DispatcherPage() {
                           ))
                         ) : (
                           <SelectItem value="__no_sites" disabled>{t('dispatcher.no_sites')}</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Estación (filtrado por puesto seleccionado) */}
+                  <div className="space-y-2">
+                    <Label>{t('dispatcher.station')}</Label>
+                    <Select
+                      value={(filters as any).stationId ?? ""}
+                      onValueChange={(v) => setFilters((s) => ({ ...s, stationId: v }))}
+                      onOpenChange={(open) => {
+                        if (open) setTimeout(() => stationInputRef.current?.focus(), 50);
+                        else setStationFilter("");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('dispatcher.select_station') || 'Seleccionar estación'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="px-2 py-2">
+                          <Input
+                            ref={(el) => (stationInputRef.current = el)}
+                            placeholder={t('dispatcher.search_station') || 'Buscar estación...'}
+                            value={stationFilter}
+                            onChange={(e) => setStationFilter(e.target.value)}
+                            disabled={!filters.siteId}
+                          />
+                        </div>
+                        {stations && stations.length > 0 ? stations
+                          .filter((s: any) => String((s.name || s.stationName || s.businessName || s.id) || '').toLowerCase().includes(stationFilter.trim().toLowerCase()))
+                          .map((s: any) => (
+                            <SelectItem key={s.id} value={s.id}>{s.name || s.stationName || s.businessName || s.id}</SelectItem>
+                          )) : (
+                            <SelectItem key="__no_stations" value="__no_stations" disabled>{filters.siteId ? t('dispatcher.no_stations') || 'Sin estaciones' : t('dispatcher.select_site_first') || 'Seleccione un puesto primero'}</SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -1100,7 +1231,7 @@ export default function DispatcherPage() {
                   {/* Botón aplicar */}
                   <Button
                     className="w-full bg-orange-500 text-white hover:bg-orange-600"
-                    onClick={aplicarFiltros}
+                    onClick={() => void aplicarFiltros()}
                   >
                     {t('dispatcher.apply_filters')}
                   </Button>
@@ -1285,10 +1416,10 @@ export default function DispatcherPage() {
                         })()
                       }
                     </td>
-                    <td className="px-4 py-3">{r.client || r.clientId || '-'}</td>
-                    <td className="px-4 py-3">{r.site || r.siteId || '-'}</td>
-                    <td className="px-4 py-3">{r.callerType || r.guardName?.fullName || r.guardName?.name || '-'}</td>
-                    <td className="px-4 py-3">{r.incidentType || r.incidentTypeId || '-'}</td>
+                    <td className="px-4 py-3">{(r.client && typeof r.client === 'object') ? (r.client.name || r.client.fullName || r.client.displayName || String(r.client.id || '')) : (r.client || r.clientId || '-')}</td>
+                    <td className="px-4 py-3">{(r.site && typeof r.site === 'object') ? (r.site.name || r.site.companyName || r.site.address || String(r.site.id || '')) : (r.site || r.siteId || '-')}</td>
+                    <td className="px-4 py-3">{(r.callerType && typeof r.callerType === 'object') ? (r.callerType.name || r.callerType.id || '-') : (r.callerType || r.guardName?.fullName || r.guardName?.name || '-')}</td>
+                    <td className="px-4 py-3">{(r.incidentType && typeof r.incidentType === 'object') ? (r.incidentType.name || r.incidentType.id || '-') : (r.incidentType || r.incidentTypeId || '-')}</td>
                     <td className="px-4 py-3">
                       {
                         (() => {
@@ -1540,7 +1671,7 @@ export default function DispatcherPage() {
             <AlertDialogHeader className="text-center">
               <AlertDialogTitle className="text-center text-lg font-semibold">Confirmar eliminación</AlertDialogTitle>
               <AlertDialogDescription className="text-left">
-                ¿Está seguro de eliminar {selectedIds.length} despacho(s)? Esta acción no se puede deshacer.
+                ¿Está seguro de eliminar {selectedIds.length} Incidente(s)? Esta acción no se puede deshacer.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

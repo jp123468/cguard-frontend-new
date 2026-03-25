@@ -320,7 +320,7 @@ export default function EditDispatchPage() {
           // ignore
         }
       } catch (err) {
-        console.error("Error cargando despacho para editar:", err);
+        console.error("Error cargando Incidente para editar:", err);
       }
     })();
   }, [editId]);
@@ -357,16 +357,16 @@ export default function EditDispatchPage() {
 
       // Backend controller expects `req.body.data` so wrap payload accordingly
       await api.put(`/tenant/${tenantId}/request/${editId}`, { data: payload });
-      toast.success('Despacho actualizado');
+      toast.success('Incidente actualizado');
       setAttachments([]);
       navigate('/dispatch-tickets');
     } catch (error) {
-      console.error('Error actualizando despacho:', error);
+      console.error('Error actualizando Incidente:', error);
       try {
-        const msg = (error && (error as any).message) || 'Error al actualizar despacho';
+        const msg = (error && (error as any).message) || 'Error al actualizar Incidente';
         toast.error(msg);
       } catch (e) {
-        toast.error('Error al actualizar despacho');
+        toast.error('Error al actualizar Incidente');
       }
     }
   };
@@ -376,7 +376,7 @@ export default function EditDispatchPage() {
       <Breadcrumb
         items={[
           { label: "Panel de control", path: "/dashboard" },
-          { label: "Editar Despacho" },
+          { label: "Editar Incidente" },
         ]}
       />
 

@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
-import { Search, ChevronDown, Plus, X, EllipsisVertical, Eye, Trash } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, ChevronDown, Plus, X, EllipsisVertical, Eye, Trash, Edit } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function AssignGuards({ site }: { site?: any }) {
+    const { t } = useTranslation();
+
     const [actionOpen, setActionOpen] = useState(false);
-    const [actionSelection, setActionSelection] = useState<string>('Action');
+    const [actionSelection, setActionSelection] = useState<string>(t('clients.assignGuards.actionDefault', 'Action'));
     const [query, setQuery] = useState('');
     const [showAssignModal, setShowAssignModal] = useState(false);
 
-    const [skillSet, setSkillSet] = useState('');
-    const [department, setDepartment] = useState('');
     const [selectedGuards, setSelectedGuards] = useState<string[]>([]);
     const [selectedGuard, setSelectedGuard] = useState<string | null>(null);
     const [guardQuery, setGuardQuery] = useState('');
@@ -26,33 +27,158 @@ export default function AssignGuards({ site }: { site?: any }) {
     const [selectedStation, setSelectedStation] = useState<string | null>(null);
     const [showNewStation, setShowNewStation] = useState(false);
     const [newStationName, setNewStationName] = useState('');
+    const [newStationStart, setNewStationStart] = useState('');
+    const [newStationEnd, setNewStationEnd] = useState('');
     const [creatingStation, setCreatingStation] = useState(false);
     const navigate = useNavigate();
 
+    const guardDropdownRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const onDocClick = (e: any) => {
+            if (!showGuardsDropdown) return;
+            if (guardDropdownRef.current && !guardDropdownRef.current.contains(e.target)) {
+                setShowGuardsDropdown(false);
+            }
+        };
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setShowGuardsDropdown(false);
+        };
+        document.addEventListener('click', onDocClick);
+        document.addEventListener('keydown', onKey);
+        return () => {
+            document.removeEventListener('click', onDocClick);
+            document.removeEventListener('keydown', onKey);
+        };
+    }, [showGuardsDropdown]);
+
     const [viewAssignments, setViewAssignments] = useState<any[]>([]);
     const [viewModalOpen, setViewModalOpen] = useState(false);
+
+    // Helpers to resolve display names from possible fields returned by backend
+    const resolveTenantUserName = (rec: any) => {
+        return (
+            rec?.tenantUser?.fullName ||
+            (rec?.tenantUser?.user && `${rec.tenantUser.user.firstName || ''} ${rec.tenantUser.user.lastName || ''}`.trim()) ||
+            rec?.tenantUserName ||
+            rec?.tenantUserFullName ||
+            rec?.tenantUser ||
+            rec?.tenantUserId ||
+            rec?.tenant_user_id ||
+            '-'
+        );
+    };
+
+    const resolveBusinessInfoName = (rec: any) => {
+        return (
+            rec?.businessInfo?.name ||
+            rec?.postSiteName ||
+            rec?.businessInfoName ||
+            rec?.businessInfo ||
+            rec?.businessInfoId ||
+            rec?.business_info_id ||
+            '-'
+        );
+    };
+
+    const resolveSecurityGuardName = (rec: any) => {
+        const guardNameFromGuard = rec?.guard ? `${rec.guard.firstName || ''} ${rec.guard.lastName || ''}`.trim() : null;
+        const guardNameFromSecurityGuard = rec?.securityGuard ? `${rec.securityGuard.firstName || ''} ${rec.securityGuard.lastName || ''}`.trim() : null;
+        const guardNameFromFields = (rec?.guardFirstName || rec?.guardLastName) ? `${rec.guardFirstName || ''} ${rec.guardLastName || ''}`.trim() : null;
+
+        return (
+            guardNameFromGuard ||
+            guardNameFromSecurityGuard ||
+            guardNameFromFields ||
+            rec?.securityGuardName ||
+            rec?.security_guard_name ||
+            rec?.security_guard_id ||
+            rec?.securityGuardId ||
+            rec?.guardId ||
+            '-'
+        );
+    };
+
+    // Match a row against the current query (name, email, phone)
+    const matchesQuery = (row: any, q: string) => {
+        if (!q) return true;
+        const s = q.trim().toLowerCase();
+        const name = (row.guardName || row.fullName || row.name || '').toString().toLowerCase();
+        const email = (row.email || '').toString().toLowerCase();
+        const phone = (row.phoneNumber || row.mobile || '').toString().toLowerCase();
+        return name.includes(s) || email.includes(s) || phone.includes(s);
+    };
 
     const handleView = async (g: any) => {
         try {
             const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
             const idToUse = g.securityGuardId || g.guardUserId || g.userId || g.guardId || g.tenantUserUserId || null;
             if (!idToUse) {
-                toast.info('No guard identifier available');
+                toast.info(t('clients.assignGuards.noGuardIdentifier', 'No guard identifier available'));
                 return;
             }
             const resp = await ApiService.get(`/tenant/${tenantId}/security-guard/${idToUse}/assignments`);
             const rows = resp && resp.rows ? resp.rows : (Array.isArray(resp) ? resp : []);
+            // Resolve names for each assignment row (businessInfo, guard, tenantUser)
+            const businessCache: Record<string, any> = {};
+            const guardCache: Record<string, any> = {};
+
+            await Promise.all((rows || []).map(async (row: any) => {
+                try {
+                    const bizId = row.businessInfoId || row.business_info_id || row.postSiteId || row.postSiteId;
+                    if (bizId && !row.businessInfoName && !businessCache[bizId]) {
+                        try {
+                            const r = await ApiService.get(`/tenant/${tenantId}/post-site/${bizId}`, { toast: { silentError: true } } as any);
+                            const b = r && (r.data || r) ? (r.data || r) : r;
+                            businessCache[bizId] = b;
+                            row.businessInfoName = b && (b.name || b.postSiteName) || null;
+                        } catch (e) {
+                            businessCache[bizId] = null;
+                        }
+                    } else if (bizId && businessCache[bizId]) {
+                        const b = businessCache[bizId];
+                        row.businessInfoName = b && (b.name || b.postSiteName) || null;
+                    }
+
+                    const sgId = row.security_guard_id || row.securityGuardId || row.guardId || row.guard?.id || row.guardId;
+                    if (sgId && !row.guardName && !guardCache[sgId]) {
+                        try {
+                            const r = await ApiService.get(`/tenant/${tenantId}/security-guard/${sgId}`, { toast: { silentError: true } } as any);
+                            const g2 = r && (r.data || r) ? (r.data || r) : r;
+                            guardCache[sgId] = g2;
+                            row.guardName = (g2 && g2.guard && (g2.guard.firstName || g2.guard.lastName)) ? `${g2.guard.firstName || ''} ${g2.guard.lastName || ''}`.trim() : (g2 && (g2.firstName || g2.lastName) ? `${g2.firstName || ''} ${g2.lastName || ''}`.trim() : null);
+                        } catch (e) {
+                            guardCache[sgId] = null;
+                        }
+                    } else if (sgId && guardCache[sgId]) {
+                        const g2 = guardCache[sgId];
+                        row.guardName = (g2 && g2.guard && (g2.guard.firstName || g2.guard.lastName)) ? `${g2.guard.firstName || ''} ${g2.guard.lastName || ''}`.trim() : (g2 && (g2.firstName || g2.lastName) ? `${g2.firstName || ''} ${g2.lastName || ''}`.trim() : null);
+                    }
+
+                    if (!row.tenantUserName) {
+                        if (row.tenantUser && row.tenantUser.user) {
+                            row.tenantUserName = `${row.tenantUser.user.firstName || ''} ${row.tenantUser.user.lastName || ''}`.trim();
+                        } else if (row.guardName) {
+                            row.tenantUserName = row.guardName;
+                        }
+                    }
+                } catch (e) {
+                    // ignore per-row resolution errors
+                }
+            }));
+
             setViewAssignments(rows);
             setViewModalOpen(true);
         } catch (err: any) {
             console.error('Failed to load guard assignments', err);
-            const message = err?.data?.message || err?.message || 'Failed to load guard assignments';
+            const message = err?.data?.message || err?.message || t('clients.assignGuards.failedLoadAssignments', 'Failed to load guard assignments');
             toast.error(message);
         }
     };
 
     const [pendingDeleteAssignment, setPendingDeleteAssignment] = useState<any | null>(null);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [openBulkDeleteDialog, setOpenBulkDeleteDialog] = useState(false);
 
     const handleDelete = (g: any) => {
         setPendingDeleteAssignment(g);
@@ -73,15 +199,15 @@ export default function AssignGuards({ site }: { site?: any }) {
             if (g.source === 'shift') {
                 await ApiService.delete(`/tenant/${tenantId}/shift/${g.id}`);
             } else if (g.source === 'guardShift') {
-                await ApiService.delete(`/tenant/${tenantId}/guardShift/${g.id}`);
+                await ApiService.delete(`/tenant/${tenantId}/guard-shift/${g.id}`);
             } else {
                 await ApiService.delete(`/tenant/${tenantId}/post-site/${postSiteId}/guards/${g.id}`);
             }
             setAssignedGuards((prev) => prev.filter((x) => x.id !== g.id));
-            toast.success('Assignment removed');
+            toast.success(t('clients.assignGuards.assignmentRemoved', 'Assignment removed'));
         } catch (err: any) {
             console.error('Failed to remove assignment', err);
-            const msg = err?.response?.data?.message ?? err?.message ?? 'Failed to remove assignment';
+            const msg = err?.response?.data?.message ?? err?.message ?? t('clients.assignGuards.removeFailed', 'Failed to remove assignment');
             toast.error(msg);
         } finally {
             setPendingDeleteAssignment(null);
@@ -89,23 +215,228 @@ export default function AssignGuards({ site }: { site?: any }) {
         }
     };
 
-    React.useEffect(() => {
-        // Load assigned guards for this post site
-        let mountedAssigned = true;
-        (async () => {
-            try {
-                const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
-                const postSiteId = site?.id || '';
-                if (!postSiteId) return;
-                const data = await ApiService.get(`/tenant/${tenantId}/post-site/${postSiteId}/guards`);
-                const rows = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
-                if (mountedAssigned) setAssignedGuards(rows);
-            } catch (err) {
-                console.error('Failed to load assigned guards', err);
-            }
-        })();
+    // Selection handlers for bulk actions
+    const toggleSelect = (id: string) => {
+        setSelectedGuards(prev => {
+            if (prev.includes(id)) return prev.filter(x => x !== id);
+            return [...prev, id];
+        });
+    };
 
-        return () => { mountedAssigned = false; };
+    const toggleSelectAll = () => {
+        const visible = assignedGuards.filter(r => matchesQuery(r, query));
+        if (selectedGuards.length === visible.length) {
+            setSelectedGuards([]);
+            return;
+        }
+        const ids = visible.map(a => a.id).filter(Boolean);
+        setSelectedGuards(ids);
+    };
+
+    const handleBulkDeleteSelected = () => {
+        if (!selectedGuards || selectedGuards.length === 0) {
+            toast.info(t('clients.assignGuards.noSelection', 'No items selected'));
+            return;
+        }
+        // open confirmation dialog
+        setOpenBulkDeleteDialog(true);
+    };
+
+    const confirmBulkDelete = async () => {
+        try {
+            const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+            const postSiteId = site?.id || '';
+            const toDelete = assignedGuards.filter(a => selectedGuards.includes(a.id));
+            const promises = toDelete.map((g) => {
+                if (g.source === 'shift') return ApiService.delete(`/tenant/${tenantId}/shift/${g.id}`);
+                if (g.source === 'guardShift') return ApiService.delete(`/tenant/${tenantId}/guard-shift/${g.id}`);
+                return ApiService.delete(`/tenant/${tenantId}/post-site/${postSiteId}/guards/${g.id}`);
+            });
+            await Promise.all(promises);
+            setAssignedGuards(prev => prev.filter(a => !selectedGuards.includes(a.id)));
+            setSelectedGuards([]);
+            toast.success(t('clients.assignGuards.bulkDeleteSuccess', 'Selected assignments removed'));
+        } catch (err: any) {
+            console.error('Failed to bulk delete assignments', err);
+            const msg = err?.response?.data?.message ?? err?.message ?? t('clients.assignGuards.removeFailed', 'Failed to remove assignment');
+            toast.error(msg);
+        } finally {
+            setOpenBulkDeleteDialog(false);
+        }
+    };
+
+    const openEditAssignment = (g: any) => {
+        // Prefill modal state from the selected assignment
+        const guardId = g.guardId || g.securityGuardId || g.userId || g.id || null;
+        setSelectedGuard(guardId);
+        // set guardQuery to a display name so the input shows the guard when guardOptions doesn't contain the item
+        setGuardQuery(g.guardName || g.fullName || g.name || '');
+        setSelectedStation(g.stationId || (g.station && (g.station.id || g.station.stationId)) || null);
+        setShiftStart(toDatetimeLocal(g.shiftStart || g.startTime || g.start || ''));
+        setShiftEnd(toDatetimeLocal(g.shiftEnd || g.endTime || g.end || ''));
+        setShiftSchedule(g.schedule || g.shiftSchedule || shiftSchedule);
+        // open modal for editing
+        setShowAssignModal(true);
+    };
+
+    // Load assigned guards (and shifts) for this post site — try multiple endpoints and normalize
+    const loadAssigned = async () => {
+        try {
+            const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+            const postSiteId = site?.id || '';
+            if (!postSiteId) return;
+
+            const tryPaths = [
+                // prefer shifts endpoint so we surface created shifts
+                `/tenant/${tenantId}/shift?postSiteId=${encodeURIComponent(postSiteId)}`,
+                `/tenant/${tenantId}/post-site/${postSiteId}/guards`,
+                `/tenant/${tenantId}/post-site/${postSiteId}/assigned-guards`,
+                `/tenant/${tenantId}/post-site/${postSiteId}/security-guards`,
+                `/tenant/${tenantId}/security-guard?postSiteId=${encodeURIComponent(postSiteId)}`,
+                `/tenant/${tenantId}/security-guards?postSiteId=${encodeURIComponent(postSiteId)}`,
+            ];
+
+            let rows: any[] | undefined;
+            let loadedFrom = '';
+            for (const path of tryPaths) {
+                try {
+                    const resp = await ApiService.get(path, { toast: { silentError: true } } as any);
+                    const body = resp && (resp.rows || resp.data) ? (resp.rows || resp.data) : resp;
+                    if (Array.isArray(body) || (body && (body.rows || body.data))) {
+                        rows = Array.isArray(body) ? body : (body.rows || body.data || []);
+                        loadedFrom = path;
+                        console.log('[AssignGuards] loaded from', path, 'count=', Array.isArray(rows) ? rows.length : 0);
+                        break;
+                    }
+                } catch (err) {
+                    // ignore and try next path
+                }
+            }
+
+            // if still empty, try generic endpoint that may return assignments
+            if ((!rows || rows.length === 0)) {
+                try {
+                    const resp2 = await ApiService.get(`/tenant/${tenantId}/post-site/${postSiteId}`);
+                    const body2 = resp2 && (resp2.data || resp2) || {};
+                    if (Array.isArray(body2.guards) && body2.guards.length > 0) {
+                        rows = body2.guards;
+                        loadedFrom = `/tenant/${tenantId}/post-site/${postSiteId}`;
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            }
+
+            const raw = rows || [];
+            const normalized = raw.map((r: any) => {
+                const id = r.id || r.guardId || r.securityGuardId || r.userId || r.guardUserId || '';
+                const firstName = r.firstName || r.guardFirstName || (r.guard && r.guard.firstName) || '';
+                const lastName = r.lastName || r.guardLastName || (r.guard && r.guard.lastName) || '';
+                const fullName = r.fullName || r.name || `${firstName} ${lastName}`.trim();
+                const phoneNumber = r.phoneNumber || r.mobile || r.guardPhone || (r.guard && (r.guard.phoneNumber || r.guard.mobile)) || '';
+                const email = r.email || r.guardEmail || (r.guard && (r.guard.email)) || '';
+                const stationName = r.stationName || (r.station && (r.station.name || r.stationName)) || r.postSiteStationName || '';
+                const source = r.source || r._source || (r.stationId || r.guardId || loadedFrom.includes('/shift') ? 'shift' : 'pivot');
+                const tenantUserId = r.tenantUserId || r.tenant_user_id || (r.tenantUser && (r.tenantUser.id || r.tenantUser.userId)) || null;
+                const siteTours = r.siteTours || r.site_tours || null;
+                const tasksField = r.tasks || null;
+                const shiftStart = r.startTime || r.start_time || r.shiftStart || r.start || null;
+                const shiftEnd = r.endTime || r.end_time || r.shiftEnd || r.end || null;
+                const postOrders = r.postOrders || r.post_orders || null;
+                const checklistsField = r.checklists || r.checklists || null;
+                const skillSetField = r.skillSet || r.skill_set || null;
+                const departmentField = r.department || null;
+                const guardFull = (r.guard && (r.guard.firstName || r.guard.lastName)) ? `${r.guard.firstName || ''} ${r.guard.lastName || ''}`.trim() : (r.fullName || r.name || null);
+
+                return {
+                    ...r,
+                    id,
+                    firstName,
+                    lastName,
+                    fullName,
+                    phoneNumber,
+                    email,
+                    stationName,
+                    source,
+                    guardName: guardFull,
+                    tenantUserId,
+                    siteTours,
+                    tasks: tasksField,
+                    shiftStart,
+                    shiftEnd,
+                    postOrders,
+                    checklists: checklistsField,
+                    skillSet: skillSetField,
+                    department: departmentField,
+                };
+            });
+
+            // Resolve human-friendly names for businessInfo and security guards when missing
+            const businessCache: Record<string, any> = {};
+            const guardCache: Record<string, any> = {};
+            const resolveNames = async () => {
+                await Promise.all(normalized.map(async (row: any) => {
+                    try {
+                        // Business / post site name
+                        const bizId = row.businessInfoId || row.business_info_id || row.postSiteId || row.post_site_id || null;
+                        if (bizId && !row.businessInfoName && !businessCache[bizId]) {
+                            try {
+                                const resp = await ApiService.get(`/tenant/${tenantId}/post-site/${bizId}`, { toast: { silentError: true } } as any);
+                                const b = resp && (resp.data || resp) ? (resp.data || resp) : resp;
+                                businessCache[bizId] = b;
+                                row.businessInfoName = b && (b.name || b.postSiteName) || null;
+                            } catch (e) {
+                                businessCache[bizId] = null;
+                            }
+                        } else if (bizId && businessCache[bizId]) {
+                            const b = businessCache[bizId];
+                            row.businessInfoName = b && (b.name || b.postSiteName) || null;
+                        }
+
+                        // Security guard name
+                        const sgId = row.security_guard_id || row.securityGuardId || row.guardId || (row.guard && row.guard.id) || null;
+                        if (sgId && !row.guardName && !guardCache[sgId]) {
+                            try {
+                                const resp = await ApiService.get(`/tenant/${tenantId}/security-guard/${sgId}`, { toast: { silentError: true } } as any);
+                                const g2 = resp && (resp.data || resp) ? (resp.data || resp) : resp;
+                                guardCache[sgId] = g2;
+                                row.guardName = (g2 && g2.guard && (g2.guard.firstName || g2.guard.lastName)) ? `${g2.guard.firstName || ''} ${g2.guard.lastName || ''}`.trim() : (g2 && (g2.firstName || g2.lastName) ? `${g2.firstName || ''} ${g2.lastName || ''}`.trim() : null);
+                            } catch (e) {
+                                guardCache[sgId] = null;
+                            }
+                        } else if (sgId && guardCache[sgId]) {
+                            const g2 = guardCache[sgId];
+                            row.guardName = (g2 && g2.guard && (g2.guard.firstName || g2.guard.lastName)) ? `${g2.guard.firstName || ''} ${g2.guard.lastName || ''}`.trim() : (g2 && (g2.firstName || g2.lastName) ? `${g2.firstName || ''} ${g2.lastName || ''}`.trim() : null);
+                        }
+
+                        // TenantUser name fallback
+                        if (!row.tenantUserName) {
+                            if (row.tenantUser && row.tenantUser.user) {
+                                row.tenantUserName = `${row.tenantUser.user.firstName || ''} ${row.tenantUser.user.lastName || ''}`.trim();
+                            } else if (row.guardName) {
+                                row.tenantUserName = row.guardName;
+                            } else if (row.tenantUserId) {
+                                row.tenantUserName = String(row.tenantUserId);
+                            }
+                        }
+                    } catch (e) {
+                        // ignore per-row resolution errors
+                    }
+                }));
+            };
+
+            await resolveNames();
+
+            setAssignedGuards(normalized);
+        } catch (err) {
+            console.error('Failed to load assigned guards', err);
+        }
+    };
+
+    React.useEffect(() => {
+        let mounted = true;
+        if (mounted) loadAssigned();
+        return () => { mounted = false; };
     }, [site]);
 
     // Load stations for this site so assign modal can link guard->station
@@ -165,25 +496,33 @@ export default function AssignGuards({ site }: { site?: any }) {
 
         return () => { mounted = false; clearTimeout(timer); };
     }, [guardQuery, site]);
-    const [assignSiteTours, setAssignSiteTours] = useState('');
-    const [assignTasks, setAssignTasks] = useState('');
-    const [assignPostOrders, setAssignPostOrders] = useState('');
-    const [assignChecklists, setAssignChecklists] = useState('');
+    
+    const [shiftStart, setShiftStart] = useState('');
+    const [shiftEnd, setShiftEnd] = useState('');
+    const [shiftSchedule, setShiftSchedule] = useState('Diurno');
+
+    // Convert ISO or other date strings to `datetime-local` input value (YYYY-MM-DDTHH:MM)
+    const toDatetimeLocal = (val: any) => {
+        if (!val) return '';
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return '';
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
 
     return (
         <div className="space-y-4">
-            <div className="bg-white border rounded-lg p-4">
+            <div className="bg-white border rounded-lg p-4 flex flex-col">
                 <div className="flex items-center justify-between gap-4 mb-4">
-                    <div className="relative">
+                    <div className="relative flex items-center pl-2">
                         <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-full bg-white text-sm inline-flex items-center gap-2">
                             {actionSelection}
                             <ChevronDown size={14} />
                         </button>
                         {actionOpen && (
-                            <div className="absolute mt-2 bg-white border rounded-md shadow-lg z-10 w-48">
-                                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Assign Selected</button>
-                                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Unassign</button>
-                            </div>
+                            <div className="absolute mt-20 bg-white border rounded-md shadow-lg z-10 w-48 left-0">
+                                    <button onClick={() => { setActionOpen(false); handleBulkDeleteSelected(); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-red-600">{t('clients.assignGuards.actionDeleteSelected', 'Delete Selected')}</button>
+                                </div>
                         )}
                     </div>
 
@@ -192,7 +531,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
                                 <Search size={16} />
                             </span>
-                            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search Guards" className="w-full h-10 rounded-full border pl-10 pr-4" />
+                            <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('clients.assignGuards.headerSearchPlaceholder','Search Guards')} className="w-full h-10 rounded-full border pl-10 pr-4" />
                         </div>
                     </div>
 
@@ -201,29 +540,28 @@ export default function AssignGuards({ site }: { site?: any }) {
                             <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
                                 <Plus size={14} />
                             </span>
-                            <span className="text-sm font-medium">Assign Guard</span>
+                            <span className="text-sm font-medium">{t('clients.assignGuards.assignButton', 'Assign Guard')}</span>
                         </button>
                     </div>
                 </div>
 
                 <div>
-                    <div className="md:block hidden overflow-x-auto">
+                    <div className="md:block hidden overflow-x-auto flex-1 min-h-[60vh]">
                         <table className="w-full">
                         <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-4 py-3"><input type="checkbox" /></th>
-                                <th className="px-4 py-3 text-left">Name</th>
-                                <th className="px-4 py-3 text-left">Mobile Number</th>
-                                <th className="px-4 py-3 text-left">Email</th>
-                                <th className="px-4 py-3 text-left">Station</th>
-                                <th className="px-4 py-3 text-left">Source</th>
-                                <th className="px-4 py-3 text-right">Actions</th>
+                                <tr>
+                                <th className="px-6 py-4 flex items-center justify-center"><input type="checkbox" checked={(assignedGuards.filter(r => matchesQuery(r, query)).length > 0) && selectedGuards.length === assignedGuards.filter(r => matchesQuery(r, query)).length} onChange={toggleSelectAll} /></th>
+                                <th className="px-6 py-4 text-left text-base">{t('clients.assignGuards.table.name', 'Name')}</th>
+                                <th className="px-6 py-4 text-left text-base">{t('clients.assignGuards.table.mobile', 'Mobile Number')}</th>
+                                <th className="px-6 py-4 text-left text-base">{t('clients.assignGuards.table.email', 'Email')}</th>
+                                <th className="px-6 py-4 text-left text-base">{t('clients.assignGuards.table.station', 'Puesto')}</th>
+                                <th className="px-6 py-4 text-right text-base">{t('clients.assignGuards.table.actions', 'Actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {assignedGuards.length === 0 ? (
+                                {assignedGuards.filter(r => matchesQuery(r, query)).length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-4 py-12">
+                                    <td colSpan={7} className="px-4 py-12">
                                         <div className="flex flex-col items-center justify-center gap-4">
                                             <div className="w-40 h-40">
                                                 <svg viewBox="0 0 200 200" className="w-full h-full text-orange-100">
@@ -234,24 +572,23 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                 </svg>
                                             </div>
                                             <div className="text-center">
-                                                <h3 className="text-lg font-semibold text-gray-700">No Result Found</h3>
-                                                <p className="text-sm text-gray-500 mt-1">No guards are assigned to this post site.</p>
+                                                <h3 className="text-lg font-semibold text-gray-700">{t('clients.assignGuards.emptyTitle', 'No Result Found')}</h3>
+                                                <p className="text-sm text-gray-500 mt-1">{t('clients.assignGuards.emptyMessage', 'No guards are assigned to this post site.')}</p>
                                             </div>
                                         </div>
                                     </td>
                                 </tr>
-                            ) : (
-                                assignedGuards.map((g) => (
+                                ) : (
+                                assignedGuards.filter(r => matchesQuery(r, query)).map((g) => (
                                     <tr key={g.id} className="border-b">
-                                        <td className="px-4 py-3"><input type="checkbox" /></td>
-                                        <td className="px-4 py-3 text-left">
-                                            {(g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.fullName || g.label || g.email || g.userId || '-')}
+                                        <td className="px-6 py-4 flex items-center justify-center"><input type="checkbox" checked={selectedGuards.includes(g.id)} onChange={() => toggleSelect(g.id)} /></td>
+                                        <td className="px-6 py-4 text-left text-base">
+                                            {g.guardName || (g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.fullName || g.label || g.email || g.userId || '-')}
                                         </td>
-                                        <td className="px-4 py-3 text-left">{g.phoneNumber || '-'}</td>
-                                        <td className="px-4 py-3 text-left">{g.email || '-'}</td>
-                                        <td className="px-4 py-3 text-left">{g.stationName || g.station?.name || '-'}</td>
-                                        <td className="px-4 py-3 text-left">{g.source || 'pivot'}</td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="px-6 py-4 text-left text-base">{g.phoneNumber || '-'}</td>
+                                        <td className="px-6 py-4 text-left text-base">{g.email || '-'}</td>
+                                        <td className="px-6 py-4 text-left text-base">{g.businessInfoName || (g.station && (g.station.stationName || g.station.name)) || g.stationName || g.stationId || '-'}</td>
+                                        <td className="px-6 py-4 text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <button className="p-2 rounded hover:bg-gray-50">
@@ -260,10 +597,13 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem onClick={() => handleView(g)}>
-                                                        <Eye className="mr-2 h-4 w-4" /> View
+                                                        <Eye className="mr-2 h-4 w-4" /> {t('clients.assignGuards.actionView','View')}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => openEditAssignment(g)}>
+                                                        <Edit className="mr-2 h-4 w-4" /> {t('clients.assignGuards.actionEdit','Edit')}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => handleDelete(g)} className="text-red-600">
-                                                        <Trash className="mr-2 h-4 w-4" /> Delete
+                                                        <Trash className="mr-2 h-4 w-4" /> {t('clients.assignGuards.actionDelete','Delete')}
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
@@ -275,13 +615,12 @@ export default function AssignGuards({ site }: { site?: any }) {
                         </table>
                     </div>
 
-                    <div className="md:hidden">
-                        <MobileCardList items={assignedGuards} renderCard={(g: any) => (
+                    <div className="md:hidden flex-1">
+                                <MobileCardList items={assignedGuards.filter(r => matchesQuery(r, query))} renderCard={(g: any) => (
                             <div>
-                                <div className="text-sm font-semibold">{(g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.fullName || g.label || g.email || g.userId || '-')}</div>
+                                <div className="text-sm font-semibold">{g.guardName || (g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.fullName || g.label || g.email || g.userId || '-')}</div>
                                 <div className="text-xs text-gray-500">{g.phoneNumber || g.email || '-'}</div>
-                                <div className="text-xs text-gray-500">{g.stationName || g.station?.name || ''}</div>
-                                <div className="text-xs text-gray-400">{g.source || 'pivot'}</div>
+                                <div className="text-xs text-gray-500">{g.businessInfoName || (g.station && (g.station.stationName || g.station.name)) || g.stationName || g.stationId || ''}</div>
                             </div>
                         )} loading={false} />
                     </div>
@@ -292,7 +631,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                         <div className="absolute inset-0 bg-black/40" onClick={() => setViewModalOpen(false)} />
                         <aside className="relative mx-auto w-full max-w-xl max-h-[60vh] bg-white shadow-xl overflow-auto rounded-lg">
                             <div className="flex items-center justify-between p-4 border-b">
-                                <h3 className="text-2xl font-semibold">Guard Assignments </h3>
+                                <h3 className="text-2xl font-semibold">{t('clients.assignGuards.viewModalTitle', 'Guard Assignments')}</h3>
                                 <button onClick={() => setViewModalOpen(false)} className="p-2 text-gray-500 hover:text-gray-700">
                                     <X size={18} />
                                 </button>
@@ -312,30 +651,54 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                         <div>
                                                             <dl className="space-y-2 text-base">
-                                                                    <div>
-                                                                        <dt className="text-sm font-medium text-gray-600">Source</dt>
-                                                                        <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.source || 'pivot'}</div></dd>
-                                                                    </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Post Site</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.postSiteName || a.businessInfoId || '-'}</div></dd>
+                                                                    <dt className="text-sm font-medium text-gray-600">ID</dt>
+                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.id || '-'}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Station</dt>
+                                                                    <dt className="text-sm font-medium text-gray-600">Tenant User</dt>
+                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.tenantUserName || resolveTenantUserName(a)}</div></dd>
+                                                                </div>
+                                                                <div>
+                                                                    <dt className="text-sm font-medium text-gray-600">Puesto</dt>
+                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.businessInfoName || resolveBusinessInfoName(a)}</div></dd>
+                                                                </div>
+                                                                <div>
+                                                                    <dt className="text-sm font-medium text-gray-600">Created At</dt>
+                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.createdAt || a.created_at || '-'}</div></dd>
+                                                                </div>
+                                                                <div>
+                                                                    <dt className="text-sm font-medium text-gray-600">Updated At</dt>
+                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.updatedAt || a.updated_at || '-'}</div></dd>
+                                                                </div>
+                                                                <div>
+                                                                    <dt className="text-sm font-medium text-gray-600">Deleted At</dt>
+                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.deletedAt || a.deleted_at || '-'}</div></dd>
+                                                                </div>
+                                                                <div>
+                                                                    <dt className="text-sm font-medium text-gray-600">Guardia</dt>
+                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{resolveSecurityGuardName(a)}</div></dd>
+                                                                </div>
+                                                                <div>
+                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.postSiteLabel','Post Site')}</dt>
+                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.postSiteName || a.businessInfoName || a.businessInfoId || '-'}</div></dd>
+                                                                </div>
+                                                                <div>
+                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.stationLabel','Station')}</dt>
                                                                     <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.stationName || a.station?.name || '-'}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Security Guard</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{(a.guardFirstName || a.guardLastName) ? `${a.guardFirstName || ''} ${a.guardLastName || ''}`.trim() : (a.guardEmail || a.guardUserId || '-')}</div></dd>
+                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.securityGuardLabel','Security Guard')}</dt>
+                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.guardName || resolveSecurityGuardName(a) || (a.guardEmail || a.guardUserId || '-')}</div></dd>
                                                                 </div>
 
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Skill Set</dt>
+                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.skillSetLabel','Skill Set')}</dt>
                                                                     <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{format(a.skillSet)}</div></dd>
                                                                 </div>
 
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Department</dt>
+                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.departmentLabel','Department')}</dt>
                                                                     <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{format(a.department)}</div></dd>
                                                                 </div>
                                                             </dl>
@@ -344,22 +707,22 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                         <div>
                                                             <dl className="space-y-2 text-base">
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Site Tours</dt>
+                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.siteToursLabel','Site Tours')}</dt>
                                                                     <dd className="text-base text-gray-800"><pre className="whitespace-pre-wrap bg-gray-50 p-2 rounded text-base">{format(a.siteTours)}</pre></dd>
                                                                 </div>
 
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Tasks</dt>
+                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.tasksLabel','Tasks')}</dt>
                                                                     <dd className="text-base text-gray-800"><pre className="whitespace-pre-wrap bg-gray-50 p-2 rounded text-base">{format(a.tasks)}</pre></dd>
                                                                 </div>
 
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Post Orders</dt>
+                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.postOrdersLabel','Post Orders')}</dt>
                                                                     <dd className="text-base text-gray-800"><pre className="whitespace-pre-wrap bg-gray-50 p-2 rounded text-base">{format(a.postOrders)}</pre></dd>
                                                                 </div>
 
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Checklists</dt>
+                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.checklistsLabel','Checklists')}</dt>
                                                                     <dd className="text-base text-gray-800"><pre className="whitespace-pre-wrap bg-gray-50 p-2 rounded text-base">{format(a.checklists)}</pre></dd>
                                                                 </div>
                                                             </dl>
@@ -370,7 +733,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                         })}
                                     </div>
                                 ) : (
-                                    <div className="text-sm text-gray-500">No assignments found.</div>
+                                    <div className="text-sm text-gray-500">{t('clients.assignGuards.viewNoAssignments','No assignments found.')}</div>
                                 )}
                             </div>
                         </aside>
@@ -385,38 +748,22 @@ export default function AssignGuards({ site }: { site?: any }) {
 
                         <aside className="relative w-full sm:ml-auto sm:max-w-md bg-white shadow-xl overflow-hidden rounded-t-lg sm:rounded-lg">
                             <div className="flex items-center justify-between p-4 border-b">
-                                <h3 className="text-lg font-semibold">Assign Guard</h3>
+                                                <h3 className="text-lg font-semibold">{t('clients.assignGuards.modalTitle', 'Assign Guard')}</h3>
                                 <button onClick={() => setShowAssignModal(false)} className="p-2 text-gray-500 hover:text-gray-700">
                                     <X size={18} />
                                 </button>
                             </div>
                             <div className="p-6 overflow-y-auto max-h-[80vh] space-y-4">
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-2">Skill Set</label>
-                                    <select value={skillSet} onChange={e => setSkillSet(e.target.value)} className="w-full border rounded-lg h-12 px-3">
-                                        <option value="">Select skill set</option>
-                                        <option value="security-level-1">Security Level 1</option>
-                                        <option value="security-level-2">Security Level 2</option>
-                                    </select>
-                                </div>
+                                
 
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-2">Department</label>
-                                    <select value={department} onChange={e => setDepartment(e.target.value)} className="w-full border rounded-lg h-12 px-3">
-                                        <option value="">Select department</option>
-                                        <option value="operations">Operations</option>
-                                        <option value="reception">Reception</option>
-                                    </select>
-                                </div>
-
-                                <div className="relative">
-                                    <label className="block text-sm text-gray-600 mb-2">Guards*</label>
+                                <div ref={guardDropdownRef} className="relative">
+                                    <label className="block text-sm text-gray-600 mb-2">{t('clients.assignGuards.guardsLabel', 'Guards*')}</label>
                                     <div className="relative">
                                         <input
                                             value={guardQuery || (selectedGuard ? guardOptions.find(g => g.id === selectedGuard)?.name ?? '' : '')}
                                             onChange={e => { setGuardQuery(e.target.value); setShowGuardsDropdown(true); setSelectedGuard(null); }}
                                             onFocus={() => setShowGuardsDropdown(true)}
-                                            placeholder="Search guards"
+                                            placeholder={t('clients.assignGuards.searchPlaceholder', 'Search guards')}
                                             className="w-full border rounded-lg h-12 px-3"
                                         />
 
@@ -426,127 +773,138 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                     <li key={g.id} onMouseDown={(e) => { e.preventDefault(); setSelectedGuard(g.id); setGuardQuery(''); setShowGuardsDropdown(false); }} className="px-3 py-2 hover:bg-gray-50 cursor-pointer">{g.name}</li>
                                                 ))}
                                                 {guardOptions.filter(g => g.name.toLowerCase().includes((guardQuery || '').toLowerCase())).length === 0 && (
-                                                    <li className="px-3 py-2 text-sm text-gray-400">No results</li>
+                                                    <li className="px-3 py-2 text-sm text-gray-400">{t('clients.assignGuards.noResults', 'No results')}</li>
                                                 )}
                                             </ul>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-400 mt-1">Type to search and pick a guard</p>
+                                    <p className="text-xs text-gray-400 mt-1">{t('clients.assignGuards.searchHelp', 'Type to search and pick a guard')}</p>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-2">Assign Site Tours</label>
-                                    <select value={assignSiteTours} onChange={e => setAssignSiteTours(e.target.value)} className="w-full border rounded-lg h-12 px-3">
-                                        <option value="">None</option>
-                                        <option value="tour-1">Site Tour 1</option>
-                                    </select>
-                                </div>
+                                {/* Assignment type removed — always creating a Shift */}
+
+                                <>
+                                    <div>
+                                        <label className="block text-sm text-gray-600 mb-2">{t('postSites.stations.form.startTime', 'Start')}</label>
+                                        <input type="datetime-local" value={shiftStart} onChange={e => setShiftStart(e.target.value)} className="w-full border rounded-lg h-12 px-3" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-gray-600 mb-2">{t('postSites.stations.form.finishTime', 'End')}</label>
+                                        <input type="datetime-local" value={shiftEnd} onChange={e => setShiftEnd(e.target.value)} className="w-full border rounded-lg h-12 px-3" />
+                                    </div>
+                                </>
+
+                                {/* guardShift option removed — attendance managed in guard profile */}
+
+                                
 
                                 <div>
-                                    <label className="block text-sm text-gray-600 mb-2">Assign Tasks</label>
-                                    <select value={assignTasks} onChange={e => setAssignTasks(e.target.value)} className="w-full border rounded-lg h-12 px-3">
-                                        <option value="">None</option>
-                                        <option value="task-1">Daily Rounds</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-2">Assign Post Orders</label>
-                                    <select value={assignPostOrders} onChange={e => setAssignPostOrders(e.target.value)} className="w-full border rounded-lg h-12 px-3">
-                                        <option value="">None</option>
-                                        <option value="po-1">Post Order 1</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-2">Assign Checklists</label>
-                                    <select value={assignChecklists} onChange={e => setAssignChecklists(e.target.value)} className="w-full border rounded-lg h-12 px-3">
-                                        <option value="">None</option>
-                                        <option value="checklist-1">Checklist A</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm text-gray-600 mb-2">Station (optional)</label>
-                                    {showNewStation ? (
-                                        <div className="flex items-center gap-2">
-                                            <input value={newStationName} onChange={e => setNewStationName(e.target.value)} placeholder="Station name" className="border rounded-lg h-12 px-3 flex-1" />
-                                            <button disabled={creatingStation} onClick={async () => {
-                                                try {
-                                                    const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
-                                                    const postSiteId = site?.id || '';
-                                                    if (!newStationName || !postSiteId) { toast.error('Provide station name'); return; }
-                                                    setCreatingStation(true);
-                                                    const payload = { name: newStationName, postSiteId };
-                                                    const res = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
-                                                    const created = (res && (res.data || res)) || res;
-                                                    setStations(s => [created, ...s]);
-                                                    setSelectedStation(created.id || created._id || null);
-                                                    setNewStationName('');
-                                                    setShowNewStation(false);
-                                                    toast.success('Station created');
-                                                } catch (err: any) {
-                                                    console.error('Failed creating station', err);
-                                                    toast.error(err?.message || 'Failed creating station');
-                                                } finally { setCreatingStation(false); }
-                                            }} className="bg-orange-600 text-white px-3 py-2 rounded">Create</button>
-                                            <button onClick={() => { setShowNewStation(false); setNewStationName(''); }} className="px-3 py-2 rounded border">Cancel</button>
+                                    <label className="block text-sm text-gray-600 mb-2">{t('clients.assignGuards.stationLabel', 'Station*')}</label>
+                                        {showNewStation ? (
+                                        <div className="space-y-2">
+                                            <input value={newStationName} onChange={e => setNewStationName(e.target.value)} placeholder={t('clients.stations.placeholderName','Station name')} className="border rounded-lg h-12 px-3 w-full" />
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1">{t('clients.assignGuards.startShort','Start (hh:mm)')}</label>
+                                                    <input type="time" value={newStationStart} onChange={e => setNewStationStart(e.target.value)} className="border rounded-lg h-10 px-3 w-full" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-500 mb-1">{t('clients.assignGuards.endShort','End (hh:mm)')}</label>
+                                                    <input type="time" value={newStationEnd} onChange={e => setNewStationEnd(e.target.value)} className="border rounded-lg h-10 px-3 w-full" />
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button disabled={creatingStation} onClick={async () => {
+                                                    try {
+                                                        const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+                                                        const postSiteId = site?.id || '';
+                                                        if (!newStationName || !postSiteId) { toast.error(t('clients.stations.provideName', 'Provide station name')); return; }
+                                                        setCreatingStation(true);
+                                                        const payload: any = { name: newStationName, postSiteId };
+                                                        if (newStationStart) payload.startTimeInDay = newStationStart;
+                                                        if (newStationEnd) payload.finishTimeInDay = newStationEnd;
+                                                        const res = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
+                                                        const created = (res && (res.data || res)) || res;
+                                                        setStations(s => [created, ...s]);
+                                                        setSelectedStation(created.id || created._id || created.stationId || null);
+                                                        setNewStationName(''); setNewStationStart(''); setNewStationEnd('');
+                                                        setShowNewStation(false);
+                                                        toast.success(t('clients.stations.created', 'Station created'));
+                                                    } catch (err: any) {
+                                                        console.error('Failed creating station', err);
+                                                        toast.error(err?.message || t('clients.stations.createFailed', 'Failed creating station'));
+                                                    } finally { setCreatingStation(false); }
+                                                }} className="bg-orange-600 text-white px-3 py-2 rounded border text-sm">{t('clients.stations.create', 'Create')}</button>
+                                                <button onClick={() => { setShowNewStation(false); setNewStationName(''); setNewStationStart(''); setNewStationEnd(''); }} className="px-3 py-2 rounded border text-sm">{t('clients.stations.cancel', 'Cancel')}</button>
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2">
                                             <select value={selectedStation || ''} onChange={e => setSelectedStation(e.target.value || null)} className="w-full border rounded-lg h-12 px-3">
-                                                <option value="">-- none --</option>
-                                                {stations.map(s => (
-                                                    <option key={s.id} value={s.id}>{s.name}</option>
-                                                ))}
+                                                <option value="">{t('clients.assignGuards.selectStationOption', '-- select station --')}</option>
+                                                {stations.map(s => {
+                                                    const id = s.id || s.stationId || s._id || '';
+                                                    const label = s.name || s.stationName || s.station_name || s.name || s.label || t('clients.assignGuards.unnamedStation','Unnamed station');
+                                                    return <option key={id || JSON.stringify(s)} value={id}>{label}</option>;
+                                                })}
                                             </select>
-                                            <button onClick={() => setShowNewStation(true)} className="px-3 py-2 rounded border text-sm">Add Station</button>
+                                            <button onClick={() => setShowNewStation(true)} className="px-3 py-2 rounded border text-sm">{t('clients.assignGuards.addStation', 'Add Station')}</button>
                                         </div>
                                     )}
                                 </div>
                             </div>
                             <div className="sticky bottom-0 bg-white border-t p-4 flex items-center justify-end gap-3">
-                                <button onClick={async () => {
-                                    try {
-                                        // Build payload
-                                        const payload: any = {
-                                            securityGuardId: selectedGuard,
-                                            assignSiteTours,
-                                            assignTasks,
-                                            assignPostOrders,
-                                            assignChecklists,
-                                            skillSet,
-                                            department,
-                                                        stationId: selectedStation,
-                                        };
-
-                                        const tenantId = (site && site.tenantId) ? site.tenantId : '';
-                                        const postSiteId = (site && site.id) ? site.id : '';
-
-                                        // Basic validation
-                                        if (!selectedGuard || !postSiteId) {
-                                            console.warn('Missing guard or post site id');
-                                            setShowAssignModal(false);
-                                            return;
-                                        }
-
-                                        const url = `/tenant/${tenantId}/post-site/${postSiteId}/assign-guard`;
-
+                                <button
+                                    onClick={async () => {
+                                        console.log('[AssignGuards] assign button clicked', { selectedGuard, selectedStation, shiftStart, shiftEnd });
+                                        let succeeded = false;
                                         try {
-                                            await ApiService.post(url, { data: payload });
-                                            toast.success('Guard assigned successfully');
+                                            const tenantId = (site && site.tenantId) ? site.tenantId : '';
+                                            const postSiteId = (site && site.id) ? site.id : '';
+
+                                            // Basic validation: require postSiteId
+                                            if (!postSiteId) {
+                                                toast.error(t('clients.assignGuards.missingPostSite', 'Missing post site id'));
+                                                return;
+                                            }
+
+                                            // If guard not selected, show error and keep modal open so user can fill other fields
+                                            if (!selectedGuard) {
+                                                toast.error(t('clients.assignGuards.selectGuardRequired', 'Please select a guard before assigning'));
+                                                return;
+                                            }
+
+                                            // Require a station for every Shift created from this modal
+                                            if (!selectedStation) {
+                                                toast.error(t('clients.assignGuards.selectStationRequired', 'Please select or create a station before assigning'));
+                                                return;
+                                            }
+
+                                            // Always create a Shift when assigning from this modal
+                                            const payload: any = {
+                                                startTime: shiftStart ? new Date(shiftStart).toISOString() : undefined,
+                                                endTime: shiftEnd ? new Date(shiftEnd).toISOString() : undefined,
+                                                station: selectedStation,
+                                                guard: selectedGuard,
+                                            };
+                                            console.log('[AssignGuards] creating shift payload:', payload);
+                                            const resp = await ApiService.post(`/tenant/${tenantId}/shift`, { data: payload });
+                                            console.log('[AssignGuards] shift create response:', resp);
+                                            toast.success(t('clients.assignGuards.shiftCreated', 'Shift created and guard assigned'));
+                                                try { await loadAssigned(); } catch (e) { console.error('Failed to reload assigned after shift create', e); }
+                                            succeeded = true;
                                         } catch (err: any) {
                                             console.error('Assign guard failed', err);
-                                            const msg = err && err.message ? err.message : 'Assign guard failed';
+                                            const msg = err?.response?.data?.message || err?.message || t('clients.assignGuards.assignFailed', 'Assign guard failed');
                                             toast.error(msg);
+                                        } finally {
+                                            if (succeeded) setShowAssignModal(false);
                                         }
-                                    } catch (err) {
-                                        console.error('Assign guard error', err);
-                                    } finally {
-                                        setShowAssignModal(false);
-                                    }
-                                }} className="w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg">
-                                    SAVE
+                                    }}
+                                    className="w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg"
+                                    aria-label={t('clients.assignGuards.assignButtonAria', 'Assign')}
+                                >
+                                    <Plus size={16} />
                                 </button>
                             </div>
                         </aside>
@@ -554,16 +912,30 @@ export default function AssignGuards({ site }: { site?: any }) {
                 )}
 
                 <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-                    <AlertDialogContent>
+                        <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Confirm removal</AlertDialogTitle>
+                            <AlertDialogTitle>{t('clients.assignGuards.confirmRemovalTitle','Confirm removal')}</AlertDialogTitle>
                             <AlertDialogDescription>
-                                Are you sure you want to remove this guard assignment? This action cannot be undone.
+                                {t('clients.assignGuards.confirmRemovalDesc','Are you sure you want to remove this guard assignment? This action cannot be undone.')}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => { setPendingDeleteAssignment(null); setOpenDeleteDialog(false); }}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction className="bg-red-500 text-white" onClick={confirmDelete}>Remove</AlertDialogAction>
+                            <AlertDialogCancel onClick={() => { setPendingDeleteAssignment(null); setOpenDeleteDialog(false); }}>{t('clients.assignGuards.cancel','Cancel')}</AlertDialogCancel>
+                            <AlertDialogAction className="bg-red-500 text-white" onClick={confirmDelete}>{t('clients.assignGuards.remove','Remove')}</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                <AlertDialog open={openBulkDeleteDialog} onOpenChange={setOpenBulkDeleteDialog}>
+                        <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>{t('clients.assignGuards.confirmBulkRemovalTitle','Confirm bulk removal')}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                {t('clients.assignGuards.confirmBulkRemovalDesc','Are you sure you want to remove the selected assignments? This action cannot be undone.')}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => { setOpenBulkDeleteDialog(false); }}>{t('clients.assignGuards.cancel','Cancel')}</AlertDialogCancel>
+                            <AlertDialogAction className="bg-red-500 text-white" onClick={confirmBulkDelete}>{t('clients.assignGuards.remove','Remove')}</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>

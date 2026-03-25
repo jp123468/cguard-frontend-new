@@ -28,7 +28,7 @@ export const RESOURCE_LABELS: Record<string, string> = {
   notificationRecipient: 'Destinatarios',
   inquiries: 'Consultas',
   request: 'Solicitudes',
-  dispatch: 'Despachos',
+  dispatch: 'Incidentes',
   task: 'Tareas',
   memos: 'Memorandos',
   tutorial: 'Tutoriales',

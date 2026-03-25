@@ -10,7 +10,8 @@ i18n.use(initReactI18next).init({
     en: { translation: en },
     pt: { translation: pt },
   },
-  lng: typeof window !== 'undefined' ? (localStorage.getItem('app_language') || 'es') : 'es',
+  // Always use Spanish by default across the app
+  lng: 'es',
   fallbackLng: 'es',
   interpolation: { escapeValue: false },
   react: { useSuspense: false },

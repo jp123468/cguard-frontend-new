@@ -61,3 +61,33 @@ body {
     outline: none;
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
 }
+
+/* Map fixes: ensure map containers fill available viewport height and scale */
+.map-wrapper {
+    width: 100%;
+    /* leave room for headers/toolbars; adjust if needed */
+    min-height: calc(100vh - 140px);
+    height: calc(100vh - 140px);
+}
+
+.map-wrapper .leaflet-container,
+.map-wrapper .mapboxgl-map,
+.map-wrapper .gm-style,
+.map-wrapper iframe,
+.map-wrapper #map {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+}
+
+/* If map is inside a flex column, ensure its parents allow growth */
+.map-wrapper, .map-wrapper > * {
+    display: block;
+    flex: 1 1 auto;
+}
+
+/* Fallback generic map container */
+.map-fullscreen {
+    width: 100%;
+    min-height: calc(100vh - 140px);
+}

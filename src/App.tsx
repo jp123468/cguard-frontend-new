@@ -386,6 +386,14 @@ export default function App() {
                 }
               />
               <Route
+                path="/post-sites/:id/incidents"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/post-sites/:id/files"
                 element={
                   <ProtectedRoute>

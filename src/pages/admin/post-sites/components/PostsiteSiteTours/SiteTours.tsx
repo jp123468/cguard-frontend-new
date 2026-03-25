@@ -18,11 +18,13 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
   const [timeMode, setTimeMode] = useState('specific');
   const [selectTime, setSelectTime] = useState('');
   const [maxDuration, setMaxDuration] = useState('');
-  const [tagType, setTagType] = useState('');
-  const [tags, setTags] = useState('');
+  const [stationId, setStationId] = useState('');
   const [assignGuard, setAssignGuard] = useState('');
   const [enableNotes, setEnableNotes] = useState(false);
   const [forceMedia, setForceMedia] = useState(false);
+
+  const [stations, setStations] = useState<any[]>([]);
+  const [loadingStations, setLoadingStations] = useState(false);
 
   const [localGuards, setLocalGuards] = useState<any[]>(guards || []);
   const [loadingGuards, setLoadingGuards] = useState(false);
@@ -31,39 +33,70 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
   const [loadingTours, setLoadingTours] = useState(false);
   const [toursError, setToursError] = useState<string | null>(null);
   const timeInputRef = useRef<HTMLInputElement | null>(null);
-  const guardsLoadedRef = useRef(false);
+  
 
   useEffect(() => {
     // Solo cargar guardias asignados a este post site cuando se abre el modal
-    if (showNewTourModal && !guardsLoadedRef.current && localGuards.length === 0) {
-      guardsLoadedRef.current = true;
-      setLoadingGuards(true);
-      setGuardLoadError(null);
-
-      const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
-      const postSiteId = site?.id || '';
-
-      if (!postSiteId) {
-        setGuardLoadError(t('siteTour.form.noPostSiteId', 'No post site selected'));
-        setLoadingGuards(false);
-        return;
-      }
-
-      ApiService.get(`/tenant/${tenantId}/post-site/${postSiteId}/guards`)
-        .then((data) => {
-          // El endpoint puede retornar un array o { rows, count }
-          const guardsList = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
-          setLocalGuards(guardsList || []);
-        })
-        .catch((err) => {
-          console.error('Failed to load assigned guards', err);
-          setGuardLoadError(t('siteTour.form.errorLoadingGuards', 'Error loading guards'));
-        })
-        .finally(() => {
-          setLoadingGuards(false);
-        });
+    // Load stations for this post site when opening modal
+    if (showNewTourModal && stations.length === 0) {
+      (async () => {
+        try {
+          setLoadingStations(true);
+          const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+          const postSiteId = site?.id || '';
+          if (!tenantId || !postSiteId) return;
+          const res: any = await ApiService.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`);
+          const rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
+          setStations(rows || []);
+        } catch (e) {
+          console.error('Failed loading stations for site', e);
+          setStations([]);
+        } finally {
+          setLoadingStations(false);
+        }
+      })();
     }
   }, [showNewTourModal, site, t]);
+
+  // Load guards for selected station when stationId changes (or when opening modal after choosing default)
+  useEffect(() => {
+    if (!showNewTourModal) return;
+    const loadGuards = async () => {
+      setLoadingGuards(true);
+      setGuardLoadError(null);
+      const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+      const postSiteId = site?.id || '';
+      try {
+        // Try station-specific endpoint first, fallback to post-site guards
+        let data: any = null;
+        if (stationId) {
+          try {
+            data = await ApiService.get(`/tenant/${tenantId}/station/${encodeURIComponent(stationId)}/guards`);
+          } catch (e) {
+            // ignore and fallback
+            data = null;
+          }
+        }
+        if (!data) {
+          // fallback to post-site level
+          try {
+            data = await ApiService.get(`/tenant/${tenantId}/post-site/${encodeURIComponent(postSiteId)}/guards`);
+          } catch (e) {
+            data = null;
+          }
+        }
+        const guardsList = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
+        setLocalGuards(guardsList || []);
+      } catch (err) {
+        console.error('Failed to load guards for station/postsite', err);
+        setGuardLoadError(t('siteTour.form.errorLoadingGuards', 'Error loading guards'));
+        setLocalGuards([]);
+      } finally {
+        setLoadingGuards(false);
+      }
+    };
+    loadGuards();
+  }, [stationId, showNewTourModal, site, t]);
 
   // Load tenant site tours (tenant-scoped)
   const fetchTours = async () => {
@@ -299,16 +332,11 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
               </div>
 
               <div>
-                <select value={tagType} onChange={e => setTagType(e.target.value)} className="w-full border rounded-lg h-12 px-3">
-                  <option value="">{t('siteTour.form.tagType')}</option>
-                  <option value="type-a">{t('siteTour.form.tagTypeOptionA')}</option>
-                </select>
-              </div>
-
-              <div>
-                <select value={tags} onChange={e => setTags(e.target.value)} className="w-full border rounded-lg h-12 px-3">
-                  <option value="">{t('siteTour.form.tags')}</option>
-                  <option value="tag-1">{t('siteTour.form.tagsOption1')}</option>
+                <select value={stationId} onChange={e => setStationId(e.target.value)} className="w-full border rounded-lg h-12 px-3">
+                  <option value="">{loadingStations ? 'Loading stations...' : t('siteTour.form.selectStation', 'Select station')}</option>
+                  {stations.map((s: any) => (
+                    <option key={s.id || s.stationId} value={s.id || s.stationId}>{s.stationName || s.name || s.station_name || s.stationId || s.id}</option>
+                  ))}
                 </select>
               </div>
 
@@ -359,6 +387,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                         name: tourName,
                         description: tourDesc,
                         postSiteId: site?.id || null,
+                        stationId: stationId || null,
                         scheduledDays,
                         continuous,
                         timeMode,

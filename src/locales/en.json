@@ -136,573 +136,998 @@
       "espacios": "Parking Lot",
       "incidentes": "Incidents",
       "tipo-incidente": "Incident Type"
-    }
-
-
-  },
-  "settings": {
-    "configuracion": {
-      "title": "Configuration",
-      "perfil-usuario": "User Profile",
-      "perfil-empresa": "Company Profile",
-      "cambiar-contrasena": "Change Password",
-      "mfa": "Two-Factor Authentication",
-      "notificaciones": "Notifications",
-      "politicas": "Policies & Documents",
-      "tipos-incidentes": "Incident Types",
-      "tipos-licencias": "License Types",
-      "conjunto-habilidades": "Skill Sets",
-      "departamentos": "Departments",
-      "impuestos": "Taxes",
-      "roles": "User Roles",
-      "campos-perfil": "Profile Fields",
-      "custom-reports": "Custom Reports",
-      "integraciones": "Integrations",
-      "payroll-setup": "Payroll Settings",
-      "publishing-sites": "Publishing Sites",
-      "keep-safe": "Security Guards",
-      "report-configuration": "Report Configuration",
-      "other-settings": "Other Settings",
-      "access-token": "Access Token",
-      "request-records": "Request Records"
     },
-    "suscripcion": {
-      "title": "Subscription",
-      "detalle": "Subscription Details",
-      "modulos": "Modules",
-      "metodos-pago": "Payment Methods",
-      "facturas": "Invoices"
+    "app": {
+      "title": "App"
     },
-    "section": {
-      "seguridad": "SECURITY",
-      "configuracion_global": "GLOBAL CONFIGURATION",
-      "acceso_de_desarrollador": "DEVELOPER ACCESS"
-    }
-  },
-  "guards": {
-    "nav": {
-      "resumen": "Overview",
-      "perfil": "Profile",
-      "disponibilidad": "Availability",
-      "indicadores": "KPI Indicators",
-      "licencias": "Licenses",
-      "notas": "Notes",
-      "recordatorios": "Reminders",
-      "archivos": "Files",
-      "asignarSitios": "Assign Sites",
-      "conjuntoHabilidades": "Skill Set",
-      "departamento": "Department",
-      "configuracion": "Settings"
-    },
-  
-    "notes": {
+    "incidents": {
+      "actionsPlaceholder": "Actions",
+      "searchPlaceholder": "Search incidents...",
+      "subject": "Subject",
+      "description": "Description",
+      "apply": "Apply",
       "actions": {
-        "default": "Action",
-        "delete": "Delete"
+        "view": "View",
+        "open": "Open",
+        "createDispatch": "Create Dispatch"
       },
-      "searchPlaceholder": "Search note",
-      "addButton": "New Note",
-      "table": {
-        "title": "Title",
+      "columns": {
+        "ticket": "Ticket",
         "date": "Date",
-        "addedBy": "Added By"
-      },
-      "empty": {
-        "title": "No results found",
-        "message": "We couldn't find<br />any items matching<br />your search"
-      },
-      "modal": {
-        "title": "Add New Note",
-        "cancel": "Cancel",
-        "save": "Save"
-      },
-      "form": {
-        "title": {
-          "label": "Title",
-          "placeholder": "Enter note title"
-        },
-        "description": {
-          "label": "Description",
-          "placeholder": "Enter note description"
-        },
-        "date": {
-          "label": "Date"
-        },
-        "attachments": {
-          "label": "Attachments",
-          "noFiles": "No files selected"
-        }
-      }
-    },
-    "overview": {
-      "loading": "Loading...",
-      "loadError": "Could not load guard"
-    },
-    "summary": {
-      "roleDefault": "Security Guard",
-      "header": {
-        "guardNumber": "Guard number",
-        "addedOn": "Added on",
-        "lastShift": "Last shift",
-        "about": "About"
-      },
-      "previous": "Previous",
-      "stats": {
-        "title": "Statistics",
-        "last7Days": "Last 7 days",
-        "compareWith": "Compare with",
-        "compareOptions": {
-          "previous": "Previous period",
-          "none": "None"
-        },
-        "metrics": {
-          "assignedSites": "Assigned Sites",
-          "completedRoutes": "Completed Routes",
-          "tasksCompleted": "Tasks Completed",
-          "reportsSent": "Reports Sent",
-          "inactivityAlerts": "Inactivity Alerts",
-          "noShows": "No Shows",
-          "lateArrivals": "Late Arrivals",
-          "hoursWorked": "Hours Worked"
-        }
-      },
-      "recentActivity": {
-        "title": "Recent Activity",
-        "filter": "Filter"
-      },
-      "sampleActivity": {
-        "message": "This message is to notify you that 'José Alejo Pinos' has accepted the company request and moved to active list"
-      },
-      "badge": {
-        "joined": "Guard joined"
-      }
-    },
-    "profile": {
-      "actions": {
-        "edit": "Edit",
-        "cancel": "Cancel",
-        "save": "Save",
-        "saving": "Saving..."
-      },
-      "toasts": {
-        "updated": "Guard updated successfully",
-        "updateError": "Error updating guard"
-      },
-      "cards": {
-        "general": "General Information",
-        "contact": "Contact Details",
-        "emergency": "Emergency Contact Details",
-        "personal": "Personal Information",
-        "deviceInfo": "Device Information",
-        "devicePermissions": "Device Permissions",
-        "languagesSkills": "Languages & Skills",
-        "licenseDetails": "License Details"
-      },
-      "fields": {
-        "firstName": "First Name",
-        "lastName": "Last Name",
-        "id1": "ID #1",
-        "id2": "ID #2",
-        "birthDate": "Birth Date",
-        "address": "Address",
-        "email": "Email",
-        "mobile": "Mobile Number",
-        "emergencyContact": "Emergency Contact",
-        "emergencyContactNumber": "Emergency Contact Number",
-        "emergencyRelation": "Relation",
-        "birthPlace": "Birth Place",
-        "maritalStatus": "Marital Status",
-        "bloodType": "Blood Type",
-        "education": "Education",
-        "gender": "Gender",
-        "governmentId": "Government ID",
-        "deviceType": "Device Type",
-        "deviceModel": "Device Model",
-        "osVersion": "OS Version",
-        "appVersion": "App Version",
-        "pushNotifications": "Push Notifications",
-        "gpsPermission": "GPS Permission",
-        "camera": "Camera",
-        "microphone": "Microphone",
-        "languages": "Languages",
-        "skills": "Skills",
-        "licenseType": "License Type",
-        "licenseNumber": "Number",
-        "issueDate": "Issue Date",
-        "expiryDate": "Expiry Date"
-      },
-      "values": {
-        "enabled": "Enabled",
-        "disabled": "Disabled",
-        "background": "Background"
-      },
-      "placeholders": {
-        "languages": "Eg: Spanish, English",
-        "skills": "Eg: First aid, Self-defense"
-      },
-      "noLicense": "No license found"
-    },
-    "tabs": {
-      "invite": "Invite via SMS or Email",
-      "create_profile": "Create profile"
-    },
-    "availability": {
-      "title": "Availability",
-      "table": {
-        "day": "Day",
-        "available": "Available",
-        "from": "From",
-        "to": "To"
-      },
-      "days": {
-        "Monday": "Monday",
-        "Tuesday": "Tuesday",
-        "Wednesday": "Wednesday",
-        "Thursday": "Thursday",
-        "Friday": "Friday",
-        "Saturday": "Saturday",
-        "Sunday": "Sunday"
-      },
-      "save": "Save",
-      "toasts": {
-        "saved": "Availability saved"
-      }
-    },
-    "licenses": {
-      "action": {
-        "default": "Action"
-      },
-      "actions": {
-        "delete": "Delete"
-      },
-      "searchPlaceholder": "Search license",
-      "newLicense": "New License",
-      "table": {
-        "type": "License Type",
-        "number": "License Number",
-        "expires": "Expires On",
-        "addedBy": "Added By"
-      },
-      "empty": {
-        "title": "No results found",
-        "description": "We couldn't find<br />any items matching<br />your search"
-      },
-      "modal": {
-        "title": "Add New License",
-        "cancel": "Cancel",
-        "save": "Save"
-      },
-      "form": {
-        "licenseType": "License Type",
-        "selectLicenseType": "Select license type",
-        "option": {
-          "driver": "Driver License",
-          "weapons": "Weapons License",
-          "security": "Security License",
-          "other": "Other"
-        },
-        "customLicenseName": "License Name",
-        "customLicensePlaceholder": "Enter license name",
-        "licenseNumber": "License Number",
-        "licenseNumberPlaceholder": "Enter license number",
-        "expiryDate": "Expires On",
-        "frontImageLabel": "Front License Image",
-        "backImageLabel": "Back License Image",
-        "chooseFile": "Choose file"
-      }
-    },
-    "reminders": {
-      "action": {
-        "default": "Action"
-      },
-      "actions": {
-        "archive": "Archive"
-      },
-      "searchPlaceholder": "Search reminders",
-      "filters": {
-        "button": "Filters",
-        "title": "Filters",
-        "status": "Status",
-        "options": {
-          "all": "All",
-          "pending": "Pending",
-          "completed": "Completed",
-          "archived": "Archived"
-        },
-        "cancel": "Cancel",
-        "apply": "Apply"
-      },
-      "addReminder": "Add Reminder",
-      "table": {
-        "title": "Title",
-        "datetime": "Reminder Date/Time",
-        "createdBy": "Created By",
-        "priority": "Priority",
+        "client": "Client",
+        "postSite": "Post site",
+        "caller": "Caller",
+        "incidentType": "Incident type",
         "status": "Status"
       },
-      "empty": {
-        "title": "No Result Found",
-        "description": "We can't find any item matching your search"
-      },
-      "modal": {
-        "title": "Add Reminder",
-        "save": "Save"
-      },
-      "form": {
-        "title": "Title",
-        "titlePlaceholder": "Title*",
-        "description": "Description",
-        "descriptionPlaceholder": "Description",
-        "selectedDate": "Selected Date",
-        "at": "At",
-        "createdFor": "Created For",
-        "selectGuards": "Select guards",
-        "priority": "Priority",
-        "attachment": "Attachment",
-        "attachmentPlaceholder": "Attachment"
-      },
-      "priority": {
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
-      },
-      "remindOptions": {
-        "30_Minutes_Before": "30 Minutes Before",
-        "1_Hour_Before": "1 Hour Before",
-        "2_Hours_Before": "2 Hours Before",
-        "4_Hours_Before": "4 Hours Before",
-        "8_Hours_Before": "8 Hours Before",
-        "1_Day_Before": "1 Day Before",
-        "2_Days_Before": "2 Days Before",
-        "4_Days_Before": "4 Days Before",
-        "8_Days_Before": "8 Days Before",
-        "2_Weeks_Before": "2 Weeks Before",
-        "4_Weeks_Before": "4 Weeks Before"
-      },
-      "repeat": {
-        "never": "Never",
-        "1_week": "1 Week",
-        "2_weeks": "2 Weeks",
-        "3_weeks": "3 Weeks",
-        "monthly": "Monthly",
-        "yearly": "Yearly"
-      },
-      "toasts": {
-        "loadError": "Could not load guard"
-      }
-    },
-    "assignSites": {
-      "loading": "Loading...",
-      "action": {
-        "default": "Action"
-      },
-      "actions": {
-        "delete": "Delete"
-      },
-      "searchPlaceholder": "Search Post Sites",
-      "assignButton": "Assign Post Sites",
-      "table": {
-        "client": "Client",
-        "postSites": "Post Sites"
-      },
-      "loadError": "Could not load guard",
-      "modal": {
-        "title": "Assign Sites",
-        "cancel": "Cancel",
-        "assign": "Assign"
-      },
-      "form": {
-        "client": "Client",
-        "selectClient": "Select client",
-        "postSite": "Post Site",
-        "selectPostSite": "Select post site"
-      },
-      "noPostSites": "No post sites found"
-    },
-    "assignSites_no_postsites": "No post sites found",
-    "files": {
-      "action": {
-        "default": "Action"
-      },
-      "actions": {
-        "delete": "Delete"
-      },
-      "searchPlaceholder": "Search files",
-      "uploadButton": "Upload",
-      "table": {
-        "date": "Date",
-        "file": "File",
-        "addedBy": "Added By"
-      },
-      "empty": {
-        "title": "No Files Found",
-        "description": "Upload files using the button on the right"
-      },
-      "loadError": "Could not load guard",
-      "modal": {
-        "title": "Upload Files",
-        "dropHere": "Drop files here..",
-        "orSelect": "Or Select",
-        "chooseFilesPlaceholder": "Choose files No files selected",
-        "filesToUpload": "Files to upload",
-        "upload": "Upload"
-      }
-    },
-    "skills": {
-      "action": {
-        "default": "Action"
-      },
-      "actions": {
-        "delete": "Delete"
-      },
-      "searchPlaceholder": "Search skill sets",
-      "assignButton": "Assign Skill Set",
-      "table": {
-        "name": "Name",
+      "emptyTitle": "No incidents found for this post site.",
+      "emptyMessage": "Try adjusting filters or create a new incident.",
+      "of": "of",
+      "prev": "Prev",
+      "next": "Next",
+      "createDispatch": "Create Dispatch",
+      "labels": {
+        "station": "Station",
+        "subject": "Subject",
         "description": "Description"
       },
-      "empty": {
-        "title": "No Result Found",
-        "description": "We can't find any item matching your search"
-      },
-      "toasts": {
-        "loadError": "Could not load guard",
-        "selectAtLeastOne": "Please select at least one skill set",
-        "provideName": "Please provide a skill name"
-      },
-      "modal": {
-        "title": "Assign Skill Set",
-        "cancel": "Cancel",
-        "assign": "Assign"
-      },
-      "form": {
-        "skillSet": "Skill Set*",
-        "selectPlaceholder": "Select skill sets..."
-      },
-      "dropdown": {
-        "searchPlaceholder": "Search..."
-      }
-    },
-    "new": {
-      "title": "New Guard",
-      "breadcrumb": {
-        "dashboard": "Dashboard"
-      },
-      "invite": {
-        "description": "Enter the guard's name and email/mobile number. A message with a link will be sent."
-      },
-      "join_code": {
-        "description": "Share the company's unique code along with the app download link.",
-        "copied": "Code copied",
-        "invite_sent": "Invitation sent by code",
-        "invite_error": "Error sending invitation by code"
-      },
-      "link": {
-        "description": "Share this link to join the company.",
-        "invite_sent": "Invitation by link sent",
-        "invite_error": "Error sending invitation by link"
-      },
-      "create": {
-        "description": "Create the guard's profile manually. They will need to verify their email and mobile number before signing in."
-      },
-      "form": {
-        "firstName": "First name*",
-        "firstNamePlaceholder": "First name *",
-        "lastName": "Last name*",
-        "lastNamePlaceholder": "Last name *",
-        "inviteBy": "Invite by*",
-        "selectMethodPlaceholder": "Select method",
-        "contactEmail": "Email Address *",
-        "contactSms": "Mobile Number *",
-        "password": "Password *",
-        "passwordPlaceholder": "Password *",
-        "confirmPassword": "Confirm Password *",
-        "confirmPasswordPlaceholder": "Confirm Password *",
-        "contactPhEmail": "e.g. person@email.com",
-        "contactPhSms": "e.g. +12015550123",
-        "selectClient": "Select Client",
-        "assignPostSite": "Assign Post Site",
-        "create_and_send": "Create & Send",
-        "send": "Send"
-      },
-      "toasts": {
-        "clients_sites_load_error": "Could not load clients or sites",
-        "invites_sent": "Invitations sent",
-        "invite_error": "Error sending invitations",
-        "profile_created": "Profile created",
-        "profile_created_sent": "Profile created and sent"
-      },
-      "errors": {
-        "no_permission_create": "You don't have permission to create guards",
-        "error_create_profile": "Error creating profile"
-      },
-      "actions": {
-        "copy": "Copy",
-        "regenerate": "Regenerate",
-        "create": "Create",
-        "show_password": "Show password",
-        "hide_password": "Hide password",
-        "show_confirm_password": "Show password",
-        "hide_confirm_password": "Hide password"
-      }
-    },
-    "KPI": {
-      "modal": {
-        "title": "Add New KPIs (Key Performance Indicators)",
-        "frequency": "Frequency",
-        "frequencyOptions": {
-          "select": "Select frequency",
-          "daily": "Daily",
-          "weekly": "Weekly",
-          "monthly": "Monthly"
-        },
-        "description": "Description",
-        "descriptionPlaceholder": "Enter description",
-        "errors": {
-          "emailRequired": "Please enter an email",
-          "emailInvalid": "Invalid email address",
-          "emailAlreadyAdded": "This email has already been added"
-        },
-        "standardReports": "Standard Reports",
-        "incidentReports": "Incident Reports",
-        "routeReports": "Route Reports",
-        "taskReports": "Task Reports",
-        "verificationReports": "Checklist Reports",
-        "defineNumber": "Define a Number",
-        "emailNotificationLabel": "Send KPI report by email",
-        "newEmailPlaceholder": "New Email...",
-        "addEmail": "Add",
-        "addButton": "ADD",
-        "confirmDeleteTitle": "Confirm deletion",
-        "confirmDeleteMessage": "Are you sure you want to delete the selected KPI(s)? This action cannot be undone."
-      },
-      "emailNotImplemented": "Email report not implemented",
-      "menu": {
-        "email": "Email Report"
-      }
-    },
-    "list": {
-      "pageTitle": "Security Guards",
-      "searchPlaceholder": "Search guard",
-      "newGuard": "New Guard",
-      "filters": "Filters",
-      "filter": {
-        "categories": "Categories",
-        "categoriesAll": "All",
+      "filterFields": {
         "client": "Client",
-        "clientAll": "All",
-        "site": "Post Site",
-        "siteAll": "All",
-        "skills": "Skill Set",
-        "skillsAll": "All",
-        "department": "Department",
-        "departmentAll": "All",
-        "status": "Status*",
-        "statusAllPlaceholder": "All Guards",
-        "statusAll": "All Guards",
-        "statusActive": "Active",
-        "statusPending": "Pending",
-        "statusArchived": "Archived"
+        "station": "Post site",
+        "status": "Status",
+        "createdFrom": "Created from",
+        "createdTo": "Created to",
+        "incidentFrom": "Incident from",
+        "incidentTo": "Incident to",
+        "showArchived": "Show archived"
+      },
+      "selectClient": "Select client",
+      "allClients": "All clients",
+      "allStations": "All stations",
+      "selectStatus": "Select status",
+      "allStatuses": "All",
+      "applyFilters": "Apply filters",
+      "clearFilters": "Clear filters",
+      "selectStation": "Select station",
+      "selectStation": "Select station",
+      "noStations": "No stations",
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "create": "Create",
+      "created": "Dispatch created"
+    },
+    "settings": {
+      "configuracion": {
+        "title": "Configuration",
+        "perfil-usuario": "User Profile",
+        "perfil-empresa": "Company Profile",
+        "cambiar-contrasena": "Change Password",
+        "mfa": "Two-Factor Authentication",
+        "notificaciones": "Notifications",
+        "politicas": "Policies & Documents",
+        "tipos-incidentes": "Incident Types",
+        "tipos-licencias": "License Types",
+        "conjunto-habilidades": "Skill Sets",
+        "departamentos": "Departments",
+        "impuestos": "Taxes",
+        "roles": "User Roles",
+        "campos-perfil": "Profile Fields",
+        "custom-reports": "Custom Reports",
+        "integraciones": "Integrations",
+        "payroll-setup": "Payroll Settings",
+        "publishing-sites": "Publishing Sites",
+        "keep-safe": "Security Guards",
+        "report-configuration": "Report Configuration",
+        "other-settings": "Other Settings",
+        "access-token": "Access Token",
+        "request-records": "Request Records"
+      },
+      "suscripcion": {
+        "title": "Subscription",
+        "detalle": "Subscription Details",
+        "modulos": "Modules",
+        "metodos-pago": "Payment Methods",
+        "facturas": "Invoices"
+      },
+      "section": {
+        "seguridad": "SECURITY",
+        "configuracion_global": "GLOBAL CONFIGURATION",
+        "acceso_de_desarrollador": "DEVELOPER ACCESS"
+      }
+    },
+    "guards": {
+      "nav": {
+        "resumen": "Overview",
+        "perfil": "Profile",
+        "disponibilidad": "Availability",
+        "indicadores": "KPI Indicators",
+        "licencias": "Licenses",
+        "notas": "Notes",
+        "recordatorios": "Reminders",
+        "archivos": "Files",
+        "asignarSitios": "Assign Sites",
+        "conjuntoHabilidades": "Skill Set",
+        "departamento": "Department",
+        "configuracion": "Settings"
+      },
+      "notes": {
+        "actions": {
+          "default": "Action",
+          "delete": "Delete"
+        },
+        "searchPlaceholder": "Search note",
+        "addButton": "New Note",
+        "table": {
+          "title": "Title",
+          "date": "Date",
+          "addedBy": "Added By"
+        },
+        "empty": {
+          "title": "No results found",
+          "message": "We couldn't find<br />any items matching<br />your search"
+        },
+        "modal": {
+          "title": "Add New Note",
+          "cancel": "Cancel",
+          "save": "Save"
+        },
+        "form": {
+          "title": {
+            "label": "Title",
+            "placeholder": "Enter note title"
+          },
+          "description": {
+            "label": "Description",
+            "placeholder": "Enter note description"
+          },
+          "date": {
+            "label": "Date"
+          },
+          "attachments": {
+            "label": "Attachments",
+            "noFiles": "No files selected"
+          }
+        }
+      },
+      "overview": {
+        "loading": "Loading...",
+        "loadError": "Could not load guard"
+      },
+      "summary": {
+        "roleDefault": "Security Guard",
+        "header": {
+          "guardNumber": "Guard number",
+          "addedOn": "Added on",
+          "lastShift": "Last shift",
+          "about": "About"
+        },
+        "previous": "Previous",
+        "stats": {
+          "title": "Statistics",
+          "last7Days": "Last 7 days",
+          "compareWith": "Compare with",
+          "compareOptions": {
+            "previous": "Previous period",
+            "none": "None"
+          },
+          "metrics": {
+            "assignedSites": "Assigned Sites",
+            "completedRoutes": "Completed Routes",
+            "tasksCompleted": "Tasks Completed",
+            "reportsSent": "Reports Sent",
+            "inactivityAlerts": "Inactivity Alerts",
+            "noShows": "No Shows",
+            "lateArrivals": "Late Arrivals",
+            "hoursWorked": "Hours Worked"
+          }
+        },
+        "recentActivity": {
+          "title": "Recent Activity",
+          "filter": "Filter"
+        },
+        "sampleActivity": {
+          "message": "This message is to notify you that 'José Alejo Pinos' has accepted the company request and moved to active list"
+        },
+        "badge": {
+          "joined": "Guard joined"
+        }
+      },
+      "profile": {
+        "actions": {
+          "edit": "Edit",
+          "cancel": "Cancel",
+          "save": "Save",
+          "saving": "Saving..."
+        },
+        "toasts": {
+          "updated": "Guard updated successfully",
+          "updateError": "Error updating guard"
+        },
+        "cards": {
+          "general": "General Information",
+          "contact": "Contact Details",
+          "emergency": "Emergency Contact Details",
+          "personal": "Personal Information",
+          "deviceInfo": "Device Information",
+          "devicePermissions": "Device Permissions",
+          "languagesSkills": "Languages & Skills",
+          "licenseDetails": "License Details"
+        },
+        "fields": {
+          "firstName": "First Name",
+          "lastName": "Last Name",
+          "id1": "ID #1",
+          "id2": "ID #2",
+          "birthDate": "Birth Date",
+          "address": "Address",
+          "email": "Email",
+          "mobile": "Mobile Number",
+          "emergencyContact": "Emergency Contact",
+          "emergencyContactNumber": "Emergency Contact Number",
+          "emergencyRelation": "Relation",
+          "birthPlace": "Birth Place",
+          "maritalStatus": "Marital Status",
+          "bloodType": "Blood Type",
+          "education": "Education",
+          "gender": "Gender",
+          "governmentId": "Government ID",
+          "deviceType": "Device Type",
+          "deviceModel": "Device Model",
+          "osVersion": "OS Version",
+          "appVersion": "App Version",
+          "pushNotifications": "Push Notifications",
+          "gpsPermission": "GPS Permission",
+          "camera": "Camera",
+          "microphone": "Microphone",
+          "languages": "Languages",
+          "skills": "Skills",
+          "licenseType": "License Type",
+          "licenseNumber": "Number",
+          "issueDate": "Issue Date",
+          "expiryDate": "Expiry Date"
+        },
+        "values": {
+          "enabled": "Enabled",
+          "disabled": "Disabled",
+          "background": "Background"
+        },
+        "placeholders": {
+          "languages": "Eg: Spanish, English",
+          "skills": "Eg: First aid, Self-defense"
+        },
+        "noLicense": "No license found"
+      },
+      "tabs": {
+        "invite": "Invite via SMS or Email",
+        "create_profile": "Create profile"
+      },
+      "availability": {
+        "title": "Availability",
+        "table": {
+          "day": "Day",
+          "available": "Available",
+          "from": "From",
+          "to": "To"
+        },
+        "days": {
+          "Monday": "Monday",
+          "Tuesday": "Tuesday",
+          "Wednesday": "Wednesday",
+          "Thursday": "Thursday",
+          "Friday": "Friday",
+          "Saturday": "Saturday",
+          "Sunday": "Sunday"
+        },
+        "save": "Save",
+        "toasts": {
+          "saved": "Availability saved"
+        }
+      },
+      "licenses": {
+        "action": {
+          "default": "Action"
+        },
+        "actions": {
+          "delete": "Delete"
+        },
+        "searchPlaceholder": "Search license",
+        "newLicense": "New License",
+        "table": {
+          "type": "License Type",
+          "number": "License Number",
+          "expires": "Expires On",
+          "addedBy": "Added By"
+        },
+        "empty": {
+          "title": "No results found",
+          "description": "We couldn't find<br />any items matching<br />your search"
+        },
+        "modal": {
+          "title": "Add New License",
+          "cancel": "Cancel",
+          "save": "Save"
+        },
+        "form": {
+          "licenseType": "License Type",
+          "selectLicenseType": "Select license type",
+          "option": {
+            "driver": "Driver License",
+            "weapons": "Weapons License",
+            "security": "Security License",
+            "other": "Other"
+          },
+          "customLicenseName": "License Name",
+          "customLicensePlaceholder": "Enter license name",
+          "licenseNumber": "License Number",
+          "licenseNumberPlaceholder": "Enter license number",
+          "expiryDate": "Expires On",
+          "frontImageLabel": "Front License Image",
+          "backImageLabel": "Back License Image",
+          "chooseFile": "Choose file"
+        }
+      },
+      "reminders": {
+        "action": {
+          "default": "Action"
+        },
+        "actions": {
+          "archive": "Archive"
+        },
+        "searchPlaceholder": "Search reminders",
+        "filters": {
+          "button": "Filters",
+          "title": "Filters",
+          "status": "Status",
+          "options": {
+            "all": "All",
+            "pending": "Pending",
+            "completed": "Completed",
+            "archived": "Archived"
+          },
+          "cancel": "Cancel",
+          "apply": "Apply"
+        },
+        "addReminder": "Add Reminder",
+        "table": {
+          "title": "Title",
+          "datetime": "Reminder Date/Time",
+          "createdBy": "Created By",
+          "priority": "Priority",
+          "status": "Status"
+        },
+        "empty": {
+          "title": "No Result Found",
+          "description": "We can't find any item matching your search"
+        },
+        "modal": {
+          "title": "Add Reminder",
+          "save": "Save"
+        },
+        "form": {
+          "title": "Title",
+          "titlePlaceholder": "Title*",
+          "description": "Description",
+          "descriptionPlaceholder": "Description",
+          "selectedDate": "Selected Date",
+          "at": "At",
+          "createdFor": "Created For",
+          "selectGuards": "Select guards",
+          "priority": "Priority",
+          "attachment": "Attachment",
+          "attachmentPlaceholder": "Attachment"
+        },
+        "priority": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        },
+        "remindOptions": {
+          "30_Minutes_Before": "30 Minutes Before",
+          "1_Hour_Before": "1 Hour Before",
+          "2_Hours_Before": "2 Hours Before",
+          "4_Hours_Before": "4 Hours Before",
+          "8_Hours_Before": "8 Hours Before",
+          "1_Day_Before": "1 Day Before",
+          "2_Days_Before": "2 Days Before",
+          "4_Days_Before": "4 Days Before",
+          "8_Days_Before": "8 Days Before",
+          "2_Weeks_Before": "2 Weeks Before",
+          "4_Weeks_Before": "4 Weeks Before"
+        },
+        "repeat": {
+          "never": "Never",
+          "1_week": "1 Week",
+          "2_weeks": "2 Weeks",
+          "3_weeks": "3 Weeks",
+          "monthly": "Monthly",
+          "yearly": "Yearly"
+        },
+        "toasts": {
+          "loadError": "Could not load guard"
+        }
+      },
+      "assignSites": {
+        "loading": "Loading...",
+        "action": {
+          "default": "Action"
+        },
+        "actions": {
+          "delete": "Delete"
+        },
+        "searchPlaceholder": "Search Post Sites",
+        "assignButton": "Assign Post Sites",
+        "table": {
+          "client": "Client",
+          "postSites": "Post Sites"
+        },
+        "loadError": "Could not load guard",
+        "modal": {
+          "title": "Assign Sites",
+          "cancel": "Cancel",
+          "assign": "Assign"
+        },
+        "form": {
+          "client": "Client",
+          "selectClient": "Select client",
+          "postSite": "Post Site",
+          "selectPostSite": "Select post site"
+        },
+        "noPostSites": "No post sites found"
+      },
+      "assignSites_no_postsites": "No post sites found",
+      "files": {
+        "action": {
+          "default": "Action"
+        },
+        "actions": {
+          "delete": "Delete"
+        },
+        "searchPlaceholder": "Search files",
+        "uploadButton": "Upload",
+        "table": {
+          "date": "Date",
+          "file": "File",
+          "addedBy": "Added By"
+        },
+        "empty": {
+          "title": "No Files Found",
+          "description": "Upload files using the button on the right"
+        },
+        "loadError": "Could not load guard",
+        "modal": {
+          "title": "Upload Files",
+          "dropHere": "Drop files here..",
+          "orSelect": "Or Select",
+          "chooseFilesPlaceholder": "Choose files No files selected",
+          "filesToUpload": "Files to upload",
+          "upload": "Upload"
+        }
+      },
+      "skills": {
+        "action": {
+          "default": "Action"
+        },
+        "actions": {
+          "delete": "Delete"
+        },
+        "searchPlaceholder": "Search skill sets",
+        "assignButton": "Assign Skill Set",
+        "table": {
+          "name": "Name",
+          "description": "Description"
+        },
+        "empty": {
+          "title": "No Result Found",
+          "description": "We can't find any item matching your search"
+        },
+        "toasts": {
+          "loadError": "Could not load guard",
+          "selectAtLeastOne": "Please select at least one skill set",
+          "provideName": "Please provide a skill name"
+        },
+        "modal": {
+          "title": "Assign Skill Set",
+          "cancel": "Cancel",
+          "assign": "Assign"
+        },
+        "form": {
+          "skillSet": "Skill Set*",
+          "selectPlaceholder": "Select skill sets..."
+        },
+        "dropdown": {
+          "searchPlaceholder": "Search..."
+        }
+      },
+      "new": {
+        "title": "New Guard",
+        "breadcrumb": {
+          "dashboard": "Dashboard"
+        },
+        "invite": {
+          "description": "Enter the guard's name and email/mobile number. A message with a link will be sent."
+        },
+        "join_code": {
+          "description": "Share the company's unique code along with the app download link.",
+          "copied": "Code copied",
+          "invite_sent": "Invitation sent by code",
+          "invite_error": "Error sending invitation by code"
+        },
+        "link": {
+          "description": "Share this link to join the company.",
+          "invite_sent": "Invitation by link sent",
+          "invite_error": "Error sending invitation by link"
+        },
+        "create": {
+          "description": "Create the guard's profile manually. They will need to verify their email and mobile number before signing in."
+        },
+        "form": {
+          "firstName": "First name*",
+          "firstNamePlaceholder": "First name *",
+          "lastName": "Last name*",
+          "lastNamePlaceholder": "Last name *",
+          "inviteBy": "Invite by*",
+          "selectMethodPlaceholder": "Select method",
+          "contactEmail": "Email Address *",
+          "contactSms": "Mobile Number *",
+          "password": "Password *",
+          "passwordPlaceholder": "Password *",
+          "confirmPassword": "Confirm Password *",
+          "confirmPasswordPlaceholder": "Confirm Password *",
+          "contactPhEmail": "e.g. person@email.com",
+          "contactPhSms": "e.g. +12015550123",
+          "selectClient": "Select Client",
+          "assignPostSite": "Assign Post Site",
+          "create_and_send": "Create & Send",
+          "send": "Send"
+        },
+        "toasts": {
+          "clients_sites_load_error": "Could not load clients or sites",
+          "invites_sent": "Invitations sent",
+          "invite_error": "Error sending invitations",
+          "profile_created": "Profile created",
+          "profile_created_sent": "Profile created and sent"
+        },
+        "errors": {
+          "no_permission_create": "You don't have permission to create guards",
+          "error_create_profile": "Error creating profile"
+        },
+        "actions": {
+          "copy": "Copy",
+          "regenerate": "Regenerate",
+          "create": "Create",
+          "show_password": "Show password",
+          "hide_password": "Hide password",
+          "show_confirm_password": "Show password",
+          "hide_confirm_password": "Hide password"
+        }
+      },
+      "KPI": {
+        "modal": {
+          "title": "Add New KPIs (Key Performance Indicators)",
+          "frequency": "Frequency",
+          "frequencyOptions": {
+            "select": "Select frequency",
+            "daily": "Daily",
+            "weekly": "Weekly",
+            "monthly": "Monthly"
+          },
+          "description": "Description",
+          "descriptionPlaceholder": "Enter description",
+          "errors": {
+            "emailRequired": "Please enter an email",
+            "emailInvalid": "Invalid email address",
+            "emailAlreadyAdded": "This email has already been added"
+          },
+          "standardReports": "Standard Reports",
+          "incidentReports": "Incident Reports",
+          "routeReports": "Route Reports",
+          "taskReports": "Task Reports",
+          "verificationReports": "Checklist Reports",
+          "defineNumber": "Define a Number",
+          "emailNotificationLabel": "Send KPI report by email",
+          "newEmailPlaceholder": "New Email...",
+          "addEmail": "Add",
+          "addButton": "ADD",
+          "confirmDeleteTitle": "Confirm deletion",
+          "confirmDeleteMessage": "Are you sure you want to delete the selected KPI(s)? This action cannot be undone."
+        },
+        "emailNotImplemented": "Email report not implemented",
+        "menu": {
+          "email": "Email Report"
+        }
+      },
+      "list": {
+        "pageTitle": "Security Guards",
+        "searchPlaceholder": "Search guard",
+        "newGuard": "New Guard",
+        "filters": "Filters",
+        "filter": {
+          "categories": "Categories",
+          "categoriesAll": "All",
+          "client": "Client",
+          "clientAll": "All",
+          "site": "Post Site",
+          "siteAll": "All",
+          "skills": "Skill Set",
+          "skillsAll": "All",
+          "department": "Department",
+          "departmentAll": "All",
+          "status": "Status*",
+          "statusAllPlaceholder": "All Guards",
+          "statusAll": "All Guards",
+          "statusActive": "Active",
+          "statusPending": "Pending",
+          "statusArchived": "Archived"
+        },
+        "applyFilters": "Apply filters",
+        "clearFilters": "Clear filters",
+        "export": {
+          "pdf": "Export as PDF",
+          "excel": "Export as Excel"
+        },
+        "import": "Import",
+        "table": {
+          "name": "Name",
+          "email": "Email",
+          "phone": "Mobile Number",
+          "status": "Status"
+        },
+        "selectAllAria": "Select all guards on this page",
+        "selectAria": "Select {{name}}",
+        "openOverviewAria": "Open overview for {{name}}",
+        "aria": {
+          "closeModal": "Close modal"
+        },
+        "labels": {
+          "name": "Name",
+          "selectedGuards": "Selected guards"
+        },
+        "actions": {
+          "restore": "Restore",
+          "archive": "Archive",
+          "copyInviteLink": "Copy invite link",
+          "resendInvite": "Resend invite",
+          "remove": "Remove",
+          "viewDetails": "View details",
+          "deletePermanently": "Delete permanently"
+        },
+        "toasts": {
+          "selectAtLeastOne": "Select at least one guard",
+          "noPermissionDelete": "You don't have permission to delete guards",
+          "noPermissionEdit": "You don't have permission to edit guards",
+          "inviteResent": "Invitation resent",
+          "inviteResendError": "Error resending invitation",
+          "copyLinkSuccess": "Invite link copied",
+          "copyLinkError": "Could not copy link",
+          "printWindowOpenError": "Could not open print window",
+          "archived": "Guard archived",
+          "archiveOnDutyError": "Cannot archive: guard is currently on duty",
+          "archiveError": "Error archiving guard",
+          "deleteSuccess": "Guard deleted permanently",
+          "deleteError": "Could not delete guard: {{msg}}",
+          "restoreSuccess": "Guard restored",
+          "restoreError": "Error restoring guard: {{msg}}",
+          "bulkArchived": "Guards archived",
+          "bulkRestored": "Guards restored",
+          "bulkDeleted": "Guards deleted permanently"
+        },
+        "buttons": {
+          "archiving": "Archiving…",
+          "deleting": "Deleting…",
+          "restoring": "Restoring…",
+          "processing": "Processing…"
+        },
+        "dialog": {
+          "archive": {
+            "title": "Archive guard",
+            "description": "Are you sure you want to archive this guard? This action can be undone from the archived filter."
+          },
+          "delete": {
+            "title": "Delete guard permanently",
+            "description": {
+              "pending": "This will permanently delete the pending guard. It cannot be recovered.",
+              "default": "This will permanently delete the guard. Ensure it's archived and not on duty."
+            }
+          },
+          "restore": {
+            "title": "Restore guard",
+            "description": "Do you want to restore this guard? This will return it to active state."
+          },
+          "bulk": {
+            "archiveTitle": "Archive guards",
+            "restoreTitle": "Restore guards",
+            "deleteTitle": "Delete guards",
+            "confirmTitle": "Confirm action",
+            "archiveDescription": "Are you sure you want to archive {{count}} guard(s)? This can be reverted from archived filter.",
+            "restoreDescription": "Do you want to restore {{count}} guard(s)? They will return to active state.",
+            "deleteDescription": "This will permanently delete {{count}} guard(s). Continue?"
+          }
+        },
+        "empty": {
+          "title": "No results found",
+          "description": "We couldn't find any items matching your search"
+        },
+        "pagination": {
+          "itemsPerPage": "Items per page",
+          "range": "{{start}} - {{end}} of {{total}}",
+          "emptyRange": "0 – 0 of 0"
+        },
+        "details": {
+          "title": "Guard Details",
+          "description": "Detailed information for the selected guard.",
+          "fields": {
+            "firstName": "First name",
+            "lastName": "Last name",
+            "email": "Email",
+            "phone": "Phone",
+            "governmentId": "Government ID",
+            "guardCredentials": "Guard credentials",
+            "address": "Address",
+            "birthDate": "Birth date",
+            "birthPlace": "Place of birth",
+            "maritalStatus": "Marital status",
+            "bloodType": "Blood type",
+            "academicInstruction": "Academic instruction",
+            "hiringContractDate": "Contract date",
+            "gender": "Gender"
+          }
+        },
+        "importDialog": {
+          "title": "Import Guards from Excel",
+          "description": "Upload a .xlsx/.xls/.csv file to import guards.",
+          "howTo": "Before uploading, ensure:",
+          "fileFormat": "File must be .xlsx, .xls or .csv",
+          "requiredColumnsLabel": "Required columns:",
+          "requiredColumns": "Name, Email, Phone, Status, Government ID, Contract Date, Gender, Blood Type, Credentials, Birth Date, Birth Place, Marital Status, Education, Address",
+          "templateDownloaded": "Template downloaded",
+          "downloadTemplate": "Download sample template",
+          "browsePlaceholder": "Browse your Excel file here....",
+          "clickToSelect": "Click to select",
+          "errors": {
+            "selectFile": "Select a file",
+            "emptyFile": "File is empty",
+            "emptyCsvRows": "CSV contains no data rows",
+            "missingColumns": "Missing required columns: {{columns}}",
+            "csvValidationFailed": "Could not validate CSV before upload",
+            "emptyExcelRows": "Excel file contains no valid data rows",
+            "excelValidationFailed": "Could not validate Excel before upload"
+          },
+          "processing": "Processing file...",
+          "importing": "Importing...",
+          "import": "Import",
+          "completed": "Import completed"
+        }
+      }
+    },
+    "clients": {
+      "KPI": {
+        "modal": {
+          "title": "Add New KPIs (Key Performance Indicators)",
+          "frequency": "Frequency",
+          "frequencyOptions": {
+            "select": "Select frequency",
+            "daily": "Daily",
+            "weekly": "Weekly",
+            "monthly": "Monthly"
+          },
+          "description": "Description",
+          "descriptionPlaceholder": "Enter description",
+          "errors": {
+            "emailRequired": "Please enter an email",
+            "emailInvalid": "Invalid email address",
+            "emailAlreadyAdded": "This email has already been added"
+          },
+          "standardReports": "Standard Reports",
+          "incidentReports": "Incident Reports",
+          "routeReports": "Route Reports",
+          "taskReports": "Task Reports",
+          "verificationReports": "Checklist Reports",
+          "defineNumber": "Define a Number",
+          "emailNotificationLabel": "Send KPI Report by Email",
+          "newEmailPlaceholder": "New Email...",
+          "addEmail": "Add",
+          "addButton": "ADD"
+        },
+        "emailNotImplemented": "Email report not implemented",
+        "menu": {
+          "email": "Email Report"
+        },
+        "toasts": {
+          "created": "KPI created successfully",
+          "updated": "KPI updated successfully",
+          "saveError": "Error saving KPI",
+          "pdfOpenError": "Error opening PDF",
+          "selectAtLeastOne": "Select at least one KPI",
+          "deleted": "KPI deleted",
+          "deletedMultiple": "KPIs deleted",
+          "deleteNoneSelected": "No items selected",
+          "deleteError": "Error deleting KPI(s)",
+          "pdfOpened": "PDF opened",
+          "pdfGenerated": "PDF generated",
+          "pdfError": "Could not generate/get PDF",
+          "excelDownloaded": "Excel downloaded",
+          "excelError": "Could not generate/get Excel",
+          "excelExportError": "Error exporting Excel"
+        }
+      },
+      "loadError": "Error loading clients",
+      "loadClientError": "Could not load client",
+      "selectAtLeastOne": "Select at least one client",
+      "selectOnlyActiveToArchive": "Select only active clients to archive",
+      "selectOnlyArchivedToRestore": "Select only archived clients to restore",
+      "selectOnlyArchivedToDelete": "Select only archived clients to delete",
+      "actionNotImplemented": "Action \"{{action}}\" not implemented yet",
+      "generatingPDF": "Generating PDF...",
+      "stations": {
+        "title": "Stations",
+        "add": "Add Station",
+        "placeholderName": "Station name",
+        "create": "Create",
+        "cancel": "Cancel",
+        "provideName": "Provide a name",
+        "created": "Station created",
+        "createFailed": "Failed creating station",
+        "remove": "Remove",
+        "removed": "Station removed",
+        "removeFailed": "Failed to remove station",
+        "noStations": "No stations added yet.",
+        "loading": "Loading...",
+        "selectPrompt": "Select a station to view details",
+        "lat": "Latitude",
+        "lng": "Longitude",
+        "schedule": "Schedule",
+        "guardsCount": "Guards",
+        "detailsTitle": "Station Details",
+        "startTime": "Start",
+        "endTime": "End",
+        "assignedGuardsTitle": "Assigned guards",
+        "manageAssignments": "Manage assignments",
+        "noAssignedGuards": "No guards assigned",
+        "hours": "hours",
+        "hShort": "h",
+        "mShort": "m",
+        "company": "Company",
+        "tenantId": "Tenant ID"
+      },
+      "assignGuards": {
+        "assignButton": "Assign Guard",
+        "modalTitle": "Assign Guard",
+        "guardsLabel": "Guards*",
+        "searchPlaceholder": "Search guards",
+        "searchHelp": "Type to search and pick a guard",
+        "stationLabel": "Station*",
+        "selectStationOption": "-- select station --",
+        "addStation": "Add Station",
+        "actionAssignSelected": "Assign Selected",
+        "actionUnassign": "Unassign",
+        "table": {
+          "name": "Name",
+          "mobile": "Mobile Number",
+          "email": "Email",
+          "station": "Station",
+          "source": "Source",
+          "actions": "Actions"
+        },
+        "emptyTitle": "No Result Found",
+        "emptyMessage": "No guards are assigned to this post site.",
+        "noResults": "No results",
+        "missingPostSite": "Missing post site id",
+        "noGuardIdentifier": "No guard identifier available",
+        "failedLoadAssignments": "Failed to load guard assignments",
+        "assignmentRemoved": "Assignment removed",
+        "removeFailed": "Failed to remove assignment",
+        "selectGuardRequired": "Please select a guard before assigning",
+        "selectStationRequired": "Please select or create a station before assigning",
+        "shiftCreated": "Shift created and guard assigned",
+        "assignFailed": "Assign guard failed",
+        "viewModalTitle": "Guard Assignments",
+        "sourceLabel": "Source",
+        "postSiteLabel": "Post Site",
+        "securityGuardLabel": "Security Guard",
+        "skillSetLabel": "Skill Set",
+        "departmentLabel": "Department",
+        "siteToursLabel": "Site Tours",
+        "tasksLabel": "Tasks",
+        "postOrdersLabel": "Post Orders",
+        "checklistsLabel": "Checklists",
+        "actionView": "View",
+        "actionDelete": "Delete",
+        "actionEdit": "Edit",
+        "actionDeleteSelected": "Delete Selected",
+        "noSelection": "No items selected",
+        "bulkDeleteSuccess": "Selected assignments removed",
+        "confirmBulkRemovalTitle": "Confirm bulk removal",
+        "confirmBulkRemovalDesc": "Are you sure you want to remove the selected assignments? This action cannot be undone.",
+        "viewNoAssignments": "No assignments found.",
+        "confirmRemovalTitle": "Confirm removal",
+        "confirmRemovalDesc": "Are you sure you want to remove this guard assignment? This action cannot be undone.",
+        "cancel": "Cancel",
+        "remove": "Remove",
+        "assignButtonAria": "Assign",
+        "actionDefault": "Action",
+        "headerSearchPlaceholder": "Search Guards",
+        "startShort": "Start (hh:mm)",
+        "endShort": "End (hh:mm)"
+      },
+      "unnamedStation": "Unnamed station",
+      "sourcePivot": "pivot",
+      "pdfDownloaded": "PDF downloaded",
+      "errorExportPDF": "Error exporting PDF",
+      "generatingExcel": "Generating Excel...",
+      "excelDownloaded": "Excel downloaded",
+      "errorExportExcel": "Error exporting Excel",
+      "categoriesUpdated": "Categories updated",
+      "errorUpdateCategories": "Error updating categories",
+      "selectAtLeastOneCategory": "Select at least one category",
+      "errorMoveCategories": "Error moving categories",
+      "bulk": {
+        "move": "Move",
+        "archive": "Archive",
+        "restore": "Restore",
+        "delete": "Delete",
+        "manageCategories": "Manage Categories"
+      },
+      "columns": {
+        "name": "Client",
+        "address": "Address",
+        "email": "Email",
+        "phone": "Phone Number",
+        "status": "Status"
+      },
+      "status": {
+        "active": "Active",
+        "archived": "Archived",
+        "pending": "Pending",
+        "invitate": "Invited"
+      },
+      "errorArchiveClient": "Error archiving client",
+      "breadcrumb": {
+        "dashboard": "Dashboard",
+        "clients": "Clients"
+      },
+      "searchPlaceholder": "Search client",
+      "newClient": "New client",
+      "editClient": "Edit client",
+      "clientCreated": "Client created successfully",
+      "clientUpdated": "Client updated successfully",
+      "form": {
+        "name": "Name *",
+        "lastName": "Last name *",
+        "email": "Email Address *",
+        "phone": "Phone *",
+        "address": "Address *",
+        "addressLine2": "Address Line 2",
+        "addressLine2Placeholder": "Optional",
+        "postalCode": "Postal code/Zip *",
+        "city": "City *",
+        "country": "Country *",
+        "latitude": "Latitude *",
+        "longitude": "Longitude *",
+        "locationSet": "Location set",
+        "useMyLocation": "Use my location",
+        "moreInfo": "More information",
+        "fax": "Fax",
+        "website": "Website",
+        "categories": "Categories",
+        "active": "Active"
+      },
+      "filters": {
+        "title": "Filters",
+        "email": "Email",
+        "phone": "Phone Number",
+        "city": "City",
+        "country": "Country",
+        "categories": "Categories",
+        "status": "Status",
+        "all": "All",
+        "active": "Active",
+        "archived": "Archived"
+      },
+      "placeholders": {
+        "emailExample": "example@email.com",
+        "phoneExample": "+1 555 1234567",
+        "cityExample": "Quito",
+        "countryExample": "Ecuador"
       },
       "applyFilters": "Apply filters",
       "clearFilters": "Clear filters",
@@ -711,1714 +1136,1484 @@
         "excel": "Export as Excel"
       },
       "import": "Import",
-      "table": {
-        "name": "Name",
-        "email": "Email",
-        "phone": "Mobile Number",
-        "status": "Status"
-      },
-      "selectAllAria": "Select all guards on this page",
-      "selectAria": "Select {{name}}",
-      "openOverviewAria": "Open overview for {{name}}",
-      "aria": {
-        "closeModal": "Close modal"
-      },
-      "labels": {
-        "name": "Name",
-        "selectedGuards": "Selected guards"
-      },
-      "actions": {
-        "restore": "Restore",
-        "archive": "Archive",
-        "copyInviteLink": "Copy invite link",
-        "resendInvite": "Resend invite",
-        "remove": "Remove",
-        "viewDetails": "View details",
-        "deletePermanently": "Delete permanently"
-      },
-      "toasts": {
-        "selectAtLeastOne": "Select at least one guard",
-        "noPermissionDelete": "You don't have permission to delete guards",
-        "noPermissionEdit": "You don't have permission to edit guards",
-        "inviteResent": "Invitation resent",
-        "inviteResendError": "Error resending invitation",
-        "copyLinkSuccess": "Invite link copied",
-        "copyLinkError": "Could not copy link",
-        "printWindowOpenError": "Could not open print window",
-        "archived": "Guard archived",
-        "archiveOnDutyError": "Cannot archive: guard is currently on duty",
-        "archiveError": "Error archiving guard",
-        "deleteSuccess": "Guard deleted permanently",
-        "deleteError": "Could not delete guard: {{msg}}",
-        "restoreSuccess": "Guard restored",
-        "restoreError": "Error restoring guard: {{msg}}",
-        "bulkArchived": "Guards archived",
-        "bulkRestored": "Guards restored",
-        "bulkDeleted": "Guards deleted permanently"
-      },
-      "buttons": {
-        "archiving": "Archiving…",
-        "deleting": "Deleting…",
-        "restoring": "Restoring…",
-        "processing": "Processing…"
-      },
-      "dialog": {
-        "archive": {
-          "title": "Archive guard",
-          "description": "Are you sure you want to archive this guard? This action can be undone from the archived filter."
-        },
-        "delete": {
-          "title": "Delete guard permanently",
-          "description": {
-            "pending": "This will permanently delete the pending guard. It cannot be recovered.",
-            "default": "This will permanently delete the guard. Ensure it's archived and not on duty."
-          }
-        },
-        "restore": {
-          "title": "Restore guard",
-          "description": "Do you want to restore this guard? This will return it to active state."
-        },
-        "bulk": {
-          "archiveTitle": "Archive guards",
-          "restoreTitle": "Restore guards",
-          "deleteTitle": "Delete guards",
-          "confirmTitle": "Confirm action",
-          "archiveDescription": "Are you sure you want to archive {{count}} guard(s)? This can be reverted from archived filter.",
-          "restoreDescription": "Do you want to restore {{count}} guard(s)? They will return to active state.",
-          "deleteDescription": "This will permanently delete {{count}} guard(s). Continue?"
-        }
-      },
       "empty": {
+        "alt": "No data",
         "title": "No results found",
-        "description": "We couldn't find any items matching your search"
+        "description": "We couldn't find any items matching your search."
       },
       "pagination": {
         "itemsPerPage": "Items per page",
-        "range": "{{start}} - {{end}} of {{total}}",
-        "emptyRange": "0 – 0 of 0"
+        "of": "of",
+        "prev": "Previous",
+        "next": "Next"
       },
-      "details": {
-        "title": "Guard Details",
-        "description": "Detailed information for the selected guard.",
-        "fields": {
-          "firstName": "First name",
-          "lastName": "Last name",
-          "email": "Email",
-          "phone": "Phone",
-          "governmentId": "Government ID",
-          "guardCredentials": "Guard credentials",
-          "address": "Address",
-          "birthDate": "Birth date",
-          "birthPlace": "Place of birth",
-          "maritalStatus": "Marital status",
-          "bloodType": "Blood type",
-          "academicInstruction": "Academic instruction",
-          "hiringContractDate": "Contract date",
-          "gender": "Gender"
+      "dialogs": {
+        "changeCategories": {
+          "title": "Change categories",
+          "desc": "Applies to {{count}} selected client(s).",
+          "newCategories": "New categories"
+        },
+        "categorize": {
+          "title": "Categorize client"
         }
       },
-      "importDialog": {
-        "title": "Import Guards from Excel",
-        "description": "Upload a .xlsx/.xls/.csv file to import guards.",
-        "howTo": "Before uploading, ensure:",
-        "fileFormat": "File must be .xlsx, .xls or .csv",
-        "requiredColumnsLabel": "Required columns:",
-        "requiredColumns": "Name, Email, Phone, Status, Government ID, Contract Date, Gender, Blood Type, Credentials, Birth Date, Birth Place, Marital Status, Education, Address",
-        "templateDownloaded": "Template downloaded",
-        "downloadTemplate": "Download sample template",
-        "browsePlaceholder": "Browse your Excel file here....",
-        "clickToSelect": "Click to select",
-        "errors": {
-          "selectFile": "Select a file",
-          "emptyFile": "File is empty",
-          "emptyCsvRows": "CSV contains no data rows",
-          "missingColumns": "Missing required columns: {{columns}}",
-          "csvValidationFailed": "Could not validate CSV before upload",
-          "emptyExcelRows": "Excel file contains no valid data rows",
-          "excelValidationFailed": "Could not validate Excel before upload"
-        },
-        "processing": "Processing file...",
-        "importing": "Importing...",
-        "import": "Import",
-        "completed": "Import completed"
-      }
-    }
-  },
-  "clients": {
-    "KPI": {
-      "modal": {
-        "title": "Add New KPIs (Key Performance Indicators)",
-        "frequency": "Frequency",
-        "frequencyOptions": {
-          "select": "Select frequency",
-          "daily": "Daily",
-          "weekly": "Weekly",
-          "monthly": "Monthly"
-        },
-        "description": "Description",
-        "descriptionPlaceholder": "Enter description",
-        "errors": {
-          "emailRequired": "Please enter an email",
-          "emailInvalid": "Invalid email address",
-          "emailAlreadyAdded": "This email has already been added"
-        },
-        "standardReports": "Standard Reports",
-        "incidentReports": "Incident Reports",
-        "routeReports": "Route Reports",
-        "taskReports": "Task Reports",
-        "verificationReports": "Checklist Reports",
-        "defineNumber": "Define a Number",
-        "emailNotificationLabel": "Send KPI Report by Email",
-        "newEmailPlaceholder": "New Email...",
-        "addEmail": "Add",
-        "addButton": "ADD"
-      },
-      "emailNotImplemented": "Email report not implemented",
-      "menu": {
-        "email": "Email Report"
-      },
-      "toasts": {
-        "created": "KPI created successfully",
-        "updated": "KPI updated successfully",
-        "saveError": "Error saving KPI",
-        "pdfOpenError": "Error opening PDF",
-        "selectAtLeastOne": "Select at least one KPI",
-        "deleted": "KPI deleted",
-        "deletedMultiple": "KPIs deleted",
-        "deleteNoneSelected": "No items selected",
-        "deleteError": "Error deleting KPI(s)",
-        "pdfOpened": "PDF opened",
-        "pdfGenerated": "PDF generated",
-        "pdfError": "Could not generate/get PDF",
-        "excelDownloaded": "Excel downloaded",
-        "excelError": "Could not generate/get Excel",
-        "excelExportError": "Error exporting Excel"
-      }
-    },
-    "loadError": "Error loading clients",
-    "loadClientError": "Could not load client",
-    "selectAtLeastOne": "Select at least one client",
-    "selectOnlyActiveToArchive": "Select only active clients to archive",
-    "selectOnlyArchivedToRestore": "Select only archived clients to restore",
-    "selectOnlyArchivedToDelete": "Select only archived clients to delete",
-    "actionNotImplemented": "Action \"{{action}}\" not implemented yet",
-    "generatingPDF": "Generating PDF...",
-    "stations": {
-      "title": "Stations",
-      "add": "Add Station",
-      "placeholderName": "Station name",
-      "create": "Create",
-      "cancel": "Cancel",
-      "provideName": "Provide a name",
-      "created": "Station created",
-      "createFailed": "Failed creating station",
-      "remove": "Remove",
-      "removed": "Station removed",
-      "removeFailed": "Failed to remove station",
-      "noStations": "No stations added yet.",
+      "client": "Client",
       "loading": "Loading...",
-      "selectPrompt": "Select a station to view details",
-      "lat": "Latitude",
-      "lng": "Longitude",
-      "schedule": "Schedule",
-      "guardsCount": "Guards"
+      "selectCategories": "Select categories",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "accept": "Accept",
+      "alerts": {
+        "archiveClients": {
+          "title": "Archive clients?",
+          "desc": "Are you sure you want to archive {{count}} client(s)? This will mark them as inactive."
+        },
+        "restoreClients": {
+          "title": "Restore clients?",
+          "desc": "Are you sure you want to restore {{count}} client(s)? They will become active again."
+        },
+        "deleteClients": {
+          "title": "Delete clients?",
+          "desc": "Are you sure you want to permanently delete {{count}} client(s)? This action cannot be undone."
+        },
+        "deleteClient": {
+          "title": "Delete client?",
+          "desc": "Are you sure you want to permanently delete {{name}}? This action cannot be undone."
+        },
+        "restoreClient": {
+          "title": "Restore client?",
+          "desc": "Are you sure you want to restore {{name}}? The client will become active again."
+        }
+      },
+      "clientsArchived": "Clients archived",
+      "clientsRestored": "Clients restored",
+      "clientsDeleted": "Clients deleted",
+      "clientDeleted": "Client deleted",
+      "clientRestored": "Client restored",
+      "clientArchived": "Client archived",
+      "errorArchive": "Error archiving",
+      "errorRestore": "Error restoring",
+      "errorDelete": "Error deleting",
+      "notes": {
+        "Title": "Title",
+        "addNote": "Add Note",
+        "editNote": "Edit",
+        "deleteNote": "Delete",
+        "Date": "Date",
+        "Added By": "Added By",
+        "noteCreated": "Note created successfully",
+        "noteUpdated": "Note updated successfully",
+        "noteDeleted": "Note deleted successfully",
+        "noteCreateFailed": "Could not create note",
+        "noteUpdateFailed": "Could not update note",
+        "deleteFailed": "Could not delete note",
+        "notesearchPlaceholder": "Search notes",
+        "confirmDeleteTitle": "Delete note(s)?",
+        "confirmDeleteMessage": "Are you sure you want to permanently delete the selected note(s)? This action cannot be undone.",
+        "form": {
+          "Title": "Add New Note",
+          "Titlenote": "Title *",
+          "Titleinput": "Enter note title",
+          "Description": "Description *",
+          "Descriptioninput": "Enter note description",
+          "Date": "Date *",
+          "AttachFile": "Attachments",
+          "AttachFileinput": "No files selected",
+          "Save": "SAVE"
+        },
+        "Details": {
+          "detailsTitle": "Note details",
+          "Title": "Title",
+          "Date": "Date",
+          "Description": "Description",
+          "AddedBy": "Added by"
+        }
+      }
     },
-    "pdfDownloaded": "PDF downloaded",
-    "errorExportPDF": "Error exporting PDF",
-    "generatingExcel": "Generating Excel...",
-    "excelDownloaded": "Excel downloaded",
-    "errorExportExcel": "Error exporting Excel",
-    "categoriesUpdated": "Categories updated",
-    "errorUpdateCategories": "Error updating categories",
-    "selectAtLeastOneCategory": "Select at least one category",
-    "errorMoveCategories": "Error moving categories",
-    "bulk": {
+    "overview": {
+      "cards": {
+        "postSites": "Post Sites",
+        "guardsAssigned": "Guards Assigned",
+        "toursCompleted": "Tour Completed (Last 7 Days)",
+        "tasksCompleted": "Task Completed (Last 7 Days)",
+        "incidents": "Incident Reports",
+        "hoursWorked": "Hrs Worked (Last 7 Days)"
+      },
+      "generalInfo": {
+        "notfoundclient": "Client not found",
+        "title": "General Information",
+        "clientName": "Client Name",
+        "address": "Address",
+        "addedOn": "Added On"
+      },
+      "contactDetails": {
+        "title": "Contact Details",
+        "phoneNumber": "Phone Number",
+        "fax": "Fax",
+        "email": "Email",
+        "website": "Website"
+      }
+    },
+    "contacts": {
+      "addcontact": "Add Contact",
+      "searchcontact": "Search Contacts",
+      "contactName": "Name",
+      "contactEmail": "Email",
+      "contactPhone": "Mobile Number",
+      "contactPostSites": "Post Sites",
+      "editcontact": "Edit Contact",
+      "contactCreated": "Contact created successfully",
+      "contactUpdated": "Contact updated successfully",
+      "contactDeleted": "Contact deleted successfully",
+      "contactCreateFailed": "Could not create contact",
+      "contactDeleteFailed": "Could not delete contact",
+      "confirmDeleteTitle": "Delete contact(s)?",
+      "confirmDeleteMessage": "Are you sure you want to permanently delete the selected contact(s)? This action cannot be undone.",
+      "deleteContactButton": "Delete",
+      "form": {
+        "AddClientContact": "Add Client Contact",
+        "Name": "Name *",
+        "Email": "Email *",
+        "Mobile Number": "Mobile Number *",
+        "Description": "Description",
+        "descriptioninput": "Enter contact description",
+        "AssignPostSite": "Assign Post Site",
+        "checkbox": "Allow guard to view contact",
+        "Addcontact": "ADD"
+      },
+      "errors": {
+        "invalidEmail": "Invalid email address",
+        "invalidPhone": "Invalid phone number",
+        "requiredName": "Name is required"
+      }
+    },
+    "postSites": {
+      "postsitdash": "Dashboard",
+      "postsite": "Post Site",
+      "searchPlaceholder": "Search Post Sites",
+      "newPostSite": "New Post Site",
+      "editPostSite": "Edit Post Site",
+      "action": "Action",
       "move": "Move",
       "archive": "Archive",
       "restore": "Restore",
       "delete": "Delete",
-      "manageCategories": "Manage Categories"
-    },
-    "columns": {
-      "name": "Client",
-      "address": "Address",
-      "email": "Email",
-      "phone": "Phone Number",
-      "status": "Status"
-    },
-    "status": {
-      "active": "Active",
-      "archived": "Archived",
-      "pending": "Pending",
-      "invitate": "Invited"
-    },
-    "errorArchiveClient": "Error archiving client",
-    "breadcrumb": {
-      "dashboard": "Dashboard",
-      "clients": "Clients"
-    },
-    "searchPlaceholder": "Search client",
-    "newClient": "New client",
-    "editClient": "Edit client",
-    "clientCreated": "Client created successfully",
-    "clientUpdated": "Client updated successfully",
-    "form": {
-      "name": "Name *",
-      "lastName": "Last name *",
-      "email": "Email Address *",
-      "phone": "Phone *",
-      "address": "Address *",
-      "addressLine2": "Address Line 2",
-      "addressLine2Placeholder": "Optional",
-      "postalCode": "Postal code/Zip *",
-      "city": "City *",
-      "country": "Country *",
-      "latitude": "Latitude *",
-      "longitude": "Longitude *",
-      "locationSet": "Location set",
-      "useMyLocation": "Use my location",
-      "moreInfo": "More information",
-      "fax": "Fax",
-      "website": "Website",
-      "categories": "Categories",
-      "active": "Active"
-    },
-    "filters": {
-      "title": "Filters",
-      "email": "Email",
-      "phone": "Phone Number",
-      "city": "City",
-      "country": "Country",
-      "categories": "Categories",
-      "status": "Status",
-      "all": "All",
-      "active": "Active",
-      "archived": "Archived"
-    },
-    "placeholders": {
-      "emailExample": "example@email.com",
-      "phoneExample": "+1 555 1234567",
-      "cityExample": "Quito",
-      "countryExample": "Ecuador"
-    },
-    "applyFilters": "Apply filters",
-    "clearFilters": "Clear filters",
-    "export": {
-      "pdf": "Export as PDF",
-      "excel": "Export as Excel"
-    },
-    "import": "Import",
-    "empty": {
-      "alt": "No data",
-      "title": "No results found",
-      "description": "We couldn't find any items matching your search."
-    },
-    "pagination": {
-      "itemsPerPage": "Items per page",
-      "of": "of",
-      "prev": "Previous",
-      "next": "Next"
-    },
-    "dialogs": {
-      "changeCategories": {
-        "title": "Change categories",
-        "desc": "Applies to {{count}} selected client(s).",
-        "newCategories": "New categories"
+      "manageCategories": "Manage Categories",
+      "filtersTitle": "Filters",
+      "filters": {
+        "email": "Email",
+        "phone": "Phone Number",
+        "city": "City",
+        "country": "Country",
+        "categories": "Categories",
+        "all": "All",
+        "active": "Active",
+        "archived": "Archived",
+        "status": "Status",
+        "applyFilters": "Apply Filters",
+        "clearFilters": "Clear Filters"
       },
-      "categorize": {
-        "title": "Categorize client"
-      }
-    },
-    "client": "Client",
-    "loading": "Loading...",
-    "selectCategories": "Select categories",
-    "cancel": "Cancel",
-    "save": "Save",
-    "saving": "Saving...",
-    "accept": "Accept",
-    "alerts": {
-      "archiveClients": {
-        "title": "Archive clients?",
-        "desc": "Are you sure you want to archive {{count}} client(s)? This will mark them as inactive."
-      },
-      "restoreClients": {
-        "title": "Restore clients?",
-        "desc": "Are you sure you want to restore {{count}} client(s)? They will become active again."
-      },
-      "deleteClients": {
-        "title": "Delete clients?",
-        "desc": "Are you sure you want to permanently delete {{count}} client(s)? This action cannot be undone."
-      },
-      "deleteClient": {
-        "title": "Delete client?",
-        "desc": "Are you sure you want to permanently delete {{name}}? This action cannot be undone."
-      },
-      "restoreClient": {
-        "title": "Restore client?",
-        "desc": "Are you sure you want to restore {{name}}? The client will become active again."
-      }
-    },
-    "clientsArchived": "Clients archived",
-    "clientsRestored": "Clients restored",
-    "clientsDeleted": "Clients deleted",
-    "clientDeleted": "Client deleted",
-    "clientRestored": "Client restored",
-    "clientArchived": "Client archived",
-    "errorArchive": "Error archiving",
-    "errorRestore": "Error restoring",
-    "errorDelete": "Error deleting",
-    "notes": {
-      "Title": "Title",
-      "addNote": "Add Note",
-      "editNote": "Edit",
-      "deleteNote": "Delete",
-      "Date": "Date",
-      "Added By": "Added By",
-      "noteCreated": "Note created successfully",
-      "noteUpdated": "Note updated successfully",
-      "noteDeleted": "Note deleted successfully",
-      "noteCreateFailed": "Could not create note",
-      "noteUpdateFailed": "Could not update note",
-      "deleteFailed": "Could not delete note",
-      "notesearchPlaceholder": "Search notes",
-      "confirmDeleteTitle": "Delete note(s)?",
-      "confirmDeleteMessage": "Are you sure you want to permanently delete the selected note(s)? This action cannot be undone.",
+      "clients": "Client",
+      "emails": "Email",
+      "phones": "Phone Number",
+      "actions": "Actions",
+      "viewDetails": "View Details",
+      "categorize": "Categorize",
+      "notsearch": "No results found matching your search",
+      "pdfexport": "Export as PDF",
+      "excelexport": "Export as Excel",
+      "import": "Import",
+      "selectAtLeastOne": "Select at least one post site",
+      "generatingPDF": "Generating PDF...",
+      "pdfDownloaded": "PDF downloaded",
+      "generatingExcel": "Generating Excel...",
+      "excelDownloaded": "Excel downloaded",
+      "sitesArchived": "Sites archived",
       "form": {
-        "Title": "Add New Note",
-        "Titlenote": "Title *",
-        "Titleinput": "Enter note title",
-        "Description": "Description *",
-        "Descriptioninput": "Enter note description",
-        "Date": "Date *",
-        "AttachFile": "Attachments",
-        "AttachFileinput": "No files selected",
-        "Save": "SAVE"
+        "client": "Client *",
+        "selectClient": "Select client",
+        "siteName": "Site Name *",
+        "address": "Address *",
+        "addressLine2": "Address Line 2",
+        "addressLine2Placeholder": "Optional",
+        "postalCode": "Postal Code/Zip *",
+        "city": "City *",
+        "country": "Country *",
+        "latitude": "Latitude *",
+        "longitude": "Longitude *",
+        "notLocationSet": "The location could not be found.",
+        "locationSet": "Location set",
+        "useMyLocation": "Use my location",
+        "moreInfo": "More information",
+        "geolocationNotSupported": "Geolocation not supported in this browser",
+        "unableToRetrieveLocation": "Could not obtain location",
+        "phone": "Phone Number *",
+        "email": "Email Address *",
+        "description": "Description *",
+        "descriptionPlaceholder": "Site description",
+        "fax": "Fax",
+        "category": "Category",
+        "slectcategory": "Select category",
+        "cancel": "Cancel",
+        "submit": "Submit"
       },
-      "Details": {
-        "detailsTitle": "Note details",
-        "Title": "Title",
-        "Date": "Date",
-        "Description": "Description",
-        "AddedBy": "Added by"
-      }
-    }
-  },
-  "overview": {
-    "cards": {
-      "postSites": "Post Sites",
-      "guardsAssigned": "Guards Assigned",
-      "toursCompleted": "Tour Completed (Last 7 Days)",
-      "tasksCompleted": "Task Completed (Last 7 Days)",
-      "incidents": "Incident Reports",
-      "hoursWorked": "Hrs Worked (Last 7 Days)"
-    },
-    "generalInfo": {
-      "notfoundclient": "Client not found",
-      "title": "General Information",
-      "clientName": "Client Name",
+      "overview": {
+        "Stats": {
+          "title": "Stats",
+          "guardsAssigned": "Guards Assigned",
+          "guardOnSite": "Guard On-Site",
+          "toursCompleted": "Tours Completed (Last 7 Days)",
+          "tasksCompleted": "Tasks Completed (Last 7 Days)",
+          "incidentsReported": "Incidents Reported",
+          "hoursLogged": "Hrs Logged (Last 7 Days)"
+        },
+        "Map": {
+          "title": "Map",
+          "MapType": "Map Type",
+          "Roadmap": "Roadmap",
+          "Satellite": "Satellite",
+          "Hybrid": "Hybrid",
+          "GeoFence": "Show Geo-Fence"
+        },
+        "LatestActivity": "Latest Activity",
+        "Filters": "Filters",
+        "FilterHelp": "Select filters for the view",
+        "fromDate": "From Date",
+        "toDate": "To Date",
+        "Type": "Type",
+        "types": {
+          "callOffRequest": "Call Off Request",
+          "checkList": "Check List",
+          "checkedIn": "Checked-In",
+          "checkedOut": "Checked-Out",
+          "clockedIn": "Clocked-In",
+          "clockedOut": "Clocked-Out",
+          "companyPolicy": "Company Policy",
+          "dispatch": "Dispatch",
+          "exchangeShift": "Exchange Shift",
+          "geoFence": "Geo Fence",
+          "guardAvailability": "Guard Availability",
+          "guardIdle": "Guard Idle",
+          "guardDeviceFall": "Guard/Device Fall",
+          "incidentReport": "Incident Report",
+          "lowBattery": "Low Battery",
+          "openShiftConfirmation": "Open Shift Confirmation",
+          "panicAlert": "Panic Alert",
+          "parkingManager": "Parking Manager",
+          "passdownReport": "Passdown Report",
+          "postOrder": "Post Order",
+          "shiftConfirmation": "Shift Confirmation",
+          "siteTour": "Site Tour",
+          "standardReport": "Standard Report",
+          "taskReport": "Task Report",
+          "timeOff": "Time off",
+          "vehiclePatrol": "Vehicle Patrol",
+          "watchModeReport": "Watch Mode Report"
+        },
+        "apply": "Filter",
+        "noActivity": "No activity yet."
+      },
+      "generalInfo": "General Information",
+      "client": "Client",
+      "siteName": "Site Name",
       "address": "Address",
-      "addedOn": "Added On"
-    },
-    "contactDetails": {
-      "title": "Contact Details",
+      "addedOn": "Added On",
+      "contactDetails": "Contact Details",
       "phoneNumber": "Phone Number",
       "fax": "Fax",
       "email": "Email",
-      "website": "Website"
-    }
-  },
-  "contacts": {
-    "addcontact": "Add Contact",
-    "searchcontact": "Search Contacts",
-    "contactName": "Name",
-    "contactEmail": "Email",
-    "contactPhone": "Mobile Number",
-    "contactPostSites": "Post Sites",
-    "editcontact": "Edit Contact",
-    "contactCreated": "Contact created successfully",
-    "contactUpdated": "Contact updated successfully",
-    "contactDeleted": "Contact deleted successfully",
-    "contactCreateFailed": "Could not create contact",
-    "contactDeleteFailed": "Could not delete contact",
-    "confirmDeleteTitle": "Delete contact(s)?",
-    "confirmDeleteMessage": "Are you sure you want to permanently delete the selected contact(s)? This action cannot be undone.",
-    "deleteContactButton": "Delete",
-    "form": {
-      "AddClientContact": "Add Client Contact",
-      "Name": "Name *",
-      "Email": "Email *",
-      "Mobile Number": "Mobile Number *",
-      "Description": "Description",
-      "descriptioninput": "Enter contact description",
-      "AssignPostSite": "Assign Post Site",
-      "checkbox": "Allow guard to view contact",
-      "Addcontact": "ADD"
-    },
-    "errors": {
-      "invalidEmail": "Invalid email address",
-      "invalidPhone": "Invalid phone number",
-      "requiredName": "Name is required"
-    }
-  },
-  "postSites": {
-    "postsitdash": "Dashboard",
-    "postsite": "Post Site",
-    "searchPlaceholder": "Search Post Sites",
-    "newPostSite": "New Post Site",
-    "editPostSite": "Edit Post Site",
-    "action": "Action",
-    "move": "Move",
-    "archive": "Archive",
-    "restore": "Restore",
-    "delete": "Delete",
-    "manageCategories": "Manage Categories",
-    "filtersTitle": "Filters",
-    "filters": {
-      "email": "Email",
-      "phone": "Phone Number",
-      "city": "City",
-      "country": "Country",
-      "categories": "Categories",
-      "all": "All",
-      "active": "Active",
-      "archived": "Archived",
-      "status": "Status",
-      "applyFilters": "Apply Filters",
-      "clearFilters": "Clear Filters"
-    },
-    "clients": "Client",
-    "emails": "Email",
-    "phones": "Phone Number",
-    "actions": "Actions",
-    "viewDetails": "View Details",
-    "categorize": "Categorize",
-    "notsearch": "No results found matching your search",
-    "pdfexport": "Export as PDF",
-    "excelexport": "Export as Excel",
-    "import": "Import",
-    "selectAtLeastOne": "Select at least one post site",
-    "generatingPDF": "Generating PDF...",
-    "pdfDownloaded": "PDF downloaded",
-    "generatingExcel": "Generating Excel...",
-    "excelDownloaded": "Excel downloaded",
-    "sitesArchived": "Sites archived",
-    "form": {
-      "client": "Client *",
-      "selectClient": "Select client",
-      "siteName": "Site Name *",
-      "address": "Address *",
-      "addressLine2": "Address Line 2",
-      "addressLine2Placeholder": "Optional",
-      "postalCode": "Postal Code/Zip *",
-      "city": "City *",
-      "country": "Country *",
-      "latitude": "Latitude *",
-      "longitude": "Longitude *",
-      "notLocationSet": "The location could not be found.",
-      "locationSet": "Location set",
-      "useMyLocation": "Use my location",
-      "moreInfo": "More information",
-      "geolocationNotSupported": "Geolocation not supported in this browser",
-      "unableToRetrieveLocation": "Could not obtain location",
-      "phone": "Phone Number *",
-      "email": "Email Address *",
-      "description": "Description *",
-      "descriptionPlaceholder": "Site description",
-      "fax": "Fax",
-      "category": "Category",
-      "slectcategory": "Select category",
-      "cancel": "Cancel",
-      "submit": "Submit"
-    },
-    "overview": {
-      "Stats": {
-        "title": "Stats",
+      "website": "Website",
+      "Details": {
+        "title": "Details",
+        "unexpected": "Unexpected error occurred",
+        "Overview": "Overview",
+        "Profile": "Profile",
+        "PostSites": "Post Sites",
+        "Contacts": "Contacts",
+        "KPIs": "KPIs",
+        "Notes": "Notes",
+        "Files": "Files",
+        "AssignGuards": "Assign Guards",
+        "Tasks": "Tasks",
+        "PostOrders": "Post Orders",
+        "Stations": "Stations",
+        "Incidents": "Incidents",
+        "SiteTours": "Site Tours",
+        "SiteTourTags": "Site Tour Tags",
+        "GeoFence": "Geo-Fence",
+        "AssignReports": "Assign Reports",
+        "Checklists": "Checklists",
+        "EmailReports": "Email Reports",
+        "Settings": "Settings",
+        "notfoundpostsite": "No post sites found",
+        "detailserror": "Could not load post site details",
+        "description": "Description",
+        "category": "Category",
+        "categories": "Categories"
+      },
+      "stations": {
+        "action": "Action",
+        "deleteSelected": "Delete selected",
+        "searchPlaceholder": "Search stations...",
+        "add": "Add Station",
+        "create": "Create",
+        "cancel": "Cancel",
+        "created": "Station created",
+        "createFailed": "Failed creating station",
+        "removed": "Station removed",
+        "removeFailed": "Failed to remove station",
+        "noStations": "No stations added yet.",
+        "loading": "Loading...",
+        "selectPrompt": "Select a station to view details",
+        "table": {
+          "name": "Name",
+          "description": "Description"
+        },
+        "tableActions": "Actions",
+        "createTitle": "Create Station",
+        "provideSchedule": "Select a schedule",
+        "form": {
+          "name": "Name *",
+          "description": "Description",
+          "descriptionPlaceholder": "Optional description",
+          "schedule": "Schedule *",
+          "selectSchedule": "Select schedule",
+          "guards": "Guards",
+          "startTime": "Start",
+          "finishTime": "Finish"
+        },
+        "placeholderName": "Station name",
+        "lat": "Latitude",
+        "lng": "Longitude",
+        "schedule": "Schedule",
+        "guardsCount": "Guards",
+        "remove": "Remove"
+      },
+      "siteTour": {
+        "searchPlaceholder": "Search Tours",
+        "newTour": "New Tour",
+        "table": {
+          "name": "Tour Name",
+          "duration": "Duration",
+          "type": "Type"
+        },
+        "placeholders": {
+          "tourNameFallback": "Tour name"
+        },
+        "empty": {
+          "title": "No Result Found",
+          "message": "We can't find any item matching your search"
+        },
+        "modal": {
+          "title": "New Tour"
+        },
+        "form": {
+          "tourName": "Tour Name*",
+          "tourDescription": "Tour Description",
+          "scheduledDays": "Scheduled Days*",
+          "options": {
+            "monFri": "Mon - Fri",
+            "sat": "Sat"
+          },
+          "continuous": "Continuous",
+          "timeMode": {
+            "specific": "Specific Time",
+            "any": "Any Time"
+          },
+          "selectTime": "Select Time",
+          "maxDuration": {
+            "placeholder": "Max Duration",
+            "15": "15 mins",
+            "30": "30 mins"
+          },
+          "tagType": "Select Tag Type*",
+          "tagTypeOptionA": "Type A",
+          "tags": "Select Tags*",
+          "tagsOption1": "Tag 1",
+          "assignGuard": "Assign Guard*",
+          "enableNotes": "Enable site tour notes",
+          "forceMedia": "Force guard to attach multiple media files"
+        },
+        "buttons": {
+          "saveDraft": "Save As Draft",
+          "submit": "Submit"
+        },
+        "options": {
+          "monFri": "Mon - Fri",
+          "weekend": "Weekend"
+        }
+      },
+      "tasks": {
+        "action": "Action",
+        "archiveSelected": "Archive Selected",
+        "export": "Export",
+        "searchPlaceholder": "Search tasks",
+        "newTask": "New Task",
+        "table": {
+          "taskName": "Task Name",
+          "duration": "Duration",
+          "type": "Type"
+        },
+        "empty": {
+          "title": "No Result Found",
+          "message": "We can't find any item matching your search"
+        },
+        "modal": {
+          "title": "New Task"
+        },
+        "form": {
+          "taskNamePlaceholder": "Task Name*",
+          "taskDescriptionPlaceholder": "Task Description",
+          "maxDuration": "Max Duration",
+          "assignGuard": "Assign Guard*",
+          "newSubTask": "New sub task"
+        },
+        "oneoff": "One-off Task",
+        "recurring": "Recurring Task",
+        "recurringPlaceholder": "Recurring scheduling controls (placeholder)",
+        "subtasks": "Sub Tasks",
+        "add": "+ Add",
+        "remove": "Remove",
+        "saveDraft": "Save As Draft",
+        "submit": "Submit"
+      },
+      "siteTourTag": {
+        "tabs": {
+          "qr": "QR Tags",
+          "nfc": "NFC Tags",
+          "virtual": "Virtual Tags",
+          "ble": "Ble Beacons"
+        },
+        "action": "Action",
+        "searchPlaceholder": "Search Tags",
+        "actions": {
+          "delete": "Delete",
+          "print": "Print"
+        },
+        "table": {
+          "name": "Name",
+          "tagId": "Tag Id",
+          "geofenceRadius": "Geofence Radius"
+        },
+        "empty": {
+          "title": "No Result Found",
+          "message": "We can't find any item matching your search"
+        },
+        "placeholders": {
+          "tagName": "Tag name"
+        },
+        "modal": {
+          "title": "New Tag",
+          "refresh": "Refresh"
+        },
+        "form": {
+          "name": "Name*",
+          "tagId": "Tag Id*",
+          "location": "Location",
+          "instructions": "Instructions For The Guards*",
+          "askQuestionsLabel": "Ask guards specific questions after they scan the tag",
+          "latitude": "Latitude*",
+          "longitude": "Longitude*",
+          "mapLocation": "Map Location",
+          "showGeoFence": "Show Geo-Fence"
+        },
+        "buttons": {
+          "saveDraft": "Save As Draft",
+          "submit": "Submit"
+        }
+      },
+      "profile": {
+        "title": "Post Site Profile",
+        "editProfile": "Edit Profile",
+        "profileUpdated": "Post site profile updated",
+        "errorUpdatingProfile": "Error updating post site profile",
+        "Map": {
+          "title": "Map",
+          "MapType": "Map Type",
+          "Roadmap": "Roadmap",
+          "Satellite": "Satellite",
+          "Hybrid": "Hybrid",
+          "GeoFence": "Show Geo-Fence",
+          "NoCoordinates": "No coordinates available for this site"
+        },
+        "GeneralInformation": {
+          "title": "General Information",
+          "client": "Client",
+          "siteName": "Site Name",
+          "address": "Address",
+          "addedOn": "Added On"
+        },
+        "ContactDetails": {
+          "title": "Contact Details",
+          "phoneNumber": "Phone Number",
+          "fax": "Fax",
+          "email": "Email",
+          "website": "Website"
+        },
+        "MoreInformation": {
+          "title": "More Information",
+          "categories": "Categories",
+          "postalCode": "Postal Code/Zip",
+          "city": "City",
+          "country": "Country",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "postSiteChargeRate": "Post Site Charge Rate",
+          "postSitePayRate": "Post Site Pay Rate"
+        },
+        "Edit": "Edit"
+      },
+      "postsiterestore": "Post Site Restored",
+      "postsitesttiledelete": "Delete Post Site",
+      "postsitesttiledeletePlural": "Delete Post Sites",
+      "postesitedeleteconfirm": "Are you sure you want to delete {{count}} post site(s)? This action cannot be undone.",
+      "postsitedeleted": "Post Site Deleted",
+      "postsitedeletedPlural": "Post Sites Deleted",
+      "postsiterestoreerror": "Error restoring post site",
+      "postsitedeleteerror": "Error deleting post site",
+      "KPI": {
+        "title": "KPI Indicators",
+        "kpisearch": "Search KPIs",
+        "kpiadded": "KPI added",
+        "kpitable": {
+          "kpitype": "Type",
+          "kpidate": "Date/Hour",
+          "kpicreatedfor": "Created for"
+        },
+        "table": {
+          "name": "Name",
+          "target": "Target",
+          "actual": "Actual",
+          "status": "Status",
+          "noTargets": "No targets defined"
+        },
+        "status": {
+          "achieved": "Achieved",
+          "notAchieved": "Not Achieved"
+        },
+        "metrics": {
+          "standardReports": "Standard Reports",
+          "taskReports": "Task Reports",
+          "incidentReports": "Incident Reports",
+          "routeReports": "Route Reports",
+          "verificationReports": "Checklist Reports"
+        },
+        "descriptionLabel": "DESCRIPTION :",
+        "exportPdf": "Export as PDF",
+        "exportExcel": "Export as Excel",
+        "emailReport": "Email Report",
+        "emailNotImplemented": "Email report not implemented",
+        "modal": {
+          "title": "Add New KPIs (Key Performance Indicators)",
+          "frequency": "Frequency",
+          "frequencyOptions": {
+            "select": "Select frequency",
+            "daily": "Daily",
+            "weekly": "Weekly",
+            "monthly": "Monthly"
+          },
+          "description": "Description",
+          "descriptionPlaceholder": "Enter description",
+          "standardReports": "Standard Reports",
+          "incidentReports": "Incident Reports",
+          "routeReports": "Route Reports",
+          "taskReports": "Task Reports",
+          "verificationReports": "Checklist Reports",
+          "defineNumber": "Define a Number",
+          "emailNotification": "Send KPI report by email",
+          "newEmailPlaceholder": "New email...",
+          "addEmail": "Add",
+          "add": "Add"
+        },
+        "confirmDelete": {
+          "title": "Confirm deletion",
+          "messageSingle": "Are you sure you want to delete this KPI? This action cannot be undone.",
+          "messageMultiple": "Are you sure you want to delete {{count}} KPI(s)? This action cannot be undone."
+        },
+        "toasts": {
+          "selectAtLeastOne": "You must select at least one KPI",
+          "kpiDeleted": "KPI deleted",
+          "kpisDeleted": "KPIs deleted",
+          "noSelected": "No items selected",
+          "deleteError": "Error deleting KPI(s)",
+          "pdfOpened": "PDF opened",
+          "pdfGenerated": "PDF generated",
+          "pdfError": "Could not generate/get PDF",
+          "pdfOpenError": "Error opening PDF",
+          "excelDownloaded": "Excel downloaded",
+          "excelError": "Could not generate/get Excel",
+          "excelExportError": "Error exporting Excel"
+        },
         "guardsAssigned": "Guards Assigned",
         "guardOnSite": "Guard On-Site",
         "toursCompleted": "Tours Completed (Last 7 Days)",
         "tasksCompleted": "Tasks Completed (Last 7 Days)",
         "incidentsReported": "Incidents Reported",
         "hoursLogged": "Hrs Logged (Last 7 Days)"
-      },
-      "Map": {
-        "title": "Map",
-        "MapType": "Map Type",
-        "Roadmap": "Roadmap",
-        "Satellite": "Satellite",
-        "Hybrid": "Hybrid",
-        "GeoFence": "Show Geo-Fence"
-      },
-      "LatestActivity": "Latest Activity",
-      "Filters": "Filters",
-      "FilterHelp": "Select filters for the view",
-      "fromDate": "From Date",
-      "toDate": "To Date",
-      "Type": "Type",
-      "types": {
-        "callOffRequest": "Call Off Request",
-        "checkList": "Check List",
-        "checkedIn": "Checked-In",
-        "checkedOut": "Checked-Out",
-        "clockedIn": "Clocked-In",
-        "clockedOut": "Clocked-Out",
-        "companyPolicy": "Company Policy",
-        "dispatch": "Dispatch",
-        "exchangeShift": "Exchange Shift",
-        "geoFence": "Geo Fence",
-        "guardAvailability": "Guard Availability",
-        "guardIdle": "Guard Idle",
-        "guardDeviceFall": "Guard/Device Fall",
-        "incidentReport": "Incident Report",
-        "lowBattery": "Low Battery",
-        "openShiftConfirmation": "Open Shift Confirmation",
-        "panicAlert": "Panic Alert",
-        "parkingManager": "Parking Manager",
-        "passdownReport": "Passdown Report",
-        "postOrder": "Post Order",
-        "shiftConfirmation": "Shift Confirmation",
-        "siteTour": "Site Tour",
-        "standardReport": "Standard Report",
-        "taskReport": "Task Report",
-        "timeOff": "Time off",
-        "vehiclePatrol": "Vehicle Patrol",
-        "watchModeReport": "Watch Mode Report"
-      },
-      "apply": "Filter",
-      "noActivity": "No activity yet."
-    },
-    "generalInfo": "General Information",
-    "client": "Client",
-    "siteName": "Site Name",
-    "address": "Address",
-    "addedOn": "Added On",
-    "contactDetails": "Contact Details",
-    "phoneNumber": "Phone Number",
-    "fax": "Fax",
-    "email": "Email",
-    "website": "Website",
-    "Details": {
-      "title": "Details",
-      "unexpected": "Unexpected error occurred",
-      "Overview": "Overview",
-      "Profile": "Profile",
-      "PostSites": "Post Sites",
-      "Contacts": "Contacts",
-      "KPIs": "KPIs",
-      "Notes": "Notes",
-      "Files": "Files",
-      "AssignGuards": "Assign Guards",
-      "Tasks": "Tasks",
-      "PostOrders": "Post Orders",
-      "Stations": "Stations",
-      "Incidents": "Incidents",
-      "Stations": "Stations",
-      "SiteTours": "Site Tours",
-      "SiteTourTags": "Site Tour Tags",
-      "GeoFence": "Geo-Fence",
-      "AssignReports": "Assign Reports",
-      "Checklists": "Checklists",
-      "EmailReports": "Email Reports",
-      "Settings": "Settings",
-      "notfoundpostsite": "No post sites found",
-      "detailserror": "Could not load post site details",
-      "description": "Description",
-      "category": "Category",
-      "categories": "Categories"
-    },
-    "stations": {
-      "action": "Action",
-      "deleteSelected": "Delete selected",
-      "searchPlaceholder": "Search stations...",
-      "add": "Add Station",
-      "create": "Create",
-      "cancel": "Cancel",
-      "created": "Station created",
-      "createFailed": "Failed creating station",
-      "removed": "Station removed",
-      "removeFailed": "Failed to remove station",
-      "noStations": "No stations added yet.",
-      "loading": "Loading...",
-      "selectPrompt": "Select a station to view details",
-      "table": { "name": "Name", "description": "Description" },
-      "tableActions": "Actions",
-      "createTitle": "Create Station",
-      "form": { "name": "Name *", "description": "Description", "descriptionPlaceholder": "Optional description" },
-      "provideSchedule": "Select a schedule",
-      "form": {
-        "name": "Name *",
-        "description": "Description",
-        "descriptionPlaceholder": "Optional description",
-        "schedule": "Schedule *",
-        "selectSchedule": "Select schedule",
-        "guards": "Guards",
-        "startTime": "Start",
-        "finishTime": "Finish"
-      },
-      "placeholderName": "Station name",
-      "lat": "Latitude",
-      "lng": "Longitude",
-      "schedule": "Schedule",
-      "guardsCount": "Guards",
-      "remove": "Remove"
-    },
-    "siteTour": {
-      "searchPlaceholder": "Search Tours",
-      "newTour": "New Tour",
-      "table": {
-        "name": "Tour Name",
-        "duration": "Duration",
-        "type": "Type"
-      },
-      "placeholders": {
-        "tourNameFallback": "Tour name"
-      },
-      "empty": {
-        "title": "No Result Found",
-        "message": "We can't find any item matching your search"
-      },
-      "modal": {
-        "title": "New Tour"
-      },
-      "form": {
-        "tourName": "Tour Name*",
-        "tourDescription": "Tour Description",
-        "scheduledDays": "Scheduled Days*",
-        "options": {
-          "monFri": "Mon - Fri",
-          "sat": "Sat"
-        },
-        "continuous": "Continuous",
-        "timeMode": {
-          "specific": "Specific Time",
-          "any": "Any Time"
-        },
-        "selectTime": "Select Time",
-        "maxDuration": {
-          "placeholder": "Max Duration",
-          "15": "15 mins",
-          "30": "30 mins"
-        },
-        "tagType": "Select Tag Type*",
-        "tagTypeOptionA": "Type A",
-        "tags": "Select Tags*",
-        "tagsOption1": "Tag 1",
-        "assignGuard": "Assign Guard*",
-        "enableNotes": "Enable site tour notes",
-        "forceMedia": "Force guard to attach multiple media files"
-      },
-      "buttons": {
-        "saveDraft": "Save As Draft",
-        "submit": "Submit"
-      },
-      "options": {
-        "monFri": "Mon - Fri",
-        "weekend": "Weekend"
       }
     },
-    "siteTourTag": {
-      "tabs": {
-        "qr": "QR Tags",
-        "nfc": "NFC Tags",
-        "virtual": "Virtual Tags",
-        "ble": "Ble Beacons"
-      },
-      "action": "Action",
-      "searchPlaceholder": "Search Tags",
-      "actions": {
-        "delete": "Delete",
-        "print": "Print"
-      },
-      "table": {
-        "name": "Name",
-        "tagId": "Tag Id",
-        "geofenceRadius": "Geofence Radius"
-      },
-      "empty": {
-        "title": "No Result Found",
-        "message": "We can't find any item matching your search"
-      },
-      "placeholders": {
-        "tagName": "Tag name"
-      },
-      "modal": {
-        "title": "New Tag",
-        "refresh": "Refresh"
-      },
-      "form": {
-        "name": "Name*",
-        "tagId": "Tag Id*",
-        "location": "Location",
-        "instructions": "Instructions For The Guards*",
-        "askQuestionsLabel": "Ask guards specific questions after they scan the tag",
-        "latitude": "Latitude*",
-        "longitude": "Longitude*",
-        "mapLocation": "Map Location",
-        "showGeoFence": "Show Geo-Fence"
-      },
-      "buttons": {
-        "saveDraft": "Save As Draft",
-        "submit": "Submit"
-      }
+    "header": {
+      "openMenu": "Open menu",
+      "feedback": "Send feedback",
+      "search": "Search",
+      "help": "Help",
+      "notifications": "Notifications",
+      "account": "User account",
+      "select_rating": "Please select a rating",
+      "feedback_thanks": "Thanks for your feedback!",
+      "connected_as": "Connected as",
+      "settings": "Settings",
+      "subscription": "Subscription",
+      "branches": "Branches",
+      "system_logs": "System logs",
+      "login_history": "Login history",
+      "light_mode": "Light mode",
+      "dark_mode": "Dark mode",
+      "logout": "Sign out",
+      "feedback_modal_title": "How would you rate your GuardsPro experience?",
+      "feedback_modal_desc": "Rate your experience with GuardsPro.",
+      "feedback_placeholder": "Tell us a bit more about your experience",
+      "send": "Send"
     },
-    "profile": {
-      "title": "Post Site Profile",
-      "editProfile": "Edit Profile",
-      "profileUpdated": "Post site profile updated",
-      "errorUpdatingProfile": "Error updating post site profile",
-      "Map": {
-        "title": "Map",
-        "MapType": "Map Type",
-        "Roadmap": "Roadmap",
-        "Satellite": "Satellite",
-        "Hybrid": "Hybrid",
-        "GeoFence": "Show Geo-Fence",
-        "NoCoordinates": "No coordinates available for this site"
-      },
-      "GeneralInformation": {
-        "title": "General Information",
-        "client": "Client",
-        "siteName": "Site Name",
-        "address": "Address",
-        "addedOn": "Added On"
-      },
-      "ContactDetails": {
-        "title": "Contact Details",
-        "phoneNumber": "Phone Number",
-        "fax": "Fax",
-        "email": "Email",
-        "website": "Website"
-      },
-      "MoreInformation": {
-        "title": "More Information",
-        "categories": "Categories",
-        "postalCode": "Postal Code/Zip",
-        "city": "City",
-        "country": "Country",
-        "latitude": "Latitude",
-        "longitude": "Longitude",
-        "postSiteChargeRate": "Post Site Charge Rate",
-        "postSitePayRate": "Post Site Pay Rate"
-      },
-      "Edit": "Edit"
-    },
-    "postsiterestore": "Post Site Restored",
-    "postsitesttiledelete": "Delete Post Site",
-    "postsitesttiledeletePlural": "Delete Post Sites",
-    "postesitedeleteconfirm": "Are you sure you want to delete {{count}} post site(s)? This action cannot be undone.",
-    "postsitedeleted": "Post Site Deleted",
-    "postsitedeletedPlural": "Post Sites Deleted",
-    "postsiterestoreerror": "Error restoring post site",
-    "postsitedeleteerror": "Error deleting post site",
-    "KPI": {
-      "title": "KPI Indicators",
-      "kpisearch": "Search KPIs",
-      "kpiadded": "KPI added",
-      "kpitable": {
-        "kpitype": "Type",
-        "kpidate": "Date/Hour",
-        "kpicreatedfor": "Created for"
-      },
-      "table": {
-        "name": "Name",
-        "target": "Target",
-        "actual": "Actual",
-        "status": "Status",
-        "noTargets": "No targets defined"
-      },
-      "status": {
-        "achieved": "Achieved",
-        "notAchieved": "Not Achieved"
-      },
-      "metrics": {
-        "standardReports": "Standard Reports",
-        "taskReports": "Task Reports",
-        "incidentReports": "Incident Reports",
-        "routeReports": "Route Reports",
-        "verificationReports": "Checklist Reports"
-      },
-      "descriptionLabel": "DESCRIPTION :",
-      "exportPdf": "Export as PDF",
-      "exportExcel": "Export as Excel",
-      "emailReport": "Email Report",
-      "emailNotImplemented": "Email report not implemented",
-      "modal": {
-        "title": "Add New KPIs (Key Performance Indicators)",
-        "frequency": "Frequency",
-        "frequencyOptions": {
-          "select": "Select frequency",
-          "daily": "Daily",
-          "weekly": "Weekly",
-          "monthly": "Monthly"
-        },
-        "description": "Description",
-        "descriptionPlaceholder": "Enter description",
-        "standardReports": "Standard Reports",
-        "incidentReports": "Incident Reports",
-        "routeReports": "Route Reports",
-        "taskReports": "Task Reports",
-        "verificationReports": "Checklist Reports",
-        "defineNumber": "Define a Number",
-        "emailNotification": "Send KPI report by email",
-        "newEmailPlaceholder": "New email...",
-        "addEmail": "Add",
-        "add": "Add"
-      },
-      "confirmDelete": {
-        "title": "Confirm deletion",
-        "messageSingle": "Are you sure you want to delete this KPI? This action cannot be undone.",
-        "messageMultiple": "Are you sure you want to delete {{count}} KPI(s)? This action cannot be undone."
-      },
-      "toasts": {
-        "selectAtLeastOne": "You must select at least one KPI",
-        "kpiDeleted": "KPI deleted",
-        "kpisDeleted": "KPIs deleted",
-        "noSelected": "No items selected",
-        "deleteError": "Error deleting KPI(s)",
-        "pdfOpened": "PDF opened",
-        "pdfGenerated": "PDF generated",
-        "pdfError": "Could not generate/get PDF",
-        "pdfOpenError": "Error opening PDF",
-        "excelDownloaded": "Excel downloaded",
-        "excelError": "Could not generate/get Excel",
-        "excelExportError": "Error exporting Excel"
-      },
-      "guardsAssigned": "Guards Assigned",
-      "guardOnSite": "Guard On-Site",
-      "toursCompleted": "Tours Completed (Last 7 Days)",
-      "tasksCompleted": "Tasks Completed (Last 7 Days)",
-      "incidentsReported": "Incidents Reported",
-      "hoursLogged": "Hrs Logged (Last 7 Days)"
-    }
-  },
-  "activity": {
-    "title": "Activity",
-    "latest": "Latest Activity",
-    "recent": "Recent Activity",
-    "noActivity": "No recent activity",
-    "showMore": "Show more",
-    "markAllRead": "Mark all as read",
-    "filters": "Filters",
-    "savedFilters": "Saved filters",
-    "filter": {
+    "dispatcher": {
+      "noPermissionViewToast": "You don't have permission to view dispatches",
+      "noPermissionViewBanner": "You don't have permission to view the dispatch list. Contact an administrator.",
+      "tenantUnavailable": "Tenant not available",
+      "share_link_copied": "Shareable link copied",
+      "share_link_failed": "Could not generate shareable link",
+      "share_error": "Error generating shareable link",
+      "select_at_least_one_export": "Select at least one dispatch to export",
+      "export_excel_error": "Error generating Excel",
+      "select_at_least_one_print": "Select at least one dispatch to print",
+      "pdf_generate_failed": "Could not generate PDF",
+      "pdf_invalid_response": "Invalid server response when generating PDF",
+      "print_error": "Error printing PDF",
+      "select_at_least_one_send": "Select at least one dispatch to send",
+      "email_sent": "Email sent",
+      "email_send_error": "Error sending email",
+      "select_at_least_one_delete": "Select at least one dispatch to delete",
+      "newDispatch": "New Dispatch",
+      "no_permission_create": "You don't have permission to create dispatches",
+      "deleted_success": "Dispatches deleted",
+      "deleted_error": "Error deleting dispatches",
+      "searchPlaceholder": "Search by client or post site",
+      "breadcrumbDashboard": "Dashboard",
+      "breadcrumbList": "Dispatches",
+      "actionPlaceholder": "Action",
+      "action_delete": "Delete",
+      "filters": "Filters",
       "client": "Client",
-      "postSite": "Post Site",
-      "guard": "Guard",
-      "type": "Type",
-      "type": {
-        "all": "All",
-        "checkin": "Check-in",
-        "checkout": "Check-out",
-        "incident": "Incident"
-      },
-      "dateFrom": "From date",
-      "dateTo": "To date",
-      "time": "Time",
-      "showArchived": "Show archived data",
-      "apply": "Apply filter"
-    },
-    "any": "Any",
-    "noResults": {
-      "title": "No results found",
-      "description": "We couldn't find any items matching your search"
-    },
-    "empty": {
-      "alt": "No data"
-    }
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "welcome": "Welcome to the dashboard",
-    "cards": "Overview Cards",
-    "noWidgets": {
-      "title": "No widgets enabled",
-      "desc": "Please enable at least one widget to see data on the board."
-    },
-    "widgets": {
-      "clientes": {
-        "title": "Clients",
-        "subtitle": "Active clients"
-      },
-      "sitios": {
-        "title": "Post Sites",
-        "subtitle": "Active publishing sites"
-      },
-      "guardias": {
-        "title": "Guards",
-        "subtitle": "Active guards"
-      },
-      "equipo": {
-        "title": "Admin team",
-        "subtitle": "Active users"
-      },
-      "registros": {
-        "title": "Records",
-        "subtitle": "Today"
-      },
-      "fichados": {
-        "title": "Clock-ins",
-        "subtitle": "Today"
-      }
-    }
-  },
-  "header": {
-    "openMenu": "Open menu",
-    "feedback": "Send feedback",
-    "search": "Search",
-    "help": "Help",
-    "notifications": "Notifications",
-    "account": "User account",
-    "select_rating": "Please select a rating",
-    "feedback_thanks": "Thanks for your feedback!",
-    "connected_as": "Connected as",
-    "settings": "Settings",
-    "subscription": "Subscription",
-    "branches": "Branches",
-    "system_logs": "System logs",
-    "login_history": "Login history",
-    "light_mode": "Light mode",
-    "dark_mode": "Dark mode",
-    "logout": "Sign out",
-    "feedback_modal_title": "How would you rate your GuardsPro experience?",
-    "feedback_modal_desc": "Rate your experience with GuardsPro.",
-    "feedback_placeholder": "Tell us a bit more about your experience",
-    "send": "Send"
-  },
-  "dispatcher": {
-    "noPermissionViewToast": "You don't have permission to view dispatches",
-    "noPermissionViewBanner": "You don't have permission to view the dispatch list. Contact an administrator.",
-    "tenantUnavailable": "Tenant not available",
-    "share_link_copied": "Shareable link copied",
-    "share_link_failed": "Could not generate shareable link",
-    "share_error": "Error generating shareable link",
-    "select_at_least_one_export": "Select at least one dispatch to export",
-    "export_excel_error": "Error generating Excel",
-    "select_at_least_one_print": "Select at least one dispatch to print",
-    "pdf_generate_failed": "Could not generate PDF",
-    "pdf_invalid_response": "Invalid server response when generating PDF",
-    "print_error": "Error printing PDF",
-    "select_at_least_one_send": "Select at least one dispatch to send",
-    "email_sent": "Email sent",
-    "email_send_error": "Error sending email",
-    "select_at_least_one_delete": "Select at least one dispatch to delete",
-    "newDispatch": "New Dispatch",
-    "no_permission_create": "You don't have permission to create dispatches",
-    "deleted_success": "Dispatches deleted",
-    "deleted_error": "Error deleting dispatches",
-    "searchPlaceholder": "Search by client or post site",
-    "breadcrumbDashboard": "Dashboard",
-    "breadcrumbList": "Dispatches",
-    "actionPlaceholder": "Action",
-    "action_delete": "Delete",
-    "filters": "Filters",
-    "client": "Client",
-    "select_client": "Select client",
-    "no_clients": "No clients",
-    "post_site": "Post site",
-    "select_site": "Select site",
-    "no_sites": "No sites",
-    "status": "Status",
-    "status_all": "All",
-    "status_open": "Open",
-    "status_closed": "Closed",
-    "created_date": "Created date",
-    "incident_date": "Incident date",
-    "show_archived": "Show archived data",
-    "apply_filters": "Apply filters",
-    "clear_filters": "Clear filters",
-    "export_pdf": "Export as PDF",
-    "export_excel": "Export as Excel",
-    "print": "Print",
-    "send_report_email": "Send report by email",
-    "no_results_title": "No results found",
-    "no_results_subtitle": "We couldn't find any items matching your search.",
-    "view_details": "View details",
-    "open_new_tab": "Open in new tab",
-    "generate_share_link": "Generate shareable link",
-    "edit": "Edit",
-    "ticket_closed": "Ticket closed",
-    "ticket_close_failed": "Could not close ticket",
-    "items_per_page": "Items per page",
-    "prev": "Previous",
-    "next": "Next",
-    "send_report_title": "Send report by email",
-    "send_report_desc": "Fill the fields to send the report by email.",
-    "sending": "Sending...",
-    "generate_shareable_link": "Generate shareable link",
-    "confirm_delete_title": "Confirm deletion",
-    "confirm_delete_desc": "Are you sure you want to delete {{count}} dispatch(es)? This action cannot be undone.",
-    "close_ticket": "Close ticket",
-    "action_delete_label": "Delete",
-    "header_ticket_id": "Ticket ID",
-    "header_datetime": "Date/Time",
-    "header_client": "Client",
-    "header_post_site": "Post Site",
-    "header_caller_type": "Caller Type",
-    "header_incident_type": "Incident Type",
-    "header_status": "Status"
-  },
-  "auth": {
-    "login_title": "Sign in | Cguard",
-    "reset_title": "Reset password | Cguard",
-    "reset_title_short": "Reset password",
-    "token_missing": "Reset token not found in URL.",
-    "password_min_length": "Password must be at least 8 characters",
-    "passwords_mismatch": "Passwords do not match",
-    "reset_success": "Password reset successfully. Please log in.",
-    "reset_failed": "Unable to reset password",
-    "register_title": "Register | Cguard",
-    "verify_email_success": "Verify email",
-    "email_label": "Email",
-    "email_placeholder": "you@company.com",
-    "password_label": "Password",
-    "password_placeholder": "Enter your password",
-    "forgot_password": "Forgot your password?",
-    "no_account_text": "Don't have an account?",
-    "name_label": "Full name",
-    "name_placeholder": "Your name",
-    "confirm_password_label": "Confirm password",
-    "confirm_password_placeholder": "Confirm password",
-    "old_password_label": "Old password",
-    "new_password_label": "New password",
-    "confirm_new_password_label": "Confirm new password",
-    "save_changes": "Save changes",
-    "validation_min6": "Minimum 6 characters",
-    "validation_min8": "Minimum 8 characters",
-    "validation_uppercase": "Must include an uppercase letter",
-    "validation_lowercase": "Must include a lowercase letter",
-    "validation_number": "Must include a number",
-    "validation_confirm_required": "Please confirm your password",
-    "validation_passwords_not_match": "Passwords do not match",
-    "already_have_account": "Already have an account?",
-    "fill_all_fields": "Please fill all fields",
-    "passwords_not_match": "Passwords do not match",
-    "account_created_verify_email": "Account created. Verify your email to sign in.",
-    "login_success": "Signed in successfully",
-    "login_failed": "Login failed",
-    "could_not_open_auth_window": "Could not open authentication window",
-    "signing_in": "Signing in...",
-    "login": "Sign in",
-    "resetting": "Resetting...",
-    "reset_password": "Reset password",
-    "back_to_login": "Back to login",
-    "change_password_title": "Change password",
-    "change_password_success": "Password updated",
-    "change_password_error": "Error changing password",
-    "login_prompt": "Sign in to your account",
-    "register_prompt": "Create your account",
-    "creating_account": "Creating account...",
-    "create_account": "Create account",
-    "logout_success": "Signed out successfully",
-    "logout_failed": "Could not sign out",
-    "landing": {
-      "title_part1": "Take your security operations",
-      "title_part2": "to the next level",
-      "desc": "Using the physical security management platform {{product}}.",
-      "tag_cloud": "Cloud-based",
-      "tag_realtime": "Real-time tracking",
-      "tag_analytics": "Analytics",
-      "logo_alt": "CGUARD logo",
-      "copyright": "© 2025-{{year}} CGUARD. All rights reserved."
-    }
-  },
-  "actions": {
-    "action": "Action",
-    "viewDetails": "View Details",
-    "edit": "Edit",
-    "categorize": "Categorize",
-    "categorize_label": "Categorize",
-    "archive": "Archive",
-    "delete": "Delete",
-    "deleting": "Deleting...",
-    "restore": "Restore",
-    "save": "Save",
-    "cancel": "Cancel",
-    "manageCategories": "Manage Categories",
-    "exportPdf": "Export as PDF",
-    "exportExcel": "Export as Excel",
-    "import": "Import",
-    "move": "Move Category",
-    "desactivate": "Desactivate",
-    "activate": "Activate"
-  },
-  "components": {
-    "addRemove": {
-      "add": "Add another",
-      "remove": "Remove",
-      "confirmTitle": "Delete block",
-      "confirmDesc": "This action cannot be undone.",
-      "cancel": "Cancel",
-      "confirmAction": "Delete"
-    },
-    "submitBar": {
-      "primary": "Send",
-      "sending": "Sending..."
-    }
-  },
-  "adminOfficeUsers": {
-    "breadcrumb": {
-      "dashboard": "Dashboard"
-    },
-    "title": "Administrative Office Users",
-    "bulkAction": {
-      "placeholder": "Action",
-      "suspend": "Suspend",
-      "activate": "Activate"
-    },
-    "searchPlaceholder": "Search user",
-    "newUser": "New User",
-    "filters": {
-      "title": "Filters",
-      "categories": "Categories",
-      "categoriesAll": "All",
-      "client": "Client",
-      "clientAll": "All",
+      "select_client": "Select client",
+      "no_clients": "No clients",
+      "post_site": "Post site",
+      "select_site": "Select site",
+      "no_sites": "No sites",
       "status": "Status",
-      "statusAllLabel": "All Users",
-      "statusAll": "All Users",
-      "statusActive": "Active",
-      "statusInactive": "Inactive",
-      "statusSuspended": "Suspended",
-      "apply": "Apply filters"
+      "status_all": "All",
+      "status_open": "Open",
+      "status_closed": "Closed",
+      "created_date": "Created date",
+      "incident_date": "Incident date",
+      "show_archived": "Show archived data",
+      "apply_filters": "Apply filters",
+      "clear_filters": "Clear filters",
+      "export_pdf": "Export as PDF",
+      "export_excel": "Export as Excel",
+      "print": "Print",
+      "send_report_email": "Send report by email",
+      "no_results_title": "No results found",
+      "no_results_subtitle": "We couldn't find any items matching your search.",
+      "view_details": "View details",
+      "open_new_tab": "Open in new tab",
+      "generate_share_link": "Generate shareable link",
+      "edit": "Edit",
+      "ticket_closed": "Ticket closed",
+      "ticket_close_failed": "Could not close ticket",
+      "items_per_page": "Items per page",
+      "prev": "Previous",
+      "next": "Next",
+      "send_report_title": "Send report by email",
+      "send_report_desc": "Fill the fields to send the report by email.",
+      "sending": "Sending...",
+      "generate_shareable_link": "Generate shareable link",
+      "confirm_delete_title": "Confirm deletion",
+      "confirm_delete_desc": "Are you sure you want to delete {{count}} dispatch(es)? This action cannot be undone.",
+      "close_ticket": "Close ticket",
+      "action_delete_label": "Delete",
+      "header_ticket_id": "Ticket ID",
+      "header_datetime": "Date/Time",
+      "header_client": "Client",
+      "header_post_site": "Post Site",
+      "header_caller_type": "Caller Type",
+      "header_incident_type": "Incident Type",
+      "header_status": "Status"
+    },
+    "auth": {
+      "login_title": "Sign in | Cguard",
+      "reset_title": "Reset password | Cguard",
+      "reset_title_short": "Reset password",
+      "token_missing": "Reset token not found in URL.",
+      "password_min_length": "Password must be at least 8 characters",
+      "passwords_mismatch": "Passwords do not match",
+      "reset_success": "Password reset successfully. Please log in.",
+      "reset_failed": "Unable to reset password",
+      "register_title": "Register | Cguard",
+      "verify_email_success": "Verify email",
+      "email_label": "Email",
+      "email_placeholder": "you@company.com",
+      "password_label": "Password",
+      "password_placeholder": "Enter your password",
+      "forgot_password": "Forgot your password?",
+      "no_account_text": "Don't have an account?",
+      "name_label": "Full name",
+      "name_placeholder": "Your name",
+      "confirm_password_label": "Confirm password",
+      "confirm_password_placeholder": "Confirm password",
+      "old_password_label": "Old password",
+      "new_password_label": "New password",
+      "confirm_new_password_label": "Confirm new password",
+      "save_changes": "Save changes",
+      "validation_min6": "Minimum 6 characters",
+      "validation_min8": "Minimum 8 characters",
+      "validation_uppercase": "Must include an uppercase letter",
+      "validation_lowercase": "Must include a lowercase letter",
+      "validation_number": "Must include a number",
+      "validation_confirm_required": "Please confirm your password",
+      "validation_passwords_not_match": "Passwords do not match",
+      "already_have_account": "Already have an account?",
+      "fill_all_fields": "Please fill all fields",
+      "passwords_not_match": "Passwords do not match",
+      "account_created_verify_email": "Account created. Verify your email to sign in.",
+      "login_success": "Signed in successfully",
+      "login_failed": "Login failed",
+      "could_not_open_auth_window": "Could not open authentication window",
+      "signing_in": "Signing in...",
+      "login": "Sign in",
+      "resetting": "Resetting...",
+      "reset_password": "Reset password",
+      "back_to_login": "Back to login",
+      "change_password_title": "Change password",
+      "change_password_success": "Password updated",
+      "change_password_error": "Error changing password",
+      "login_prompt": "Sign in to your account",
+      "register_prompt": "Create your account",
+      "creating_account": "Creating account...",
+      "create_account": "Create account",
+      "logout_success": "Signed out successfully",
+      "logout_failed": "Could not sign out",
+      "landing": {
+        "title_part1": "Take your security operations",
+        "title_part2": "to the next level",
+        "desc": "Using the physical security management platform {{product}}.",
+        "tag_cloud": "Cloud-based",
+        "tag_realtime": "Real-time tracking",
+        "tag_analytics": "Analytics",
+        "logo_alt": "CGUARD logo",
+        "copyright": "© 2025-{{year}} CGUARD. All rights reserved."
+      }
     },
     "actions": {
+      "action": "Action",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "categorize": "Categorize",
+      "categorize_label": "Categorize",
+      "archive": "Archive",
+      "delete": "Delete",
+      "deleting": "Deleting...",
+      "restore": "Restore",
+      "save": "Save",
+      "cancel": "Cancel",
+      "manageCategories": "Manage Categories",
       "exportPdf": "Export as PDF",
       "exportExcel": "Export as Excel",
-      "import": "Import"
+      "import": "Import",
+      "move": "Move Category",
+      "desactivate": "Desactivate",
+      "activate": "Activate",
+      "close": "Close",
+      "confirm": "Confirm"
     },
-    "table": {
-      "headers": {
-        "contactName": "Contact Name",
-        "email": "Email",
-        "accessLevel": "Access Level",
-        "lastLogin": "Last Login",
-        "status": "Status"
-      }
-    },
-    "rowActions": {
-      "resendInvitation": "Resend Invitation",
-      "suspend": "Suspend",
-      "restore": "Restore",
-      "delete": "Delete",
-      "edit": "Edit"
-    },
-    "statuses": {
-      "archived": "Archived",
-      "pending": "Pending",
-      "inactive": "Inactive",
-      "active": "Active"
-    },
-    "footer": {
-      "itemsPerPage": "Items per page"
-    },
-    "pagination": {
-      "zero": "0 – 0 of 0",
-      "range": "1 – {{end}} of {{total}}"
-    },
-    "dialogs": {
-      "common": {
+    "components": {
+      "addRemove": {
+        "add": "Add another",
+        "remove": "Remove",
+        "confirmTitle": "Delete block",
+        "confirmDesc": "This action cannot be undone.",
         "cancel": "Cancel",
-        "sending": "Sending...",
-        "processing": "Processing...",
-        "processingDelete": "Deleting..."
+        "confirmAction": "Delete"
       },
-      "resend": {
-        "title": "Resend invitation",
-        "description": "Resend invitation to {{user}}?",
-        "confirm": "Resend",
-        "success": "Invitation resent",
-        "error": "Error resending invitation"
-      },
-      "restore": {
-        "title": "Restore user",
-        "description": "Restore user {{user}} to active state?",
-        "confirm": "Restore",
-        "success": "User restored",
-        "error": "Error restoring user"
-      },
-      "delete": {
-        "title": "Delete user",
-        "description": "Permanently delete {{user}}? This cannot be undone.",
-        "confirm": "Delete"
+      "submitBar": {
+        "primary": "Send",
+        "sending": "Sending..."
       }
     },
-    "toasts": {
-      "selectAtLeastOne": "Select at least one user",
-      "exportError": "Could not export users",
-      "cannotSuspendAdmin": "Cannot suspend an admin user",
-      "suspendedArchivedSuccess": "User suspended and archived",
-      "errorSuspendingUser": "Error suspending user",
-      "cannotDeleteAdmin": "Cannot delete an admin user",
-      "deletedSuccess": "User deleted",
-      "deleteError": "Error deleting user",
-      "noValidUsersToSuspend": "No valid users to suspend (admins cannot be suspended)",
-      "skippedAdminsWarning": "Some admins were skipped during suspension",
-      "suspendedCount": "Suspended {{count}} user(s)",
-      "suspendAllError": "Could not suspend all users",
-      "activatedCount": "Activated {{count}} user(s)",
-      "activateAllError": "Could not activate all users"
-    },
-    "newUser": {
+    "adminOfficeUsers": {
       "breadcrumb": {
-        "dashboard": "Dashboard",
-        "new": "New User"
+        "dashboard": "Dashboard"
       },
-      "form": {
-        "nameLabel": "Name*",
-        "namePlaceholder": "Name*",
-        "emailLabel": "Email Address*",
-        "emailPlaceholder": "Email Address*",
-        "accessLevelLabel": "Access Level*",
-        "accessLevelPlaceholder": "Select access level",
-        "selectDefault": "Select...",
-        "searchPlaceholder": "option",
-        "deselectAll": "Deselect all",
-        "selectAll": "Select all",
-        "noOptions": "No options",
-        "assignClientsPlaceholder": "Assign Clients",
-        "assignSitesPlaceholder": "Assign Post Sites",
-        "assignClientsLabel": "Assign Clients",
-        "assignSitesLabel": "Assign Post Sites",
-        "create": "Create",
-        "creating": "Creating..."
+      "title": "Administrative Office Users",
+      "bulkAction": {
+        "placeholder": "Action",
+        "suspend": "Suspend",
+        "activate": "Activate"
       },
-      "invite": {
-        "createTrigger": "Create invitation code",
-        "title": "Generate invitation code",
-        "description": "Create a temporary code to invite a user (expires in 1 hour).",
-        "placeholderToken": "------",
-        "expiresLabel": "Expires:",
-        "generating": "Generating...",
-        "regen": "Regenerate",
-        "generate": "Generate code"
+      "searchPlaceholder": "Search user",
+      "filters": {
+        "title": "Filters",
+        "categories": "Categories",
+        "categoriesAll": "All",
+        "client": "Client",
+        "clientAll": "All",
+        "status": "Status",
+        "statusAllLabel": "All Users",
+        "statusAll": "All Users",
+        "statusActive": "Active",
+        "statusInactive": "Inactive",
+        "statusSuspended": "Suspended",
+        "apply": "Apply filters"
+      },
+      "actions": {
+        "exportPdf": "Export as PDF",
+        "exportExcel": "Export as Excel",
+        "import": "Import"
+      },
+      "table": {
+        "headers": {
+          "contactName": "Contact Name",
+          "email": "Email",
+          "accessLevel": "Access Level",
+          "lastLogin": "Last Login",
+          "status": "Status"
+        }
+      },
+      "rowActions": {
+        "resendInvitation": "Resend Invitation",
+        "suspend": "Suspend",
+        "restore": "Restore",
+        "delete": "Delete",
+        "edit": "Edit"
+      },
+      "statuses": {
+        "archived": "Archived",
+        "pending": "Pending",
+        "inactive": "Inactive",
+        "active": "Active"
+      },
+      "footer": {
+        "itemsPerPage": "Items per page"
+      },
+      "pagination": {
+        "zero": "0 – 0 of 0",
+        "range": "1 – {{end}} of {{total}}"
+      },
+      "dialogs": {
+        "common": {
+          "cancel": "Cancel",
+          "sending": "Sending...",
+          "processing": "Processing...",
+          "processingDelete": "Deleting..."
+        },
+        "resend": {
+          "title": "Resend invitation",
+          "description": "Resend invitation to {{user}}?",
+          "confirm": "Resend",
+          "success": "Invitation resent",
+          "error": "Error resending invitation"
+        },
+        "restore": {
+          "title": "Restore user",
+          "description": "Restore user {{user}} to active state?",
+          "confirm": "Restore",
+          "success": "User restored",
+          "error": "Error restoring user"
+        },
+        "delete": {
+          "title": "Delete user",
+          "description": "Permanently delete {{user}}? This cannot be undone.",
+          "confirm": "Delete"
+        }
       },
       "toasts": {
-        "codeCopied": "Code copied",
-        "inviteCreated": "Invitation code created",
-        "inviteGeneratedLocal": "Code generated locally (not saved on server)",
-        "created": "User created",
-        "updated": "User updated"
+        "selectAtLeastOne": "Select at least one user",
+        "exportError": "Could not export users",
+        "cannotSuspendAdmin": "Cannot suspend an admin user",
+        "suspendedArchivedSuccess": "User suspended and archived",
+        "errorSuspendingUser": "Error suspending user",
+        "cannotDeleteAdmin": "Cannot delete an admin user",
+        "deletedSuccess": "User deleted",
+        "deleteError": "Error deleting user",
+        "noValidUsersToSuspend": "No valid users to suspend (admins cannot be suspended)",
+        "skippedAdminsWarning": "Some admins were skipped during suspension",
+        "suspendedCount": "Suspended {{count}} user(s)",
+        "suspendAllError": "Could not suspend all users",
+        "activatedCount": "Activated {{count}} user(s)",
+        "activateAllError": "Could not activate all users"
       },
-      "errors": {
-        "invalidIds": "Invalid IDs detected in assignments",
-        "unknown": "Unknown error",
-        "createCode": "Error creating code"
+      "newUser": {
+        "breadcrumb": {
+          "dashboard": "Dashboard",
+          "new": "New User"
+        },
+        "form": {
+          "nameLabel": "Name*",
+          "namePlaceholder": "Name*",
+          "emailLabel": "Email Address*",
+          "emailPlaceholder": "Email Address*",
+          "accessLevelLabel": "Access Level*",
+          "accessLevelPlaceholder": "Select access level",
+          "selectDefault": "Select...",
+          "searchPlaceholder": "option",
+          "deselectAll": "Deselect all",
+          "selectAll": "Select all",
+          "noOptions": "No options",
+          "assignClientsPlaceholder": "Assign Clients",
+          "assignSitesPlaceholder": "Assign Post Sites",
+          "assignClientsLabel": "Assign Clients",
+          "assignSitesLabel": "Assign Post Sites",
+          "create": "Create",
+          "creating": "Creating..."
+        },
+        "invite": {
+          "createTrigger": "Create invitation code",
+          "title": "Generate invitation code",
+          "description": "Create a temporary code to invite a user (expires in 1 hour).",
+          "placeholderToken": "------",
+          "expiresLabel": "Expires:",
+          "generating": "Generating...",
+          "regen": "Regenerate",
+          "generate": "Generate code"
+        },
+        "toasts": {
+          "codeCopied": "Code copied",
+          "inviteCreated": "Invitation code created",
+          "inviteGeneratedLocal": "Code generated locally (not saved on server)",
+          "created": "User created",
+          "updated": "User updated"
+        },
+        "errors": {
+          "invalidIds": "Invalid IDs detected in assignments",
+          "unknown": "Unknown error",
+          "createCode": "Error creating code"
+        }
+      },
+      "editUser": {
+        "breadcrumb": {
+          "dashboard": "Dashboard",
+          "edit": "Edit User",
+          "new": "New User"
+        },
+        "form": {
+          "nameLabel": "Name*",
+          "namePlaceholder": "Name*",
+          "emailLabel": "Email Address*",
+          "emailPlaceholder": "Email Address*",
+          "accessLevelLabel": "Access Level*",
+          "accessLevelPlaceholder": "Select access level",
+          "selectDefault": "Select...",
+          "searchPlaceholder": "option",
+          "deselectAll": "Deselect all",
+          "selectAll": "Select all",
+          "noOptions": "No options",
+          "assignClientsPlaceholder": "Assign Clients*",
+          "assignSitesPlaceholder": "Assign Post Sites",
+          "assignClientsLabel": "Assign Clients*",
+          "assignSitesLabel": "Assign Post Sites",
+          "save": "Save",
+          "send": "Send",
+          "savingEdit": "Saving...",
+          "savingNew": "Sending..."
+        },
+        "toasts": {
+          "updated": "User updated",
+          "created": "User created"
+        },
+        "errors": {
+          "loadError": "Could not load user"
+        }
+      },
+      "noData": {
+        "title": "No results found",
+        "message": "We couldn't find any items matching your search"
       }
     },
-    "editUser": {
-      "breadcrumb": {
-        "dashboard": "Dashboard",
-        "edit": "Edit User",
-        "new": "New User"
+    "dashboard": {
+      "title": "Dashboard",
+      "manageWidgets": "Manage Widgets",
+      "popover": {
+        "widgets": {
+          "stats": "Statistics Board",
+          "tracker": "Active Guards",
+          "activity": "Latest Activity",
+          "timeLog": "Time Clock",
+          "checkIn": "Check Ins",
+          "checkOut": "Check Outs",
+          "incidents": "Recent Incidents",
+          "reports": "Standard Reports",
+          "tours": "Recent Site Tours",
+          "scans": "Recent Tag Scans"
+        }
       },
-      "form": {
-        "nameLabel": "Name*",
-        "namePlaceholder": "Name*",
-        "emailLabel": "Email Address*",
-        "emailPlaceholder": "Email Address*",
-        "accessLevelLabel": "Access Level*",
-        "accessLevelPlaceholder": "Select access level",
-        "selectDefault": "Select...",
-        "searchPlaceholder": "option",
-        "deselectAll": "Deselect all",
-        "selectAll": "Select all",
-        "noOptions": "No options",
-        "assignClientsPlaceholder": "Assign Clients*",
-        "assignSitesPlaceholder": "Assign Post Sites",
-        "assignClientsLabel": "Assign Clients*",
-        "assignSitesLabel": "Assign Post Sites",
-        "save": "Save",
-        "send": "Send",
-        "savingEdit": "Saving...",
-        "savingNew": "Sending..."
-      },
-      "toasts": {
-        "updated": "User updated",
-        "created": "User created"
-      },
-      "errors": {
-        "loadError": "Could not load user"
-      }
-    },
-    "noData": {
-      "title": "No results found",
-      "message": "We couldn't find any items matching your search"
-    }
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "manageWidgets": "Manage Widgets",
-    "popover": {
-      "widgets": {
-        "stats": "Statistics Board",
-        "tracker": "Active Guards",
-        "activity": "Latest Activity",
+      "page": {
+        "noData": "No data available",
+        "noTrackerData": "No tracker data available",
+        "noTimeLogData": "No time log data available",
+        "noActivityData": "No activity data available",
+        "noCheckInData": "No check-in data available",
+        "noCheckOutData": "No check-out data available",
+        "noIncidentsData": "No incident data available",
+        "noReportsData": "No report data available",
+        "noToursData": "No site tour data available",
+        "noScansData": "No tag scan data available",
+        "liveTracker": "Live Tracker",
+        "showGeofence": "Show Geofence",
+        "hideGeofence": "Hide Geofence",
+        "roadmap": "Roadmap",
+        "satellite": "Satellite",
+        "lastActivity": "Latest Activity",
+        "viewAll": "View All",
         "timeLog": "Time Clock",
-        "checkIn": "Check Ins",
-        "checkOut": "Check Outs",
+        "entriesCount": "{{count}} Entries",
+        "checkIns": "Check Ins",
+        "checkOuts": "Check Outs",
         "incidents": "Recent Incidents",
         "reports": "Standard Reports",
         "tours": "Recent Site Tours",
         "scans": "Recent Tag Scans"
+      },
+      "table": {
+        "headers": {
+          "index": "#",
+          "image": "Image",
+          "guard": "Guard",
+          "postSite": "Post Site",
+          "lastUpdate": "Last Update",
+          "battery": "Battery Status",
+          "speed": "Speed (MPH)",
+          "lastLocation": "Last Location",
+          "type": "Type",
+          "shiftName": "Shift/Break Name",
+          "time": "Time"
+        }
       }
     },
-    "page": {
-      "noData": "No data available",
-      "noTrackerData": "No tracker data available",
-      "noTimeLogData": "No time log data available",
-      "noActivityData": "No activity data available",
-      "noCheckInData": "No check-in data available",
-      "noCheckOutData": "No check-out data available",
-      "noIncidentsData": "No incident data available",
-      "noReportsData": "No report data available",
-      "noToursData": "No site tour data available",
-      "noScansData": "No tag scan data available",
-      "liveTracker": "Live Tracker",
-      "showGeofence": "Show Geofence",
-      "hideGeofence": "Hide Geofence",
-      "roadmap": "Roadmap",
-      "satellite": "Satellite",
-      "lastActivity": "Latest Activity",
-      "viewAll": "View All",
-      "timeLog": "Time Clock",
-      "entriesCount": "{{count}} Entries",
-      "checkIns": "Check Ins",
-      "checkOuts": "Check Outs",
-      "incidents": "Recent Incidents",
-      "reports": "Standard Reports",
-      "tours": "Recent Site Tours",
-      "scans": "Recent Tag Scans"
-    },
-    "table": {
-      "headers": {
-        "index": "#",
-        "image": "Image",
-        "guard": "Guard",
-        "postSite": "Post Site",
-        "lastUpdate": "Last Update",
-        "battery": "Battery Status",
-        "speed": "Speed (MPH)",
-        "lastLocation": "Last Location",
-        "type": "Type",
-        "shiftName": "Shift/Break Name",
-        "time": "Time"
+    "activity": {
+      "title": "Activity",
+      "empty": {
+        "title": "No activity",
+        "description": "No recent activity to show"
       }
-    }
-  },
-  "activity": {
-    "title": "Activity",
-    "empty": {
-      "title": "No activity",
-      "description": "No recent activity to show"
-    }
-  },
-  "visitantes": {
-    "dashboard": "dashboard",
-    "title": "Visitors",
-    "bitacoras": "Logs",
-    "loading": "Loading...",
-    "search": "Search",
-    "searchVisitor": "Search visitor",
-    "addVisitor": "Add visitor",
-    "newVisitor": "New Visitor",
-    "action": "Action",
-    "action": {
-      "activate": "Activate",
-      "deactivate": "Deactivate",
-      "delete": "Delete"
     },
-    "filters": "Filters",
-    "client": "Client",
-    "selectClient": "Select a client",
-    "site": "Post Site",
-    "selectSite": "Select a site",
-    "guard": "Guard",
-    "selectGuard": "Select a guard",
-    "tag": "Tag",
-    "selectTag": "Select a tag",
-    "tag": {
-      "vip": "VIP",
-      "provider": "Provider"
-    },
-    "showArchived": "Show archived data",
-    "filterButton": "Filter",
-    "importVisitors": "Import visitors",
-    "print": "Print",
-    "email": "Email",
-    "table": {
-      "name": "Name",
-      "company": "Company",
-      "email": "Email",
-      "lastRecord": "Last record",
-      "status": "Status"
-    },
-    "noResultsTitle": "No results found",
-    "noResultsBody": "We couldn't find any items matching your search",
-    "perPage": "Items per page",
-    "paginationPlaceholder": "0 of 0",
-    "noLogs": "No logs found",
-    "deleteSelected": "Delete selected",
-    "exportCSV": "Export CSV",
-    "exportExcel": "Export as Excel",
-    "exportPDF": "Export as PDF",
-    "searchLogs": "Search logs",
-    "logDetails": "Log Details",
-    "logTable": {
-      "id": "ID",
-      "firstName": "First name",
-      "lastName": "Last name",
-      "idNumber": "ID",
-      "date": "Date",
-      "postSite": "Site",
-      "client": "Client",
-      "guard": "Guard",
-      "numPeople": "Number of people",
-      "reason": "Reason of visit",
-      "exitTime": "Exit Time",
-      "placeType": "Place Type and Number"
-    },
-    "form": {
-      "name": "Name",
-      "lastName": "Last Name",
-      "idNumber": "ID Number",
-      "idImage": "ID Image",
-      "mobile": "Mobile Number",
-      "phone": "Phone Number",
-      "email": "Email",
-      "company": "Company",
-      "numPeople": "Number of people",
-      "reason": "Reason of visit"
-    },
-    "placeholder": {
-      "name": "e.g. John",
-      "lastName": "e.g. Doe",
-      "idNumber": "e.g. 12015550123",
-      "mobile": "e.g. +12015550123",
-      "phone": "e.g. +12015550123",
-      "email": "email@example.com",
-      "company": "Company name",
-      "reason": "Reason of visit"
-    },
-    "save": "Save",
-    "markExit": "Mark Exit",
-    "confirmDeleteTitle": "Confirm Delete",
-    "confirmDeleteMessage": "Are you sure you want to delete these items?",
-    "noSelectionExport": "No items selected for export",
-    "noSelectionDelete": "No items selected for deletion",
-    "exportSuccess": "Export successful",
-    "exportError": "Error exporting data",
-    "deleteSuccess": "Items deleted successfully",
-    "notprint": "This item cannot be printed",
-    "created": "Visitor created",
-    "updated": "Visitor updated",
-    "deleted": "Visitor deleted",
-    "placeTypeSelect": "Select a place and number",
-    "placeType": {
-      "house": "House",
-      "apartment": "Apartment",
-      "office": "Office"
-    },
-    "placeTypeValue": "Place Number"
-  },
-  "billing": {
-    "common": {
-      "dashboard": "Dashboard",
-      "search_placeholder": "Search...",
-      "no_results": "No results found",
-      "items_per_page": "Items per page",
-      "confirm_delete": "Are you sure you want to delete these items?",
-      "no_selection": "No items selected",
-      "cancel": "Cancel",
-      "save": "Save",
-      "create": "Create",
+    "visitantes": {
+      "dashboard": "dashboard",
+      "title": "Visitors",
+      "bitacoras": "Logs",
       "loading": "Loading...",
-      "sending": "Sending...",
-      "download": "Download",
-      "export": "Export",
-      "print": "Print"
-    },
-    "estimates": {
-      "title": "Estimates",
-      "list_title": "Estimates",
-      "search_placeholder": "Search by number or client",
-      "top_actions": {
-        "create": "New Estimate",
-        "export": "Export",
-        "delete": "Delete selected"
-      },
-      "columns": {
-        "select": "Select",
-        "date": "Date",
-        "estimateNumber": "Number",
-        "client": "Client",
-        "total": "Total",
-        "expiryDate": "Expiry Date",
-        "status": "Status",
-        "actions": "Actions"
-      },
-      "statuses": {
-        "draft": "Draft",
-        "sent": "Sent",
-        "accepted": "Accepted",
-        "rejected": "Rejected",
-        "expired": "Expired"
-      },
-      "filters": {
-        "open": "Filters",
-        "client": "Client",
-        "status": "Status",
-        "date_from": "Date from",
-        "date_to": "Date to",
-        "apply": "Apply",
-        "clear": "Clear"
-      },
-      "actions": {
-        "view": "View",
-        "preview": "Preview",
-        "send": "Send",
-        "convert": "Convert to invoice",
-        "download": "Download",
+      "search": "Search",
+      "searchVisitor": "Search visitor",
+      "addVisitor": "Add visitor",
+      "newVisitor": "New Visitor",
+      "action": {
+        "activate": "Activate",
+        "deactivate": "Deactivate",
         "delete": "Delete"
       },
-      "messages": {
-        "no_results": "No estimates found",
-        "sent_success": "Estimate sent",
-        "convert_success": "Estimate converted to invoice",
-        "delete_success": "Estimate deleted"
+      "filters": "Filters",
+      "client": "Client",
+      "selectClient": "Select a client",
+      "site": "Post Site",
+      "selectSite": "Select a site",
+      "guard": "Guard",
+      "selectGuard": "Select a guard",
+      "tagLabel": "Tag",
+      "selectTag": "Select a tag",
+      "tag": {
+        "vip": "VIP",
+        "provider": "Provider"
       },
-      "preview": {
-        "title": "Preview Estimate",
-        "client_details": "Client details",
-        "site_details": "Site details",
-        "items": "Items",
-        "notes": "Notes",
-        "terms": "Terms",
-        "subtotal": "Subtotal",
-        "tax": "Tax",
-        "total": "Total",
-        "as_invoice": "Preview as invoice"
-      }
-    },
-    "invoices": {
-      "title": "Invoices",
-      "search_placeholder": "Search by number or client",
-      "top_actions": {
-        "create": "New Invoice",
-        "export": "Export",
-        "delete": "Delete selected"
-      },
-      "columns": {
-        "select": "Select",
-        "date": "Date",
-        "invoiceNumber": "Number",
-        "client": "Client",
-        "total": "Total",
-        "amountDue": "Amount Due",
-        "dueDate": "Due Date",
-        "status": "Status",
-        "actions": "Actions"
-      },
-      "statuses": {
-        "draft": "Draft",
-        "sent": "Sent",
-        "paid": "Paid",
-        "overdue": "Overdue",
-        "partial": "Partial"
-      },
-      "actions": {
-        "view": "View",
-        "preview": "Preview",
-        "send": "Send",
-        "download": "Download",
-        "register_payment": "Register payment",
-        "delete": "Delete"
-      },
-      "messages": {
-        "no_results": "No invoices found",
-        "send_success": "Invoice sent",
-        "delete_success": "Invoice deleted",
-        "payment_registered": "Payment registered"
-      },
-      "preview": {
-        "title": "Preview Invoice",
-        "client_details": "Client details",
-        "site_details": "Site details",
-        "items": "Items",
-        "notes": "Notes",
-        "terms": "Terms",
-        "subtotal": "Subtotal",
-        "tax": "Tax",
-        "total": "Total",
-        "amount_due": "Amount Due"
-      },
-      "payment_modal": {
-        "title": "Register payment",
-        "date": "Date",
-        "amount": "Amount",
-        "method": "Method",
-        "note": "Note",
-        "save": "Save payment",
-        "saving": "Saving...",
-        "success": "Payment registered successfully",
-        "error": "Error registering payment"
-      }
-    },
-    "items": {
-      "title": "Items",
-      "search_placeholder": "Search items",
-      "columns": {
+      "showArchived": "Show archived data",
+      "filterButton": "Filter",
+      "importVisitors": "Import visitors",
+      "print": "Print",
+      "email": "Email",
+      "table": {
         "name": "Name",
-        "description": "Description",
-        "price": "Price",
-        "tax": "Tax",
-        "actions": "Actions"
+        "company": "Company",
+        "email": "Email",
+        "lastRecord": "Last record",
+        "status": "Status"
       },
-      "actions": {
-        "add": "Add item",
-        "edit": "Edit",
-        "delete": "Delete"
+      "noResultsTitle": "No results found",
+      "noResultsBody": "We couldn't find any items matching your search",
+      "perPage": "Items per page",
+      "paginationPlaceholder": "0 of 0",
+      "noLogs": "No logs found",
+      "deleteSelected": "Delete selected",
+      "exportCSV": "Export CSV",
+      "exportExcel": "Export as Excel",
+      "exportPDF": "Export as PDF",
+      "searchLogs": "Search logs",
+      "logDetails": "Log Details",
+      "logTable": {
+        "id": "ID",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "idNumber": "ID",
+        "date": "Date",
+        "postSite": "Site",
+        "client": "Client",
+        "guard": "Guard",
+        "numPeople": "Number of people",
+        "reason": "Reason of visit",
+        "exitTime": "Exit Time",
+        "placeType": "Place Type and Number"
       },
       "form": {
-        "title_create": "Create item",
-        "title_edit": "Edit item",
         "name": "Name",
-        "description": "Description",
-        "price": "Price",
-        "tax": "Tax",
-        "save": "Save",
-        "creating": "Creating...",
-        "updating": "Updating..."
+        "lastName": "Last Name",
+        "idNumber": "ID Number",
+        "idImage": "ID Image",
+        "mobile": "Mobile Number",
+        "phone": "Phone Number",
+        "email": "Email",
+        "company": "Company",
+        "numPeople": "Number of people",
+        "reason": "Reason of visit"
       },
-      "messages": {
-        "no_results": "No items found",
-        "created": "Item created",
-        "updated": "Item updated",
-        "deleted": "Item deleted"
-      }
+      "placeholder": {
+        "name": "e.g. John",
+        "lastName": "e.g. Doe",
+        "idNumber": "e.g. 12015550123",
+        "mobile": "e.g. +12015550123",
+        "phone": "e.g. +12015550123",
+        "email": "email@example.com",
+        "company": "Company name",
+        "reason": "Reason of visit"
+      },
+      "save": "Save",
+      "markExit": "Mark Exit",
+      "confirmDeleteTitle": "Confirm Delete",
+      "confirmDeleteMessage": "Are you sure you want to delete these items?",
+      "noSelectionExport": "No items selected for export",
+      "noSelectionDelete": "No items selected for deletion",
+      "exportSuccess": "Export successful",
+      "exportError": "Error exporting data",
+      "deleteSuccess": "Items deleted successfully",
+      "notprint": "This item cannot be printed",
+      "created": "Visitor created",
+      "updated": "Visitor updated",
+      "deleted": "Visitor deleted",
+      "placeTypeSelect": "Select a place and number",
+      "placeType": {
+        "house": "House",
+        "apartment": "Apartment",
+        "office": "Office"
+      },
+      "placeTypeValue": "Place Number"
     },
-    "forms": {
-      "validation": {
-        "required": "This field is required",
-        "invalid_number": "Invalid number",
-        "select_client": "Select a client",
-        "select_site": "Select a site"
+    "billing": {
+      "common": {
+        "dashboard": "Dashboard",
+        "search_placeholder": "Search...",
+        "no_results": "No results found",
+        "items_per_page": "Items per page",
+        "confirm_delete": "Are you sure you want to delete these items?",
+        "no_selection": "No items selected",
+        "cancel": "Cancel",
+        "save": "Save",
+        "create": "Create",
+        "loading": "Loading...",
+        "sending": "Sending...",
+        "download": "Download",
+        "export": "Export",
+        "print": "Print"
       },
-      "labels": {
-        "title": "Title",
-        "summary": "Summary",
-        "client": "Client",
-        "site": "Site",
-        "number": "Number",
-        "po_so": "PO / SO",
-        "date": "Date",
-        "expiry_due": "Expiry / Due",
-        "notes": "Notes",
-        "item_name": "Item name",
-        "quantity": "Quantity",
-        "rate": "Unit price",
-        "tax_rate": "Tax rate",
-        "subtotal": "Subtotal",
-        "total": "Total"
+      "estimates": {
+        "title": "Estimates",
+        "list_title": "Estimates",
+        "search_placeholder": "Search by number or client",
+        "top_actions": {
+          "create": "New Estimate",
+          "export": "Export",
+          "delete": "Delete selected"
+        },
+        "columns": {
+          "select": "Select",
+          "date": "Date",
+          "estimateNumber": "Number",
+          "client": "Client",
+          "total": "Total",
+          "expiryDate": "Expiry Date",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "statuses": {
+          "draft": "Draft",
+          "sent": "Sent",
+          "accepted": "Accepted",
+          "rejected": "Rejected",
+          "expired": "Expired"
+        },
+        "filters": {
+          "open": "Filters",
+          "client": "Client",
+          "status": "Status",
+          "date_from": "Date from",
+          "date_to": "Date to",
+          "apply": "Apply",
+          "clear": "Clear"
+        },
+        "actions": {
+          "view": "View",
+          "preview": "Preview",
+          "send": "Send",
+          "convert": "Convert to invoice",
+          "download": "Download",
+          "delete": "Delete"
+        },
+        "messages": {
+          "no_results": "No estimates found",
+          "sent_success": "Estimate sent",
+          "convert_success": "Estimate converted to invoice",
+          "delete_success": "Estimate deleted"
+        },
+        "preview": {
+          "title": "Preview Estimate",
+          "client_details": "Client details",
+          "site_details": "Site details",
+          "items": "Items",
+          "notes": "Notes",
+          "terms": "Terms",
+          "subtotal": "Subtotal",
+          "tax": "Tax",
+          "total": "Total",
+          "as_invoice": "Preview as invoice"
+        }
+      },
+      "invoices": {
+        "title": "Invoices",
+        "search_placeholder": "Search by number or client",
+        "top_actions": {
+          "create": "New Invoice",
+          "export": "Export",
+          "delete": "Delete selected"
+        },
+        "columns": {
+          "select": "Select",
+          "date": "Date",
+          "invoiceNumber": "Number",
+          "client": "Client",
+          "total": "Total",
+          "amountDue": "Amount Due",
+          "dueDate": "Due Date",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "statuses": {
+          "draft": "Draft",
+          "sent": "Sent",
+          "paid": "Paid",
+          "overdue": "Overdue",
+          "partial": "Partial"
+        },
+        "actions": {
+          "view": "View",
+          "preview": "Preview",
+          "send": "Send",
+          "download": "Download",
+          "register_payment": "Register payment",
+          "delete": "Delete"
+        },
+        "messages": {
+          "no_results": "No invoices found",
+          "send_success": "Invoice sent",
+          "delete_success": "Invoice deleted",
+          "payment_registered": "Payment registered"
+        },
+        "preview": {
+          "title": "Preview Invoice",
+          "client_details": "Client details",
+          "site_details": "Site details",
+          "items": "Items",
+          "notes": "Notes",
+          "terms": "Terms",
+          "subtotal": "Subtotal",
+          "tax": "Tax",
+          "total": "Total",
+          "amount_due": "Amount Due"
+        },
+        "payment_modal": {
+          "title": "Register payment",
+          "date": "Date",
+          "amount": "Amount",
+          "method": "Method",
+          "note": "Note",
+          "save": "Save payment",
+          "saving": "Saving...",
+          "success": "Payment registered successfully",
+          "error": "Error registering payment"
+        }
+      },
+      "items": {
+        "title": "Items",
+        "search_placeholder": "Search items",
+        "columns": {
+          "name": "Name",
+          "description": "Description",
+          "price": "Price",
+          "tax": "Tax",
+          "actions": "Actions"
+        },
+        "actions": {
+          "add": "Add item",
+          "edit": "Edit",
+          "delete": "Delete"
+        },
+        "form": {
+          "title_create": "Create item",
+          "title_edit": "Edit item",
+          "name": "Name",
+          "description": "Description",
+          "price": "Price",
+          "tax": "Tax",
+          "save": "Save",
+          "creating": "Creating...",
+          "updating": "Updating..."
+        },
+        "messages": {
+          "no_results": "No items found",
+          "created": "Item created",
+          "updated": "Item updated",
+          "deleted": "Item deleted"
+        }
+      },
+      "forms": {
+        "validation": {
+          "required": "This field is required",
+          "invalid_number": "Invalid number",
+          "select_client": "Select a client",
+          "select_site": "Select a site"
+        },
+        "labels": {
+          "title": "Title",
+          "summary": "Summary",
+          "client": "Client",
+          "site": "Site",
+          "number": "Number",
+          "po_so": "PO / SO",
+          "date": "Date",
+          "expiry_due": "Expiry / Due",
+          "notes": "Notes",
+          "item_name": "Item name",
+          "quantity": "Quantity",
+          "rate": "Unit price",
+          "tax_rate": "Tax rate",
+          "subtotal": "Subtotal",
+          "total": "Total"
+        }
       }
     }
+  },
+  "incidents": {
+    "actionsPlaceholder": "Acciones",
+    "searchPlaceholder": "Buscar incidentes...",
+    "filters": "Filtros",
+    "export": "Exportar",
+    "email":"Email",
+    "filtersPlaceholder": "Opciones de filtro no implementadas — UI de marcador de posición.",
+    "subject": "Asunto",
+    "description": "Descripción",
+    "apply": "Aplicar",
+    "newIncident": "Nuevo incidente",
+    "actions": "Acciones",
+    "actions": {
+      "view": "Ver",
+      "open": "Abrir",
+      "createDispatch": "Crear Incidente"
+    },
+    "columns": {
+      "ticket": "Ticket",
+      "date": "Fecha",
+      "client": "Cliente",
+      "postSite": "Puesto",
+      "caller": "Informador",
+      "incidentType": "Tipo",
+      "status": "Estado"
+    },
+    "emptyTitle": "No se encontraron incidentes para este puesto.",
+    "emptyMessage": "Intenta ajustar los filtros o crear un nuevo incidente.",
+    "of": "de",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "createDispatch": "Crear Incidente",
+    "labels": {
+      "station": "Estación",
+      "subject": "Asunto",
+      "description": "Descripción"
+    },
+    "filterFields": {
+      "client": "Cliente",
+      "station": "Puesto de seguridad",
+      "status": "Estado",
+      "createdFrom": "Fecha de creación desde",
+      "createdTo": "Fecha de creación hasta",
+      "incidentFrom": "Fecha del incidente desde",
+      "incidentTo": "Fecha del incidente hasta",
+      "showArchived": "Mostrar archivados"
+    },
+    "selectClient": "Seleccionar cliente",
+    "allClients": "Todos los clientes",
+    "allStations": "Todas las estaciones",
+    "selectStatus": "Seleccionar estado",
+    "allStatuses": "Todos",
+    "applyFilters": "Aplicar filtros",
+    "clearFilters": "Limpiar filtros",
+    "selectStation": "Seleccionar estación",
+    "noStations": "Sin estaciones",
+    "cancel": "Cancelar",
+    "creating": "Creando...",
+    "create": "Crear",
+    "created": "Incidente creado"
+  }
+,
+  "dispatcher": {
+    "tenant_unavailable": "Tenant not available",
+    "basic_details": "Basic Details",
+    "ticket_id": "Ticket ID",
+    "date_time": "Date/Time",
+    "client_name": "Client Name",
+    "post_site_label": "Post Site",
+    "caller_type": "Caller Type",
+    "caller_name": "Caller Name",
+    "incident_type_label": "Incident Type",
+    "incident_date_time_label": "Incident Date/Time",
+    "incident_location": "Incident Location",
+    "dispatcher_label": "Dispatcher",
+    "comment": {
+      "write_error": "Please write a comment",
+      "file_upload_failed": "File upload failed, comment sent without attachment",
+      "added": "Comment added",
+      "added_local": "Comment added (local)",
+      "add_failed": "Could not add comment",
+      "new_comment_title": "New comment",
+      "note": "Note",
+      "attach_file_optional": "Attach file (optional)",
+      "remove_file": "Remove",
+      "add": "Add",
+      "you": "You"
+    },
+    "incident_details": "Incident Details",
+    "action_taken": "Action Taken",
+    "internal_notes": "Internal Notes",
+    "files": "Files",
+    "guard_assigned": "Guard Assigned",
+    "ticket_summary": "Ticket Summary",
+    "no_comments_yet": "No comments yet",
+    "guard": "Guard",
+    "close": "Close",
+    "add_comment_button": "Add comment",
+    "edit": "Edit",
+    "cancel": "Cancel"
   }
 }

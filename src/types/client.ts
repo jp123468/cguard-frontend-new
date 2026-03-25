@@ -1,6 +1,8 @@
 // Client types matching backend structure
 
 export interface Client {
+    company: any;
+    fullName: any;
     id: string;
     name: string;
     lastName?: string;

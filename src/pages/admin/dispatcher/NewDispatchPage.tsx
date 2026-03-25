@@ -33,6 +33,7 @@ import IncidentTypesService from "@/services/incident-types.service";
 import api from "@/lib/api";
 import { postSiteService } from "@/lib/api/postSiteService";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Datos cargados desde backend
 // Se usan estados vacíos y se rellenan en useEffect
@@ -51,6 +52,20 @@ const tiposLlamador = [
   { id: "supervisor", name: "Supervisor" },
 ];
 
+type AssignedGuard = {
+  id?: string | number | null;
+  name?: string | null;
+  raw?: any;
+  stationId?: any;
+  stationIdCanonical?: any;
+  stationName?: any;
+  postSiteId?: any;
+  guardId?: any;
+  guardIdCanonical?: any;
+  securityGuardId?: any;
+  securityGuardRecordId?: any;
+};
+
 // tiposIncidente se carga desde backend en el estado `tiposIncidente`
 
 export default function NewDispatchPage() {
@@ -58,8 +73,16 @@ export default function NewDispatchPage() {
   const location = useLocation();
   const [attachments, setAttachments] = useState<File[]>([]);
   const [clientes, setClientes] = useState<Array<{ id: string; name: string }>>([]);
-  const [sitios, setSitios] = useState<Array<{ id: string; name: string }>>([]);
+  const [sitios, setSitios] = useState<Array<{
+    businessName: string; id: string; name: string 
+}>>([]);
+  const [stations, setStations] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
+  const [stationFilter, setStationFilter] = useState("");
+  const stationInputRef = useRef<HTMLInputElement | null>(null);
+  const [callerNameEdited, setCallerNameEdited] = useState<boolean>(false);
   const [guardias, setGuardias] = useState<Array<{ id: string; name: string }>>([]);
+  const [assignedGuardias, setAssignedGuardias] = useState<AssignedGuard[]>([]);
   const [tiposIncidente, setTiposIncidente] = useState<Array<{ id: string; name: string }>>([]);
   const [clienteFilter, setClienteFilter] = useState("");
   const [sitioFilter, setSitioFilter] = useState("");
@@ -110,10 +133,10 @@ export default function NewDispatchPage() {
         if (!tenantId) return;
 
         const tryPaths = [
-          `/tenant/${tenantId}/securityGuard?limit=100&offset=0`,
           `/tenant/${tenantId}/security-guard?limit=100&offset=0`,
-          `/tenant/${tenantId}/securityGuards?limit=100&offset=0`,
           `/tenant/${tenantId}/security-guards?limit=100&offset=0`,
+          `/tenant/${tenantId}/securityGuard?limit=100&offset=0`,
+          `/tenant/${tenantId}/securityGuards?limit=100&offset=0`,
           `/tenant/${tenantId}/user?limit=100&offset=0&role=guard`,
         ];
 
@@ -122,6 +145,8 @@ export default function NewDispatchPage() {
           try {
             const resp = await api.get(path, { toast: { silentError: true } } as any);
             const body = resp.data ?? resp; // axios returns { data }
+            // Log response for debugging guard list endpoints
+            // eslint-disable-next-line no-console
             if (Array.isArray(body)) {
               rows = body;
             } else if (body && Array.isArray(body.rows)) {
@@ -132,6 +157,7 @@ export default function NewDispatchPage() {
             if (rows && rows.length > 0) break;
           } catch (err) {
             // intentar siguiente path
+            // eslint-disable-next-line no-console
           }
         }
 
@@ -178,10 +204,19 @@ export default function NewDispatchPage() {
     })();
   }, []);
 
+  // Determine if we were opened with a duplicate that includes a siteId (from Incidents)
+  const dup = (location && (location as any).state && (location as any).state.duplicate) || null;
+  const dupSiteId = dup ? (dup.siteId || dup.postSiteId || dup.site || null) : null;
+  const isFromPostSite = Boolean(dupSiteId);
+
+  const [prefillClientName, setPrefillClientName] = useState<string | null>(null);
+  const [prefillSiteName, setPrefillSiteName] = useState<string | null>(null);
+
   const form = useForm<DispatchCreateSchema>({
     resolver: zodResolver(dispatchCreateSchema),
     defaultValues: {
       clientId: "",
+      stationId: "",
       siteId: "",
       guardId: "",
       priority: "media",
@@ -198,6 +233,529 @@ export default function NewDispatchPage() {
     },
     mode: "onBlur",
   });
+
+  const watchedSiteId = useWatch({ control: form.control, name: "siteId" }) as string | undefined;
+  const watchedClientId = useWatch({ control: form.control, name: "clientId" }) as string | undefined;
+
+  // Debug flag: show assignedGuardias in-page when URL contains ?debugGuards=1
+  const debugGuards = typeof window !== "undefined" && window.location.search.indexOf("debugGuards=1") !== -1;
+
+  // Helper to fetch stations for a given post-site id. Extracted so
+  // other handlers (e.g. site selector onChange) can trigger it.
+  const fetchStationsFor = async (siteToLoad: string | null) => {
+    try {
+      if (!siteToLoad) {
+        setStations([]);
+        setSelectedStationId(null);
+        try { form.setValue('stationId', ''); } catch (e) { /* ignore */ }
+        return;
+      }
+      const tenantId = localStorage.getItem('tenantId');
+      if (!tenantId) return;
+
+      // Preferred endpoint (singular 'station' with postSiteId filter)
+      try {
+        const res = await api.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(String(siteToLoad))}&limit=999`, { toast: { silentError: true } } as any);
+        const body = res && (res.data ?? res);
+        // eslint-disable-next-line no-console
+        let rows: any[] = [];
+        if (Array.isArray(body)) rows = body;
+        else if (body && Array.isArray(body.rows)) rows = body.rows;
+        else if (body && Array.isArray(body.data)) rows = body.data;
+        // Prefer stations explicitly linked to this postSite. If none are linked, fall back to whatever the endpoint returned.
+        const exactRows = (rows || []).filter((r: any) => {
+          const link = r?.postSiteId || r?.post_site_id || r?.businessInfoId || r?.siteId || r?.site || r?.postSite || r?.business_info_id;
+          return link && String(link) === String(siteToLoad);
+        });
+        // Debug: log counts to help diagnose stations appearing under wrong post-site
+        // eslint-disable-next-line no-console
+        if (!exactRows.length) {
+          // No stations explicitly linked to this postSite in this response — try next fallback
+          throw new Error('noExactRows');
+        }
+        const rowsToMap = exactRows;
+
+        const mapped = (rowsToMap || []).map((s: any) => {
+          const id = s?.id || s?.stationId || s || null;
+          const name =
+            s?.name ||
+            s?.stationName ||
+            s?.displayName ||
+            s?.title ||
+            s?.label ||
+            s?.description ||
+            s?.address ||
+            (s?.location && (s.location.name || s.location.address)) ||
+            (typeof s === 'string' ? s : (s && s.id) ? s.id : String(id));
+          return { id, name };
+        });
+        setStations(mapped);
+        if (dup && dup.stationId) {
+          setSelectedStationId(dup.stationId);
+          try { form.setValue('stationId', dup.stationId); } catch (e) { /* ignore */ }
+        }
+        return;
+      } catch (err) {
+        // try fallbacks below
+      }
+
+      try {
+        const res2 = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/stations`, { toast: { silentError: true } } as any);
+        const body2 = res2 && (res2.data ?? res2);
+        let rows2: any[] = [];
+        if (Array.isArray(body2)) rows2 = body2;
+        else if (body2 && Array.isArray(body2.rows)) rows2 = body2.rows;
+        else if (body2 && Array.isArray(body2.data)) rows2 = body2.data;
+        const exactRows2 = (rows2 || []).filter((r: any) => {
+          const link = r?.postSiteId || r?.post_site_id || r?.businessInfoId || r?.siteId || r?.site || r?.postSite || r?.business_info_id;
+          return link && String(link) === String(siteToLoad);
+        });
+        // Debug: log counts for this fallback
+        // eslint-disable-next-line no-console
+        if (!exactRows2.length) {
+          // No exact matches here — continue to next fallback
+          throw new Error('noExactRows2');
+        }
+        const rows2ToMap = exactRows2;
+
+        const mapped2 = (rows2ToMap || []).map((s: any) => {
+          const id = s?.id || s?.stationId || s || null;
+          const name =
+            s?.name ||
+            s?.stationName ||
+            s?.displayName ||
+            s?.title ||
+            s?.label ||
+            s?.description ||
+            s?.address ||
+            (s?.location && (s.location.name || s.location.address)) ||
+            (typeof s === 'string' ? s : (s && s.id) ? s.id : String(id));
+          return { id, name };
+        });
+        setStations(mapped2);
+        if (dup && dup.stationId) {
+          setSelectedStationId(dup.stationId);
+          try { form.setValue('stationId', dup.stationId); } catch (e) { /* ignore */ }
+        }
+        return;
+      } catch (err2) {
+        // try another fallback
+      }
+
+      try {
+        const res3 = await api.get(`/tenant/${tenantId}/stations?postSiteId=${encodeURIComponent(String(siteToLoad))}`, { toast: { silentError: true } } as any);
+        const body3 = res3 && (res3.data ?? res3);
+        let rows3: any[] = [];
+        if (Array.isArray(body3)) rows3 = body3;
+        else if (body3 && Array.isArray(body3.rows)) rows3 = body3.rows;
+        else if (body3 && Array.isArray(body3.data)) rows3 = body3.data;
+        const exactRows3 = (rows3 || []).filter((r: any) => {
+          const link = r?.postSiteId || r?.post_site_id || r?.businessInfoId || r?.siteId || r?.site || r?.postSite || r?.business_info_id;
+          return link && String(link) === String(siteToLoad);
+        });
+        if (!exactRows3.length) {
+          // No exact matches in final stations response
+          throw new Error('noExactRows3');
+        }
+        const rows3ToMap = exactRows3;
+        const mapped3 = (rows3ToMap || []).map((s: any) => {
+          const id = s?.id || s?.stationId || s || null;
+          const name =
+            s?.name ||
+            s?.stationName ||
+            s?.displayName ||
+            s?.title ||
+            s?.label ||
+            s?.description ||
+            s?.address ||
+            (s?.location && (s.location.name || s.location.address)) ||
+            (typeof s === 'string' ? s : (s && s.id) ? s.id : String(id));
+          return { id, name };
+        });
+        setStations(mapped3);
+        // Debug: log final stations set
+        // eslint-disable-next-line no-console
+        if (dup && dup.stationId) {
+          setSelectedStationId(dup.stationId);
+          try { form.setValue('stationId', dup.stationId); } catch (e) { /* ignore */ }
+        }
+        return;
+      } catch (err3) {
+        console.warn('Fallback stations endpoints failed', err3);
+        setStations([]);
+      }
+    } catch (e) {
+      console.error('Error loading stations', e);
+      setStations([]);
+    }
+  };
+
+  useEffect(() => {
+    const siteToLoad = dupSiteId || watchedSiteId;
+    fetchStationsFor(siteToLoad);
+  }, [dupSiteId, watchedSiteId, location]);
+
+  // Load assigned guards for selected post-site (so we can filter by station)
+  useEffect(() => {
+    let mounted = true;
+    const loadAssignedForSite = async () => {
+      try {
+        const siteToLoad = dupSiteId || watchedSiteId;
+        const tenantId = localStorage.getItem('tenantId');
+        if (!tenantId || !siteToLoad) {
+          if (mounted) setAssignedGuardias([]);
+          return;
+        }
+
+        // If station is selected, try the precise POSTSITE+STATION endpoint first (returns canonical assigned guards)
+        if (selectedStationId) {
+          try {
+            const resp = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/station/${selectedStationId}/assigned-guards?activeOnly=1`, { toast: { silentError: true } } as any);
+            const body = resp && (resp.data ?? resp);
+            let exactRows: any[] = [];
+            if (Array.isArray(body)) exactRows = body;
+            else if (body && Array.isArray(body.rows)) exactRows = body.rows;
+            else if (body && Array.isArray(body.data)) exactRows = body.data;
+            if (exactRows && exactRows.length) {
+              const mappedExact = (exactRows || []).map((r: any) => {
+                const display = r.fullName || r.guardName || r.displayName || r.name || (r.raw && (r.raw.guard && ((r.raw.guard.firstName || '') + ' ' + (r.raw.guard.lastName || '')).trim())) || 'Sin nombre';
+                const id = r.id || r.guardUserId || r.securityGuardRecordId || r.tenantUserId || r.guardId || (r.raw && (r.raw.guardId || r.raw.id)) || null;
+                const stationIdFromRow = r.stationId || r.stationIdCanonical || (r.raw && (r.raw.stationId || r.raw.station?.id)) || null;
+                const stationNameFromRow = r.stationName || (r.raw && (r.raw.stationName || r.raw.station?.name)) || null;
+                const postSiteIdFromRow = r.postSiteId || (r.raw && (r.raw.postSiteId || r.raw.post_site_id)) || null;
+                return { id, name: display, raw: r, stationId: stationIdFromRow, stationName: stationNameFromRow, postSiteId: postSiteIdFromRow };
+              }).filter((x:any) => x.id);
+              if (mounted) setAssignedGuardias(mappedExact);
+              return;
+            }
+          } catch (err) {
+            // ignore and continue with other fallbacks
+          }
+        }
+
+        // Prefer the explicit assigned-guards endpoint for this post-site
+        const preferredPaths = [
+          `/tenant/${tenantId}/post-site/${siteToLoad}/assigned-guards`,
+          `/tenant/${tenantId}/post-site/${siteToLoad}/guards`,
+          `/tenant/${tenantId}/post-site/${siteToLoad}/security-guards`,
+        ];
+
+        let rows: any[] | undefined;
+
+        const siteStrShort = String(siteToLoad);
+
+        for (const path of preferredPaths) {
+          try {
+            const resp = await api.get(path, { toast: { silentError: true } } as any);
+            const body = resp && (resp.data ?? resp);
+            // eslint-disable-next-line no-console
+            if (Array.isArray(body)) rows = body;
+            else if (body && Array.isArray(body.rows)) rows = body.rows;
+            else if (body && Array.isArray(body.data)) rows = body.data;
+
+            if (rows && rows.length) {
+              // Keep only rows that are explicitly linked to this post-site (by id or by station linkage)
+              const linked = (rows || []).filter((r: any) => {
+                if (String(r.postSiteId || r.post_site_id || r.businessInfoId || r.siteId || r.site_id || r.postSite || r.site) === siteStrShort) return true;
+                const candStation = r.stationId || r.station?.id || r.station_id || r.postSiteStationId || r.post_site_station_id || null;
+                if (candStation) {
+                  // If station linkage present, accept — we'll further filter against loaded stations later
+                  return true;
+                }
+                return false;
+              });
+
+              if (linked && linked.length) {
+                rows = linked;
+                break;
+              }
+              // no linked rows in this response; continue to next fallback
+              rows = undefined;
+            }
+          } catch (e) {
+            // try next
+            // eslint-disable-next-line no-console
+          }
+        }
+
+        // Fallback to security-guard endpoint with postSiteId filter
+        if ((!rows || !rows.length)) {
+          try {
+            const resp = await api.get(`/tenant/${tenantId}/security-guard?postSiteId=${encodeURIComponent(siteToLoad)}&limit=999`, { toast: { silentError: true } } as any);
+            const body = resp && (resp.data ?? resp);
+            // eslint-disable-next-line no-console
+            if (Array.isArray(body)) rows = body;
+            else if (body && Array.isArray(body.rows)) rows = body.rows;
+            else if (body && Array.isArray(body.data)) rows = body.data;
+          } catch (e) {
+            // ignore
+            // eslint-disable-next-line no-console
+          }
+        }
+
+        // If still no rows, try extracting guards from shift endpoints (some backends expose assignments via shifts)
+        if ((!rows || !rows.length)) {
+          try {
+            const shiftPaths = [
+              `/tenant/${tenantId}/post-site/${siteToLoad}/shifts`,
+              `/tenant/${tenantId}/shift?postSiteId=${encodeURIComponent(siteToLoad)}&limit=999`,
+              `/tenant/${tenantId}/shifts?postSiteId=${encodeURIComponent(siteToLoad)}&limit=999`,
+            ];
+            let shiftRows: any[] = [];
+            for (const sp of shiftPaths) {
+              try {
+                const r = await api.get(sp, { toast: { silentError: true } } as any);
+                const b = r && (r.data ?? r);
+                // eslint-disable-next-line no-console
+                let sarr: any[] = [];
+                if (Array.isArray(b)) sarr = b;
+                else if (b && Array.isArray(b.rows)) sarr = b.rows;
+                else if (b && Array.isArray(b.data)) sarr = b.data;
+                if (sarr && sarr.length) {
+                  shiftRows = sarr;
+                  break;
+                }
+              } catch (err) {
+                // try next shift path
+                // eslint-disable-next-line no-console
+              }
+            }
+
+            if (shiftRows && shiftRows.length) {
+              const extracted: any[] = [];
+              for (const sh of shiftRows) {
+                const stationForShift = sh.stationId || sh.station?.id || sh.station_id || sh.postSiteStationId || sh.post_site_station_id || null;
+                const postSiteForShift = sh.postSiteId || sh.post_site_id || sh.siteId || sh.site || siteToLoad;
+                const cand = sh.assignedGuards || sh.guards || sh.securityGuards || sh.users || sh.assignees || sh.assignments;
+                if (Array.isArray(cand)) {
+                  for (const c of cand) {
+                    let guardObj: any = null;
+                    if (!c) continue;
+                    // If c is a primitive id (string/number), resolve name from loaded guard list if possible
+                    if (typeof c === 'string' || typeof c === 'number') {
+                      const gid = String(c);
+                      const found = (guardias || []).find((g) => String(g.id) === gid);
+                      guardObj = { id: gid, name: found?.name || null, raw: c };
+                    } else if (typeof c === 'object') {
+                      const gid = c.id || c.userId || c.guardId || c.user?.id || null;
+                      const found = gid ? (guardias || []).find((g) => String(g.id) === String(gid)) : null;
+                      const display = c.fullName || c.displayName || c.name || c.user?.fullName || found?.name || null;
+                      guardObj = { id: gid || null, name: display, raw: c };
+                    }
+                    if (guardObj) {
+                      guardObj.postSiteId = postSiteForShift;
+                      guardObj.stationId = stationForShift;
+                      guardObj.rawShift = sh;
+                      extracted.push(guardObj);
+                    }
+                  }
+                } else if (sh.guard || sh.user || sh.guardId) {
+                  const c = sh.guard || sh.user || sh.guardId;
+                  let guardObj: any = null;
+                  if (typeof c === 'string' || typeof c === 'number') {
+                    const gid = String(c);
+                    const found = (guardias || []).find((g) => String(g.id) === gid);
+                    guardObj = { id: gid, name: found?.name || null, raw: c };
+                  } else if (typeof c === 'object') {
+                    const gid = c.id || c.userId || c.guardId || c.user?.id || null;
+                    const found = gid ? (guardias || []).find((g) => String(g.id) === String(gid)) : null;
+                    const display = c.fullName || c.displayName || c.name || c.user?.fullName || found?.name || null;
+                    guardObj = { id: gid || null, name: display, raw: c };
+                  }
+                  if (guardObj) {
+                    guardObj.postSiteId = postSiteForShift;
+                    guardObj.stationId = stationForShift;
+                    guardObj.rawShift = sh;
+                    extracted.push(guardObj);
+                  }
+                }
+              }
+              if (extracted.length) {
+                rows = extracted;
+                // eslint-disable-next-line no-console
+              }
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+
+        // eslint-disable-next-line no-console
+        try {
+          // Print full JSON for easier copy-paste debugging
+          // eslint-disable-next-line no-console
+          if ((rows || []).length) {
+            // eslint-disable-next-line no-console
+          }
+        } catch (err) {
+          // ignore stringify errors
+        }
+        if (!rows || !Array.isArray(rows) || rows.length === 0) {
+          if (mounted) setAssignedGuardias([]);
+          return;
+        }
+
+        // If endpoint returned rows without explicit linkage (no postSiteId/stationId),
+        // but we requested for a specific post-site, annotate them so frontend can treat
+        // them as belonging to this post-site (common for legacy endpoints that only return guard records).
+        try {
+          const anyLinked = (rows || []).some((r: any) => {
+            return Boolean(r.postSiteId || r.post_site_id || r.businessInfoId || r.siteId || r.site || r.stationId || r.station?.id || r.station_id || r.postSiteStationId || r.post_site_station_id);
+          });
+          if (!anyLinked && siteToLoad && (rows || []).length) {
+            // annotate each row with the current post-site id
+            rows = (rows || []).map((r: any) => ({ ...(r || {}), postSiteId: r.postSiteId || r.post_site_id || r.businessInfoId || r.siteId || r.site || siteToLoad }));
+            // eslint-disable-next-line no-console
+          }
+        } catch (err) {
+          // ignore
+        }
+
+        // Limit to guards that actually belong to this post-site or to stations of this post-site
+        const siteStr = String(siteToLoad);
+        const stationIdsForSite = new Set((stations || []).map((s) => String(s.id)));
+
+        const filteredRows = rows.filter((r: any) => {
+          // direct postSite linkage
+          if (String(r.postSiteId || r.post_site_id || r.businessInfoId || r.siteId || r.site_id || r.postSite || r.site) === siteStr) return true;
+
+          // station linkage (stationId or nested station.id)
+          const candStation = r.stationId || r.station?.id || r.station_id || r.postSiteStationId || r.post_site_station_id || null;
+          if (candStation && stationIdsForSite.has(String(candStation))) return true;
+
+          // sometimes responses include stationName only — try to match by name among loaded stations
+          const candStationName = (r.stationName || r.station?.stationName || r.station?.name || r.postSiteStationName || r.post_site_station_name || '').trim();
+          if (candStationName) {
+            const match = (stations || []).some((s) => String((s.name || '')).trim().toLowerCase() === String(candStationName).toLowerCase());
+            if (match) return true;
+          }
+
+          return false;
+        });
+
+        const mapped = filteredRows.map((g: any) => {
+          const display =
+            g.fullName ||
+            g.displayName ||
+            g.name ||
+            g.user?.fullName ||
+            ((g.firstName || g.firstname || '') + ' ' + (g.lastName || g.lastname || '')).trim() ||
+            g.username ||
+            g.email ||
+            'Sin nombre';
+          const id = g.id || g.userId || g.guardId || g.uuid || g.securityGuardId || g.guard_user_id || g.user?.id || null;
+          const stationIdFromRow = g.stationId || g.stationIdCanonical || g.station?.id || g.station_id || g.postSiteStationId || g.post_site_station_id || g.station?.stationId || g.rawShift?.stationId || (g.rawShift && g.rawShift.station && (g.rawShift.station.id || g.rawShift.station.stationId)) || null;
+          const stationNameFromRow = (g.stationName || g.station?.stationName || g.station?.name || g.postSiteStationName || g.post_site_station_name || (g.rawShift && (g.rawShift.stationName || g.rawShift.station?.name)) || '').trim() || null;
+          const postSiteIdFromRow = g.postSiteId || g.post_site_id || g.businessInfoId || g.siteId || g.site || (g.rawShift && (g.rawShift.postSiteId || g.rawShift.post_site_id)) || null;
+          return { id, name: display, raw: g, stationId: stationIdFromRow, stationName: stationNameFromRow, postSiteId: postSiteIdFromRow };
+        }).filter((x: any) => x.id);
+
+        // Debug: show what rows we received, how we filtered them and the final mapped guards
+        // eslint-disable-next-line no-console
+
+        // If we found no station-matching guards but a station is selected, try station-scoped shift endpoints
+        if ((!mapped || mapped.length === 0) && selectedStationId) {
+          // First try canonical assigned-guards endpoint which should include station linkage
+          try {
+            const respCanon = await api.get(`/tenant/${tenantId}/post-site/${siteToLoad}/assigned-guards`, { toast: { silentError: true } } as any);
+            const bodyCanon = respCanon && (respCanon.data ?? respCanon);
+            let canonRows: any[] = [];
+            if (Array.isArray(bodyCanon)) canonRows = bodyCanon;
+            else if (bodyCanon && Array.isArray(bodyCanon.rows)) canonRows = bodyCanon.rows;
+            else if (bodyCanon && Array.isArray(bodyCanon.data)) canonRows = bodyCanon.data;
+            // eslint-disable-next-line no-console
+            if (canonRows && canonRows.length) {
+              const mappedCanon = (canonRows || []).map((r: any) => ({ id: r.id || r.guardUserId || r.securityGuardRecordId || r.tenantUserId || r.guardId, name: r.fullName || r.guardName || r.displayName || r.name || (r.guard && `${r.guard.firstName || ''} ${r.guard.lastName || ''}`.trim()) || '', raw: r, stationId: r.stationId || r.stationIdCanonical || r.station?.id || r.station_id || null, stationName: r.stationName || r.station?.name || r.stationName, postSiteId: r.postSiteId || r.post_site_id || null })).filter((x:any) => x.id);
+              const stationMatches = mappedCanon.filter((m:any) => String(m.stationId) === String(selectedStationId) || String(m.stationId || '').trim() === String(selectedStationId).trim());
+              // eslint-disable-next-line no-console
+              if (stationMatches && stationMatches.length) {
+                if (mounted) setAssignedGuardias(stationMatches);
+                return;
+              }
+            }
+          } catch (err) {
+            // ignore canonical endpoint errors
+            // eslint-disable-next-line no-console
+          }
+
+          // Next fallback: try station-scoped shift endpoints
+          try {
+            // Try fetching shifts by stationId which often include guard assignments
+            const spResp = await api.get(`/tenant/${tenantId}/shift?stationId=${encodeURIComponent(String(selectedStationId))}&limit=999`, { toast: { silentError: true } } as any);
+            const spBody = spResp && (spResp.data ?? spResp);
+            let spRows: any[] = [];
+            if (Array.isArray(spBody)) spRows = spBody;
+            else if (spBody && Array.isArray(spBody.rows)) spRows = spBody.rows;
+            else if (spBody && Array.isArray(spBody.data)) spRows = spBody.data;
+            // Extract guard objects from shifts
+            const extracted: any[] = [];
+            for (const sh of (spRows || [])) {
+              const stationForShift = sh.stationId || sh.station?.id || sh.station_id || null;
+              const postSiteForShift = sh.postSiteId || sh.post_site_id || sh.siteId || sh.site || siteToLoad;
+              const cand = sh.assignedGuards || sh.guards || sh.securityGuards || sh.users || sh.assignees || sh.assignments;
+              if (Array.isArray(cand)) {
+                for (const c of cand) {
+                  let guardObj: any = null;
+                  if (!c) continue;
+                  if (typeof c === 'string' || typeof c === 'number') {
+                    const gid = String(c);
+                    const found = (guardias || []).find((g) => String(g.id) === gid);
+                    guardObj = { id: gid, name: found?.name || null, raw: c };
+                  } else if (typeof c === 'object') {
+                    const gid = c.id || c.userId || c.guardId || c.user?.id || null;
+                    const found = gid ? (guardias || []).find((g) => String(g.id) === String(gid)) : null;
+                    const display = c.fullName || c.displayName || c.name || c.user?.fullName || found?.name || null;
+                    guardObj = { id: gid || null, name: display, raw: c };
+                  }
+                  if (guardObj) {
+                    guardObj.postSiteId = postSiteForShift;
+                    guardObj.stationId = stationForShift;
+                    guardObj.rawShift = sh;
+                    extracted.push(guardObj);
+                  }
+                }
+              } else if (sh.guard || sh.user || sh.guardId) {
+                const c = sh.guard || sh.user || sh.guardId;
+                let guardObj: any = null;
+                if (typeof c === 'string' || typeof c === 'number') {
+                  const gid = String(c);
+                  const found = (guardias || []).find((g) => String(g.id) === gid);
+                  guardObj = { id: gid, name: found?.name || null, raw: c };
+                } else if (typeof c === 'object') {
+                  const gid = c.id || c.userId || c.guardId || c.user?.id || null;
+                  const found = gid ? (guardias || []).find((g) => String(g.id) === String(gid)) : null;
+                  const display = c.fullName || c.displayName || c.name || c.user?.fullName || found?.name || null;
+                  guardObj = { id: gid || null, name: display, raw: c };
+                }
+                if (guardObj) {
+                  guardObj.postSiteId = postSiteForShift;
+                  guardObj.stationId = stationForShift;
+                  guardObj.rawShift = sh;
+                  extracted.push(guardObj);
+                }
+              }
+            }
+            if (extracted.length) {
+              const mappedStation = extracted.map((g: any) => ({ id: g.id, name: g.name, raw: g, stationId: g.stationId, stationName: null, postSiteId: g.postSiteId })).filter((x: any) => x.id);
+              // eslint-disable-next-line no-console
+              if (mounted) setAssignedGuardias(mappedStation);
+              return;
+            }
+          } catch (err) {
+            // ignore station-specific fallback errors
+            // eslint-disable-next-line no-console
+          }
+        }
+
+        if (mounted) setAssignedGuardias(mapped);
+      } catch (e) {
+        if (mounted) setAssignedGuardias([]);
+      }
+    };
+
+    loadAssignedForSite();
+    return () => { mounted = false; };
+  }, [dupSiteId, watchedSiteId, stations, /* ensure guards reload when client changes */ watchedClientId, selectedStationId]);
 
   // If navigated with a duplicate state, prefill the form
   useEffect(() => {
@@ -237,6 +795,47 @@ export default function NewDispatchPage() {
       };
 
       form.reset(prefill);
+      // Reset manual-edit flag when we programmatically reset the form (dup prefill)
+      try { setCallerNameEdited(false); } catch (e) { /* ignore */ }
+      // If opened from a post-site context, fetch the post-site to populate names and client
+      (async () => {
+        try {
+          const siteId = prefill.siteId || dupSiteId;
+          if (!siteId) return;
+          // fetch post-site details to show human-friendly names in readonly fields
+          const ps = await postSiteService.get(String(siteId));
+          const siteName = ps?.companyName || ps?.name || ps?.businessName || '';
+          setPrefillSiteName(siteName || String(siteId));
+          setSitios([{
+            id: ps.id, name: siteName || ps.id,
+            businessName: ""
+          }]);
+
+          const cid = ps?.clientId || ps?.client || null;
+          if (cid) {
+            form.setValue('clientId', cid);
+            // Ensure siteId is set on the form when opened from a post-site context
+            try { form.setValue('siteId', String(siteId)); } catch (e) { /* ignore */ }
+            try {
+              const existing = clientes.find((c) => c.id === cid);
+              if (existing) setPrefillClientName(existing.name);
+              else {
+                const cdata = await clientService.getClient(String(cid));
+                const cname = cdata?.fullName || cdata?.company || cdata?.name || '';
+                setPrefillClientName(cname || String(cid));
+                setClientes((prev) => (prev || []).concat({ id: String(cid), name: cname || String(cid) }));
+              }
+            } catch (e) {
+              // ignore client fetch errors
+            }
+          }
+
+          // Ensure stations for that site are loaded
+          try { await fetchStationsFor(siteId); } catch (e) { /* ignore */ }
+        } catch (err) {
+          // ignore
+        }
+      })();
       // fill sitios when clientId present (the useEffect watching watchedClientId will load sitios)
     } catch (err) {
       // ignore
@@ -244,18 +843,26 @@ export default function NewDispatchPage() {
   }, [location]);
 
   // Watch selected clientId and load sitios (postSite) solo para ese cliente
-  const watchedClientId = useWatch({ control: form.control, name: "clientId" }) as string | undefined;
 
   useEffect(() => {
     (async () => {
       try {
         if (!watchedClientId) {
           setSitios([]);
+          // clear site and stations when client cleared
+          try { form.setValue('siteId', ''); } catch (e) { /* ignore */ }
+          setStations([]);
           return;
         }
         const resp = await postSiteService.list({ clientId: watchedClientId }, { limit: 100, offset: 0 });
         if (resp && Array.isArray(resp.rows)) {
-          setSitios(resp.rows.map((s: any) => ({ id: s.id, name: s.name || s.companyName || s.address || "Sitio" })));
+          setSitios(
+            resp.rows.map((s: any) => ({
+              id: String(s.id ?? s.postSiteId ?? s.uuid ?? ""),
+              name: s.name || s.businessName || s.companyName || s.address || "Sitio",
+              businessName: s.businessName || s.companyName || s.name || s.address || "",
+            }))
+          );
         } else {
           setSitios([]);
         }
@@ -265,6 +872,42 @@ export default function NewDispatchPage() {
       }
     })();
   }, [watchedClientId]);
+
+
+  // Auto-fill `callerName` when caller type or related selections change
+  const watchedCallerType = useWatch({ control: form.control, name: "callerType" }) as string | undefined;
+  const watchedGuardId = useWatch({ control: form.control, name: "guardId" }) as string | undefined;
+  const { user } = useAuth();
+
+  useEffect(() => {
+    try {
+      const ct = watchedCallerType;
+      if (!ct) return;
+
+      // If user manually edited callerName, do not overwrite it
+      if (callerNameEdited) return;
+
+      if (ct === 'guardia') {
+        if (watchedGuardId) {
+          const id = String(watchedGuardId);
+          // Prefer the global guard list, then assigned guards returned for the site/station
+          const g = (guardias || []).find((x) => String(x.id) === id) || (assignedGuardias || []).find((x) => String(x.id) === id);
+          if (g && g.name) form.setValue('callerName', g.name);
+        }
+      } else if (ct === 'cliente') {
+        if (watchedClientId) {
+          const c = clientes.find((x) => String(x.id) === String(watchedClientId));
+          if (c && c.name) form.setValue('callerName', c.name);
+        }
+      } else if (ct === 'supervisor') {
+        const name = user?.fullName || user?.displayName || user?.name || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : null) || user?.email || '';
+        if (name) form.setValue('callerName', name);
+      }
+    } catch (e) {
+      // noop
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedCallerType, watchedGuardId, watchedClientId, guardias, clientes, user, callerNameEdited, assignedGuardias]);
 
   const onSubmit = async (data: DispatchCreateSchema) => {
     const incidentAt =
@@ -276,6 +919,7 @@ export default function NewDispatchPage() {
     const payload: any = {
       clientId: data.clientId || null,
       siteId: data.siteId || null,
+      stationId: (data as any).stationId || selectedStationId || null,
       guardId: data.guardId || null,
       priority: data.priority || null,
       // default to 'abierto' when creating a new dispatch
@@ -303,7 +947,6 @@ export default function NewDispatchPage() {
     // (form has `attachment` but attachments are handled separately)
     // Log payload for debugging in DevTools / network
     // eslint-disable-next-line no-console
-    console.log('Creating request payload:', payload);
 
     try {
       const tenantId = localStorage.getItem('tenantId');
@@ -312,31 +955,154 @@ export default function NewDispatchPage() {
         return;
       }
 
-      // Note: attachments are not uploaded in this flow (option B).
-      // Backend controller expects `req.body.data` so wrap payload accordingly
-      await api.post(`/tenant/${tenantId}/request`, { data: payload });
+      // Note: attachments are not uploaded in this flow. Send payload to `incident` endpoint
+      // Normalize payload keys to backend expectations
+      // Try to resolve selected guard to a securityGuard record id (guardNameId) when possible
+      let resolvedGuardNameId: any = null;
+      try {
+        const sel = payload.guardId;
+        if (sel) {
+          const found = (assignedGuardias || []).find((g) => String(g.id) === String(sel));
+          if (found) {
+            // Safely resolve candidate using optional chaining to avoid undefined errors
+            const candidate =
+              found?.securityGuardRecordId ??
+              found?.securityGuardId ??
+              found?.guardId ??
+              found?.raw?.securityGuardRecordId ??
+              found?.raw?.securityGuardId ??
+              found?.raw?.guardNameId ??
+              found?.raw?.guardName ??
+              null;
+            resolvedGuardNameId = candidate != null ? String(candidate) : null;
+          }
+        }
+      } catch (e) {
+        // ignore resolution errors
+      }
+
+      const incidentPayload = {
+        ...payload,
+        incidentType: payload.incidentTypeId || payload.incidentType || null,
+        // send the security-guard record id expected by the backend as `guardNameId` when available
+        guardNameId: resolvedGuardNameId || payload.guardId || payload.guardNameId || null,
+        // still include guardId for compatibility (may be a user id)
+        guardId: payload.guardId || null,
+        postSiteId: payload.siteId || payload.postSiteId || null,
+      };
+
+      // Debug: log final payload that will be sent to the API
+      // eslint-disable-next-line no-console
+
+      await api.post(`/tenant/${tenantId}/incident`, { data: incidentPayload });
 
       // Show success toast, clear attachments and navigate back
-      toast.success('Despacho creado');
+      toast.success('Incidente creado');
       setAttachments([]);
-      navigate('/dispatch-tickets');
+      // If we created this incident from a post-site context, navigate back to that post-site's incidents tab
+      const targetSiteId = incidentPayload.postSiteId || incidentPayload.siteId || dupSiteId || null;
+      if (targetSiteId) {
+        navigate(`/post-sites/${targetSiteId}/incidents`);
+      } else {
+        navigate('/dispatch-tickets');
+      }
     } catch (error) {
       console.error('Error creating request:', error);
       try {
-        const msg = (error && (error as any).message) || 'Error al crear despacho';
+        const msg = (error && (error as any).message) || 'Error al crear Incidente';
         toast.error(msg);
       } catch (e) {
-        toast.error('Error al crear despacho');
+        toast.error('Error al crear Incidente');
       }
     }
   };
+
+  // Compute guard options depending on selected station: prefer assigned guards filtered by station
+  // If no station selected, show guards assigned to the current post-site (do not hide everything)
+  const guardOptions = (() => {
+    const sid = selectedStationId ? String(selectedStationId) : null;
+    // Debug: overall state when computing options
+    // eslint-disable-next-line no-console
+    try {
+      const stationNameForSid = (stations || []).find((s) => String(s.id) === sid)?.name || '';
+
+      const byStation = (assignedGuardias || []).filter((m) => {
+        // Prefer direct mapped stationId on the mapped object
+        if (m.stationId && String(m.stationId) === sid) return true;
+        // Also consider backend-provided canonical station id
+        if (m.stationIdCanonical && String(m.stationIdCanonical) === sid) return true;
+
+        // Prefer direct mapped stationName equality
+        if (m.stationName && stationNameForSid && String(m.stationName).trim().toLowerCase() === String(stationNameForSid).trim().toLowerCase()) return true;
+
+        const r = m.raw || {};
+        const candidateIds = [r.stationId, r.station?.id, r.station_id, r.postSiteStationId, r.post_site_station_id, r.station?.stationId];
+        // include canonical ids from raw rows
+        if (r.stationIdCanonical) candidateIds.push(r.stationIdCanonical);
+        if (m.stationIdCanonical) candidateIds.push(m.stationIdCanonical);
+        if (candidateIds.some((c: any) => c && String(c) === sid)) return true;
+
+        // Match by station name if provided in the raw row
+        const candStationName = (r.stationName || r.station?.stationName || r.station?.name || r.postSiteStationName || r.post_site_station_name || r.station?.stationName || '').trim();
+        if (candStationName && stationNameForSid && candStationName.toLowerCase() === stationNameForSid.trim().toLowerCase()) return true;
+
+        return false;
+      }).map((m) => ({ id: m.id as string, name: m.name }));
+      // Debug: inspect assignedGuardias and matches
+      // eslint-disable-next-line no-console
+      console.debug('guardOptions compute', { sid, stationNameForSid, assignedCount: (assignedGuardias || []).length, matchCount: byStation.length, sampleMatch: byStation[0] });
+
+      // If a station is selected, only return guards that match that station (no fallbacks)
+      if (sid) {
+        if (byStation && byStation.length) return byStation;
+        // No guards for this station
+        return [] as { id: string; name: string }[];
+      }
+
+      // No station selected: return guards assigned to the current post-site (if any)
+      try {
+        const currentSite = dupSiteId || watchedSiteId || null;
+        if (currentSite) {
+          const byPostSite = (assignedGuardias || []).filter((m) => String(m.postSiteId || m.raw?.postSiteId || m.raw?.post_site_id || m.raw?.siteId || m.raw?.site || '') === String(currentSite)).map((m) => ({ id: m.id as string, name: m.name }));
+          if (byPostSite && byPostSite.length) {
+            // eslint-disable-next-line no-console
+            console.debug('guardOptions fallback byPostSite', { currentSite, count: byPostSite.length, sample: byPostSite[0] });
+            return byPostSite;
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      // Fallback: return all assigned guards for this post-site (last resort)
+      // eslint-disable-next-line no-console
+      console.debug('guardOptions fallback to all assignedGuardias', { assignedCount: (assignedGuardias || []).length });
+      return (assignedGuardias || []).map((m) => ({ id: m.id as string, name: m.name }));
+    } catch (e) {
+      return [];
+    }
+  })();
+
+  // When station changes, if current selected guard is not in options, clear it
+  useEffect(() => {
+    try {
+      const current = form.getValues ? form.getValues('guardId') : null;
+      if (!current) return;
+      const found = guardOptions && guardOptions.some((g) => String(g.id) === String(current));
+      if (!found) {
+        form.setValue('guardId', '');
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [selectedStationId, assignedGuardias, guardias]);
 
   return (
     <AppLayout>
       <Breadcrumb
         items={[
           { label: "Panel de control", path: "/dashboard" },
-          { label: "Nuevo Despacho" },
+          { label: "Nuevo Incidente" },
         ]}
       />
 
@@ -344,90 +1110,167 @@ export default function NewDispatchPage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <FormField
-                control={form.control}
-                name="clientId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cliente*</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} onOpenChange={(open) => {
-                      if (open) {
-                        setTimeout(() => clienteInputRef.current?.focus(), 50);
-                      } else {
-                        setClienteFilter("");
-                      }
-                    }}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <div className="px-2 py-2">
-                          <Input
-                            ref={(el) => (clienteInputRef.current = el)}
-                            placeholder="Buscar cliente..."
-                            value={clienteFilter}
-                            onChange={(e) => setClienteFilter(e.target.value)}
-                          />
-                        </div>
-                        {clientes
-                          .filter((c) => c.name.toLowerCase().includes(clienteFilter.trim().toLowerCase()))
-                          .map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                {!isFromPostSite ? (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="clientId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cliente*</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} onOpenChange={(open) => {
+                            if (open) {
+                              setTimeout(() => clienteInputRef.current?.focus(), 50);
+                            } else {
+                              setClienteFilter("");
+                            }
+                          }}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <div className="px-2 py-2">
+                                <Input
+                                  ref={(el) => (clienteInputRef.current = el)}
+                                  placeholder="Buscar cliente..."
+                                  value={clienteFilter}
+                                  onChange={(e) => setClienteFilter(e.target.value)}
+                                />
+                              </div>
+                              {clientes
+                                .filter((c) => c.name.toLowerCase().includes(clienteFilter.trim().toLowerCase()))
+                                .map((c) => (
+                                  <SelectItem key={c.id} value={c.id}>
+                                    {c.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              <FormField
-                control={form.control}
-                name="siteId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Puesto de seguridad*</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} onOpenChange={(open) => {
-                      if (open) {
-                        setTimeout(() => sitioInputRef.current?.focus(), 50);
-                      } else {
-                        setSitioFilter("");
-                      }
-                    }}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <div className="px-2 py-2">
-                          <Input
-                            ref={(el) => (sitioInputRef.current = el)}
-                            placeholder="Buscar sitio..."
-                            value={sitioFilter}
-                            onChange={(e) => setSitioFilter(e.target.value)}
-                          />
-                        </div>
-                        {sitios
-                          .filter((s) => s.name.toLowerCase().includes(sitioFilter.trim().toLowerCase()))
-                          .map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              {s.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                    <FormField
+                      control={form.control}
+                      name="siteId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Puesto de seguridad*</FormLabel>
+                          <Select onValueChange={(v) => { field.onChange(v); fetchStationsFor(v); }} value={field.value} onOpenChange={(open) => {
+                            if (open) {
+                              setTimeout(() => sitioInputRef.current?.focus(), 50);
+                            } else {
+                              setSitioFilter("");
+                            }
+                          }}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <div className="px-2 py-2">
+                                <Input
+                                  ref={(el) => (sitioInputRef.current = el)}
+                                  placeholder="Buscar sitio..."
+                                  value={sitioFilter}
+                                  onChange={(e) => setSitioFilter(e.target.value)}
+                                />
+                              </div>
+                              {sitios
+                                .filter((s) => s.name.toLowerCase().includes(sitioFilter.trim().toLowerCase()))
+                                .map((s) => (
+                                  <SelectItem key={s.id} value={s.id}>
+                                    {s.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="clientId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cliente</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value ?? (prefillClientName || (clientes.find(c => c.id === form.getValues('clientId'))?.name) || '')} disabled />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="siteId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Puesto de seguridad</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value ?? (prefillSiteName || (sitios && sitios[0] && sitios[0].name) || '')} disabled />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </>
                 )}
-              />
+
+                {/* Station selector: visible even when creating manually. Disabled/empty until site selected */}
+                <FormField
+                  control={form.control}
+                  name="stationId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estación</FormLabel>
+                      <Select
+                        value={field.value || ''}
+                        onValueChange={(v) => {
+                          field.onChange(v);
+                          setSelectedStationId(v || null);
+                        }}
+                        onOpenChange={(open) => {
+                          if (open) setTimeout(() => stationInputRef.current?.focus(), 50);
+                          else setStationFilter('');
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={stations && stations.length > 0 ? 'Seleccionar estación' : (watchedSiteId || dupSiteId ? 'Sin estaciones' : 'Seleccione un puesto primero')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <div className="px-2 py-2">
+                            <Input
+                              ref={(el) => (stationInputRef.current = el)}
+                              placeholder="Buscar estación..."
+                              value={stationFilter}
+                              onChange={(e) => setStationFilter(e.target.value)}
+                              disabled={!(watchedSiteId || dupSiteId)}
+                            />
+                          </div>
+                          {stations && stations.length > 0 ? stations
+                            .filter((s) => s.name.toLowerCase().includes(stationFilter.trim().toLowerCase()))
+                            .map((s) => (
+                              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                            )) : (
+                              <SelectItem key="__no_stations" value="__no_stations" disabled>{watchedSiteId || dupSiteId ? 'Sin estaciones' : 'Seleccione un puesto primero'}</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
               <FormField
                 control={form.control}
                 name="guardId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Asignar Guardia</FormLabel>
+                    <FormLabel>Guardia a Informar</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value} onOpenChange={(open) => {
                       if (open) {
                         setTimeout(() => guardInputRef.current?.focus(), 50);
@@ -447,13 +1290,28 @@ export default function NewDispatchPage() {
                             onChange={(e) => setGuardFilter(e.target.value)}
                           />
                         </div>
-                        {guardias
-                          .filter((g) => g.name.toLowerCase().includes(guardFilter.trim().toLowerCase()))
-                          .map((g) => (
-                            <SelectItem key={g.id} value={g.id}>
-                              {g.name}
-                            </SelectItem>
-                          ))}
+                          {(!selectedStationId)
+                            ? (
+                              <>
+                                <SelectItem key="__no_station_selected" value="__no_station_selected" disabled>
+                                  Seleccione una estación primero
+                                </SelectItem>
+                              </>
+                            ) : (
+                              (guardOptions && guardOptions.length > 0)
+                                ? (guardOptions || [])
+                                    .filter((g) => (g.name || '').toLowerCase().includes(guardFilter.trim().toLowerCase()))
+                                    .map((g) => (
+                                      <SelectItem key={g.id} value={g.id}>
+                                        {g.name}
+                                      </SelectItem>
+                                    ))
+                                : (
+                                    <SelectItem key="__no_assigned_guards" value="__no_assigned_guards" disabled>
+                                      No hay guardias asignados a esta estación
+                                    </SelectItem>
+                                  )
+                            )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -520,7 +1378,7 @@ export default function NewDispatchPage() {
                   <FormItem>
                     <FormLabel>Nombre del llamador*</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} onChange={(e) => { setCallerNameEdited(true); field.onChange(e); }} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -795,7 +1653,15 @@ export default function NewDispatchPage() {
             </div>
           </form>
         </Form>
+        {debugGuards ? (
+          <div className="mt-4 rounded border p-3 bg-white text-xs">
+            <div className="font-medium mb-2">DEBUG: assignedGuardias (truncated)</div>
+            <pre style={{ maxHeight: 300, overflow: 'auto' }}>{JSON.stringify((assignedGuardias || []).slice(0,50), null, 2)}</pre>
+          </div>
+        ) : null}
       </div>
     </AppLayout>
   );
 }
+
+

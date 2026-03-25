@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import securityGuardService from '@/lib/api/securityGuardService';
+import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input';
@@ -89,6 +90,85 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
   const handleCancel = () => {
     setEditedGuard({ ...guard });
     setIsEditing(false);
+  };
+
+  // GuardShift (attendance) state
+  const [guardShifts, setGuardShifts] = useState<any[]>([]);
+  const [loadingShifts, setLoadingShifts] = useState(false);
+  const [showCreateShiftModal, setShowCreateShiftModal] = useState(false);
+  const [createPunchIn, setCreatePunchIn] = useState<string>('');
+  const [createPunchOut, setCreatePunchOut] = useState<string>('');
+  const [createSchedule, setCreateSchedule] = useState<string>('Diurno');
+
+  const loadGuardShifts = async () => {
+    if (!id) return;
+    setLoadingShifts(true);
+    try {
+      const tenantId = localStorage.getItem('tenantId') || '';
+      const resp = await ApiService.get(`/tenant/${tenantId}/guard-shift?filter[guardName]=${encodeURIComponent(id)}&limit=50`);
+      const rows = Array.isArray(resp) ? resp : (resp && resp.rows) ? resp.rows : [];
+      setGuardShifts(rows);
+    } catch (err) {
+      console.error('Failed loading guard shifts', err);
+    } finally {
+      setLoadingShifts(false);
+    }
+  };
+
+  useEffect(() => {
+    loadGuardShifts();
+  }, [id]);
+
+  const handlePunchInNow = async () => {
+    if (!id) return;
+    try {
+      const tenantId = localStorage.getItem('tenantId') || '';
+      const payload = { punchInTime: new Date().toISOString(), guardName: id };
+      await ApiService.post(`/tenant/${tenantId}/guard-shift`, { data: payload });
+      toast.success('Punch in recorded');
+      await loadGuardShifts();
+    } catch (err: any) {
+      console.error('Punch in failed', err);
+      toast.error(err?.message || 'Failed to punch in');
+    }
+  };
+
+  const handlePunchOutLast = async () => {
+    if (!id) return;
+    try {
+      // find last open shift (no punchOutTime)
+      const open = guardShifts.find(g => !g.punchOutTime);
+      if (!open) {
+        toast.info('No open punch found');
+        return;
+      }
+      const tenantId = localStorage.getItem('tenantId') || '';
+      const now = new Date().toISOString();
+      await ApiService.patch(`/tenant/${tenantId}/guard-shift/${open.id}`, { data: { punchOutTime: now } });
+      toast.success('Punch out recorded');
+      await loadGuardShifts();
+    } catch (err: any) {
+      console.error('Punch out failed', err);
+      toast.error(err?.message || 'Failed to punch out');
+    }
+  };
+
+  const handleCreateManual = async () => {
+    if (!id) return;
+    try {
+      const tenantId = localStorage.getItem('tenantId') || '';
+      const payload: any = { guardName: id, shiftSchedule: createSchedule };
+      if (createPunchIn) payload.punchInTime = new Date(createPunchIn).toISOString();
+      if (createPunchOut) payload.punchOutTime = new Date(createPunchOut).toISOString();
+      await ApiService.post(`/tenant/${tenantId}/guard-shift`, { data: payload });
+      toast.success('Attendance record created');
+      setShowCreateShiftModal(false);
+      setCreatePunchIn(''); setCreatePunchOut(''); setCreateSchedule('Diurno');
+      await loadGuardShifts();
+    } catch (err: any) {
+      console.error('Create guard shift failed', err);
+      toast.error(err?.message || 'Failed creating record');
+    }
   };
 
   return (
@@ -266,6 +346,36 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                 </div>
               </InfoCard>
 
+              {/* Attendance / GuardShift */}
+              <InfoCard title="guards.profile.cards.attendance">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <button onClick={handlePunchInNow} className="bg-green-600 text-white px-3 py-2 rounded">Punch In (now)</button>
+                    <button onClick={handlePunchOutLast} className="bg-red-600 text-white px-3 py-2 rounded">Punch Out (last)</button>
+                    <button onClick={() => setShowCreateShiftModal(true)} className="px-3 py-2 rounded border">Create Record</button>
+                  </div>
+
+                  <div>
+                    {loadingShifts ? (
+                      <div className="text-sm text-gray-500">Loading...</div>
+                    ) : guardShifts.length === 0 ? (
+                      <div className="text-sm text-gray-500">No attendance records.</div>
+                    ) : (
+                      <ul className="space-y-2">
+                        {guardShifts.map((s) => (
+                          <li key={s.id} className="border rounded p-2 bg-white">
+                            <div className="text-sm font-medium">{s.shiftSchedule || s.schedule || '-'}</div>
+                            <div className="text-xs text-gray-600">In: {s.punchInTime ? new Date(s.punchInTime).toLocaleString() : '-'}</div>
+                            <div className="text-xs text-gray-600">Out: {s.punchOutTime ? new Date(s.punchOutTime).toLocaleString() : '-'}</div>
+                            <div className="text-xs text-gray-500">Station: {s.stationName || (s.station && s.station.name) || '-'}</div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </InfoCard>
+
               {/* Detalles de la Licencia */}
               <InfoCard title="guards.profile.cards.licenseDetails">
                 {editedGuard?.licenses && editedGuard.licenses.length > 0 ? (
@@ -288,6 +398,38 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
             </div>
           </div>
         </div>
+        {showCreateShiftModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowCreateShiftModal(false)} />
+            <aside className="relative mx-auto w-full max-w-md bg-white shadow-xl overflow-auto rounded-lg">
+              <div className="flex items-center justify-between p-4 border-b">
+                <h3 className="text-lg font-semibold">Create Attendance Record</h3>
+                <button onClick={() => setShowCreateShiftModal(false)} className="p-2 text-gray-500 hover:text-gray-700">Close</button>
+              </div>
+              <div className="p-4 space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Punch In</label>
+                  <input type="datetime-local" value={createPunchIn} onChange={e => setCreatePunchIn(e.target.value)} className="w-full border rounded h-10 px-3" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Punch Out</label>
+                  <input type="datetime-local" value={createPunchOut} onChange={e => setCreatePunchOut(e.target.value)} className="w-full border rounded h-10 px-3" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Shift Schedule</label>
+                  <select value={createSchedule} onChange={e => setCreateSchedule(e.target.value)} className="w-full border rounded h-10 px-3">
+                    <option value="Diurno">Diurno</option>
+                    <option value="Nocturno">Nocturno</option>
+                  </select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setShowCreateShiftModal(false)} className="px-3 py-2 rounded border">Cancel</button>
+                  <button onClick={handleCreateManual} className="px-3 py-2 rounded bg-orange-600 text-white">Create</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        )}
       </GuardsLayout>
     </AppLayout>
   );

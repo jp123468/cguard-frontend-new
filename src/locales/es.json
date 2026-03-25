@@ -115,7 +115,7 @@
       "facturas": "Facturas",
       "elementos": "Servicios"
     },
-    "despachador": "Despachador",
+    "despachador": "Incidentes",
     "visitantes": {
       "label": "Gestión de visitantes",
       "visitantes": "Visitantes",
@@ -136,46 +136,45 @@
       "espacios": "Plazas",
       "incidentes": "Incidentes",
       "tipo-incidente": "Tipo de incidente"
-    }
+    },
+    "app": {
+      "title": "App"
+    },
+    "title": "Configuración",
+    "perfil-usuario": "Perfil de usuario",
+    "perfil-empresa": "Perfil de la empresa",
+    "cambiar-contrasena": "Cambiar contraseña",
+    "mfa": "Autenticación de dos factores",
+    "notificaciones": "Notificaciones",
+    "politicas": "Políticas y documentos",
+    "tipos-incidentes": "Tipos de incidentes",
+    "tipos-licencias": "Tipos de licencias",
+    "conjunto-habilidades": "Conjuntos de habilidades",
+    "departamentos": "Departamentos",
+    "impuestos": "Impuestos",
+    "roles": "Roles de usuario",
+    "campos-perfil": "Campos de perfil",
+    "custom-reports": "Informes personalizados",
+    "integraciones": "Integraciones",
+    "payroll-setup": "Configuración de nómina",
+    "publishing-sites": "Puestos vigilados",
+    "keep-safe": "security-guards",
+    "report-configuration": "Configuración de informes",
+    "other-settings": "Otras configuraciones",
+    "access-token": "Token de acceso",
+    "request-records": "Solicitar registros"
   },
-  "settings": {
-    "configuracion": {
-      "title": "Configuración",
-      "perfil-usuario": "Perfil de usuario",
-      "perfil-empresa": "Perfil de la empresa",
-      "cambiar-contrasena": "Cambiar contraseña",
-      "mfa": "Autenticación de dos factores",
-      "notificaciones": "Notificaciones",
-      "politicas": "Políticas y documentos",
-      "tipos-incidentes": "Tipos de incidentes",
-      "tipos-licencias": "Tipos de licencias",
-      "conjunto-habilidades": "Conjuntos de habilidades",
-      "departamentos": "Departamentos",
-      "impuestos": "Impuestos",
-      "roles": "Roles de usuario",
-      "campos-perfil": "Campos de perfil",
-      "custom-reports": "Informes personalizados",
-      "integraciones": "Integraciones",
-      "payroll-setup": "Configuración de nómina",
-      "publishing-sites": "Puestos vigilados",
-      "keep-safe": "security-guards",
-      "report-configuration": "Configuración de informes",
-      "other-settings": "Otras configuraciones",
-      "access-token": "Token de acceso",
-      "request-records": "Solicitar registros"
-    },
-    "suscripcion": {
-      "title": "Suscripción",
-      "detalle": "Detalles de la suscripción",
-      "modulos": "Módulos",
-      "metodos-pago": "Métodos de pago",
-      "facturas": "Facturas"
-    },
-    "section": {
-      "seguridad": "SEGURIDAD",
-      "configuracion_global": "CONFIGURACIÓN GLOBAL",
-      "acceso_de_desarrollador": "ACCESO DE DESARROLLADOR"
-    }
+  "suscripcion": {
+    "title": "Suscripción",
+    "detalle": "Detalles de la suscripción",
+    "modulos": "Módulos",
+    "metodos-pago": "Métodos de pago",
+    "facturas": "Facturas"
+  },
+  "section": {
+    "seguridad": "SEGURIDAD",
+    "configuracion_global": "CONFIGURACIÓN GLOBAL",
+    "acceso_de_desarrollador": "ACCESO DE DESARROLLADOR"
   },
   "guards": {
     "nav": {
@@ -849,11 +848,12 @@
         "skills": "Ej: Primeros auxilios, Defensa personal"
       },
       "noLicense": "No se encontró ninguna licencia"
-    }, "tabs": {
+    },
+    "tabs": {
       "invite": "Invitar por SMS o correo electrónico",
       "create_profile": "Crear perfil"
     },
-   "new": {
+    "new": {
       "title": "Nuevo Guardia",
       "breadcrumb": {
         "dashboard": "Panel de control"
@@ -981,8 +981,70 @@
       "lng": "Longitud",
       "schedule": "Horario",
       "guardsCount": "Guardias",
-      "remove": "Eliminar"
+      "detailsTitle": "Detalles de la estación"
     },
+    "assignGuards": {
+      "assignButton": "Asignar guardia",
+      "modalTitle": "Asignar guardia",
+      "guardsLabel": "Guardias*",
+      "searchPlaceholder": "Buscar guardias",
+      "searchHelp": "Escribe para buscar y selecciona un guardia",
+      "stationLabel": "Puesto*",
+      "selectStationOption": "-- seleccionar puesto --",
+      "addStation": "Agregar puesto",
+      "actionAssignSelected": "Asignar seleccionados",
+      "actionUnassign": "Quitar asignación",
+      "table": {
+        "name": "Nombre",
+        "mobile": "Teléfono",
+        "email": "Correo",
+        "station": "Puesto",
+        "source": "Origen",
+        "actions": "Acciones"
+      },
+      "emptyTitle": "No se encontraron resultados",
+      "emptyMessage": "No hay guardias asignados a este puesto.",
+      "noResults": "Sin resultados",
+      "missingPostSite": "Falta el id del puesto",
+      "noGuardIdentifier": "No hay identificador del guardia",
+      "failedLoadAssignments": "Error al cargar las asignaciones del guardia",
+      "assignmentRemoved": "Asignación removida",
+      "removeFailed": "Error al remover la asignación",
+      "selectGuardRequired": "Por favor selecciona un guardia antes de asignar",
+      "selectStationRequired": "Por favor selecciona o crea un puesto antes de asignar",
+      "shiftCreated": "Turno creado y guardia asignada",
+      "assignFailed": "Error al asignar guardia",
+      "viewModalTitle": "Asignaciones de guardia",
+      "sourceLabel": "Origen",
+      "postSiteLabel": "Puesto",
+      "securityGuardLabel": "Guardia",
+      "skillSetLabel": "Conjunto de habilidades",
+      "departmentLabel": "Departamento",
+      "siteToursLabel": "Recorridos",
+      "tasksLabel": "Tareas",
+      "postOrdersLabel": "Órdenes del puesto",
+      "checklistsLabel": "Listas de verificación",
+      "actionView": "Ver",
+      "actionDelete": "Eliminar",
+      "actionEdit": "Editar",
+      "actionDeleteSelected": "Eliminar seleccionados",
+      "noSelection": "No hay elementos seleccionados",
+      "bulkDeleteSuccess": "Asignaciones seleccionadas eliminadas",
+      "confirmBulkRemovalTitle": "Confirmar eliminación múltiple",
+      "confirmBulkRemovalDesc": "¿Estás seguro de que deseas eliminar las asignaciones seleccionadas? Esta acción no se puede deshacer.",
+      "viewNoAssignments": "No se encontraron asignaciones.",
+      "confirmRemovalTitle": "Confirmar eliminación",
+      "confirmRemovalDesc": "¿Estás seguro de que deseas eliminar esta asignación de guardia? Esta acción no se puede deshacer.",
+      "cancel": "Cancelar",
+      "remove": "Eliminar",
+      "assignButtonAria": "Asignar",
+      "actionDefault": "Acción",
+      "headerSearchPlaceholder": "Buscar guardias",
+      "startShort": "Inicio (hh:mm)",
+      "endShort": "Fin (hh:mm)"
+    },
+    "unnamedStation": "Estación sin nombre",
+    "sourcePivot": "pivot",
     "pdfDownloaded": "PDF descargado",
     "errorExportPDF": "Error al exportar PDF",
     "generatingExcel": "Generando Excel...",
@@ -1296,7 +1358,7 @@
         "clockedIn": "Hora de entrada",
         "clockedOut": "Hora de salida",
         "companyPolicy": "Política de la empresa",
-        "dispatch": "Despacho",
+        "dispatch": "Incidente",
         "exchangeShift": "Intercambio de turno",
         "geoFence": "Geo Fence",
         "guardAvailability": "Disponibilidad de guardia",
@@ -1333,7 +1395,6 @@
       "AssignGuards": "Asignar guardias",
       "Tasks": "Tareas",
       "PostOrders": "Órdenes del puesto",
-      "Stations": "Estaciones",
       "Incidents": "Incidentes",
       "Stations": "Estaciones",
       "SiteTours": "Recorridos del puesto de seguridad",
@@ -1363,16 +1424,38 @@
       "noStations": "No hay estaciones agregadas.",
       "loading": "Cargando...",
       "selectPrompt": "Selecciona una estación para ver detalles",
-      "table": { "name": "Nombre", "description": "Descripción" },
+      "table": {
+        "name": "Nombre",
+        "description": "Descripción"
+      },
       "tableActions": "Acciones",
       "createTitle": "Crear Estación",
-      "form": { "name": "Nombre *", "description": "Descripción", "descriptionPlaceholder": "Descripción opcional", "schedule": "Horario *", "selectSchedule": "Selecciona horario", "guards": "Guardias", "startTime": "Inicio", "finishTime": "Fin" },
+      "form": {
+        "name": "Nombre *",
+        "description": "Descripción",
+        "descriptionPlaceholder": "Descripción opcional",
+        "schedule": "Horario *",
+        "selectSchedule": "Selecciona horario",
+        "guards": "Guardias",
+        "startTime": "Inicio",
+        "finishTime": "Fin"
+      },
       "provideSchedule": "Selecciona un horario",
       "placeholderName": "Nombre de la estación",
       "lat": "Latitud",
       "lng": "Longitud",
       "schedule": "Horario",
-      "guardsCount": "Guardias"
+      "guardsCount": "Guardias",
+      "startTime": "Inicio",
+      "endTime": "Fin",
+      "assignedGuardsTitle": "Guardias asignados",
+      "manageAssignments": "Administrar asignaciones",
+      "noAssignedGuards": "No hay guardias asignados",
+      "hours": "horas",
+      "hShort": "h",
+      "mShort": "m",
+      "company": "Empresa",
+      "tenantId": "Tenant ID"
     },
     "profile": {
       "title": "Perfil del puesto de vigilancia",
@@ -1502,6 +1585,40 @@
       "tasksCompleted": "Tareas completadas (últimos 7 días)",
       "incidentsReported": "Incidentes reportados",
       "hoursLogged": "Horas registradas (últimos 7 días)"
+    },
+    "tasks": {
+      "action": "Acción",
+      "archiveSelected": "Eliminar seleccionados",
+      "export": "Exportar",
+      "searchPlaceholder": "Buscar tareas",
+      "newTask": "Nueva Tarea",
+      "table": {
+        "taskName": "Nombre de la tarea",
+        "duration": "Duración",
+        "type": "Tipo"
+      },
+      "empty": {
+        "title": "No se encontraron resultados",
+        "message": "No pudimos encontrar elementos que coincidan con tu búsqueda"
+      },
+      "modal": {
+        "title": "Nueva Tarea"
+      },
+      "form": {
+        "taskNamePlaceholder": "Nombre de la tarea*",
+        "taskDescriptionPlaceholder": "Descripción de la tarea",
+        "maxDuration": "Duración máxima",
+        "assignGuard": "Asignar Guardia*",
+        "newSubTask": "Nueva subtarea"
+      },
+      "oneoff": "Tarea única",
+      "recurring": "Tarea recurrente",
+      "recurringPlaceholder": "Controles de programación recurrente (marcador)",
+      "subtasks": "Sub tareas",
+      "add": "+ Agregar",
+      "remove": "Eliminar",
+      "saveDraft": "Guardar como borrador",
+      "submit": "Enviar"
     }
   },
   "activity": {
@@ -1598,29 +1715,29 @@
     "send": "Enviar"
   },
   "dispatcher": {
-    "noPermissionViewToast": "No tienes permiso para ver despachos",
-    "noPermissionViewBanner": "No tienes permiso para ver la lista de despachos. Contacta a un administrador.",
+    "noPermissionViewToast": "No tienes permiso para ver incidentes",
+    "noPermissionViewBanner": "No tienes permiso para ver la lista de incidentes. Contacta a un administrador.",
     "tenantUnavailable": "Tenant no disponible",
     "share_link_copied": "Enlace compartible copiado",
     "share_link_failed": "No se pudo generar el enlace compartible",
     "share_error": "Error al generar enlace compartible",
-    "select_at_least_one_export": "Selecciona al menos un despacho para exportar",
+    "select_at_least_one_export": "Selecciona al menos un incidente para exportar",
     "export_excel_error": "Error al generar Excel",
-    "select_at_least_one_print": "Selecciona al menos un despacho para imprimir",
+    "select_at_least_one_print": "Selecciona al menos un incidente para imprimir",
     "pdf_generate_failed": "No se pudo generar el PDF",
     "pdf_invalid_response": "Respuesta inválida del servidor al generar el PDF",
     "print_error": "Error al imprimir el PDF",
-    "select_at_least_one_send": "Selecciona al menos un despacho para enviar",
+    "select_at_least_one_send": "Selecciona al menos un incidente para enviar",
     "email_sent": "Correo enviado",
     "email_send_error": "Error al enviar correo",
-    "select_at_least_one_delete": "Selecciona al menos un despacho para eliminar",
-    "newDispatch": "Nuevo despacho",
-    "no_permission_create": "No tienes permiso para crear despachos",
-    "deleted_success": "Despachos eliminados",
-    "deleted_error": "Error al eliminar despachos",
+    "select_at_least_one_delete": "Selecciona al menos un incidente para eliminar",
+    "newDispatch": "Nuevo incidente",
+    "no_permission_create": "No tienes permiso para crear incidentes",
+    "deleted_success": "Incidentes eliminados",
+    "deleted_error": "Error al eliminar incidentes",
     "searchPlaceholder": "Buscar por cliente o sitio",
     "breadcrumbDashboard": "Panel de control",
-    "breadcrumbList": "Lista de despachos",
+    "breadcrumbList": "Lista de incidentes",
     "actionPlaceholder": "Acción",
     "action_delete": "Eliminar",
     "filters": "Filtros",
@@ -1659,16 +1776,50 @@
     "sending": "Enviando...",
     "generate_shareable_link": "Generar enlace compartible",
     "confirm_delete_title": "Confirmar eliminación",
-    "confirm_delete_desc": "¿Estás seguro de eliminar {{count}} despacho(s)? Esta acción no se puede deshacer.",
+    "confirm_delete_desc": "¿Estás seguro de eliminar {{count}} incidente(s)? Esta acción no se puede deshacer.",
     "close_ticket": "Cerrar ticket",
     "action_delete_label": "Eliminar",
     "header_ticket_id": "ID del ticket",
     "header_datetime": "Fecha/Hora",
     "header_client": "Cliente",
     "header_post_site": "Sitio",
-    "header_caller_type": "Tipo de llamante",
+    "header_caller_type": "Tipo de Informador",
     "header_incident_type": "Tipo de incidente",
-    "header_status": "Estado"
+    "header_status": "Estado",
+    "basic_details": "Detalles básicos",
+    "ticket_id": "ID del ticket",
+    "date_time": "Fecha/Hora",
+    "client_name": "Cliente",
+    "post_site_label": "Puesto",
+    "caller_type": "Tipo de informador",
+    "caller_name": "Nombre del informante",
+    "incident_type_label": "Tipo de incidente",
+    "incident_date_time_label": "Fecha/Hora del incidente",
+    "incident_location": "Ubicación del incidente",
+    "dispatcher_label": "Despachador",
+    "comment": {
+      "write_error": "Escribe un comentario",
+      "file_upload_failed": "No se pudo subir el archivo, comentario enviado sin adjunto",
+      "added": "Comentario agregado",
+      "added_local": "Comentario agregado (local)",
+      "add_failed": "No se pudo agregar comentario",
+      "new_comment_title": "Nuevo comentario",
+      "note": "Nota",
+      "attach_file_optional": "Adjuntar archivo (opcional)",
+      "remove_file": "Eliminar",
+      "add": "Agregar",
+      "you": "Tú"
+    },
+    "incident_details": "Detalles del incidente",
+    "action_taken": "Acciones tomadas",
+    "internal_notes": "Notas internas",
+    "files": "Archivos",
+    "guard_assigned": "Guardia asignado",
+    "ticket_summary": "Resumen del ticket",
+    "no_comments_yet": "No hay comentarios aún",
+    "guard": "Guardia",
+    "close": "Cerrar",
+    "add_comment_button": "Agregar comentario"
   },
   "auth": {
     "login_title": "Iniciar sesión | Cguard",
@@ -1752,7 +1903,9 @@
     "import": "Importar",
     "move": "Mover Categoría",
     "desactivate": "Desactivar",
-    "activate": "Activar"
+    "activate": "Activar",
+    "close": "Cerrar",
+    "confirm": "Confirmar"
   },
   "components": {
     "addRemove": {
@@ -2539,5 +2692,73 @@
       "saveDraft": "Guardar como borrador",
       "submit": "Enviar"
     }
+  },
+  "incidents": {
+    "actionsPlaceholder": "Acciones",
+    "searchPlaceholder": "Buscar incidentes...",
+    "filters": "Filtros",
+    "export": "Exportar",
+    "email": "Email",
+    "filtersPlaceholder": "Opciones de filtro no implementadas — UI de marcador de posición.",
+    "subject": "Asunto",
+    "description": "Descripción",
+    "apply": "Aplicar",
+    "newIncident": "Nuevo incidente",
+    "actionsLabel": "Acciones",
+    "actions": {
+      "view": "Ver",
+      "open": "Abrir",
+      "createDispatch": "Crear Incidente",
+      "delete": "Eliminar"
+    },
+    "moreActions": "Más acciones",
+    "loading": "Cargando...",
+    "status": {
+      "open": "Abierto",
+      "closed": "Cerrado"
+    },
+    "columns": {
+      "ticket": "Ticket",
+      "date": "Fecha",
+      "client": "Cliente",
+      "postSite": "Puesto",
+      "caller": "Informador",
+      "incidentType": "Tipo",
+      "status": "Estado"
+    },
+    "emptyTitle": "No se encontraron incidentes para este puesto.",
+    "emptyMessage": "Intenta ajustar los filtros o crear un nuevo incidente.",
+    "of": "de",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "createDispatch": "Crear Incidente",
+    "labels": {
+      "station": "Estación",
+      "subject": "Asunto",
+      "description": "Descripción"
+    },
+    "filterFields": {
+      "client": "Cliente",
+      "station": "Puesto de seguridad",
+      "status": "Estado",
+      "createdFrom": "Fecha de creación desde",
+      "createdTo": "Fecha de creación hasta",
+      "incidentFrom": "Fecha del incidente desde",
+      "incidentTo": "Fecha del incidente hasta",
+      "showArchived": "Mostrar archivados"
+    },
+    "selectClient": "Seleccionar cliente",
+    "allClients": "Todos los clientes",
+    "allStations": "Todas las estaciones",
+    "selectStatus": "Seleccionar estado",
+    "allStatuses": "Todos",
+    "applyFilters": "Aplicar filtros",
+    "clearFilters": "Limpiar filtros",
+    "selectStation": "Seleccionar estación",
+    "noStations": "Sin estaciones",
+    "cancel": "Cancelar",
+    "creating": "Creando...",
+    "create": "Crear",
+    "created": "Incidente creado"
   }
 }

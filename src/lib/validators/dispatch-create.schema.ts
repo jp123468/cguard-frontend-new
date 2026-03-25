@@ -2,8 +2,11 @@ import { z } from "zod";
 
 export const dispatchCreateSchema = z
   .object({
-    clientId: z.string().min(1, "Cliente requerido"),
-    siteId: z.string().min(1, "Sitio requerido"),
+    // clientId/siteId may be omitted when creating from a post-site context
+    clientId: z.string().optional(),
+    siteId: z.string().optional(),
+    // station is required for the post-site flow (we rely on station to locate the incident)
+    stationId: z.string().min(1, "Estación requerida"),
     guardId: z.string().optional(),
     priority: z.enum(["alta", "media", "baja"]),
     callerType: z.string().min(1, "Tipo de llamador requerido"),
@@ -20,13 +23,17 @@ export const dispatchCreateSchema = z
       .optional()
       .or(z.undefined()),
   })
+  // require date/time and basic presence of mandatory fields
   .refine(
-    (v) =>
-      Boolean(v.incidentDate) &&
-      Boolean(v.incidentTime) &&
-      Boolean(v.clientId) &&
-      Boolean(v.siteId),
-    { message: "Campos obligatorios incompletos", path: ["clientId"] }
+    (v) => Boolean(v.incidentDate) && Boolean(v.incidentTime),
+    { message: "Fecha y hora del incidente son requeridas", path: ["incidentDate"] }
+  )
+  .refine(
+    (v) => {
+      // Ensure we have enough location context: stationId must be provided
+      return Boolean(v.stationId && String(v.stationId).trim().length > 0);
+    },
+    { message: "Estación requerida", path: ["stationId"] }
   );
 
 export type DispatchCreateSchema = z.infer<typeof dispatchCreateSchema>;

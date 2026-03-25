@@ -29,7 +29,7 @@ const plans = [
 const modules = [
     { id: "visitors", name: "Gestión de Visitantes", description: "Gestiona los visitantes en tus sitios de puestos", price: 1, unit: "Month / User" },
     { id: "billing", name: "Facturador", description: "Crea fácilmente presupuestos y facturas para tus clientes usando el módulo de facturación", price: 1, unit: "Month / User" },
-    { id: "dispatcher", name: "Despachador", description: "Gestiona fácilmente las llamadas de despacho", price: 1, unit: "Month / User" },
+    { id: "dispatcher", name: "Despachador", description: "Gestiona fácilmente las llamadas de Incidente", price: 1, unit: "Month / User" },
     { id: "sms", name: "Motor de SMS", description: "Habilita notificaciones por SMS (1000 SMS / mes)", price: 10, unit: "Month" },
     { id: "scheduler", name: "Programador", description: "Gestiona fácilmente el horario de tus guardias, asistencia y solicitudes de tiempo libre", price: 2, unit: "Month / User" },
     { id: "payroll", name: "Nómina", description: "Gestiona fácilmente las nóminas de tus guardias", price: 1, unit: "Month / User" },
