@@ -58,6 +58,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
     const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
     const [tags, setTags] = useState<any[]>([]);
     const [tours, setTours] = useState<any[]>([]);
+    const [shifts, setShifts] = useState<any[]>([]);
     const [stations, setStations] = useState<any[]>([]);
     const [loadingStations, setLoadingStations] = useState(false);
     const [loadingTags, setLoadingTags] = useState(false);
@@ -65,7 +66,27 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
     const [loadingTours, setLoadingTours] = useState(false);
     const [showCreateTourModal, setShowCreateTourModal] = useState(false);
     const [tourForm, setTourForm] = useState<any>({ name: '', stationId: '' });
+    const [localGuards, setLocalGuards] = useState<any[]>([]);
+    const [loadingGuards, setLoadingGuards] = useState(false);
+    const [guardLoadError, setGuardLoadError] = useState<string | null>(null);
 
+    function getGuardNameFromShift(sh: any) {
+        if (!sh) return null;
+        const g = sh.guard || {};
+        const candidates: string[] = [];
+        // common variations
+        if (g.firstName || g.first_name) candidates.push(g.firstName || g.first_name);
+        if (g.lastName || g.last_name) candidates.push(g.lastName || g.last_name);
+        if (sh.firstName || sh.first_name) candidates.push(sh.firstName || sh.first_name);
+        if (sh.lastName || sh.last_name) candidates.push(sh.lastName || sh.last_name);
+        if (g.name || g.fullName || g.full_name) candidates.push(g.name || g.fullName || g.full_name);
+        if (sh.guardName || sh.guard_name) candidates.push(sh.guardName || sh.guard_name);
+        const joined = candidates.filter(Boolean).join(' ').trim();
+        if (joined) return joined;
+        if (g.username) return g.username;
+        if ((g as any).displayName) return (g as any).displayName;
+        return null;
+    }
     const stationsCoords = useMemo<{ lat: number; lng: number; name?: string }[]>(() => {
         return (stations || []).map((s: any) => {
             const lat = parseFloat(String(s.latitude || s.latitud || s.lat || (s.coords && s.coords.lat) || ''));
@@ -216,6 +237,8 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                 longitude: form.longitude || undefined,
                 showGeoFence: form.showGeoFence || false,
                 stationId: form.stationId || undefined,
+                // Optionally link the tag to a shift record
+                ...(form.shiftId ? { shiftId: form.shiftId } : {}),
             };
 
             const created = await ApiService.post(`/tenant/${tenantId}/site-tour/${tourId}/tag`, tagPayload);
@@ -253,6 +276,20 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         }
     }
 
+    async function loadShiftsForSite() {
+        const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+        const postSiteId = site?.id || '';
+        if (!tenantId || !postSiteId) return;
+        try {
+            const res: any = await ApiService.get(`/tenant/${tenantId}/shift?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`);
+            const rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
+            setShifts(rows || []);
+        } catch (e) {
+            console.error('Failed loading shifts for site', e);
+            setShifts([]);
+        }
+    }
+
     async function createTourAndTag() {
         const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
         const postSiteId = site?.id || null;
@@ -267,9 +304,37 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         try {
             const payload: any = { name: tourForm.name, postSiteId };
             if (tourForm.stationId) payload.stationId = tourForm.stationId;
+            // include assigned guard if selected
+            if (tourForm.securityGuardId) payload.securityGuardId = tourForm.securityGuardId;
             const tourResp: any = await ApiService.post(`/tenant/${tenantId}/site-tour`, payload);
             const tourId = tourResp && (tourResp.id || tourResp._id);
             if (!tourId) throw new Error('No se obtuvo id del recorrido');
+                // Persist assignment with richer data so QR/tag flows can read it later
+                async function createAssignment(tourId: string, guardId?: string | null, stationId?: string | null) {
+                    const tId = site?.tenantId || localStorage.getItem('tenantId') || '';
+                    if (!tId || !tourId || !guardId) return null;
+                    try {
+                        // No explicit start/end provided here; set status and importHash
+                        const body: any = {
+                            securityGuardId: guardId,
+                            stationId: stationId || null,
+                            postSiteId: postSiteId || null,
+                            startAt: null,
+                            endAt: null,
+                            status: 'assigned',
+                            importHash: `ui-${Date.now()}`,
+                        };
+                        const resp = await ApiService.post(`/tenant/${tId}/site-tour/${tourId}/assign`, body);
+                        return resp;
+                    } catch (e) {
+                        console.error('Failed creating assignment', e);
+                        return null;
+                    }
+                }
+
+                if (tourForm.securityGuardId) {
+                    try { await createAssignment(tourId, tourForm.securityGuardId, tourForm.stationId || null); } catch (e) { /* ignore */ }
+                }
 
             // Now create the tag attached to this tour using current form values
             const tagPayload: any = {
@@ -282,6 +347,8 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                 longitude: form.longitude || undefined,
                 showGeoFence: form.showGeoFence || false,
                 stationId: form.stationId || tourForm.stationId || undefined,
+                // Optionally link the tag to a shift record
+                ...(form.shiftId ? { shiftId: form.shiftId } : {}),
             };
 
             const created = await ApiService.post(`/tenant/${tenantId}/site-tour/${tourId}/tag`, tagPayload);
@@ -297,6 +364,105 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
             toast.error(msg);
         }
     }
+
+    // Load guards for the selected station (or fallback to post-site guards)
+    useEffect(() => {
+        if (!showCreateTourModal) return;
+        let mounted = true;
+        (async () => {
+            setLoadingGuards(true);
+            setGuardLoadError(null);
+            const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+            const postSiteId = site?.id || '';
+            const stationId = tourForm.stationId || '';
+            if (!tenantId || !postSiteId) {
+                setLocalGuards([]);
+                setLoadingGuards(false);
+                return;
+            }
+                try {
+                let data: any = null;
+                const ts = Date.now();
+                // try station guards with cache-buster + no-cache header
+                if (stationId) {
+                    try {
+                        data = await ApiService.get(`/tenant/${tenantId}/station/${encodeURIComponent(stationId)}/guards?_=${ts}`, { headers: { 'Cache-Control': 'no-cache' } } as any);
+                    } catch (e) {
+                        data = null;
+                    }
+                }
+                // fallback: query `station` for the postSite and extract embedded guards
+                if ((!data || (Array.isArray(data) && data.length === 0) || (data && data.rows && data.rows.length === 0)) && postSiteId) {
+                    try {
+                        const stationsRes: any = await ApiService.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(postSiteId)}&_=${ts}`, { headers: { 'Cache-Control': 'no-cache' } } as any);
+                        const stationsRows = Array.isArray(stationsRes) ? stationsRes : (stationsRes && (stationsRes.rows || stationsRes.data)) ? (stationsRes.rows || stationsRes.data) : [];
+                        let guardsList: any[] = [];
+                        if (stationId) {
+                            const st = (stationsRows || []).find((s: any) => String(s.id) === String(stationId) || String(s.stationId) === String(stationId));
+                            if (st) guardsList = st.assignedGuards || st.guards || st.securityGuards || [];
+                        } else {
+                            (stationsRows || []).forEach((s: any) => {
+                                const g = s.assignedGuards || s.guards || s.securityGuards;
+                                if (Array.isArray(g) && g.length) guardsList.push(...g);
+                            });
+                        }
+                        data = guardsList;
+                    } catch (e) {
+                        data = null;
+                    }
+                }
+                // fallback: tenant security-guard filtered by station
+                if ((!data || (Array.isArray(data) && data.length === 0) || (data && data.rows && data.rows.length === 0)) && stationId) {
+                    try {
+                        data = await ApiService.get(`/tenant/${tenantId}/security-guard?filter[station]=${encodeURIComponent(stationId)}&_=${ts}`, { headers: { 'Cache-Control': 'no-cache' } } as any);
+                    } catch (e) {
+                        data = null;
+                    }
+                }
+                // last fallback: security-guard by postSiteId
+                if ((!data || (Array.isArray(data) && data.length === 0) || (data && data.rows && data.rows.length === 0)) && postSiteId) {
+                    try {
+                        data = await ApiService.get(`/tenant/${tenantId}/security-guard?postSiteId=${encodeURIComponent(postSiteId)}&_=${ts}`, { headers: { 'Cache-Control': 'no-cache' } } as any);
+                    } catch (e) {
+                        data = null;
+                    }
+                }
+                // fallback: sometimes station endpoint returns the station list with assignedGuards embedded
+                if ((!data || (Array.isArray(data) && data.length === 0) || (data && data.rows && data.rows.length === 0)) && postSiteId) {
+                    try {
+                        const stationsResp: any = await ApiService.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(postSiteId)}&limit=999&_=${ts}`, { headers: { 'Cache-Control': 'no-cache' } } as any);
+                        const stationsRows = Array.isArray(stationsResp) ? stationsResp : (stationsResp && (stationsResp.rows || stationsResp.data)) ? (stationsResp.rows || stationsResp.data) : [];
+                        if (stationId) {
+                            const found = (stationsRows || []).find((s: any) => String(s.id) === String(stationId) || String(s.stationId) === String(stationId));
+                            if (found) {
+                                data = found.assignedGuards || found.guards || [];
+                            }
+                        }
+                        // if still no stationId match, try to collect assignedGuards across stations
+                        if ((!data || (Array.isArray(data) && data.length === 0)) && Array.isArray(stationsRows) && stationsRows.length) {
+                            const collected: any[] = [];
+                            stationsRows.forEach((s: any) => {
+                                const arr = s.assignedGuards || s.guards || [];
+                                if (Array.isArray(arr) && arr.length) collected.push(...arr);
+                            });
+                            if (collected.length) data = collected;
+                        }
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+                const list = Array.isArray(data) ? data : (data && (data.rows || data.data)) ? (data.rows || data.data) : [];
+                if (mounted) setLocalGuards(list || []);
+            } catch (err) {
+                console.error('Failed to load guards for station/postsite', err);
+                if (mounted) setLocalGuards([]);
+                if (mounted) setGuardLoadError('Error loading guards');
+            } finally {
+                if (mounted) setLoadingGuards(false);
+            }
+        })();
+        return () => { mounted = false; };
+    }, [tourForm.stationId, showCreateTourModal, site]);
 
     async function loadTagsForSite(filterTagType?: string) {
         const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
@@ -332,6 +498,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         if (showNewTag) {
             loadTagsForSite(activeTabKey);
             loadToursForSite();
+            loadShiftsForSite();
         }
     }, [showNewTag, activeTabKey]);
 
@@ -472,16 +639,31 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                             </thead>
                             <tbody>
                                 {tags && tags.length > 0 ? (
-                                    tags.map((tag) => (
-                                        <tr key={tag.id || (tag as any)._id || tag.tagIdentifier} className="border-t">
-                                            <td className="px-4 py-3"><input type="checkbox" /></td>
-                                            <td className="px-4 py-3">{tag.name}</td>
-                                            <td className="px-4 py-3 break-words">{tag.tagIdentifier || tag.id || (tag as any)._id}</td>
-                                            <td className="px-4 py-3 text-right">
-                                                <button onClick={() => openQrFor(tag.tagIdentifier || tag.id || (tag as any)._id)} className="px-3 py-1 bg-orange-600 text-white rounded">QR</button>
-                                            </td>
-                                        </tr>
-                                    ))
+                                    tags.map((tag) => {
+                                        // Resolve associated shift (if any) loaded into `shifts` state
+                                        const shiftId = tag.shiftId || tag.shift?.id || tag.siteTourShiftId || null;
+                                        const shift = shiftId ? (shifts || []).find((s: any) => String(s.id) === String(shiftId)) : null;
+                                        const guardName = shift ? getGuardNameFromShift(shift) : null;
+                                        const stationName = shift && (shift.station?.stationName || shift.station?.name) ? (shift.station.stationName || shift.station.name) : (shift && shift.stationName) ? shift.stationName : null;
+                                        const start = shift && shift.startTime ? new Date(shift.startTime).toLocaleString() : null;
+                                        const shiftLabel = shift ? `${guardName ?? 'Guard'}${stationName ? ' — ' + stationName : ''}${start ? ' (' + start + ')' : ''}` : null;
+
+                                        return (
+                                            <tr key={tag.id || (tag as any)._id || tag.tagIdentifier} className="border-t">
+                                                <td className="px-4 py-3"><input type="checkbox" /></td>
+                                                <td className="px-4 py-3">
+                                                    <div className="flex flex-col">
+                                                        <div className="font-medium">{tag.name}</div>
+                                                        {shiftLabel && <div className="text-xs text-gray-500">{shiftLabel}</div>}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 break-words">{tag.tagIdentifier || tag.id || (tag as any)._id}</td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <button onClick={() => openQrFor(tag.tagIdentifier || tag.id || (tag as any)._id)} className="px-3 py-1 bg-orange-600 text-white rounded">QR</button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 ) : (
                                     <tr>
                                         <td colSpan={4} className="px-4 py-12">
@@ -525,7 +707,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center">
                     <div className="absolute inset-0 bg-black/40" onClick={() => setShowNewTag(false)} />
 
-                    <aside className="relative w-full sm:ml-auto sm:max-w-md bg-white shadow-xl overflow-hidden rounded-t-lg sm:rounded-lg max-h-[90vh] flex flex-col">
+                    <aside className="relative w-full sm:ml-auto sm:max-w-sm bg-white shadow-xl overflow-hidden rounded-t-lg sm:rounded-lg max-h-[90vh] flex flex-col">
                         <div className="flex items-center justify-between p-4 border-b">
                             <h3 className="text-lg font-semibold">{t('siteTourTag.modal.title')}</h3>
                             <button onClick={() => setShowNewTag(false)} className="p-2 text-gray-500 hover:text-gray-700">
@@ -575,13 +757,23 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('siteTourTag.form.siteTour') || 'Recorrido'}</label>
                                 <div className="flex gap-2">
-                                    <select value={form.siteTourId || ''} onChange={(e) => update('siteTourId', e.target.value)} className="flex-1 px-3 py-2 border rounded-md">
-                                        <option value="">{loadingTours ? 'Cargando recorridos...' : (t('siteTourTag.form.selectTour') || 'Seleccione un recorrido')}</option>
-                                        {tours.map((tr: any) => (
-                                            <option key={tr.id || tr._id} value={tr.id || tr._id}>{tr.name || tr.title || `Recorrido ${tr.id || tr._id}`}</option>
-                                        ))}
-                                    </select>
-                                    <button onClick={() => { setShowCreateTourModal(true); setTourForm({ name: '', stationId: form.stationId || '' }); }} className="px-3 py-2 bg-violet-600 text-white rounded-md">{t('siteTourTag.form.createTourAndTag') || 'Crear recorrido y etiqueta'}</button>
+                                        <select value={form.siteTourId || ''} onChange={(e) => update('siteTourId', e.target.value)} className="flex-1 px-3 py-2 border rounded-md">
+                                            <option value="">{loadingTours ? 'Cargando recorridos...' : (t('siteTourTag.form.selectTour') || 'Seleccione un recorrido')}</option>
+                                            {tours.map((tr: any) => (
+                                                <option key={tr.id || tr._id} value={tr.id || tr._id}>{tr.name || tr.title || `Recorrido ${tr.id || tr._id}`}</option>
+                                            ))}
+                                        </select>
+                                        <select value={form.shiftId || ''} onChange={(e) => update('shiftId', e.target.value)} className="px-3 py-2 border rounded-md">
+                                            <option value="">{shifts && shifts.length ? 'Attach to shift (optional)' : 'No shifts'}</option>
+                                            {shifts.map((sh: any) => {
+                                                const guardName = getGuardNameFromShift(sh) || 'Guard';
+                                                const stationName = (sh.station && (sh.station.stationName || sh.station.name)) || sh.stationName || '';
+                                                const start = sh.startTime ? new Date(sh.startTime).toLocaleString() : '';
+                                                const label = `${guardName}${stationName ? ' - ' + stationName : ''}${start ? ' (' + start + ')' : ''}`;
+                                                return <option key={sh.id} value={sh.id}>{label}</option>;
+                                            })}
+                                        </select>
+                                        <button onClick={() => { setShowCreateTourModal(true); setTourForm({ name: '', stationId: form.stationId || '' }); }} className="px-3 py-2 bg-violet-600 text-white rounded-md">{t('siteTourTag.form.createTourAndTag') || 'Crear recorrido y etiqueta'}</button>
                                 </div>
                             </div>
 
@@ -726,7 +918,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                 <div className="fixed inset-0 z-60 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/40" onClick={() => setShowCreateTourModal(false)} />
 
-                    <div className="relative bg-white rounded-lg p-4 max-w-md w-full">
+                    <div className="relative bg-white rounded-lg p-4 max-w-sm w-full">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-semibold">{t('siteTour.form.createTitle') || 'Crear recorrido'}</h3>
                             <button onClick={() => setShowCreateTourModal(false)} className="p-2 text-gray-500 hover:text-gray-700">
@@ -745,6 +937,18 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                         <option key={s.id || s.stationId} value={s.id || s.stationId}>{s.stationName || s.name || s.station_name || s.id}</option>
                                     ))}
                                 </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-gray-700 mb-2">{t('siteTour.form.assignGuard') || 'Asignar Guardia'}</label>
+                                <select value={tourForm.securityGuardId || ''} onChange={(e) => setTourForm((s: any) => ({ ...s, securityGuardId: e.target.value }))} className="w-full px-3 py-2 border rounded-md text-sm">
+                                    <option value="">{loadingGuards ? 'Cargando guardias...' : (localGuards && localGuards.length ? (t('siteTour.form.selectGuard') || 'Seleccione guardia') : 'No guards found')}</option>
+                                    {localGuards.map((g: any) => {
+                                        const name = (g.guard && (g.guard.firstName || g.guard.lastName)) ? `${g.guard.firstName || ''} ${g.guard.lastName || ''}`.trim() : (g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.name || g.fullName || g.label) || '';
+                                        return <option key={g.id || g.guardId || g.securityGuardId} value={g.id || g.guardId || g.securityGuardId}>{name}</option>;
+                                    })}
+                                </select>
+                                {guardLoadError && <div className="text-xs text-red-600 mt-1">{guardLoadError}</div>}
                             </div>
                         </div>
 

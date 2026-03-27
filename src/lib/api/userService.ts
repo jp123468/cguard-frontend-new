@@ -90,9 +90,9 @@ export const userService = {
 
   async deleteUser(id: string): Promise<void> {
     const tenantId = getTenantId();
-    // try delete with JSON body first
+    // try delete with JSON body first — axios expects `data` for DELETE payload
     try {
-      await api.delete(`/tenant/${tenantId}/user`, { body: JSON.stringify({ ids: [id] }) } as any);
+      await api.delete(`/tenant/${tenantId}/user`, { data: { ids: [id] } } as any);
       return;
     } catch (e) {
       // fallbacks

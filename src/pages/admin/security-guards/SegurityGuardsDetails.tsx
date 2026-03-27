@@ -7,6 +7,7 @@ import GuardProfile from './components/GuardProfile/GuardProfilepage';
 import GuardAvailability from './components/GuardAvailability/GuardAvailabilitypage';
 import GuardIndicators from './components/GuardKPIs/GuardKPIspage';
 import securityGuardService from '@/lib/api/securityGuardService';
+import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next'
 
@@ -23,22 +24,95 @@ export default function GuardOverview() {
         if (!id) return;
         let mounted = true;
         setLoading(true);
-        securityGuardService
-            .get(id)
-            .then((data) => {
+
+        (async () => {
+            try {
+                const data = await securityGuardService.get(id);
                 if (!mounted) return;
                 const g = data.guard ?? data;
                 const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
                 setGuard({ ...g, fullName });
-            })
-            .catch((err) => {
-                console.error('Error cargando guardia:', err);
+            } catch (err) {
+                console.error('Error cargando guardia (security-guard):', err);
+                const status = (err as any) && ((err as any).status || (err as any).response?.status || (err as any).code);
+
+                const tenantId = localStorage.getItem('tenantId') || '';
+
+                // helper to try simple GETs and list queries
+                const tryGet = async (path: string) => {
+                    try {
+                        const resp = await ApiService.get(path, { toast: { silentError: true } } as any);
+                        const data = (resp && (resp.data || resp)) || resp;
+                        if (!data) return null;
+                        if (Array.isArray(data)) return data;
+                        if (data.rows && Array.isArray(data.rows) && data.rows.length) return data.rows;
+                        return data;
+                    } catch (e) {
+                        return null;
+                    }
+                };
+
+                if (status === 404) {
+                    try {
+                        const candidates = [
+                            `/tenant/${tenantId}/security-guard?filter[id]=${encodeURIComponent(id)}&limit=1`,
+                            `/tenant/${tenantId}/security-guard?filter[guardId]=${encodeURIComponent(id)}&limit=1`,
+                            `/tenant/${tenantId}/security-guard?filter[email]=${encodeURIComponent(id)}&limit=1`,
+                        ];
+
+                        for (const p of candidates) {
+                            const r = await tryGet(p);
+                            if (r) {
+                                const row = Array.isArray(r) ? r[0] : (r.rows ? r.rows[0] : r);
+                                if (row) {
+                                    const g = row.guard ?? row;
+                                    const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
+                                    if (mounted) setGuard({ ...g, fullName });
+                                    return;
+                                }
+                            }
+                        }
+
+                        const tryPaths = [
+                            `/tenant/${tenantId}/guard/${encodeURIComponent(id)}`,
+                            `/tenant/${tenantId}/user/${encodeURIComponent(id)}`,
+                        ];
+
+                        for (const p of tryPaths) {
+                            const r = await tryGet(p);
+                            if (r) {
+                                const g = (Array.isArray(r) ? r[0] : (r.guard ?? r)) || r;
+                                const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
+                                if (mounted) setGuard({ ...g, fullName });
+                                return;
+                            }
+                        }
+
+                        const broad = await tryGet(`/tenant/${tenantId}/security-guard?limit=999`);
+                        if (broad && Array.isArray(broad)) {
+                            const match = broad.find((item: any) => {
+                                const gid = item.guard?.id || item.id || item.guardId || item.userId || item.value;
+                                return String(gid) === String(id);
+                            });
+                            if (match) {
+                                const g = match.guard ?? match;
+                                const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
+                                if (mounted) setGuard({ ...g, fullName });
+                                return;
+                            }
+                        }
+                    } catch (fallbackErr) {
+                        console.error('Fallback fetch error:', fallbackErr);
+                    }
+                }
+
                 toast.error(t('guards.overview.loadError'));
-            })
-            .finally(() => {
+            } finally {
                 if (!mounted) return;
                 setLoading(false);
-            });
+            }
+        })();
+
         return () => { mounted = false; };
     }, [id]);
 

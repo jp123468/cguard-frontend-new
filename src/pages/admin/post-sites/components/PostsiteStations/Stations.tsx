@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { Plus, Trash, Eye, MoreVertical } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useTranslation } from 'react-i18next';
 
 export default function Stations({ site }: { site?: any }) {
@@ -16,6 +17,8 @@ export default function Stations({ site }: { site?: any }) {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pendingDeleteStation, setPendingDeleteStation] = useState<any | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [actionSelectValue, setActionSelectValue] = useState<string>('');
 
   const [stationShifts, setStationShifts] = useState<any[]>([]);
@@ -239,15 +242,35 @@ export default function Stations({ site }: { site?: any }) {
     if (!value) return '-';
     try {
       let dt: Date | null = null;
+      // ISO datetime
       if (value.includes('T')) dt = new Date(value);
       else {
-        const parts = value.split(':');
-        if (parts.length >= 2) {
-          const now = new Date();
-          now.setHours(parseInt(parts[0] || '0', 10));
-          now.setMinutes(parseInt(parts[1] || '0', 10));
-          now.setSeconds(0);
-          dt = now;
+        // Handle formats like "HH:MM" or "HH:MM a.m./p.m." or "HH:MM AM/PM"
+        const ampmMatch = value.match(/(\d{1,2}:\d{2})\s*([ap]\.m\.|am|pm|AM|PM)?/i);
+        if (ampmMatch) {
+          const timePart = ampmMatch[1];
+          const ampm = (ampmMatch[2] || '').toLowerCase();
+          const parts = timePart.split(':');
+          if (parts.length >= 2) {
+            let hh = parseInt(parts[0] || '0', 10);
+            const mm = parseInt(parts[1] || '0', 10);
+            if (ampm.includes('p') && hh < 12) hh += 12;
+            if (ampm.includes('a') && hh === 12) hh = 0;
+            const now = new Date();
+            now.setHours(hh);
+            now.setMinutes(mm);
+            now.setSeconds(0);
+            dt = now;
+          }
+        } else {
+          const parts = value.split(':');
+          if (parts.length >= 2) {
+            const now = new Date();
+            now.setHours(parseInt(parts[0] || '0', 10));
+            now.setMinutes(parseInt(parts[1] || '0', 10));
+            now.setSeconds(0);
+            dt = now;
+          }
         }
       }
       if (!dt || isNaN(dt.getTime())) return value;
@@ -255,6 +278,18 @@ export default function Stations({ site }: { site?: any }) {
     } catch (e) {
       return value;
     }
+  };
+
+  // Normaliza diferentes formas en que el backend puede devolver guardias asignados
+  const normalizeAssignedGuards = (detail: any) => {
+    if (!detail) return [];
+    if (Array.isArray(detail.assignedGuards)) return detail.assignedGuards;
+    if (detail.assignedGuards && Array.isArray(detail.assignedGuards.rows)) return detail.assignedGuards.rows;
+    if (Array.isArray(detail.guards)) return detail.guards;
+    if (detail.guards && Array.isArray(detail.guards.rows)) return detail.guards.rows;
+    // some endpoints return embedded objects under 'assigned' or similar
+    if (Array.isArray(detail.assigned)) return detail.assigned;
+    return [];
   };
 
   const createStation = async () => {
@@ -308,6 +343,33 @@ export default function Stations({ site }: { site?: any }) {
     }
   };
 
+  const handleDelete = (id: string) => {
+    console.debug('[Stations] handleDelete called', id);
+    setPendingDeleteStation(id);
+    // Open dialog on next tick to avoid event ordering issues (menu close etc.)
+    setTimeout(() => setOpenDeleteDialog(true), 0);
+  };
+
+  const confirmDeleteStation = async () => {
+    const id = pendingDeleteStation;
+    if (!id) {
+      setOpenDeleteDialog(false);
+      return;
+    }
+    try {
+      const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+      await ApiService.delete(`/tenant/${tenantId}/station/${id}`);
+      setStations(s => s.filter(x => x.id !== id));
+      toast.success(t('postSites.stations.removed', 'Station removed'));
+    } catch (err: any) {
+      console.error('Failed remove station', err);
+      toast.error(err?.message || t('postSites.stations.removeFailed', 'Failed to remove station'));
+    } finally {
+      setPendingDeleteStation(null);
+      setOpenDeleteDialog(false);
+    }
+  };
+
   const removeSelected = async () => {
     if (!selectedIds.length) return;
     try {
@@ -322,19 +384,118 @@ export default function Stations({ site }: { site?: any }) {
     }
   };
 
+  // normalized assigned guards for rendering
+  const [fetchedAssignedGuards, setFetchedAssignedGuards] = useState<any[]>([]);
+  const assignedGuardsFromDetail = normalizeAssignedGuards(selectedStationDetail);
+  const assignedGuardsArr = (assignedGuardsFromDetail && assignedGuardsFromDetail.length) ? assignedGuardsFromDetail : fetchedAssignedGuards;
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchAssigned = async () => {
+      if (!selectedStationDetail) return;
+      const existing = normalizeAssignedGuards(selectedStationDetail);
+      if (existing && existing.length) {
+        if (mounted) setFetchedAssignedGuards([]);
+        return;
+      }
+
+      try {
+        const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+        const postSiteId = site?.id || selectedStationDetail?.postSiteId || selectedStationDetail?.postSiteId || '';
+        let rows: any[] = [];
+
+        const stationId = selectedStationDetail?.id || selectedStationDetail?.stationId || selectedStationDetail?.station_id || '';
+
+        // Prefer endpoints that allow filtering by station id; include shift/guard-shift responses
+        const tryEndpoints = [
+          // shifts may include nested `guard` objects
+          `/tenant/${tenantId}/shift?filter[station]=${encodeURIComponent(stationId)}&limit=999`,
+          `/tenant/${tenantId}/guard-shift?filter[station]=${encodeURIComponent(stationId)}&limit=999`,
+          // specific: guards linked directly to a station
+          `/tenant/${tenantId}/security-guard?filter[station]=${encodeURIComponent(stationId)}&limit=999`,
+          `/tenant/${tenantId}/guard?filter[station]=${encodeURIComponent(stationId)}&limit=999`,
+          `/tenant/${tenantId}/user?filter[role]=guard&filter[station]=${encodeURIComponent(stationId)}&limit=999`,
+          // fallback: guards filtered by postSite
+          `/tenant/${tenantId}/security-guard?filter[postSiteId]=${encodeURIComponent(postSiteId)}&limit=999`,
+          `/tenant/${tenantId}/guard?filter[postSiteId]=${encodeURIComponent(postSiteId)}&limit=999`,
+          `/tenant/${tenantId}/user?filter[role]=guard&filter[postSiteId]=${encodeURIComponent(postSiteId)}&limit=999`,
+          // broad fallbacks
+          `/tenant/${tenantId}/security-guard?limit=999`,
+          `/tenant/${tenantId}/guard?limit=999`,
+          `/tenant/${tenantId}/user?filter[role]=guard&limit=999`,
+        ];
+
+        for (const ep of tryEndpoints) {
+          try {
+            const res = await ApiService.get(ep);
+            const rrows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
+            if (rrows && rrows.length) { rows = rrows; break; }
+          } catch (e) {
+            // try next
+          }
+        }
+
+        if (!rows || rows.length === 0) {
+          if (mounted) setFetchedAssignedGuards([]);
+          return;
+        }
+
+        const stationNamesToMatch = [
+          (selectedStationDetail?.name || selectedStationDetail?.stationName || selectedStationDetail?.station_name || '')
+        ].map(x => String(x || '').toLowerCase()).filter(Boolean);
+        const stationIdsToMatch = [selectedStationDetail?.id || selectedStationDetail?.stationId || selectedStationDetail?.station_id].filter(Boolean);
+
+        const filtered = rows.filter((r: any) => {
+          // station id may be a plain string or nested object
+          const rStationId = r.station || r.stationId || r.station_id || (r.station && r.station.id) || r.assignedStationId || r.postSiteId || r.postSite;
+          if (rStationId && stationIdsToMatch.includes(rStationId)) return true;
+
+          // station name may be nested
+          const rStationName = (r.stationName || (r.station && (r.station.stationName || r.station.name)) || r.assignedStation || r.postSiteName || r.siteName || '').toString().toLowerCase();
+          if (rStationName && stationNamesToMatch.includes(rStationName)) return true;
+
+          // some records embed postSite or station fields differently
+          if (r.postSite && (r.postSite === selectedStationDetail?.id || r.postSite === selectedStationDetail?.postSiteId)) return true;
+
+          return false;
+        });
+
+        const normalized = filtered.map((r: any) => {
+          // guard info may be nested under multiple keys (e.g., r.guard when fetching shifts)
+          const guardObj = r.guard || r.guardInfo || r.securityGuard || r.user || r.assignedGuard || r;
+          const id = guardObj?.id || guardObj?.guardId || guardObj?.value || r.guardId || r.id;
+          const fullName = guardObj?.fullName || (guardObj?.firstName || guardObj?.lastName ? `${guardObj?.firstName || ''} ${guardObj?.lastName || ''}`.trim() : guardObj?.name || guardObj?.label) || r.fullName || r.name || '';
+          const email = guardObj?.email || guardObj?.guardEmail || r.email || '';
+          // try to extract station/postSite related info from the raw record
+          const station = r.stationName || (r.station && (r.station.stationName || r.station.name)) || r.assignedStation || r.postSiteName || r.siteName || null;
+          const postSite = r.postSiteName || r.companyName || r.postSite || null;
+          return { id, fullName, email, station, postSite, raw: guardObj };
+        });
+
+        // dedupe by id
+        const byId: Record<string, any> = {};
+        for (const g of normalized) {
+          if (!g.id) continue;
+          if (!byId[g.id]) byId[g.id] = g;
+        }
+        const deduped = Object.values(byId);
+        if (mounted) setFetchedAssignedGuards(deduped);
+      } catch (err) {
+        if (mounted) setFetchedAssignedGuards([]);
+      }
+    };
+
+    fetchAssigned();
+    return () => { mounted = false; };
+  }, [selectedStationDetail, site]);
+
   // Assigned guards updates must be done via AssignGuards component/page.
 
   return (
     <div className="space-y-4 flex-1 min-h-0 flex flex-col">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">{t('postSites.stations.title', 'Stations')}</h3>
-      </div>
-
       <div className="bg-white border rounded-lg p-4 flex-1 flex flex-col">
         <div className="flex items-center justify-between mb-4 gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="text-sm text-gray-700 truncate">{selectedIds.length > 0 ? `${selectedIds.length} selected` : ''}</div>
-          </div>
+          
 
           <div className="flex-1 mx-2 flex items-center gap-3">
             <div className="flex-shrink-0">
@@ -416,7 +577,7 @@ export default function Stations({ site }: { site?: any }) {
                                     {openMenuId === id && (
                                       <div data-menu-id={id} className="absolute right-0 mt-2 w-44 bg-white border rounded-md shadow-lg py-1 z-50">
                                         <button onClick={(e) => { e.stopPropagation(); setSelectedStationId(id); setShowDetailModal(true); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"><Eye size={14} className="text-gray-600" />{t('postSites.stations.view', 'View details')}</button>
-                                        <button onClick={(e) => { e.stopPropagation(); removeStation(id); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"><Trash size={14} className="text-red-600" />{t('postSites.stations.remove', 'Remove')}</button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(id); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"><Trash size={14} className="text-red-600" />{t('postSites.stations.remove', 'Remove')}</button>
                                       </div>
                                     )}
                                   </div>
@@ -453,7 +614,7 @@ export default function Stations({ site }: { site?: any }) {
                               {openMenuId === id && (
                                 <div data-menu-id={id} className="absolute right-0 mt-2 w-44 bg-white border rounded-md shadow-lg py-1 z-50">
                                   <button onClick={(e) => { e.stopPropagation(); setSelectedStationId(id); setShowDetailModal(true); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"><Eye size={14} className="text-gray-600" />{t('postSites.stations.view', 'View details')}</button>
-                                  <button onClick={(e) => { e.stopPropagation(); removeStation(id); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"><Trash size={14} className="text-red-600" />{t('postSites.stations.remove', 'Remove')}</button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleDelete(id); setOpenMenuId(null); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"><Trash size={14} className="text-red-600" />{t('postSites.stations.remove', 'Remove')}</button>
                                 </div>
                               )}
                             </div>
@@ -553,23 +714,26 @@ export default function Stations({ site }: { site?: any }) {
                   <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-gray-700">
 
                     <div>
-                      <dt className="text-xs font-medium text-gray-600">{t('postSites.stations.schedule', 'Schedule')}</dt>
-                      <dd className="text-base text-gray-800 mt-1">{(formatScheduleFromTimes(selectedStationDetail.startingTimeInDay, selectedStationDetail.finishTimeInDay) || selectedStationDetail.stationSchedule || '-')}</dd>
+                        <dt className="text-xs font-medium text-gray-600">{t('postSites.stations.schedule', 'Schedule')}</dt>
+                        <dd className="text-base text-gray-800 mt-1">{(formatScheduleFromTimes(
+                          selectedStationDetail?.startingTimeInDay || selectedStationDetail?.startTime || selectedStationDetail?.start || selectedStationDetail?.starting_time,
+                          selectedStationDetail?.finishTimeInDay || selectedStationDetail?.finishTime || selectedStationDetail?.endTime || selectedStationDetail?.finish || selectedStationDetail?.end_time
+                        ) || selectedStationDetail.stationSchedule || '-')}</dd>
                     </div>
 
                     <div>
                       <dt className="text-xs font-medium text-gray-600">{t('postSites.stations.guardsCount', 'Guards')}</dt>
-                      <dd className="text-base text-gray-800 mt-1">{selectedStationDetail.numberOfGuardsInStation || (selectedStationDetail.assignedGuards ? selectedStationDetail.assignedGuards.length : '-')}</dd>
+                      <dd className="text-base text-gray-800 mt-1">{selectedStationDetail.numberOfGuardsInStation || (assignedGuardsArr && assignedGuardsArr.length ? assignedGuardsArr.length : '-')}</dd>
                     </div>
 
                     <div>
                       <dt className="text-xs font-medium text-gray-600">{t('postSites.stations.startTime', 'Start')}</dt>
-                      <dd className="text-base text-gray-800 mt-1">{formatTimeLocalized(selectedStationDetail.startingTimeInDay)}</dd>
+                      <dd className="text-base text-gray-800 mt-1">{formatTimeLocalized(selectedStationDetail?.startingTimeInDay || selectedStationDetail?.startTime || selectedStationDetail?.start || selectedStationDetail?.starting_time)}</dd>
                     </div>
 
                     <div>
                       <dt className="text-xs font-medium text-gray-600">{t('postSites.stations.endTime', 'End')}</dt>
-                      <dd className="text-base text-gray-800 mt-1">{formatTimeLocalized(selectedStationDetail.finishTimeInDay)}</dd>
+                      <dd className="text-base text-gray-800 mt-1">{formatTimeLocalized(selectedStationDetail?.finishTimeInDay || selectedStationDetail?.finishTime || selectedStationDetail?.endTime || selectedStationDetail?.finish || selectedStationDetail?.end_time)}</dd>
                     </div>
                   </div>
 
@@ -582,15 +746,100 @@ export default function Stations({ site }: { site?: any }) {
                     </div>
 
                     <div className="mt-2">
-                      {(selectedStationDetail.assignedGuards || []).length === 0 ? (
-                        <div className="text-gray-500">{t('postSites.stations.noAssignedGuards', 'No guards assigned')}</div>
-                      ) : (
-                        <ul className="list-disc pl-5 text-sm text-gray-700">
-                          {(selectedStationDetail.assignedGuards || []).map((g: any) => (
-                            <li key={g.id || g.value || JSON.stringify(g)}>{g.fullName || g.label || g.name || g.email || (g.id || g)}</li>
-                          ))}
-                        </ul>
-                      )}
+                      {(!assignedGuardsArr || assignedGuardsArr.length === 0) ? (
+                          <div className="text-gray-500">{t('postSites.stations.noAssignedGuards', 'No guards assigned')}</div>
+                        ) : (
+                          <ul className="list-disc pl-5 text-sm text-gray-700">
+                            {assignedGuardsArr.map((g: any) => (
+                              <li key={g.id || g.value || JSON.stringify(g)} className="mb-1">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    {g.id ? (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowDetailModal(false);
+                                      const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+                                      // Open a blank tab immediately to avoid popup blockers,
+                                      // then resolve the correct security-guard resource and navigate it.
+                                      const popup = window.open('', '_blank');
+                                      (async () => {
+                                        try {
+                                          // Try several queries and attempt to find the best matching security-guard record
+                                          const tryPaths = [
+                                            `/tenant/${tenantId}/security-guard?filter[guardId]=${encodeURIComponent(g.id)}&limit=50`,
+                                            `/tenant/${tenantId}/security-guard?filter[id]=${encodeURIComponent(g.id)}&limit=50`,
+                                            `/tenant/${tenantId}/security-guard?filter[email]=${encodeURIComponent(g.email || '')}&limit=50`,
+                                          ];
+
+                                          let candidate: any = null;
+
+                                          const normalizeRows = (resp: any) => Array.isArray(resp) ? resp : (resp && resp.rows) ? resp.rows : [];
+
+                                          for (const p of tryPaths) {
+                                            try {
+                                              const resp = await ApiService.get(p, { toast: { silentError: true } } as any);
+                                              const rows = normalizeRows(resp);
+                                              if (!rows || !rows.length) continue;
+                                              // Find row where nested guard id matches the clicked guard id
+                                              const match = rows.find((row: any) => {
+                                                const nestedGuardId = row.guard?.id || row.guardId || row.guard?.guardId || row.id || row.guardId;
+                                                if (nestedGuardId && String(nestedGuardId) === String(g.id)) return true;
+                                                // also match if row.id === g.id
+                                                if (row.id && String(row.id) === String(g.id)) return true;
+                                                // try matching by email or phone
+                                                if (g.email && ((row.email && String(row.email) === String(g.email)) || (row.guard && row.guard.email && String(row.guard.email) === String(g.email)))) return true;
+                                                if (g.phoneNumber && ((row.phoneNumber && String(row.phoneNumber) === String(g.phoneNumber)) || (row.guard && row.guard.phoneNumber && String(row.guard.phoneNumber) === String(g.phoneNumber)))) return true;
+                                                return false;
+                                              });
+                                              if (match) { candidate = match; break; }
+                                              // if no nested match, but only one row returned, prefer it
+                                              if (rows.length === 1) { candidate = rows[0]; break; }
+                                            } catch (e) {
+                                              // continue
+                                            }
+                                          }
+
+                                          // If still not found, do a broader fetch and try to match nested guard.id
+                                          if (!candidate) {
+                                            try {
+                                              const respAll = await ApiService.get(`/tenant/${tenantId}/security-guard?limit=999`, { toast: { silentError: true } } as any);
+                                              const allRows = normalizeRows(respAll);
+                                              const match = allRows.find((row: any) => {
+                                                const nested = row.guard || {};
+                                                const gidCandidates = [nested.id, nested.guardId, row.guardId, row.id];
+                                                return gidCandidates.some((x: any) => x && String(x) === String(g.id));
+                                              });
+                                              if (match) candidate = match;
+                                            } catch (e) {
+                                              // ignore
+                                            }
+                                          }
+
+                                          const finalId = candidate ? (candidate.id || candidate.guard?.id || candidate.guardId || g.id) : g.id;
+                                          const finalUrl = `${window.location.origin}/guards/${finalId}/overview`;
+                                          if (popup) popup.location.href = finalUrl;
+                                          return;
+                                        } catch (e) {
+                                          const fallbackUrl = `${window.location.origin}/guards/${g.id}/overview`;
+                                          if (popup) popup.location.href = fallbackUrl;
+                                        }
+                                      })();
+                                    }}
+                                    className="text-sm text-gray-800 hover:text-orange-600 underline"
+                                  >
+                                    {g.fullName || g.label || g.name || g.email || g.id}
+                                    </button>
+                                  ) : (
+                                    <span className="text-sm text-gray-800">{g.fullName || g.label || g.name || g.email || g.id}</span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-gray-500 ml-3">{g.station ? g.station : (g.postSite ? g.postSite : '')}</div>
+                              </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -644,6 +893,20 @@ export default function Stations({ site }: { site?: any }) {
           </div>
         </div>
       )}
+      <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('clients.stations.confirmRemovalTitle','Confirm removal')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('clients.stations.confirmRemovalDesc','Are you sure you want to remove this station? This action cannot be undone.')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setPendingDeleteStation(null); setOpenDeleteDialog(false); }}>{t('actions.cancel','Cancel')}</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-500 text-white" onClick={confirmDeleteStation}>{t('postSites.stations.remove','Remove')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

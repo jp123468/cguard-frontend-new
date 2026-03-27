@@ -63,12 +63,10 @@ export default function CompanyPoliciesTable() {
   };
 
   const handleCreate = (data: PolicyForm) => {
-    console.log("GUARDAR", data);
     setOpenNew(false);
   };
 
   const handleDraft = (data: PolicyForm) => {
-    console.log("BORRADOR", data);
     setOpenNew(false);
   };
 

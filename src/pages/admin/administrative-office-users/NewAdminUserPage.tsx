@@ -127,20 +127,24 @@ export default function NewAdminUserPage() {
   const { t } = useTranslation();
   const form = useForm<NewAdminUserValues>({
     resolver: zodResolver(newAdminUserSchema),
-    defaultValues: {
+    // cast defaultValues as any so we can add extra fields (stationIds) without changing the shared type
+    defaultValues: ({
       name: "",
       email: "",
-      accessLevel: undefined as unknown as NewAdminUserValues["accessLevel"],
+      accessLevel: "",
       clientIds: [],
       postSiteIds: [],
-    },
+      stationIds: [],
+    }),
     mode: "onTouched",
   });
 
   const { handleSubmit, control, formState, setValue, setError } = form;
   const [clientOptions, setClientOptions] = useState<Array<{ id: string; name: string }>>(CLIENT_OPTIONS_PLACEHOLDER);
   const [siteOptions, setSiteOptions] = useState<Array<{ id: string; name: string; clientIds?: string[] }>>([]);
+  const [stationOptions, setStationOptions] = useState<Array<{ id: string; name: string; postSiteId?: string }>>([]);
   const [roleOptions, setRoleOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [aclAllowedStationIds, setAclAllowedStationIds] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [aclAllowedClientIds, setAclAllowedClientIds] = useState<string[] | null>(null);
@@ -152,6 +156,7 @@ export default function NewAdminUserPage() {
   // watch selected clients to load sites
   const watchedClientIds = useWatch({ control: form.control, name: 'clientIds' }) as string[] | undefined;
   const watchedPostSiteIds = useWatch({ control: form.control, name: 'postSiteIds' }) as string[] | undefined;
+  const watchedStationIds = useWatch({ control: form.control, name: 'stationIds' }) as string[] | undefined;
 
   useEffect(() => {
     // load clients and sites via the tenant endpoints requested
@@ -177,6 +182,19 @@ export default function NewAdminUserPage() {
         const sitesRows = Array.isArray(sitesResp) ? sitesResp : (sitesResp && sitesResp.rows) ? sitesResp.rows : [];
         const mappedSites = (sitesRows || []).map((s: any) => ({ id: s.id ?? s._id ?? String(s.id), name: s.companyName ?? s.name ?? s.label ?? '', clientIds: s.clientIds || (s.clientAccountId ? [s.clientAccountId] : []) }));
         setSiteOptions(mappedSites);
+
+        // preload stations for these sites (optional): attempt to fetch stations endpoint and map them
+        try {
+          const tenantId = localStorage.getItem("tenantId") || "";
+          if (tenantId) {
+            const stationsResp: any = await ApiService.get(`/tenant/${tenantId}/station`);
+            const stationsRows = Array.isArray(stationsResp) ? stationsResp : (stationsResp && stationsResp.rows) ? stationsResp.rows : [];
+            const mappedStations = (stationsRows || []).map((st: any) => ({ id: st.id ?? st._id ?? String(st.id), name: st.name ?? st.label ?? st.label ?? st.stationName ?? '', postSiteId: st.postSiteId ?? st.businessInfoId ?? st.businessInfo ?? null }));
+            setStationOptions(mappedStations);
+          }
+        } catch (e) {
+          // ignore station pre-load errors
+        }
 
         // load roles for access level select
         const res = await ApiService.get(`/tenant/${tenantId}/role`);
@@ -270,6 +288,43 @@ export default function NewAdminUserPage() {
     return () => { mounted = false; };
   }, [watchedClientIds]);
 
+  // Load stations when selected postSiteIds change (filter stations by postSiteId)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const tenantId = localStorage.getItem("tenantId") || "";
+        if (!tenantId) return;
+
+        // try server-side filtered call first
+        let rows: any[] = [];
+        try {
+          if (watchedPostSiteIds && watchedPostSiteIds.length === 1) {
+            const resp = await ApiService.get(`/tenant/${tenantId}/station`, { postSiteId: watchedPostSiteIds[0] } as any);
+            rows = Array.isArray(resp) ? resp : (resp && resp.rows) ? resp.rows : [];
+          } else {
+            const resp = await ApiService.get(`/tenant/${tenantId}/station`);
+            rows = Array.isArray(resp) ? resp : (resp && resp.rows) ? resp.rows : [];
+          }
+        } catch (e) {
+          // fallback: empty
+          rows = [];
+        }
+
+        if (!mounted) return;
+
+        // Map and filter by selected postSiteIds if provided
+        const mapped = (rows || []).map((st: any) => ({ id: st.id ?? st._id ?? String(st.id), name: st.name ?? st.label ?? st.stationName ?? '', postSiteId: st.postSiteId ?? st.businessInfoId ?? st.businessInfo ?? null }));
+        const filtered = (watchedPostSiteIds && watchedPostSiteIds.length > 0) ? mapped.filter((m: any) => watchedPostSiteIds.includes(String(m.postSiteId))) : mapped;
+        setStationOptions(filtered);
+      } catch (e) {
+        console.error('Error cargando estaciones', e);
+        setStationOptions([]);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [watchedPostSiteIds]);
+
   // ACL: Filter available options for non-admins
   useEffect(() => {
     (async () => {
@@ -311,21 +366,27 @@ export default function NewAdminUserPage() {
         if (isAdmin) {
           setAclAllowedClientIds(null);
           setAclAllowedPostSiteIds(null);
+          setAclAllowedStationIds(null);
           return;
         }
 
         // if not admin, restrict to assigned arrays
         const assignedClients = tenantUser?.assignedClients || tenantUser?.clientIds || [];
         const assignedSites = tenantUser?.assignedPostSites || tenantUser?.postSiteIds || [];
+        const assignedStations = tenantUser?.assignedStations || tenantUser?.stationIds || [];
         setAclAllowedClientIds(Array.isArray(assignedClients) ? assignedClients : []);
         setAclAllowedPostSiteIds(Array.isArray(assignedSites) ? assignedSites : []);
+        setAclAllowedStationIds(Array.isArray(assignedStations) ? assignedStations : []);
 
-        // filter clientOptions and siteOptions accordingly
+        // filter clientOptions, siteOptions and stationOptions accordingly
         if (assignedClients && Array.isArray(assignedClients) && assignedClients.length > 0) {
           setClientOptions((prev) => prev.filter((c) => assignedClients.includes(c.id)));
         }
         if (assignedSites && Array.isArray(assignedSites) && assignedSites.length > 0) {
           setSiteOptions((prev) => prev.filter((s) => assignedSites.includes(s.id)));
+        }
+        if (assignedStations && Array.isArray(assignedStations) && assignedStations.length > 0) {
+          setStationOptions((prev) => prev.filter((s) => assignedStations.includes(s.id)));
         }
 
       } catch (e) {
@@ -347,12 +408,14 @@ export default function NewAdminUserPage() {
         const tenantObj = resp?.tenants ? resp.tenants.find((t: any) => (t.tenant?.id ?? t.tenantId ?? t.tenant) === tenantId) : null;
         const assignedClients = tenantObj?.assignedClients || resp?.assignedClients || tenantObj?.clientIds || resp?.clientIds || [];
         const assignedSites = tenantObj?.assignedPostSites || resp?.assignedPostSites || tenantObj?.postSiteIds || resp?.postSiteIds || [];
+        const assignedStations = tenantObj?.assignedStations || resp?.assignedStations || tenantObj?.stationIds || resp?.stationIds || [];
 
         if (resp?.name) setValue('name', resp.name);
         if (resp?.email) setValue('email', resp.email);
         if (resp?.role) setValue('accessLevel', resp.role);
         if (Array.isArray(assignedClients)) setValue('clientIds', assignedClients);
         if (Array.isArray(assignedSites)) setValue('postSiteIds', assignedSites);
+        if (Array.isArray(assignedStations)) setValue('stationIds', assignedStations);
       } catch (e) {
         console.error('Error cargando usuario para edición', e);
       } finally {
@@ -379,7 +442,12 @@ export default function NewAdminUserPage() {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       const invalidClient = (values.clientIds || []).find((id) => !uuidRegex.test(id));
       const invalidSite = (values.postSiteIds || []).find((id) => !uuidRegex.test(id));
+      const invalidStation = (values.stationIds || []).find((id: string) => !uuidRegex.test(id));
       if (invalidClient || invalidSite) {
+        toast.error(t('adminOfficeUsers.newUser.errors.invalidIds', { defaultValue: 'IDs inválidos detectados en asignaciones' }));
+        return;
+      }
+      if (invalidStation) {
         toast.error(t('adminOfficeUsers.newUser.errors.invalidIds', { defaultValue: 'IDs inválidos detectados en asignaciones' }));
         return;
       }
@@ -391,12 +459,11 @@ export default function NewAdminUserPage() {
         role: values.accessLevel,
         clientIds: values.clientIds,
         postSiteIds: values.postSiteIds || [],
+        stationIds: values.stationIds || [],
         invited: invitedPending,
         pending: invitedPending,
       } as any;
 
-      console.log("[NewAdminUserPage] tenantId ->", tenantId);
-      console.log("[NewAdminUserPage] creating user payload ->", payload);
 
       let resp: any;
       if (editUserId) {
@@ -405,7 +472,6 @@ export default function NewAdminUserPage() {
         resp = await userService.createUser(payload);
       }
 
-      console.log("[NewAdminUserPage] response ->", resp);
       toast.success(editUserId ? t('adminOfficeUsers.newUser.toasts.updated', { defaultValue: 'Usuario actualizado correctamente' }) : t('adminOfficeUsers.newUser.toasts.created', { defaultValue: 'Usuario creado correctamente' }));
       navigate("/back-office");
     } catch (err) {
@@ -613,6 +679,27 @@ export default function NewAdminUserPage() {
                         onChange={(ids: string[]) => field.onChange(ids)}
                         options={siteOptions}
                         placeholder={t('adminOfficeUsers.newUser.form.assignSitesPlaceholder', { defaultValue: 'Asignar Sitios de Publicación' })}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            {/* Stations (estaciones) - linked to selected postSite(s) */}
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              <FormField
+                control={control}
+                name="stationIds"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>{t('adminOfficeUsers.newUser.form.assignStationsLabel', { defaultValue: 'Asignar Estaciones' })}</FormLabel>
+                    <FormControl>
+                      <ClientMultiSelect
+                        value={(field.value as string[]) || []}
+                        onChange={(ids: string[]) => field.onChange(ids)}
+                        options={stationOptions}
+                        placeholder={t('adminOfficeUsers.newUser.form.assignStationsPlaceholder', { defaultValue: 'Asignar Estaciones' })}
                       />
                     </FormControl>
                     <FormMessage />

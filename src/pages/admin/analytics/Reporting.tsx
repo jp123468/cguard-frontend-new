@@ -131,7 +131,6 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
     if (onExportPdf) {
       onExportPdf();
     } else {
-      console.log("Exportar como PDF");
     }
   };
 

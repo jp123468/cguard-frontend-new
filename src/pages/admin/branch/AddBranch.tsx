@@ -85,7 +85,6 @@ export default function AddBranch() {
     };
 
     const handleSubmit = () => {
-        console.log("Form submitted:", formData);
         // TODO: Submit to backend
         navigate("/branch");
     };

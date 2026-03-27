@@ -205,6 +205,9 @@ export default function AssignGuards({ site }: { site?: any }) {
             }
             setAssignedGuards((prev) => prev.filter((x) => x.id !== g.id));
             toast.success(t('clients.assignGuards.assignmentRemoved', 'Assignment removed'));
+            try {
+                window.dispatchEvent(new CustomEvent('assignments:changed', { detail: { action: 'delete', id: g.id } }));
+            } catch (e) {}
         } catch (err: any) {
             console.error('Failed to remove assignment', err);
             const msg = err?.response?.data?.message ?? err?.message ?? t('clients.assignGuards.removeFailed', 'Failed to remove assignment');
@@ -254,8 +257,10 @@ export default function AssignGuards({ site }: { site?: any }) {
             });
             await Promise.all(promises);
             setAssignedGuards(prev => prev.filter(a => !selectedGuards.includes(a.id)));
+            const deletedIds = selectedGuards.slice();
             setSelectedGuards([]);
             toast.success(t('clients.assignGuards.bulkDeleteSuccess', 'Selected assignments removed'));
+            try { window.dispatchEvent(new CustomEvent('assignments:changed', { detail: { action: 'bulk-delete', ids: deletedIds } })); } catch (e) {}
         } catch (err: any) {
             console.error('Failed to bulk delete assignments', err);
             const msg = err?.response?.data?.message ?? err?.message ?? t('clients.assignGuards.removeFailed', 'Failed to remove assignment');
@@ -461,45 +466,135 @@ export default function AssignGuards({ site }: { site?: any }) {
 
     React.useEffect(() => {
         let mounted = true;
-        const timer = setTimeout(async () => {
+        // If a station is selected, use the station-scoped guards endpoint first
+        // and fall back to shifts and tenant-level guards only if needed.
+        (async () => {
             try {
                 const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
-                const q = guardQuery || '';
-                const data = await ApiService.get(`/tenant/${tenantId}/security-guard/autocomplete?limit=50&query=${encodeURIComponent(q)}`);
-                const items = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
-                const normalized = items.map((r: any) => {
-                    const guardObj = r.guard ?? r;
-                    // Prefer the underlying user id when available (r.guardId),
-                    // else use any user id present on the returned object (guardObj.id),
-                    // else fall back to the securityGuard record id (r.id).
-                    const id = r.guardId ?? guardObj.id ?? r.id ?? '';
-                    const name = (guardObj.firstName || guardObj.lastName)
-                        ? `${guardObj.firstName || ''} ${guardObj.lastName || ''}`.trim()
-                        : (r.fullName || r.name || r.label || '');
-                    return { id, name };
-                }).filter((g: any) => g.id);
+                const postSiteId = site?.id || '';
 
-                // Deduplicate by id (backend may return duplicate entries coming
-                // from security_guard rows and tenant_user rows for same user)
-                const deduped = Object.values(
-                    normalized.reduce((acc: Record<string, any>, g: any) => {
-                        if (!acc[g.id]) acc[g.id] = g;
-                        return acc;
-                    }, {}),
-                ) as { id: string; name: string }[];
+                if (!selectedStation) {
+                    // No station selected: keep original autocomplete behavior
+                    const timer = setTimeout(async () => {
+                        try {
+                            const q = guardQuery || '';
+                            const data = await ApiService.get(`/tenant/${tenantId}/security-guard/autocomplete?limit=50&query=${encodeURIComponent(q)}`);
+                            const items = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
+                            const normalized = items.map((r: any) => {
+                                const guardObj = r.guard ?? r;
+                                const id = r.guardId ?? guardObj.id ?? r.id ?? '';
+                                const name = (guardObj.firstName || guardObj.lastName)
+                                    ? `${guardObj.firstName || ''} ${guardObj.lastName || ''}`.trim()
+                                    : (r.fullName || r.name || r.label || '');
+                                return { id, name };
+                            }).filter((g: any) => g.id);
 
-                if (mounted) setGuardOptions(deduped);
+                            const deduped = Object.values(
+                                normalized.reduce((acc: Record<string, any>, g: any) => {
+                                    if (!acc[g.id]) acc[g.id] = g;
+                                    return acc;
+                                }, {}),
+                            ) as { id: string; name: string }[];
+
+                            if (mounted) setGuardOptions(deduped);
+                        } catch (err) {
+                            console.error('Failed to load guards', err);
+                        }
+                    }, 250);
+
+                    return () => { mounted = false; clearTimeout(timer); };
+                }
+
+                // Station selected: try station-assigned guards endpoint first
+                try {
+                    const stationResp = await ApiService.get(`/tenant/${tenantId}/stations/${selectedStation}/guards`, { toast: { silentError: true } } as any);
+                    let items = Array.isArray(stationResp) ? stationResp : (stationResp && stationResp.rows) ? stationResp.rows : (stationResp && stationResp.data) ? stationResp.data : [];
+                    items = items || [];
+                    const normalized = items.map((r: any) => {
+                        const guardObj = r.guard ?? r;
+                        const id = r.guardId ?? guardObj.id ?? r.id ?? '';
+                        const name = r.fullName || r.name || (guardObj.firstName || guardObj.lastName) ? `${guardObj.firstName || ''} ${guardObj.lastName || ''}`.trim() : (r.label || '');
+                        return { id, name };
+                    }).filter((g: any) => g.id);
+
+                    const deduped = Object.values(
+                        normalized.reduce((acc: Record<string, any>, g: any) => {
+                            if (!acc[g.id]) acc[g.id] = g;
+                            return acc;
+                        }, {}),
+                    ) as { id: string; name: string }[];
+
+                    if (deduped.length > 0) {
+                        if (mounted) setGuardOptions(deduped);
+                        return;
+                    }
+                } catch (e) {
+                    // ignore and fallback
+                }
+
+                // Fallback #1: extract guards from shifts for this station
+                try {
+                    const shiftsResp = await ApiService.get(`/tenant/${tenantId}/shift?postSiteId=${encodeURIComponent(postSiteId)}&stationId=${encodeURIComponent(selectedStation)}&limit=999`, { toast: { silentError: true } } as any);
+                    let rows = Array.isArray(shiftsResp) ? shiftsResp : (shiftsResp && shiftsResp.rows) ? shiftsResp.rows : (shiftsResp && shiftsResp.data) ? shiftsResp.data : [];
+                    rows = rows || [];
+                    const extracted = rows.flatMap((sh: any) => {
+                        const g = sh.guard ?? sh.securityGuard ?? sh.security_guard ?? (sh.guard && (sh.guard.guard || sh.guard));
+                        const id = g?.id || g?.guardId || sh.guardId || sh.security_guard_id || null;
+                        const name = g?.fullName || (g && (g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g?.name || sh.guardName || sh.guard_name || null));
+                        if (id) return [{ id, name }];
+                        return [];
+                    });
+
+                    const dedupedShifts = Object.values(
+                        (extracted || []).reduce((acc: Record<string, any>, g: any) => {
+                            if (!acc[g.id]) acc[g.id] = g;
+                            return acc;
+                        }, {}),
+                    ) as { id: string; name: string }[];
+
+                    if (dedupedShifts.length > 0) {
+                        if (mounted) setGuardOptions(dedupedShifts);
+                        return;
+                    }
+                } catch (e) {
+                    // ignore
+                }
+
+                // Fallback #2: tenant-level guards filtered by station
+                try {
+                    const tenantGuards = await ApiService.get(`/tenant/${tenantId}/security-guard?filter[station]=${encodeURIComponent(selectedStation)}&limit=999`, { toast: { silentError: true } } as any);
+                    let items = Array.isArray(tenantGuards) ? tenantGuards : (tenantGuards && tenantGuards.rows) ? tenantGuards.rows : (tenantGuards && tenantGuards.data) ? tenantGuards.data : [];
+                    items = items || [];
+                    const normalized = items.map((r: any) => {
+                        const guardObj = r.guard ?? r;
+                        const id = r.guardId ?? guardObj.id ?? r.id ?? '';
+                        const name = r.fullName || r.name || (guardObj.firstName || guardObj.lastName) ? `${guardObj.firstName || ''} ${guardObj.lastName || ''}`.trim() : (r.label || '');
+                        return { id, name };
+                    }).filter((g: any) => g.id);
+
+                    const deduped = Object.values(
+                        normalized.reduce((acc: Record<string, any>, g: any) => {
+                            if (!acc[g.id]) acc[g.id] = g;
+                            return acc;
+                        }, {}),
+                    ) as { id: string; name: string }[];
+
+                    if (mounted) setGuardOptions(deduped);
+                } catch (e) {
+                    // ignore
+                }
             } catch (err) {
                 console.error('Failed to load guards', err);
             }
-        }, 250);
-
-        return () => { mounted = false; clearTimeout(timer); };
-    }, [guardQuery, site]);
+        })();
+        return () => { mounted = false; };
+    }, [guardQuery, site, selectedStation]);
     
     const [shiftStart, setShiftStart] = useState('');
     const [shiftEnd, setShiftEnd] = useState('');
     const [shiftSchedule, setShiftSchedule] = useState('Diurno');
+    const [shiftStartError, setShiftStartError] = useState<string | null>(null);
+    const [shiftEndError, setShiftEndError] = useState<string | null>(null);
 
     // Convert ISO or other date strings to `datetime-local` input value (YYYY-MM-DDTHH:MM)
     const toDatetimeLocal = (val: any) => {
@@ -509,6 +604,8 @@ export default function AssignGuards({ site }: { site?: any }) {
         const pad = (n: number) => String(n).padStart(2, '0');
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     };
+
+    const isFormValid = Boolean(selectedGuard && selectedStation && shiftStart && shiftEnd);
 
     return (
         <div className="space-y-4">
@@ -554,7 +651,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                 <th className="px-6 py-4 text-left text-base">{t('clients.assignGuards.table.name', 'Name')}</th>
                                 <th className="px-6 py-4 text-left text-base">{t('clients.assignGuards.table.mobile', 'Mobile Number')}</th>
                                 <th className="px-6 py-4 text-left text-base">{t('clients.assignGuards.table.email', 'Email')}</th>
-                                <th className="px-6 py-4 text-left text-base">{t('clients.assignGuards.table.station', 'Puesto')}</th>
+                                <th className="px-6 py-4 text-left text-base">{t('clients.assignGuards.table.station', 'Estación')}</th>
                                 <th className="px-6 py-4 text-right text-base">{t('clients.assignGuards.table.actions', 'Actions')}</th>
                             </tr>
                         </thead>
@@ -761,36 +858,43 @@ export default function AssignGuards({ site }: { site?: any }) {
                                     <div className="relative">
                                         <input
                                             value={guardQuery || (selectedGuard ? guardOptions.find(g => g.id === selectedGuard)?.name ?? '' : '')}
-                                            onChange={e => { setGuardQuery(e.target.value); setShowGuardsDropdown(true); setSelectedGuard(null); }}
-                                            onFocus={() => setShowGuardsDropdown(true)}
-                                            placeholder={t('clients.assignGuards.searchPlaceholder', 'Search guards')}
+                                            onChange={e => { setGuardQuery(e.target.value); if (selectedStation) setShowGuardsDropdown(true); setSelectedGuard(null); }}
+                                            onFocus={() => { if (selectedStation) setShowGuardsDropdown(true); }}
+                                            placeholder={selectedStation ? t('clients.assignGuards.searchPlaceholder', 'Search guards') : t('siteTour.form.selectStationFirst', 'Select a station first')}
                                             className="w-full border rounded-lg h-12 px-3"
+                                            disabled={!selectedStation}
                                         />
 
                                         {showGuardsDropdown && (
                                             <ul className="absolute z-40 w-full bg-white border rounded-md mt-1 max-h-48 overflow-auto">
-                                                {guardOptions.filter(g => g.name.toLowerCase().includes((guardQuery || '').toLowerCase())).map(g => (
-                                                    <li key={g.id} onMouseDown={(e) => { e.preventDefault(); setSelectedGuard(g.id); setGuardQuery(''); setShowGuardsDropdown(false); }} className="px-3 py-2 hover:bg-gray-50 cursor-pointer">{g.name}</li>
-                                                ))}
-                                                {guardOptions.filter(g => g.name.toLowerCase().includes((guardQuery || '').toLowerCase())).length === 0 && (
+                                                {!selectedStation ? (
+                                                    <li className="px-3 py-2 text-sm text-gray-500">{t('siteTour.form.selectStationFirst', 'Select a station first')}</li>
+                                                ) : (
+                                                    guardOptions.filter(g => g.name.toLowerCase().includes((guardQuery || '').toLowerCase())).map(g => (
+                                                        <li key={g.id} onMouseDown={(e) => { e.preventDefault(); setSelectedGuard(g.id); setGuardQuery(''); setShowGuardsDropdown(false); }} className="px-3 py-2 hover:bg-gray-50 cursor-pointer">{g.name}</li>
+                                                    ))
+                                                )}
+                                                {selectedStation && guardOptions.filter(g => g.name.toLowerCase().includes((guardQuery || '').toLowerCase())).length === 0 && (
                                                     <li className="px-3 py-2 text-sm text-gray-400">{t('clients.assignGuards.noResults', 'No results')}</li>
                                                 )}
                                             </ul>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-400 mt-1">{t('clients.assignGuards.searchHelp', 'Type to search and pick a guard')}</p>
+                                    <p className="text-xs text-gray-400 mt-1">{selectedStation ? t('clients.assignGuards.searchHelp', 'Type to search and pick a guard') : t('siteTour.form.selectStationFirst', 'Select a station first')}</p>
                                 </div>
 
                                 {/* Assignment type removed — always creating a Shift */}
 
                                 <>
                                     <div>
-                                        <label className="block text-sm text-gray-600 mb-2">{t('postSites.stations.form.startTime', 'Start')}</label>
-                                        <input type="datetime-local" value={shiftStart} onChange={e => setShiftStart(e.target.value)} className="w-full border rounded-lg h-12 px-3" />
+                                        <label className="block text-sm text-gray-600 mb-2">{t('postSites.stations.form.startTime', 'Start')} <span className="text-red-600">*</span></label>
+                                        <input type="datetime-local" value={shiftStart} onChange={e => { setShiftStart(e.target.value); if (shiftStartError) setShiftStartError(null); }} className="w-full border rounded-lg h-12 px-3" />
+                                        {shiftStartError && <p className="text-xs text-red-600 mt-1">{shiftStartError}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm text-gray-600 mb-2">{t('postSites.stations.form.finishTime', 'End')}</label>
-                                        <input type="datetime-local" value={shiftEnd} onChange={e => setShiftEnd(e.target.value)} className="w-full border rounded-lg h-12 px-3" />
+                                        <label className="block text-sm text-gray-600 mb-2">{t('postSites.stations.form.finishTime', 'End')} <span className="text-red-600">*</span></label>
+                                        <input type="datetime-local" value={shiftEnd} onChange={e => { setShiftEnd(e.target.value); if (shiftEndError) setShiftEndError(null); }} className="w-full border rounded-lg h-12 px-3" />
+                                        {shiftEndError && <p className="text-xs text-red-600 mt-1">{shiftEndError}</p>}
                                     </div>
                                 </>
 
@@ -855,6 +959,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                             </div>
                             <div className="sticky bottom-0 bg-white border-t p-4 flex items-center justify-end gap-3">
                                 <button
+                                    disabled={!isFormValid}
                                     onClick={async () => {
                                         console.log('[AssignGuards] assign button clicked', { selectedGuard, selectedStation, shiftStart, shiftEnd });
                                         let succeeded = false;
@@ -880,6 +985,16 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                 return;
                                             }
 
+                                            // Validate start/end times (both required)
+                                            setShiftStartError(null);
+                                            setShiftEndError(null);
+                                            if (!shiftStart || !shiftEnd) {
+                                                if (!shiftStart) setShiftStartError(t('clients.assignGuards.startRequired', 'Start time is required'));
+                                                if (!shiftEnd) setShiftEndError(t('clients.assignGuards.endRequired', 'End time is required'));
+                                                toast.error(t('clients.assignGuards.hoursRequiredToast', 'Please enter both start and end times before assigning'));
+                                                return;
+                                            }
+
                                             // Always create a Shift when assigning from this modal
                                             const payload: any = {
                                                 startTime: shiftStart ? new Date(shiftStart).toISOString() : undefined,
@@ -891,17 +1006,34 @@ export default function AssignGuards({ site }: { site?: any }) {
                                             const resp = await ApiService.post(`/tenant/${tenantId}/shift`, { data: payload });
                                             console.log('[AssignGuards] shift create response:', resp);
                                             toast.success(t('clients.assignGuards.shiftCreated', 'Shift created and guard assigned'));
-                                                try { await loadAssigned(); } catch (e) { console.error('Failed to reload assigned after shift create', e); }
+                                            try { await loadAssigned(); } catch (e) { console.error('Failed to reload assigned after shift create', e); }
+                                            // notify other views/pages that assignments changed
+                                            try {
+                                                const detail = { action: 'assign', resource: resp };
+                                                window.dispatchEvent(new CustomEvent('assignments:changed', { detail }));
+                                            } catch (e) {
+                                                // ignore
+                                            }
                                             succeeded = true;
                                         } catch (err: any) {
                                             console.error('Assign guard failed', err);
-                                            const msg = err?.response?.data?.message || err?.message || t('clients.assignGuards.assignFailed', 'Assign guard failed');
-                                            toast.error(msg);
+                                            const serverMsg = err?.response?.data?.message || err?.message || '';
+                                            // Map common DB notNull violations to friendlier messages
+                                            if (typeof serverMsg === 'string' && /startTime\s+cannot\s+be\s+null/i.test(serverMsg)) {
+                                                toast.error(t('clients.assignGuards.startRequired', 'Start time is required'));
+                                            } else if (typeof serverMsg === 'string' && /endTime\s+cannot\s+be\s+null/i.test(serverMsg)) {
+                                                toast.error(t('clients.assignGuards.endRequired', 'End time is required'));
+                                            } else if (typeof serverMsg === 'string' && /startTime\s+cannot\s+be\s+null|endTime\s+cannot\s+be\s+null/i.test(serverMsg)) {
+                                                toast.error(t('clients.assignGuards.hoursRequiredToast', 'Please enter both start and end times before assigning'));
+                                            } else {
+                                                const msg = serverMsg || t('clients.assignGuards.assignFailed', 'Assign guard failed');
+                                                toast.error(msg);
+                                            }
                                         } finally {
                                             if (succeeded) setShowAssignModal(false);
                                         }
                                     }}
-                                    className="w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg"
+                                    className={`w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg ${!isFormValid ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     aria-label={t('clients.assignGuards.assignButtonAria', 'Assign')}
                                 >
                                     <Plus size={16} />

@@ -9,6 +9,7 @@ export const newAdminUserSchema = z.object({
     accessLevel: z.string().trim().min(1, "Seleccione un nivel"),
     clientIds: z.array(z.string()).optional(),
     postSiteIds: z.array(z.string()).optional(),
+    stationIds: z.array(z.string()).optional(),
 });
 
 export type NewAdminUserValues = z.infer<typeof newAdminUserSchema>;

@@ -54,7 +54,6 @@ export default function DeveloperTokensView({
             variant="outline"
             className="text-orange-600 border-orange-200 hover:text-orange-700"
             onClick={() => {
-              console.log("Se generó un nuevo token");
               onCreate?.();
             }}
           >

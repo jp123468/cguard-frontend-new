@@ -93,6 +93,9 @@ const stationService = {
     const params = new URLSearchParams();
     if (filters.name) params.append('filter[name]', filters.name);
     if (filters.clientId) params.append('filter[clientId]', filters.clientId);
+    // allow filtering stations by postSite id (station repository expects filter.postSite)
+    const postSiteId = (filters as any).postSite || (filters as any).postSiteId || undefined;
+    if (postSiteId) params.append('filter[postSite]', postSiteId);
     const categoryToUse = filters.categoryId ?? filters.category;
     if (categoryToUse) params.append('filter[categoryIds]', categoryToUse);
     if (filters.email) {
@@ -113,7 +116,10 @@ const stationService = {
     }
     params.append('limit', options.limit.toString());
     params.append('offset', options.offset.toString());
-    const { data } = await api.get(`/tenant/${tenantId}/post-site?${params.toString()}`, { toast: { silentError: true } } as any);
+    // If caller asked for stations linked to a postSite, call the stations endpoint
+    const useStationsEndpoint = !!postSiteId;
+    const endpoint = useStationsEndpoint ? 'stations' : 'post-site';
+    const { data } = await api.get(`/tenant/${tenantId}/${endpoint}?${params.toString()}`, { toast: { silentError: true } } as any);
     const mappedRows: PostSite[] = (data.rows || []).map((r: any) => ({
       id: r.id,
       name: r.stationName ?? r.name ?? '',
@@ -145,8 +151,31 @@ const stationService = {
 
   async get(id: string): Promise<any> {
     const tenantId = getTenantId();
-    const { data } = await api.get(`/tenant/${tenantId}/post-site/${id}`, { toast: { silentError: true } } as any);
-    return data;
+    // Some deployments expose the station resource under `/stations/:id` instead
+    // of `/post-site/:id`. Try `/stations/:id` first to avoid unnecessary 404s,
+    // then fall back to `/post-site/:id` for legacy deployments.
+    const stationsUrl = `/tenant/${tenantId}/stations/${id}`;
+    const postSiteUrl = `/tenant/${tenantId}/post-site/${id}`;
+    try {
+      const { data } = await api.get(stationsUrl, { toast: { silentError: true } } as any);
+      return data;
+    } catch (err: any) {
+      // log the failing stations URL for debugging
+      console.error(`stationService.get: stations URL failed: ${stationsUrl}`, err);
+      // Some backends surface the HTTP status in different shapes.
+      const status = err?.response?.status ?? err?.status ?? err?.statusCode ?? null;
+      if (status === 404) {
+        try {
+          const { data } = await api.get(postSiteUrl, { toast: { silentError: true } } as any);
+          return data;
+        } catch (fallbackErr) {
+          console.error(`stationService.get: fallback post-site URL also failed: ${postSiteUrl}`, fallbackErr);
+          // rethrow the fallback error
+          throw fallbackErr;
+        }
+      }
+      throw err;
+    }
   },
 
   async create(payload: PostSiteInput): Promise<PostSite> {

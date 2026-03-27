@@ -117,7 +117,6 @@ const Invoicing: React.FC<InvoicingProps> = ({ onExportPdf }) => {
         if (onExportPdf) {
             onExportPdf();
         } else {
-            console.log("Exportar como PDF");
         }
     };
 

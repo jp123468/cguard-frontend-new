@@ -186,7 +186,7 @@
       "notas": "Notas",
       "recordatorios": "Recordatorios",
       "archivos": "Archivos",
-      "asignarSitios": "Asignar Puestos ",
+      "asignarSitios": "Asignas Estaciones",
       "conjuntoHabilidades": "Conjunto de Habilidades",
       "departamento": "Departamento",
       "configuracion": "Configuración"
@@ -423,14 +423,15 @@
         "delete": "Eliminar"
       },
       "searchPlaceholder": "Buscar puestos de seguridad",
-      "assignButton": "Asignar puestos de seguridad",
+      "assignButton": "Asignas Estacionesde seguridad",
       "table": {
         "client": "Cliente",
-        "postSites": "Puestos de seguridad"
+        "postSites": "Puestos de seguridad",
+        "station": "Estación"
       },
       "loadError": "No se pudo cargar el guardia",
       "modal": {
-        "title": "Asignar puestos de seguridad",
+        "title": "Asignas Estacionesde seguridad",
         "cancel": "Cancelar",
         "assign": "Asignar"
       },
@@ -438,9 +439,14 @@
         "client": "Cliente",
         "selectClient": "Seleccionar cliente",
         "postSite": "Puesto de seguridad",
-        "selectPostSite": "Seleccionar puesto de seguridad"
+        "selectPostSite": "Seleccionar puesto de seguridad",
+        "station": "Estación",
+        "selectStation": "Seleccionar estación"
       },
-      "noPostSites": "No se encontraron puestos de seguridad"
+      "noStations": "No se encontraron estaciones",
+      "noPostSites": "No se encontraron puestos de seguridad",
+      "postSiteLoading": "Cargando información del puesto...",
+      "postSiteLoadError": "No se pudo cargar el puesto"
     },
     "files": {
       "action": {
@@ -982,6 +988,9 @@
       "schedule": "Horario",
       "guardsCount": "Guardias",
       "detailsTitle": "Detalles de la estación"
+      ,
+      "confirmRemovalTitle": "Confirmar eliminación",
+      "confirmRemovalDesc": "¿Estás seguro de que deseas eliminar este puesto? Esta acción no se puede deshacer."
     },
     "assignGuards": {
       "assignButton": "Asignar guardia",
@@ -989,16 +998,16 @@
       "guardsLabel": "Guardias*",
       "searchPlaceholder": "Buscar guardias",
       "searchHelp": "Escribe para buscar y selecciona un guardia",
-      "stationLabel": "Puesto*",
-      "selectStationOption": "-- seleccionar puesto --",
-      "addStation": "Agregar puesto",
+      "stationLabel": "Estación*",
+      "selectStationOption": "-- seleccionar estación --",
+      "addStation": "Agregar Estación",
       "actionAssignSelected": "Asignar seleccionados",
       "actionUnassign": "Quitar asignación",
       "table": {
         "name": "Nombre",
         "mobile": "Teléfono",
         "email": "Correo",
-        "station": "Puesto",
+        "station": "Estación",
         "source": "Origen",
         "actions": "Acciones"
       },
@@ -1041,7 +1050,10 @@
       "actionDefault": "Acción",
       "headerSearchPlaceholder": "Buscar guardias",
       "startShort": "Inicio (hh:mm)",
-      "endShort": "Fin (hh:mm)"
+      "endShort": "Fin (hh:mm)",
+      "startRequired": "La hora de inicio es obligatoria",
+      "endRequired": "La hora de fin es obligatoria",
+      "hoursRequiredToast": "Por favor ingresa la hora de inicio y fin antes de asignar"
     },
     "unnamedStation": "Estación sin nombre",
     "sourcePivot": "pivot",
@@ -1426,7 +1438,8 @@
       "selectPrompt": "Selecciona una estación para ver detalles",
       "table": {
         "name": "Nombre",
-        "description": "Descripción"
+        "description": "Descripción",
+        "guards": "Guardias"
       },
       "tableActions": "Acciones",
       "createTitle": "Crear Estación",
@@ -1449,13 +1462,17 @@
       "startTime": "Inicio",
       "endTime": "Fin",
       "assignedGuardsTitle": "Guardias asignados",
-      "manageAssignments": "Administrar asignaciones",
+      "manageAssignments": "Asignar",
       "noAssignedGuards": "No hay guardias asignados",
       "hours": "horas",
       "hShort": "h",
       "mShort": "m",
       "company": "Empresa",
-      "tenantId": "Tenant ID"
+      "tenantId": "Tenant ID",
+      "view": "Ver detalles",
+      "detailsTitle": "Detalles de la estación",
+      "noDetails": "No hay detalles disponibles",
+      "remove": "Eliminar"
     },
     "profile": {
       "title": "Perfil del puesto de vigilancia",
@@ -1609,6 +1626,7 @@
         "taskDescriptionPlaceholder": "Descripción de la tarea",
         "maxDuration": "Duración máxima",
         "assignGuard": "Asignar Guardia*",
+          "selectStationFirst": "Selecciona primero una estación",
         "newSubTask": "Nueva subtarea"
       },
       "oneoff": "Tarea única",
@@ -2150,9 +2168,11 @@
         "selectAll": "Seleccionar todos",
         "noOptions": "Sin opciones",
         "assignClientsPlaceholder": "Asignar Clientes",
-        "assignSitesPlaceholder": "Asignar Puestos de vigilancia",
+        "assignSitesPlaceholder": "Asignas Estacionesde vigilancia",
         "assignClientsLabel": "Asignar Clientes",
-        "assignSitesLabel": "Asignar Puestos de vigilancia",
+        "assignSitesLabel": "Asignas Estacionesde vigilancia",
+        "assignStationsPlaceholder": "Asignar Estaciones",
+        "assignStationsLabel": "Asignar Estaciones",
         "create": "Crear",
         "creating": "Creando..."
       },
@@ -2198,9 +2218,9 @@
         "selectAll": "Seleccionar todos",
         "noOptions": "Sin opciones",
         "assignClientsPlaceholder": "Asignar Clientes*",
-        "assignSitesPlaceholder": "Asignar Puestos de vigilancia",
+        "assignSitesPlaceholder": "Asignas Estacionesde vigilancia",
         "assignClientsLabel": "Asignar Clientes*",
-        "assignSitesLabel": "Asignar Puestos de vigilancia",
+        "assignSitesLabel": "Asignas Estacionesde vigilancia",
         "save": "Guardar",
         "send": "Enviar",
         "savingEdit": "Guardando...",
@@ -2596,6 +2616,32 @@
   "siteTour": {
     "searchPlaceholder": "Buscar Recorridos",
     "newTour": "Nuevo Recorrido",
+    "menu": {
+      "action": "Acción",
+      "archiveSelected": "Archivar",
+      "archive": "Archivar",
+      "delete": "Eliminar",
+      "export": "Exportar"
+    },
+    "actions": {
+      "noSelection": "No hay elementos seleccionados",
+      "missingTenant": "Tenant faltante",
+      "confirmArchiveTitle": "Confirmar archivado",
+      "confirmArchiveMessage": "¿Está seguro de que desea archivar los recorridos seleccionados? Esta acción puede deshacerse editando el recorrido.",
+      "archived": "Recorridos archivados",
+      "archiveError": "Error al archivar los recorridos seleccionados",
+      "confirmDeleteTitle": "Confirmar eliminación",
+      "confirmDeleteMessage": "¿Está seguro de que desea eliminar permanentemente los recorridos seleccionados? Esta acción no se puede deshacer y eliminará todos los datos asociados.",
+      "deleted": "Recorridos eliminados",
+      "deleteError": "Error al eliminar los recorridos seleccionados",
+      "delete": "Eliminar",
+      "view": "Ver detalles",
+      "edit": "Editar"
+    },
+    "notifications": {
+      "created": "Recorrido creado",
+      "updated": "Recorrido actualizado"
+    },
     "table": {
       "name": "Nombre del Recorrido",
       "duration": "Duración",
@@ -2641,6 +2687,7 @@
     },
     "buttons": {
       "saveDraft": "Guardar como borrador",
+      "cancel": "Cancelar",
       "submit": "Enviar"
     },
     "options": {
@@ -2655,8 +2702,10 @@
       "virtual": "Etiquetas Virtuales",
       "ble": "Beacons BLE"
     },
-    "action": "Acción",
-    "searchPlaceholder": "Buscar Etiquetas",
+        "loadingGuards": "Cargando guardias...",
+        "noGuardsFound": "No se encontraron guardias",
+        "noGuardsForStation": "No se encontraron guardias para este puesto"
+    ,"searchPlaceholder": "Buscar Etiquetas",
     "actions": {
       "delete": "Eliminar",
       "print": "Imprimir"

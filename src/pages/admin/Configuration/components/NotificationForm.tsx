@@ -110,7 +110,6 @@ export default function NotificationMatrix() {
       id: n.id,
       channels: state[n.id],
     }));
-    console.log("Payload notificaciones:", payload);
     toast.success("Preferencias guardadas");
   };
 

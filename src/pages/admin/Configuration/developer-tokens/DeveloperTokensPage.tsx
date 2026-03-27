@@ -13,7 +13,6 @@ export default function DeveloperTokensPage() {
             tokens={tokens}
             onCreate={() => {
               // Solo consola, como pediste:
-              console.log("Se generó un nuevo token");
             }}
           />
         </div>

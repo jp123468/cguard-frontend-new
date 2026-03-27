@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { stationService } from '@/lib/api/stationService';
 
@@ -6,6 +7,7 @@ export default function PostSiteMiniInfo({ postSiteId }: { postSiteId: string })
   const [site, setSite] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!postSiteId) return;
@@ -13,12 +15,15 @@ export default function PostSiteMiniInfo({ postSiteId }: { postSiteId: string })
     setLoading(true);
     stationService.get(postSiteId)
       .then((data) => { if (mounted) setSite(data); })
-      .catch((e) => { if (mounted) setError('No se pudo cargar el puesto'); })
+      .catch((e) => {
+        console.error('PostSiteMiniInfo: failed to load postSite', e);
+        if (mounted) setError(t('guards.assignSites.postSiteLoadError', { defaultValue: 'No se pudo cargar el puesto' }));
+      })
       .finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, [postSiteId]);
 
-  if (loading) return <div className="text-xs text-gray-400">Cargando puesto...</div>;
+  if (loading) return <div className="text-xs text-gray-400">{t('guards.assignSites.postSiteLoading', { defaultValue: 'Cargando puesto...' })}</div>;
   if (error) return <div className="text-xs text-red-400">{error}</div>;
   if (!site) return null;
 

@@ -614,7 +614,8 @@
         "assignButton": "Assign Skill Set",
         "table": {
           "name": "Name",
-          "description": "Description"
+          "description": "Description",
+          "guards": "Guards"
         },
         "empty": {
           "title": "No Result Found",
@@ -988,6 +989,9 @@
         "mShort": "m",
         "company": "Company",
         "tenantId": "Tenant ID"
+      ,
+      "confirmRemovalTitle": "Confirm removal",
+      "confirmRemovalDesc": "Are you sure you want to remove this station? This action cannot be undone."
       },
       "assignGuards": {
         "assignButton": "Assign Guard",
@@ -1048,6 +1052,10 @@
         "headerSearchPlaceholder": "Search Guards",
         "startShort": "Start (hh:mm)",
         "endShort": "End (hh:mm)"
+        ,
+        "startRequired": "Start time is required",
+        "endRequired": "End time is required",
+        "hoursRequiredToast": "Please enter both start and end times before assigning"
       },
       "unnamedStation": "Unnamed station",
       "sourcePivot": "pivot",
@@ -1488,11 +1496,19 @@
         "lng": "Longitude",
         "schedule": "Schedule",
         "guardsCount": "Guards",
+        "view": "View details",
+        "detailsTitle": "Station details",
+        "noDetails": "No details available",
         "remove": "Remove"
       },
       "siteTour": {
         "searchPlaceholder": "Search Tours",
         "newTour": "New Tour",
+        "menu": {
+          "action": "Action",
+          "archiveSelected": "Archive Selected",
+          "export": "Export"
+        },
         "table": {
           "name": "Tour Name",
           "duration": "Duration",
@@ -1532,8 +1548,13 @@
           "tags": "Select Tags*",
           "tagsOption1": "Tag 1",
           "assignGuard": "Assign Guard*",
+          "selectStationFirst": "Select a station first",
           "enableNotes": "Enable site tour notes",
           "forceMedia": "Force guard to attach multiple media files"
+          ,
+          "loadingGuards": "Loading guards...",
+          "noGuardsFound": "No guards found",
+          "noGuardsForStation": "No guards found for this station"
         },
         "buttons": {
           "saveDraft": "Save As Draft",
