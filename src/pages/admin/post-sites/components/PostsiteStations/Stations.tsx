@@ -20,6 +20,8 @@ export default function Stations({ site }: { site?: any }) {
   const [pendingDeleteStation, setPendingDeleteStation] = useState<any | null>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [actionSelectValue, setActionSelectValue] = useState<string>('');
+  const [deleteBlocked, setDeleteBlocked] = useState(false);
+  const [dependencyDetails, setDependencyDetails] = useState<any | null>(null);
 
   const [stationShifts, setStationShifts] = useState<any[]>([]);
   const [loadingShifts, setLoadingShifts] = useState(false);
@@ -345,24 +347,55 @@ export default function Stations({ site }: { site?: any }) {
 
   const handleDelete = (id: string) => {
     console.debug('[Stations] handleDelete called', id);
-    setPendingDeleteStation(id);
-    // Open dialog on next tick to avoid event ordering issues (menu close etc.)
-    setTimeout(() => setOpenDeleteDialog(true), 0);
+    (async () => {
+      const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+      try {
+        const resp = await ApiService.get(`/tenant/${tenantId}/station/${encodeURIComponent(id)}`);
+        const st = (resp && (resp.data || resp)) || resp;
+        const guards = Array.isArray(st.assignedGuards) ? st.assignedGuards.length : (st.assignedGuards && Array.isArray(st.assignedGuards.rows) ? st.assignedGuards.rows.length : 0);
+        const siteTours = Array.isArray(st.siteTours) ? st.siteTours.length : (st.siteTours && Array.isArray(st.siteTours.rows) ? st.siteTours.rows.length : 0);
+        const tags = Array.isArray(st.siteTourTags) ? st.siteTourTags.length : (st.siteTourTags && Array.isArray(st.siteTourTags.rows) ? st.siteTourTags.rows.length : 0);
+        if ((guards || 0) > 0 || (siteTours || 0) > 0 || (tags || 0) > 0) {
+          setDeleteBlocked(true);
+          setDependencyDetails([{ id, name: st.name || st.stationName || id, guards, siteTours, tags }]);
+          setPendingDeleteStation(id);
+          setTimeout(() => setOpenDeleteDialog(true), 0);
+          return;
+        }
+      } catch (e) {
+        // ignore fetch error and proceed to normal delete flow
+      }
+      setDeleteBlocked(false);
+      setPendingDeleteStation(id);
+      // Open dialog on next tick to avoid event ordering issues (menu close etc.)
+      setTimeout(() => setOpenDeleteDialog(true), 0);
+    })();
   };
 
   const confirmDeleteStation = async () => {
-    const id = pendingDeleteStation;
-    if (!id) {
+    const idOrIds = pendingDeleteStation;
+    if (!idOrIds) {
       setOpenDeleteDialog(false);
       return;
     }
+
     try {
       const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
-      await ApiService.delete(`/tenant/${tenantId}/station/${id}`);
-      setStations(s => s.filter(x => x.id !== id));
-      toast.success(t('postSites.stations.removed', 'Station removed'));
+
+      if (Array.isArray(idOrIds)) {
+        // bulk delete
+        await Promise.all(idOrIds.map((id) => ApiService.delete(`/tenant/${tenantId}/station/${id}`)));
+        setStations(s => s.filter(x => !idOrIds.includes(x.id || x.stationId || '')));
+        setSelectedIds([]);
+        toast.success(t('postSites.stations.removedMultiple', 'Stations removed'));
+      } else {
+        // single delete
+        await ApiService.delete(`/tenant/${tenantId}/station/${idOrIds}`);
+        setStations(s => s.filter(x => x.id !== idOrIds));
+        toast.success(t('postSites.stations.removed', 'Station removed'));
+      }
     } catch (err: any) {
-      console.error('Failed remove station', err);
+      console.error('Failed remove station(s)', err);
       toast.error(err?.message || t('postSites.stations.removeFailed', 'Failed to remove station'));
     } finally {
       setPendingDeleteStation(null);
@@ -498,11 +531,44 @@ export default function Stations({ site }: { site?: any }) {
           
 
           <div className="flex-1 mx-2 flex items-center gap-3">
-            <div className="flex-shrink-0">
+              <div className="flex-shrink-0">
               <select value={actionSelectValue} onChange={(e) => {
                 const v = e.target.value; setActionSelectValue(v);
                 if (v === 'delete_selected') {
-                  if (selectedIds.length > 0) removeSelected();
+                  if (!selectedIds || selectedIds.length === 0) {
+                    toast.error(t('postSites.stations.selectOneToDelete', 'Please select at least one station to delete'));
+                    setActionSelectValue('');
+                    return;
+                  }
+                  // Check dependencies before opening confirmation
+                  (async () => {
+                    const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+                    const problematic: any[] = [];
+                    for (const sid of selectedIds) {
+                      try {
+                        const resp = await ApiService.get(`/tenant/${tenantId}/station/${encodeURIComponent(sid)}`);
+                        const st = (resp && (resp.data || resp)) || resp;
+                        const guards = Array.isArray(st.assignedGuards) ? st.assignedGuards.length : (st.assignedGuards && Array.isArray(st.assignedGuards.rows) ? st.assignedGuards.rows.length : 0);
+                        const siteTours = Array.isArray(st.siteTours) ? st.siteTours.length : (st.siteTours && Array.isArray(st.siteTours.rows) ? st.siteTours.rows.length : 0);
+                        const tags = Array.isArray(st.siteTourTags) ? st.siteTourTags.length : (st.siteTourTags && Array.isArray(st.siteTourTags.rows) ? st.siteTourTags.rows.length : 0);
+                        if ((guards || 0) > 0 || (siteTours || 0) > 0 || (tags || 0) > 0) {
+                          problematic.push({ id: sid, name: st.name || st.stationName || sid, guards, siteTours, tags });
+                        }
+                      } catch (e) {
+                        // ignore individual failures
+                      }
+                    }
+                    if (problematic.length) {
+                      setDeleteBlocked(true);
+                      setDependencyDetails(problematic);
+                      setPendingDeleteStation(problematic.map(p => p.id));
+                      setOpenDeleteDialog(true);
+                    } else {
+                      setDeleteBlocked(false);
+                      setPendingDeleteStation(selectedIds.slice());
+                      setOpenDeleteDialog(true);
+                    }
+                  })();
                   setActionSelectValue('');
                 }
               }} className="border border-gray-200 bg-white rounded-lg px-4 py-2 text-sm text-gray-700 shadow-sm">
@@ -896,14 +962,34 @@ export default function Stations({ site }: { site?: any }) {
       <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('clients.stations.confirmRemovalTitle','Confirm removal')}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {deleteBlocked
+                ? t('postSites.stations.confirmRemovalBlockedTitle', 'Cannot remove station')
+                : (Array.isArray(pendingDeleteStation) ? t('postSites.stations.confirmRemovalMultipleTitle','Confirm removal of selected stations') : t('clients.stations.confirmRemovalTitle','Confirm removal'))}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {t('clients.stations.confirmRemovalDesc','Are you sure you want to remove this station? This action cannot be undone.')}
+              {deleteBlocked ? (
+                // show dependency details
+                <div className="space-y-2">
+                  <div>{t('postSites.stations.confirmRemovalBlockedDesc', 'One or more selected stations have related records and cannot be removed.')}</div>
+                  {dependencyDetails && Array.isArray(dependencyDetails) && (
+                    <ul className="mt-2 list-disc pl-5 text-sm text-gray-700">
+                      {dependencyDetails.map((d: any) => (
+                        <li key={d.id}>{d.name}: {d.guards ? `${d.guards} ${t('postSites.stations.guards', 'guards')}` : ''}{d.siteTours ? ` ${d.siteTours} ${t('postSites.stations.siteTours', 'site tours')}` : ''}{d.tags ? ` ${d.tags} ${t('postSites.stations.tags', 'tags')}` : ''}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ) : (
+                Array.isArray(pendingDeleteStation) ? t('postSites.stations.confirmRemovalMultipleDesc','Are you sure you want to remove the selected stations? This action cannot be undone.') : t('clients.stations.confirmRemovalDesc','Are you sure you want to remove this station? This action cannot be undone.')
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setPendingDeleteStation(null); setOpenDeleteDialog(false); }}>{t('actions.cancel','Cancel')}</AlertDialogCancel>
-            <AlertDialogAction className="bg-red-500 text-white" onClick={confirmDeleteStation}>{t('postSites.stations.remove','Remove')}</AlertDialogAction>
+            <AlertDialogCancel onClick={() => { setPendingDeleteStation(null); setOpenDeleteDialog(false); setDeleteBlocked(false); setDependencyDetails(null); }}>{t('actions.cancel','Cancel')}</AlertDialogCancel>
+            {!deleteBlocked && (
+              <AlertDialogAction className="bg-red-500 text-white" onClick={confirmDeleteStation}>{t('postSites.stations.remove','Remove')}</AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -34,7 +34,7 @@ export default function NewOrEditPostSitePage() {
             }
         })();
 
-        // Cargar categorías
+        // Cargar Sectores
         (async () => {
             try {
                 const response = await categoryService.list({ filter: { module: "postSite" }, limit: 1000, offset: 0 });
@@ -119,11 +119,11 @@ export default function NewOrEditPostSitePage() {
                                                 <p className="text-sm">{(site as any).contactPhone ?? site.phone ?? '-'}</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs text-gray-600">Fax</p>
+                                                <p className="text-xs text-gray-600">Teléfono fijo</p>
                                                 <p className="text-sm">{(site as any).fax ?? '-'}</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs text-gray-600">Categorías</p>
+                                                <p className="text-xs text-gray-600">Sectores</p>
                                                 <p className="text-sm">
                                                     {Array.isArray((site as any).categoryIds) && (site as any).categoryIds.length > 0
                                                         ? ((site as any).categoryIds.map((cid: string) => {

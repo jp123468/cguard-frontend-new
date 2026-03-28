@@ -65,6 +65,14 @@ api.interceptors.request.use((config) => {
       // fallback: ignore
     }
   }
+  // Ensure backend can localize messages by sending the current UI language.
+  try {
+    const lang = localStorage.getItem('i18nextLng') || (typeof navigator !== 'undefined' && navigator.language) || 'en'
+    if (!config.headers) config.headers = {} as any
+    (config.headers as any)['Accept-Language'] = lang
+  } catch (e) {
+    // ignore
+  }
   // If sending FormData, remove Content-Type so browser sets the multipart boundary
   try {
     if (typeof FormData !== 'undefined' && config.data instanceof FormData) {

@@ -103,7 +103,7 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
                 <p className="text-sm">{(site as any).contactPhone ?? site.phone ?? "-"}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-600 font-semibold">Fax</p>
+                <p className="text-xs text-gray-600 font-semibold">Teléfono fijo</p>
                 <p className="text-sm">{(site as any).fax ?? "-"}</p>
               </div>
               {/* Client account summary if present */}
@@ -140,7 +140,7 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
                 </div>
               )}
               <div className="sm:col-span-2">
-                <p className="text-xs text-gray-600 font-semibold">Categorías</p>
+                <p className="text-xs text-gray-600 font-semibold">Sectores</p>
                 <p className="text-sm">
                   {categories.length > 0
                     ? categories.map((c) => c.name).join(", ")

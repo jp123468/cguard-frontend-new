@@ -40,7 +40,7 @@ export function ClientDetailsDialog({
                 const data = await clientService.getClient(clientId);
                 setClient(data);
 
-                // Cargar las categorías si existen categoryIds
+                // Cargar las Sectores si existen categoryIds
                 const categoryIds = (data as any).categoryIds || [];
                 if (categoryIds.length > 0) {
                     try {
@@ -109,13 +109,13 @@ export function ClientDetailsDialog({
                             </div>
                             {client.faxNumber && (
                                 <div>
-                                    <p className="text-xs text-gray-600 font-semibold">Fax</p>
+                                    <p className="text-xs text-gray-600 font-semibold">Teléfono fijo</p>
                                     <p className="text-sm">{client.faxNumber}</p>
                                 </div>
                             )}
                             {categories.length > 0 && (
                                 <div className="md:col-span-2">
-                                    <p className="text-xs text-gray-600 font-semibold">Categorías</p>
+                                    <p className="text-xs text-gray-600 font-semibold">Sectores</p>
                                     <p className="text-sm">{categories.map(c => c.name).join(", ")}</p>
                                 </div>
                             )}

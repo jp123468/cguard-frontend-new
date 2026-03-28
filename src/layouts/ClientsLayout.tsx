@@ -19,6 +19,8 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
   const cfg: any = (clientsNav as any)[navKey] || null;
   const { id } = useParams();
   const location = useLocation();
+  // Temporarily hide these client nav items visually
+  const hiddenIds = ['notes', 'files', 'clientPortal', 'userAccess', 'emailReports'];
 
   const getActiveLabel = () => {
     if (!cfg || !cfg.sections) return null;
@@ -64,6 +66,14 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
                           ? (client?.postSites?.length ?? client?.postSiteIds?.length ?? client?.postSitesCount ?? undefined)
                           : undefined;
                         const badgeCount = it.id === 'postSites' ? (postSitesCount ?? initialBadge ?? 0) : undefined;
+                        // If this item is in the hidden list, render an HTML comment instead
+                        if (hiddenIds.includes(it.id)) {
+                          const comment = `<!-- hidden:${it.id} ${t(it.label)} -->`;
+                          return (
+                            <li key={it.id} className="bg-white" dangerouslySetInnerHTML={{ __html: comment }} />
+                          );
+                        }
+
                         return (
                           <li key={it.id} className="bg-white">
                             <Link

@@ -154,7 +154,7 @@ export default function ClientProfile({ client }: { client: any }) {
               <p className="text-lg text-gray-800">{client.active === false ? 'No' : client.active === true ? 'Sí' : '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.categories', 'Categorías')}</p>
+              <p className="text-sm text-gray-600">{t('clients.form.categories', 'Sectores')}</p>
               <p className="text-lg text-gray-800">{(categoryNames && categoryNames.length) ? categoryNames.join(', ') : ((client.categoryNames && client.categoryNames.length) ? client.categoryNames.join(', ') : ((client.categoryIds && client.categoryIds.length) ? client.categoryIds.join(', ') : '-'))}</p>
             </div>
           </div>

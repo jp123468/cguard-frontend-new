@@ -552,10 +552,10 @@ export default function SecurityGuardsPage() {
 
                   <div className="mt-6 space-y-4">
                     <div className="space-y-2">
-                      <Label>{t('guards.list.filter.categories', 'Categorías')}</Label>
+                      <Label>{t('guards.list.filter.categories', 'Sectores')}</Label>
                       <Select value={filterCategory} onValueChange={(v) => setFilterCategory(v)}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Categorías" />
+                          <SelectValue placeholder="Sectores" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="todas">{t('guards.list.filter.categoriesAll', 'Todas')}</SelectItem>

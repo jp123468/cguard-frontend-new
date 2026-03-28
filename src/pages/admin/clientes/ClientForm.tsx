@@ -110,7 +110,7 @@ export default function ClientForm({
     });
 
     const personType = form.watch('personType' as any) || 'PN';
-    // Función para cargar categorías del módulo clientAccount
+    // Función para cargar Sectores del módulo clientAccount
     const loadCategories = async () => {
         setLoadingCategories(true);
         try {
@@ -120,18 +120,18 @@ export default function ClientForm({
                 offset: 0,
             });
 
-            // Extraer el array de categorías de la respuesta
+            // Extraer el array de Sectores de la respuesta
             const categoryList = response?.rows || [];
             setCategories(categoryList);
         } catch (e) {
             console.error("Error loading categories:", e);
-            console.error(t('categoriesnotloaded', "No se pudieron cargar las categorías"));
+            console.error(t('categoriesnotloaded', "No se pudieron cargar las Sectores"));
         } finally {
             setLoadingCategories(false);
         }
     };
 
-    // Cargar categorías al montar el componente
+    // Cargar Sectores al montar el componente
     useEffect(() => {
         loadCategories();
     }, []);
@@ -289,7 +289,7 @@ export default function ClientForm({
     }, [categories]);
 
     const handleCategoryCreated = () => {
-        // Recargar las categorías sin recargar toda la página
+        // Recargar las Sectores sin recargar toda la página
         loadCategories();
     };
 
@@ -488,7 +488,7 @@ export default function ClientForm({
                                                     module="clientAccount"
                                                     onCategoryCreated={handleCategoryCreated}
                                                     multiple={true}
-                                                    placeholder={t('clients.selectCategories', 'Selecciona categorías')}
+                                                    placeholder={t('clients.selectCategories', 'Selecciona Sectores')}
                                                 />
                                             </FormControl>
                                         </div>

@@ -6,11 +6,13 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { useTranslation } from 'react-i18next';
 
 export default function ClientPostSites({ client }: { client: any }) {
+  const { t } = useTranslation();
   const actionRef = useRef<HTMLDivElement | null>(null);
   const [actionOpen, setActionOpen] = useState(false);
-  const [actionSelection, setActionSelection] = useState<string>('Action');
+  const [actionSelection, setActionSelection] = useState<string>(t('clientPostSites.action'));
   const [searchQuery, setSearchQuery] = useState('');
   const [rows, setRows] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -66,7 +68,7 @@ export default function ClientPostSites({ client }: { client: any }) {
             </button>
             {actionOpen && (
               <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-50 w-44">
-                <button onClick={() => { setActionOpen(false); if (selectedIds.length === 0) { toast.error('Selecciona al menos un sitio'); return; } setArchiveTargetIds(selectedIds); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Archive</button>
+                <button onClick={() => { setActionOpen(false); if (selectedIds.length === 0) { toast.error(t('clientPostSites.selectAtLeastOne') || 'Selecciona al menos un sitio'); return; } setArchiveTargetIds(selectedIds); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">{t('clientPostSites.archive')}</button>
               </div>
             )}
           </div>
@@ -76,7 +78,7 @@ export default function ClientPostSites({ client }: { client: any }) {
               <Search size={16} className="absolute left-3 top-3 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search post site"
+                placeholder={t('clientPostSites.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -86,7 +88,7 @@ export default function ClientPostSites({ client }: { client: any }) {
 
           <Link to="/post-sites/new" className="px-6 py-2 bg-orange-600 text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors">
             <Plus size={16} />
-            New Post Site
+            {t('clientPostSites.newPostSite')}
           </Link>
         </div>
 
@@ -105,11 +107,11 @@ export default function ClientPostSites({ client }: { client: any }) {
                     checked={filtered.length > 0 && selectedIds.length === filtered.length}
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Post Site</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Client</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Phone Number</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.postSite')}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.client')}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.email')}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.phoneNumber')}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.status')}</th>
                 <th className="px-4 py-3 text-left"></th>
               </tr>
             </thead>
@@ -127,8 +129,8 @@ export default function ClientPostSites({ client }: { client: any }) {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">No Result Found</h3>
-                        <p className="text-sm text-gray-500 mt-1">We can't find any item matching your search</p>
+                        <h3 className="text-lg font-semibold text-gray-700">{t('clientPostSites.noResult.title')}</h3>
+                        <p className="text-sm text-gray-500 mt-1">{t('clientPostSites.noResult.description')}</p>
                       </div>
                     </div>
                   </td>
@@ -152,9 +154,9 @@ export default function ClientPostSites({ client }: { client: any }) {
                     <td className="px-4 py-3 text-sm text-gray-700">{s.contactPhone ?? s.phone ?? '-'}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {s.status === 'active' ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">Active</span>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">{t('common.active')}</span>
                       ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">Inactive</span>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">{t('common.inactive')}</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700 relative overflow-visible">
@@ -163,8 +165,8 @@ export default function ClientPostSites({ client }: { client: any }) {
                           <button aria-label="Open menu" className="p-2 rounded-full hover:bg-gray-100"><EllipsisVertical className="h-5 w-5 text-slate-400" /></button>
                         </PopoverTrigger>
                         <PopoverContent className="w-44 p-1 rounded-md shadow-lg z-50">
-                          <Link to={`/post-sites/${s.id}`} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Eye className="h-4 w-4" />{` ${'View Details'}`}</Link>
-                          <button onClick={() => { setArchiveTargetIds([s.id]); /* close popover visually */ (document.activeElement as HTMLElement | null)?.blur(); setSelectedIds((p) => p.filter((id) => id !== s.id)); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Archive className="h-4 w-4" />{` ${'Archive'}`}</button>
+                          <Link to={`/post-sites/${s.id}`} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Eye className="h-4 w-4" />{` ${t('clientPostSites.viewDetails')}`}</Link>
+                          <button onClick={() => { setArchiveTargetIds([s.id]); /* close popover visually */ (document.activeElement as HTMLElement | null)?.blur(); setSelectedIds((p) => p.filter((id) => id !== s.id)); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Archive className="h-4 w-4" />{` ${t('clientPostSites.archive')}`}</button>
                         </PopoverContent>
                       </Popover>
                     </td>
@@ -179,7 +181,7 @@ export default function ClientPostSites({ client }: { client: any }) {
           <MobileCardList
             items={filtered}
             loading={false}
-            emptyMessage={'No Result Found'}
+            emptyMessage={t('clientPostSites.noResult.title')}
             renderCard={(s: any) => (
               <div>
                 <div className="flex items-start justify-between">
@@ -191,9 +193,9 @@ export default function ClientPostSites({ client }: { client: any }) {
                   <div className="text-right">
                     <div>
                       {s.status === 'active' ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">Active</span>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">{t('common.active')}</span>
                       ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">Inactive</span>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">{t('common.inactive')}</span>
                       )}
                     </div>
                     <div className="mt-2">
@@ -202,8 +204,8 @@ export default function ClientPostSites({ client }: { client: any }) {
                           <button aria-label="Open menu" className="p-2 rounded-full hover:bg-gray-100"><EllipsisVertical className="h-5 w-5 text-slate-400" /></button>
                         </PopoverTrigger>
                         <PopoverContent className="w-44 p-1 rounded-md shadow-lg z-50">
-                          <Link to={`/post-sites/${s.id}`} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Eye className="h-4 w-4" />{` ${'View Details'}`}</Link>
-                          <button onClick={() => { setArchiveTargetIds([s.id]); (document.activeElement as HTMLElement | null)?.blur(); setSelectedIds((p) => p.filter((id) => id !== s.id)); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Archive className="h-4 w-4" />{` ${'Archive'}`}</button>
+                          <Link to={`/post-sites/${s.id}`} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Eye className="h-4 w-4" />{` ${t('clientPostSites.viewDetails')}`}</Link>
+                          <button onClick={() => { setArchiveTargetIds([s.id]); (document.activeElement as HTMLElement | null)?.blur(); setSelectedIds((p) => p.filter((id) => id !== s.id)); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Archive className="h-4 w-4" />{` ${t('clientPostSites.archive')}`}</button>
                         </PopoverContent>
                       </Popover>
                     </div>
@@ -219,31 +221,49 @@ export default function ClientPostSites({ client }: { client: any }) {
           <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="absolute inset-0 bg-black opacity-30" onClick={() => setArchiveTargetIds([])} />
             <div className="bg-white rounded-t-lg sm:rounded-md shadow-xl p-4 sm:p-6 z-70 w-full sm:max-w-md max-h-full sm:max-h-[90vh] overflow-auto">
-              <h3 className="text-lg font-semibold mb-2 text-center">{`Archive ${archiveTargetIds.length > 1 ? 'Post Sites' : 'Post Site'}?`}</h3>
-              <p className="text-sm text-gray-600 mb-4 text-center">{`Are you sure you want to archive the selected ${archiveTargetIds.length} site(s)? This will mark them as inactive.`}</p>
+              <h3 className="text-lg font-semibold mb-2 text-center">{t('clientPostSites.confirmArchiveTitle', { count: archiveTargetIds.length })}</h3>
+              <p className="text-sm text-gray-600 mb-4 text-center">{t('clientPostSites.confirmArchiveDescription', { count: archiveTargetIds.length })}</p>
               <div className="flex justify-end gap-3">
-                <button onClick={() => setArchiveTargetIds([])} className="px-4 py-2 rounded-md border">Cancel</button>
+                <button onClick={() => setArchiveTargetIds([])} className="px-4 py-2 rounded-md border">{t('common.cancel')}</button>
                 <button onClick={async () => {
                   setArchiveLoading(true);
                   try {
-                    const results = await Promise.allSettled(archiveTargetIds.map(id => stationService.update(id, { status: 'inactive' } as any)));
-                    const successes = results.reduce((acc, r, idx) => (r.status === 'fulfilled' ? acc.concat(archiveTargetIds[idx]) : acc), [] as string[]);
+                    const results = await Promise.all(archiveTargetIds.map(async (id) => {
+                      try {
+                        const station = await stationService.get(id);
+                        const guardsCount = station?.guardsCount ?? (Array.isArray(station?.assignedGuards) ? station.assignedGuards.length : 0);
+                        if (guardsCount > 0) {
+                          return { id, ok: false, reason: 'linked_guards' };
+                        }
+                        await stationService.update(id, { status: 'inactive' } as any);
+                        return { id, ok: true };
+                      } catch (e) {
+                        return { id, ok: false, reason: 'error' };
+                      }
+                    }));
+
+                    const successes = results.filter(r => r.ok).map(r => r.id);
+                    const linked = results.filter(r => !r.ok && r.reason === 'linked_guards').map(r => r.id);
+                    const errors = results.filter(r => !r.ok && r.reason === 'error').map(r => r.id);
+
                     if (successes.length > 0) {
                       setRows(prev => prev.filter(r => !successes.includes(r.id)));
                       setSelectedIds(prev => prev.filter(id => !successes.includes(id)));
-                      toast.success(successes.length === archiveTargetIds.length ? 'Sitio(s) archivado(s)' : `${successes.length} sitio(s) archivado(s)`);
+                      toast.success(successes.length === archiveTargetIds.length ? t('clientPostSites.archivedAll') : t('clientPostSites.archivedPartial', { count: successes.length }));
                     }
-                    const failures = results.filter(r => r.status === 'rejected');
-                    if (failures.length > 0) {
-                      toast.error('Error archiving some sites');
+                    if (linked.length > 0) {
+                      toast.error(t('clientPostSites.cannotArchiveLinkedGuards', { count: linked.length }));
+                    }
+                    if (errors.length > 0) {
+                      toast.error(t('clientPostSites.archivePartialError'));
                     }
                   } catch (err) {
-                    toast.error('Error archiving');
+                    toast.error(t('clientPostSites.archiveError'));
                   } finally {
                     setArchiveLoading(false);
                     setArchiveTargetIds([]);
                   }
-                }} className="px-4 py-2 rounded-md bg-red-600 text-white">{archiveLoading ? 'Archiving...' : 'Archive'}</button>
+                }} className="px-4 py-2 rounded-md bg-red-600 text-white">{archiveLoading ? t('clientPostSites.archiving') : t('clientPostSites.archive')}</button>
               </div>
             </div>
           </div>

@@ -522,10 +522,10 @@ export default function AdminOfficeUsersPage() {
 
                 <div className="mt-6 space-y-4">
                   <div className="space-y-2">
-                    <Label>{t('adminOfficeUsers.filters.categories', { defaultValue: 'Categorías' })}</Label>
+                    <Label>{t('adminOfficeUsers.filters.categories', { defaultValue: 'Sectores' })}</Label>
                     <Select value={filterCategory ?? 'all'} onValueChange={(v) => setFilterCategory(v === 'all' ? null : v)}>
                       <SelectTrigger>
-                        <SelectValue placeholder={t('adminOfficeUsers.filters.categories', { defaultValue: 'Categorías' })} />
+                        <SelectValue placeholder={t('adminOfficeUsers.filters.categories', { defaultValue: 'Sectores' })} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">{t('adminOfficeUsers.filters.categoriesAll', { defaultValue: 'Todas' })}</SelectItem>

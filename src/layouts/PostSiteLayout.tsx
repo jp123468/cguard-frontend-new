@@ -73,23 +73,45 @@ export default function PostSiteLayout({ title, children, site }: Props) {
                   {sections.map((section, idx) => (
                     <div key={idx} className="mb-0 pb-0">
                       <ul className="divide-y">
-                        {section.items.map((it) => {
-                          const path = resolve(it.path);
-                          const isActive = location.pathname === path;
-                          return (
-                            <li key={it.id} className="bg-white">
-                              <Link
-                                to={path}
-                                data-active={isActive ? 'true' : undefined}
-                                className={`flex items-center justify-between px-5 py-3 text-sm ${
-                                  isActive ? 'bg-orange-50 text-orange-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                                }`}
-                              >
-                                <span>{it.label}</span>
-                              </Link>
-                            </li>
-                          );
-                        })}
+                                {section.items.map((it) => {
+                                  const path = resolve(it.path);
+                                  const isActive = location.pathname === path;
+                                  // Temporarily hide these menu IDs by rendering an HTML comment
+                                  const hiddenIds = [
+                                    'kpis',
+                                    'postOrders',
+                                    'notes',
+                                    'files',
+                                    'tasks',
+                                    'geoFence',
+                                    'assignReports',
+                                    'checklists',
+                                    'emailReports',
+                                    'settings',
+                                    'informes'
+                                  ];
+
+                                  if (hiddenIds.includes(it.id)) {
+                                    const comment = `<!-- hidden-menu: id=${it.id} label=${it.label} path=${path} -->`;
+                                    return (
+                                      <li key={it.id} className="bg-white" dangerouslySetInnerHTML={{ __html: comment }} />
+                                    );
+                                  }
+
+                                  return (
+                                    <li key={it.id} className="bg-white">
+                                      <Link
+                                        to={path}
+                                        data-active={isActive ? 'true' : undefined}
+                                        className={`flex items-center justify-between px-5 py-3 text-sm ${
+                                          isActive ? 'bg-orange-50 text-orange-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                      >
+                                        <span>{it.label}</span>
+                                      </Link>
+                                    </li>
+                                  );
+                                })}
                       </ul>
                     </div>
                   ))}

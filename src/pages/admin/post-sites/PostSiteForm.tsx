@@ -193,7 +193,7 @@ export default function PostSiteForm({
             setCategories(categoryList);
         } catch (e) {
             console.error("Error loading categories:", e);
-            toast.error("No se pudieron cargar las categorías");
+            toast.error("No se pudieron cargar las Sectores");
         } finally {
             setLoadingCategories(false);
         }
@@ -534,7 +534,7 @@ export default function PostSiteForm({
                                         name="fax"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>{t('postSites.form.fax', 'Fax')}</FormLabel>
+                                                <FormLabel>{t('postSites.form.fax', 'Teléfono fijo')}</FormLabel>
                                                 <FormControl>
                                                     <PhoneInput
                                                         value={field.value ?? ""}
@@ -572,7 +572,7 @@ export default function PostSiteForm({
                                                         options={cats}
                                                         value={field.value ? String(field.value) : undefined}
                                                         onChange={field.onChange}
-                                                        placeholder={loadingCategories ? t('categories.loading', 'Cargando...') : t('postSites.form.slectcategory', 'Seleccionar categoría')}
+                                                        placeholder={loadingCategories ? t('categories.loading', 'Cargando...') : t('postSites.form.slectcategory', 'seleccionar sector de seguridadría')}
                                                         module="postSite"
                                                         onCategoryCreated={handleCategoryCreated}
                                                     />

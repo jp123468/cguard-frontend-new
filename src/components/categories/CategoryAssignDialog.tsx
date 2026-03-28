@@ -26,7 +26,7 @@ export default function CategoryAssignDialog({ open, onOpenChange, targetIds, on
         setCategories(res.rows || []);
       } catch (e) {
         console.error(e);
-        toast.error("No se pudieron cargar las categorías");
+        toast.error("No se pudieron cargar las Sectores");
       }
     })();
   }, [open]);
@@ -40,7 +40,7 @@ export default function CategoryAssignDialog({ open, onOpenChange, targetIds, on
     setLoading(true);
     try {
       await Promise.all(targetIds.map((id) => postSiteService.update(id, { categoryId: selected } as any)));
-      toast.success(targetIds.length > 1 ? "Categorías actualizadas" : "Categoría actualizada");
+      toast.success(targetIds.length > 1 ? "Sectores actualizadas" : "Categoría actualizada");
       onOpenChange(false);
       onDone?.();
     } catch (e) {
@@ -55,7 +55,7 @@ export default function CategoryAssignDialog({ open, onOpenChange, targetIds, on
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{targetIds.length > 1 ? 'Mover Sitios a Categoría' : 'Categorizar Sitio'}</DialogTitle>
+          <DialogTitle>{targetIds.length > 1 ? 'Mover Sitios a Categoría' : 'Sectorizar Sitio'}</DialogTitle>
           <DialogDescription>Selecciona la categoría destino para los sitios seleccionados.</DialogDescription>
         </DialogHeader>
 

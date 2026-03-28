@@ -505,7 +505,7 @@
       "contactDetails": {
         "title": "Detalhes de Contato",
         "phoneNumber": "Número de telefone",
-        "fax": "Fax",
+        "fax": "Teléfono fijo",
         "email": "Email",
         "website": "Website"
       }
@@ -523,16 +523,16 @@
     "generatingExcel": "Gerando Excel...",
     "excelDownloaded": "Excel baixado",
     "errorExportExcel": "Erro ao exportar Excel",
-    "categoriesUpdated": "Categorias atualizadas",
-    "errorUpdateCategories": "Erro ao atualizar categorias",
+    "categoriesUpdated": "Tipos atualizadas",
+    "errorUpdateCategories": "Erro ao atualizar Tipos",
     "selectAtLeastOneCategory": "Selecione pelo menos uma categoria",
-    "errorMoveCategories": "Erro ao mover categorias",
+    "errorMoveCategories": "Erro ao mover Tipos",
     "bulk": {
       "move": "Mover",
       "archive": "Arquivar",
       "restore": "Restaurar",
       "delete": "Excluir",
-      "manageCategories": "Gerenciar Categorias"
+      "manageCategories": "Gerenciar Tipos"
     },
     "columns": {
       "name": "Cliente",
@@ -606,9 +606,9 @@
       "locationSet": "Localização definida",
       "useMyLocation": "Usar minha localização",
       "moreInfo": "Mais informações",
-      "fax": "Fax",
+      "fax": "Teléfono fijo",
       "website": "Website",
-      "categories": "Categorias"
+      "categories": "Tipos"
     },
     "filters": {
       "title": "Filtros",
@@ -616,7 +616,7 @@
       "phone": "Número de telefone",
       "city": "Cidade",
       "country": "País",
-      "categories": "Categorias",
+      "categories": "Tipos",
       "status": "Status",
       "all": "Todos",
       "active": "Ativo",
@@ -648,17 +648,17 @@
     },
     "dialogs": {
       "changeCategories": {
-        "title": "Alterar categorias",
+        "title": "Alterar Tipos",
         "desc": "Aplica a {{count}} cliente(s) selecionados.",
-        "newCategories": "Novas categorias"
+        "newCategories": "Novas Tipos"
       },
       "categorize": {
-        "title": "Categorizar cliente"
+        "title": "Sectorizar cliente"
       }
     },
     "client": "Cliente",
     "loading": "Carregando...",
-    "selectCategories": "Selecione categorias",
+    "selectCategories": "Selecione Tipos",
     "cancel": "Cancelar",
     "save": "Salvar",
     "saving": "Salvando...",
@@ -741,13 +741,13 @@
     "action": "Ação",
     "move": "Mover",
     "archive": "Arquivar",
-    "manageCategories": "Gerenciar Categorias",
+    "manageCategories": "Gerenciar Tipos",
     "filters": {
       "email": "E-mail",
       "phone": "Número de Telefone",
       "city": "Cidade",
       "country": "País",
-      "categories": "Categorias",
+      "categories": "Tipos",
       "all": "Todos",
       "active": "Ativo",
       "archived": "Arquivado",
@@ -760,7 +760,7 @@
     "phones": "Telefone",
     "actions": "Ações",
     "viewDetails": "Visualizar detalhes",
-    "categorize": "Categorizar",
+    "categorize": "Sectorizar",
     "notsearch": "Nenhum resultado encontrado correspondente à sua pesquisa",
     "pdfexport": "Exportar a PDF",
     "excelexport": "Exportar a Excel",
@@ -792,7 +792,7 @@
       "email": "Endereço de e-mail *",
       "description": "Descrição *",
       "descriptionPlaceholder": "Descrição do site",
-      "fax": "Fax",
+      "fax": "Teléfono fijo",
       "category": "Categoria",
       "slectcategory": "Selecionar categoria",
       "cancel": "Cancelar",
@@ -879,7 +879,7 @@
       "ContactDetails": {
         "title": "Detalhes de Contato",
         "phoneNumber": "Número de telefone",
-        "fax": "Fax",
+        "fax": "Teléfono fijo",
         "email": "Email",
         "website": "Website"
       },
@@ -901,14 +901,14 @@
     "action": "Ação",
     "viewDetails": "Visualizar detalhes",
     "edit": "Editar",
-    "categorize": "Categorizar",
-    "categorize_label": "Categorizar",
+    "categorize": "Sectorizar",
+    "categorize_label": "Sectorizar",
     "archive": "Arquivar",
     "delete": "Excluir",
     "restore": "Restaurar",
     "save": "Salvar",
     "cancel": "Cancelar",
-    "manageCategories": "Gerenciar Categorias",
+    "manageCategories": "Gerenciar Tipos",
     "exportPdf": "Exportar como PDF",
     "exportExcel": "Exportar como Excel",
     "import": "Importar",
@@ -974,7 +974,7 @@
     },
     "filters": {
       "title": "Filtros",
-      "categories": "Categorias",
+      "categories": "Tipos",
       "categoriesAll": "Todas",
       "client": "Cliente",
       "clientAll": "Todos",

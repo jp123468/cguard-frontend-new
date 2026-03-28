@@ -1,6 +1,6 @@
 export const RESOURCE_LABELS: Record<string, string> = {
   user: 'Usuarios',
-  category: 'Categorías',
+  category: 'Sectores',
   auditLog: 'Registro de auditoría',
   settings: 'Ajustes',
   bannerSuperiorApp: 'Banner superior',
@@ -33,7 +33,7 @@ export const RESOURCE_LABELS: Record<string, string> = {
   memos: 'Memorandos',
   tutorial: 'Tutoriales',
   videoTutorial: 'Videos tutoriales',
-  videoTutorialCategory: 'Categorías de video',
+  videoTutorialCategory: 'Sectores de video',
   completionOfTutorial: 'Completitud de tutorial',
   deviceIdInformation: 'Dispositivos',
   insurance: 'Seguros',

@@ -307,7 +307,7 @@ export default function PostSitePage() {
           },
         },
         {
-          label: t('postSites.categorize', 'Categorizar'),
+          label: t('postSites.categorize', 'Sectorizar'),
           icon: <Tag className="h-4 w-4" />,
           onClick: () => {
             setAssignTargetIds([site.id]);
@@ -390,12 +390,12 @@ export default function PostSitePage() {
                   if (hasPermission('postSiteEdit')) actions.push({ value: "restaurar", label: t('postSites.restore', 'Restaurar') });
                   if (hasPermission('postSiteDestroy')) actions.push({ value: "eliminar", label: t('postSites.delete', 'Eliminar') });
                 }
-                if (hasPermission('postSiteEdit')) actions.push({ value: "gestionar-categorias", label: t('postSites.manageCategories', 'Gestionar Categorías') });
+                if (hasPermission('postSiteEdit')) actions.push({ value: "gestionar-Tipos", label: t('postSites.manageCategories', 'Gestionar Sectores') });
                 return actions;
               }, [filters.active, hasPermission])}
               onChange={async (action) => {
                 // centralized bulk action handler
-                if (action === "gestionar-categorias") {
+                if (action === "gestionar-Tipos") {
                   setOpenCategoryManager(true);
                   setBulkKey((k) => k + 1);
                   return;
@@ -537,7 +537,7 @@ export default function PostSitePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>{t('postSites.filters.categories', 'Categorías')}</Label>
+                    <Label>{t('postSites.filters.categories', 'Sectores')}</Label>
                     <Select
                       value={tempFilters.category || "all"}
                       onValueChange={(v) =>
@@ -548,7 +548,7 @@ export default function PostSitePage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={t('postSites.filters.categories', 'Categorías')} />
+                        <SelectValue placeholder={t('postSites.filters.categories', 'Sectores')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">{t('postSites.filters.all', 'Todas')}</SelectItem>

@@ -105,7 +105,7 @@ export default function VehiclesPage() {
 
                                 <div className="mt-6 space-y-5">
                                     <div className="space-y-2">
-                                        <Label>Categorías</Label>
+                                        <Label>Sectores</Label>
                                         <Select
                                             value={filters.categoryId ?? ""}
                                             onValueChange={(v) => setFilters((s) => ({ ...s, categoryId: v }))}

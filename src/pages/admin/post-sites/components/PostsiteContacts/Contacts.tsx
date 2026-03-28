@@ -88,38 +88,32 @@ export default function PostSiteContacts({ site }: { site?: any }) {
   useEffect(() => {
     let mounted = true;
     async function loadContacts() {
-      // Prefer loading via the client contacts endpoint and filter by postSite
-      let clientId = site?.clientId || (site?.client && site.client.id) || resolvedClientId;
-      // If we don't have a clientId yet but have a postSiteId, fetch the post site to resolve its client
-      if (!clientId && postSiteId) {
-        try {
-          const ps = await postSiteService.get(postSiteId);
-          if (!mounted) return;
-          clientId = ps?.clientId || ps?.clientAccountId || (ps?.client && ps.client.id) || (ps?.clientAccount && ps.clientAccount.id) || undefined;
-          if (clientId) setResolvedClientId(String(clientId));
-        } catch (err) {
-          console.warn('[PostSiteContacts] failed to fetch postSite to resolve clientId', err);
-          toast.error(t('clients.contacts.loadPostSiteError', 'Error al cargar datos del puesto'));
-        }
-      }
-      if (!clientId && !postSiteId) return;
+      if (!postSiteId && !site?.clientId) return;
       setLoading(true);
       try {
+        if (postSiteId) {
+          // Load contacts specific to this post site via dedicated endpoint
+          const resp = await postSiteService.getPostSiteContacts(postSiteId, { limit: 9999, offset: 0 });
+          if (!mounted) return;
+          const rows = Array.isArray(resp?.rows) ? resp.rows : (Array.isArray(resp) ? resp : []);
+          setContacts(rows.map((r: any) => ({
+            id: String(r.id || r._id || Date.now()),
+            name: r.name || r.fullName || r.contactName || '',
+            email: r.email || r.contactEmail,
+            mobile: r.mobile || r.phone || r.contactPhone,
+            postSite: site?.name || r.postSiteName || r.postSite || undefined,
+            description: r.description || r.desc || r.note || r.notes || '',
+          })));
+          return;
+        }
+
+        // Fallback: if we only have clientId, load all contacts for the client
+        const clientId = site?.clientId || (site?.client && site.client.id) || resolvedClientId;
         if (clientId) {
           const resp = await clientService.getClientContacts(String(clientId), { limit: 9999, offset: 0 });
           if (!mounted) return;
           const rows = Array.isArray(resp?.rows) ? resp.rows : [];
-          // Filter contacts that belong to this post site
-          const filteredRows = rows.filter((r: any) => {
-            // backend may store postSite as id or name; check common fields
-            if (r.postSite === postSiteId || String(r.postSite) === String(postSiteId)) return true;
-            if (r.postSiteId && (String(r.postSiteId) === String(postSiteId))) return true;
-            if (Array.isArray(r.postSiteIds) && r.postSiteIds.map(String).includes(String(postSiteId))) return true;
-            // sometimes postSite stored inside an object
-            if (r.postSite && typeof r.postSite === 'object' && (String(r.postSite.id) === String(postSiteId) || String(r.postSite._id) === String(postSiteId))) return true;
-            return false;
-          });
-          setContacts(filteredRows.map((r: any) => ({
+          setContacts(rows.map((r: any) => ({
             id: String(r.id || r._id || Date.now()),
             name: r.name || r.fullName || r.contactName || r.label || '',
             email: r.email,
@@ -127,12 +121,6 @@ export default function PostSiteContacts({ site }: { site?: any }) {
             postSite: site?.name || r.postSiteName || r.postSite || undefined,
             description: r.description || r.desc || r.note || r.notes || '',
           })));
-        } else {
-          // fallback: if no clientId but we have postSiteId, use postSiteService endpoint
-          const resp = await postSiteService.getPostSiteContacts(postSiteId, { limit: 9999, offset: 0 });
-          if (!mounted) return;
-          const rows = Array.isArray(resp?.rows) ? resp.rows : (Array.isArray(resp) ? resp : []);
-          setContacts(rows.map((r: any) => ({ id: String(r.id || r._id || Date.now()), name: r.name || r.fullName || r.contactName || '', email: r.email || r.contactEmail, mobile: r.mobile || r.phone || r.contactPhone, postSite: site?.name || r.postSiteName || r.postSite || undefined, description: r.description || r.desc || r.note || r.notes || '' })));
         }
       } catch (err) {
         console.warn('[PostSiteContacts] error loading contacts', err);
@@ -143,7 +131,7 @@ export default function PostSiteContacts({ site }: { site?: any }) {
     }
     loadContacts();
     return () => { mounted = false; };
-  }, [postSiteId, site?.clientId]);
+  }, [postSiteId, site?.clientId, resolvedClientId]);
 
   function handleOpenAdd() {
     setForm({});

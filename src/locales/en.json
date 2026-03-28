@@ -1114,7 +1114,7 @@
         "locationSet": "Location set",
         "useMyLocation": "Use my location",
         "moreInfo": "More information",
-        "fax": "Fax",
+        "fax": "Teléfono fijo",
         "website": "Website",
         "categories": "Categories",
         "active": "Active"
@@ -1258,7 +1258,7 @@
       "contactDetails": {
         "title": "Contact Details",
         "phoneNumber": "Phone Number",
-        "fax": "Fax",
+        "fax": "Teléfono fijo",
         "email": "Email",
         "website": "Website"
       }
@@ -1360,7 +1360,7 @@
         "email": "Email Address *",
         "description": "Description *",
         "descriptionPlaceholder": "Site description",
-        "fax": "Fax",
+        "fax": "Teléfono fijo",
         "category": "Category",
         "slectcategory": "Select category",
         "cancel": "Cancel",
@@ -1429,7 +1429,7 @@
       "addedOn": "Added On",
       "contactDetails": "Contact Details",
       "phoneNumber": "Phone Number",
-      "fax": "Fax",
+      "fax": "Teléfono fijo",
       "email": "Email",
       "website": "Website",
       "Details": {
@@ -1668,7 +1668,7 @@
         "ContactDetails": {
           "title": "Contact Details",
           "phoneNumber": "Phone Number",
-          "fax": "Fax",
+          "fax": "Teléfono fijo",
           "email": "Email",
           "website": "Website"
         },
@@ -2636,5 +2636,40 @@
     "add_comment_button": "Add comment",
     "edit": "Edit",
     "cancel": "Cancel"
+  },
+  "common": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "cancel": "Cancel"
+  },
+  "clientPostSites": {
+    "searchPlaceholder": "Search post sites...",
+    "newPostSite": "New Post Site",
+    "headers": {
+      "postSite": "Post Site",
+      "client": "Client",
+      "email": "Email",
+      "phoneNumber": "Phone Number",
+      "status": "Status"
+    },
+    "noResult": {
+      "title": "No Result Found",
+      "description": "We couldn't find any item matching your search"
+    },
+    "viewDetails": "View Details",
+    "archive": "Archive",
+    "confirmArchiveTitle": "Archive {{count}} post site(s)?",
+    "confirmArchiveDescription": "Are you sure you want to archive {{count}} post site(s)?",
+    "archivedAll": "All selected post sites archived",
+    "archivedPartial": "{{count}} post site(s) archived",
+    "archivePartialError": "Some items could not be archived",
+    "archiveError": "Error archiving post sites"
+  }
+  ,
+  "clientPostSites": {
+    "archiving": "Archiving...",
+    "action": "Action",
+    "selectAtLeastOne": "Select at least one post site",
+    "cannotArchiveLinkedGuards": "Cannot archive {{count}} site(s) because they have guards assigned. Unassign guards first."
   }
 }

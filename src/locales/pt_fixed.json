@@ -499,7 +499,7 @@
       "contactDetails": {
         "title": "Detalhes de Contato",
         "phoneNumber": "Número de telefone",
-        "fax": "Fax",
+        "fax": "Teléfono fijo",
         "email": "Email",
         "website": "Website"
       }
@@ -517,16 +517,16 @@
     "generatingExcel": "Gerando Excel...",
     "excelDownloaded": "Excel baixado",
     "errorExportExcel": "Erro ao exportar Excel",
-    "categoriesUpdated": "Categorias atualizadas",
-    "errorUpdateCategories": "Erro ao atualizar categorias",
+    "categoriesUpdated": "Tipos atualizadas",
+    "errorUpdateCategories": "Erro ao atualizar Tipos",
     "selectAtLeastOneCategory": "Selecione pelo menos uma categoria",
-    "errorMoveCategories": "Erro ao mover categorias",
+    "errorMoveCategories": "Erro ao mover Tipos",
     "bulk": {
       "move": "Mover",
       "archive": "Arquivar",
       "restore": "Restaurar",
       "delete": "Excluir",
-      "manageCategories": "Gerenciar Categorias"
+      "manageCategories": "Gerenciar Tipos"
     },
     "columns": {
       "name": "Cliente",
@@ -545,8 +545,8 @@
       "action": "Ação",
       "viewDetails": "Visualizar detalhes",
       "edit": "Editar",
-      "categorize": "Categorizar",
-      "categorize_label": "Categorizar",
+      "categorize": "Sectorizar",
+      "categorize_label": "Sectorizar",
       "archive": "Arquivar",
       "delete": "Excluir",
       "restore": "Restaurar"
@@ -565,7 +565,7 @@
       "phone": "Número de telefone",
       "city": "Cidade",
       "country": "País",
-      "categories": "Categorias",
+      "categories": "Tipos",
       "status": "Status",
       "all": "Todos",
       "active": "Ativo",
@@ -597,17 +597,17 @@
     },
     "dialogs": {
       "changeCategories": {
-        "title": "Alterar categorias",
+        "title": "Alterar Tipos",
         "desc": "Aplica a {{count}} cliente(s) selecionados.",
-        "newCategories": "Novas categorias"
+        "newCategories": "Novas Tipos"
       },
       "categorize": {
-        "title": "Categorizar cliente"
+        "title": "Sectorizar cliente"
       }
     },
     "client": "Cliente",
     "loading": "Carregando...",
-    "selectCategories": "Selecione categorias",
+    "selectCategories": "Selecione Tipos",
     "cancel": "Cancelar",
     "save": "Salvar",
     "saving": "Salvando...",

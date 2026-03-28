@@ -62,7 +62,7 @@ export function CategorySelect({
                 const mapped = res.rows.map((c) => ({ id: c.id, name: c.name }));
                 setItems(mapped);
             } catch {
-                toast.error(t('categories.notcategories', 'No hay categorías disponibles'));
+                toast.error(t('categories.notcategories', 'No hay Sectores disponibles'));
             } finally {
                 setIsLoading(false);
             }
@@ -84,7 +84,7 @@ export function CategorySelect({
 
     const handleCreate = async () => {
         if (!hasPermission('categoryCreate')) {
-            toast.error(t('categories.noPermissionCreate', 'No tienes permiso para crear categorías'));
+            toast.error(t('categories.noPermissionCreate', 'No tienes permiso para Crear sector de seguridads'));
             return;
         }
         if (!newName.trim()) {
@@ -138,7 +138,7 @@ export function CategorySelect({
                     <Command>
                         <CommandInput placeholder={t('categories.searchPlaceholder', 'Buscar...')} />
                         <CommandList>
-                            <CommandEmpty>{isLoading ? "Cargando..." : t('categories.notfoundcategory', 'No se encontraron categorías.')}</CommandEmpty>
+                            <CommandEmpty>{isLoading ? "Cargando..." : t('categories.notfoundcategory', 'No se encontraron Sectores.')}</CommandEmpty>
 
                             {hasPermission('categoryCreate') && (
                                 <CommandGroup>

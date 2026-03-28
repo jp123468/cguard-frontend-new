@@ -192,7 +192,7 @@ export default function ClientesPage() {
       const data = await categoryService.list({ filter: { module: "clientAccount" }, limit: 1000 });
       setCategories(data.rows || []);
     } catch (error) {
-      console.error("Error al cargar categorías:", error);
+      console.error("Error al cargar Sectores:", error);
     }
   };
 
@@ -259,7 +259,7 @@ export default function ClientesPage() {
   };
 
   const handleBulkAction = async (action: string) => {
-    if (action === "gestionar-categorias") {
+    if (action === "gestionar-Sectores") {
       // Permitir reabrir/retocar el diálogo aunque ya esté abierto
       setOpenCategoryManager((prev) => {
         if (prev) {
@@ -419,7 +419,7 @@ export default function ClientesPage() {
       return;
     }
     setMoveLoading(true);
-    console.log('🟢 Moviendo clientes a categorías:', {
+    console.log('🟢 Moviendo clientes a Sectores:', {
       selectedIds,
       categoryIds: moveCategories,
     });
@@ -457,7 +457,7 @@ export default function ClientesPage() {
       if (hasPermission('clientAccountEdit')) actions.push({ value: "restaurar", label: t('actions.restore') });
       if (hasPermission('clientAccountDestroy')) actions.push({ value: "eliminar", label: t('actions.delete') });
     }
-    if (hasPermission('clientAccountEdit')) actions.push({ value: "gestionar-categorias", label: t('actions.manageCategories') });
+    if (hasPermission('clientAccountEdit')) actions.push({ value: "gestionar-Sectores", label: t('actions.manageCategories') });
     return actions;
   }, [filters.active]);
 
@@ -480,7 +480,7 @@ export default function ClientesPage() {
       {
         key: "more",
         header: t('clients.columns.more', 'Más'),
-        className: "hidden md:table-cell text-right",
+        className: "hidden",
         render: (_v: any, row: Client) => (
           <div className="flex justify-end">
             <DropdownMenu>
@@ -599,21 +599,21 @@ export default function ClientesPage() {
       />
 
       <section className="p-4">
-          <div className="mb-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('clients.searchPlaceholder')}
-                className="pl-9 w-full sm:w-64"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-2">
               <BulkActionsSelect key={bulkKey} actions={bulkActions} onChange={handleBulkAction} />
+            </div>
+
+            <div className="flex-1 flex justify-center">
+              <div className="relative w-full max-w-md">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={t('clients.searchPlaceholder')}
+                  className="pl-9 w-full"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="ml-auto flex items-center gap-2">

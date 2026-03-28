@@ -136,7 +136,7 @@ export default function ShiftTemplates() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="delete">Eliminar</SelectItem>
-                <SelectItem value="categorize">Categorizar</SelectItem>
+                <SelectItem value="categorize">Sectorizar</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -363,7 +363,7 @@ export default function ShiftTemplates() {
                   </SheetHeader>
                   <div className="space-y-6 py-4">
                     <div className="grid gap-2">
-                      <Label>Categorías</Label>
+                      <Label>Sectores</Label>
                       <Select value={filters.categories} onValueChange={(v) => setFilters({ ...filters, categories: v })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar" />
@@ -457,7 +457,7 @@ export default function ShiftTemplates() {
                             <Trash2 className="mr-2 h-4 w-4" /> Eliminar
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <Tag className="mr-2 h-4 w-4" /> Categorizar
+                            <Tag className="mr-2 h-4 w-4" /> Sectorizar
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <Upload className="mr-2 h-4 w-4" /> Publicar Turno

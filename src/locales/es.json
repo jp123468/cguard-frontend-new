@@ -23,14 +23,14 @@
     "updatedAt": "Última actualización"
   },
   "categories": {
-    "notcategories": "No hay categorías disponibles",
-    "addcategory": "Crear categoría",
+    "notcategories": "No hay Sectores disponibles",
+    "addcategory": "Crear sector de seguridad",
     "addcategoryDescription": "Formulario para crear una nueva categoría.",
-    "noPermissionCreate": "No tienes permiso para crear categorías",
-    "noPermissionEdit": "No tienes permiso para editar categorías",
-    "noPermissionDelete": "No tienes permiso para eliminar categorías",
+    "noPermissionCreate": "No tienes permiso para Crear sector de seguridads",
+    "noPermissionEdit": "No tienes permiso para editar Sectores",
+    "noPermissionDelete": "No tienes permiso para eliminar Sectores",
     "nameRequired": "El nombre de la categoría es obligatorio",
-    "notfoundcategory": "No se encontraron categorías",
+    "notfoundcategory": "No se encontraron Sectores",
     "categoryCreated": "Categoría creada con éxito",
     "errorCreating": "Error al crear la categoría",
     "categoryEdited": "Categoría editada con éxito",
@@ -48,11 +48,11 @@
     "loading": "Cargando...",
     "delete": "Eliminar",
     "cannotDelete": "No se puede eliminar",
-    "categoriesnotloaded": "No se pudieron cargar las categorías.",
+    "categoriesnotloaded": "No se pudieron cargar las Sectores.",
     "namecategory": "Nombre de la categoría",
     "actions": "Acciones",
-    "title": "Administrador de categorías",
-    "titleDescription": "Gestiona las categorías para el módulo seleccionado. Las categorías en uso no pueden ser eliminadas.",
+    "title": "Administrador de Sectores",
+    "titleDescription": "Gestiona las Sectores para el módulo seleccionado. Las Sectores en uso no pueden ser eliminadas.",
     "confirmDeleteId": "¿Desea eliminar esta categoría?",
     "cannotDeleteMessage": "La categoría \"{{name}}\" no puede ser eliminada porque está en uso por {{count}} clientes.",
     "Understood": "Entendido"
@@ -619,7 +619,7 @@
       "newGuard": "Nuevo Guardia",
       "filters": "Filtros",
       "filter": {
-        "categories": "Categorías",
+        "categories": "Sectores",
         "categoriesAll": "Todas",
         "client": "Cliente",
         "clientAll": "Todos",
@@ -955,7 +955,7 @@
       "contactDetails": {
         "title": "Detalles de contacto",
         "phoneNumber": "Teléfono",
-        "fax": "Fax",
+        "fax": "Teléfono fijo",
         "email": "Correo electrónico",
         "website": "Sitio web"
       }
@@ -987,8 +987,7 @@
       "lng": "Longitud",
       "schedule": "Horario",
       "guardsCount": "Guardias",
-      "detailsTitle": "Detalles de la estación"
-      ,
+      "detailsTitle": "Detalles de la estación",
       "confirmRemovalTitle": "Confirmar eliminación",
       "confirmRemovalDesc": "¿Estás seguro de que deseas eliminar este puesto? Esta acción no se puede deshacer."
     },
@@ -1062,16 +1061,16 @@
     "generatingExcel": "Generando Excel...",
     "excelDownloaded": "Excel descargado",
     "errorExportExcel": "Error al exportar Excel",
-    "categoriesUpdated": "Categorías actualizadas",
-    "errorUpdateCategories": "Error al actualizar categorías",
+    "categoriesUpdated": "Sectores actualizadas",
+    "errorUpdateCategories": "Error al actualizar Sectores",
     "selectAtLeastOneCategory": "Selecciona al menos una categoría",
-    "errorMoveCategories": "Error al mover categorías",
+    "errorMoveCategories": "Error al mover Sectores",
     "bulk": {
       "move": "Mover",
       "archive": "Archivar",
       "restore": "Restaurar",
       "delete": "Eliminar",
-      "manageCategories": "Gestionar categorías"
+      "manageCategories": "Gestionar Sectores"
     },
     "columns": {
       "name": "Cliente",
@@ -1113,7 +1112,7 @@
         "Mobile Number": "Número móvil *",
         "Description": "Descripción",
         "descriptioninput": "Ingresa la descripción del contacto",
-        "AssignPostSite": "Asignar sitio publicado",
+        "AssignPostSite": "Indicar el Puesto de Seguridad",
         "checkbox": "Permitir que el guardia vea el contacto",
         "Addcontact": "AGREGAR"
       },
@@ -1179,9 +1178,9 @@
       "locationSet": "Ubicación establecida",
       "useMyLocation": "Usar mi ubicación",
       "moreInfo": "Más información",
-      "fax": "Fax",
+      "fax": "Teléfono fijo",
       "website": "Sitio web",
-      "categories": "Categorías",
+      "categories": "Tipo",
       "active": "Activo"
     },
     "filters": {
@@ -1190,7 +1189,7 @@
       "phone": "Teléfono",
       "city": "Ciudad",
       "country": "País",
-      "categories": "Categorías",
+      "categories": "Sectores",
       "status": "Estado",
       "all": "Todos",
       "active": "Activo",
@@ -1222,17 +1221,17 @@
     },
     "dialogs": {
       "changeCategories": {
-        "title": "Cambiar categorías",
+        "title": "Cambiar Sectores",
         "desc": "Aplica a {{count}} cliente(s) seleccionados.",
-        "newCategories": "Nuevas categorías"
+        "newCategories": "Nuevas Sectores"
       },
       "categorize": {
-        "title": "Categorizar cliente"
+        "title": "Sectorizar cliente"
       }
     },
     "client": "Cliente",
     "loading": "Cargando...",
-    "selectCategories": "Selecciona categorías",
+    "selectCategories": "Selecciona Sectores",
     "cancel": "Cancelar",
     "save": "Guardar",
     "saving": "Guardando...",
@@ -1281,13 +1280,13 @@
     "archive": "Archivar",
     "restore": "Restaurar",
     "delete": "Eliminar",
-    "manageCategories": "Gestionar Categorías",
+    "manageCategories": "Gestionar Sectores",
     "filters": {
       "email": "Correo electrónico",
       "phone": "Teléfono",
       "city": "Ciudad",
       "country": "País",
-      "categories": "Categorías",
+      "categories": "Sectores",
       "all": "Todos",
       "active": "Activo",
       "archived": "Archivado",
@@ -1300,7 +1299,7 @@
     "phones": "Teléfono",
     "actions": "Acciones",
     "viewDetails": "Ver Detalles",
-    "categorize": "Categorizar",
+    "categorize": "Sectorizar",
     "notsearch": "No se encontraron resultados que coincidan con tu búsqueda",
     "pdfexport": "Exportar a PDF",
     "excelexport": "Exportar a Excel",
@@ -1332,9 +1331,9 @@
       "email": "Correo electrónico *",
       "description": "Descripción *",
       "descriptionPlaceholder": "Descripción del sitio",
-      "fax": "Fax",
+      "fax": "Teléfono fijo",
       "category": "Categoría",
-      "slectcategory": "Seleccionar categoría",
+      "slectcategory": "seleccionar sector de seguridadría",
       "cancel": "Cancelar",
       "submit": "Enviar"
     },
@@ -1420,11 +1419,20 @@
       "detailserror": "No se pudieron cargar los detalles del puesto de vigilancia",
       "description": "Descripción",
       "category": "Categoría",
-      "categories": "Categorías"
+      "categories": "Sectores"
     },
     "stations": {
       "action": "Acción",
       "deleteSelected": "Eliminar seleccionados",
+      "selectOneToDelete": "Por favor selecciona al menos una estación para eliminar",
+      "removedMultiple": "Estaciones eliminadas",
+      "confirmRemovalMultipleTitle": "Confirmar eliminación de estaciones seleccionadas",
+      "confirmRemovalMultipleDesc": "¿Estás seguro de que deseas eliminar las estaciones seleccionadas? Esta acción no se puede deshacer.",
+      "remove": "Eliminar",
+      "confirmRemovalBlockedTitle": "No se puede eliminar la estación",
+      "confirmRemovalBlockedDesc": "Una o más estaciones seleccionadas tienen registros relacionados y no se pueden eliminar.",
+      "siteTours": "recorridos",
+      "tags": "etiquetas",
       "searchPlaceholder": "Buscar estaciones...",
       "add": "Agregar estación",
       "create": "Crear",
@@ -1498,13 +1506,13 @@
       "ContactDetails": {
         "title": "Detalles de contacto",
         "phoneNumber": "Número de teléfono",
-        "fax": "Fax",
+        "fax": "Teléfono fijo",
         "email": "Correo electrónico",
         "website": "Sitio web"
       },
       "MoreInformation": {
         "title": "Más información",
-        "categories": "Categorías",
+        "categories": "Sectores",
         "postalCode": "Código postal",
         "city": "Ciudad",
         "country": "País",
@@ -1626,7 +1634,7 @@
         "taskDescriptionPlaceholder": "Descripción de la tarea",
         "maxDuration": "Duración máxima",
         "assignGuard": "Asignar Guardia*",
-          "selectStationFirst": "Selecciona primero una estación",
+        "selectStationFirst": "Selecciona primero una estación",
         "newSubTask": "Nueva subtarea"
       },
       "oneoff": "Tarea única",
@@ -1903,19 +1911,51 @@
       "copyright": "© 2025-{{year}} CGUARD. Todos los derechos reservados."
     }
   },
+  "common": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "cancel": "Cancelar"
+  },
+  "clientPostSites": {
+    "searchPlaceholder": "Buscar puestos de vigilancia...",
+    "newPostSite": "Nuevo puesto",
+    "headers": {
+      "postSite": "Puesto",
+      "client": "Cliente",
+      "email": "Correo",
+      "phoneNumber": "Teléfono",
+      "status": "Estado"
+    },
+    "noResult": {
+      "title": "No se encontraron resultados",
+      "description": "No pudimos encontrar ningún elemento que coincida con tu búsqueda"
+    },
+    "viewDetails": "Ver detalles",
+    "archive": "Archivar",
+    "confirmArchiveTitle": "¿Archivar {{count}} puesto(s)?",
+    "confirmArchiveDescription": "¿Estás seguro de archivar {{count}} puesto(s)?",
+    "archivedAll": "Todos los puestos seleccionados archivados",
+    "archivedPartial": "{{count}} puesto(s) archivados",
+    "archivePartialError": "Algunos elementos no se pudieron archivar",
+    "archiveError": "Error al archivar los puestos",
+    "archiving": "Archivando...",
+    "action": "Acción",
+    "selectAtLeastOne": "Selecciona al menos un puesto",
+    "cannotArchiveLinkedGuards": "No se pueden archivar {{count}} puesto(s) porque tienen guardias asignados. Desvincula los guardias primero."
+  },
   "actions": {
     "action": "Acción",
     "viewDetails": "Ver detalles",
     "edit": "Editar",
-    "categorize": "Categorizar",
-    "categorize_label": "Categorizar",
+    "categorize": "Sectorizar",
+    "categorize_label": "Sectorizar",
     "archive": "Archivar",
     "delete": "Eliminar",
     "deleting": "Eliminando...",
     "restore": "Restaurar",
     "save": "Guardar",
     "cancel": "Cancelar",
-    "manageCategories": "Gestionar Categorías",
+    "manageCategories": "Gestionar Sectores",
     "exportPdf": "Exportar como PDF",
     "exportExcel": "Exportar como Excel",
     "import": "Importar",
@@ -2061,7 +2101,7 @@
     "newUser": "Nuevo Usuario",
     "filters": {
       "title": "Filtros",
-      "categories": "Categorías",
+      "categories": "Sectores",
       "categoriesAll": "Todas",
       "client": "Cliente",
       "clientAll": "Todos",
@@ -2702,10 +2742,10 @@
       "virtual": "Etiquetas Virtuales",
       "ble": "Beacons BLE"
     },
-        "loadingGuards": "Cargando guardias...",
-        "noGuardsFound": "No se encontraron guardias",
-        "noGuardsForStation": "No se encontraron guardias para este puesto"
-    ,"searchPlaceholder": "Buscar Etiquetas",
+    "loadingGuards": "Cargando guardias...",
+    "noGuardsFound": "No se encontraron guardias",
+    "noGuardsForStation": "No se encontraron guardias para este puesto",
+    "searchPlaceholder": "Buscar Etiquetas",
     "actions": {
       "delete": "Eliminar",
       "print": "Imprimir"

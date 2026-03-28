@@ -603,7 +603,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
 
                         {actionOpen && (
                             <div className="absolute left-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-20">
-                                {actionOptionsMap[activeTabKey].map(opt => (
+                                {(actionOptionsMap[activeTabKey] || []).map((opt: string) => (
                                     <button
                                         key={opt}
                                         onClick={() => { handleActionChange(activeTabKey, opt); setActionOpen(false); }}
