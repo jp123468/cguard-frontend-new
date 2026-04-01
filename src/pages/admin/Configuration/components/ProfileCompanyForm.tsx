@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import tenantService from '@/services/tenant.service';
 import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
 import OSMMapEmbed from "@/components/maps/OSMMapEmbed";
+import geocodeClient from '@/lib/geocodeClient';
 import CompanyDocumentsSection, { CompanyDocument } from "./profile/documents/CompanyDocumentsSection";
 import { validateCedulaOrRuc } from '@/lib/validators/id';
 
@@ -214,10 +215,8 @@ export default function ProfileCompanyForm() {
     // debounce to avoid many requests while typing
     timer = setTimeout(async () => {
       try {
-        const q = encodeURIComponent(form.address + ' Ecuador');
-        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=ec&q=${q}&limit=1`;
-        const res = await fetch(url);
-        const data = await res.json();
+        const q = form.address + ' Ecuador';
+        const data = await geocodeClient.searchGeocode(q, { addressdetails: '1', countrycodes: 'ec', limit: '1' });
         if (cancelled) return;
         if (Array.isArray(data) && data.length > 0) {
           const best = data[0];

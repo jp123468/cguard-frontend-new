@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import geocodeClient from '@/lib/geocodeClient';
 
 // Fix for default marker icon
 if (typeof window !== 'undefined' && L && L.Icon && L.Icon.Default) {
@@ -88,12 +89,10 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
   // Geocodificación inversa para mostrar dirección
   const fetchAddress = async (lat: number, lng: number) => {
     try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const display = data.display_name || "";
+      const data = await geocodeClient.reverseGeocode(lat, lng, { addressdetails: '1' });
+      const display = data?.display_name || "";
       setAddress(display);
-      const details = data.address || {};
+      const details = data?.address || {};
       if (onMarkerMove) onMarkerMove(lat, lng, display, details);
     } catch {
       setAddress("");

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import geocodeClient from '@/lib/geocodeClient';
 
 // Componente de autocompletado de direcciones para Ecuador usando Nominatim
 interface AddressAutocompleteECUProps {
@@ -29,13 +30,14 @@ const AddressAutocompleteECU: React.FC<AddressAutocompleteECUProps> = ({
   // Buscar sugerencias en Nominatim
   const fetchSuggestions = async (query: string) => {
     setLoading(true);
-    const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=${country}&q=${encodeURIComponent(
-      query
-    )}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    setSuggestions(data);
-    setLoading(false);
+    try {
+      const data = await geocodeClient.searchGeocode(query, { addressdetails: '1', countrycodes: country });
+      setSuggestions(data || []);
+    } catch (e) {
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Manejar cambios en el input

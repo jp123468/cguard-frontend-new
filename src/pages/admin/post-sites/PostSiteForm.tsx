@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { categoryService } from "@/lib/api/categoryService";
 import { stationService } from "@/lib/api/stationService";
 import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
+import geocodeClient from '@/lib/geocodeClient';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -162,38 +163,32 @@ export default function PostSiteForm({
             } else {
                 // If there's no addressComponents, try to geocode the typed address
                 const typed = form.getValues('address') || '';
-                if (typed && typed.length > 0) {
-                    try {
-                        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&accept-language=es&countrycodes=ec&q=${encodeURIComponent(
-                            typed
-                        )}`;
-                        const resp = await fetch(url);
-                        if (resp.ok) {
-                            const arr = await resp.json();
-                            if (Array.isArray(arr) && arr.length > 0) {
-                                const r = arr[0] as any;
-                                const lat = parseFloat(r.lat);
-                                const lng = parseFloat(r.lon);
-                                const addr = r.address || {};
-                                values.address = [addr.road, addr.house_number].filter(Boolean).join(' ') || r.display_name || typed;
-                                values.city = addr.city || addr.town || addr.village || addr.county || addr.state || (addr as any).city_district || addr.suburb || '';
-                                values.postalCode = addr.postcode || '';
-                                values.country = addr.country || '';
-                                values.latitud = String(lat);
-                                values.longitud = String(lng);
-                                // sync form fields
-                                setFormValue('address', values.address);
-                                setFormValue('city', values.city);
-                                setFormValue('postalCode', values.postalCode);
-                                setFormValue('country', values.country);
-                                setFormValue('latitud', values.latitud);
-                                setFormValue('longitud', values.longitud);
+                        if (typed && typed.length > 0) {
+                            try {
+                                const arr = await geocodeClient.searchGeocode(typed, { addressdetails: '1', limit: '1', 'accept-language': 'es', countrycodes: 'ec' });
+                                if (Array.isArray(arr) && arr.length > 0) {
+                                    const r = arr[0] as any;
+                                    const lat = parseFloat(r.lat);
+                                    const lng = parseFloat(r.lon);
+                                    const addr = r.address || {};
+                                    values.address = [addr.road, addr.house_number].filter(Boolean).join(' ') || r.display_name || typed;
+                                    values.city = addr.city || addr.town || addr.village || addr.county || addr.state || (addr as any).city_district || addr.suburb || '';
+                                    values.postalCode = addr.postcode || '';
+                                    values.country = addr.country || '';
+                                    values.latitud = String(lat);
+                                    values.longitud = String(lng);
+                                    // sync form fields
+                                    setFormValue('address', values.address);
+                                    setFormValue('city', values.city);
+                                    setFormValue('postalCode', values.postalCode);
+                                    setFormValue('country', values.country);
+                                    setFormValue('latitud', values.latitud);
+                                    setFormValue('longitud', values.longitud);
+                                }
+                            } catch (err) {
+                                // ignore and fallthrough to validation errors below
                             }
                         }
-                    } catch (err) {
-                        // ignore and fallthrough to validation errors below
-                    }
-                }
                 // After attempting geocode, re-check required fields
                 const a = form.getValues('address') || values.address || '';
                 const c = form.getValues('city') || values.city || '';
@@ -433,34 +428,28 @@ export default function PostSiteForm({
                         const typed = form.getValues('address') || '';
                         if (typed && typed.length > 2) {
                             try {
-                                const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&accept-language=es&countrycodes=ec&q=${encodeURIComponent(
-                                    typed
-                                )}`;
-                                const resp = await fetch(url);
-                                if (resp.ok) {
-                                    const arr = await resp.json();
-                                    if (Array.isArray(arr) && arr.length > 0) {
-                                        const r = arr[0] as any;
-                                        const lat = parseFloat(r.lat);
-                                        const lng = parseFloat(r.lon);
-                                        const addr = r.address || {};
-                                        const derived = {
-                                            address: [addr.road, addr.house_number].filter(Boolean).join(' ') || r.display_name || typed,
-                                            city: addr.city || addr.town || addr.village || addr.county || addr.state || (addr as any).city_district || addr.suburb || '',
-                                            postalCode: addr.postcode || '',
-                                            country: addr.country || '',
-                                            latitude: lat,
-                                            longitude: lng,
-                                        };
-                                        // Populate form values so RHF validation can succeed
-                                        setAddressComponents(derived as any);
-                                        setFormValue('address', derived.address);
-                                        setFormValue('city', derived.city);
-                                        setFormValue('postalCode', derived.postalCode);
-                                        setFormValue('country', derived.country);
-                                        setFormValue('latitud', String(derived.latitude));
-                                        setFormValue('longitud', String(derived.longitude));
-                                    }
+                                const arr = await geocodeClient.searchGeocode(typed, { addressdetails: '1', limit: '1', 'accept-language': 'es', countrycodes: 'ec' });
+                                if (Array.isArray(arr) && arr.length > 0) {
+                                    const r = arr[0] as any;
+                                    const lat = parseFloat(r.lat);
+                                    const lng = parseFloat(r.lon);
+                                    const addr = r.address || {};
+                                    const derived = {
+                                        address: [addr.road, addr.house_number].filter(Boolean).join(' ') || r.display_name || typed,
+                                        city: addr.city || addr.town || addr.village || addr.county || addr.state || (addr as any).city_district || addr.suburb || '',
+                                        postalCode: addr.postcode || '',
+                                        country: addr.country || '',
+                                        latitude: lat,
+                                        longitude: lng,
+                                    };
+                                    // Populate form values so RHF validation can succeed
+                                    setAddressComponents(derived as any);
+                                    setFormValue('address', derived.address);
+                                    setFormValue('city', derived.city);
+                                    setFormValue('postalCode', derived.postalCode);
+                                    setFormValue('country', derived.country);
+                                    setFormValue('latitud', String(derived.latitude));
+                                    setFormValue('longitud', String(derived.longitude));
                                 }
                             } catch (err) {
                                 // ignore

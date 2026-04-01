@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Search } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import geocodeClient from '@/lib/geocodeClient';
 
 // Fix for default marker icon
 // @ts-ignore
@@ -214,13 +215,8 @@ export default function AddressAutocompleteOSM({
       let data: SearchResult[] = [];
       for (const v of variants) {
         // Limit forward search to Ecuador to avoid far-away matches
-        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=10&accept-language=es&countrycodes=ec&q=${encodeURIComponent(
-          v
-        )}`;
         // eslint-disable-next-line no-await-in-loop
-        const response = await fetch(url);
-        // eslint-disable-next-line no-await-in-loop
-        const chunk: SearchResult[] = await response.json();
+        const chunk: SearchResult[] = await geocodeClient.searchGeocode(v, { addressdetails: '1', limit: '10', 'accept-language': 'es', countrycodes: 'ec' });
         if (Array.isArray(chunk) && chunk.length > 0) {
           data = chunk;
           break;
@@ -296,15 +292,7 @@ export default function AddressAutocompleteOSM({
 
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?` +
-        `format=jsonv2&lat=${lat}&lon=${lng}&` +
-        `addressdetails=1&accept-language=es`
-      );
-      if (!response.ok) {
-        throw new Error('Error en la respuesta de Nominatim');
-      }
-      const data = await response.json();
+      const data = await geocodeClient.reverseGeocode(lat, lng, { addressdetails: '1' });
       // Siempre actualizar el campo de dirección, aunque falten datos
       // debug
       // eslint-disable-next-line no-console
@@ -397,12 +385,7 @@ export default function AddressAutocompleteOSM({
                 const q = (searchQuery || '').trim();
                 if (q.length < 3) return;
                 // do a single, limited geocode
-                const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&accept-language=es&countrycodes=ec&q=${encodeURIComponent(
-                  q
-                )}`;
-                const resp = await fetch(url);
-                if (!resp.ok) return;
-                const arr = await resp.json();
+                const arr = await geocodeClient.searchGeocode(q, { addressdetails: '1', limit: '1', 'accept-language': 'es', countrycodes: 'ec' });
                 if (!Array.isArray(arr) || arr.length === 0) return;
                 const r = arr[0] as SearchResult;
                 const lat = parseFloat(r.lat);
