@@ -111,6 +111,10 @@ export default function ClientForm({
     });
 
     const personType = form.watch('personType' as any) || 'PN';
+    // Watch latitude/longitude so we can force remount of the map when they change
+    const watchedLat = form.watch('latitude' as any);
+    const watchedLng = form.watch('longitude' as any);
+    const addressMapKey = `${watchedLat || ''}_${watchedLng || ''}_${mode}_${id || ''}`;
     // Función para cargar Sectores del módulo clientAccount
     const loadCategories = async () => {
         setLoadingCategories(true);
@@ -204,8 +208,15 @@ export default function ClientForm({
         if (values.country !== undefined) basePayload.country = values.country;
         if (values.faxNumber !== undefined) basePayload.faxNumber = values.faxNumber;
         if (values.website !== undefined) basePayload.website = values.website;
-        if ((values as any).latitude !== undefined) basePayload.latitude = (values as any).latitude;
-        if ((values as any).longitude !== undefined) basePayload.longitude = (values as any).longitude;
+        // Ensure latitude/longitude are sent as numbers (or null) to backend
+        if ((values as any).latitude !== undefined) {
+            const rawLat = (values as any).latitude;
+            basePayload.latitude = rawLat === '' || rawLat === null ? null : Number.parseFloat(String(rawLat));
+        }
+        if ((values as any).longitude !== undefined) {
+            const rawLng = (values as any).longitude;
+            basePayload.longitude = rawLng === '' || rawLng === null ? null : Number.parseFloat(String(rawLng));
+        }
         if (values.active !== undefined) basePayload.active = values.active;
 
         try {
@@ -546,13 +557,45 @@ export default function ClientForm({
                                 return null;
                             })()}
                             <AddressAutocompleteOSM
+                                key={addressMapKey}
                                 onAddressSelect={(addressData: AddressComponents) => {
-                                    form.setValue('address', addressData.address);
-                                    form.setValue('city', addressData.city);
-                                    form.setValue('postalCode', addressData.postalCode);
-                                    form.setValue('country', addressData.country);
-                                    form.setValue('latitude' as any, String(addressData.latitude));
-                                    form.setValue('longitude' as any, String(addressData.longitude));
+                                    // Support different shapes returned by OSM/Nominatim or custom components
+                                    const anyAddr = addressData as any;
+                                    const addrObj = typeof anyAddr.address === 'object' && anyAddr.address ? anyAddr.address : {};
+
+                                    const latRaw = anyAddr.lat ?? anyAddr.lat ?? anyAddr.latitude ?? anyAddr.lat ?? anyAddr.lat ?? anyAddr.lat ?? anyAddr.latitude ?? anyAddr.latitude ?? anyAddr.latitude;
+                                    const lngRaw = anyAddr.lon ?? anyAddr.lng ?? anyAddr.longitude ?? anyAddr.long ?? anyAddr.lon ?? anyAddr.lng ?? anyAddr.longitude;
+
+                                    const addressStr = typeof anyAddr.address === 'string'
+                                        ? anyAddr.address
+                                        : (anyAddr.display_name || [
+                                            addrObj.road,
+                                            addrObj.suburb,
+                                            addrObj.town,
+                                            addrObj.village,
+                                            addrObj.county,
+                                            addrObj.municipality,
+                                            addrObj.state,
+                                            addrObj.postcode,
+                                            addrObj.country
+                                        ].filter(Boolean).join(', ') || '');
+
+                                    const cityStr = anyAddr.city ?? anyAddr.town ?? anyAddr.village ?? addrObj.town ?? addrObj.city ?? addrObj.village ?? '';
+                                    const postal = anyAddr.postcode ?? anyAddr.postalCode ?? addrObj.postcode ?? '';
+                                    const country = anyAddr.country ?? addrObj.country ?? '';
+
+                                    form.setValue('address', addressStr);
+                                    form.setValue('city', cityStr);
+                                    form.setValue('postalCode', postal);
+                                    form.setValue('country', country);
+
+                                    if (latRaw !== undefined && latRaw !== null) {
+                                        form.setValue('latitude' as any, String(latRaw));
+                                    }
+                                    if (lngRaw !== undefined && lngRaw !== null) {
+                                        form.setValue('longitude' as any, String(lngRaw));
+                                    }
+
                                     // deduplicated toast
                                     // eslint-disable-next-line @typescript-eslint/no-var-requires
                                     const { toastOnce } = require('@/lib/toastOnce');
@@ -562,8 +605,8 @@ export default function ClientForm({
                                 placeholder={t('clients.form.searchAddress', 'Buscar dirección...')}
                                 showMap={true}
                                 mapHeight="350px"
-                                initialLat={form.getValues('latitude' as any) ? Number.parseFloat(String(form.getValues('latitude' as any))) : undefined}
-                                initialLng={form.getValues('longitude' as any) ? Number.parseFloat(String(form.getValues('longitude' as any))) : undefined}
+                                initialLat={watchedLat ? Number.parseFloat(String(watchedLat)) : undefined}
+                                initialLng={watchedLng ? Number.parseFloat(String(watchedLng)) : undefined}
                             />
                             </>
                         ) : null}
