@@ -6,6 +6,7 @@ import { MapPin, Search } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import geocodeClient from '@/lib/geocodeClient';
+import { toast } from 'sonner';
 
 // Fix for default marker icon
 // @ts-ignore
@@ -224,8 +225,16 @@ export default function AddressAutocompleteOSM({
       }
       setSuggestions(data);
       setShowSuggestions(true);
-    } catch (error) {
+    } catch (error: any) {
       setSuggestions([]);
+      setShowSuggestions(false);
+      // user-friendly error for failed geocode
+      try {
+        const msg = (error && (error.message || String(error))) ? (error.message || String(error)) : 'Unable to geocode';
+        toast.error(msg);
+      } catch (e) {
+        try { toast.error('Unable to geocode'); } catch (e) {}
+      }
     } finally {
       setLoading(false);
     }
@@ -329,19 +338,25 @@ export default function AddressAutocompleteOSM({
           safeEmit(addressData);
         }
       }
-    } catch (error) {
-      setSearchQuery('');
-      safeEmit({
-        address: '',
-        city: '',
-        postalCode: '',
-        country: '',
-        latitude: lat,
-        longitude: lng,
-      });
-      // Avoid blocking alerts that may produce multiple UX interrupts; log instead
-      // eslint-disable-next-line no-console
-      console.warn('[AddressAutocompleteOSM] reverseGeocode failed for', lat, lng, error);
+    } catch (error: any) {
+        setSearchQuery('');
+        safeEmit({
+          address: '',
+          city: '',
+          postalCode: '',
+          country: '',
+          latitude: lat,
+          longitude: lng,
+        });
+        // show a toast so user knows reverse geocode failed
+        try {
+          const msg = (error && (error.message || String(error))) ? (error.message || String(error)) : 'Unable to reverse geocode';
+          toast.error(msg);
+        } catch (e) {
+          try { toast.error('Unable to reverse geocode'); } catch (e) {}
+        }
+        // eslint-disable-next-line no-console
+        console.warn('[AddressAutocompleteOSM] reverseGeocode failed for', lat, lng, error);
     }
   };
 
