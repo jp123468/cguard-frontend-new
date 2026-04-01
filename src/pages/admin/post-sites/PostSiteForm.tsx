@@ -96,6 +96,19 @@ export default function PostSiteForm({
         }
     }, [direccionDiferente, selectedClient]);
 
+    // Al marcar "dirección diferente": limpiar el campo de dirección para
+    // permitir ingresar una nueva dirección (el autocompletado se remonta).
+    useEffect(() => {
+        if (!direccionDiferente) return;
+        form.setValue('address', '', { shouldValidate: true, shouldDirty: true });
+        form.setValue('city', '', { shouldValidate: true, shouldDirty: true });
+        form.setValue('postalCode', '', { shouldValidate: true, shouldDirty: true });
+        form.setValue('country', '', { shouldValidate: true, shouldDirty: true });
+        form.setValue('latitud', undefined, { shouldValidate: true, shouldDirty: true });
+        form.setValue('longitud', undefined, { shouldValidate: true, shouldDirty: true });
+        setAddressComponents(null);
+    }, [direccionDiferente]);
+
     // Manejar cambio de cliente: fetch datos completos y actualizar selectedClient
     const handleClientChange = async (clientId: string) => {
         if (!clientId) {
@@ -113,6 +126,91 @@ export default function PostSiteForm({
 
     // Antes de enviar, si el checkbox NO está marcado, forzar los datos del cliente en el payload
     async function onSubmit(values: PostSiteInput) {
+        // Debug: show current addressComponents and form values at submit start
+        try {
+            // eslint-disable-next-line no-console
+            console.debug('[PostSiteForm] onSubmit - addressComponents:', addressComponents);
+            // eslint-disable-next-line no-console
+            console.debug('[PostSiteForm] form values at submit start:', {
+                address: form.getValues('address'),
+                city: form.getValues('city'),
+                postalCode: form.getValues('postalCode'),
+                country: form.getValues('country'),
+                latitud: form.getValues('latitud'),
+                longitud: form.getValues('longitud'),
+            });
+        } catch (e) {}
+        // If the user indicated a different address, prefer the values
+        // obtained from the map (`addressComponents`) to ensure the form
+        // receives address/city/postalCode/country and lat/lng before
+        // validation and submit.
+        if (direccionDiferente) {
+            if (addressComponents) {
+                values.address = addressComponents.address || '';
+                values.city = addressComponents.city || '';
+                values.postalCode = addressComponents.postalCode || '';
+                values.country = addressComponents.country || '';
+                values.latitud = String(addressComponents.latitude);
+                values.longitud = String(addressComponents.longitude);
+                // keep form inputs in sync
+                setFormValue('address', values.address);
+                setFormValue('city', values.city);
+                setFormValue('postalCode', values.postalCode);
+                setFormValue('country', values.country);
+                setFormValue('latitud', values.latitud);
+                setFormValue('longitud', values.longitud);
+            } else {
+                // If there's no addressComponents, try to geocode the typed address
+                const typed = form.getValues('address') || '';
+                if (typed && typed.length > 0) {
+                    try {
+                        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&accept-language=es&countrycodes=ec&q=${encodeURIComponent(
+                            typed
+                        )}`;
+                        const resp = await fetch(url);
+                        if (resp.ok) {
+                            const arr = await resp.json();
+                            if (Array.isArray(arr) && arr.length > 0) {
+                                const r = arr[0] as any;
+                                const lat = parseFloat(r.lat);
+                                const lng = parseFloat(r.lon);
+                                const addr = r.address || {};
+                                values.address = [addr.road, addr.house_number].filter(Boolean).join(' ') || r.display_name || typed;
+                                values.city = addr.city || addr.town || addr.village || addr.county || addr.state || (addr as any).city_district || addr.suburb || '';
+                                values.postalCode = addr.postcode || '';
+                                values.country = addr.country || '';
+                                values.latitud = String(lat);
+                                values.longitud = String(lng);
+                                // sync form fields
+                                setFormValue('address', values.address);
+                                setFormValue('city', values.city);
+                                setFormValue('postalCode', values.postalCode);
+                                setFormValue('country', values.country);
+                                setFormValue('latitud', values.latitud);
+                                setFormValue('longitud', values.longitud);
+                            }
+                        }
+                    } catch (err) {
+                        // ignore and fallthrough to validation errors below
+                    }
+                }
+                // After attempting geocode, re-check required fields
+                const a = form.getValues('address') || values.address || '';
+                const c = form.getValues('city') || values.city || '';
+                const p = form.getValues('postalCode') || values.postalCode || '';
+                const co = form.getValues('country') || values.country || '';
+                if (!a || !c || !p || !co) {
+                    toast.error(t('postSites.form.addressRequired', 'Debes seleccionar o ingresar la dirección del sitio'));
+                    return;
+                }
+                // ensure lat/lng are strings if present
+                const latVal = form.getValues('latitud') || values.latitud;
+                const lngVal = form.getValues('longitud') || values.longitud;
+                if (latVal !== undefined && latVal !== null) values.latitud = String(latVal);
+                if (lngVal !== undefined && lngVal !== null) values.longitud = String(lngVal);
+            }
+        }
+
         // Forzar los datos del cliente justo antes de enviar si el checkbox NO está marcado
         if (!direccionDiferente && selectedClient) {
             values.address = selectedClient.address || '';
@@ -120,8 +218,8 @@ export default function PostSiteForm({
             values.postalCode = selectedClient.postalCode || '';
             values.country = selectedClient.country || '';
             // Agregar latitud y longitud si existen en el cliente
-            values.latitud = selectedClient.latitud || selectedClient.latitude || '';
-            values.longitud = selectedClient.longitud || selectedClient.longitude || '';
+            values.latitud = String(selectedClient.latitud ?? selectedClient.latitude ?? '');
+            values.longitud = String(selectedClient.longitud ?? selectedClient.longitude ?? '');
         }
         // Forzar los valores en el form también (por si RHF hace validación interna)
         if (!direccionDiferente && selectedClient) {
@@ -155,16 +253,18 @@ export default function PostSiteForm({
             toast.error(e?.response?.data?.message ?? "Error al guardar");
         }
     }
-        // Cuando el usuario selecciona una dirección diferente con el mapa
-        const handleAddressSelect = (address: AddressComponents) => {
-            setAddressComponents(address);
-            setFormValue('address', address.address);
-            setFormValue('city', address.city);
-            setFormValue('postalCode', address.postalCode);
-            setFormValue('country', address.country);
-            setFormValue('latitud', address.latitude);
-            setFormValue('longitud', address.longitude);
-        };
+    // Cuando el usuario selecciona una dirección diferente con el mapa
+    const handleAddressSelect = (address: AddressComponents) => {
+        setAddressComponents(address);
+        try { console.debug('[PostSiteForm] handleAddressSelect ->', address); } catch (e) {}
+        setFormValue('address', address.address);
+        setFormValue('city', address.city);
+        setFormValue('postalCode', address.postalCode);
+        setFormValue('country', address.country);
+        // El validador espera strings para latitud/longitud
+        setFormValue('latitud', String(address.latitude));
+        setFormValue('longitud', String(address.longitude));
+    };
     // Deduplicate toasts across mounts and avoid duplicate navigation
     const shownToasts = useRef<Set<string>>(new Set());
     const showToastOnce = (key: string, message: string) => {
@@ -257,8 +357,8 @@ export default function PostSiteForm({
                     postalCode: (data as any).postalCode ?? (data as any).zipCode ?? "",
                     city: (data as any).city ?? "",
                     country: (data as any).country ?? "",
-                    latitud: (data as any).latitud ?? undefined,
-                    longitud: (data as any).longitud ?? undefined,
+                    latitud: (data as any).latitud !== undefined && (data as any).latitud !== null ? String((data as any).latitud) : undefined,
+                    longitud: (data as any).longitud !== undefined && (data as any).longitud !== null ? String((data as any).longitud) : undefined,
                     email: (data as any).contactEmail ?? data.email ?? "",
                     phone: (data as any).contactPhone ?? data.phone ?? "",
                     fax: data.fax || "",
@@ -326,7 +426,50 @@ export default function PostSiteForm({
     return (
         <div className="max-w-[1400px] mx-auto">
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-6">
+                <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    // If direccionDiferente and no addressComponents yet, try a geocode
+                    if (direccionDiferente && !addressComponents) {
+                        const typed = form.getValues('address') || '';
+                        if (typed && typed.length > 2) {
+                            try {
+                                const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&accept-language=es&countrycodes=ec&q=${encodeURIComponent(
+                                    typed
+                                )}`;
+                                const resp = await fetch(url);
+                                if (resp.ok) {
+                                    const arr = await resp.json();
+                                    if (Array.isArray(arr) && arr.length > 0) {
+                                        const r = arr[0] as any;
+                                        const lat = parseFloat(r.lat);
+                                        const lng = parseFloat(r.lon);
+                                        const addr = r.address || {};
+                                        const derived = {
+                                            address: [addr.road, addr.house_number].filter(Boolean).join(' ') || r.display_name || typed,
+                                            city: addr.city || addr.town || addr.village || addr.county || addr.state || (addr as any).city_district || addr.suburb || '',
+                                            postalCode: addr.postcode || '',
+                                            country: addr.country || '',
+                                            latitude: lat,
+                                            longitude: lng,
+                                        };
+                                        // Populate form values so RHF validation can succeed
+                                        setAddressComponents(derived as any);
+                                        setFormValue('address', derived.address);
+                                        setFormValue('city', derived.city);
+                                        setFormValue('postalCode', derived.postalCode);
+                                        setFormValue('country', derived.country);
+                                        setFormValue('latitud', String(derived.latitude));
+                                        setFormValue('longitud', String(derived.longitude));
+                                    }
+                                }
+                            } catch (err) {
+                                // ignore
+                            }
+                        }
+                    }
+                    // Now run RHF validation + onSubmit
+                    await form.handleSubmit(onSubmit, onError)();
+                }} className="space-y-6">
                     {/* Fila 1 */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField<PostSiteInput>
@@ -391,8 +534,21 @@ export default function PostSiteForm({
                                         <FormLabel>Dirección del sitio</FormLabel>
                                         <FormControl>
                                             <AddressAutocompleteOSM
+                                                key={direccionDiferente ? 'address-different' : 'address-same'}
                                                 onAddressSelect={handleAddressSelect}
-                                                defaultValue={form.getValues('address') || ''}
+                                                defaultValue={form.watch('address') || ''}
+                                                    suppressInitialReverse={direccionDiferente}
+                                                    onQueryChange={(q) => setFormValue('address', q)}
+                                                    onGeocodeResult={(addr) => {
+                                                        try { console.debug('[PostSiteForm] onGeocodeResult ->', addr); } catch (e) {}
+                                                        setAddressComponents(addr);
+                                                        setFormValue('address', addr.address);
+                                                        setFormValue('city', addr.city);
+                                                        setFormValue('postalCode', addr.postalCode);
+                                                        setFormValue('country', addr.country);
+                                                        setFormValue('latitud', String(addr.latitude));
+                                                        setFormValue('longitud', String(addr.longitude));
+                                                    }}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -458,7 +614,9 @@ export default function PostSiteForm({
 
                     </div>
                     {/* Mapa OSM con selector de tipo de mapa */}
-                    {(lat && lng) && (
+                    {/* Evitar mostrar el mapa duplicado: si el usuario marca "dirección diferente",
+                        el componente AddressAutocompleteOSM ya renderiza su propio mapa. */}
+                    {(lat && lng) && !direccionDiferente && (
                         <div className="my-4">
                             {/* Nota: el selector de tipo de mapa y la etiqueta de ubicación
                                 deben mostrarse debajo del bloque de horario. */}

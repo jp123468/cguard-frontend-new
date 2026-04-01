@@ -151,31 +151,12 @@ const stationService = {
 
   async get(id: string): Promise<any> {
     const tenantId = getTenantId();
-    // Some deployments expose the station resource under `/stations/:id` instead
-    // of `/post-site/:id`. Try `/stations/:id` first to avoid unnecessary 404s,
-    // then fall back to `/post-site/:id` for legacy deployments.
-    const stationsUrl = `/tenant/${tenantId}/stations/${id}`;
+    // Use the canonical `/post-site/:id` endpoint directly. Some deployments
+    // previously attempted `/stations/:id` first which produced noisy 404s
+    // for valid post-site resources; remove that fallback.
     const postSiteUrl = `/tenant/${tenantId}/post-site/${id}`;
-    try {
-      const { data } = await api.get(stationsUrl, { toast: { silentError: true } } as any);
-      return data;
-    } catch (err: any) {
-      // log the failing stations URL for debugging
-      console.error(`stationService.get: stations URL failed: ${stationsUrl}`, err);
-      // Some backends surface the HTTP status in different shapes.
-      const status = err?.response?.status ?? err?.status ?? err?.statusCode ?? null;
-      if (status === 404) {
-        try {
-          const { data } = await api.get(postSiteUrl, { toast: { silentError: true } } as any);
-          return data;
-        } catch (fallbackErr) {
-          console.error(`stationService.get: fallback post-site URL also failed: ${postSiteUrl}`, fallbackErr);
-          // rethrow the fallback error
-          throw fallbackErr;
-        }
-      }
-      throw err;
-    }
+    const { data } = await api.get(postSiteUrl, { toast: { silentError: true } } as any);
+    return data;
   },
 
   async create(payload: PostSiteInput): Promise<PostSite> {

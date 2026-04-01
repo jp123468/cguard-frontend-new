@@ -37,8 +37,12 @@ interface SearchResult {
     town?: string;
     village?: string;
     postcode?: string;
+    post_code?: string;
     country?: string;
     state?: string;
+    county?: string;
+    suburb?: string;
+    city_district?: string;
   };
 }
 
@@ -51,6 +55,9 @@ interface Props {
   showMap?: boolean;
   mapHeight?: string;
   openWithQuery?: string;
+  suppressInitialReverse?: boolean;
+  onQueryChange?: (q: string) => void;
+  onGeocodeResult?: (address: AddressComponents) => void;
 }
 
 function DraggableMarker({ position, setPosition, onDragEnd }: { position: [number, number], setPosition: (pos: [number, number]) => void, onDragEnd: (lat: number, lng: number) => void }) {
@@ -79,6 +86,9 @@ export default function AddressAutocompleteOSM({
   showMap = true,
   mapHeight = '300px',
   openWithQuery,
+  suppressInitialReverse = false,
+  onQueryChange,
+  onGeocodeResult,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState(defaultValue);
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
@@ -160,6 +170,7 @@ export default function AddressAutocompleteOSM({
   }, [position]);
 
   // When parent updates initialLat/initialLng (e.g., after async load), update position
+  // If `suppressInitialReverse` is true, do not call reverseGeocode on mount/update.
   useEffect(() => {
     const nl = Number(initialLat as any);
     const nlng = Number(initialLng as any);
@@ -168,15 +179,16 @@ export default function AddressAutocompleteOSM({
     if (okLat && okLng) {
       const newPos: [number, number] = [nl, nlng];
       setPosition(newPos);
-      // try reverse geocoding to update address fields when coordinates are provided
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        reverseGeocode(nl, nlng);
-      } catch (e) {
-        // ignore
+      if (!suppressInitialReverse) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          reverseGeocode(nl, nlng);
+        } catch (e) {
+          // ignore
+        }
       }
     }
-  }, [initialLat, initialLng]);
+  }, [initialLat, initialLng, suppressInitialReverse]);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -261,7 +273,15 @@ export default function AddressAutocompleteOSM({
     } catch (e) {}
     const addressData: AddressComponents = {
       address: [result.address.road, result.address.house_number].filter(Boolean).join(' ') || result.display_name,
-      city: result.address.city || result.address.town || result.address.village || '',
+      city:
+        result.address.city ||
+        result.address.town ||
+        result.address.village ||
+        result.address.county ||
+        result.address.state ||
+        (result.address as any).city_district ||
+        result.address.suburb ||
+        '',
       postalCode: result.address.postcode || '',
       country: result.address.country || '',
       latitude: lat,
@@ -290,11 +310,21 @@ export default function AddressAutocompleteOSM({
       // eslint-disable-next-line no-console
       console.debug('[AddressAutocompleteOSM] reverseGeocode result for', lat, lng, data.display_name);
       setSearchQuery(data.display_name || '');
+      try { onQueryChange && onQueryChange(data.display_name || ''); } catch (err) {}
+      const addr = data.address || {};
       const addressData: AddressComponents = {
-        address: (data.address && ([data.address.road, data.address.house_number].filter(Boolean).join(' '))) || data.display_name || '',
-        city: (data.address && (data.address.city || data.address.town || data.address.village)) || '',
-        postalCode: (data.address && data.address.postcode) || '',
-        country: (data.address && data.address.country) || '',
+        address: (addr && ([addr.road, addr.house_number].filter(Boolean).join(' '))) || data.display_name || '',
+        city:
+          addr.city ||
+          addr.town ||
+          addr.village ||
+          addr.county ||
+          addr.state ||
+          (addr as any).city_district ||
+          addr.suburb ||
+          (data.display_name ? data.display_name.split(',').slice(1, 2).join('').trim() : ''),
+        postalCode: (addr && (addr.postcode || addr.post_code)) || '',
+        country: (addr && addr.country) || '',
         latitude: lat,
         longitude: lng,
       };
@@ -354,9 +384,43 @@ export default function AddressAutocompleteOSM({
             type="text"
             value={searchQuery}
             onChange={(e) => {
-              setSearchQuery(e.target.value);
+              const v = e.target.value;
+              setSearchQuery(v);
               if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-              searchTimeoutRef.current = setTimeout(() => searchAddress(e.target.value), 500);
+              searchTimeoutRef.current = setTimeout(() => searchAddress(v), 500);
+              try { onQueryChange && onQueryChange(v); } catch (err) {}
+            }}
+            onBlur={async () => {
+              // When user leaves the input without selecting a suggestion,
+              // attempt a lightweight geocode to populate city/postal/country.
+              try {
+                const q = (searchQuery || '').trim();
+                if (q.length < 3) return;
+                // do a single, limited geocode
+                const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&accept-language=es&countrycodes=ec&q=${encodeURIComponent(
+                  q
+                )}`;
+                const resp = await fetch(url);
+                if (!resp.ok) return;
+                const arr = await resp.json();
+                if (!Array.isArray(arr) || arr.length === 0) return;
+                const r = arr[0] as SearchResult;
+                const lat = parseFloat(r.lat);
+                const lng = parseFloat(r.lon);
+                const addr = r.address || {};
+                const addressData: AddressComponents = {
+                  address: [addr.road, addr.house_number].filter(Boolean).join(' ') || r.display_name || q,
+                  city:
+                    addr.city || addr.town || addr.village || addr.county || addr.state || (addr as any).city_district || addr.suburb || '',
+                  postalCode: addr.postcode || '',
+                  country: addr.country || '',
+                  latitude: lat,
+                  longitude: lng,
+                };
+                try { onGeocodeResult && onGeocodeResult(addressData); } catch (e) {}
+              } catch (e) {
+                // ignore
+              }
             }}
             placeholder={placeholder}
             onFocus={() => setShowSuggestions(true)}
