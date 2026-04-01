@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Plus, ChevronDown } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 
 export default function PostSiteGeoFence({ site }: { site?: any }) {
   const [addOpen, setAddOpen] = useState(false);
   const addRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -15,6 +17,8 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
     return () => document.removeEventListener('click', onDocClick);
   }, []);
 
+  useScrollToTopOnMount(containerRef);
+
   function handleAdd(option: 'Allowed' | 'Restricted') {
     // Placeholder: open drawer or start creation flow
     console.log('Add geofence:', option);
@@ -23,7 +27,7 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
   }
 
   return (
-    <div className="space-y-4">
+  <div ref={containerRef} className="space-y-4">
       <div className="bg-white border rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Geo-Fence</h3>

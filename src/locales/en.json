@@ -1606,42 +1606,69 @@
           "virtual": "Virtual Tags",
           "ble": "Ble Beacons"
         },
+        "newTagButton": "New Tag",
         "action": "Action",
-        "searchPlaceholder": "Search Tags",
         "actions": {
           "delete": "Delete",
           "print": "Print"
         },
+        "searchPlaceholder": "Search...",
         "table": {
           "name": "Name",
           "tagId": "Tag Id",
-          "geofenceRadius": "Geofence Radius"
+          "geofenceRadius": "Radius (m)"
         },
+        "qrButton": "QR",
+        "loadingGuards": "Loading guards...",
+        "noGuardsFound": "No guards found",
+        "noGuardsForStation": "No guards found for this post site",
         "empty": {
-          "title": "No Result Found",
-          "message": "We can't find any item matching your search"
+          "title": "No tags",
+          "message": "No tags were found for this post site."
         },
         "placeholders": {
           "tagName": "Tag name"
         },
+        "loading": "Loading...",
+        "noTags": "No tags",
         "modal": {
           "title": "New Tag",
-          "refresh": "Refresh"
+          "existingTitle": "Existing Tags",
+          "refresh": "Refresh",
+          "saveDraft": "Save As Draft",
+          "submit": "Submit"
         },
         "form": {
+          "siteTour": "Site Tour",
+          "selectTour": "Select a tour",
+          "loadingTours": "Loading tours...",
+          "attachToShift": "Attach to shift (optional)",
+          "noShifts": "No shifts",
+          "createTourAndTag": "Create tour and tag",
           "name": "Name*",
           "tagId": "Tag Id*",
+          "instructions": "Instructions for the guards",
+          "mapLocation": "Map Location",
+          "noCoordinates": "No coordinates selected",
+          "mapToStationLabel": "Map to station (quick)",
+          "coordsPlaceholder": "Lat, Lng",
+          "loadingStations": "Loading stations...",
+          "selectStationOptional": "Select station (optional)",
           "location": "Location",
-          "instructions": "Instructions For The Guards*",
           "askQuestionsLabel": "Ask guards specific questions after they scan the tag",
           "latitude": "Latitude*",
           "longitude": "Longitude*",
-          "mapLocation": "Map Location",
           "showGeoFence": "Show Geo-Fence"
         },
         "buttons": {
           "saveDraft": "Save As Draft",
           "submit": "Submit"
+        },
+        "qrModal": {
+          "title": "QR",
+          "print": "Print",
+          "copy": "Copy",
+          "copiedToast": "Copied"
         }
       },
       "profile": {

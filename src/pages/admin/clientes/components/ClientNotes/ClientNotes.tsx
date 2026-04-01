@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, ChevronDown, Plus, X, Calendar as CalendarIcon, EllipsisVertical, Pencil, Trash, Eye } from 'lucide-react';
 import ClientsLayout from '@/layouts/ClientsLayout';
 import AppLayout from '@/layouts/app-layout';
@@ -19,6 +20,7 @@ type Props = {
 export default function ClientNotes({ client }: Props) {
     const { t } = useTranslation();
     const actionRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
     const [pickerMonth, setPickerMonth] = useState<Date>(() => new Date());
 
     const [actionOpen, setActionOpen] = useState(false);
@@ -115,6 +117,8 @@ export default function ClientNotes({ client }: Props) {
         }
     }, [actionOpen]);
 
+    useScrollToTopOnMount(containerRef);
+
     const handleSubmitNote = async () => {
         if (!formData.title || !formData.title.trim()) {
             toast.error(t('clients.notes.validation.titleRequired', 'Title is required'));
@@ -182,7 +186,7 @@ export default function ClientNotes({ client }: Props) {
     const shortName = (name: string, max = 28) => (name.length <= max ? name : name.slice(0, max) + '...');
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div ref={containerRef} className="min-h-screen flex flex-col">
             <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
                 <div className="flex items-center justify-between gap-4 mb-6">
                     <div className="relative" ref={actionRef}>

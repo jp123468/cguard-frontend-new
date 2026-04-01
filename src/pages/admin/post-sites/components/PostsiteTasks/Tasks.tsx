@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, ChevronDown, Plus, X } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function Tasks({ site }: { site?: any }) {
     const { t } = useTranslation();
@@ -20,6 +21,7 @@ export default function Tasks({ site }: { site?: any }) {
     const [dueTime, setDueTime] = useState('');
     const [subTasks, setSubTasks] = useState<string[]>([]);
     const [newSubTask, setNewSubTask] = useState('');
+    const containerRef = useRef<HTMLDivElement | null>(null);
 
     const guardOptions = [
         { id: 'guard-1', name: 'John Doe' },
@@ -27,8 +29,10 @@ export default function Tasks({ site }: { site?: any }) {
         { id: 'guard-3', name: 'Carlos Ruiz' },
     ];
 
+    useScrollToTopOnMount(containerRef);
+
     return (
-        <div className="space-y-4">
+        <div ref={containerRef} className="space-y-4">
             <div className="bg-white border rounded-lg p-4">
                 <div className="flex items-center justify-between gap-4 mb-4">
                     <div className="relative">

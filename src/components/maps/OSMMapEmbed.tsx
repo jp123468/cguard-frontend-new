@@ -32,6 +32,8 @@ interface OSMMapEmbedProps {
   mapType?: 'osm' | 'satellite';
   // onMarkerMove: lat, lng, display_name, and structured address details
   onMarkerMove?: (lat: number, lng: number, address: string, addressDetails?: any) => void;
+  // allow parent to disable marker dragging (readonly views)
+  draggable?: boolean;
 }
 
 const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
@@ -42,6 +44,7 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
   className = "w-full rounded-md border overflow-hidden",
   mapType = 'osm',
   onMarkerMove,
+  draggable = true,
 }) => {
   if (!lat || !lng) return null;
   const initialLat = typeof lat === "string" ? parseFloat(lat) : lat;
@@ -118,7 +121,7 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
   }, [markerPos[0], markerPos[1]]);
 
   return (
-    <div style={{ position: 'relative', height }} className={className}>
+    <div style={{ position: 'relative', height, zIndex: 0 }} className={className}>
       <button
         style={{
           position: 'absolute',
@@ -159,9 +162,9 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
       <MapContainer
         center={markerPos}
         zoom={zoom}
-        style={{ height: "100%", width: "100%" }}
+        style={{ height: "100%", width: "100%", zIndex: 0 }}
         scrollWheelZoom={true}
-        dragging={true}
+        dragging={draggable}
         doubleClickZoom={true}
         zoomControl={true}
         ref={mapRef as any}
@@ -179,15 +182,15 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
         )}
         <Marker
           position={markerPos}
-          draggable={true}
-          eventHandlers={{
+          draggable={draggable}
+          eventHandlers={draggable ? {
             dragend: (e) => {
               const marker = e.target;
               const pos = marker.getLatLng();
               setMarkerPos([pos.lat, pos.lng]);
               // fetchAddress(pos.lat, pos.lng) se llama por useEffect
             },
-          }}
+          } : undefined}
         />
         </MapContainer>
       {address && (

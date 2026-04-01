@@ -307,6 +307,19 @@ export default function PostSiteForm({
     const lat = form.watch('latitud');
     const lng = form.watch('longitud');
 
+    // Watch station schedule to disable/hide start/end when schedule is 24 hours
+    const stationScheduleValue = form.watch('stationSchedule');
+    const scheduleNumber = parseInt(String(stationScheduleValue || ''), 10);
+    const is24Hours = !isNaN(scheduleNumber) && scheduleNumber === 24;
+
+    // If schedule becomes 24 hours, clear start/end time fields
+    useEffect(() => {
+        if (is24Hours) {
+            setFormValue('startingTimeInDay', '');
+            setFormValue('finishTimeInDay', '');
+        }
+    }, [is24Hours]);
+
     // Estado para tipo de mapa
     const [mapType, setMapType] = useState<'osm' | 'satellite'>('osm');
 
@@ -447,77 +460,94 @@ export default function PostSiteForm({
                     {/* Mapa OSM con selector de tipo de mapa */}
                     {(lat && lng) && (
                         <div className="my-4">
-                            <div className="flex items-center justify-between mb-1">
-                                <label className="block text-sm font-medium text-gray-700">Ubicación en el mapa</label>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-600">Tipo de mapa</span>
-                                    <select
-                                        className="border rounded px-2 py-1 text-xs"
-                                        value={mapType}
-                                        onChange={e => setMapType(e.target.value as 'osm' | 'satellite')}
-                                    >
-                                        <option value="osm">OpenStreetMap</option>
-                                        <option value="satellite">Satélite</option>
-                                    </select>
-                                </div>
-                                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <FormField<PostSiteInput>
-                                        control={form.control}
-                                        name="stationSchedule"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Horario</FormLabel>
-                                                <FormControl>
-                                                    <Select value={field.value ?? ''} onValueChange={(v) => field.onChange(v)}>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Seleccione horario" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="1 hora">1 hora</SelectItem>
-                                                            <SelectItem value="4 horas">4 horas</SelectItem>
-                                                            <SelectItem value="8 horas">8 horas</SelectItem>
-                                                            <SelectItem value="10 horas">10 horas</SelectItem>
-                                                            <SelectItem value="12 horas">12 horas</SelectItem>
-                                                            <SelectItem value="14 horas">14 horas</SelectItem>
-                                                            <SelectItem value="16 horas">16 horas</SelectItem>
-                                                            <SelectItem value="24 horas">24 horas</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                            {/* Nota: el selector de tipo de mapa y la etiqueta de ubicación
+                                deben mostrarse debajo del bloque de horario. */}
 
-                                    <FormField<PostSiteInput>
-                                        control={form.control}
-                                        name="startingTimeInDay"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Hora inicio</FormLabel>
-                                                <FormControl>
-                                                    <Input type="time" {...field} value={field.value ?? ''} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                            <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <FormField<PostSiteInput>
+                                    control={form.control}
+                                    name="stationSchedule"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Horario</FormLabel>
+                                            <FormControl>
+                                                <Select value={field.value ?? ''} onValueChange={(v) => field.onChange(v)}>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Seleccione horario" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="1 hora">1 hora</SelectItem>
+                                                        <SelectItem value="4 horas">4 horas</SelectItem>
+                                                        <SelectItem value="8 horas">8 horas</SelectItem>
+                                                        <SelectItem value="10 horas">10 horas</SelectItem>
+                                                        <SelectItem value="12 horas">12 horas</SelectItem>
+                                                        <SelectItem value="14 horas">14 horas</SelectItem>
+                                                        <SelectItem value="16 horas">16 horas</SelectItem>
+                                                        <SelectItem value="24 horas">24 horas</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                                    <FormField<PostSiteInput>
-                                        control={form.control}
-                                        name="finishTimeInDay"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Hora fin</FormLabel>
-                                                <FormControl>
-                                                    <Input type="time" {...field} value={field.value ?? ''} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
+                                {!is24Hours ? (
+                                    <>
+                                        <FormField<PostSiteInput>
+                                            control={form.control}
+                                            name="startingTimeInDay"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Hora inicio</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="time" {...field} value={field.value ?? ''} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <FormField<PostSiteInput>
+                                            control={form.control}
+                                            name="finishTimeInDay"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Hora fin</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="time" {...field} value={field.value ?? ''} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </>
+                                ) : (
+                                    <div className="flex items-center col-span-2">
+                                        <div className="text-sm text-gray-500">Horario 24 horas seleccionado — no aplica hora inicio/fin</div>
+                                    </div>
+                                )}
                             </div>
+
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Ubicación en el mapa</label>
+
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-gray-600">Tipo de mapa</span>
+                                        <select
+                                            className="border rounded px-2 py-1 text-xs"
+                                            value={mapType}
+                                            onChange={e => setMapType(e.target.value as 'osm' | 'satellite')}
+                                        >
+                                            <option value="osm">OpenStreetMap</option>
+                                            <option value="satellite">Satélite</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>{/* placeholder for future quick actions */}</div>
+                            </div>
+
                             <OSMMapEmbed lat={lat} lng={lng} mapType={mapType} />
                         </div>
                     )}

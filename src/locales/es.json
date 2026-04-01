@@ -186,7 +186,7 @@
       "notas": "Notas",
       "recordatorios": "Recordatorios",
       "archivos": "Archivos",
-      "asignarSitios": "Asignas Estaciones",
+      "asignarSitios": "Asignar Estaciones",
       "conjuntoHabilidades": "Conjunto de Habilidades",
       "departamento": "Departamento",
       "configuracion": "Configuración"
@@ -423,7 +423,7 @@
         "delete": "Eliminar"
       },
       "searchPlaceholder": "Buscar puestos de seguridad",
-      "assignButton": "Asignas Estacionesde seguridad",
+      "assignButton": "Asignar Estacionesde seguridad",
       "table": {
         "client": "Cliente",
         "postSites": "Puestos de seguridad",
@@ -431,7 +431,7 @@
       },
       "loadError": "No se pudo cargar el guardia",
       "modal": {
-        "title": "Asignas Estacionesde seguridad",
+        "title": "Asignar Estacionesde seguridad",
         "cancel": "Cancelar",
         "assign": "Asignar"
       },
@@ -529,7 +529,7 @@
           "emailAlreadyAdded": "Este correo ya ha sido agregado"
         },
         "standardReports": "Informes Estándar",
-        "incidentReports": "Informes de Incidentes",
+        "incidentReports": "Informes de Incidentes(últimos 7 días)",
         "routeReports": "Informes de Recorridos por el Sitio",
         "taskReports": "Informes de Tareas",
         "verificationReports": "Informes de Listas de Verificación",
@@ -936,13 +936,17 @@
       "userAccess": "Acceso de usuarios",
       "emailReports": "Reportes por correo"
     },
+    "validation": {
+      "cedula_invalid": "Cédula inválida",
+      "ruc_invalid": "RUC inválido (debe terminar en 001 y contener cédula válida)"
+    },
     "overview": {
       "cards": {
         "postSites": "Puestos vigilados",
         "guardsAssigned": "Guardias asignados",
         "toursCompleted": "Recorridos completados (últimos 7 días)",
         "tasksCompleted": "Tareas completadas (últimos 7 días)",
-        "incidents": "Informes de incidentes",
+        "incidents": "Informes de Incidentes (últimos 7 días)",
         "hoursWorked": "Horas trabajadas (últimos 7 días)"
       },
       "generalInfo": {
@@ -1344,7 +1348,7 @@
         "guardOnSite": "Guardias en el sitio",
         "toursCompleted": "Recorridos completados (últimos 7 días)",
         "tasksCompleted": "Tareas completadas (últimos 7 días)",
-        "incidentsReported": "Incidentes reportados",
+        "incidentsReported": "Incidentes reportados (últimos 7 días)",
         "hoursLogged": "Horas registradas (últimos 7 días)"
       },
       "Map": {
@@ -1554,7 +1558,7 @@
       "metrics": {
         "standardReports": "Informes estándar",
         "taskReports": "Informes de tareas",
-        "incidentReports": "Informes de incidentes",
+        "incidentReports": "Informes de Incidentes (últimos 7 días)",
         "routeReports": "Informes de rutas",
         "verificationReports": "Informes de verificación"
       },
@@ -1575,7 +1579,7 @@
         "description": "Descripción",
         "descriptionPlaceholder": "Ingrese descripción",
         "standardReports": "Informes estándar",
-        "incidentReports": "Informes de incidentes",
+        "incidentReports": "Informes de Incidentes (últimos 7 días)",
         "routeReports": "Informes de rutas",
         "taskReports": "Informes de tareas",
         "verificationReports": "Informes de verificación",
@@ -1608,7 +1612,7 @@
       "guardOnSite": "Guardia en el sitio",
       "toursCompleted": "Recorridos completados (últimos 7 días)",
       "tasksCompleted": "Tareas completadas (últimos 7 días)",
-      "incidentsReported": "Incidentes reportados",
+      "incidentsReported": "Incidentes reportados (últimos 7 días)",
       "hoursLogged": "Horas registradas (últimos 7 días)"
     },
     "tasks": {
@@ -2208,9 +2212,9 @@
         "selectAll": "Seleccionar todos",
         "noOptions": "Sin opciones",
         "assignClientsPlaceholder": "Asignar Clientes",
-        "assignSitesPlaceholder": "Asignas Estacionesde vigilancia",
+        "assignSitesPlaceholder": "Asignar Estacionesde vigilancia",
         "assignClientsLabel": "Asignar Clientes",
-        "assignSitesLabel": "Asignas Estacionesde vigilancia",
+        "assignSitesLabel": "Asignar Estacionesde vigilancia",
         "assignStationsPlaceholder": "Asignar Estaciones",
         "assignStationsLabel": "Asignar Estaciones",
         "create": "Crear",
@@ -2258,9 +2262,9 @@
         "selectAll": "Seleccionar todos",
         "noOptions": "Sin opciones",
         "assignClientsPlaceholder": "Asignar Clientes*",
-        "assignSitesPlaceholder": "Asignas Estacionesde vigilancia",
+        "assignSitesPlaceholder": "Asignar Estacionesde vigilancia",
         "assignClientsLabel": "Asignar Clientes*",
-        "assignSitesLabel": "Asignas Estacionesde vigilancia",
+        "assignSitesLabel": "Asignar Estacionesde vigilancia",
         "save": "Guardar",
         "send": "Enviar",
         "savingEdit": "Guardando...",
@@ -2699,6 +2703,12 @@
       "refresh": "Recargar"
     },
     "form": {
+      "createTitle": "Crear recorrido",
+      "name": "Nombre del recorrido",
+      "station": "Estación (opcional)",
+      "selectStation": "Seleccionar estación",
+      "selectGuard": "Seleccionar guardia",
+      "createAndAttach": "Crear recorrido y etiqueta",
       "tourName": "Nombre del Recorrido*",
       "tourDescription": "Descripción del Recorrido",
       "scheduledDays": "Días Programados*",
@@ -2742,44 +2752,69 @@
       "virtual": "Etiquetas Virtuales",
       "ble": "Beacons BLE"
     },
-    "loadingGuards": "Cargando guardias...",
-    "noGuardsFound": "No se encontraron guardias",
-    "noGuardsForStation": "No se encontraron guardias para este puesto",
-    "searchPlaceholder": "Buscar Etiquetas",
+    "newTagButton": "Nueva etiqueta",
+    "action": "Acción",
     "actions": {
       "delete": "Eliminar",
       "print": "Imprimir"
     },
+    "searchPlaceholder": "Buscar...",
     "table": {
       "name": "Nombre",
       "tagId": "ID de Etiqueta",
-      "geofenceRadius": "Radio de Geo-cerca"
+      "geofenceRadius": "Radio (m)"
     },
+    "qrButton": "QR",
+    "loadingGuards": "Cargando guardias...",
+    "noGuardsFound": "No se encontraron guardias",
+    "noGuardsForStation": "No se encontraron guardias para este puesto",
     "empty": {
-      "title": "No se encontraron resultados",
-      "message": "No pudimos encontrar elementos que coincidan con tu búsqueda"
+      "title": "Sin etiquetas",
+      "message": "No se encontraron etiquetas para este puesto."
     },
     "placeholders": {
       "tagName": "Nombre de la etiqueta"
     },
+    "loading": "Cargando...",
+    "noTags": "No hay etiquetas",
     "modal": {
       "title": "Nueva Etiqueta",
-      "refresh": "Recargar"
+      "existingTitle": "Etiquetas existentes",
+      "refresh": "Recargar",
+      "saveDraft": "Guardar borrador",
+      "submit": "Enviar"
     },
     "form": {
+      "siteTour": "Recorrido",
+      "selectTour": "Seleccione una estación",
+      "loadingTours": "Cargando recorridos...",
+      "attachToShift": "Adjuntar a turno (opcional)",
+      "noShifts": "No hay turnos",
+      "createTourAndTag": "Crear recorrido y etiqueta",
       "name": "Nombre*",
       "tagId": "ID de Etiqueta*",
+      "instructions": "Instrucciones para los guardias",
+      "mapLocation": "Ubicar en mapa",
+      "noCoordinates": "No se seleccionaron coordenadas",
+      "mapToStationLabel": "Relacionar con estación (rápido)",
+      "coordsPlaceholder": "Lat, Lng",
+      "loadingStations": "Cargando estaciones...",
+      "selectStationOptional": "Seleccionar estación (opcional)",
       "location": "Ubicación",
-      "instructions": "Instrucciones para los guardias*",
       "askQuestionsLabel": "Pedir preguntas al guardia tras escanear",
       "latitude": "Latitud*",
       "longitude": "Longitud*",
-      "mapLocation": "Ubicar en mapa",
       "showGeoFence": "Mostrar Geo-cerca"
     },
     "buttons": {
       "saveDraft": "Guardar como borrador",
       "submit": "Enviar"
+    },
+    "qrModal": {
+      "title": "QR",
+      "print": "Imprimir",
+      "copy": "Copiar",
+      "copiedToast": "Copiado"
     }
   },
   "incidents": {

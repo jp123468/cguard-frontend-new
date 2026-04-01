@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 import IncidentMap from "@/components/IncidentMap/IncidentMap";
 import { categoryService } from '@/lib/api/categoryService';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 function formatDate(d?: string) {
     if (!d) return '-';
@@ -16,6 +17,8 @@ function formatDate(d?: string) {
 
 export default function PostSiteProfile({ site }: { site?: any }) {
     const { t } = useTranslation();
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    useScrollToTopOnMount(containerRef);
     const { id } = useParams<{ id: string }>();
 
     const clientName = site?.client?.name || site?.clientAccount?.name || site?.clientAccountName || '-';
@@ -92,7 +95,7 @@ export default function PostSiteProfile({ site }: { site?: any }) {
     const payRate = site?.payRate ?? site?.postSitePayRate ?? '-';
 
     return (
-        <div className="space-y-6">
+        <div ref={containerRef} className="space-y-6">
             <div className="md:block hidden bg-white border rounded-md p-6 shadow-sm">
                 <div className="flex items-start justify-between">
                     <div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, Plus, X, ChevronDown } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 
@@ -8,6 +9,7 @@ export default function ClientUserAccess({ client }: Props) {
   const [query, setQuery] = useState('');
   const [showInvite, setShowInvite] = useState(false);
   const [users, setUsers] = useState<any[]>(Array.isArray(client?.portalUsers) ? client.portalUsers : []);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [selectedExisting, setSelectedExisting] = useState<string | ''>('');
   const [form, setForm] = useState({ name: '', email: '', accessLevel: '' });
   const [touched, setTouched] = useState({ name: false, email: false, accessLevel: false });
@@ -24,6 +26,8 @@ export default function ClientUserAccess({ client }: Props) {
   }, [actionOpen]);
 
   const filtered = users.filter((u) => (u.name || '').toLowerCase().includes(query.toLowerCase()) || (u.email || '').toLowerCase().includes(query.toLowerCase()));
+
+  useScrollToTopOnMount(containerRef);
 
   function openInvite() {
     setSelectedExisting('');
@@ -51,7 +55,7 @@ export default function ClientUserAccess({ client }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div ref={containerRef} className="min-h-screen flex flex-col">
       <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative w-full max-w-lg">

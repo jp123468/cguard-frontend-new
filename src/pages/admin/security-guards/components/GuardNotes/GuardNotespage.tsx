@@ -4,6 +4,9 @@ import { useTranslation } from 'react-i18next';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import securityGuardService from '@/lib/api/securityGuardService';
+import { toast } from 'sonner';
+import api from '@/lib/api';
 
 
 type Props = {
@@ -26,6 +29,7 @@ export default function GuardNotes({ guard }: Props) {
         date: new Date().toISOString().split('T')[0],
         attachments: [] as File[],
     });
+    const [uploadProgress, setUploadProgress] = useState<Record<number, number>>({});
 
     const handleAddNote = () => {
         setShowModal(true);
@@ -58,19 +62,114 @@ export default function GuardNotes({ guard }: Props) {
     }, [actionOpen]);
 
     const handleSubmitNote = () => {
-        // Logic to save the note will go here
-        const newNote = {
-            title: formData.title,
-            description: formData.description,
-            date: formData.date,
-            addedBy: 'You',
-            attachments: formData.attachments,
-        };
-        setNotesData((prev) => [newNote, ...prev]);
-        setShowModal(false);
-        // clear form
-        setFormData({ title: '', description: '', date: new Date().toISOString().split('T')[0], attachments: [] });
+        // Save note to backend
+        (async () => {
+            try {
+                const payload: any = {
+                    title: formData.title,
+                    description: formData.description,
+                    noteDate: formData.date,
+                };
+
+                if (!guard || !guard.id) {
+                    toast.error('Guard id missing');
+                    return;
+                }
+
+                // Upload attachments (pdf/images) to storage and collect metadata
+                            const attachments: any[] = [];
+                            const files = formData.attachments || [];
+                            for (let i = 0; i < files.length; i++) {
+                    const f = files[i];
+                    // Validate mime/type
+                    const mime = f.type || '';
+                    let storageId = '';
+                    if (mime === 'application/pdf') storageId = 'notesPdf';
+                    else if (mime.startsWith('image/')) storageId = 'notesImages';
+                    else {
+                        try { toast.error(t('guards.notes.form.attachments.invalidType', { defaultValue: 'Tipo de archivo no permitido' })); } catch (e) {}
+                        continue;
+                    }
+
+                    // Validate size (<= 3MB)
+                    if (f.size > 3 * 1024 * 1024) {
+                        try { toast.error(t('guards.notes.form.attachments.tooLarge', { defaultValue: 'Archivo mayor a 3MB' })); } catch (e) {}
+                        continue;
+                    }
+
+                    try {
+                        // initialize progress and upload with callback to update UI
+                        setUploadProgress((prev) => ({ ...prev, [i]: 0 }));
+                        const uploaded = await securityGuardService.uploadFileToStorageWithProgress(f, storageId, (p) => {
+                            setUploadProgress((prev) => ({ ...prev, [i]: Math.round(p) }));
+                        });
+                        setUploadProgress((prev) => ({ ...prev, [i]: 100 }));
+                        attachments.push(uploaded);
+                    } catch (err) {
+                        console.error('Upload failed for file', f.name, err);
+                        try { toast.error(t('guards.notes.form.attachments.uploadFailed', { defaultValue: 'Fallo al subir archivo' })); } catch (e) {}
+                    }
+                }
+
+                const tenantId = localStorage.getItem('tenantId');
+
+                // Create the note first (without attachments). We'll create attachment metadata afterwards
+                const created = await securityGuardService.createSecurityGuardNote(guard.id, payload);
+
+                // For each uploaded file, create an attachment record linked to the created note
+                if (tenantId && attachments.length > 0) {
+                    for (const up of attachments) {
+                        try {
+                            const attPayload: any = {
+                                name: up.name,
+                                mimeType: up.mimeType || '',
+                                sizeInBytes: up.sizeInBytes || up.size || 0,
+                                storageId: up.storageId || (up.mimeType === 'application/pdf' ? 'notesPdf' : 'notesImages'),
+                                // send encrypted token instead of raw privateUrl when available
+                                fileToken: up.fileToken || null,
+                                publicUrl: up.publicUrl || null,
+                                notableType: 'note',
+                                notableId: created.id,
+                            };
+
+                            await api.post(`/tenant/${tenantId}/attachments`, attPayload);
+                        } catch (err) {
+                            console.error('Failed to create attachment metadata', err);
+                            try { toast.error(t('guards.notes.form.attachments.metadataCreateFailed', { defaultValue: 'Fallo al guardar metadata del archivo' })); } catch (e) {}
+                        }
+                    }
+                }
+
+                // Backend returns the created note object
+                setNotesData((prev) => [created, ...prev]);
+                try { toast.success(t('guards.notes.noteCreated', { defaultValue: 'Nota creada correctamente' })); } catch (e) {}
+                setShowModal(false);
+                setFormData({ title: '', description: '', date: new Date().toISOString().split('T')[0], attachments: [] });
+                setUploadProgress({});
+            } catch (err: any) {
+                try { toast.error(t('guards.notes.noteCreateFailed', { defaultValue: 'No se pudo crear la nota' })); } catch (e) {}
+                console.error('Failed to create note', err);
+            }
+        })();
     };
+
+    // Load notes for guard
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            if (!guard || !guard.id) return;
+            try {
+                const resp: any = await securityGuardService.getSecurityGuardNotes(guard.id);
+                // resp may be { rows, count } or an array
+                const items = resp?.rows ?? resp ?? [];
+                if (mounted) setNotesData(items);
+            } catch (err) {
+                console.error('Failed to load guard notes', err);
+                try { toast.error(t('guards.notes.loadError', { defaultValue: 'Error al cargar notas' })); } catch (e) {}
+            }
+        })();
+        return () => { mounted = false; };
+    }, [guard?.id]);
 
     const removeAttachment = (index: number) => {
         setFormData((prev) => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== index) }));
@@ -264,13 +363,21 @@ export default function GuardNotes({ guard }: Props) {
                                                     {formData.attachments && formData.attachments.length > 0 ? (
                                                         <div className="space-y-2">
                                                             {formData.attachments.map((f, i) => (
-                                                                <div key={i} className="flex items-center justify-between gap-3">
-                                                                    <div className="flex items-center gap-3 truncate">
-                                                                        <span className="text-sm text-gray-700 font-medium truncate" style={{maxWidth: 200}} title={f.name}>{shortName(f.name, 28)}</span>
+                                                                <div key={i} className="flex flex-col gap-2 w-full">
+                                                                    <div className="flex items-center justify-between gap-3">
+                                                                        <div className="flex items-center gap-3 truncate">
+                                                                            <span className="text-sm text-gray-700 font-medium truncate" style={{maxWidth: 200}} title={f.name}>{shortName(f.name, 28)}</span>
+                                                                        </div>
+                                                                        <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="text-gray-500 hover:text-red-500 p-1 rounded" aria-label={`Remove ${f.name}`}>
+                                                                            <X size={14} />
+                                                                        </button>
                                                                     </div>
-                                                                    <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="text-gray-500 hover:text-red-500 p-1 rounded" aria-label={`Remove ${f.name}`}>
-                                                                        <X size={14} />
-                                                                    </button>
+                                                                    {/* Progress Bar */}
+                                                                    {typeof uploadProgress[i] !== 'undefined' && (
+                                                                        <div className="w-full bg-gray-100 rounded h-2 overflow-hidden">
+                                                                            <div className="bg-orange-600 h-2" style={{ width: `${uploadProgress[i]}%` }} />
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             ))}
                                                         </div>

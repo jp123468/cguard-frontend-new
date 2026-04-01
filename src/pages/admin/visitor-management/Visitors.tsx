@@ -39,6 +39,7 @@ import {
     UserPlus,
 } from "lucide-react";
 import visitorLogService from "@/lib/api/visitorLogService";
+import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { clientService } from '@/lib/api/clientService';
 import { postSiteService } from '@/lib/api/postSiteService';
@@ -94,6 +95,7 @@ export default function Visitors() {
         numPeople: 1,
         reason: "",
     });
+    const [idImageFile, setIdImageFile] = useState<File | null>(null);
     const [perPage, setPerPage] = useState("25");
     const [action, setAction] = useState<string | undefined>(undefined);
 
@@ -694,6 +696,36 @@ export default function Visitors() {
             const createdDateObj = createdVisitDate ? new Date(createdVisitDate) : null;
             const diffMs = createdDateObj ? Math.abs(createdDateObj.getTime() - now.getTime()) : null;
 
+            // If an ID image file was provided, upload to storage and create attachment metadata
+            try {
+                if (idImageFile) {
+                    // upload file to storage (securityGuardService handles tenant id)
+                    const uploaded = await securityGuardService.uploadFileToStorage(idImageFile, 'notesImages');
+
+                    const tenantId = localStorage.getItem('tenantId');
+                    if (tenantId) {
+                        const attPayload: any = {
+                            name: uploaded.name || idImageFile.name,
+                            mimeType: idImageFile.type || 'image/*',
+                            sizeInBytes: uploaded.sizeInBytes || idImageFile.size,
+                            storageId: 'notesImages',
+                            // prefer fileToken when present (encrypted privateUrl)
+                            fileToken: uploaded.fileToken || null,
+                            publicUrl: uploaded.publicUrl || null,
+                            notableType: 'visitorLog',
+                            notableId: created.id,
+                        };
+
+                        await api.post(`/tenant/${tenantId}/attachments`, attPayload);
+                        // clear selected file after successful upload
+                        setIdImageFile(null);
+                    }
+                }
+            } catch (err) {
+                console.warn('Failed to upload/create attachment for visitor', err);
+                try { toast.error(t('visitantes.attachUploadError') || 'Fallo al subir adjunto'); } catch (e) {}
+            }
+
             toast.success(t('visitantes.created') || 'Visitante creado');
             setOpenAddVisitor(false);
             setNewVisitor((s) => ({ ...s, firstName: '', lastName: '', idNumber: '', mobile: '', client: '', site: '', guard: '', placeTypeKind: '', placeTypeValue: '', numPeople: 1, reason: '' } as any));
@@ -1264,7 +1296,7 @@ export default function Visitors() {
 
                         <div className="space-y-1.5">
                             <Label>{t('visitantes.form.idImage') || 'Imagen del ID'}</Label>
-                            <Input type="file" />
+                            <Input type="file" onChange={(e) => { const f = e.target.files && e.target.files.length ? e.target.files[0] : null; setIdImageFile(f); }} />
                         </div>
 
                         <div className="space-y-1.5">

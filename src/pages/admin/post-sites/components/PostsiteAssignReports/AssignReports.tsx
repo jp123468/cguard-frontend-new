@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, MoreVertical, Plus, X } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 type Report = {
   id: string;
@@ -30,6 +31,8 @@ export default function PostSiteAssignReports({ site }: { site?: any }) {
 
   const [rowMenuOpen, setRowMenuOpen] = useState<Record<string, boolean>>({});
   const [confirmUnassign, setConfirmUnassign] = useState<{ open: boolean; id?: string }>({ open: false });
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useScrollToTopOnMount(containerRef);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -61,7 +64,7 @@ export default function PostSiteAssignReports({ site }: { site?: any }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div ref={containerRef} className="space-y-4">
       <div className="bg-white border rounded-lg p-4">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div ref={actionRef} className="relative">

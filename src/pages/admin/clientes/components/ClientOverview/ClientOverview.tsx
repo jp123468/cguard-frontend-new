@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { useTranslation } from 'react-i18next';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { clientService } from '@/lib/api/clientService';
@@ -6,13 +7,15 @@ import MobileCardList from '@/components/responsive/MobileCardList';
 
 export default function ClientOverview({ client }: { client: any }) {
   const { t } = useTranslation();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useScrollToTopOnMount(containerRef);
 
   const [postSitesCount, setPostSitesCount] = useState<number>(client?.postSites?.length ?? 0);
   const [guardsAssigned, setGuardsAssigned] = useState<number>(client?.assignedGuards?.length ?? client?.assignedSecurityGuardsCount ?? 0);
   const [incidents, setIncidents] = useState<number>(client?.stats?.incidents ?? 0);
-  const tasksCompleted = client?.stats?.tasksCompleted ?? 0;
-  const toursCompleted = client?.stats?.toursCompleted ?? 0;
-  const hoursWorked = client?.stats?.hoursWorked ?? '00:00';
+  const [tasksCompleted, setTasksCompleted] = useState<number>(client?.stats?.tasksCompleted ?? 0);
+  const [toursCompleted, setToursCompleted] = useState<number>(client?.stats?.toursCompleted ?? 0);
+  const [hoursWorked, setHoursWorked] = useState<string>(client?.stats?.hoursWorked ?? '00:00');
 
   const addedOn = client?.createdAt ? new Date(client.createdAt).toLocaleDateString() : '-';
 
@@ -30,23 +33,29 @@ export default function ClientOverview({ client }: { client: any }) {
     async function loadCounts() {
       if (!client || !client.id) return;
       try {
-        // Post sites count
-        const ps = await clientService.getClientPostSites(client.id, { limit: 1, offset: 0 });
+        // Use single overview endpoint (backend provides aggregated numbers)
+        const overview = await clientService.getClientOverview(client.id);
         if (!mounted) return;
-        setPostSitesCount(ps?.count || 0);
-
-        // Guards assigned count (lightweight)
-        const gsCount = await clientService.getClientGuardsCount(client.id);
-        if (!mounted) return;
-        setGuardsAssigned(gsCount || 0);
-
-        // Incidents last 7 days
-        const today = new Date();
-        const start = new Date();
-        start.setDate(today.getDate() - 7);
-        const inc = (await clientService.getClientIncidents(client.id, { limit: 1, offset: 0, filter: { dateRange: [start.toISOString(), today.toISOString()] } })) as unknown as { count?: number } | null;
-        if (!mounted) return;
-        setIncidents(inc?.count ?? 0);
+        setPostSitesCount(overview?.postSitesCount ?? overview?.postSites?.length ?? 0);
+        setGuardsAssigned(overview?.assignedCount ?? overview?.assignedGuards?.length ?? 0);
+        setIncidents(overview?.incidentsLast7Days ?? overview?.incidents ?? 0);
+        // Map other values for display (keep existing fallbacks)
+        // toursCompleted and tasksCompleted may come from overview's last7days counters
+        // hoursLoggedSeconds -> format to HH:MM
+        const secs = Number(overview?.hoursLoggedSeconds || 0);
+        const hh = Math.floor(secs / 3600).toString().padStart(2, '0');
+        const mm = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
+        const hhmm = `${hh}:${mm}`;
+        // set local vars used in render
+        // toursCompleted and tasksCompleted are not stateful here; we keep using client prop if present
+        (/* no-op: keep existing state variables */ null as any);
+        // update hoursWorked display via local variable by using state setter (not present) — reuse existing local const by mutating via ref is unnecessary
+        // Simpler: assign to client object fields so render picks them up
+        if (overview) {
+          setToursCompleted(overview.toursLast7Days ?? (client as any).stats?.toursCompleted ?? 0);
+          setTasksCompleted(overview.tasksLast7Days ?? (client as any).stats?.tasksCompleted ?? 0);
+          setHoursWorked(hhmm);
+        }
       } catch (e) {
         // non-blocking: keep existing numbers on error
         console.error('Error fetching client overview counts', e);
@@ -57,7 +66,7 @@ export default function ClientOverview({ client }: { client: any }) {
   }, [client?.id]);
 
   return (
-    <div className="space-y-6">
+    <div ref={containerRef} className="space-y-6">
       {/* Mobile compact summary */}
       <div className="md:hidden">
         <MobileCardList
@@ -176,3 +185,5 @@ export default function ClientOverview({ client }: { client: any }) {
     </div>
   );
 }
+
+

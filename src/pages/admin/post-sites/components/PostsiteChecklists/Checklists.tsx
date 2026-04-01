@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Search, Plus, X, List } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { toast } from 'sonner';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 type ChecklistItem = { id: string; text: string };
 
@@ -31,6 +32,9 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
   const [assignedGuard, setAssignedGuard] = useState<string | ''>('');
   const [items, setItems] = useState<ChecklistItem[]>([{ id: String(Date.now()), text: '' }]);
   const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; ids?: string[] }>({ open: false });
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useScrollToTopOnMount(containerRef);
 
   function toggleSelect(id: string) {
     setSelectedIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
@@ -96,7 +100,7 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
   const filtered = checklists.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <div className="space-y-4">
+    <div ref={containerRef} className="space-y-4">
       <div className="bg-white border rounded-lg p-4">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="relative">

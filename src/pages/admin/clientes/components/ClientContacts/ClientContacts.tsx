@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ type Contact = {
 };
 
 export default function ClientContacts({ client }: { client: any }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [phoneCountry, setPhoneCountry] = useState<string>('us');
   const initial: Contact[] = Array.isArray(client?.contacts) ? client.contacts : [];
   const [contacts, setContacts] = useState<Contact[]>(initial);
@@ -145,6 +147,9 @@ export default function ClientContacts({ client }: { client: any }) {
     if (!q) return contacts;
     return contacts.filter(c => (c.name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q) || (c.mobile || '').toLowerCase().includes(q));
   }, [contacts, query]);
+
+  // scroll to top when this component mounts/shows
+  useScrollToTopOnMount(containerRef);
 
   function handleOpenAdd() {
     setForm({});
@@ -358,7 +363,7 @@ export default function ClientContacts({ client }: { client: any }) {
   });
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div ref={containerRef} className="min-h-screen flex flex-col">
       <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center w-full">

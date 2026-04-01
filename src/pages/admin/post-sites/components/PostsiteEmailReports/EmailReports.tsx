@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Search, Plus, X } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { toast } from 'sonner';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 type EmailReport = {
   id: string;
@@ -36,6 +37,7 @@ const SAMPLE_REPORTS = [
 
 export default function PostSiteEmailReports({ site }: { site?: any }) {
   const [query, setQuery] = useState('');
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [list, setList] = useState<EmailReport[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [action, setAction] = useState('');
@@ -100,8 +102,10 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
     toast.success('Email añadido');
   }
 
+  useScrollToTopOnMount(containerRef);
+
   return (
-    <div className="space-y-4">
+    <div ref={containerRef} className="space-y-4">
       <div className="bg-white border rounded-lg p-4">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="relative">

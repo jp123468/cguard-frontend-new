@@ -41,6 +41,9 @@ export interface ClientInput {
     website?: string;
     active?: boolean;
     categoryId?: string;
+    // Optional geographic coordinates (string or number accepted)
+    latitude?: string | number | null;
+    longitude?: string | number | null;
 }
 
 export interface ClientFilters {

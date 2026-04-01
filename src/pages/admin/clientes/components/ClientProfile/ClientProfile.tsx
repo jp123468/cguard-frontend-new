@@ -5,11 +5,13 @@ import { useEffect, useState as useStateReact } from 'react';
 import { categoryService } from '@/lib/api/categoryService';
 import { Button } from '@/components/ui/button';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function ClientProfile({ client }: { client: any }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [buttonFading, setButtonFading] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
   const [categoryNames, setCategoryNames] = useStateReact<string[] | null>(null);
 
   if (!client) return null;
@@ -18,14 +20,14 @@ export default function ClientProfile({ client }: { client: any }) {
     let mounted = true;
     async function loadCategoryNames() {
       try {
-        // If API already provided categoryNames, use them
-        if (client?.categoryNames && Array.isArray(client.categoryNames) && client.categoryNames.length) {
-          if (mounted) setCategoryNames(client.categoryNames.map(String));
-          return;
-        }
-
+        // Always attempt to resolve categoryIds to names by requesting categories
         const ids = client?.categoryIds;
+        // If there are no category ids, try client.categoryNames or set empty
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
+          if (client?.categoryNames && Array.isArray(client.categoryNames)) {
+            if (mounted) setCategoryNames(client.categoryNames.map(String));
+            return;
+          }
           if (mounted) setCategoryNames([]);
           return;
         }
@@ -33,11 +35,16 @@ export default function ClientProfile({ client }: { client: any }) {
         // Load all categories for clientAccount and map locally
         const resp = await categoryService.list({ filter: { module: 'clientAccount' }, limit: 1000 });
         const map = new Map<string, string>();
-        (resp.rows || []).forEach((c) => map.set(c.id, c.name));
-        const names = ids.map((id: any) => map.get(String(id)) || String(id));
-        if (mounted) setCategoryNames(names);
+        (resp.rows || []).forEach((c) => map.set(String(c.id), c.name || ''));
+        const names = ids.map((id: any) => map.get(String(id)) || '').filter(Boolean);
+        // If mapping produced no names, fallback to any provided client.categoryNames or the raw ids
+        if (mounted) {
+          if (names.length > 0) setCategoryNames(names);
+          else if (client?.categoryNames && Array.isArray(client.categoryNames) && client.categoryNames.length) setCategoryNames(client.categoryNames.map(String));
+          else setCategoryNames(ids.map(String));
+        }
       } catch (e) {
-        if (mounted) setCategoryNames((client?.categoryNames && Array.isArray(client.categoryNames)) ? client.categoryNames.map(String) : []);
+        if (mounted) setCategoryNames((client?.categoryNames && Array.isArray(client.categoryNames)) ? client.categoryNames.map(String) : (client?.categoryIds && Array.isArray(client.categoryIds) ? client.categoryIds.map(String) : []));
       }
     }
 
@@ -45,8 +52,11 @@ export default function ClientProfile({ client }: { client: any }) {
     return () => { mounted = false; };
   }, [client]);
 
+  // Ensure this component's container is scrolled to the top when mounted/shown
+  useScrollToTopOnMount(containerRef);
+
   return (
-    <div className="p-4 bg-white border rounded-md">
+    <div ref={containerRef} className="p-4 bg-white border rounded-md">
       <div className="mb-4">
         <h3 className="text-2xl font-semibold">{t('clients.nav.profile') || 'Perfil'}</h3>
       </div>
@@ -169,6 +179,27 @@ export default function ClientProfile({ client }: { client: any }) {
               setButtonFading(true);
               setTimeout(() => {
                 setEditing(true);
+                // scroll the closest scrollable ancestor so the form appears at top
+                try {
+                  const el = containerRef.current;
+                  const findScrollParent = (node: HTMLElement | null): HTMLElement | Window => {
+                    if (!node) return window;
+                    let parent: HTMLElement | null = node.parentElement;
+                    while (parent) {
+                      const style = window.getComputedStyle(parent);
+                      const overflowY = style.getPropertyValue('overflow-y');
+                      if ((overflowY === 'auto' || overflowY === 'scroll') && parent.scrollHeight > parent.clientHeight) return parent;
+                      parent = parent.parentElement;
+                    }
+                    return window;
+                  };
+                  const sp = findScrollParent(el);
+                  if (sp === window) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  } else {
+                    (sp as HTMLElement).scrollTo({ top: (el ? el.offsetTop : 0), behavior: 'smooth' });
+                  }
+                } catch (e) {}
                 setButtonFading(false);
               }, 300);
             }}

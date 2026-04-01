@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Info } from 'lucide-react';
 import { toast } from 'sonner';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function PostSiteSettings({ site }: { site?: any }) {
   const [values, setValues] = useState<Record<string, any>>({
@@ -31,8 +32,11 @@ export default function PostSiteSettings({ site }: { site?: any }) {
     toast.success('Settings saved');
   }
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useScrollToTopOnMount(containerRef);
+
   return (
-    <div className="relative bg-white border rounded-md shadow-sm">
+    <div ref={containerRef} className="relative bg-white border rounded-md shadow-sm">
       <div className="p-6 space-y-4 overflow-auto">
         <div className="space-y-4 mt-4">
           <SettingRow checked={values.enforceClockInBeforeCheckIn} onChange={() => toggle('enforceClockInBeforeCheckIn')}>Enforce clock-in before check-in</SettingRow>

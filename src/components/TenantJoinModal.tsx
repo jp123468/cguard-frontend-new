@@ -14,6 +14,7 @@ import { AuthService } from "@/services/auth/authService";
 import { setTenantId as setClientTenantId } from "@/lib/api/clientService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from 'react-i18next';
+import { validateCedulaOrRuc } from '@/lib/validators/id';
 
 export default function TenantJoinModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
     const [mode, setMode] = useState<'join' | 'create'>('join');
@@ -174,9 +175,9 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
             return;
         }
 
-        // tax/RUC: 13 numeros y terminar en 001
+        // tax/RUC: validación centralizada (RUC debe ser 13 dígitos y terminar en 001)
         const taxDigits = digits(form.taxNumber || '');
-        if (taxDigits.length !== 13 || !taxDigits.endsWith('001')) {
+        if (!validateCedulaOrRuc(taxDigits) || taxDigits.length !== 13) {
             toast.error(t('tenantValidations.tax_invalid'));
             return;
         }

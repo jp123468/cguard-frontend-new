@@ -216,15 +216,118 @@ export const securityGuardService = {
       throw new Error(`Upload failed: ${uploadResp.status} ${text}`);
     }
 
-    const fileObj = {
-      new: true,
-      name: filename,
-      sizeInBytes: file.size,
-      privateUrl: creds.data?.privateUrl ?? creds.privateUrl,
-      publicUrl: creds.data?.uploadCredentials?.publicUrl ?? creds.uploadCredentials?.publicUrl ?? null,
-    };
+      const fileObj = {
+        new: true,
+        name: filename,
+        sizeInBytes: file.size,
+        privateUrl: creds.data?.privateUrl ?? creds.privateUrl,
+        fileToken: creds?.fileToken ?? creds.data?.fileToken ?? null,
+        publicUrl: creds.data?.uploadCredentials?.publicUrl ?? creds.uploadCredentials?.publicUrl ?? null,
+      };
 
     return fileObj;
+  },
+
+  async uploadFileToStorage(file: File, storageId: string) {
+    const tenantId = getTenantId();
+    const filename = file.name;
+    const credsResp: any = await api.get(`/tenant/${tenantId}/file/credentials?filename=${encodeURIComponent(filename)}&storageId=${encodeURIComponent(storageId)}`);
+    const creds = credsResp && (credsResp as any).data ? credsResp.data : credsResp;
+
+    const uploadUrl = creds?.uploadCredentials?.url ?? creds?.url ?? creds.uploadCredentials?.url;
+    const fields = creds?.uploadCredentials?.fields ?? creds?.fields;
+
+    if (!uploadUrl) throw new Error('Upload URL not available');
+
+    // If backend returned fields (S3 presigned POST), use FormData
+    if (fields) {
+      const form = new FormData();
+      Object.keys(fields).forEach((k) => form.append(k, fields[k]));
+      form.append('file', file, filename);
+
+      const uploadResp = await fetch(uploadUrl, { method: 'POST', body: form });
+      if (!uploadResp.ok) {
+        const text = await uploadResp.text().catch(() => null);
+        throw new Error(`Upload failed: ${uploadResp.status} ${text}`);
+      }
+    } else {
+      // If backend expects direct PUT to uploadUrl
+      const putResp = await fetch(uploadUrl, { method: 'PUT', body: file });
+      if (!putResp.ok) {
+        const text = await putResp.text().catch(() => null);
+        throw new Error(`Upload failed: ${putResp.status} ${text}`);
+      }
+    }
+
+      const fileObj = {
+        new: true,
+        name: filename,
+        sizeInBytes: file.size,
+        privateUrl: creds?.privateUrl ?? creds.privateUrl,
+        fileToken: creds?.fileToken ?? creds.data?.fileToken ?? null,
+        publicUrl: creds?.uploadCredentials?.publicUrl ?? creds.publicUrl ?? creds?.publicUrl ?? null,
+      };
+
+    return fileObj;
+  },
+
+  /**
+   * Upload with progress callback. onProgress receives a number [0-100].
+   */
+  async uploadFileToStorageWithProgress(file: File, storageId: string, onProgress: (p: number) => void) {
+    const tenantId = getTenantId();
+    const filename = file.name;
+    const credsResp: any = await api.get(`/tenant/${tenantId}/file/credentials?filename=${encodeURIComponent(filename)}&storageId=${encodeURIComponent(storageId)}`);
+    const creds = credsResp && (credsResp as any).data ? credsResp.data : credsResp;
+
+    const uploadUrl = creds?.uploadCredentials?.url ?? creds?.url ?? creds.uploadCredentials?.url;
+    const fields = creds?.uploadCredentials?.fields ?? creds?.fields;
+
+    if (!uploadUrl) throw new Error('Upload URL not available');
+
+    return await new Promise<any>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          try { onProgress(percent); } catch (e) {}
+        }
+      };
+
+      xhr.onerror = function () {
+        reject(new Error('Upload failed'));
+      };
+
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const fileObj = {
+            new: true,
+            name: filename,
+            sizeInBytes: file.size,
+            privateUrl: creds?.privateUrl ?? creds.privateUrl,
+            publicUrl: creds?.uploadCredentials?.publicUrl ?? creds.publicUrl ?? creds?.publicUrl ?? null,
+          };
+          try { onProgress(100); } catch (e) {}
+          resolve(fileObj);
+        } else {
+          reject(new Error(`Upload failed: ${xhr.status}`));
+        }
+      };
+
+      if (fields) {
+        const form = new FormData();
+        Object.keys(fields).forEach((k) => form.append(k, fields[k]));
+        form.append('file', file, filename);
+        xhr.open('POST', uploadUrl, true);
+        xhr.send(form);
+      } else {
+        // direct PUT
+        xhr.open('PUT', uploadUrl, true);
+        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+        xhr.send(file);
+      }
+    });
   },
 };
 

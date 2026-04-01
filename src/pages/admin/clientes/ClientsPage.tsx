@@ -216,6 +216,36 @@ export default function ClientesPage() {
     setPage(1);
   }, [debouncedSearch, filters]);
 
+  // When changing between responsive layouts (mobile <-> desktop)
+  // ensure the page scrolls to the top so the user always sees
+  // the beginning of the new layout. This listens to the MD
+  // breakpoint used in the UI (`md:` = 768px).
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(min-width: 768px)');
+    const scrollTopMain = () => {
+      try {
+        // AppLayout renders the scrollable area inside a <main> element
+        const main = document.querySelector('main');
+        if (main && typeof (main as HTMLElement).scrollTo === 'function') {
+          (main as HTMLElement).scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+      } catch (e) {
+        // ignore and fallthrough to window
+      }
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch { window.scrollTo(0, 0); }
+    };
+
+    const onChange = () => scrollTopMain();
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else mq.addListener(onChange);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', onChange as any);
+      else mq.removeListener(onChange as any);
+    };
+  }, []);
+
   // Reset bulk action selector when filter (active state) changes to reflect new options
   useEffect(() => {
     setBulkKey((k) => k + 1);

@@ -157,7 +157,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       <aside
         className={[
-          "hidden lg:block fixed left-0 top-0 h-screen bg-white border-r border-gray-200 overflow-hidden transition-[width] duration-300",
+          "hidden lg:block fixed left-0 top-0 h-screen bg-white border-r border-gray-200 overflow-y-auto transition-[width] duration-300",
           sidebarOpen ? "w-64" : "w-0",
         ].join(" ")}
       >

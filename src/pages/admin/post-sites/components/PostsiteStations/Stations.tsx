@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { Plus, Trash, Eye, MoreVertical } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useTranslation } from 'react-i18next';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function Stations({ site }: { site?: any }) {
   const { t } = useTranslation();
@@ -40,6 +41,7 @@ export default function Stations({ site }: { site?: any }) {
   const [stationSchedule, setStationSchedule] = useState('');
   const [numberOfGuardsInStation, setNumberOfGuardsInStation] = useState('1');
   const [startingTimeInDay, setStartingTimeInDay] = useState('');
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [finishTimeInDay, setFinishTimeInDay] = useState('');
 
   useEffect(() => {
@@ -61,6 +63,8 @@ export default function Stations({ site }: { site?: any }) {
     })();
     return () => { mounted = false; };
   }, [site]);
+
+  useScrollToTopOnMount(containerRef);
 
   useEffect(() => {
     if (!selectedStationId) return;

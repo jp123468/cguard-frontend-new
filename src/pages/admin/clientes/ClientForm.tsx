@@ -8,6 +8,7 @@ import { clientService } from "@/lib/api/clientService";
 import { categoryService } from "@/lib/api/categoryService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
+import { validateCedulaOrRuc } from '@/lib/validators/id';
 import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
 
 import { Button } from "@/components/ui/button";
@@ -441,7 +442,30 @@ export default function ClientForm({
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             {...field}
                                             value={typeof field.value === 'string' ? field.value : ''}
-                                            maxLength={20}
+                                            // limitar caracteres según tipo
+                                            maxLength={personType === 'PJ' ? 13 : 10}
+                                            onChange={(e) => {
+                                                // permitir sólo dígitos
+                                                const digits = (e.target.value || '').replace(/\D/g, '');
+                                                field.onChange(digits);
+                                            }}
+                                            onBlur={() => {
+                                                const val = (field.value || '').toString().trim();
+                                                const digits = val.replace(/\D/g, '');
+                                                    if (personType === 'PN') {
+                                                        if (digits.length !== 10 || !validateCedulaOrRuc(digits)) {
+                                                            form.setError('documentNumber' as any, { type: 'manual', message: t('clients.validation.cedula_invalid') });
+                                                        } else {
+                                                            form.clearErrors('documentNumber' as any);
+                                                        }
+                                                    } else {
+                                                        if (digits.length !== 13 || !validateCedulaOrRuc(digits)) {
+                                                            form.setError('documentNumber' as any, { type: 'manual', message: t('clients.validation.ruc_invalid') });
+                                                        } else {
+                                                            form.clearErrors('documentNumber' as any);
+                                                        }
+                                                    }
+                                            }}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -516,6 +540,11 @@ export default function ClientForm({
                         </div>
 
                         {showAddressAutocomplete ? (
+                            <>
+                            {(() => {
+                                try { console.debug('[ClientForm] address initial values', { latitude: form.getValues('latitude' as any), longitude: form.getValues('longitude' as any) }); } catch (e) {}
+                                return null;
+                            })()}
                             <AddressAutocompleteOSM
                                 onAddressSelect={(addressData: AddressComponents) => {
                                     form.setValue('address', addressData.address);
@@ -524,15 +553,19 @@ export default function ClientForm({
                                     form.setValue('country', addressData.country);
                                     form.setValue('latitude' as any, String(addressData.latitude));
                                     form.setValue('longitude' as any, String(addressData.longitude));
-                                    toast.success(t('clients.form.addressAutoFilled', 'Dirección completada automáticamente'));
+                                    // deduplicated toast
+                                    // eslint-disable-next-line @typescript-eslint/no-var-requires
+                                    const { toastOnce } = require('@/lib/toastOnce');
+                                    toastOnce.success(t('clients.form.addressAutoFilled', 'Dirección completada automáticamente'));
                                 }}
                                 defaultValue={form.getValues('address') || ''}
                                 placeholder={t('clients.form.searchAddress', 'Buscar dirección...')}
                                 showMap={true}
                                 mapHeight="350px"
-                                initialLat={form.getValues('latitude' as any) ? parseFloat(form.getValues('latitude' as any)!) : undefined}
-                                initialLng={form.getValues('longitude' as any) ? parseFloat(form.getValues('longitude' as any)!) : undefined}
+                                initialLat={form.getValues('latitude' as any) ? Number.parseFloat(String(form.getValues('latitude' as any))) : undefined}
+                                initialLng={form.getValues('longitude' as any) ? Number.parseFloat(String(form.getValues('longitude' as any))) : undefined}
                             />
+                            </>
                         ) : null}
 
                         {/* Manual Address Fields - Always show for editing */}

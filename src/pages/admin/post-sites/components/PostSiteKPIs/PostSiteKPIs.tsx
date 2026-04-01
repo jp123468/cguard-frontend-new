@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Search, ChevronDown, ChevronUp, Plus, X, Mail, MessageCircle, ChevronLeft, ChevronRight, Edit, Trash, FileText, File, Upload, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import KpiService from '@/services/kpi.service';
@@ -6,6 +6,7 @@ import { ApiService } from '@/services/api/apiService';
 import KpiBarChart from '@/components/KpiBarChart';
 import { useTranslation } from "react-i18next";
 import MobileCardList from '@/components/responsive/MobileCardList';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 type Props = {
   site?: any;
 };
@@ -25,6 +26,8 @@ export default function PostSiteKPIs({ site }: Props) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [toDeleteId, setToDeleteId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useScrollToTopOnMount(containerRef);
 
   const [formData, setFormData] = useState({
     frequency: '',
@@ -339,8 +342,8 @@ export default function PostSiteKPIs({ site }: Props) {
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
 
-  return (
-      <div className="bg-white border rounded-lg p-6 shadow-sm min-h-[560px]">
+    return (
+      <div ref={containerRef} className="bg-white border rounded-lg p-6 shadow-sm min-h-[560px]">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative inline-block">
             <button

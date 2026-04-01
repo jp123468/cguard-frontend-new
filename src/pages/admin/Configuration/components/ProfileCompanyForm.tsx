@@ -10,17 +10,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import CompanyPhoneField from "./profile/CompanyPhoneField";
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 import { Camera, Edit, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import tenantService from '@/services/tenant.service';
 import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
 import OSMMapEmbed from "@/components/maps/OSMMapEmbed";
 import CompanyDocumentsSection, { CompanyDocument } from "./profile/documents/CompanyDocumentsSection";
+import { validateCedulaOrRuc } from '@/lib/validators/id';
 
 // useEffect imported above
 
 export default function ProfileCompanyForm() {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const isAdmin = (() => {
     if (!user) return false;
@@ -353,7 +356,17 @@ export default function ProfileCompanyForm() {
             <Input
               value={form.ruc}
               onChange={(e) => setForm((s) => ({ ...s, ruc: e.target.value }))}
+              onBlur={(e) => {
+                const v = (e.target as HTMLInputElement).value || '';
+                const digits = v.replace(/\D/g, '');
+                if (digits && digits.length > 0) {
+                  if (digits.length !== 13 || !validateCedulaOrRuc(digits)) {
+                    toast.error(t('clients.validation.ruc_invalid'));
+                  }
+                }
+              }}
               placeholder="RUC de la empresa"
+              maxLength={13}
               disabled={!canEdit}
             />
           </div>
@@ -388,7 +401,11 @@ export default function ProfileCompanyForm() {
                         latitude: String(addressData.latitude),
                         longitude: String(addressData.longitude),
                       }));
-                      toast.success('Dirección completada automáticamente');
+                      // deduplicated toast
+                      import.meta.env && null; // placeholder to keep linters happy
+                      // eslint-disable-next-line @typescript-eslint/no-var-requires
+                      const { toastOnce } = require('@/lib/toastOnce');
+                      toastOnce.success('Dirección completada automáticamente');
                     }}
                     defaultValue={form.address || ''}
                     openWithQuery={autocompleteOpenQuery}

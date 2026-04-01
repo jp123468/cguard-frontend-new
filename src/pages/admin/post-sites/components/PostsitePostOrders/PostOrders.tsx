@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Search, ChevronDown, Plus } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function PostSiteOrders({ site }: { site?: any }) {
   const [actionOpen, setActionOpen] = useState(false);
@@ -10,9 +11,12 @@ export default function PostSiteOrders({ site }: { site?: any }) {
   const [copyFrom, setCopyFrom] = useState('');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useScrollToTopOnMount(containerRef);
 
   return (
-    <div className="space-y-4">
+    <div ref={containerRef} className="space-y-4">
       
 
       <div className="bg-white border rounded-lg p-4 shadow-sm">

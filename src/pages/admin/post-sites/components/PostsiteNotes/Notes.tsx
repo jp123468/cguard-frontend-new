@@ -4,6 +4,7 @@ import MobileCardList from '@/components/responsive/MobileCardList';
 import { useTranslation } from 'react-i18next';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { toast } from 'sonner';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 type Props = {
   site?: any;
@@ -163,8 +164,11 @@ export default function PostSiteNotes({ site }: Props) {
 
   const shortName = (name: string, max = 28) => (name.length <= max ? name : name.slice(0, max) + '...');
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useScrollToTopOnMount(containerRef);
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div ref={containerRef} className="min-h-screen flex flex-col">
       <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative" ref={actionRef}>

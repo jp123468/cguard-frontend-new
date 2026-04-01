@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +24,7 @@ type Contact = {
 
 export default function PostSiteContacts({ site }: { site?: any }) {
   const { t } = useTranslation();
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const initial: Contact[] = Array.isArray(site?.contacts) ? site.contacts : [];
   const [contacts, setContacts] = useState<Contact[]>(initial);
   const [query, setQuery] = useState('');
@@ -239,6 +241,8 @@ export default function PostSiteContacts({ site }: { site?: any }) {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   }
 
+  useScrollToTopOnMount(containerRef);
+
   function deleteContact(id: string) {
     (async () => {
       try {
@@ -265,7 +269,7 @@ export default function PostSiteContacts({ site }: { site?: any }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div ref={containerRef} className="min-h-screen flex flex-col">
       <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center w-full">

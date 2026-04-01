@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, Plus, X, ChevronDown } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 
 type Props = { client?: any };
 export default function ClientEmailReports({ client }: { client: any }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [query, setQuery] = useState('');
   const [showInvite, setShowInvite] = useState(false);
   const [users, setUsers] = useState<any[]>(Array.isArray(client?.portalUsers) ? client.portalUsers : []);
@@ -54,8 +56,10 @@ export default function ClientEmailReports({ client }: { client: any }) {
     setShowInvite(false);
   }
 
+  useScrollToTopOnMount(containerRef);
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div ref={containerRef} className="min-h-screen flex flex-col">
       <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative" ref={actionRef}>

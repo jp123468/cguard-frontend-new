@@ -20,6 +20,27 @@ export default function GuardsLayout({ navKey, title, children }: Props) {
   const { id } = useParams();
   const location = useLocation();
 
+  // Labels to hide (normalized, lowercase, without accents)
+  const hiddenLabels = [
+    'disponibilidad',
+    'indicadores claves de guardias',
+    'indicadores clave de guardias',
+    'indicadores clave',
+    'recordatorios',
+    'archivos',
+    'conjunto de habilidades',
+    'habilidades',
+    'departamento',
+    'configuracion',
+    'configuración',
+  ];
+
+  const normalize = (s: any) =>
+    String(s || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
   // Replace :id in paths with actual guard ID
   const resolvePathWithId = (path: string) => {
     if (id && path.includes(':id')) {
@@ -40,24 +61,32 @@ export default function GuardsLayout({ navKey, title, children }: Props) {
               <div key={idx} className="mb-3">
                 {section.label ? <div className="text-xs text-gray-500 uppercase mb-2">{section.label}</div> : null}
                 <ul className="space-y-1">
-                  {section.items?.map((it: any) => {
-                    const resolvedPath = resolvePathWithId(it.path);
-                    const isActive = location.pathname === resolvedPath;
-                    return (
-                      <li key={it.id}>
-                        <Link 
-                          to={resolvedPath} 
-                          className={`block px-3 py-2.5 rounded text-base ${
-                            isActive 
-                              ? 'bg-orange-50 text-orange-600 font-medium' 
-                              : 'text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          {t(it.label)}
-                        </Link>
-                      </li>
-                    );
-                  })}
+                  {(
+                    section.items || []
+                  )
+                    .filter((it: any) => {
+                      const raw = normalize(it.label);
+                      const translated = normalize(t(it.label));
+                      return !hiddenLabels.some(h => raw.includes(h) || translated.includes(h));
+                    })
+                    .map((it: any) => {
+                      const resolvedPath = resolvePathWithId(it.path);
+                      const isActive = location.pathname === resolvedPath;
+                      return (
+                        <li key={it.id}>
+                          <Link 
+                            to={resolvedPath} 
+                            className={`block px-3 py-2.5 rounded text-base ${
+                              isActive 
+                                ? 'bg-orange-50 text-orange-600 font-medium' 
+                                : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            {t(it.label)}
+                          </Link>
+                        </li>
+                      );
+                    })}
                 </ul>
               </div>
             ))}

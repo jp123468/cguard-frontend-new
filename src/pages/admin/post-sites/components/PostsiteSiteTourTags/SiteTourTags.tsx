@@ -17,10 +17,11 @@ const svgMarker = `
 </svg>`;
 
 // We'll use a div icon per-marker to ensure the SVG renders fully
-import { ApiService } from '@/services/api/apiService';
+import { ApiService, ApiError } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function PostSiteTourTags({ site }: { site?: any }) {
     const { t } = useTranslation();
@@ -57,6 +58,16 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
     }), []);
     const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
     const [tags, setTags] = useState<any[]>([]);
+    const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+    const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
+
+    function getTagId(tag: any, idx: number) {
+        return String(tag?.id || tag?._id || tag?.tagIdentifier || idx);
+    }
+
+    function toggleTagSelection(id: string) {
+        setSelectedTagIds((prev) => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+    }
     const [tours, setTours] = useState<any[]>([]);
     const [shifts, setShifts] = useState<any[]>([]);
     const [stations, setStations] = useState<any[]>([]);
@@ -69,6 +80,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
     const [localGuards, setLocalGuards] = useState<any[]>([]);
     const [loadingGuards, setLoadingGuards] = useState(false);
     const [guardLoadError, setGuardLoadError] = useState<string | null>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
 
     function getGuardNameFromShift(sh: any) {
         if (!sh) return null;
@@ -95,6 +107,8 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
             return null as any;
         }).filter((x: any) => x) as { lat: number; lng: number; name?: string }[];
     }, [stations]);
+
+    useScrollToTopOnMount(containerRef);
 
     const initialCenter = useMemo(() => {
         if (markerPos) return [markerPos.lat, markerPos.lng];
@@ -132,13 +146,18 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         update('coords', `${lat}, ${lng}`);
         update('latitude', lat.toString());
         update('longitude', lng.toString());
-        // Center the map to the chosen coordinates
-        if (mapInstance && typeof mapInstance.flyTo === 'function') {
+        // Center the map to the chosen coordinates (use animated pan/fly to avoid abrupt jumps)
+        if (mapInstance) {
             try {
-                mapInstance.flyTo([lat, lng], 16);
+                if (typeof mapInstance.flyTo === 'function') {
+                    mapInstance.flyTo([lat, lng], 16, { animate: true, duration: 0.6 });
+                } else if (typeof mapInstance.panTo === 'function') {
+                    mapInstance.panTo([lat, lng], { animate: true, duration: 0.6 });
+                } else if (typeof mapInstance.setView === 'function') {
+                    mapInstance.setView([lat, lng], 16, { animate: true });
+                }
             } catch (e) {
-                // fallback to setView if flyTo isn't available
-                if (typeof mapInstance.setView === 'function') mapInstance.setView([lat, lng], 16);
+                try { if (typeof mapInstance.setView === 'function') mapInstance.setView([lat, lng], 16); } catch (err) { /* ignore */ }
             }
         }
     }
@@ -157,10 +176,16 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
     useEffect(() => {
         if (markerPos && mapInstance) {
             const zoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 16;
-            if (typeof mapInstance.flyTo === 'function') {
-                mapInstance.flyTo([markerPos.lat, markerPos.lng], zoom);
-            } else if (typeof mapInstance.setView === 'function') {
-                mapInstance.setView([markerPos.lat, markerPos.lng], zoom);
+            try {
+                if (typeof mapInstance.flyTo === 'function') {
+                    mapInstance.flyTo([markerPos.lat, markerPos.lng], zoom, { animate: true, duration: 0.6 });
+                } else if (typeof mapInstance.panTo === 'function') {
+                    mapInstance.panTo([markerPos.lat, markerPos.lng], { animate: true, duration: 0.6 });
+                } else if (typeof mapInstance.setView === 'function') {
+                    mapInstance.setView([markerPos.lat, markerPos.lng], zoom, { animate: true });
+                }
+            } catch (e) {
+                try { if (typeof mapInstance.setView === 'function') mapInstance.setView([markerPos.lat, markerPos.lng], zoom); } catch (err) { /* ignore */ }
             }
         }
     }, [markerPos, mapInstance]);
@@ -188,17 +213,108 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         ble: ['delete'],
     };
 
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
     function handleActionChange(tabKey: string, opt: string) {
         if (opt === 'delete') {
-            toast('Delete action not implemented');
+            setShowDeleteConfirm(true);
             return;
         }
-        if (opt === 'print') {
-            toast('Print action not implemented');
-            return;
-        }
+        if (opt === 'print') return bulkPrintSelectedTags();
         toast(opt);
     }
+
+    async function bulkDeleteSelectedTags() {
+        if (!selectedTagIds || selectedTagIds.length === 0) {
+            toast.error(t('siteTourTag.errors.selectAtLeastOne','Seleccione al menos una etiqueta'));
+            return;
+        }
+        const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+        if (!tenantId) { toast.error('Missing tenantId'); return; }
+        const toDelete = selectedTagIds.slice();
+        const results: {id: string, ok: boolean, err?: any}[] = [];
+        for (const sid of toDelete) {
+            const found = (tags || []).map((t: any, i: number) => ({ t, i })).find(({t,i}) => getTagId(t, i) === sid);
+            if (!found) { results.push({ id: sid, ok: false, err: 'Not found' }); continue; }
+            const tag = found.t;
+            const tagId = tag.id || tag._id || tag.tagIdentifier;
+            const tourId = tag.siteTourId || tag.siteTour || currentTourId;
+            if (!tourId || !tagId) { results.push({ id: sid, ok: false, err: 'Missing tour or tag id' }); continue; }
+            try {
+                await ApiService.delete(`/tenant/${tenantId}/site-tour/${encodeURIComponent(tourId)}/tag/${encodeURIComponent(tagId)}`);
+                results.push({ id: sid, ok: true });
+            } catch (e) {
+                console.error('Failed deleting tag', tag, e);
+                results.push({ id: sid, ok: false, err: e });
+            }
+        }
+        const failed = results.filter(r => !r.ok);
+        if (failed.length === 0) {
+            toast.success(t('siteTourTag.success.deleted','Etiquetas eliminadas'));
+            setSelectedTagIds([]);
+        } else {
+            toast.error(t('siteTourTag.errors.deleteFailedCount', { count: failed.length, defaultValue: `Fallo al eliminar ${failed.length} etiquetas` }));
+        }
+        try { await loadTagsForSite(activeTabKey); } catch (e) {}
+    }
+
+    async function bulkPrintSelectedTags() {
+        if (!selectedTagIds || selectedTagIds.length === 0) {
+            toast.error('Seleccione al menos una etiqueta');
+            return;
+        }
+        // Resolve printable values for each selected id
+        const values: string[] = [];
+        for (const sid of selectedTagIds) {
+            const found = (tags || []).map((t: any, i: number) => ({ t, i })).find(({t,i}) => getTagId(t, i) === sid);
+            if (!found) continue;
+            const tag = found.t;
+            const val = tag.tagIdentifier || tag.id || tag._id || getTagId(tag, found.i);
+            if (val) values.push(String(val));
+        }
+        if (values.length === 0) { toast.error('No hay valores imprimibles'); return; }
+
+        try {
+            const dataUrls = await Promise.all(values.map(async (v) => {
+                const url = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(v)}`;
+                try {
+                    const resp = await fetch(url, { cache: 'no-store' });
+                    const blob = await resp.blob();
+                    return await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(String(reader.result));
+                        reader.onerror = () => reject('read-failed');
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (e) {
+                    console.error('Failed fetching QR', e);
+                    return null as any;
+                }
+            }));
+
+            const imgs = dataUrls.filter(Boolean);
+            if (imgs.length === 0) { toast.error('No se pudieron generar los QR'); return; }
+            const w = window.open('', '_blank');
+            if (!w) { toast.error('No se pudo abrir la ventana de impresión'); return; }
+            const html = `<!doctype html><html><head><meta charset="utf-8"><title>QR</title><style>body{margin:0;padding:8mm;display:flex;flex-direction:column;align-items:center} .qr{page-break-after:always;margin-bottom:8mm} img{max-width:320px;width:100%;height:auto;display:block}</style></head><body>${imgs.map((d:any,idx:number)=>`<div class="qr"><img src="${d}" alt="QR ${idx+1}"/></div>`).join('')}<script>window.focus();setTimeout(()=>{try{window.print();setTimeout(()=>window.close(),500)}catch(e){console.error(e)}},300);</script></body></html>`;
+            w.document.write(html);
+            w.document.close();
+        } catch (e) {
+            console.error('bulk print failed', e);
+            toast.error('Error al imprimir');
+        }
+    }
+
+    // Filter tags according to the search field for the active tab
+    const filteredTags = useMemo(() => {
+        const q = String((searchQuery[activeTabKey] || '')).trim().toLowerCase();
+        if (!q) return tags || [];
+        return (tags || []).filter((t: any) => {
+            const name = String(t?.name || '').toLowerCase();
+            const id = String(t?.tagIdentifier || t?.id || t?._id || '').toLowerCase();
+            return name.includes(q) || id.includes(q);
+        });
+    }, [tags, searchQuery, activeTabKey]);
 
     const [actionOpen, setActionOpen] = useState(false);
     const actionRef = useRef<HTMLDivElement | null>(null);
@@ -223,7 +339,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
             // Require an existing site tour to attach the tag to
             const tourId = form.siteTourId || currentTourId || null;
             if (!tourId) {
-                toast.error('Seleccione un recorrido o crea uno primero');
+                toast.error('Seleccione una estación o crea una primero');
                 return;
             }
 
@@ -411,6 +527,84 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                         data = null;
                     }
                 }
+                // fallback: if station endpoint returned nothing, try inspecting shifts for guard objects (preferred canonical source)
+                if ((!data || (Array.isArray(data) && data.length === 0) || (data && data.rows && data.rows.length === 0)) && stationId) {
+                    try {
+                        const shiftsQs = `stationId=${encodeURIComponent(stationId)}${postSiteId ? `&postSiteId=${encodeURIComponent(postSiteId)}` : ''}&_=${ts}`;
+                        const shiftsResp: any = await ApiService.get(`/tenant/${tenantId}/shift?${shiftsQs}`, { headers: { 'Cache-Control': 'no-cache' } } as any);
+                        const shiftRows = Array.isArray(shiftsResp) ? shiftsResp : (shiftsResp && (shiftsResp.rows || shiftsResp.data)) ? (shiftsResp.rows || shiftsResp.data) : [];
+                        if (shiftRows && shiftRows.length) {
+                            const guardsFromShifts: any[] = [];
+
+                            const extractGuardFromShift = (sh: any) => {
+                                if (!sh) return null;
+                                const candidates = [
+                                    sh.guard,
+                                    sh.securityGuard,
+                                    sh.security_guard,
+                                    sh.guardObject,
+                                    sh.user,
+                                    sh.assignedGuard,
+                                    sh.guardInfo,
+                                ];
+                                for (const c of candidates) {
+                                    if (c && typeof c === 'object') return c;
+                                }
+
+                                const idFields = ['guardId', 'securityGuardId', 'security_guard_id', 'guard_id', 'securityGuard_id'];
+                                for (const f of idFields) {
+                                    if (sh[f]) return { id: sh[f] };
+                                }
+
+                                for (const k of Object.keys(sh || {})) {
+                                    if (/guard/i.test(k)) {
+                                        const v = (sh as any)[k];
+                                        if (!v) continue;
+                                        if (typeof v === 'object') return v;
+                                        if (typeof v === 'string' || typeof v === 'number') return { id: v };
+                                    }
+                                }
+
+                                return null;
+                            };
+
+                            shiftRows.forEach((sh: any) => {
+                                const g = extractGuardFromShift(sh);
+                                if (g) {
+                                    const guardObj = (typeof g === 'object') ? { ...g } : { id: g };
+                                    guardObj.stationId = guardObj.stationId || guardObj.station_id || sh.stationId || sh.station_id || stationId;
+                                    guardsFromShifts.push(guardObj);
+                                }
+                            });
+
+                            // Deduplicate guards
+                            const seen = new Map<string, any>();
+                            guardsFromShifts.forEach((g: any) => {
+                                const key = (g && (g.id || g.email || g.username || g._id)) ? String(g.id || g._id || g.email || g.username) : JSON.stringify(g);
+                                if (!seen.has(key)) {
+                                    const copy = { ...(g || {}) };
+                                    const sid = copy.stationId || copy.station_id || null;
+                                    if (sid) copy.stations = [String(sid)];
+                                    seen.set(key, copy);
+                                } else {
+                                    const existing = seen.get(key);
+                                    const sid = (g && (g.stationId || g.station_id)) ? String(g.stationId || g.station_id) : null;
+                                    if (sid) {
+                                        existing.stations = Array.isArray(existing.stations) ? existing.stations : (existing.stationId ? [String(existing.stationId)] : []);
+                                        if (!existing.stations.includes(sid)) existing.stations.push(sid);
+                                        seen.set(key, existing);
+                                    }
+                                }
+                            });
+
+                            if (seen.size) data = Array.from(seen.values());
+                        }
+                    } catch (e) {
+                        // ignore and fallthrough to tenant-level guard lookup
+                        data = null;
+                    }
+                }
+
                 // fallback: tenant security-guard filtered by station
                 if ((!data || (Array.isArray(data) && data.length === 0) || (data && data.rows && data.rows.length === 0)) && stationId) {
                     try {
@@ -469,26 +663,115 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         if (!tenantId || !site?.id) return;
         setLoadingTags(true);
         try {
-            // Query tags for the post site directly (covers all tours under the site)
+            // Query tags for the post site using several possible endpoints (some backends differ)
             const q = filterTagType ? `?tagType=${encodeURIComponent(filterTagType)}` : '';
-            const tagsResp: any = await ApiService.get(`/tenant/${tenantId}/stations/${site.id}/site-tour-tags${q}`);
-            // eslint-disable-next-line no-console
-            console.debug('loadTagsForSite: tagsResp', tagsResp);
-            const rows = tagsResp && (tagsResp.rows || tagsResp) || [];
-            setTags(rows);
-            // infer a currentTourId if present on first row
-            if (rows && rows.length > 0) {
-                setCurrentTourId(rows[0].siteTourId || rows[0].siteTour || null);
-            } else {
-                setCurrentTourId(null);
+            const ts = Date.now();
+            // 1) Preferred: post-site aggregated endpoint (backend implements this)
+            try {
+                const sep = q.startsWith('?') ? '&' : (q ? '?' : '?');
+                const tagsResp: any = await ApiService.get(`/tenant/${tenantId}/post-site/${encodeURIComponent(site.id)}/site-tour-tags${q}${sep}_=${ts}`);
+                const rows = tagsResp && (tagsResp.rows || tagsResp) || [];
+                if (rows && rows.length) {
+                    setTags(rows);
+                    setCurrentTourId(rows[0].siteTourId || rows[0].siteTour || null);
+                    return;
+                }
+            } catch (err) {
+                // ignore and try fallbacks (including station-scoped endpoint)
             }
-        } catch (e) {
-            console.error('Failed loading tags', e);
+
+            // 2) Tenant-level aggregated endpoint (postSiteId in path)
+            try {
+                const qs2 = filterTagType ? `?tagType=${encodeURIComponent(filterTagType)}&_=${ts}` : `?_=${ts}`;
+                const tagsResp2: any = await ApiService.get(`/tenant/${tenantId}/post-site/${encodeURIComponent(site.id)}/site-tour-tags${qs2}`);
+                const rows2 = tagsResp2 && (tagsResp2.rows || tagsResp2) || [];
+                if (rows2 && rows2.length) {
+                    setTags(rows2);
+                    setCurrentTourId(rows2[0].siteTourId || rows2[0].siteTour || null);
+                    return;
+                }
+            } catch (err) {
+                // ignore and try other fallbacks
+            }
+
+            // 3) Fallback: fetch tours for the postSite and query tags per tour (some APIs expose tags under each tour)
+            try {
+                const toursResp: any = await ApiService.get(`/tenant/${tenantId}/site-tour?postSiteId=${encodeURIComponent(site.id)}&limit=999`);
+                const toursRows = Array.isArray(toursResp) ? toursResp : (toursResp && toursResp.rows) ? toursResp.rows : [];
+                const collected: any[] = [];
+                for (const tr of (toursRows || [])) {
+                    const tid = tr && (tr.id || tr._id);
+                    if (!tid) continue;
+                        try {
+                        const sep2 = q.startsWith('?') ? '&' : (q ? '?' : '?');
+                        const perResp: any = await ApiService.get(`/tenant/${tenantId}/site-tour/${encodeURIComponent(tid)}/tags${q}${sep2}_=${ts}`);
+                        const perRows = perResp && (perResp.rows || perResp) || [];
+                        if (perRows && perRows.length) collected.push(...perRows);
+                        continue;
+                    } catch (e1) {
+                        // try alternate singular path
+                    }
+                    try {
+                        const sep3 = q.startsWith('?') ? '&' : (q ? '?' : '?');
+                        const perResp2: any = await ApiService.get(`/tenant/${tenantId}/site-tour/${encodeURIComponent(tid)}/tag${q}${sep3}_=${ts}`);
+                        const perRows2 = perResp2 && (perResp2.rows || perResp2) || [];
+                        if (perRows2 && perRows2.length) collected.push(...perRows2);
+                    } catch (e2) {
+                        // ignore per-tour failures
+                    }
+                }
+                if (collected.length) {
+                    // dedupe by id or tagIdentifier
+                    const seen = new Map<string, any>();
+                    for (const it of collected) {
+                        const key = String(it.id || it._id || it.tagIdentifier || JSON.stringify(it));
+                        if (!seen.has(key)) seen.set(key, it);
+                    }
+                    const rowsFinal = Array.from(seen.values());
+                    setTags(rowsFinal);
+                    setCurrentTourId(rowsFinal[0]?.siteTourId || rowsFinal[0]?.siteTour || null);
+                    return;
+                }
+            } catch (err) {
+                // ignore
+            }
+
+            // nothing found — clear
             setTags([]);
+            setCurrentTourId(null);
+        } catch (e: any) {
+            // Suppress noisy 404 when tag endpoints are legitimately absent; treat as empty list.
+            if (e instanceof ApiError && e.status === 404) {
+                setTags([]);
+            } else {
+                console.error('Failed loading tags', e);
+                setTags([]);
+            }
         } finally {
             setLoadingTags(false);
         }
     }
+
+    // keep selected ids in sync when tags list changes
+    useEffect(() => {
+        setSelectedTagIds((prev) => {
+            const available = (tags || []).map((t: any, idx: number) => String(t.id || t._id || t.tagIdentifier || idx));
+            return prev.filter(id => available.includes(id));
+        });
+    }, [tags]);
+
+    // keep header checkbox indeterminate state in sync with selections (relative to visible rows)
+    useEffect(() => {
+        try {
+            const total = (filteredTags || []).length;
+            const selected = (selectedTagIds || []).length;
+            if (headerCheckboxRef.current) {
+                headerCheckboxRef.current.indeterminate = selected > 0 && selected < total;
+            }
+        } catch (e) {
+            // ignore
+        }
+    }, [selectedTagIds, filteredTags]);
 
     // QR modal state and helpers
     const [showQrModal, setShowQrModal] = useState(false);
@@ -499,8 +782,31 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
             loadTagsForSite(activeTabKey);
             loadToursForSite();
             loadShiftsForSite();
+            // Initialize map and coord fields from the post-site if available
+            try {
+                const siteLat = parseFloat(String(site?.latitude || site?.latitud || site?.lat || (site?.coords && site.coords.lat) || ''));
+                const siteLng = parseFloat(String(site?.longitude || site?.longitud || site?.lng || (site?.coords && site.coords.lng) || ''));
+                if (!isNaN(siteLat) && !isNaN(siteLng)) {
+                    update('coords', `${siteLat}, ${siteLng}`);
+                    update('latitude', siteLat.toString());
+                    update('longitude', siteLng.toString());
+                    setMarkerPos({ lat: siteLat, lng: siteLng });
+                }
+            } catch (e) {
+                // ignore malformed values
+            }
         }
     }, [showNewTag, activeTabKey]);
+
+    // When the create-tag modal opens, Leaflet needs to invalidate size
+    // so tiles render correctly at the new dimensions.
+    useEffect(() => {
+        if (!showNewTag || !mapInstance) return;
+        const t = setTimeout(() => {
+            try { mapInstance.invalidateSize(); } catch (e) { /* ignore */ }
+        }, 150);
+        return () => clearTimeout(t);
+    }, [showNewTag, mapInstance]);
 
     useEffect(() => {
         // load stations for quick mapping (quick solution)
@@ -534,33 +840,60 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         setShowQrModal(true);
     }
 
-    function printQr() {
+    async function printQr() {
         if (!qrValue) return;
         const url = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrValue)}`;
-        const w = window.open('', '_blank');
-        if (!w) {
-            toast.error('No se pudo abrir la ventana de impresión');
-            return;
-        }
-        w.document.write(`<!doctype html><html><head><title>QR</title></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;margin:0;"><img src="${url}" style="max-width:100%;height:auto;"/></body></html>`);
-        w.document.close();
-        w.focus();
-        // give the image a moment to load before printing
-        setTimeout(() => {
-            try {
-                w.print();
-                // optionally close after print
-                setTimeout(() => w.close(), 500);
-            } catch (e) {
-                console.error(e);
+        try {
+            const resp = await fetch(url, { cache: 'no-store' });
+            const blob = await resp.blob();
+            const dataUrl: string = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result));
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+
+            const w = window.open('', '_blank');
+            if (!w) {
+                toast.error('No se pudo abrir la ventana de impresión');
+                return;
             }
-        }, 250);
+
+            const html = `<!doctype html><html><head><meta charset="utf-8"><title>QR</title><style>html,body{height:100%;}body{display:flex;align-items:center;justify-content:center;height:100vh;margin:0}img{max-width:90%;height:auto;display:block}</style></head><body><img src="${dataUrl}" alt="QR"/></body></html>`;
+            w.document.write(html);
+            w.document.close();
+            // wait for image to load inside new window then print
+            const tryPrint = () => {
+                try {
+                    w.focus();
+                    w.print();
+                    setTimeout(() => w.close(), 500);
+                } catch (e) {
+                    console.error('Print failed', e);
+                    try { w.close(); } catch (_) {}
+                }
+            };
+
+            // If the image hasn't loaded yet, set a short timeout to allow rendering
+            setTimeout(tryPrint, 200);
+        } catch (err) {
+            console.error('Failed fetching QR image', err);
+            // fallback: open the image URL directly and attempt to print (may be blocked by CORS)
+            const w = window.open('', '_blank');
+            if (!w) { toast.error('No se pudo abrir la ventana de impresión'); return; }
+            w.document.write(`<!doctype html><html><head><title>QR</title></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;margin:0;"><img src="${url}" style="max-width:100%;height:auto;"/></body></html>`);
+            w.document.close();
+            w.focus();
+            setTimeout(() => {
+                try { w.print(); setTimeout(() => w.close(), 500); } catch (e) { console.error(e); }
+            }, 500);
+        }
     }
 
     // Google Maps implementation is used instead of Leaflet.
 
     return (
-        <div className="space-y-4">
+        <div ref={containerRef} className="space-y-4">
             <div className="bg-white border rounded-lg p-4">
                 <div className="mb-4">
                     <div className="flex items-center justify-between">
@@ -585,7 +918,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                 <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
                                     <Plus size={14} />
                                 </span>
-                                <span className="text-sm font-medium">New Tag</span>
+                                <span className="text-sm font-medium">{t('siteTourTag.newTagButton', 'New Tag')}</span>
                             </button>
                         </div>
                     </div>
@@ -603,18 +936,28 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
 
                         {actionOpen && (
                             <div className="absolute left-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-20">
-                                {(actionOptionsMap[activeTabKey] || []).map((opt: string) => (
-                                    <button
-                                        key={opt}
-                                        onClick={() => { handleActionChange(activeTabKey, opt); setActionOpen(false); }}
-                                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
-                                    >
-                                        {t(`siteTourTag.actions.${opt}`)}
-                                    </button>
-                                ))}
+                                {(actionOptionsMap[activeTabKey] || []).map((opt: string) => {
+                                    const disabled = !(selectedTagIds && selectedTagIds.length > 0);
+                                    return (
+                                        <button
+                                            key={opt}
+                                            onClick={() => {
+                                                if (disabled) return;
+                                                handleActionChange(activeTabKey, opt);
+                                                setActionOpen(false);
+                                            }}
+                                            disabled={disabled}
+                                            className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${disabled ? 'text-gray-400 cursor-not-allowed' : ''}`}
+                                        >
+                                            {t(`siteTourTag.actions.${opt}`)}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
+
+                    {/* action buttons removed — use dropdown actions */}
 
                     <div className="w-1/3">
                         <input
@@ -631,15 +974,31 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-4 py-3"><input type="checkbox" /></th>
+                                        <th className="px-4 py-3 w-12 text-center">
+                                            <div className="flex items-center justify-center">
+                                                <input
+                                                    ref={headerCheckboxRef}
+                                                    type="checkbox"
+                                                    className="h-4 w-4"
+                                                    checked={(filteredTags || []).length > 0 && selectedTagIds.length === (filteredTags || []).length}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedTagIds((filteredTags || []).map((t: any, i: number) => getTagId(t, i)));
+                                                        } else {
+                                                            setSelectedTagIds([]);
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        </th>
                                         <th className="px-4 py-3 text-left">{t('siteTourTag.table.name')}</th>
                                         <th className="px-4 py-3 text-left">{activeTabKey === 'virtual' ? t('siteTourTag.table.geofenceRadius') : t('siteTourTag.table.tagId')}</th>
                                         <th className="px-4 py-3 text-right">&nbsp;</th>
                                     </tr>
                             </thead>
                             <tbody>
-                                {tags && tags.length > 0 ? (
-                                    tags.map((tag) => {
+                                {filteredTags && filteredTags.length > 0 ? (
+                                    filteredTags.map((tag, idx) => {
                                         // Resolve associated shift (if any) loaded into `shifts` state
                                         const shiftId = tag.shiftId || tag.shift?.id || tag.siteTourShiftId || null;
                                         const shift = shiftId ? (shifts || []).find((s: any) => String(s.id) === String(shiftId)) : null;
@@ -649,8 +1008,25 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                         const shiftLabel = shift ? `${guardName ?? 'Guard'}${stationName ? ' — ' + stationName : ''}${start ? ' (' + start + ')' : ''}` : null;
 
                                         return (
-                                            <tr key={tag.id || (tag as any)._id || tag.tagIdentifier} className="border-t">
-                                                <td className="px-4 py-3"><input type="checkbox" /></td>
+                                            <tr key={tag.id || (tag as any)._id || tag.tagIdentifier || idx} className="border-t">
+                                                <td className="px-4 py-3 text-center w-12">
+                                                    <div className="flex items-center justify-center">
+                                                        {(() => {
+                                                            const rowId = getTagId(tag, idx);
+                                                            return (
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="h-4 w-4"
+                                                                    checked={selectedTagIds.includes(rowId)}
+                                                                    onChange={(e) => {
+                                                                        if (e.target.checked) toggleTagSelection(rowId);
+                                                                        else toggleTagSelection(rowId);
+                                                                    }}
+                                                                />
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                </td>
                                                 <td className="px-4 py-3">
                                                     <div className="flex flex-col">
                                                         <div className="font-medium">{tag.name}</div>
@@ -659,7 +1035,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                                 </td>
                                                 <td className="px-4 py-3 break-words">{tag.tagIdentifier || tag.id || (tag as any)._id}</td>
                                                 <td className="px-4 py-3 text-right">
-                                                    <button onClick={() => openQrFor(tag.tagIdentifier || tag.id || (tag as any)._id)} className="px-3 py-1 bg-orange-600 text-white rounded">QR</button>
+                                                    <button onClick={() => openQrFor(tag.tagIdentifier || tag.id || (tag as any)._id)} className="px-3 py-1 bg-orange-600 text-white rounded">{t('siteTourTag.qrButton', 'QR')}</button>
                                                 </td>
                                             </tr>
                                         );
@@ -704,10 +1080,10 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
             </div>
 
             {showNewTag && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center">
+                <div className="fixed inset-0 z-50 flex items-stretch">
                     <div className="absolute inset-0 bg-black/40" onClick={() => setShowNewTag(false)} />
 
-                    <aside className="relative w-full sm:ml-auto sm:max-w-sm bg-white shadow-xl overflow-hidden rounded-t-lg sm:rounded-lg max-h-[90vh] flex flex-col">
+                    <aside className="relative w-full sm:ml-auto sm:max-w-sm h-screen bg-white shadow-xl overflow-hidden rounded-none sm:rounded-lg flex flex-col">
                         <div className="flex items-center justify-between p-4 border-b">
                             <h3 className="text-lg font-semibold">{t('siteTourTag.modal.title')}</h3>
                             <button onClick={() => setShowNewTag(false)} className="p-2 text-gray-500 hover:text-gray-700">
@@ -717,63 +1093,34 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
 
                         <div className="p-6 overflow-y-auto flex-1 space-y-4">
                             <div>
-                                <div className="mb-4">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="text-sm font-semibold">{t('siteTourTag.modal.title') || 'Existing tags'}</h4>
-                                        <button onClick={() => loadTagsForSite(activeTabKey)} className="text-sm px-2 py-1 border rounded">{t('siteTourTag.modal.refresh') || 'Refresh'}</button>
-                                    </div>
-                                    <div className="mt-3">
-                                        {loadingTags ? <div className="text-sm text-gray-500">Cargando...</div> : (
-                                            tags.length === 0 ? <div className="text-sm text-gray-500">No hay etiquetas</div> : (
-                                                <table className="w-full text-sm">
-                                                    <thead>
-                                                        <tr className="text-left">
-                                                            <th className="px-2 py-1">{t('siteTourTag.table.name')}</th>
-                                                            <th className="px-2 py-1">{t('siteTourTag.table.tagId')}</th>
-                                                            <th className="px-2 py-1" />
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {tags.map(tag => (
-                                                            <tr key={tag.id} className="border-t">
-                                                                <td className="px-2 py-2">{tag.name}</td>
-                                                                <td className="px-2 py-2 break-words">{tag.tagIdentifier || tag.id}</td>
-                                                                <td className="px-2 py-2 text-right">
-                                                                    <button onClick={() => openQrFor(tag.tagIdentifier || tag.id)} className="px-3 py-1 bg-orange-600 text-white rounded">QR</button>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            )
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
                                 <input value={form.tagType} readOnly className="w-full border rounded-lg h-12 px-3" />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('siteTourTag.form.siteTour') || 'Recorrido'}</label>
-                                <div className="flex gap-2">
-                                        <select value={form.siteTourId || ''} onChange={(e) => update('siteTourId', e.target.value)} className="flex-1 px-3 py-2 border rounded-md">
-                                            <option value="">{loadingTours ? 'Cargando recorridos...' : (t('siteTourTag.form.selectTour') || 'Seleccione un recorrido')}</option>
+                                <div className="flex flex-col gap-2 min-w-0 overflow-hidden">
+                                        <select value={form.siteTourId || ''} onChange={(e) => update('siteTourId', e.target.value)} className="w-full px-3 py-2 h-12 border rounded-md">
+                                            <option value="">{loadingTours ? t('siteTourTag.form.loadingTours', 'Cargando recorridos...') : (t('siteTourTag.form.selectTour') || 'Seleccione una recorrido')}</option>
                                             {tours.map((tr: any) => (
                                                 <option key={tr.id || tr._id} value={tr.id || tr._id}>{tr.name || tr.title || `Recorrido ${tr.id || tr._id}`}</option>
                                             ))}
                                         </select>
-                                        <select value={form.shiftId || ''} onChange={(e) => update('shiftId', e.target.value)} className="px-3 py-2 border rounded-md">
-                                            <option value="">{shifts && shifts.length ? 'Attach to shift (optional)' : 'No shifts'}</option>
+
+                                        <select value={form.shiftId || ''} onChange={(e) => update('shiftId', e.target.value)} className="w-full px-3 py-2 h-12 border rounded-md truncate max-w-full min-w-0" style={{maxWidth: '100%'}}>
+                                            <option value="">{shifts && shifts.length ? t('siteTourTag.form.attachToShift', 'Adjuntar a turno (opcional)') : t('siteTourTag.form.noShifts', 'No hay turnos')}</option>
                                             {shifts.map((sh: any) => {
                                                 const guardName = getGuardNameFromShift(sh) || 'Guard';
                                                 const stationName = (sh.station && (sh.station.stationName || sh.station.name)) || sh.stationName || '';
-                                                const start = sh.startTime ? new Date(sh.startTime).toLocaleString() : '';
-                                                const label = `${guardName}${stationName ? ' - ' + stationName : ''}${start ? ' (' + start + ')' : ''}`;
-                                                return <option key={sh.id} value={sh.id}>{label}</option>;
+                                                const fullLabel = `${guardName}${stationName ? ' - ' + stationName : ''}`;
+                                                let displayLabel = fullLabel;
+                                                if (displayLabel.length > 30) displayLabel = displayLabel.slice(0, 27) + '...';
+                                                return <option key={sh.id} value={sh.id} title={fullLabel}>{displayLabel}</option>;
                                             })}
                                         </select>
-                                        <button onClick={() => { setShowCreateTourModal(true); setTourForm({ name: '', stationId: form.stationId || '' }); }} className="px-3 py-2 bg-violet-600 text-white rounded-md">{t('siteTourTag.form.createTourAndTag') || 'Crear recorrido y etiqueta'}</button>
+
+                                    <div className="mt-1">
+                                        <button onClick={() => { setShowCreateTourModal(true); setTourForm({ name: '', stationId: form.stationId || '' }); }} className="w-full px-3 py-2 bg-violet-600 text-white rounded-md">{t('siteTourTag.form.createTourAndTag') || 'Crear recorrido y etiqueta'}</button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -807,7 +1154,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                                     setMarkerPos({ lat, lng });
                                                 }
                                             }
-                                        }} placeholder="Lat, Lng" className="col-span-2 w-full border rounded-lg h-12 px-3" />
+                                        }} placeholder={t('siteTourTag.form.coordsPlaceholder', 'Lat, Lng')} className="col-span-2 w-full border rounded-lg h-12 px-3" />
 
                                         <div className="col-span-1">
                                             <button onClick={handleLocateInMap} className="w-full px-4 py-2 border rounded-md">{t('siteTourTag.form.mapLocation')}</button>
@@ -819,17 +1166,32 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                     )}
 
                                     {/* Only show the textual Lat/Lng if the single 'coords' input is empty to avoid duplicate display */}
-                                    {!form.coords && (
-                                        <div className="text-sm text-gray-600 mt-2">{form.latitude && form.longitude ? `Lat: ${form.latitude} | Lng: ${form.longitude}` : 'No coordinates selected'}</div>
+                                        {!form.coords && (
+                                        <div className="text-sm text-gray-600 mt-2">{form.latitude && form.longitude ? `Lat: ${form.latitude} | Lng: ${form.longitude}` : t('siteTourTag.form.noCoordinates', 'No coordinates selected')}</div>
                                     )}
 
                                     <div className="border rounded-md overflow-hidden">
-                                        <div style={{ height: 220 }}>
+                                        <div style={{ height: '60vh', minHeight: 220 }}>
                                             <MapWrapper
                                                 center={initialCenter}
-                                                zoom={13}
+                                                zoom={19}
+                                                maxZoom={19}
                                                 style={{ height: '100%', width: '100%' }}
-                                                whenCreated={(map: any) => setMapInstance(map as L.Map)}
+                                                whenCreated={(map: any) => {
+                                                    const m = map as L.Map;
+                                                    setMapInstance(m);
+                                                    try {
+                                                        if (typeof m.getMaxZoom === 'function' && typeof m.setZoom === 'function') {
+                                                            const mz = m.getMaxZoom();
+                                                            if (typeof mz === 'number' && isFinite(mz)) m.setZoom(mz);
+                                                            else m.setZoom(19);
+                                                        } else if (typeof m.setZoom === 'function') {
+                                                            m.setZoom(19);
+                                                        }
+                                                    } catch (e) {
+                                                        // ignore any errors when forcing zoom
+                                                    }
+                                                }}
                                             >
                                                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                                                 {markerPos ? (
@@ -840,8 +1202,8 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                                 {/* render station markers */}
                                                 {stationsCoords.map((sc: any, idx: number) => (
                                                     <Marker key={`st-${idx}`} position={[sc.lat, sc.lng]}>
-                                                        <Popup>{sc.name || 'Station'}</Popup>
-                                                    </Marker>
+                                                                        <Popup>{sc.name || t('siteTourTag.placeholders.tagName', 'Station')}</Popup>
+                                                                    </Marker>
                                                 ))}
                                                 <MapClickHandler />
                                             </MapWrapper>
@@ -850,9 +1212,9 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                 </>
                             ) : (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Map to station (quick)</label>
-                                    <select value={form.stationId || ''} onChange={e => update('stationId', e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700">
-                                        <option value="">{loadingStations ? 'Loading stations...' : 'Select station (optional)'}</option>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('siteTourTag.form.mapToStationLabel', 'Map to station (quick)')}</label>
+                                    <select value={form.stationId || ''} onChange={e => update('stationId', e.target.value)} className="w-full px-3 py-2 h-12 border rounded-md text-sm text-gray-700">
+                                        <option value="">{loadingStations ? t('siteTourTag.form.loadingStations', 'Loading stations...') : t('siteTourTag.form.selectStationOptional', 'Select station (optional)')}</option>
                                         {stations.map((s: any) => (
                                             <option key={s.id || s.stationId} value={s.id || s.stationId}>{s.stationName || s.name || s.station_name || s.stationId || s.id}</option>
                                         ))}
@@ -886,13 +1248,32 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                     </aside>
                 </div>
             )}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-60 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/40" onClick={() => setShowDeleteConfirm(false)} />
+
+                    <div className="relative bg-white rounded-lg p-6 max-w-lg w-full">
+                        <div className="flex justify-between items-start">
+                            <h3 className="text-lg font-semibold">{t('siteTourTag.confirm.deleteTitle','Confirmar eliminación')}</h3>
+                            <button onClick={() => setShowDeleteConfirm(false)} className="p-2 text-gray-500 hover:text-gray-700">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <p className="mt-3 text-sm text-gray-600">{t('siteTourTag.confirm.deleteMessage','¿Eliminar las etiquetas seleccionadas? Esta acción no se puede deshacer.')}</p>
+                        <div className="mt-6 flex justify-end gap-3">
+                            <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 rounded border bg-white text-sm">{t('siteTourTag.confirm.cancel','Cancelar')}</button>
+                            <button onClick={async () => { setShowDeleteConfirm(false); await bulkDeleteSelectedTags(); }} className="px-4 py-2 rounded bg-red-600 text-white text-sm">{t('siteTourTag.confirm.confirm','Eliminar')}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {showQrModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/40" onClick={() => setShowQrModal(false)} />
 
                     <div className="relative bg-white rounded-lg p-4 max-w-sm w-full">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-semibold">QR</h3>
+                            <h3 className="text-lg font-semibold">{t('siteTourTag.qrModal.title', 'QR')}</h3>
                             <button onClick={() => setShowQrModal(false)} className="p-2 text-gray-500 hover:text-gray-700">
                                 <X size={18} />
                             </button>
@@ -907,8 +1288,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                             <div className="text-sm text-gray-700 break-words">{qrValue}</div>
 
                             <div className="flex gap-2">
-                                <button onClick={printQr} className="px-4 py-2 bg-orange-600 text-white rounded">Print</button>
-                                <button onClick={() => { navigator.clipboard?.writeText(qrValue); toast.success('Copiado'); }} className="px-4 py-2 border rounded">Copiar</button>
+                                <button onClick={printQr} className="px-4 py-2 bg-orange-600 text-white rounded">{t('siteTourTag.qrModal.print', 'Print')}</button>
                             </div>
                         </div>
                     </div>
@@ -931,7 +1311,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
 
                             <div>
                                 <label className="block text-sm text-gray-700 mb-2">{t('siteTour.form.station') || 'Estación (opcional)'}</label>
-                                <select value={tourForm.stationId || ''} onChange={(e) => setTourForm((s: any) => ({ ...s, stationId: e.target.value }))} className="w-full px-3 py-2 border rounded-md text-sm">
+                                <select value={tourForm.stationId || ''} onChange={(e) => setTourForm((s: any) => ({ ...s, stationId: e.target.value }))} className="w-full px-3 py-2 h-12 border rounded-md text-sm">
                                     <option value="">{loadingStations ? 'Cargando estaciones...' : (t('siteTour.form.selectStation') || 'Sin estación')}</option>
                                     {stations.map((s: any) => (
                                         <option key={s.id || s.stationId} value={s.id || s.stationId}>{s.stationName || s.name || s.station_name || s.id}</option>
@@ -941,7 +1321,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
 
                             <div>
                                 <label className="block text-sm text-gray-700 mb-2">{t('siteTour.form.assignGuard') || 'Asignar Guardia'}</label>
-                                <select value={tourForm.securityGuardId || ''} onChange={(e) => setTourForm((s: any) => ({ ...s, securityGuardId: e.target.value }))} className="w-full px-3 py-2 border rounded-md text-sm">
+                                <select value={tourForm.securityGuardId || ''} onChange={(e) => setTourForm((s: any) => ({ ...s, securityGuardId: e.target.value }))} className="w-full px-3 py-2 h-12 border rounded-md text-sm">
                                     <option value="">{loadingGuards ? 'Cargando guardias...' : (localGuards && localGuards.length ? (t('siteTour.form.selectGuard') || 'Seleccione guardia') : 'No guards found')}</option>
                                     {localGuards.map((g: any) => {
                                         const name = (g.guard && (g.guard.firstName || g.guard.lastName)) ? `${g.guard.firstName || ''} ${g.guard.lastName || ''}`.trim() : (g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.name || g.fullName || g.label) || '';
@@ -952,9 +1332,11 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                             </div>
                         </div>
 
-                        <div className="mt-4 flex justify-end gap-2">
+                        <div className="mt-4 flex justify-end">
                             <button onClick={() => setShowCreateTourModal(false)} className="px-4 py-2 border rounded-md">{t('common.cancel') || 'Cancelar'}</button>
-                            <button onClick={() => createTourAndTag()} className="px-4 py-2 bg-orange-600 text-white rounded-md">{t('siteTour.form.createAndAttach') || 'Crear recorrido y etiqueta'}</button>
+                        </div>
+                        <div className="mt-2 flex justify-end">
+                            <button onClick={() => createTourAndTag()} className="px-4 py-2 bg-violet-600 text-white rounded-md whitespace-nowrap">{t('siteTour.form.createAndAttach') || 'Crear recorrido y etiqueta'}</button>
                         </div>
                     </div>
                 </div>

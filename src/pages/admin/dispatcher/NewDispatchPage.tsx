@@ -34,6 +34,7 @@ import api from "@/lib/api";
 import { postSiteService } from "@/lib/api/postSiteService";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import securityGuardService from '@/lib/api/securityGuardService';
 
 // Datos cargados desde backend
 // Se usan estados vacíos y se rellenan en useEffect
@@ -994,12 +995,43 @@ export default function NewDispatchPage() {
       // Debug: log final payload that will be sent to the API
       // eslint-disable-next-line no-console
 
-      await api.post(`/tenant/${tenantId}/incident`, { data: incidentPayload });
+      const resp = await api.post(`/tenant/${tenantId}/incident`, { data: incidentPayload });
+      const created = (resp && (resp.data && (resp.data.data || resp.data)) ) || resp;
 
-      // Show success toast, clear attachments and navigate back
+      // Show success toast
       toast.success('Incidente creado');
+
+      // If frontend provided attachments, upload them to storage and create attachment metadata linked to the incident
+      try {
+        if (attachments && attachments.length > 0) {
+          for (const f of attachments) {
+            try {
+              const uploaded = await securityGuardService.uploadFileToStorage(f, 'notesImages');
+              const attPayload: any = {
+                name: uploaded.name || f.name,
+                mimeType: f.type || 'application/octet-stream',
+                sizeInBytes: uploaded.sizeInBytes || f.size,
+                storageId: 'notesImages',
+                fileToken: uploaded.fileToken || null,
+                publicUrl: uploaded.publicUrl || null,
+                notableType: 'incident',
+                notableId: created && (created.id || (created.data && created.data.id)) ? (created.id || created.data.id) : null,
+              };
+
+              if (attPayload.notableId) {
+                await api.post(`/tenant/${tenantId}/attachments`, attPayload);
+              }
+            } catch (e) {
+              console.warn('Failed to upload/create attachment for incident', e);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Unhandled error while processing incident attachments', e);
+      }
+
+      // Clear attachments and navigate back
       setAttachments([]);
-      // If we created this incident from a post-site context, navigate back to that post-site's incidents tab
       const targetSiteId = incidentPayload.postSiteId || incidentPayload.siteId || dupSiteId || null;
       if (targetSiteId) {
         navigate(`/post-sites/${targetSiteId}/incidents`);

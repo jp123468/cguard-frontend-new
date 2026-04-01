@@ -15,7 +15,7 @@ export default function IncidentMap({ lat, lng, label }: { lat?: number; lng?: n
   // Por ahora, usar OpenStreetMap (Leaflet)
   return (
     <div className="w-full h-64 rounded-md overflow-hidden mb-4">
-      <OSMMapEmbed lat={lat} lng={lng} zoom={15} />
+      <OSMMapEmbed lat={lat} lng={lng} zoom={15} draggable={false} />
     </div>
   );
 }

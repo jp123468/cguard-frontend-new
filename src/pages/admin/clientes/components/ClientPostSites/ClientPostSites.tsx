@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, ChevronDown, Plus, EllipsisVertical, Eye, Archive } from 'lucide-react';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { stationService } from '@/lib/api/stationService';
@@ -10,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function ClientPostSites({ client }: { client: any }) {
   const { t } = useTranslation();
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const actionRef = useRef<HTMLDivElement | null>(null);
   const [actionOpen, setActionOpen] = useState(false);
   const [actionSelection, setActionSelection] = useState<string>(t('clientPostSites.action'));
@@ -54,8 +56,10 @@ export default function ClientPostSites({ client }: { client: any }) {
     return (r.name || r.companyName || '').toLowerCase().includes(q) || (r.contactEmail || r.email || '').toLowerCase().includes(q) || (r.contactPhone || r.phone || '').toLowerCase().includes(q);
   });
 
+  useScrollToTopOnMount(containerRef);
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div ref={containerRef} className="min-h-screen flex flex-col">
       <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative" ref={actionRef}>

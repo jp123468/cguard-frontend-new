@@ -5,8 +5,7 @@ import en from './locales/en.json'
 import pt from './locales/pt_fixed.json'
 
 i18n.use(initReactI18next).init({
-  resources: {
-    es: { translation: es },
+  resources: {  es: { translation: es },
     en: { translation: en },
     pt: { translation: pt },
   },

@@ -1,13 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, ChevronDown, Plus, X, Paperclip } from 'lucide-react';
 import ClientsLayout from '@/layouts/ClientsLayout';
 import AppLayout from '@/layouts/app-layout';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import securityGuardService from '@/lib/api/securityGuardService';
+import api from '@/lib/api';
+import { toast } from 'sonner';
 
 type Props = { client?: any };
 
 export default function ClientFiles({ client }: Props) {
   const actionRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [actionOpen, setActionOpen] = useState(false);
   const [actionSelection, setActionSelection] = useState<string>('Action');
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,6 +21,7 @@ export default function ClientFiles({ client }: Props) {
 
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
 
   const handleOpenUpload = () => {
     setShowUpload(true);
@@ -35,18 +41,70 @@ export default function ClientFiles({ client }: Props) {
   }, [actionOpen]);
 
   const handleSubmitUpload = () => {
-    if (uploadFiles.length === 0) { setShowUpload(false); return; }
-    const newFiles = uploadFiles.map((f) => ({ id: Date.now().toString() + Math.random().toString(36).slice(2,7), name: f.name, date: new Date().toISOString().slice(0,10), addedBy: 'You' }));
-    setFilesData((prev) => [...newFiles, ...prev]);
-    setUploadFiles([]);
-    setShowUpload(false);
+    (async () => {
+      if (uploadFiles.length === 0) { setShowUpload(false); return; }
+
+      const tenantId = localStorage.getItem('tenantId');
+      if (!tenantId) { toast.error('Missing tenantId'); return; }
+
+      const createdFiles: any[] = [];
+
+      for (const f of uploadFiles) {
+        // Validate type and size (<= 3MB)
+        if (!(f.type === 'application/pdf' || f.type.startsWith('image/'))) {
+          toast.error(`Tipo no permitido: ${f.name}`);
+          continue;
+        }
+        if (f.size > 3 * 1024 * 1024) {
+          toast.error(`Archivo mayor a 3MB: ${f.name}`);
+          continue;
+        }
+
+        const storageId = f.type === 'application/pdf' ? 'notesPdf' : 'notesImages';
+        try {
+          setUploadProgress((p) => ({ ...p, [f.name]: 0 }));
+          const uploaded = await securityGuardService.uploadFileToStorageWithProgress(f, storageId, (percent) => {
+            setUploadProgress((p) => ({ ...p, [f.name]: percent }));
+          });
+
+          const payload = {
+            name: uploaded.name,
+            mimeType: f.type,
+            sizeInBytes: f.size,
+            storageId: storageId,
+            // prefer encrypted token when available
+            fileToken: uploaded.fileToken || null,
+            publicUrl: uploaded.publicUrl || null,
+            notableType: 'clientAccount',
+            notableId: client?.id,
+          };
+
+          const resp: any = await api.post(`/tenant/${tenantId}/attachments`, payload);
+          const created = resp && (resp as any).data ? (resp as any).data : resp;
+
+          createdFiles.push({ id: created.id, name: created.name, date: new Date().toISOString().slice(0,10), addedBy: 'You' });
+          setUploadProgress((p) => ({ ...p, [f.name]: 100 }));
+        } catch (err) {
+          console.error('Upload/create failed', err);
+          toast.error(`Fallo al subir ${f.name}`);
+          setUploadProgress((p) => ({ ...p, [f.name]: 0 }));
+        }
+      }
+
+      if (createdFiles.length) setFilesData((prev) => [...createdFiles, ...prev]);
+      setUploadFiles([]);
+      setTimeout(() => setUploadProgress({}), 500);
+      setShowUpload(false);
+    })();
   };
 
   const removeUploadFile = (idx: number) => setUploadFiles((prev) => prev.filter((_, i) => i !== idx));
 
+  useScrollToTopOnMount(containerRef);
+
   return (
 
-    <div className="min-h-screen flex flex-col">
+  <div ref={containerRef} className="min-h-screen flex flex-col">
       <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative" ref={actionRef}>

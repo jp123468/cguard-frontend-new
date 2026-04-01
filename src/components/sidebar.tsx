@@ -68,7 +68,7 @@ export default function Sidebar() {
   }, [location.pathname]);
 
   return (
-    <aside className="h-full w-full bg-white border-r border-gray-200 overflow-hidden">
+    <aside className="h-full w-full bg-white border-r border-gray-200 overflow-y-auto">
       <div className="h-full">
         {/* <div className="flex items-center gap-2 px-4 py-6">
           <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">

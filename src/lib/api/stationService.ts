@@ -208,8 +208,23 @@ const stationService = {
 
   async update(id: string, payload: Partial<PostSiteInput>): Promise<PostSite> {
     const tenantId = getTenantId();
-    const existingRes = await api.get(`/tenant/${tenantId}/stations/${id}`);
-    const existing = existingRes.data || {};
+    // Load existing resource using stationService.get which already handles
+    // legacy `/stations/:id` and `/post-site/:id` patterns. If that fails,
+    // attempt a direct `/post-site/:id` GET as a last resort and proceed with
+    // an empty fallback object so update still attempts to submit.
+    let existing: any = {};
+    try {
+      existing = await stationService.get(id);
+    } catch (err) {
+      console.error(`stationService.update: failed to load existing station/post-site ${id}`, err);
+      try {
+        const res = await api.get(`/tenant/${tenantId}/post-site/${id}`, { toast: { silentError: true } } as any);
+        existing = res.data || {};
+      } catch (e) {
+        console.error(`stationService.update: fallback direct post-site GET also failed for ${id}`, e);
+        existing = {};
+      }
+    }
     const body: any = {
       stationName: (payload as any).name ?? existing.stationName ?? existing.name,
       // include companyName for backend compatibility
@@ -232,7 +247,7 @@ const stationService = {
       startingTimeInDay: (payload as any).startingTimeInDay ?? existing.startingTimeInDay,
       finishTimeInDay: (payload as any).finishTimeInDay ?? existing.finishTimeInDay,
     };
-    const { data } = await api.patch(`/tenant/${tenantId}/post-site/${id}`, body);
+    const { data } = await api.put(`/tenant/${tenantId}/post-site/${id}`, body);
     return data;
   },
 

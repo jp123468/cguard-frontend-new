@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function PostSiteTours({ site, guards = [] }: { site?: any; guards?: any[] }) {
   const { t } = useTranslation();
@@ -32,6 +33,84 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
       }
     }
     return false;
+  }
+  // Resolve station display name for a tour or related object supporting multiple shapes
+  function resolveStationName(obj: any) {
+    if (!obj) return '-';
+    // If obj is a plain id/string/number
+    if (typeof obj === 'string' || typeof obj === 'number') {
+      const key = String(obj);
+      return stationsMap[key] || key || '-';
+    }
+
+    // If obj is an object representing a tour (has stationId or station)
+    const sid = obj.stationId || obj.station_id || (obj.station && (obj.station.id || obj.station.stationId || obj.station.station_id)) || null;
+    if (sid) {
+      const key = String(sid);
+      const nameFromMap = stationsMap[key];
+      if (nameFromMap) return nameFromMap;
+      // If station object included, try its name
+      if (obj.station && (obj.station.stationName || obj.station.name || obj.station.station_name)) return obj.station.stationName || obj.station.name || obj.station.station_name;
+      return key;
+    }
+
+    // If obj.station is a name string
+    if (obj.stationName || obj.station_name || obj.station) {
+      const candidate = obj.stationName || obj.station_name || obj.station;
+      if (typeof candidate === 'string') return candidate;
+      if (typeof candidate === 'object' && (candidate.name || candidate.stationName)) return candidate.name || candidate.stationName;
+    }
+
+    // If tour contains an array of stations, pick first
+    const arr = obj.stations || obj.stationList || obj.stationIds || null;
+    if (Array.isArray(arr) && arr.length > 0) {
+      const first = arr[0];
+      if (!first) return '-';
+      if (typeof first === 'string' || typeof first === 'number') return stationsMap[String(first)] || String(first);
+      return first.stationName || first.name || first.station_name || first.id || '-';
+    }
+
+    return '-';
+  }
+
+  function resolveGuardName(idOrObj: any) {
+    if (!idOrObj) return '-';
+    if (typeof idOrObj === 'object') {
+      const o = idOrObj;
+      return o.fullName || o.guardName || (o.firstName || o.lastName ? ((o.firstName || '') + ' ' + (o.lastName || '')).trim() : (o.name || o.id || '-'));
+    }
+    const id = String(idOrObj);
+    // search local guards
+    const g1 = (localGuards || []).find(g => String(g.id || g.guardId || g.securityGuardId || g.userId) === id);
+    if (g1) return g1.fullName || g1.name || ((g1.firstName || '') + ' ' + (g1.lastName || '')).trim() || id;
+    // search detailAssignments
+    const a1 = (detailAssignments || []).find(a => String(a.securityGuardId || a.guardId || (a.guard && (a.guard.id || a.guard.userId)) || a.id) === id);
+    if (a1) return a1.guardName || (a1.guard && (a1.guard.fullName || ((a1.guard.firstName || '') + ' ' + (a1.guard.lastName || '')).trim())) || id;
+    // search detailShifts (direct fields)
+    const s1 = (detailShifts || []).find(s => String(s.guardId || s.securityGuardId || (s.guard && (s.guard.id || s.guard.userId)) || s.id) === id);
+    if (s1) return s1.guardName || (s1.guard && (s1.guard.fullName || ((s1.guard.firstName || '') + ' ' + (s1.guard.lastName || '')).trim())) || id;
+
+    // deep search inside shifts for nested guard objects (covers various API shapes)
+    for (const sh of (detailShifts || [])) {
+      const candidates = [sh.guard, sh.securityGuard, sh.security_guard, sh.guardObject, sh.user, sh.assignedGuard, sh.guardInfo];
+      for (const c of candidates) {
+        if (!c || typeof c !== 'object') continue;
+        const cid = String(c.id || c._id || c.guardId || c.securityGuardId || c.userId || c.id);
+        if (cid === id) return c.fullName || c.guardName || ((c.firstName || '') + ' ' + (c.lastName || '')).trim() || id;
+      }
+    }
+
+    // deep search inside assignments as well
+    for (const a of (detailAssignments || [])) {
+      const candidates = [a.guard, a.securityGuard, a.guardObject, a.user, a.assignedGuard];
+      for (const c of candidates) {
+        if (!c || typeof c !== 'object') continue;
+        const cid = String(c.id || c._id || c.guardId || c.securityGuardId || c.userId || c.id);
+        if (cid === id) return c.fullName || c.guardName || ((c.firstName || '') + ' ' + (c.lastName || '')).trim() || id;
+      }
+    }
+    // fallback to id
+    return id;
   }
   const [actionOpen, setActionOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -72,12 +151,16 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
   const [loadingDetailShifts, setLoadingDetailShifts] = useState(false);
   const [detailAssignments, setDetailAssignments] = useState<any[]>([]);
   const [loadingDetailAssignments, setLoadingDetailAssignments] = useState(false);
+  const [detailGuardName, setDetailGuardName] = useState<string | null>(null);
   const [editingTourId, setEditingTourId] = useState<string | null>(null);
   const timeInputRef = useRef<HTMLInputElement | null>(null);
   const translateTimeMode = (mode?: string) => {
     if (!mode) return '-';
     return t(`siteTour.form.timeMode.${mode}`, mode);
   };
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useScrollToTopOnMount(containerRef);
 
   const loadAssignments = async (tourId: string) => {
     const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
@@ -118,6 +201,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
       })();
     }
   }, [showNewTourModal, site, t]);
+  useScrollToTopOnMount(containerRef);
 
   // Load stations for the current post site proactively so we can display station names in the table
   useEffect(() => {
@@ -372,6 +456,50 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
           } catch (e) {
             // ignore
           }
+          const idStr = assignGuard ? String(assignGuard) : null;
+
+          // Additional fallback: some backends index by `guardId` (internal id) instead of record `id`.
+          if (idStr) {
+            try {
+              const byGuardIdResp: any = await ApiService.get(`/tenant/${tenantId}/security-guard?filter[guardId]=${encodeURIComponent(idStr)}`);
+              const byGuardIdRows = Array.isArray(byGuardIdResp) ? byGuardIdResp : (byGuardIdResp && byGuardIdResp.rows) ? byGuardIdResp.rows : [];
+              if (byGuardIdRows && byGuardIdRows.length) {
+                const foundG = (byGuardIdRows || []).find((r: any) => String(r.guardId || r.securityGuardId || r.id || r._id) === idStr);
+                if (foundG) {
+                  const name = resolveGuardName(foundG);
+                  if (name) {
+                    setDetailGuardName(name);
+                    return;
+                  }
+                }
+                const nameFallback2 = resolveGuardName(byGuardIdRows[0]);
+                if (nameFallback2 && nameFallback2 !== idStr) {
+                  setDetailGuardName(nameFallback2);
+                  return;
+                }
+              }
+            } catch (e) {
+              // ignore
+            }
+
+            // Try alternate query param (some APIs accept `guardId=`)
+            try {
+              const altResp: any = await ApiService.get(`/tenant/${tenantId}/security-guard?guardId=${encodeURIComponent(idStr)}`);
+              const altRows = Array.isArray(altResp) ? altResp : (altResp && altResp.rows) ? altResp.rows : [];
+              if (altRows && altRows.length) {
+                const foundAlt = (altRows || []).find((r: any) => String(r.guardId || r.securityGuardId || r.id || r._id) === idStr);
+                if (foundAlt) {
+                  const name = resolveGuardName(foundAlt);
+                  if (name) {
+                    setDetailGuardName(name);
+                    return;
+                  }
+                }
+              }
+            } catch (e) {
+              // ignore
+            }
+          }
         }
 
         // Record whether guards were obtained from shift rows. If they were, trust that list directly.
@@ -407,6 +535,105 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
       }
     })();
   }, [showDetailModal, detailTour]);
+
+  // Resolve a human-friendly guard name for the detail modal.
+  useEffect(() => {
+    if (!detailTour) {
+      setDetailGuardName(null);
+      return;
+    }
+
+    const candidate = detailTour.assignedGuard || detailTour.securityGuardId || detailTour.security_guard_id || detailTour.securityGuard || detailTour.guard || detailTour.assigned_guard || detailTour.guardId || detailTour.guard_id || null;
+    // initial attempt using local resolvers
+    const initial = candidate ? resolveGuardName(candidate) : null;
+    // Only overwrite an existing resolved human-friendly name with a raw id.
+    setDetailGuardName((prev) => {
+      const idStrLocal = candidate ? String(candidate) : null;
+      if (initial && idStrLocal && initial !== idStrLocal) return initial;
+      if (!prev) return initial || null;
+      return prev;
+    });
+
+    // If resolver returned the same id string (no name found) and candidate looks like an id, try API lookup
+    const idStr = candidate ? String(candidate) : null;
+    if (idStr && initial === idStr) {
+      // if assignments/shifts are still loading, wait for them to complete (effect will re-run)
+      if (loadingDetailAssignments || loadingDetailShifts) {
+        return;
+      }
+
+      (async () => {
+        try {
+          const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+          if (!tenantId) {
+            // cannot lookup without tenant; show placeholder instead of raw id
+            setDetailGuardName('-');
+            return;
+          }
+
+          // server does not always expose single-item GET; skip direct GET and use list/filter fallbacks instead
+
+          // fallback: try list endpoint filtered by id
+          try {
+            const listResp: any = await ApiService.get(`/tenant/${tenantId}/security-guard?filter[id]=${encodeURIComponent(idStr)}`);
+            const rows = Array.isArray(listResp) ? listResp : (listResp && listResp.rows) ? listResp.rows : [];
+            if (rows && rows.length) {
+              // Try to find a matching security-guard by either the security-guard record id or the internal guardId field
+              const found = (rows || []).find((r: any) => {
+                const rid = String(r.id || r._id || '');
+                const gid = String(r.guardId || r.securityGuardId || r.guard_id || '');
+                return rid === idStr || gid === idStr;
+              });
+              if (found) {
+                const name = resolveGuardName(found);
+                if (name) {
+                  setDetailGuardName(name);
+                  return;
+                }
+              }
+              // also try the first row as a fallback
+              const nameFallback = resolveGuardName(rows[0]);
+              if (nameFallback && nameFallback !== idStr) {
+                setDetailGuardName(nameFallback);
+                return;
+              }
+            }
+          } catch (e) {
+            // ignore
+          }
+
+          // fallback 2: fetch guards for this postSite (if available) and search by id
+          try {
+            const ts2 = Date.now();
+            const postSiteId = site?.id || '';
+            const guardsResp: any = await ApiService.get(`/tenant/${tenantId}/security-guard?postSiteId=${encodeURIComponent(postSiteId)}&_=${ts2}&limit=999`);
+            const guardsRows = Array.isArray(guardsResp) ? guardsResp : (guardsResp && guardsResp.rows) ? guardsResp.rows : [];
+            if (guardsRows && guardsRows.length) {
+              const found = (guardsRows || []).find((g: any) => String(g.id || g._id || g.guardId || g.securityGuardId) === idStr);
+              if (found) {
+                const name = resolveGuardName(found);
+                if (name) {
+                  setDetailGuardName(name);
+                  return;
+                }
+              }
+            }
+          } catch (e) {
+            // ignore
+          }
+
+          // nothing found: show placeholder instead of raw id, but don't overwrite an already-resolved name
+          setDetailGuardName((prev) => {
+            if (prev && prev !== idStr && prev !== null) return prev;
+            return '-';
+          });
+        } catch (e) {
+          // ignore network errors
+          setDetailGuardName('-');
+        }
+      })();
+    }
+  }, [detailTour, detailAssignments, detailShifts, localGuards, site]);
 
   // When editing a tour, prefill assignment fields from existing active assignment (if any)
   useEffect(() => {
@@ -473,7 +700,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
 
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div ref={containerRef} className="min-h-screen flex flex-col">
       <div className="bg-white border rounded-lg p-4 flex-1 flex flex-col">
         <div className="flex items-center justify-between gap-4 mb-4 sticky top-0 bg-white z-10">
             <div className="relative">
@@ -611,7 +838,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                           </div>
                         </td>
                         <td className="px-6 py-4 text-left">{tour.name || '-'}</td>
-                        <td className="px-6 py-4 text-left">{stationsMap[String(tour.stationId || tour.station_id || tour.station)] || tour.stationName || tour.station_id || tour.stationId || '-'}</td>
+                        <td className="px-6 py-4 text-left">{resolveStationName(tour)}</td>
                         <td className="px-6 py-4 text-left">{tour.maxDuration || '-'}</td>
                         <td className="px-6 py-4 text-left">{translateTimeMode(tour.timeMode)}</td>
                         <td className="px-6 py-4 text-right">
@@ -637,6 +864,8 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                                       const postSiteId = site?.id || '';
                                       const shiftsResp: any = await ApiService.get(`/tenant/${tenantId}/shift?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`, { headers: { 'Cache-Control': 'no-cache' } } as any);
                                       const shiftRows = Array.isArray(shiftsResp) ? shiftsResp : (shiftsResp && (shiftsResp.rows || shiftsResp.data)) ? (shiftsResp.rows || shiftsResp.data) : [];
+                                      // Store ALL shifts returned for the postSite so resolvers can find nested guard objects.
+                                      // Keep the previous matching logic for the 'matched' subset if needed for display.
                                       const matched = (shiftRows || []).filter((sh: any) => {
                                         const siteToursField = sh.siteTours || sh.site_tours || sh.siteTour || sh.site_tour || [];
                                         if (Array.isArray(siteToursField) && siteToursField.length) {
@@ -646,7 +875,8 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                                         if (String(sh.siteTourId || sh.siteTour || sh.tourId || '') === String(tid)) return true;
                                         return false;
                                       });
-                                      setDetailShifts(matched || []);
+                                      // Save all shifts to `detailShifts` so resolveGuardName can look through them.
+                                      setDetailShifts(shiftRows || []);
                                     } catch (e) {
                                       console.error('Failed loading detail shifts', e);
                                       setDetailShifts([]);
@@ -774,137 +1004,84 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
             </div>
           )}
 
-          {/* Detail modal */}
+          {/* Detail modal (simplified: only relevant fields + guard/station names) */}
           {showDetailModal && detailTour && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
               <div className="absolute inset-0 bg-black/40" onClick={() => setShowDetailModal(false)} />
               <div className="bg-white rounded-lg shadow-lg z-50 max-w-2xl w-full p-8">
-                <h3 className="text-2xl font-semibold mb-3">{detailTour.name || t('siteTour.placeholders.tourNameFallback')}</h3>
-                <p className="text-base text-gray-700 mb-6">{detailTour.description || '-'}</p>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div><strong>{t('siteTour.table.duration')}</strong><div className="mt-1">{detailTour.maxDuration || '-'}</div></div>
-                  <div><strong>{t('siteTour.table.type')}</strong><div className="mt-1">{translateTimeMode(detailTour.timeMode)}</div></div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold">{detailTour.name || detailTour.title || t('siteTour.detail.title', 'Tour details')}</h3>
+                  <button onClick={() => setShowDetailModal(false)} className="p-2 text-gray-500 hover:text-gray-700">
+                    <X size={18} />
+                  </button>
                 </div>
 
-                <div className="mt-6 grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.scheduledDays', 'Scheduled Days')}</div>
-                    <div className="mt-1 text-sm">{detailTour.scheduledDays || '-'}</div>
+                    <div className="text-sm text-gray-500">{t('siteTour.field.description', 'Description')}</div>
+                    <div className="mt-1 text-sm">{detailTour.description || detailTour.desc || '-'}</div>
                   </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.continuous', 'Continuous')}</div>
-                    <div className="mt-1 text-sm">{detailTour.continuous ? t('siteTour.yes', 'Yes') : t('siteTour.no', 'No')}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.form.selectTime', 'Select Time')}</div>
-                    <div className="mt-1 text-sm">{detailTour.selectTime || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.active', 'Active')}</div>
-                    <div className="mt-1 text-sm">{detailTour.active ? t('siteTour.yes', 'Yes') : t('siteTour.no', 'No')}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.importHash', 'Import Hash')}</div>
-                    <div className="mt-1 text-sm">{detailTour.importHash || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.securityGuard', 'Assigned Guard ID')}</div>
-                    <div className="mt-1 text-sm">{detailTour.securityGuardId || detailTour.security_guard_id || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.postSiteId', 'Post Site')}</div>
-                    <div className="mt-1 text-sm">{detailTour.postSiteId || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.station', 'Station')}</div>
-                    <div className="mt-1 text-sm">{stationsMap[String(detailTour.stationId || detailTour.station_id || detailTour.station)] || detailTour.stationName || detailTour.station_id || detailTour.stationId || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.tenantId', 'Tenant')}</div>
-                    <div className="mt-1 text-sm">{detailTour.tenantId || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.createdBy', 'Created By')}</div>
-                    <div className="mt-1 text-sm">{detailTour.createdById || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.updatedBy', 'Updated By')}</div>
-                    <div className="mt-1 text-sm">{detailTour.updatedById || '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.createdAt', 'Created At')}</div>
-                    <div className="mt-1 text-sm">{detailTour.createdAt ? new Date(detailTour.createdAt).toLocaleString() : '-'}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">{t('siteTour.table.updatedAt', 'Updated At')}</div>
-                    <div className="mt-1 text-sm">{detailTour.updatedAt ? new Date(detailTour.updatedAt).toLocaleString() : '-'}</div>
-                  </div>
-                  <div className="col-span-2">
-                    <div className="text-xs text-gray-500">{t('siteTour.table.deletedAt', 'Deleted At')}</div>
-                    <div className="mt-1 text-sm">{detailTour.deletedAt ? new Date(detailTour.deletedAt).toLocaleString() : '-'}</div>
-                  </div>
-                </div>
 
-                <div className="mt-6">
-                  <h4 className="text-lg font-medium mb-2">{t('siteTour.details.shiftsTitle', 'Related shifts')}</h4>
-                  {loadingDetailShifts ? (
-                    <div className="text-sm text-gray-500">{t('siteTour.loading', 'Loading...')}</div>
-                  ) : detailShifts && detailShifts.length ? (
-                    <div className="space-y-3">
-                      {detailShifts.map((sh: any) => {
-                        const guardName = sh.guard && (sh.guard.fullName || `${sh.guard.firstName || ''} ${sh.guard.lastName || ''}`.trim()) || sh.guardName || sh.guard_name || sh.user && (sh.user.fullName || `${sh.user.firstName || ''} ${sh.user.lastName || ''}`.trim()) || '-';
-                        const start = sh.startTime || sh.start || sh.shiftStart || sh.startAt || sh.start_time || null;
-                        const end = sh.endTime || sh.end || sh.shiftEnd || sh.endAt || sh.end_time || null;
-                        const station = (sh.station && (sh.station.stationName || sh.station.name)) || sh.stationName || sh.station_name || '-';
-                        return (
-                          <div key={sh.id || sh._id || (sh.startTime + Math.random())} className="p-3 border rounded-md">
-                            <div className="flex items-center justify-between">
-                              <div className="font-medium">{guardName}</div>
-                              <div className="text-sm text-gray-500">{station}</div>
-                            </div>
-                            <div className="text-sm text-gray-600 mt-1">
-                              <div>{start ? new Date(start).toLocaleString() : '-' } — {end ? new Date(end).toLocaleString() : '-'}</div>
-                              {sh.schedule && <div className="text-xs text-gray-400 mt-1">{JSON.stringify(sh.schedule)}</div>}
-                            </div>
-                          </div>
-                        );
-                      })}
+                  <div>
+                    <div className="text-sm text-gray-500">{t('siteTour.field.scheduledDays', 'Scheduled Days')}</div>
+                    <div className="mt-1 text-sm">{detailTour.scheduledDays || detailTour.scheduled_days || detailTour.schedule || '-'}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm text-gray-500">{t('siteTour.field.timeMode', 'Time Mode')}</div>
+                    <div className="mt-1 text-sm">{translateTimeMode(detailTour.timeMode || detailTour.time_mode)}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm text-gray-500">{t('siteTour.field.selectTime', 'Select Time')}</div>
+                    <div className="mt-1 text-sm">{detailTour.selectTime || detailTour.select_time || '-'}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm text-gray-500">{t('siteTour.field.continuous', 'Continuous')}</div>
+                    <div className="mt-1 text-sm">{detailTour.continuous ? t('common.yes', 'Yes') : t('common.no', 'No')}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm text-gray-500">{t('siteTour.field.maxDuration', 'Max Duration')}</div>
+                    <div className="mt-1 text-sm">{detailTour.maxDuration || detailTour.max_duration || '-'}</div>
+                  </div>
+
+
+                  <div>
+                    <div className="text-sm text-gray-500">{t('siteTour.field.assignedGuard', 'Assigned Guard')}</div>
+                    <div className="mt-1 text-sm">
+                      {(() => {
+                        const candidateId = detailTour.assignedGuard || detailTour.securityGuardId || detailTour.security_guard_id || detailTour.guard || detailTour.assigned_guard || detailTour.guardId || detailTour.guard_id || null;
+                        if (detailGuardName === '-') {
+                          return <span className="text-red-600">{candidateId || '-'}</span>;
+                        }
+                        if (detailGuardName) return <span>{detailGuardName}</span>;
+                        // fallback: try resolving from candidate id synchronously
+                        const sync = candidateId ? resolveGuardName(candidateId) : null;
+                        if (sync && sync !== String(candidateId)) return <span>{sync}</span>;
+                        return <span className="text-red-600">{candidateId || '-'}</span>;
+                      })()}
                     </div>
-                  ) : (
-                    <div className="text-sm text-gray-500">{t('siteTour.details.noShifts', 'No related shifts found')}</div>
-                  )}
+                  </div>
+
+                  <div>
+                    <div className="text-sm text-gray-500">{t('siteTour.field.station', 'Station')}</div>
+                    <div className="mt-1 text-sm">{resolveStationName(detailTour.station || detailTour.stationId || detailTour.station_id || detailTour.stationName || detailTour)}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm text-gray-500">{t('siteTour.field.active', 'Active')}</div>
+                    <div className="mt-1 text-sm">{typeof detailTour.active === 'boolean' ? (detailTour.active ? t('common.yes', 'Yes') : t('common.no', 'No')) : (detailTour.active ? String(detailTour.active) : '-')}</div>
+                  </div>
+
+                  {/* Created At / Updated At intentionally omitted per request */}
                 </div>
 
-                <div className="mt-6">
-                  <h4 className="text-lg font-medium mb-2">{t('siteTour.details.assignmentsTitle', 'Assignments')}</h4>
-                  {loadingDetailAssignments ? (
-                    <div className="text-sm text-gray-500">{t('siteTour.loading', 'Loading...')}</div>
-                  ) : detailAssignments && detailAssignments.length ? (
-                    <div className="space-y-3">
-                      {detailAssignments.map((a: any) => {
-                        const guardName = a.guard && (a.guard.fullName || `${a.guard.firstName || ''} ${a.guard.lastName || ''}`.trim()) || a.guardName || a.guard_name || a.securityGuardName || a.security_guard_name || a.securityGuardId || '-';
-                        const start = a.startAt ? (new Date(a.startAt)).toLocaleString() : '-';
-                        const end = a.endAt ? (new Date(a.endAt)).toLocaleString() : '-';
-                        const station = a.station && (a.station.stationName || a.station.name) || a.stationName || a.station_name || a.stationId || '-';
-                        return (
-                          <div key={a.id || a._id || `${a.startAt}-${Math.random()}`} className="p-3 border rounded-md">
-                            <div className="flex items-center justify-between">
-                              <div className="font-medium">{guardName}</div>
-                              <div className="text-sm text-gray-600">{a.status || '-'}</div>
-                            </div>
-                            <div className="text-sm text-gray-600 mt-1">{station} • {start} — {end}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-500">{t('siteTour.details.noAssignments', 'No assignments found')}</div>
-                  )}
-                </div>
-
-                <div className="mt-4 flex justify-end">
-                  <button onClick={() => setShowDetailModal(false)} className="px-4 py-2 rounded-full bg-gray-100 text-gray-700">{t('siteTour.buttons.cancel')}</button>
+                <div className="mt-6 flex justify-end">
+                  <button onClick={() => setShowDetailModal(false)} className="px-4 py-2 rounded border">
+                    {t('common.close', 'Close')}
+                  </button>
                 </div>
               </div>
             </div>

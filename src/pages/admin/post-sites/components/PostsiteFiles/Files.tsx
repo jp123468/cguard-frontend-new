@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, ChevronDown, Plus, X, Paperclip } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 
@@ -14,6 +15,7 @@ export default function PostSiteFiles({ site }: Props) {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     // If the site has attached files from API, preload them
@@ -22,8 +24,10 @@ export default function PostSiteFiles({ site }: Props) {
     }
   }, [site]);
 
+  useScrollToTopOnMount(containerRef);
+
   return (
-    <div className="space-y-4">
+    <div ref={containerRef} className="space-y-4">
       <div className="bg-white border rounded-lg p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative" ref={actionRef}>

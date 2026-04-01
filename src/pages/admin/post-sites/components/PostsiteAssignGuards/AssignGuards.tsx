@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, ChevronDown, Plus, X, EllipsisVertical, Eye, Trash, Edit } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -33,6 +34,9 @@ export default function AssignGuards({ site }: { site?: any }) {
     const navigate = useNavigate();
 
     const guardDropdownRef = useRef<HTMLDivElement | null>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
+    useScrollToTopOnMount(containerRef);
 
     useEffect(() => {
         const onDocClick = (e: any) => {
@@ -452,9 +456,31 @@ export default function AssignGuards({ site }: { site?: any }) {
                 const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
                 const postSiteId = site?.id || '';
                 if (!postSiteId) return;
-                const data = await ApiService.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`);
-                const rows = Array.isArray(data) ? data : (data && data.rows) ? data.rows : [];
-                if (mounted) setStations(rows);
+                const resp = await ApiService.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`);
+
+                // Normalize different response shapes from API
+                let rows: any[] = [];
+                if (!resp) rows = [];
+                else if (Array.isArray(resp)) rows = resp;
+                else if (Array.isArray(resp.rows)) rows = resp.rows;
+                else if (Array.isArray(resp.data)) rows = resp.data;
+                else if (Array.isArray((resp as any).stations)) rows = (resp as any).stations;
+
+                // Fallback: some pages embed stations on the `site` object
+                if ((!rows || rows.length === 0) && site && Array.isArray((site as any).stations)) {
+                    rows = (site as any).stations;
+                }
+
+                // Map to a consistent shape to avoid missing labels/ids
+                const mapped = (rows || []).map((r: any) => ({
+                    id: r.id || r.stationId || r._id || r.station_id || String(r._id || r.id || JSON.stringify(r)),
+                    name: r.name || r.stationName || r.station_name || r.label || r.title || (r.description ? String(r.description).slice(0, 60) : '') || ''
+                }));
+
+                if (mounted) {
+                    setStations(mapped);
+                    if (!mapped || mapped.length === 0) console.warn('[AssignGuards] no stations found for postSite', postSiteId, 'resp=', resp, 'site.stations=', (site as any).stations);
+                }
             } catch (err) {
                 console.error('Failed to load stations', err);
             }
@@ -608,7 +634,7 @@ export default function AssignGuards({ site }: { site?: any }) {
     const isFormValid = Boolean(selectedGuard && selectedStation && shiftStart && shiftEnd);
 
     return (
-        <div className="space-y-4">
+        <div ref={containerRef} className="space-y-4">
             <div className="bg-white border rounded-lg p-4 flex flex-col">
                 <div className="flex items-center justify-between gap-4 mb-4">
                     <div className="relative flex items-center pl-2">

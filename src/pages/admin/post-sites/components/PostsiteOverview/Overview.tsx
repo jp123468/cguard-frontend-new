@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useTranslation } from "react-i18next";
 import IncidentMap from "@/components/IncidentMap/IncidentMap";
 import { useState } from 'react';
+import { ApiService } from '@/services/api/apiService';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function PostSiteOverview({ site }: { site?: any }) {
   const { t } = useTranslation();
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useScrollToTopOnMount(containerRef);
 
   const typeKeys = [
     'callOffRequest','checkList','checkedIn','checkedOut','clockedIn','clockedOut',
@@ -32,15 +36,153 @@ export default function PostSiteOverview({ site }: { site?: any }) {
     { id: 'hrs', label: t('postSites.overview.Stats.hoursLogged'), value: '00:00', color: 'text-red-500' },
   ];
 
+  const [assignedCount, setAssignedCount] = useState<number>(0);
+  const [onsiteCount, setOnsiteCount] = useState<number>(0);
+  const [toursCount, setToursCount] = useState<number>(0);
+  const [tasksCount, setTasksCount] = useState<number>(0);
+  const [incidentsCount, setIncidentsCount] = useState<number>(0);
+  const [hoursLogged, setHoursLogged] = useState<string>('00:00');
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+        const postSiteId = site?.id || '';
+        if (!tenantId || !postSiteId) return;
+
+        // Prefer backend-provided overview counters (single request)
+        try {
+          const overview: any = await ApiService.get(`/tenant/${tenantId}/post-site/${postSiteId}/overview`, { toast: { silentError: true } } as any);
+          if (overview && (typeof overview.assignedCount !== 'undefined')) {
+            if (mounted) {
+              setAssignedCount(Number(overview.assignedCount || 0));
+              setOnsiteCount(Number(overview.onsiteCount || 0));
+              setToursCount(Number(overview.toursLast7Days || 0));
+              setTasksCount(Number(overview.tasksLast7Days || 0));
+              setIncidentsCount(Number(overview.incidentsLast7Days || 0));
+              const secs = Number(overview.hoursLoggedSeconds || 0);
+              const hrs = Math.floor(secs / 3600);
+              const mins = Math.floor((secs % 3600) / 60);
+              setHoursLogged(`${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}`);
+            }
+            return; // done
+          }
+        } catch (e) {
+          // fallback to legacy aggregation below
+        }
+
+        // 2) Shifts — used for onsite count and hours logged
+        let shifts: any[] = [];
+        try {
+          const shiftsResp: any = await ApiService.get(`/tenant/${tenantId}/shift?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`, { headers: { 'Cache-Control': 'no-cache' } } as any);
+          shifts = Array.isArray(shiftsResp) ? shiftsResp : (shiftsResp && (shiftsResp.rows || shiftsResp.data)) ? (shiftsResp.rows || shiftsResp.data) : [];
+        } catch (e) {
+          // fallback to post-site shifts endpoint
+          try {
+            const resp2: any = await ApiService.get(`/tenant/${tenantId}/post-site/${postSiteId}/shifts`, { toast: { silentError: true } } as any);
+            shifts = Array.isArray(resp2) ? resp2 : (resp2 && (resp2.rows || resp2.data)) ? (resp2.rows || resp2.data) : [];
+          } catch (e2) { shifts = []; }
+        }
+
+        const now = Date.now();
+        // onsite: count shifts where now between start and end if timestamps available
+        let onsite = 0;
+        let hoursSeconds = 0;
+        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        for (const sh of (shifts || [])) {
+          // try multiple possible fields
+          const startStr = sh.start || sh.shiftStart || sh.startTime || sh.start_time || sh.startAt || sh.startDate;
+          const endStr = sh.end || sh.shiftEnd || sh.endTime || sh.end_time || sh.finishTimeInDay || sh.finish_time || sh.finish;
+          const s = startStr ? +new Date(startStr) : NaN;
+          const e = endStr ? +new Date(endStr) : NaN;
+          if (!isNaN(s) && !isNaN(e)) {
+            if (s <= now && now <= e) onsite += 1;
+            // sum durations for shifts that started within last 7 days (or ended within)
+            if ((s >= sevenDaysAgo) || (e >= sevenDaysAgo)) {
+              hoursSeconds += Math.max(0, (e - s) / 1000);
+            }
+          }
+        }
+        if (mounted) {
+          setOnsiteCount(onsite);
+          // convert seconds to HH:MM
+          const hrs = Math.floor(hoursSeconds / 3600);
+          const mins = Math.floor((hoursSeconds % 3600) / 60);
+          setHoursLogged(`${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}`);
+        }
+
+        // 3) Tours completed in last 7 days — use tags as proxy
+        try {
+          const tagsResp: any = await ApiService.get(`/tenant/${tenantId}/post-site/${encodeURIComponent(postSiteId)}/site-tour-tags?limit=999`);
+          const tags = Array.isArray(tagsResp) ? tagsResp : (tagsResp && (tagsResp.rows || tagsResp.data)) ? (tagsResp.rows || tagsResp.data) : [];
+          const recentTags = (tags || []).filter((t: any) => {
+            const c = t.createdAt || t.created_at || t.timestamp || t.date;
+            if (!c) return false;
+            const tms = +new Date(c);
+            return !isNaN(tms) && tms >= sevenDaysAgo;
+          });
+          if (mounted) setToursCount(recentTags.length);
+        } catch (e) { if (mounted) setToursCount(0); }
+
+        // 4) Incidents in last 7 days
+        try {
+          const incResp: any = await ApiService.get(`/tenant/${tenantId}/incident?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`);
+          const rows = Array.isArray(incResp) ? incResp : (incResp && (incResp.rows || incResp.data)) ? (incResp.rows || incResp.data) : [];
+          const recent = (rows || []).filter((r: any) => {
+            const c = r.createdAt || r.created_at || r.incidentAt || r.date;
+            if (!c) return false;
+            const tms = +new Date(c);
+            return !isNaN(tms) && tms >= sevenDaysAgo;
+          });
+          if (mounted) setIncidentsCount(recent.length);
+        } catch (e) { if (mounted) setIncidentsCount(0); }
+
+        // 5) Tasks completed last 7 days — try couple endpoints
+        try {
+          let tasksRows: any[] = [];
+          try {
+            const tResp: any = await ApiService.get(`/tenant/${tenantId}/post-site/${postSiteId}/tasks`, { toast: { silentError: true } } as any);
+            tasksRows = Array.isArray(tResp) ? tResp : (tResp && (tResp.rows || tResp.data)) ? (tResp.rows || tResp.data) : [];
+          } catch (e) {
+            try {
+              const t2: any = await ApiService.get(`/tenant/${tenantId}/task?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`, { toast: { silentError: true } } as any);
+              tasksRows = Array.isArray(t2) ? t2 : (t2 && (t2.rows || t2.data)) ? (t2.rows || t2.data) : [];
+            } catch (e2) { tasksRows = []; }
+          }
+
+          const recentTasks = (tasksRows || []).filter((it: any) => {
+            const fin = it.completedAt || it.finishedAt || it.closedAt || it.completed_at || it.finished_at || it.closed_at || it.updatedAt || it.updated_at;
+            if (!fin) return false;
+            const tms = +new Date(fin);
+            return !isNaN(tms) && tms >= sevenDaysAgo;
+          });
+          if (mounted) setTasksCount(recentTasks.length);
+        } catch (e) { if (mounted) setTasksCount(0); }
+
+      } catch (err) {
+        console.error('Failed loading overview counters', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [site]);
+
   return (
-    <div className="space-y-6">
+    <div ref={containerRef} className="space-y-6">
       <div className="bg-white border rounded-md p-6 shadow-sm">
         <h3 className="text-lg font-semibold mb-4">{t('postSites.overview.Stats.title')}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {stats.map((s) => (
             <div key={s.id} className="p-6 bg-white rounded-lg border border-gray-100 flex flex-col items-center text-center">
               <div className={`text-sm mb-3 ${s.color}`}>{s.label}</div>
-                <div className={`text-3xl font-semibold ${s.color}`}>{s.value}</div>
+              <div className={`text-3xl font-semibold ${s.color}`}>
+                {s.id === 'assigned' ? assignedCount
+                  : s.id === 'onsite' ? onsiteCount
+                  : s.id === 'tours' ? toursCount
+                  : s.id === 'tasks' ? tasksCount
+                  : s.id === 'incidents' ? incidentsCount
+                  : hoursLogged}
+              </div>
             </div>
           ))}
         </div>

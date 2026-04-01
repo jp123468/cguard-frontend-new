@@ -64,6 +64,45 @@ export default function ClientsDetails() {
     }
   }, [location]);
 
+  // When the active tab changes, ensure the visible content scrolls to the top.
+  useEffect(() => {
+    const doScroll = (behavior: ScrollBehavior = 'auto') => {
+      try {
+        // prefer content container used by ClientsLayout
+        const content = document.querySelector('.flex-1.overflow-y-auto') as HTMLElement | null;
+        if (content) {
+          content.scrollTop = 0;
+          try { content.scrollTo({ top: 0, left: 0, behavior }); } catch {}
+        }
+      } catch (e) {}
+
+      try {
+        const main = document.querySelector('main') as HTMLElement | null;
+        if (main) {
+          main.scrollTop = 0;
+          try { main.scrollTo({ top: 0, left: 0, behavior }); } catch {}
+        }
+      } catch (e) {}
+
+      try {
+        // also attempt to bring the first heading of the new section into view
+        const contentRoot = document.querySelector('.flex-1.overflow-y-auto') || document.querySelector('main') || document.body;
+        if (contentRoot) {
+          const heading = (contentRoot as HTMLElement).querySelector('h1,h2,h3,h4');
+          if (heading && typeof (heading as HTMLElement).scrollIntoView === 'function') {
+            (heading as HTMLElement).scrollIntoView({ behavior: 'auto', block: 'start' });
+          }
+        }
+      } catch (e) {}
+    };
+
+    // immediate and delayed attempts (cover async renders)
+    doScroll('auto');
+    const t1 = window.setTimeout(() => doScroll('auto'), 50);
+    const t2 = window.setTimeout(() => doScroll('auto'), 300);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [activeTab]);
+
   return (
     <AppLayout>
       <ClientsLayout navKey="clients" title="clients.nav.title" client={client}>

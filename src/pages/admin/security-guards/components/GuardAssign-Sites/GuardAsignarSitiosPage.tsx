@@ -574,7 +574,7 @@ export default function GuardAsignarSitiosPage() {
               <div className="flex items-center justify-end gap-3 p-4 border-t">
                 <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancel' })}</button>
                 <button onClick={async () => {
-                  try {
+                  try { 
                     const tenantId = localStorage.getItem('tenantId');
                     // Optimistic UI: remove selected mappings locally
                     setMappings((prev) => prev.filter(m => !selectedIds.includes(m.id)));

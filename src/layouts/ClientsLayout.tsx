@@ -41,6 +41,8 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
     return path;
   };
 
+  // Scrolling is handled by Consumers to avoid hook ordering problems during HMR.
+
     return (
     <div className="flex gap-4 h-[calc(100vh-64px)] overflow-hidden">
       <div className={`shrink-0 transition-all duration-300 ${sidebarOpen ? 'w-64 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
@@ -125,6 +127,8 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
     </div>
   );
 }
+
+  
 
 function FetchPostSitesCount({ clientId, initial, onCount }: { clientId: string; initial?: number; onCount: (c: number) => void }) {
   useEffect(() => {

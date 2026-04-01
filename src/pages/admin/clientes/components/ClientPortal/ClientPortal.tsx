@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, Plus, X, ChevronDown } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 
@@ -6,6 +7,7 @@ type Props = { client?: any };
 
 export default function ClientPortal({ client }: Props) {
   const [showInvite, setShowInvite] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [form, setForm] = useState({ name: '', email: '' });
   const [touched, setTouched] = useState({ name: false, email: false });
   const [selectAll, setSelectAll] = useState(false);
@@ -69,6 +71,8 @@ export default function ClientPortal({ client }: Props) {
     }
   }, [actionOpen]);
 
+  useScrollToTopOnMount(containerRef);
+
   function handleToggleCheck(idx: number) {
     setChecks((prev) => {
       const next = [...prev];
@@ -96,7 +100,7 @@ export default function ClientPortal({ client }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div ref={containerRef} className="min-h-screen flex flex-col">
       <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-start justify-between gap-4 mb-4">
 

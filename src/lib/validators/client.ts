@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { validateCedulaOrRuc } from "./id";
 
-export const clientSchema = z.object({
+export const clientSchema = z
+    .object({
     name: z
         .string()
         .trim()
@@ -95,6 +97,27 @@ export const clientSchema = z.object({
         .min(1, "RUC/Cédula requerido")
         .max(50, "Máximo 50 caracteres"),
     categoryIds: z.array(z.string()).min(1, "Selecciona al menos una categoría"),
+})
+.superRefine((data, ctx) => {
+    const personType = data.personType || 'PN';
+    const doc = (data.documentNumber || '').toString().trim();
+    if (!doc) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['documentNumber'], message: 'RUC/Cédula requerido' });
+        return;
+    }
+
+    const digits = doc.replace(/\D/g, '');
+    if (personType === 'PN') {
+        // Persona natural: debe ser una cédula válida de 10 dígitos
+        if (!validateCedulaOrRuc(digits) || digits.length !== 10) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['documentNumber'], message: 'Cédula inválida' });
+        }
+    } else if (personType === 'PJ') {
+        // Persona jurídica: RUC de 13 dígitos que termina en 001 y cuyos primeros 10 conforman una cédula válida
+        if (!validateCedulaOrRuc(digits) || digits.length !== 13) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['documentNumber'], message: 'RUC inválido (debe terminar en 001 y contener cédula válida)' });
+        }
+    }
 });
 
 export type ClientInput = z.infer<typeof clientSchema>;

@@ -156,6 +156,21 @@ export const clientService = {
         const tenantId = getTenantId();
         // Mapear postalCode y addressLine2 del frontend a zipCode y addressComplement del backend
         const payload: any = { ...input };
+        // Ensure latitude/longitude are sent as numbers when present, otherwise omit them
+        if (typeof input.latitude !== 'undefined' && input.latitude !== null && String(input.latitude).trim() !== '') {
+            const lat = Number(String(input.latitude));
+            if (!Number.isNaN(lat)) payload.latitude = lat;
+            else delete payload.latitude;
+        } else {
+            delete payload.latitude;
+        }
+        if (typeof input.longitude !== 'undefined' && input.longitude !== null && String(input.longitude).trim() !== '') {
+            const lng = Number(String(input.longitude));
+            if (!Number.isNaN(lng)) payload.longitude = lng;
+            else delete payload.longitude;
+        } else {
+            delete payload.longitude;
+        }
         if (input.postalCode !== undefined) {
             payload.zipCode = input.postalCode;
             delete payload.postalCode;
@@ -182,6 +197,21 @@ export const clientService = {
         const tenantId = getTenantId();
         // Mapear postalCode y addressLine2 del frontend a zipCode y addressComplement del backend
         const payload: any = { ...input };
+        // Ensure latitude/longitude are sent as numbers when present, otherwise omit them
+        if (typeof input.latitude !== 'undefined' && input.latitude !== null && String(input.latitude).trim() !== '') {
+            const lat = Number(String(input.latitude));
+            if (!Number.isNaN(lat)) payload.latitude = lat;
+            else delete payload.latitude;
+        } else {
+            delete payload.latitude;
+        }
+        if (typeof input.longitude !== 'undefined' && input.longitude !== null && String(input.longitude).trim() !== '') {
+            const lng = Number(String(input.longitude));
+            if (!Number.isNaN(lng)) payload.longitude = lng;
+            else delete payload.longitude;
+        } else {
+            delete payload.longitude;
+        }
         if (input.postalCode !== undefined) {
             payload.zipCode = input.postalCode;
             delete payload.postalCode;
@@ -517,5 +547,14 @@ export const clientService = {
             }
         }
 
+    },
+
+    /**
+     * Get aggregated overview for a client (postSitesCount, assignedCount, onsiteCount, toursLast7Days, tasksLast7Days, incidentsLast7Days, hoursLoggedSeconds)
+     */
+    async getClientOverview(clientId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/overview`, { toast: { silentError: true } } as any);
+        return data;
     },
 };

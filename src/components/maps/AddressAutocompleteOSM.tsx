@@ -1,12 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useMapEvent } from 'react-leaflet';
-// Componente para manejar el click en el mapa
-function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
-  useMapEvent('click', (e) => {
-    onMapClick(e.latlng.lat, e.latlng.lng);
-  });
-  return null;
-}
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -92,15 +84,99 @@ export default function AddressAutocompleteOSM({
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [position, setPosition] = useState<[number, number]>([initialLat, initialLng]);
-  const mapRef = useRef<any>(null);
+  // Coerce incoming initialLat/initialLng to numbers and fall back to defaults
+  const startLat = (typeof initialLat === 'number' && !Number.isNaN(initialLat)) ? initialLat : 40.4168;
+  const startLng = (typeof initialLng === 'number' && !Number.isNaN(initialLng)) ? initialLng : -3.7038;
+  const [position, setPosition] = useState<[number, number]>([startLat, startLng]);
+  const mapRef = useRef<L.Map | null>(null);
+  // Deduplicate address emissions to avoid multiple toasts/notifications
+  // Keep last emitted coords and timestamp; dedupe based on proximity only
+  const lastEmitRef = useRef<{ lat: number; lng: number; t: number } | null>(null);
+  const EMIT_DEDUP_MS = 2000;
+  const COORD_TOL = 1e-4; // ~11 meters
+
+  const coordsClose = (aLat: number, aLng: number, bLat: number, bLng: number) => {
+    return Math.abs(aLat - bLat) <= COORD_TOL && Math.abs(aLng - bLng) <= COORD_TOL;
+  };
+
+  const safeEmit = (addressData: AddressComponents) => {
+    const now = Date.now();
+    const last = lastEmitRef.current;
+    if (last && coordsClose(last.lat, last.lng, addressData.latitude, addressData.longitude) && now - last.t < EMIT_DEDUP_MS) {
+      return;
+    }
+    lastEmitRef.current = { lat: addressData.latitude, lng: addressData.longitude, t: now };
+    try {
+      onAddressSelect(addressData);
+    } catch (e) {
+      // swallow
+    }
+  };
+
+  // Block reverseGeocode emits for a short window after a direct selection
+  const blockedUntilRef = useRef<number | null>(null);
+
+  // Debugging: log incoming props to help diagnose center issues
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line no-console
+      console.debug('[AddressAutocompleteOSM] props initialLat/initialLng:', initialLat, initialLng, '-> start:', startLat, startLng);
+    } catch (e) {}
+  }, [initialLat, initialLng, startLat, startLng]);
+
+  // expose map instance for debugging when available
+  useEffect(() => {
+    try {
+      if ((window as any).__lastAddressMap !== mapRef.current) {
+        (window as any).__lastAddressMap = mapRef.current;
+      }
+    } catch (e) {}
+  }, [mapRef.current]);
 
   // Centrar el mapa automáticamente cuando cambie la posición
   useEffect(() => {
-    if (mapRef.current) {
-      mapRef.current.setView(position, mapRef.current.getZoom(), { animate: true });
+    try {
+      if (mapRef.current) {
+        const map = mapRef.current as any;
+        const currentZoom = (map && typeof map.getZoom === 'function') ? map.getZoom() : 13;
+        const targetZoom = currentZoom || 13;
+        // setView without animation to avoid jumpy behavior and ensure tiles load for correct coords
+        map.setView(position, targetZoom, { animate: false });
+        try { map.invalidateSize && map.invalidateSize(); } catch (e) {}
+
+        // retry centering a couple times after render/layout completes
+        const retry = (delay: number) => setTimeout(() => {
+          try {
+            map.setView(position, targetZoom, { animate: false });
+            try { map.invalidateSize && map.invalidateSize(); } catch (e) {}
+          } catch (err) {}
+        }, delay);
+        retry(250);
+        retry(800);
+      }
+    } catch (e) {
+      // ignore
     }
   }, [position]);
+
+  // When parent updates initialLat/initialLng (e.g., after async load), update position
+  useEffect(() => {
+    const nl = Number(initialLat as any);
+    const nlng = Number(initialLng as any);
+    const okLat = typeof initialLat !== 'undefined' && !Number.isNaN(nl);
+    const okLng = typeof initialLng !== 'undefined' && !Number.isNaN(nlng);
+    if (okLat && okLng) {
+      const newPos: [number, number] = [nl, nlng];
+      setPosition(newPos);
+      // try reverse geocoding to update address fields when coordinates are provided
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        reverseGeocode(nl, nlng);
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [initialLat, initialLng]);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -125,7 +201,8 @@ export default function AddressAutocompleteOSM({
 
       let data: SearchResult[] = [];
       for (const v of variants) {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=10&accept-language=es&q=${encodeURIComponent(
+        // Limit forward search to Ecuador to avoid far-away matches
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=10&accept-language=es&countrycodes=ec&q=${encodeURIComponent(
           v
         )}`;
         // eslint-disable-next-line no-await-in-loop
@@ -169,6 +246,19 @@ export default function AddressAutocompleteOSM({
     setPosition([lat, lng]);
     setSearchQuery(result.display_name);
     setShowSuggestions(false);
+    try {
+      // debug: log selection and coords
+      // eslint-disable-next-line no-console
+      console.debug('[AddressAutocompleteOSM] selectSuggestion ->', { lat, lng, name: result.display_name });
+      if (mapRef.current) {
+        const map = mapRef.current as any;
+        map.setView([lat, lng], 16, { animate: false });
+        try { map.invalidateSize && map.invalidateSize(); } catch (e) {}
+        // retry centering to ensure tiles match the new center
+        setTimeout(() => { try { map.setView([lat, lng], 16, { animate: false }); map.invalidateSize && map.invalidateSize(); } catch (e) {} }, 300);
+        setTimeout(() => { try { map.setView([lat, lng], 16, { animate: false }); map.invalidateSize && map.invalidateSize(); } catch (e) {} }, 900);
+      }
+    } catch (e) {}
     const addressData: AddressComponents = {
       address: [result.address.road, result.address.house_number].filter(Boolean).join(' ') || result.display_name,
       city: result.address.city || result.address.town || result.address.village || '',
@@ -177,14 +267,18 @@ export default function AddressAutocompleteOSM({
       latitude: lat,
       longitude: lng,
     };
-    onAddressSelect(addressData);
+    // mark as recently emitted and block reverseGeocode re-emits shortly after
+    const now = Date.now();
+    lastEmitRef.current = { lat: addressData.latitude, lng: addressData.longitude, t: now };
+    blockedUntilRef.current = now + EMIT_DEDUP_MS;
+    safeEmit(addressData);
   };
 
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?` +
-        `format=json&lat=${lat}&lon=${lng}&` +
+        `format=jsonv2&lat=${lat}&lon=${lng}&` +
         `addressdetails=1&accept-language=es`
       );
       if (!response.ok) {
@@ -192,6 +286,9 @@ export default function AddressAutocompleteOSM({
       }
       const data = await response.json();
       // Siempre actualizar el campo de dirección, aunque falten datos
+      // debug
+      // eslint-disable-next-line no-console
+      console.debug('[AddressAutocompleteOSM] reverseGeocode result for', lat, lng, data.display_name);
       setSearchQuery(data.display_name || '');
       const addressData: AddressComponents = {
         address: (data.address && ([data.address.road, data.address.house_number].filter(Boolean).join(' '))) || data.display_name || '',
@@ -201,10 +298,22 @@ export default function AddressAutocompleteOSM({
         latitude: lat,
         longitude: lng,
       };
-      onAddressSelect(addressData);
+      // If we have a short-term block (user selected a suggestion), skip emitting here
+      const now = Date.now();
+      if (blockedUntilRef.current && now < blockedUntilRef.current) {
+        // skip emitting to avoid duplicate toasts
+      } else {
+        // Avoid re-emitting if we recently emitted nearly-identical coordinates
+        const last = lastEmitRef.current;
+        if (last && coordsClose(last.lat, last.lng, lat, lng) && now - last.t < EMIT_DEDUP_MS) {
+          // skip emit — already emitted recently
+        } else {
+          safeEmit(addressData);
+        }
+      }
     } catch (error) {
       setSearchQuery('');
-      onAddressSelect({
+      safeEmit({
         address: '',
         city: '',
         postalCode: '',
@@ -212,7 +321,9 @@ export default function AddressAutocompleteOSM({
         latitude: lat,
         longitude: lng,
       });
-      alert('No se pudo obtener la dirección para esta ubicación.');
+      // Avoid blocking alerts that may produce multiple UX interrupts; log instead
+      // eslint-disable-next-line no-console
+      console.warn('[AddressAutocompleteOSM] reverseGeocode failed for', lat, lng, error);
     }
   };
 
@@ -283,15 +394,13 @@ export default function AddressAutocompleteOSM({
       {showMap && (
         <div className="rounded-md border overflow-hidden relative" style={{ zIndex: 0, height: mapHeight }}>
           <MapContainer
-            key={position[0] + '-' + position[1]}
             center={position}
             zoom={13}
+            doubleClickZoom={false}
+            ref={(el: any) => { try { mapRef.current = el as L.Map; } catch (e) { mapRef.current = null; } }}
             style={{ height: '100%', width: '100%' }}
           >
-            <MapClickHandler onMapClick={(lat, lng) => {
-              setPosition([lat, lng]);
-              reverseGeocode(lat, lng);
-            }} />
+            {/* Clicking the map to select a point is disabled per UX request; marker drag is used instead */}
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

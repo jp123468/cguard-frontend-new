@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApiService } from '@/services/api/apiService';
@@ -31,8 +31,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function Incidents({ site }: { site?: any }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -58,6 +60,7 @@ export default function Incidents({ site }: { site?: any }) {
   const [filterStationId, setFilterStationId] = useState<string | undefined>(undefined);
   const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
   const [filterCreatedFrom, setFilterCreatedFrom] = useState<string | undefined>(undefined);
+
   const [filterCreatedTo, setFilterCreatedTo] = useState<string | undefined>(undefined);
   const [filterInformer, setFilterInformer] = useState<string | undefined>(undefined);
   const [filterIncidentTypeId, setFilterIncidentTypeId] = useState<string | undefined>(undefined);
@@ -569,8 +572,10 @@ export default function Incidents({ site }: { site?: any }) {
   // simple client-side search term for the dispatch table
   
 
+  useScrollToTopOnMount(containerRef);
+
   return (
-    <div className="space-y-4">
+    <div ref={containerRef} className="space-y-4">
       <div className="bg-white border rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
