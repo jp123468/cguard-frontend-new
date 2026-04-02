@@ -292,9 +292,9 @@ export default function AddressAutocompleteOSM({
       latitude: lat,
       longitude: lng,
     };
-    // mark as recently emitted and block reverseGeocode re-emits shortly after
+    // Block reverseGeocode re-emits shortly after selection, but do NOT pre-populate
+    // lastEmitRef here — safeEmit will set it. Pre-setting caused safeEmit to no-op.
     const now = Date.now();
-    lastEmitRef.current = { lat: addressData.latitude, lng: addressData.longitude, t: now };
     blockedUntilRef.current = now + EMIT_DEDUP_MS;
     safeEmit(addressData);
   };
