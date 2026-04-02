@@ -191,7 +191,7 @@ export default function AddressAutocompleteOSM({
       }
     }
   }, [initialLat, initialLng, suppressInitialReverse]);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Search addresses using Nominatim (OpenStreetMap geocoding)

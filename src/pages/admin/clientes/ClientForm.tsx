@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { validateCedulaOrRuc } from '@/lib/validators/id';
 import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
+import { toastOnce } from '@/lib/toastOnce';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -584,21 +585,37 @@ export default function ClientForm({
                                     const postal = anyAddr.postcode ?? anyAddr.postalCode ?? addrObj.postcode ?? '';
                                     const country = anyAddr.country ?? addrObj.country ?? '';
 
-                                    form.setValue('address', addressStr);
-                                    form.setValue('city', cityStr);
-                                    form.setValue('postalCode', postal);
-                                    form.setValue('country', country);
+                                    // Update form values and mark them as dirty/touched so they are picked up by submit
+                                    const setOpts = { shouldDirty: true, shouldTouch: true, shouldValidate: false } as const;
+                                    form.setValue('address', addressStr, setOpts);
+                                    form.setValue('city', cityStr, setOpts);
+                                    form.setValue('postalCode', postal, setOpts);
+                                    form.setValue('country', country, setOpts);
 
                                     if (latRaw !== undefined && latRaw !== null) {
-                                        form.setValue('latitude' as any, String(latRaw));
+                                        // store as string in the form (existing code expects strings in many places)
+                                        form.setValue('latitude' as any, String(latRaw), setOpts);
                                     }
                                     if (lngRaw !== undefined && lngRaw !== null) {
-                                        form.setValue('longitude' as any, String(lngRaw));
+                                        form.setValue('longitude' as any, String(lngRaw), setOpts);
                                     }
 
+                                    // Ensure react-hook-form triggers any validation or watchers that depend on coords
+                                    try {
+                                        form.trigger(['latitude' as any, 'longitude' as any, 'address', 'city', 'postalCode']);
+                                    } catch (e) {}
+
+                                    // minimal debug to help trace why values might not persist
+                                    try { console.debug('[ClientForm] address selected -> form values:', {
+                                        address: form.getValues('address'),
+                                        city: form.getValues('city'),
+                                        postalCode: form.getValues('postalCode'),
+                                        country: form.getValues('country'),
+                                        latitude: form.getValues('latitude'),
+                                        longitude: form.getValues('longitude'),
+                                    }); } catch (e) {}
+
                                     // deduplicated toast
-                                    // eslint-disable-next-line @typescript-eslint/no-var-requires
-                                    const { toastOnce } = require('@/lib/toastOnce');
                                     toastOnce.success(t('clients.form.addressAutoFilled', 'Dirección completada automáticamente'));
                                 }}
                                 defaultValue={form.getValues('address') || ''}
