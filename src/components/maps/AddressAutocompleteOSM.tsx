@@ -267,13 +267,13 @@ export default function AddressAutocompleteOSM({
       // debug: log selection and coords
       // eslint-disable-next-line no-console
       console.debug('[AddressAutocompleteOSM] selectSuggestion ->', { lat, lng, name: result.display_name });
-      if (mapRef.current) {
+        if (mapRef.current) {
         const map = mapRef.current as any;
-        map.setView([lat, lng], 16, { animate: false });
+        map.setView([lat, lng], 17, { animate: false });
         try { map.invalidateSize && map.invalidateSize(); } catch (e) {}
         // retry centering to ensure tiles match the new center
-        setTimeout(() => { try { map.setView([lat, lng], 16, { animate: false }); map.invalidateSize && map.invalidateSize(); } catch (e) {} }, 300);
-        setTimeout(() => { try { map.setView([lat, lng], 16, { animate: false }); map.invalidateSize && map.invalidateSize(); } catch (e) {} }, 900);
+        setTimeout(() => { try { map.setView([lat, lng], 17, { animate: false }); map.invalidateSize && map.invalidateSize(); } catch (e) {} }, 300);
+        setTimeout(() => { try { map.setView([lat, lng], 17, { animate: false }); map.invalidateSize && map.invalidateSize(); } catch (e) {} }, 900);
       }
     } catch (e) {}
     const addressData: AddressComponents = {
@@ -457,7 +457,7 @@ export default function AddressAutocompleteOSM({
         <div className="rounded-md border overflow-hidden relative" style={{ zIndex: 0, height: mapHeight }}>
           <MapContainer
             center={position}
-            zoom={13}
+            zoom={15}
             doubleClickZoom={false}
             ref={(el: any) => { try { mapRef.current = el as L.Map; } catch (e) { mapRef.current = null; } }}
             style={{ height: '100%', width: '100%' }}
