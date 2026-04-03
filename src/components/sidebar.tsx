@@ -68,7 +68,7 @@ export default function Sidebar() {
   }, [location.pathname]);
 
   return (
-    <aside className="h-full w-full bg-white border-r border-gray-200 overflow-y-auto">
+    <aside className="h-full w-full bg-white border-r border-gray-200 overflow-y-auto hide-scrollbar">
       <div className="h-full">
         {/* <div className="flex items-center gap-2 px-4 py-6">
           <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
@@ -80,7 +80,7 @@ export default function Sidebar() {
           </span>
         </div> */}
 
-        <div className="flex items-center gap-2 px-5 py-3">
+        <div className="sticky top-0 z-20 bg-white flex items-center gap-2 px-5 py-3 border-b border-gray-100">
           <img
             src="../../assets/logo/logo.png" // 👈 cambia esta ruta por la de tu logo
             alt="GuardsPro Logo"

@@ -91,3 +91,12 @@ body {
     width: 100%;
     min-height: calc(100vh - 140px);
 }
+
+/* Utility: hide scrollbar but keep scroll functionality */
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}

@@ -43,6 +43,7 @@ import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { clientService } from '@/lib/api/clientService';
 import { postSiteService } from '@/lib/api/postSiteService';
+import { stationService } from '@/lib/api/stationService';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from "sonner";
 
@@ -58,6 +59,7 @@ type VisitorFilters = {
 type NewVisitor = {
     client: string;
     site: string;
+    station?: string;
     guard: string;
     placeTypeKind?: string;
     placeTypeValue?: string;
@@ -85,6 +87,7 @@ export default function Visitors() {
     const [newVisitor, setNewVisitor] = useState<NewVisitor>({
         client: "",
         site: "",
+        station: '',
         guard: "",
         placeTypeKind: '',
         placeTypeValue: '',
@@ -117,6 +120,7 @@ export default function Visitors() {
     const [postSites, setPostSites] = useState<any[]>([]);
     const [postSitesForFilter, setPostSitesForFilter] = useState<any[]>([]);
     const [postSitesForNewVisitor, setPostSitesForNewVisitor] = useState<any[]>([]);
+    const [stationsForNewVisitor, setStationsForNewVisitor] = useState<any[]>([]);
     const [guards, setGuards] = useState<any[]>([]);
     const [guardsForFilter, setGuardsForFilter] = useState<any[]>([]);
     const [guardsForNewVisitor, setGuardsForNewVisitor] = useState<any[]>([]);
@@ -288,7 +292,7 @@ export default function Visitors() {
             return;
         }
 
-        const keys = ['Date', 'Last name', 'First name', 'ID', 'Reason of visit', 'Exit Time', 'Number of people', 'Client', 'Site'];
+        const keys = ['Date', 'Last name', 'First name', 'ID', 'Reason of visit', 'Exit Time', 'Number of people', 'Station', 'Client', 'Site'];
         const rowsCsv = rowsToExport.map((r) => ({
             Date: formatDateTime(r.visitDate),
             'Last name': r.lastName ?? '',
@@ -297,6 +301,7 @@ export default function Visitors() {
             'Reason of visit': r.reason ?? '',
             'Exit Time': formatDateTime(r.exitTime),
             'Number of people': r.numPeople ?? '',
+            Station: r.station?.stationName || r.station?.name || r.stationName || '',
             Client: getClientLabelFromRecord(r) || '',
             Site: getPostSiteLabelFromRecord(r) || '',
         }));
@@ -336,12 +341,13 @@ export default function Visitors() {
             'Reason of visit': r.reason ?? '',
             'Exit Time': formatDateTime(r.exitTime),
             'Number of people': r.numPeople ?? '',
+            Station: r.station?.stationName || r.station?.name || r.stationName || '',
             Client: getClientLabelFromRecord(r) || '',
             Site: getPostSiteLabelFromRecord(r) || '',
         }));
 
         try {
-            const header = ['Date', 'Last name', 'First name', 'ID', 'Reason of visit', 'Exit Time', 'Number of people', 'Client', 'Site'];
+            const header = ['Date', 'Last name', 'First name', 'ID', 'Reason of visit', 'Exit Time', 'Number of people', 'Station', 'Client', 'Site'];
             const worksheet = XLSX.utils.json_to_sheet(data, { header });
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Bitacoras');
@@ -381,6 +387,7 @@ export default function Visitors() {
                         <td>${(r.reason || '')}</td>
                         <td>${(formatDateTime(r.exitTime) || '')}</td>
                         <td>${(r.numPeople ?? '')}</td>
+                        <td>${(r.station?.stationName || r.station?.name || r.stationName || '')}</td>
                         <td>${(getClientLabelFromRecord(r) || '')}</td>
                         <td>${(getPostSiteLabelFromRecord(r) || '')}</td>
                     </tr>
@@ -401,7 +408,7 @@ export default function Visitors() {
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>ID</th><th>${t('visitantes.logTable.firstName') || 'Nombre'}</th><th>${t('visitantes.logTable.lastName') || 'Apellidos'}</th><th>${t('visitantes.logTable.idNumber') || 'ID'}</th><th>${t('visitantes.logTable.date') || 'Fecha'}</th><th>${t('visitantes.logTable.site') || 'Sitio'}</th>
+                                        <th>ID</th><th>${t('visitantes.logTable.firstName') || 'Nombre'}</th><th>${t('visitantes.logTable.lastName') || 'Apellidos'}</th><th>${t('visitantes.logTable.idNumber') || 'ID'}</th><th>${t('visitantes.logTable.date') || 'Fecha'}</th><th>${t('visitantes.logTable.station') || 'Estación'}</th><th>${t('visitantes.logTable.client') || 'Cliente'}</th><th>${t('visitantes.logTable.postSite') || 'Sitio'}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -445,6 +452,7 @@ export default function Visitors() {
                 <td>${(r.reason || '')}</td>
                 <td>${(formatDateTime(r.exitTime) || '')}</td>
                 <td>${(r.numPeople ?? '')}</td>
+                <td>${(r.station?.stationName || r.station?.name || r.stationName || '')}</td>
                 <td>${(getClientLabelFromRecord(r) || '')}</td>
                 <td>${(getPostSiteLabelFromRecord(r) || '')}</td>
             </tr>
@@ -465,7 +473,7 @@ export default function Visitors() {
                 <table>
                     <thead>
                         <tr>
-                            <th>Date</th><th>Last name</th><th>First name</th><th>ID</th><th>Reason of visit</th><th>Exit Time</th><th>Number of people</th><th>Client</th><th>Site</th>
+                            <th>Date</th><th>Last name</th><th>First name</th><th>ID</th><th>Reason of visit</th><th>Exit Time</th><th>Number of people</th><th>Station</th><th>Client</th><th>Site</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -579,15 +587,37 @@ export default function Visitors() {
         loadGuards();
     }, [filters.client]);
 
-    // when newVisitor.client changes, load guards for that client (used in add visitor form)
+    // when newVisitor.site changes, load stations for that post site (used in add visitor form)
+    useEffect(() => {
+        const loadStations = async () => {
+            try {
+                if (!newVisitor.site) {
+                    setStationsForNewVisitor([]);
+                    // clear dependent selects
+                    setNewVisitor((s) => ({ ...s, station: '', guard: '' }));
+                    return;
+                }
+                const resp = await stationService.list({ postSite: newVisitor.site } as any, { limit: 200, offset: 0 } as any);
+                setStationsForNewVisitor(resp.rows || []);
+                // clear dependent selects when site changes
+                setNewVisitor((s) => ({ ...s, station: '', guard: '' }));
+            } catch (e) {
+                console.error('Failed to load stations for new visitor form', e);
+            }
+        };
+        loadStations();
+    }, [newVisitor.site]);
+
+    // load guards only when a station is selected — show guards linked to that station
     useEffect(() => {
         const loadGuards = async () => {
             try {
-                if (!newVisitor.client) {
+                if (!newVisitor.station) {
                     setGuardsForNewVisitor([]);
                     return;
                 }
-                const resp = await securityGuardService.list({ 'filter[clientId]': newVisitor.client, limit: 200, offset: 0 } as any);
+
+                const resp = await securityGuardService.list({ 'filter[station]': newVisitor.station, limit: 200, offset: 0 } as any);
                 const list = Array.isArray(resp) ? resp : (resp.rows || []);
                 setGuardsForNewVisitor(list || []);
             } catch (e) {
@@ -595,7 +625,7 @@ export default function Visitors() {
             }
         };
         loadGuards();
-    }, [newVisitor.client]);
+    }, [newVisitor.station]);
     useEffect(() => {
         // load clients, post sites and guards for selects
         const load = async () => {
@@ -685,6 +715,7 @@ export default function Visitors() {
                 reason: newVisitor.reason || undefined,
                 clientId: newVisitor.client,
                 postSiteId: newVisitor.site,
+                    stationId: newVisitor.station || undefined,
                 guardId: newVisitor.guard,
                 // combine type and value into a single string, e.g. "DEPARTAMENTO - 24"
                 placeType: newVisitor.placeTypeKind && newVisitor.placeTypeValue ? `${newVisitor.placeTypeKind.toUpperCase()} - ${newVisitor.placeTypeValue}` : (newVisitor.placeTypeValue || undefined),
@@ -965,6 +996,7 @@ export default function Visitors() {
                                         <th className="px-4 py-2">{t('visitantes.logTable.idNumber') || 'ID'}</th>
                                         <th className="px-4 py-2">{t('visitantes.logTable.client') || 'Cliente'}</th>
                                         <th className="px-4 py-2">{t('visitantes.logTable.postSite') || 'Post Site'}</th>
+                                        <th className="px-4 py-2">{t('visitantes.logTable.station') || 'Estación'}</th>
                                         <th className="px-4 py-2">{t('visitantes.logTable.date') || 'Fecha'}</th>
                                         <th className="px-4 py-2 text-right" />
                                     </tr>
@@ -989,6 +1021,7 @@ export default function Visitors() {
                                                 <td className="px-4 py-3">{r.idNumber}</td>
                                                 <td className="px-4 py-3">{getClientLabelFromRecord(r)}</td>
                                                 <td className="px-4 py-3">{r.postSite?.companyName || r.postSite?.name || r.postSiteName || '-'}</td>
+                                                <td className="px-4 py-3">{r.station?.stationName || r.station?.name || r.stationName || '-'}</td>
                                                 <td className="px-4 py-3">{formatDateTime(r.visitDate)}</td>
                                                 <td className="px-2 py-3 text-right">
                                                     <DropdownMenu>
@@ -1028,6 +1061,7 @@ export default function Visitors() {
                                     <div className="text-sm text-gray-600">{t('visitantes.logTable.idNumber') || 'ID'}: {r.idNumber || '-'}</div>
                                     <div className="text-sm text-gray-600">{t('visitantes.logTable.client') || 'Cliente'}: {getClientLabelFromRecord(r)}</div>
                                     <div className="text-sm text-gray-600">{t('visitantes.logTable.postSite') || 'Post Site'}: {r.postSite?.companyName || r.postSite?.name || r.postSiteName || '-'}</div>
+                                    <div className="text-sm text-gray-600">{t('visitantes.logTable.station') || 'Estación'}: {r.station?.stationName || r.station?.name || r.stationName || '-'}</div>
                                     <div className="flex items-center justify-end mt-2 space-x-2">
                                         <Button size="sm" variant="ghost" onClick={() => viewLog(r.id)}>{t('actions.viewDetails') || 'Ver'}</Button>
                                         <Button size="sm" variant="ghost" onClick={() => markExit(r.id)} disabled={!!r.exitTime}>{t('visitantes.markExit') || 'Salida'}</Button>
@@ -1152,6 +1186,10 @@ export default function Visitors() {
                                 <dd className="text-base text-gray-800">{getPostSiteLabelFromRecord(selectedLog)}</dd>
                             </div>
                             <div>
+                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.station') || 'Estación'}</dt>
+                                <dd className="text-base text-gray-800">{selectedLog.station?.stationName || selectedLog.station?.name || selectedLog.stationName || '-'}</dd>
+                            </div>
+                            <div>
                                 <dt className="text-sm text-gray-600">{t('visitantes.logTable.placeType') || 'Tipo de lugar'}</dt>
                                 <dd className="text-base text-gray-800">{selectedLog.placeType || '-'}</dd>
                             </div>
@@ -1213,13 +1251,31 @@ export default function Visitors() {
                         </div>
 
                         <div className="space-y-1.5">
+                            <Label>{t('visitantes.station') || 'Estación'}</Label>
+                            <Select
+                                value={newVisitor.station}
+                                onValueChange={(v) => setNewVisitor((s) => ({ ...s, station: v, guard: '' }))}
+                                disabled={stationsForNewVisitor.length === 0}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={t('visitantes.selectStation') || 'Selecciona una estación'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {stationsForNewVisitor.map((st) => (
+                                        <SelectItem key={st.id} value={st.id}>{st.stationName || st.name || st.id}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-1.5">
                             <Label>{t('visitantes.guard') || 'Guardia'}<span className="text-red-600">*</span></Label>
                             <Select
                                 value={newVisitor.guard}
                                 onValueChange={(v) =>
                                     setNewVisitor((s) => ({ ...s, guard: v }))
                                 }
-                                disabled={guardsForNewVisitor.length === 0}
+                                disabled={!newVisitor.station || guardsForNewVisitor.length === 0}
                                 aria-required="true"
                             >
                                 <SelectTrigger>

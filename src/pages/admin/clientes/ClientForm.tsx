@@ -208,7 +208,7 @@ export default function ClientForm({
         if (values.city !== undefined) basePayload.city = values.city;
         if (values.country !== undefined) basePayload.country = values.country;
         if (values.faxNumber !== undefined) basePayload.faxNumber = values.faxNumber;
-        if (values.website !== undefined) basePayload.website = values.website;
+        if (values.website !== undefined && String(values.website).trim() !== "") basePayload.website = values.website;
         // Ensure latitude/longitude are sent as numbers (or null) to backend
         if ((values as any).latitude !== undefined) {
             const rawLat = (values as any).latitude;

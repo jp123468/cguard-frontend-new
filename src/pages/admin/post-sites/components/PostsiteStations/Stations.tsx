@@ -54,7 +54,25 @@ export default function Stations({ site }: { site?: any }) {
         setLoading(true);
         const res = await ApiService.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`);
         const rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
-        if (mounted) setStations(rows);
+
+        // Defensive: filter results to ensure station.postSiteId (when present) matches requested postSiteId
+        const filtered = (rows || []).filter((r: any) => {
+          const rPost = r.postSiteId || r.post_site_id || r.postSite || r.post_site || (r.postSite && r.postSite.id) || (r.station && (r.station.postSiteId || r.station.postSite)) || null;
+          if (!rPost) return true; // keep when unknown shape
+          try { return String(rPost) === String(postSiteId); } catch (e) { return true; }
+        });
+
+        if (filtered.length !== (rows || []).length) {
+          console.warn('[Stations] filtered out stations that do not match postSiteId', { requested: postSiteId, before: (rows || []).length, after: filtered.length });
+        }
+
+        // Normalize station objects for UI
+        const mapped = (filtered || []).map((r: any) => ({
+          id: r.id || r.stationId || r._id || r.station_id || String(r._id || r.id || JSON.stringify(r)),
+          name: r.name || r.stationName || r.station_name || r.label || r.title || (r.description ? String(r.description).slice(0, 60) : '') || ''
+        }));
+
+        if (mounted) setStations(mapped);
       } catch (err) {
         console.error('Failed to load stations', err);
       } finally {
@@ -480,16 +498,19 @@ export default function Stations({ site }: { site?: any }) {
         const stationNamesToMatch = [
           (selectedStationDetail?.name || selectedStationDetail?.stationName || selectedStationDetail?.station_name || '')
         ].map(x => String(x || '').toLowerCase()).filter(Boolean);
-        const stationIdsToMatch = [selectedStationDetail?.id || selectedStationDetail?.stationId || selectedStationDetail?.station_id].filter(Boolean);
+        const stationIdsToMatch = [selectedStationDetail?.id || selectedStationDetail?.stationId || selectedStationDetail?.station_id]
+            .filter(Boolean)
+            .map((v: any) => String(v));
 
         const filtered = rows.filter((r: any) => {
           // station id may be a plain string or nested object
-          const rStationId = r.station || r.stationId || r.station_id || (r.station && r.station.id) || r.assignedStationId || r.postSiteId || r.postSite;
-          if (rStationId && stationIdsToMatch.includes(rStationId)) return true;
+          const rawStationId = r.station || r.stationId || r.station_id || (r.station && r.station.id) || r.assignedStationId || r.postSiteId || r.postSite;
+          const rStationId = rawStationId && typeof rawStationId === 'object' ? (rawStationId.id || rawStationId.stationId || '') : rawStationId;
+          if (rStationId && stationIdsToMatch.includes(String(rStationId))) return true;
 
           // station name may be nested
           const rStationName = (r.stationName || (r.station && (r.station.stationName || r.station.name)) || r.assignedStation || r.postSiteName || r.siteName || '').toString().toLowerCase();
-          if (rStationName && stationNamesToMatch.includes(rStationName)) return true;
+          if (rStationName && stationNamesToMatch.some(n => rStationName.includes(n) || n.includes(rStationName))) return true;
 
           // some records embed postSite or station fields differently
           if (r.postSite && (r.postSite === selectedStationDetail?.id || r.postSite === selectedStationDetail?.postSiteId)) return true;

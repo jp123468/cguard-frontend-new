@@ -436,7 +436,22 @@ export default function AssignGuards({ site }: { site?: any }) {
 
             await resolveNames();
 
-            setAssignedGuards(normalized);
+            // Filter out rows that clearly belong to a different postSite (defensive check)
+            const filtered = normalized.filter((r: any) => {
+                const rPost = r.postSiteId || r.post_site_id || (r.postSite && (r.postSite.id || r.postSite.postSiteId)) || r.businessInfoId || r.business_info_id || null;
+                if (!rPost) return true; // keep if we can't determine
+                try {
+                    return String(rPost) === String(postSiteId);
+                } catch (e) {
+                    return true;
+                }
+            });
+
+            if (filtered.length !== normalized.length) {
+                console.warn('[AssignGuards] filtered out assignments for other postSites', { requested: postSiteId, before: normalized.length, after: filtered.length });
+            }
+
+            setAssignedGuards(filtered);
         } catch (err) {
             console.error('Failed to load assigned guards', err);
         }

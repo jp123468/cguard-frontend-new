@@ -126,7 +126,9 @@ export default function ProfileCompanyForm() {
 
         const payload: any = {
           name: form.name,
-          website: form.website,
+          // website is optional: only include when non-empty
+          // this prevents sending an empty string which some backends treat as a required field
+          ...(form.website && String(form.website).trim() ? { website: form.website } : {}),
           address: form.address,
           billingAddress: form.billingAddress,
           addressLine2: form.addressLine2,
@@ -403,8 +405,8 @@ export default function ProfileCompanyForm() {
                       // deduplicated toast
                       import.meta.env && null; // placeholder to keep linters happy
                       // eslint-disable-next-line @typescript-eslint/no-var-requires
-                      const { toastOnce } = require('@/lib/toastOnce');
-                      toastOnce.success('Dirección completada automáticamente');
+                      //const { toastOnce } = require('@/lib/toastOnce');
+                      toast.success('Dirección completada automáticamente');
                     }}
                     defaultValue={form.address || ''}
                     openWithQuery={autocompleteOpenQuery}
