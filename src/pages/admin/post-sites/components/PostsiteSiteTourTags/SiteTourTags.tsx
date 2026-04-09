@@ -117,6 +117,8 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         return [-2.170998, -79.922359];
     }, [markerPos, stationsCoords, form.latitude, form.longitude]);
     // Small wrapper to avoid strict react-leaflet prop typing in this file
+    // Ajusta el zoom inicial a 18 para acercar dos niveles más la vista
+    const DEFAULT_MAP_ZOOM = 18;
     const MapWrapper: any = (props: any) => <MapContainer {...props} />;
     function update(k: string, v: any) {
         setForm((s: any) => ({ ...s, [k]: v }));
@@ -150,14 +152,14 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         if (mapInstance) {
             try {
                 if (typeof mapInstance.flyTo === 'function') {
-                    mapInstance.flyTo([lat, lng], 16, { animate: true, duration: 0.6 });
+                    mapInstance.flyTo([lat, lng], DEFAULT_MAP_ZOOM, { animate: true, duration: 0.6 });
                 } else if (typeof mapInstance.panTo === 'function') {
                     mapInstance.panTo([lat, lng], { animate: true, duration: 0.6 });
                 } else if (typeof mapInstance.setView === 'function') {
-                    mapInstance.setView([lat, lng], 16, { animate: true });
+                    mapInstance.setView([lat, lng], DEFAULT_MAP_ZOOM, { animate: true });
                 }
             } catch (e) {
-                try { if (typeof mapInstance.setView === 'function') mapInstance.setView([lat, lng], 16); } catch (err) { /* ignore */ }
+                try { if (typeof mapInstance.setView === 'function') mapInstance.setView([lat, lng], DEFAULT_MAP_ZOOM); } catch (err) { /* ignore */ }
             }
         }
     }
@@ -175,7 +177,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
     // When marker position changes, center the map there
     useEffect(() => {
         if (markerPos && mapInstance) {
-            const zoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 16;
+            const zoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : DEFAULT_MAP_ZOOM;
             try {
                 if (typeof mapInstance.flyTo === 'function') {
                     mapInstance.flyTo([markerPos.lat, markerPos.lng], zoom, { animate: true, duration: 0.6 });
@@ -354,7 +356,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                 showGeoFence: form.showGeoFence || false,
                 stationId: form.stationId || undefined,
                 // Optionally link the tag to a shift record
-                ...(form.shiftId ? { shiftId: form.shiftId } : {}),
+                // shiftId eliminado
             };
 
             const created = await ApiService.post(`/tenant/${tenantId}/site-tour/${tourId}/tag`, tagPayload);
@@ -420,37 +422,11 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         try {
             const payload: any = { name: tourForm.name, postSiteId };
             if (tourForm.stationId) payload.stationId = tourForm.stationId;
-            // include assigned guard if selected
-            if (tourForm.securityGuardId) payload.securityGuardId = tourForm.securityGuardId;
+            // Eliminado: no se asigna guardia al crear recorrido
             const tourResp: any = await ApiService.post(`/tenant/${tenantId}/site-tour`, payload);
             const tourId = tourResp && (tourResp.id || tourResp._id);
             if (!tourId) throw new Error('No se obtuvo id del recorrido');
-                // Persist assignment with richer data so QR/tag flows can read it later
-                async function createAssignment(tourId: string, guardId?: string | null, stationId?: string | null) {
-                    const tId = site?.tenantId || localStorage.getItem('tenantId') || '';
-                    if (!tId || !tourId || !guardId) return null;
-                    try {
-                        // No explicit start/end provided here; set status and importHash
-                        const body: any = {
-                            securityGuardId: guardId,
-                            stationId: stationId || null,
-                            postSiteId: postSiteId || null,
-                            startAt: null,
-                            endAt: null,
-                            status: 'assigned',
-                            importHash: `ui-${Date.now()}`,
-                        };
-                        const resp = await ApiService.post(`/tenant/${tId}/site-tour/${tourId}/assign`, body);
-                        return resp;
-                    } catch (e) {
-                        console.error('Failed creating assignment', e);
-                        return null;
-                    }
-                }
-
-                if (tourForm.securityGuardId) {
-                    try { await createAssignment(tourId, tourForm.securityGuardId, tourForm.stationId || null); } catch (e) { /* ignore */ }
-                }
+                // Eliminado: no se crea asignación de guardia
 
             // Now create the tag attached to this tour using current form values
             const tagPayload: any = {
@@ -1106,17 +1082,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                             ))}
                                         </select>
 
-                                        <select value={form.shiftId || ''} onChange={(e) => update('shiftId', e.target.value)} className="w-full px-3 py-2 h-12 border rounded-md truncate max-w-full min-w-0" style={{maxWidth: '100%'}}>
-                                            <option value="">{shifts && shifts.length ? t('siteTourTag.form.attachToShift', 'Adjuntar a turno (opcional)') : t('siteTourTag.form.noShifts', 'No hay turnos')}</option>
-                                            {shifts.map((sh: any) => {
-                                                const guardName = getGuardNameFromShift(sh) || 'Guard';
-                                                const stationName = (sh.station && (sh.station.stationName || sh.station.name)) || sh.stationName || '';
-                                                const fullLabel = `${guardName}${stationName ? ' - ' + stationName : ''}`;
-                                                let displayLabel = fullLabel;
-                                                if (displayLabel.length > 30) displayLabel = displayLabel.slice(0, 27) + '...';
-                                                return <option key={sh.id} value={sh.id} title={fullLabel}>{displayLabel}</option>;
-                                            })}
-                                        </select>
+
 
                                     <div className="mt-1">
                                         <button onClick={() => { setShowCreateTourModal(true); setTourForm({ name: '', stationId: form.stationId || '' }); }} className="w-full px-3 py-2 bg-violet-600 text-white rounded-md">{t('siteTourTag.form.createTourAndTag') || 'Crear recorrido y etiqueta'}</button>
@@ -1141,52 +1107,26 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                             */}
                             { !form.stationId ? (
                                 <>
-                                    <div className="grid grid-cols-3 gap-4 items-center">
-                                        <input value={form.coords} onChange={(e) => {
-                                            update('coords', e.target.value);
-                                            const parts = String(e.target.value).split(',').map(p => p.trim());
-                                            if (parts.length >= 2) {
-                                                const lat = parseFloat(parts[0]);
-                                                const lng = parseFloat(parts[1]);
-                                                if (!isNaN(lat) && !isNaN(lng)) {
-                                                    update('latitude', lat.toString());
-                                                    update('longitude', lng.toString());
-                                                    setMarkerPos({ lat, lng });
-                                                }
-                                            }
-                                        }} placeholder={t('siteTourTag.form.coordsPlaceholder', 'Lat, Lng')} className="col-span-2 w-full border rounded-lg h-12 px-3" />
 
-                                        <div className="col-span-1">
-                                            <button onClick={handleLocateInMap} className="w-full px-4 py-2 border rounded-md">{t('siteTourTag.form.mapLocation')}</button>
-                                        </div>
-                                    </div>
 
+                                    {/* Solo se muestra el error del mapa si existe, pero no los campos lat/lng ni el botón de ubicar */}
                                     {mapError && (
                                         <div className="text-sm text-red-600 mt-2">{mapError}</div>
-                                    )}
-
-                                    {/* Only show the textual Lat/Lng if the single 'coords' input is empty to avoid duplicate display */}
-                                        {!form.coords && (
-                                        <div className="text-sm text-gray-600 mt-2">{form.latitude && form.longitude ? `Lat: ${form.latitude} | Lng: ${form.longitude}` : t('siteTourTag.form.noCoordinates', 'No coordinates selected')}</div>
                                     )}
 
                                     <div className="border rounded-md overflow-hidden">
                                         <div style={{ height: '60vh', minHeight: 220 }}>
                                             <MapWrapper
                                                 center={initialCenter}
-                                                zoom={19}
+                                                zoom={DEFAULT_MAP_ZOOM}
                                                 maxZoom={19}
                                                 style={{ height: '100%', width: '100%' }}
                                                 whenCreated={(map: any) => {
                                                     const m = map as L.Map;
                                                     setMapInstance(m);
                                                     try {
-                                                        if (typeof m.getMaxZoom === 'function' && typeof m.setZoom === 'function') {
-                                                            const mz = m.getMaxZoom();
-                                                            if (typeof mz === 'number' && isFinite(mz)) m.setZoom(mz);
-                                                            else m.setZoom(19);
-                                                        } else if (typeof m.setZoom === 'function') {
-                                                            m.setZoom(19);
+                                                        if (typeof m.setZoom === 'function') {
+                                                            m.setZoom(DEFAULT_MAP_ZOOM);
                                                         }
                                                     } catch (e) {
                                                         // ignore any errors when forcing zoom
@@ -1202,8 +1142,8 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                                 {/* render station markers */}
                                                 {stationsCoords.map((sc: any, idx: number) => (
                                                     <Marker key={`st-${idx}`} position={[sc.lat, sc.lng]}>
-                                                                        <Popup>{sc.name || t('siteTourTag.placeholders.tagName', 'Station')}</Popup>
-                                                                    </Marker>
+                                                        <Popup>{sc.name || t('siteTourTag.placeholders.tagName', 'Station')}</Popup>
+                                                    </Marker>
                                                 ))}
                                                 <MapClickHandler />
                                             </MapWrapper>
@@ -1319,24 +1259,12 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                 </select>
                             </div>
 
-                            <div>
-                                <label className="block text-sm text-gray-700 mb-2">{t('siteTour.form.assignGuard') || 'Asignar Guardia'}</label>
-                                <select value={tourForm.securityGuardId || ''} onChange={(e) => setTourForm((s: any) => ({ ...s, securityGuardId: e.target.value }))} className="w-full px-3 py-2 h-12 border rounded-md text-sm">
-                                    <option value="">{loadingGuards ? 'Cargando guardias...' : (localGuards && localGuards.length ? (t('siteTour.form.selectGuard') || 'Seleccione guardia') : 'No guards found')}</option>
-                                    {localGuards.map((g: any) => {
-                                        const name = (g.guard && (g.guard.firstName || g.guard.lastName)) ? `${g.guard.firstName || ''} ${g.guard.lastName || ''}`.trim() : (g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.name || g.fullName || g.label) || '';
-                                        return <option key={g.id || g.guardId || g.securityGuardId} value={g.id || g.guardId || g.securityGuardId}>{name}</option>;
-                                    })}
-                                </select>
-                                {guardLoadError && <div className="text-xs text-red-600 mt-1">{guardLoadError}</div>}
-                            </div>
+
                         </div>
 
-                        <div className="mt-4 flex justify-end">
-                            <button onClick={() => setShowCreateTourModal(false)} className="px-4 py-2 border rounded-md">{t('common.cancel') || 'Cancelar'}</button>
-                        </div>
-                        <div className="mt-2 flex justify-end">
-                            <button onClick={() => createTourAndTag()} className="px-4 py-2 bg-violet-600 text-white rounded-md whitespace-nowrap">{t('siteTour.form.createAndAttach') || 'Crear recorrido y etiqueta'}</button>
+                        <div className="mt-4 flex justify-end gap-2">
+                            <button onClick={() => setShowCreateTourModal(false)} className="px-4 py-2 border rounded-md h-12 flex items-center">{t('common.cancel') || 'Cancelar'}</button>
+                            <button onClick={() => createTourAndTag()} className="px-4 py-2 bg-violet-600 text-white rounded-md whitespace-nowrap h-12 flex items-center">{t('siteTour.form.createAndAttach') || 'Crear recorrido y etiqueta'}</button>
                         </div>
                     </div>
                 </div>

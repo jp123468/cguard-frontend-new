@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Select, { MultiValue, OptionsOrGroups } from 'react-select';
 import { Search, ChevronDown, Plus, X, Clock, EllipsisVertical, Eye, Edit, Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
-
+          
 export default function PostSiteTours({ site, guards = [] }: { site?: any; guards?: any[] }) {
   const { t } = useTranslation();
   // Helper: determine whether a guard object is assigned to a given station id
@@ -118,17 +119,17 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
 
   const [tourName, setTourName] = useState('');
   const [tourDesc, setTourDesc] = useState('');
-  const [scheduledDays, setScheduledDays] = useState('');
+  const [scheduledDays, setScheduledDays] = useState<string[]>([]);
   const [continuous, setContinuous] = useState(false);
   const [timeMode, setTimeMode] = useState('specific');
   const [selectTime, setSelectTime] = useState('');
   const [maxDuration, setMaxDuration] = useState('');
   const [stationId, setStationId] = useState('');
-  const [assignGuard, setAssignGuard] = useState('');
+  // Eliminado assignGuard: los recorridos no requieren guardia específico
   const [enableNotes, setEnableNotes] = useState(false);
   const [forceMedia, setForceMedia] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const isFormValid = Boolean(tourName.trim() && scheduledDays && assignGuard && stationId);
+  const isFormValid = Boolean(tourName.trim() && scheduledDays.length > 0 && stationId);
 
   const [stations, setStations] = useState<any[]>([]);
   const [loadingStations, setLoadingStations] = useState(false);
@@ -153,6 +154,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
   const [loadingDetailAssignments, setLoadingDetailAssignments] = useState(false);
   const [detailGuardName, setDetailGuardName] = useState<string | null>(null);
   const [editingTourId, setEditingTourId] = useState<string | null>(null);
+  
   const timeInputRef = useRef<HTMLInputElement | null>(null);
   const translateTimeMode = (mode?: string) => {
     if (!mode) return '-';
@@ -456,50 +458,9 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
           } catch (e) {
             // ignore
           }
-          const idStr = assignGuard ? String(assignGuard) : null;
+          // Eliminado assignGuard: ya no se usa
 
-          // Additional fallback: some backends index by `guardId` (internal id) instead of record `id`.
-          if (idStr) {
-            try {
-              const byGuardIdResp: any = await ApiService.get(`/tenant/${tenantId}/security-guard?filter[guardId]=${encodeURIComponent(idStr)}`);
-              const byGuardIdRows = Array.isArray(byGuardIdResp) ? byGuardIdResp : (byGuardIdResp && byGuardIdResp.rows) ? byGuardIdResp.rows : [];
-              if (byGuardIdRows && byGuardIdRows.length) {
-                const foundG = (byGuardIdRows || []).find((r: any) => String(r.guardId || r.securityGuardId || r.id || r._id) === idStr);
-                if (foundG) {
-                  const name = resolveGuardName(foundG);
-                  if (name) {
-                    setDetailGuardName(name);
-                    return;
-                  }
-                }
-                const nameFallback2 = resolveGuardName(byGuardIdRows[0]);
-                if (nameFallback2 && nameFallback2 !== idStr) {
-                  setDetailGuardName(nameFallback2);
-                  return;
-                }
-              }
-            } catch (e) {
-              // ignore
-            }
-
-            // Try alternate query param (some APIs accept `guardId=`)
-            try {
-              const altResp: any = await ApiService.get(`/tenant/${tenantId}/security-guard?guardId=${encodeURIComponent(idStr)}`);
-              const altRows = Array.isArray(altResp) ? altResp : (altResp && altResp.rows) ? altResp.rows : [];
-              if (altRows && altRows.length) {
-                const foundAlt = (altRows || []).find((r: any) => String(r.guardId || r.securityGuardId || r.id || r._id) === idStr);
-                if (foundAlt) {
-                  const name = resolveGuardName(foundAlt);
-                  if (name) {
-                    setDetailGuardName(name);
-                    return;
-                  }
-                }
-              }
-            } catch (e) {
-              // ignore
-            }
-          }
+          // Eliminado: lógica de idStr ya no es relevante
         }
 
         // Record whether guards were obtained from shift rows. If they were, trust that list directly.
@@ -645,7 +606,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
           // prefer active assignment, otherwise most recent
           const active = rows.find((r: any) => r.status === 'assigned') || rows[0];
           if (active) {
-            setAssignGuard(active.securityGuardId || active.guardId || '');
+            // Eliminado assignGuard: ya no se usa
             setStationId(active.stationId || '');
             if (active.startAt) {
               try {
@@ -750,8 +711,9 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
             </div>
           </div>
 
-          <div className="flex-shrink-0">
-            <button onClick={() => { setEditingTourId(null); setTourName(''); setTourDesc(''); setScheduledDays(''); setContinuous(false); setTimeMode('specific'); setSelectTime(''); setMaxDuration(''); setAssignGuard(''); setStationId(''); setShowNewTourModal(true); }} className="inline-flex items-center gap-3 bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">
+          <div className="flex-shrink-0 flex items-center gap-3">
+            {/* TagScans ahora es un componente independiente; abre la vista de Etiquetas desde el menú lateral o la ruta dedicada. */}
+            <button onClick={() => { setEditingTourId(null); setTourName(''); setTourDesc(''); setScheduledDays([]); setContinuous(false); setTimeMode('specific'); setSelectTime(''); setMaxDuration(''); setStationId(''); setShowNewTourModal(true); }} className="inline-flex items-center gap-3 bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700">
               <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
                 <Plus size={14} />
               </span>
@@ -904,7 +866,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                                   setSelectTime(tour.selectTime || '');
                                   setMaxDuration(tour.maxDuration || '');
                                   setStationId(tour.stationId || tour.station_id || '');
-                                  setAssignGuard(tour.securityGuardId || tour.security_guard_id || tour.guardId || '');
+                                  // Eliminado assignGuard: ya no se usa
                                 }}>
                                   <div className="flex items-center gap-2"><Edit size={14} /> <span>{t('siteTour.actions.edit', 'Editar')}</span></div>
                                 </button>
@@ -965,6 +927,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
               </div>
             </div>
           )}
+          
 
           {/* Confirm delete modal */}
           {showConfirmDelete && (
@@ -1003,6 +966,8 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
               </div>
             </div>
           )}
+
+          {/* TagScans removed from inline modal — use the sidebar/menu or dedicated route */}
 
           {/* Detail modal (simplified: only relevant fields + guard/station names) */}
           {showDetailModal && detailTour && (
@@ -1118,7 +1083,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto max-h-[90vh] space-y-4">
+            <div className="flex-1 p-6 overflow-y-auto max-h-[90vh] flex flex-col space-y-4">
               <div>
                 <input value={tourName} onChange={e => setTourName(e.target.value)} placeholder={t('siteTour.form.tourName')} className="w-full border rounded-lg h-12 px-3" />
                 {submitAttempted && !tourName.trim() && (
@@ -1131,13 +1096,33 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
               </div>
 
               <div>
-                <select value={scheduledDays} onChange={e => setScheduledDays(e.target.value)} className="w-full border rounded-lg h-12 px-3">
-                  <option value="">{t('siteTour.form.scheduledDays')}</option>
-                  <option value="mon">{t('siteTour.options.monFri')}</option>
-                  <option value="sat">{t('siteTour.options.weekend')}</option>
-                </select>
-                {submitAttempted && !scheduledDays && (
-                  <div className="text-sm text-red-600 mt-1">{t('siteTour.form.validation.scheduledDaysRequired', 'Scheduled days is required')}</div>
+                <label className="block text-sm font-medium mb-1">{t('siteTour.form.scheduledDays', 'Días de la semana')}</label>
+                <Select<{ value: string; label: string }, true>
+                  isMulti
+                  options={[
+                    { value: 'monday', label: t('siteTour.options.monday', 'Lunes') },
+                    { value: 'tuesday', label: t('siteTour.options.tuesday', 'Martes') },
+                    { value: 'wednesday', label: t('siteTour.options.wednesday', 'Miércoles') },
+                    { value: 'thursday', label: t('siteTour.options.thursday', 'Jueves') },
+                    { value: 'friday', label: t('siteTour.options.friday', 'Viernes') },
+                    { value: 'saturday', label: t('siteTour.options.saturday', 'Sábado') },
+                    { value: 'sunday', label: t('siteTour.options.sunday', 'Domingo') },
+                  ]}
+                  value={[
+                    { value: 'monday', label: t('siteTour.options.monday', 'Lunes') },
+                    { value: 'tuesday', label: t('siteTour.options.tuesday', 'Martes') },
+                    { value: 'wednesday', label: t('siteTour.options.wednesday', 'Miércoles') },
+                    { value: 'thursday', label: t('siteTour.options.thursday', 'Jueves') },
+                    { value: 'friday', label: t('siteTour.options.friday', 'Viernes') },
+                    { value: 'saturday', label: t('siteTour.options.saturday', 'Sábado') },
+                    { value: 'sunday', label: t('siteTour.options.sunday', 'Domingo') },
+                  ].filter(opt => scheduledDays.includes(opt.value))}
+                  onChange={(opts: MultiValue<{ value: string; label: string }>) => setScheduledDays((opts || []).map(opt => opt.value))}
+                  classNamePrefix="react-select"
+                  placeholder={t('siteTour.form.scheduledDaysPlaceholder', 'Selecciona los días...')}
+                />
+                {submitAttempted && scheduledDays.length === 0 && (
+                  <div className="text-sm text-red-600 mt-1">{t('siteTour.form.validation.scheduledDaysRequired', 'Selecciona al menos un día')}</div>
                 )}
               </div>
 
@@ -1229,43 +1214,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                 )}
               </div>
 
-              <div>
-                <select
-                  value={assignGuard}
-                  onChange={e => setAssignGuard(e.target.value)}
-                  className="w-full border rounded-lg h-12 px-3"
-                  disabled={!stationId}
-                >
-                  <option value="">{t('siteTour.form.assignGuard')}</option>
-                  {!stationId ? (
-                    <option disabled value="">{t('siteTour.form.selectStationFirst', 'Select a station first')}</option>
-                  ) : loadingGuards ? (
-                    <option disabled value="">{t('siteTour.form.loadingGuards', 'Loading guards...')}</option>
-                  ) : guardLoadError ? (
-                    <option disabled value="">{guardLoadError}</option>
-                  ) : (() => {
-                    // When a station is selected, prefer shift-derived guard lists when available (they are canonical).
-                    // Always restrict visible guards to those matching the selected station when a station is chosen.
-                    // This prevents showing postSite-level guards when a specific station is expected.
-                    const visibleGuards = stationId
-                      ? (localGuards || []).filter((g: any) => guardMatchesStation(g, stationId))
-                      : (localGuards || []);
-
-                    if (!visibleGuards || visibleGuards.length === 0) {
-                      return <option disabled value="">{stationId ? t('siteTour.form.noGuardsForStation', 'No guards found for this station') : t('siteTour.form.noGuardsFound', 'No guards found')}</option>;
-                    }
-                    return visibleGuards.map((g: any) => {
-                      const display = g.fullName || (g.firstName || g.lastName ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.displayName || g.name || g.email || g.id || ''));
-                      return (
-                        <option key={g.id || display} value={g.id}>{display || String(g.id)}</option>
-                      );
-                    });
-                  })()}
-                </select>
-                {submitAttempted && !assignGuard && (
-                  <div className="text-sm text-red-600 mt-1">{t('siteTour.form.validation.assignGuardRequired', 'Assigning a guard is required')}</div>
-                )}
-              </div>
+              {/* Eliminado campo de asignación de guardia: los recorridos pueden ser realizados por cualquier guardia de la estación */}
 
               {/*<div className="space-y-2">
                 <label className="flex items-center gap-2"><input type="checkbox" checked={enableNotes} onChange={e => setEnableNotes(e.target.checked)} /> {t('siteTour.form.enableNotes')}</label>
@@ -1273,7 +1222,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
               </div>*/}
             </div>
 
-            <div className="p-4 border-t">
+            <div className="p-4 border-t mt-auto">
               <div className="flex justify-between items-center">
                 <div>
                   <button onClick={() => { /* save as draft */ setShowNewTourModal(false); setEditingTourId(null); }} className="px-4 py-2 rounded-full bg-gray-100 text-gray-700">{t('siteTour.buttons.saveDraft')}</button>
@@ -1301,13 +1250,11 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                           description: tourDesc,
                           postSiteId: site?.id || null,
                           stationId: stationId || null,
-                          scheduledDays,
+                          scheduledDays: scheduledDays,
                           continuous,
                           timeMode,
                           selectTime,
                           maxDuration,
-                          // include selected guard id when provided so backend can create assignment
-                          securityGuardId: assignGuard || null,
                           active: true,
                         };
 
@@ -1323,52 +1270,18 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                           toast.success(t('siteTour.notifications.created', 'Site tour created'));
                         }
 
-                        // Persist assignment details (station/postSite/start/end/status/importHash) if a guard was selected
-                        try {
-                          if (createdId && assignGuard) {
-                            // compute startAt/endAt where possible
-                            let startAt: string | null = null;
-                            let endAt: string | null = null;
-                            if (selectTime) {
-                              try {
-                                const d = new Date(selectTime as any);
-                                if (!isNaN(d.getTime())) startAt = d.toISOString();
-                                // if maxDuration provided (minutes), compute endAt
-                                const dur = Number(maxDuration);
-                                if (!isNaN(dur) && startAt) {
-                                  endAt = new Date(d.getTime() + dur * 60000).toISOString();
-                                }
-                              } catch (e) {
-                                // ignore parsing errors
-                              }
-                            }
-
-                            const assignBody: any = {
-                              securityGuardId: assignGuard,
-                              stationId: stationId || null,
-                              postSiteId: site?.id || null,
-                              startAt: startAt,
-                              endAt: endAt,
-                              status: 'assigned',
-                              importHash: `ui-${Date.now()}`,
-                            };
-
-                            await ApiService.post(`/tenant/${tenantId}/site-tour/${encodeURIComponent(createdId)}/assign`, assignBody);
-                          }
-                        } catch (e) {
-                          console.error('Failed to persist assignment after save', e);
-                        }
+                        // Ya no se persiste asignación de guardia: los recorridos son generales para la estación
                         // refresh list
                         try { await fetchTours(); } catch (e) { /* ignore */ }
                         // reset and close
                         setTourName('');
                         setTourDesc('');
-                        setScheduledDays('');
+                        setScheduledDays([]);
                         setContinuous(false);
                         setTimeMode('specific');
                         setSelectTime('');
                         setMaxDuration('');
-                        setAssignGuard('');
+                        // eliminado setAssignGuard
                         setShowNewTourModal(false);
                         setEditingTourId(null);
                       } catch (err: any) {

@@ -30,15 +30,14 @@ type PhoneInputProps = {
     maxLocalDigits?: number;
 };
 
-export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
+export function PhoneInput({ value, onChange, placeholder, onCountryChange, maxLocalDigits }: PhoneInputProps) {
     // notify parent of selected country via onCountryChange when provided
     const defaultCountry = COUNTRIES[0];
     const [open, setOpen] = useState(false);
     const [country, setCountry] = useState<Country>(defaultCountry);
-    const { onCountryChange } = (arguments[0] || {}) as PhoneInputProps;
 
     // notify initial country to parent once
-    useMemo(() => {
+    useEffect(() => {
         if (onCountryChange) onCountryChange(country);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -66,9 +65,9 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
     // Calcular el máximo total: código de país + espacios + dígitos
     const maxPhoneLength = useMemo(() => {
         const codeLength = country.dialCode.length + 1; // +1 para el "+"
-        const maxDigits = (arguments[0] as PhoneInputProps)?.maxLocalDigits ?? country.maxLength ?? 15;
+        const maxDigits = maxLocalDigits ?? country.maxLength ?? 15;
         return codeLength + maxDigits;
-    }, [country]);
+    }, [country, maxLocalDigits]);
 
     const handleCountrySelect = (c: Country) => {
         setCountry(c);
@@ -121,27 +120,25 @@ export function PhoneInput({ value, onChange, placeholder }: PhoneInputProps) {
                     >
                         <Command>
                             <CommandInput placeholder="Search..." />
-                            <CommandList
-                                className="max-h-[240px] overflow-auto overscroll-contain touch-auto"
-                                onWheel={(e: any) => {
-                                    const el = e.currentTarget as HTMLElement;
-                                    const delta = e.deltaY;
+                                    <CommandList
+                                        className="max-h-[240px] overflow-auto overscroll-contain touch-auto"
+                                        onWheel={(e: any) => {
+                                            const el = e.currentTarget as HTMLElement;
+                                            const delta = e.deltaY;
 
-                                    const atTop = el.scrollTop === 0;
-                                    const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
+                                            const atTop = el.scrollTop === 0;
+                                            const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
 
-                                    // Si intentan desplazar más allá del límite, dejar que el evento llegue al padre.
-                                    if ((delta < 0 && atTop) || (delta > 0 && atBottom)) {
-                                        // Allow propagation so parent can scroll if needed
-                                        return;
-                                    }
+                                            // If trying to scroll beyond the list, let parent handle it.
+                                            if ((delta < 0 && atTop) || (delta > 0 && atBottom)) {
+                                                return;
+                                            }
 
-                                    // Dentro del listado: prevenir comportamiento por defecto y actualizar scroll aquí.
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    el.scrollTop += delta;
-                                }}
-                            >
+                                            // Within list: manually adjust scroll. Avoid calling preventDefault
+                                            // to prevent passive event listener warnings in some browsers.
+                                            el.scrollTop += delta;
+                                        }}
+                                    >
                                 <CommandEmpty>No se encontraron países.</CommandEmpty>
                                 <CommandGroup>
                                     {COUNTRIES.map((c) => (

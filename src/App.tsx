@@ -47,6 +47,7 @@ import PostSiteDetailsPage from "./pages/admin/post-sites/PostSiteDetailsPage"
 import SecurityGuardsPage from "./pages/admin/security-guards/SecurityGuardsPage"
 import NewSecurityGuardPage from "./pages/admin/security-guards/NewSecurityGuardPage"
 import GuardRegistration from "./pages/guard/registration"
+import ClientRegistration from "./pages/client/registration"
 import AdminOfficeUsersPage from "./pages/admin/administrative-office-users/AdminOfficeUsersPage"
 import NewAdminUserPage from "./pages/admin/administrative-office-users/NewAdminUserPage"
 import EditAdminUserPage from "./pages/admin/administrative-office-users/EditAdminUserPage";
@@ -150,6 +151,14 @@ export default function App() {
                 element={
                   <PublicOnlyRoute>
                     <Login />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/client/registration"
+                element={
+                  <PublicOnlyRoute>
+                    <ClientRegistration />
                   </PublicOnlyRoute>
                 }
               />
@@ -435,6 +444,14 @@ export default function App() {
               />
               <Route
                 path="/post-sites/:id/site-tour-tags"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/tag-scans"
                 element={
                   <ProtectedRoute>
                     <PostSiteDetailsPage />

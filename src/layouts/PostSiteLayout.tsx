@@ -27,6 +27,7 @@ export default function PostSiteLayout({ title, children, site }: Props) {
         { id: 'tasks', label: t('postSites.Details.Tasks', 'Tasks'), path: `/post-sites/${id || ':id'}/tasks` },
         { id: 'siteTours', label: t('postSites.Details.SiteTours', 'Site Tours'), path: `/post-sites/${id || ':id'}/site-tours` },
         { id: 'siteTourTags', label: t('postSites.Details.SiteTourTags', 'Site Tour Tags'), path: `/post-sites/${id || ':id'}/site-tour-tags` },
+        { id: 'tagScans', label: t('postSites.Details.TagScans', 'Tag Scans'), path: `/post-sites/${id || ':id'}/tag-scans` },
         { id: 'geoFence', label: t('postSites.Details.GeoFence', 'Geo-Fence'), path: `/post-sites/${id || ':id'}/geo-fence` },
         { id: 'assignReports', label: t('postSites.Details.AssignReports', 'Assign Reports'), path: `/post-sites/${id || ':id'}/assign-reports` },
         { id: 'incidents', label: t('postSites.Details.Incidents', 'Incidents'), path: `/post-sites/${id || ':id'}/incidents` },

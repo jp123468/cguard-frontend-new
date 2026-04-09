@@ -18,6 +18,7 @@ import Incidents from './components/PostsiteIncidents/Incidents';
 import Tasks from './components/PostsiteTasks/Tasks';
 import SiteTours from './components/PostsiteSiteTours/SiteTours';
 import SiteTourTags from './components/PostsiteSiteTourTags/SiteTourTags';
+import TagScans from './components/PostsiteTagScans/TagScans';
 import GeoFence from './components/PostsiteGeoFence/GeoFence';
 import AssignReports from './components/PostsiteAssignReports/AssignReports';
 import Checklists from './components/PostsiteChecklists/Checklists';
@@ -85,6 +86,8 @@ export default function PostSiteDetailsPage() {
         return <SiteTours site={site} />;
       case 'site-tour-tags':
         return <SiteTourTags site={site} />;
+      case 'tag-scans':
+        return <TagScans postSiteId={id} site={site} />;
       case 'geo-fence':
         return <GeoFence site={site} />;
       case 'assign-reports':

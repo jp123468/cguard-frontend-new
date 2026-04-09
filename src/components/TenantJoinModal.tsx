@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PhoneInput } from "@/components/phone/PhoneInput";
@@ -14,7 +15,7 @@ import { AuthService } from "@/services/auth/authService";
 import { setTenantId as setClientTenantId } from "@/lib/api/clientService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from 'react-i18next';
-import { validateCedulaOrRuc } from '@/lib/validators/id';
+import { validateTaxNumberForCountry, validatePhoneForCountry, digitsOnly } from '@/lib/validators/id';
 
 export default function TenantJoinModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
     const [mode, setMode] = useState<'join' | 'create'>('join');
@@ -22,10 +23,23 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
     const [loading, setLoading] = useState(false);
     const { signInWithToken, user, loading: authLoading } = useAuth();
     const { t } = useTranslation();
+    const DRAFT_KEY = 'tenantCreateFormDraft_v1';
     const reopenDelayMs = 25 * 1000; // 25 seconds
     const suppressReopen = useRef(false as boolean);
     const reopenTimer = useRef<number | null>(null);
-    const [internalOpen, setInternalOpen] = useState(open);
+    const AUTO_OPEN_KEY = 'tenantModalAutoOpen';
+    // El borrador y el auto-open siempre están activos por defecto
+    const [autoOpen, setAutoOpen] = useState<boolean>(true);
+    const [internalOpen, setInternalOpen] = useState<boolean>(() => {
+        try {
+            const draft = localStorage.getItem(DRAFT_KEY);
+            const pref = localStorage.getItem(AUTO_OPEN_KEY);
+            const auto = pref === null ? true : pref === 'true';
+            return Boolean(open) || (auto && Boolean(draft));
+        } catch (e) {
+            return Boolean(open);
+        }
+    });
 
     // helper to detect tenant presence in various profile shapes
     const profileHasTenant = (u: any) => {
@@ -47,8 +61,18 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                 try { onOpenChange(false); } catch {}
                 return;
             }
-            // otherwise reset when opened
-            setMode('join'); setToken('');
+            // otherwise decide which tab to show: if a draft exists, open 'create'
+            try {
+                const draft = localStorage.getItem(DRAFT_KEY);
+                if (draft) {
+                    setMode('create');
+                } else {
+                    setMode('join');
+                }
+            } catch (e) {
+                setMode('join');
+            }
+            setToken('');
         }
 
         // keep internal synced when parent opens/closes externally
@@ -122,13 +146,15 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
         };
 
     // Minimal create form state (expanded to match tenants table)
-    const [form, setForm] = useState<any>({
+    const EMPTY_FORM = {
         name: '',
         address: '',
         addressLine2: '',
         city: '',
         postalCode: '',
         country: '',
+        // phoneCountry set from PhoneInput (country code or name)
+        phoneCountry: '',
         latitude: '',
         longitude: '',
         phone: '',
@@ -136,13 +162,231 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
         email: '',
         taxNumber: '',
         businessTitle: '',
-    });
+    };
+    const [form, setForm] = useState<any>({ ...EMPTY_FORM });
+    const [phoneError, setPhoneError] = useState<string | null>(null);
+    const [taxError, setTaxError] = useState<string | null>(null);
+    const [emailError, setEmailError] = useState<string | null>(null);
+    const [landlineCountry, setLandlineCountry] = useState<string>('EC');
+    const [landlineError, setLandlineError] = useState<string | null>(null);
+    // Validación de teléfono fijo
+    const getLandlineErrorMessage = (landline: string | undefined, country?: string) => {
+        const p = (landline || '').toString().trim();
+        if (!p) return null; // opcional
+        // PhoneInput entrega el número en formato internacional: +593 2 3456789
+        // Queremos validar que la parte local (sin código país) tenga 7 dígitos
+        let d = digitsOnly(p);
+        const c = (country || '').toString().toLowerCase();
+
+        // Detectar y quitar código de país
+        if (c === 'ec' || c === 'ecuador' || d.startsWith('593')) {
+            if (d.startsWith('593')) d = d.slice(3);
+            // Si empieza con 0, quitarlo (caso nacional)
+            if (d.startsWith('0')) d = d.slice(1);
+            if (d.length !== 7) return 'El teléfono fijo ecuatoriano debe tener 7 dígitos (sin incluir el código de país).';
+            if (!/^[2-7]/.test(d)) return 'El teléfono fijo ecuatoriano debe comenzar con un dígito entre 2 y 7.';
+            return null;
+        }
+        // Fallback genérico: 5-12 dígitos (sin código país)
+        // Detectar y quitar códigos de país comunes
+        const paises = [
+            { code: '51', len: 2 }, // Perú
+            { code: '57', len: 2 }, // Colombia
+            { code: '52', len: 2 }, // México
+            { code: '54', len: 2 }, // Argentina
+            { code: '56', len: 2 }, // Chile
+            { code: '1', len: 1 },  // USA
+        ];
+        for (const pais of paises) {
+            if (d.startsWith(pais.code)) {
+                d = d.slice(pais.len);
+                break;
+            }
+        }
+        if (d.length < 5 || d.length > 12) return 'Número de teléfono fijo inválido.';
+        return null;
+    };
+    // Live-validate landline as user types or country changes
+    useEffect(() => {
+        if (!form.landline) {
+            setLandlineError(null);
+            return;
+        }
+        const msg = getLandlineErrorMessage(form.landline, landlineCountry);
+        setLandlineError(msg);
+    }, [form.landline, landlineCountry]);
+
+    // Return a localized, specific error message for phone validation or null if valid
+    const getPhoneErrorMessage = (phone: string | undefined, country?: string) => {
+        const p = (phone || '').toString().trim();
+        if (!p) return null;
+        const d = digitsOnly(p);
+        const c = (country || '').toString().toLowerCase();
+
+        const isEcuador = c.includes('ec') || c.includes('ecuador') || d.startsWith('593');
+        if (isEcuador) {
+            // Normalize local part
+            let local = d;
+            if (local.startsWith('593')) local = local.slice(3);
+            // If starts with 0 -> expect 10 digits starting with 09
+            if (local.startsWith('0')) {
+                if (!(local.length === 10 && local.startsWith('09'))) {
+                    return 'El celular debe tener 10 dígitos y comenzar con 09.';
+                }
+                return null;
+            }
+            // otherwise expect 9 digits starting with 9
+            if (!(local.length === 9 && local.startsWith('9'))) {
+                return 'El celular debe tener 9 dígitos y comenzar con 9.';
+            }
+            return null;
+        }
+
+        // generic fallback: require 7-15 digits
+        if (d.length < 7 || d.length > 15) return 'Número de teléfono inválido.';
+        return null;
+    };
+    // Return a localized, specific error message for tax/ID numbers
+    const getTaxErrorMessage = (tax: string | undefined, country?: string) => {
+        const v = (tax || '').toString().trim();
+        if (!v) return null;
+        const d = digitsOnly(v);
+        const c = (country || '').toString().toLowerCase();
+
+        // Ecuador: handle cédula vs RUC cases
+        if (c.includes('ec') || c.includes('ecuador') || d.startsWith('593')) {
+            // If the number corresponds to a RUC-like length (>10), require it to end in 001
+            if (d.length > 10) {
+                if (!d.endsWith('001')) {
+                    return 'Si tiene más de 10 dígitos, el RUC ecuatoriano debe terminar en 001.';
+                }
+                if (d.length !== 13) {
+                    return 'El RUC ecuatoriano debe tener 13 dígitos.';
+                }
+                // full RUC shape present, validate with validator helper
+                if (!validateTaxNumberForCountry(v, 'EC')) {
+                    return 'RUC inválido: verifique la cédula base y los dígitos (debe terminar en 001).';
+                }
+                return null;
+            }
+
+            // Otherwise treat as cédula (10 dígitos). Validate cedula base.
+            if (d.length !== 10) return 'Cédula ecuatoriana inválida: debe tener 10 dígitos.';
+            if (!validateTaxNumberForCountry(v, 'EC')) return 'Cédula ecuatoriana inválida.';
+            return null;
+        }
+
+        // Ecuador: basic checks for RUC (13 dígitos termina en 001) y cédula (10 dígitos)
+        if (c.includes('ec') || c.includes('ecuador')) {
+            const digits = digitsOnly(v);
+            // RUC-like: more than 10 digits -> expect 13 and end with 001
+            if (digits.length > 10) {
+                if (!digits.endsWith('001')) return 'Si tiene más de 10 dígitos, el RUC ecuatoriano debe terminar en 001.';
+                if (digits.length !== 13) return 'El RUC ecuatoriano debe tener 13 dígitos.';
+                if (!validateTaxNumberForCountry(v, 'EC')) return 'RUC inválido: verifique la cédula base y los dígitos (debe terminar en 001).';
+                return null;
+            }
+
+            // Cédula: expect 10 digits
+            if (digits.length === 10) {
+                if (!validateTaxNumberForCountry(v, 'EC')) return 'Cédula ecuatoriana inválida.';
+                return null;
+            }
+
+            return 'Número de identificación inválido para Ecuador.';
+        }
+
+        // Fallback generic message
+        if (!validateTaxNumberForCountry(v, country)) return 'Número de identificación inválido, debe tener 13 dígitos (001).';
+        return null;
+    };
+
+    const getEmailErrorMessage = (email: string | undefined) => {
+        const v = (email || '').toString().trim();
+        if (!v) return null;
+        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRe.test(v)) return 'Correo electrónico inválido. Ej: nombre@dominio.com';
+        return null;
+    };
     const [showAddressAutocomplete, setShowAddressAutocomplete] = useState(true);
     const [autocompleteOpenQuery, setAutocompleteOpenQuery] = useState('');
 
-    const handleCreate = async () => {
+    const clearDraft = () => {
+        try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+        try { setForm({ ...EMPTY_FORM }); } catch (e) {}
+        try { setPhoneError(null); setTaxError(null); setEmailError(null); } catch (e) {}
+    };
+
+    // Live-validate phone as user types or country changes
+    useEffect(() => {
+        const pd = digitsOnly(form.phone || '');
+        let pc = form.country || form.phoneCountry || undefined;
+        if (pd.startsWith('593')) pc = 'EC';
+        if (!form.phone) {
+            setPhoneError(null);
+            return;
+        }
+        const phoneMsg = getPhoneErrorMessage(form.phone, pc);
+        setPhoneError(phoneMsg);
+    }, [form.phone, form.country, form.phoneCountry, t]);
+
+    // Persist draft to localStorage whenever the form changes (en tiempo real)
+    useEffect(() => {
+        const isEmpty = Object.values(form).every(v => v === '' || v == null);
+        if (isEmpty) return;
+        try {
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+        } catch (e) {
+            // ignore storage errors
+        }
+    }, [form]);
+
+    // El switch y la preferencia quedan siempre activos, no se muestra más el control
+
+    // Restore draft when the modal opens (internalOpen === true)
+    // Restore draft when the modal opens (internalOpen === true)
+    useEffect(() => {
+        if (!internalOpen) return;
+        // Solo restaurar si el formulario está vacío
+        const isEmpty = Object.values(form).every(v => v === '' || v == null);
+        if (!isEmpty) return;
+        try {
+            const raw = localStorage.getItem(DRAFT_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    setForm({ ...EMPTY_FORM, ...parsed });
+                }
+            }
+        } catch (e) {
+            // ignore parse errors
+        }
+    }, [internalOpen]);
+
+    // Live-validate tax number
+    useEffect(() => {
+        const td = digitsOnly(form.taxNumber || '');
+        let tc = form.country || undefined;
+        if (td.length === 13 && td.endsWith('001')) tc = 'EC';
+        if (!form.taxNumber) {
+            setTaxError(null);
+            return;
+        }
+        const taxMsg = getTaxErrorMessage(form.taxNumber, tc);
+        setTaxError(taxMsg);
+    }, [form.taxNumber, form.country, t]);
+
+    // Live-validate email
+    useEffect(() => {
+        if (!form.email) {
+            setEmailError(null);
+            return;
+        }
+        setEmailError(getEmailErrorMessage(form.email));
+    }, [form.email]);
+
+        const handleCreate = async () => {
             // Validaciones según especificación del cliente
-            const digits = (v: string) => (v || '').toString().replace(/\D/g, '');
 
             if (!form.name || !form.email || !form.phone || !form.address) {
             toast.error(t('tenantValidations.required_fields'));
@@ -156,17 +400,27 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
         }
 
         // email: basic validation
-        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRe.test((form.email || '').trim())) {
-            toast.error(t('tenantValidations.email_invalid'));
+        const emailMsg = getEmailErrorMessage(form.email);
+        if (emailMsg) {
+            setEmailError(emailMsg);
             return;
+        } else {
+            setEmailError(null);
         }
 
-        // celular: debe tener 10 dígitos y empezar con 9 o 09
-        const mobile = digits(form.phone || '');
-        if (mobile.length !== 10 || !(mobile.startsWith('9') || mobile.startsWith('09'))) {
-            toast.error(t('tenantValidations.mobile_invalid'));
+        // celular: validar en base al país (usa país de dirección; si no, usa selector de teléfono)
+        // If phone starts with Ecuador dial code, prefer Ecuador validation.
+        const phoneDigits = digitsOnly(form.phone || '');
+        let phoneCountry = form.country || form.phoneCountry || undefined;
+        if (phoneDigits.startsWith('593')) {
+            phoneCountry = 'EC';
+        }
+        const phoneMsg = getPhoneErrorMessage(form.phone, phoneCountry);
+        if (phoneMsg) {
+            setPhoneError(phoneMsg);
             return;
+        } else {
+            setPhoneError(null);
         }
 
         // razón social: max 40 caracteres
@@ -175,18 +429,29 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
             return;
         }
 
-        // tax/RUC: validación centralizada (RUC debe ser 13 dígitos y terminar en 001)
-        const taxDigits = digits(form.taxNumber || '');
-        if (!validateCedulaOrRuc(taxDigits) || taxDigits.length !== 13) {
-            toast.error(t('tenantValidations.tax_invalid'));
+        // tax/RUC: validar en base al país. If the tax number matches Ecuador pattern
+        // (13 digits and ends with 001) validate as Ecuador regardless of address country.
+        const taxDigits = digitsOnly(form.taxNumber || '');
+        let taxCountry = form.country || undefined;
+        if (taxDigits.length === 13 && taxDigits.endsWith('001')) {
+            taxCountry = 'EC';
+        }
+        const taxMsg = getTaxErrorMessage(form.taxNumber, taxCountry);
+        if (taxMsg) {
+            setTaxError(taxMsg);
             return;
+        } else {
+            setTaxError(null);
         }
 
-        // landline optional: si presente, debe tener 7 o 9 digitos
-        const landDigits = digits(form.landline || '');
-        if (landDigits && !(landDigits.length === 7 || landDigits.length === 9)) {
-            toast.error(t('tenantValidations.landline_invalid'));
+        // landline optional: validar según país
+        const landlineMsg = getLandlineErrorMessage(form.landline, landlineCountry);
+        if (landlineMsg) {
+            setLandlineError(landlineMsg);
+            toast.error(landlineMsg);
             return;
+        } else {
+            setLandlineError(null);
         }
 
         setLoading(true);
@@ -225,6 +490,8 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
             // prevent scheduled reopen when closing after successful create
             try { suppressReopen.current = true; } catch {}
             onOpenChange(false);
+            // clear saved draft after successful create
+            try { localStorage.removeItem(DRAFT_KEY); } catch (e) { }
             // Refresh the page so the frontend picks up the new tenant context
             try { setTimeout(() => window.location.reload(), 300); } catch {}
         } catch (err: any) {
@@ -348,20 +615,35 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                     <label className="text-sm">{t('tenantJoinModal.companyName')}</label>
                                     <Input value={form.name} onChange={(e) => setForm((s: any) => ({ ...s, name: e.target.value }))} />
                                 </div>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-4">
                                 <div>
-                                    <label className="text-sm">{t('tenantJoinModal.contactEmail')}</label>
-                                    <Input type="email" value={form.email} onChange={(e) => setForm((s: any) => ({ ...s, email: e.target.value }))} />
+                                    <label className="block text-sm font-medium mb-1">Teléfono fijo</label>
+                                    <PhoneInput
+                                        value={form.landline}
+                                        onChange={(v) => setForm((s: any) => ({ ...s, landline: v }))}
+                                        onCountryChange={(c: any) => setLandlineCountry(c?.code || c?.name || '')}
+                                        placeholder="Número fijo"
+                                    />
+                                    {landlineError && <div className="text-red-500 text-xs mt-1">{landlineError}</div>}
                                 </div>
                                 <div>
                                     <label className="text-sm">{t('tenantJoinModal.mobilePhone')}</label>
-                                    <PhoneInput value={form.phone} onChange={(v) => setForm((s: any) => ({ ...s, phone: v }))} placeholder="Número móvil" />
+                                    <PhoneInput
+                                        value={form.phone}
+                                        onChange={(v) => setForm((s: any) => ({ ...s, phone: v }))}
+                                        onCountryChange={(c: any) => setForm((s: any) => ({ ...s, phoneCountry: c?.code || c?.name || '' }))}
+                                        placeholder="Número móvil"
+                                    />
+                                    {phoneError && <p className="text-sm text-red-600 mt-1">{phoneError}</p>}
                                 </div>
                                 <div>
-                                    <label className="text-sm">{t('tenantJoinModal.landline')}</label>
-                                    <Input value={form.landline} onChange={(e) => setForm((s: any) => ({ ...s, landline: e.target.value }))} placeholder="Código + número" />
+                                    <label className="text-sm">Email</label>
+                                    <Input
+                                        value={form.email}
+                                        onChange={e => setForm((s: any) => ({ ...s, email: e.target.value }))}
+                                        placeholder="correo@ejemplo.com"
+                                        type="email"
+                                    />
+                                    {emailError && <p className="text-sm text-red-600 mt-1">{emailError}</p>}
                                 </div>
                             </div>
 
@@ -373,6 +655,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                 <div>
                                     <label className="text-sm">{t('tenantJoinModal.taxNumber')}</label>
                                     <Input value={form.taxNumber} onChange={(e) => setForm((s: any) => ({ ...s, taxNumber: e.target.value }))} />
+                                    {taxError && <p className="text-sm text-red-600 mt-1">{taxError}</p>}
                                 </div>
                             </div>
 
@@ -397,15 +680,31 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                             openWithQuery={autocompleteOpenQuery}
                                             placeholder="Buscar dirección..."
                                             onAddressSelect={(data: AddressComponents) => {
-                                                setForm((s: any) => ({
-                                                    ...s,
-                                                    address: data.address || s.address,
-                                                    city: data.city || s.city,
-                                                    postalCode: data.postalCode || s.postalCode,
-                                                    country: data.country || s.country,
-                                                    latitude: String(data.latitude),
-                                                    longitude: String(data.longitude),
-                                                }));
+                                                // Si la dirección sugerida es la de Madrid, no la pongas automáticamente
+                                                const forbidden = 'reloj de la puerta del sol, 7, puerta del sol, barrio de los austrias, sol, centro, madrid, comunidad de madrid, 28013, españa';
+                                                const incoming = (data.address || '').trim().toLowerCase();
+                                                setForm((s: any) => {
+                                                    // Si la dirección sugerida es la de Madrid, no la pongas
+                                                    if (incoming === forbidden) {
+                                                        return {
+                                                            ...s,
+                                                            city: data.city || s.city,
+                                                            postalCode: data.postalCode || s.postalCode,
+                                                            country: data.country || s.country,
+                                                            latitude: String(data.latitude),
+                                                            longitude: String(data.longitude),
+                                                        };
+                                                    }
+                                                    return {
+                                                        ...s,
+                                                        address: data.address || s.address,
+                                                        city: data.city || s.city,
+                                                        postalCode: data.postalCode || s.postalCode,
+                                                        country: data.country || s.country,
+                                                        latitude: String(data.latitude),
+                                                        longitude: String(data.longitude),
+                                                    };
+                                                });
                                             }}
                                             showMap={true}
                                         />
@@ -448,10 +747,26 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                 </div>
                             </div>
 
-                            <div className="flex justify-end gap-3 mt-2">
-                                <Button variant="ghost" onClick={() => closeWithoutReopen()} disabled={loading}>{t('actions.cancel')}</Button>
-                                <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8"
-                                    onClick={handleCreate} disabled={loading || !(form.name && form.email && form.phone && form.address && form.taxNumber && form.businessTitle)}>{loading ? t('tenantJoinModal.creating') : t('tenantJoinModal.createAndLink')}</Button>
+                            <div className="flex items-center justify-between gap-3 mt-2">
+                                <div className="flex flex-col gap-2">
+                                    <Button variant="destructive" className="bg-red-500 hover:bg-red-600 text-white" onClick={clearDraft} disabled={loading}>Borrar borrador</Button>
+                                </div>
+                                <div className="flex justify-end gap-3">
+                                    <Button variant="ghost" onClick={() => closeWithoutReopen()} disabled={loading}>{t('actions.cancel')}</Button>
+                                    <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8"
+                                        onClick={handleCreate}
+                                        disabled={
+                                            loading ||
+                                            !(form.name && form.email && form.phone && form.address && form.taxNumber && form.businessTitle) ||
+                                            Boolean(phoneError) ||
+                                            Boolean(taxError) ||
+                                            Boolean(emailError) ||
+                                            form.address && form.address.trim().toLowerCase() === 'reloj de la puerta del sol, 7, puerta del sol, barrio de los austrias, sol, centro, madrid, comunidad de madrid, 28013, españa'
+                                        }
+                                    >
+                                        {loading ? t('tenantJoinModal.creating') : t('tenantJoinModal.createAndLink')}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     )}
