@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import PostSiteLayout from '@/layouts/PostSiteLayout';
-import { postSiteService } from '@/lib/api/postSiteService';
+import { postSiteService, setTenantId as setGlobalTenantId } from '@/lib/api/postSiteService';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -46,6 +46,13 @@ export default function PostSiteDetailsPage() {
         const data = await postSiteService.get(id);
         if (!mounted) return;
         setSite(data);
+        // Ensure tenantId is available globally for components that rely on localStorage fallback
+        try {
+          const tid = data?.tenantId || (data?.tenant && (data.tenant.id || data.tenant.tenantId));
+          if (tid) {
+            setGlobalTenantId(tid);
+          }
+        } catch (e) {}
       } catch (e: any) {
         console.error(e);
         setError(e?.message || `${t('postsite.Details.unexpected', 'Unexpected error occurred')}`);

@@ -86,8 +86,8 @@ export default function AssignGuards({ site }: { site?: any }) {
     };
 
     const resolveSecurityGuardName = (rec: any) => {
-        const guardNameFromGuard = rec?.guard ? `${rec.guard.firstName || ''} ${rec.guard.lastName || ''}`.trim() : null;
-        const guardNameFromSecurityGuard = rec?.securityGuard ? `${rec.securityGuard.firstName || ''} ${rec.securityGuard.lastName || ''}`.trim() : null;
+        const guardNameFromGuard = rec?.guard ? (rec.guard.fullName || `${rec.guard.firstName || ''} ${rec.guard.lastName || ''}`.trim()) : null;
+        const guardNameFromSecurityGuard = rec?.securityGuard ? (rec.securityGuard.fullName || `${rec.securityGuard.firstName || ''} ${rec.securityGuard.lastName || ''}`.trim()) : null;
         const guardNameFromFields = (rec?.guardFirstName || rec?.guardLastName) ? `${rec.guardFirstName || ''} ${rec.guardLastName || ''}`.trim() : null;
 
         return (
@@ -148,15 +148,33 @@ export default function AssignGuards({ site }: { site?: any }) {
                     if (sgId && !row.guardName && !guardCache[sgId]) {
                         try {
                             const r = await ApiService.get(`/tenant/${tenantId}/security-guard/${sgId}`, { toast: { silentError: true } } as any);
-                            const g2 = r && (r.data || r) ? (r.data || r) : r;
+                            let g2 = r && (r.data || r) ? (r.data || r) : r;
+                            // Try tenant public then global public if tenant-scoped fetch didn't include a name
+                            let resolvedName = g2 && (g2.fullName || (g2.guard && (g2.guard.fullName || `${g2.guard.firstName || ''} ${g2.guard.lastName || ''}`.trim())) || (g2.firstName || g2.lastName ? `${g2.firstName || ''} ${g2.lastName || ''}`.trim() : null));
+                            if (!resolvedName) {
+                                try {
+                                    const pubUrl = tenantId ? `/tenant/${tenantId}/security-guard/public?securityGuardId=${encodeURIComponent(String(sgId))}` : `/security-guard/public?securityGuardId=${encodeURIComponent(String(sgId))}`;
+                                    const p = await ApiService.get(pubUrl, { toast: { silentError: true } } as any).catch(() => null);
+                                    const pData = p && (p.data || p) ? (p.data || p) : p;
+                                    if (pData) {
+                                        resolvedName = pData.fullName || (pData.guard && (pData.guard.fullName || `${pData.guard.firstName || ''} ${pData.guard.lastName || ''}`.trim())) || (pData.firstName || pData.lastName ? `${pData.firstName || ''} ${pData.lastName || ''}`.trim() : null) || resolvedName;
+                                        // prefer using public payload for cache if tenant fetch was empty
+                                        if (!g2 || !g2.fullName) g2 = pData;
+                                    }
+                                } catch (e) {
+                                    // ignore
+                                }
+                            }
+
                             guardCache[sgId] = g2;
-                            row.guardName = (g2 && g2.guard && (g2.guard.firstName || g2.guard.lastName)) ? `${g2.guard.firstName || ''} ${g2.guard.lastName || ''}`.trim() : (g2 && (g2.firstName || g2.lastName) ? `${g2.firstName || ''} ${g2.lastName || ''}`.trim() : null);
+                            row.guardName = resolvedName || null;
                         } catch (e) {
                             guardCache[sgId] = null;
                         }
                     } else if (sgId && guardCache[sgId]) {
                         const g2 = guardCache[sgId];
-                        row.guardName = (g2 && g2.guard && (g2.guard.firstName || g2.guard.lastName)) ? `${g2.guard.firstName || ''} ${g2.guard.lastName || ''}`.trim() : (g2 && (g2.firstName || g2.lastName) ? `${g2.firstName || ''} ${g2.lastName || ''}`.trim() : null);
+                        const resolvedName = g2 && (g2.fullName || (g2.guard && (g2.guard.fullName || `${g2.guard.firstName || ''} ${g2.guard.lastName || ''}`.trim())) || (g2.firstName || g2.lastName ? `${g2.firstName || ''} ${g2.lastName || ''}`.trim() : null));
+                        row.guardName = resolvedName || null;
                     }
 
                     if (!row.tenantUserName) {
@@ -768,12 +786,12 @@ export default function AssignGuards({ site }: { site?: any }) {
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-black/40" onClick={() => setViewModalOpen(false)} />
                         <aside className="relative mx-auto w-full max-w-xl max-h-[60vh] bg-white shadow-xl overflow-auto rounded-lg">
-                            <div className="flex items-center justify-between p-4 border-b">
-                                <h3 className="text-2xl font-semibold">{t('clients.assignGuards.viewModalTitle', 'Guard Assignments')}</h3>
-                                <button onClick={() => setViewModalOpen(false)} className="p-2 text-gray-500 hover:text-gray-700">
-                                    <X size={18} />
-                                </button>
-                            </div>
+                                            <div className="relative p-4 border-b">
+                                                <h3 className="text-2xl font-semibold text-center">{t('clients.assignGuards.viewModalTitle', 'Guard Assignments')}</h3>
+                                                <button aria-label="close" onClick={() => setViewModalOpen(false)} className="absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
+                                                    X
+                                                </button>
+                                            </div>
                             <div className="p-4">
                                 {viewAssignments.length > 0 ? (
                                     <div className="border rounded bg-white p-4">
@@ -899,29 +917,24 @@ export default function AssignGuards({ site }: { site?: any }) {
                                     <div className="relative">
                                         <input
                                             value={guardQuery || (selectedGuard ? guardOptions.find(g => g.id === selectedGuard)?.name ?? '' : '')}
-                                            onChange={e => { setGuardQuery(e.target.value); if (selectedStation) setShowGuardsDropdown(true); setSelectedGuard(null); }}
-                                            onFocus={() => { if (selectedStation) setShowGuardsDropdown(true); }}
-                                            placeholder={selectedStation ? t('clients.assignGuards.searchPlaceholder', 'Search guards') : t('siteTour.form.selectStationFirst', 'Select a station first')}
+                                            onChange={e => { setGuardQuery(e.target.value); setShowGuardsDropdown(true); setSelectedGuard(null); }}
+                                            onFocus={() => { setShowGuardsDropdown(true); }}
+                                            placeholder={t('clients.assignGuards.searchPlaceholder', 'Search guards')}
                                             className="w-full border rounded-lg h-12 px-3"
-                                            disabled={!selectedStation}
                                         />
 
                                         {showGuardsDropdown && (
                                             <ul className="absolute z-40 w-full bg-white border rounded-md mt-1 max-h-48 overflow-auto">
-                                                {!selectedStation ? (
-                                                    <li className="px-3 py-2 text-sm text-gray-500">{t('siteTour.form.selectStationFirst', 'Select a station first')}</li>
+                                                {guardOptions.filter(g => g.name.toLowerCase().includes((guardQuery || '').toLowerCase())).length === 0 ? (
+                                                    <li className="px-3 py-2 text-sm text-gray-500">{guardQuery ? t('clients.assignGuards.noResults', 'No results') : t('clients.assignGuards.searchHelp', 'Type to search and pick a guard')}</li>
                                                 ) : (
                                                     guardOptions.filter(g => g.name.toLowerCase().includes((guardQuery || '').toLowerCase())).map(g => (
-                                                        <li key={g.id} onMouseDown={(e) => { e.preventDefault(); setSelectedGuard(g.id); setGuardQuery(''); setShowGuardsDropdown(false); }} className="px-3 py-2 hover:bg-gray-50 cursor-pointer">{g.name}</li>
+                                                        <li key={g.id} onMouseDown={(e) => { e.preventDefault(); setSelectedGuard(g.id); setGuardQuery(g.name || ''); setShowGuardsDropdown(false); }} className="px-3 py-2 hover:bg-gray-50 cursor-pointer">{g.name}</li>
                                                     ))
-                                                )}
-                                                {selectedStation && guardOptions.filter(g => g.name.toLowerCase().includes((guardQuery || '').toLowerCase())).length === 0 && (
-                                                    <li className="px-3 py-2 text-sm text-gray-400">{t('clients.assignGuards.noResults', 'No results')}</li>
                                                 )}
                                             </ul>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-400 mt-1">{selectedStation ? t('clients.assignGuards.searchHelp', 'Type to search and pick a guard') : t('siteTour.form.selectStationFirst', 'Select a station first')}</p>
                                 </div>
 
                                 {/* Assignment type removed — always creating a Shift */}
