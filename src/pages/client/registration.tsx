@@ -12,7 +12,9 @@ export default function ClientRegistration() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const inviteToken = searchParams.get("token") || searchParams.get("invite") || undefined;
+  const rawInviteToken = searchParams.get("token") || searchParams.get("invitationToken") || searchParams.get("invite") || undefined;
+  const inviteToken = rawInviteToken && rawInviteToken !== 'null' && rawInviteToken !== 'undefined' ? rawInviteToken : undefined;
+  const inviteType = searchParams.get("inviteType") || undefined;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -35,13 +37,17 @@ export default function ClientRegistration() {
   useEffect(() => {
     const fetchInvite = async () => {
       if (!inviteToken) return;
+      if (inviteType === 'guard') {
+        navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}&inviteType=guard`);
+        return;
+      }
       setIsLoading(true);
       try {
         const endpointBase = `/user/public`;
         const qp = new URLSearchParams();
-        if (inviteToken) qp.append("token", inviteToken);
-        const urlWithQs = qp.toString() ? `${endpointBase}?${qp.toString()}` : endpointBase;
-        const res = await ApiService.get(urlWithQs);
+        qp.append("token", inviteToken);
+        const urlWithQs = `${endpointBase}?${qp.toString()}`;
+        const res = await ApiService.get(urlWithQs, { skipAuth: true });
         const data = res?.data || res;
         if (!data) {
           setInviteNotFound(true);
@@ -53,13 +59,27 @@ export default function ClientRegistration() {
         if (rootName) { setName(rootName); setLockedName(true); }
         if (emailCandidate) { setEmail(emailCandidate); setLockedEmail(true); }
       } catch (err: any) {
+        // If this token belongs to a guard invitation instead of a client invitation,
+        // redirect to the guard invitation page.
+        if (inviteToken) {
+          try {
+            const guardResponse = await ApiService.get(`/security-guard/public?token=${encodeURIComponent(inviteToken)}`, { skipAuth: true });
+            const guardData = guardResponse?.data || guardResponse;
+            if (guardData) {
+              navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}`);
+              return;
+            }
+          } catch (_guardErr) {
+            // ignore and preserve original error flow
+          }
+        }
         setInviteNotFound(true);
       } finally {
         setIsLoading(false);
       }
     };
     fetchInvite();
-  }, [inviteToken]);
+  }, [inviteToken, navigate]);
 
   const validateEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -72,8 +92,11 @@ export default function ClientRegistration() {
     else if (!validateEmail(email)) nextErrors.email = "Correo electrónico inválido";
     if (!password) nextErrors.password = "La contraseña es obligatoria";
     else {
-      if ((password || "").length < 8) nextErrors.password = "La contraseña debe tener al menos 8 caracteres";
+      if (password.length < 8) nextErrors.password = "La contraseña debe tener al menos 8 caracteres";
       else if (!/[A-Z]/.test(password)) nextErrors.password = "La contraseña debe contener al menos una letra mayúscula";
+      else if (!/[a-z]/.test(password)) nextErrors.password = "La contraseña debe contener al menos una letra minúscula";
+      else if (!/[0-9]/.test(password)) nextErrors.password = "La contraseña debe contener al menos un número";
+      else if (!/[^A-Za-z0-9]/.test(password)) nextErrors.password = "La contraseña debe contener al menos un carácter especial";
     }
     if (!confirm) nextErrors.confirm = "Confirme la contraseña";
     if (password && confirm && password !== confirm) nextErrors.confirm = "Las contraseñas no coinciden";
@@ -87,11 +110,12 @@ export default function ClientRegistration() {
     setIsLoading(true);
     try {
       const payload: any = {
-        token: inviteToken,
+        email,
         password,
+        invitationToken: inviteToken,
+        name,
       };
-      // PATCH /user/public or /auth/authPasswordReset
-      await ApiService.post("/auth/authPasswordReset", { token: inviteToken, password });
+      await AuthService.signUp(payload);
       toast.success("Registro completado, ya puedes iniciar sesión");
       navigate("/login");
     } catch (err: any) {

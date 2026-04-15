@@ -53,7 +53,7 @@ export class ApiService {
     let response: Response;
     try {
       // Ensure credentials (cookies) are sent so backend session auth works
-      response = await fetch(url, { ...options, headers, credentials: 'include' });
+      response = await fetch(url, { ...options, headers, credentials: 'include', cache: options.cache ?? 'no-store' });
     } catch {
       throw new ApiError("No se pudo conectar con el servidor.", 0, null);
     }
@@ -63,7 +63,7 @@ export class ApiService {
 
     let data: any = null;
     try {
-      if (response.status === 204) data = null;
+      if (response.status === 204 || response.status === 304) data = null;
       else if (isJson) {
         const text = await response.text();
         data = text ? JSON.parse(text) : null;
@@ -74,7 +74,7 @@ export class ApiService {
       data = null;
     }
 
-    if (!response.ok) {
+    if (!response.ok && response.status !== 304) {
       // If server replied with 429, set client-side pause to avoid immediate retry storms.
       if (response.status === 429) {
         const retryAfter = response.headers.get('retry-after');

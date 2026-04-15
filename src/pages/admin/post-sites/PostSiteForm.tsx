@@ -76,15 +76,16 @@ export default function PostSiteForm({
     const [direccionDiferente, setDireccionDiferente] = useState(false);
     const [addressComponents, setAddressComponents] = useState<AddressComponents | null>(null);
     // Si hay cliente seleccionado y el checkbox NO está marcado, copiar los datos de dirección del cliente al formulario y forzar validación
+    // Solo hacerlo en modo creación para no sobreescribir los datos de un puesto existente.
     useEffect(() => {
-        if (!direccionDiferente && selectedClient && selectedClient.id) {
+        if (mode === 'create' && !direccionDiferente && selectedClient && selectedClient.id) {
             form.setValue('address', selectedClient.address || '', { shouldValidate: true, shouldDirty: true });
             form.setValue('city', selectedClient.city || '', { shouldValidate: true, shouldDirty: true });
             form.setValue('postalCode', selectedClient.postalCode || '', { shouldValidate: true, shouldDirty: true });
             form.setValue('country', selectedClient.country || '', { shouldValidate: true, shouldDirty: true });
             form.trigger(['address', 'city', 'postalCode', 'country']);
         }
-    }, [direccionDiferente, selectedClient]);
+    }, [mode, direccionDiferente, selectedClient]);
 
     // También completar teléfono y correo desde el cliente seleccionado cuando NO se indica dirección diferente
     useEffect(() => {
@@ -363,6 +364,17 @@ export default function PostSiteForm({
                     status: typeof (data as any).active === 'boolean' ? ((data as any).active ? 'active' : 'inactive') : (data.status ?? "active"),
                 };
                 form.reset(payload);
+
+                const hasAnyAddressValue = Boolean(payload.address || payload.postalCode || payload.city || payload.country || payload.addressLine2);
+                const sameAsClient = selectedClient && selectedClient.id &&
+                    payload.address === (selectedClient.address || '') &&
+                    payload.postalCode === (selectedClient.postalCode || '') &&
+                    payload.city === (selectedClient.city || '') &&
+                    payload.country === (selectedClient.country || '');
+
+                if (hasAnyAddressValue && !sameAsClient) {
+                    setDireccionDiferente(true);
+                }
             })().catch((e) => {
                 console.error(e);
                     if (!redirecting) {
@@ -372,7 +384,7 @@ export default function PostSiteForm({
                 }
             });
         }
-    }, [mode, id, baseUrl, form]);
+    }, [mode, id, baseUrl, form, selectedClient]);
 
     const handleCancel = () => {
         if (mode === 'edit' && id) {
@@ -526,24 +538,145 @@ export default function PostSiteForm({
                                                 key={direccionDiferente ? 'address-different' : 'address-same'}
                                                 onAddressSelect={handleAddressSelect}
                                                 defaultValue={form.watch('address') || ''}
-                                                    suppressInitialReverse={direccionDiferente}
-                                                    onQueryChange={(q) => setFormValue('address', q)}
-                                                    onGeocodeResult={(addr) => {
-                                                        try { console.debug('[PostSiteForm] onGeocodeResult ->', addr); } catch (e) {}
-                                                        setAddressComponents(addr);
-                                                        setFormValue('address', addr.address);
-                                                        setFormValue('city', addr.city);
-                                                        setFormValue('postalCode', addr.postalCode);
-                                                        setFormValue('country', addr.country);
-                                                        setFormValue('latitud', String(addr.latitude));
-                                                        setFormValue('longitud', String(addr.longitude));
-                                                    }}
+                                                initialLat={form.watch('latitud') ? Number(form.watch('latitud')) : undefined}
+                                                initialLng={form.watch('longitud') ? Number(form.watch('longitud')) : undefined}
+                                                suppressInitialReverse={false}
+                                                onQueryChange={(q) => setFormValue('address', q)}
+                                                onGeocodeResult={(addr) => {
+                                                    try { console.debug('[PostSiteForm] onGeocodeResult ->', addr); } catch (e) {}
+                                                    setAddressComponents(addr);
+                                                    setFormValue('address', addr.address);
+                                                    setFormValue('city', addr.city);
+                                                    setFormValue('postalCode', addr.postalCode);
+                                                    setFormValue('country', addr.country);
+                                                    setFormValue('latitud', String(addr.latitude));
+                                                    setFormValue('longitud', String(addr.longitude));
+                                                }}
                                             />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
+
+                            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                                <p className="text-sm font-medium text-slate-700 mb-3">{t('postSites.form.additionalAddressFields', 'Campos adicionales de dirección')}</p>
+                                <div className="grid grid-cols-1 gap-6">
+                                    <FormField<PostSiteInput>
+                                        control={form.control}
+                                        name="addressLine2"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t('postSites.form.addressLine2', 'Dirección Complementaria')}</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder={t('postSites.form.addressLine2Placeholder', 'Opcional')}
+                                                        {...field}
+                                                        value={field.value ? String(field.value) : ''}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                                    <FormField<PostSiteInput>
+                                        control={form.control}
+                                        name="postalCode"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t('clients.form.postalCode', 'Código postal/Zip')}</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="170606"
+                                                        {...field}
+                                                        value={field.value ? String(field.value) : ''}
+                                                        disabled
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField<PostSiteInput>
+                                        control={form.control}
+                                        name="city"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t('clients.form.city', 'Ciudad')}</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="Quito"
+                                                        {...field}
+                                                        value={field.value ? String(field.value) : ''}
+                                                        disabled
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField<PostSiteInput>
+                                        control={form.control}
+                                        name="country"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t('clients.form.country', 'País')}</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="Ecuador"
+                                                        {...field}
+                                                        value={field.value ? String(field.value) : ''}
+                                                        disabled
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                                    <FormField<PostSiteInput>
+                                        control={form.control}
+                                        name="latitud"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t('clients.form.latitude', 'Latitud')}</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="-0.2695948"
+                                                        {...field}
+                                                        value={field.value ? String(field.value) : ''}
+                                                        disabled
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField<PostSiteInput>
+                                        control={form.control}
+                                        name="longitud"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t('clients.form.longitude', 'Longitud')}</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="-78.5365247"
+                                                        {...field}
+                                                        value={field.value ? String(field.value) : ''}
+                                                        disabled
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

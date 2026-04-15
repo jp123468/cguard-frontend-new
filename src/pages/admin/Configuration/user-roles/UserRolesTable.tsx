@@ -71,7 +71,9 @@ export default function UserRolesTable({
   onPageSize,
   pageLabel,
 }: Props) {
-  const allChecked = rows.length > 0 && rows.every((r) => checked[r.id]);
+  const selectableRows = rows.filter((r) => !r.isDefault);
+  const allChecked = selectableRows.length > 0 && selectableRows.every((r) => checked[r.id]);
+  const anyDeletableSelected = rows.some((r) => !r.isDefault && checked[r.id]);
 
   const { hasPermission } = usePermissions();
 
@@ -85,7 +87,7 @@ export default function UserRolesTable({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={onBulkDelete} disabled={!Object.keys(checked).length}>
+            <DropdownMenuItem onClick={onBulkDelete} disabled={!anyDeletableSelected}>
               Eliminar
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -133,6 +135,7 @@ export default function UserRolesTable({
                     <TableCell>
                       <Checkbox
                         checked={!!checked[r.id]}
+                        disabled={!!r.isDefault}
                         onCheckedChange={(v) => onCheckRow(r.id, Boolean(v))}
                       />
                     </TableCell>
@@ -157,7 +160,7 @@ export default function UserRolesTable({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem disabled={!hasPermission('settingsEdit')} onClick={() => { if (!hasPermission('settingsEdit')) return; onEdit(r); }}>Editar</DropdownMenuItem>
+                          <DropdownMenuItem disabled={!hasPermission('settingsEdit') || !!r.isDefault} onClick={() => { if (!hasPermission('settingsEdit') || !!r.isDefault) return; onEdit(r); }}>Editar</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import AuthLayout from "@/layouts/auth-layout";
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
+import { ApiService } from '@/services/api/apiService';
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
@@ -17,12 +18,43 @@ export default function VerifyEmail() {
     document.title = t('auth.verify_email_title') || 'Verificando correo | Cguard';
     (async () => {
       const params = new URLSearchParams(location.search);
-      const token = params.get('token');
+      const rawToken = params.get('token');
+      const token = rawToken && rawToken !== 'null' && rawToken !== 'undefined' ? rawToken : null;
+      const securityGuardId = params.get('securityGuardId');
       if (!token) {
         toast.error(t('auth.verify_email_missing_token') || 'Falta el token de verificación');
         navigate('/login', { replace: true });
         return;
       }
+
+      const redirectInvite = async () => {
+        try {
+          const guardResponse = await ApiService.get(`/security-guard/public?token=${encodeURIComponent(token)}${securityGuardId ? `&securityGuardId=${encodeURIComponent(securityGuardId)}` : ''}`, { skipAuth: true });
+          const guardData = guardResponse?.data || guardResponse;
+          if (guardData) {
+            navigate(`/auth/invitation?token=${encodeURIComponent(token)}${securityGuardId ? `&securityGuardId=${encodeURIComponent(securityGuardId)}` : ''}&inviteType=guard`, { replace: true });
+            return true;
+          }
+        } catch (_err) {
+          // not a guard invite
+        }
+
+        try {
+          const clientResponse = await ApiService.get(`/user/public?token=${encodeURIComponent(token)}`, { skipAuth: true });
+          const clientData = clientResponse?.data || clientResponse;
+          if (clientData) {
+            navigate(`/client/registration?token=${encodeURIComponent(token)}&inviteType=client`, { replace: true });
+            return true;
+          }
+        } catch (_err) {
+          // not a client invite
+        }
+
+        return false;
+      };
+
+      const redirected = await redirectInvite();
+      if (redirected) return;
 
       try {
         const base = import.meta.env.VITE_API_URL ?? "http://localhost:3001/api";

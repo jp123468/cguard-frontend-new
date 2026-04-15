@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 type MapType = 'roadmap' | 'satellite';
 
+type AddressDetails = Record<string, any> | undefined;
+
 function loadScript(src: string) {
   return new Promise<void>((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) return resolve();
@@ -15,6 +17,17 @@ function loadScript(src: string) {
   });
 }
 
+function parsePlaceAddress(place: any) {
+  const components: Record<string, string> = {};
+  if (!place || !place.address_components) return components;
+  place.address_components.forEach((comp: any) => {
+    comp.types.forEach((type: string) => {
+      components[type] = comp.long_name;
+    });
+  });
+  return components;
+}
+
 export default function GoogleMapEmbed({
   lat,
   lng,
@@ -24,6 +37,9 @@ export default function GoogleMapEmbed({
   mapType = 'roadmap',
   showGeofence = false,
   geofenceRadius = 200,
+  draggable = false,
+  onMarkerMove,
+  height,
 }: {
   lat?: number;
   lng?: number;
@@ -33,6 +49,9 @@ export default function GoogleMapEmbed({
   mapType?: MapType;
   showGeofence?: boolean;
   geofenceRadius?: number;
+  draggable?: boolean;
+  onMarkerMove?: (lat: number, lng: number, address: string, addressDetails?: AddressDetails) => void;
+  height?: string;
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<any>(null);
@@ -49,12 +68,11 @@ export default function GoogleMapEmbed({
       if (!mapRef.current) return;
 
       if (!apiKey) {
-        // no API key: we'll keep iframe fallback; mark not-ready for JS mode
         setReady(false);
         return;
       }
 
-      const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+      const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
       try {
         await loadScript(src);
         if (!mounted) return;
@@ -68,13 +86,34 @@ export default function GoogleMapEmbed({
           center,
           zoom,
           mapTypeId: mapType === 'satellite' ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP,
+          mapTypeControl: true,
+          streetViewControl: false,
+          fullscreenControl: false,
         });
 
         markerRef.current = new google.maps.Marker({
           position: center,
           map: mapInstance.current,
           title: address || 'Location',
+          draggable,
         });
+
+        if (draggable && markerRef.current) {
+          markerRef.current.addListener('dragend', () => {
+            const position = markerRef.current.getPosition();
+            if (!position) return;
+            const latLng = { lat: position.lat(), lng: position.lng() };
+
+            if (typeof onMarkerMove === 'function') {
+              const geocoder = new google.maps.Geocoder();
+              geocoder.geocode({ location: latLng }, (results: any[], status: string) => {
+                const formatted = results && results[0]?.formatted_address ? results[0].formatted_address : '';
+                const details = parsePlaceAddress(results && results[0]);
+                onMarkerMove(latLng.lat, latLng.lng, formatted, details);
+              });
+            }
+          });
+        }
 
         if (showGeofence) {
           circleRef.current = new google.maps.Circle({
@@ -82,7 +121,7 @@ export default function GoogleMapEmbed({
             strokeOpacity: 0.6,
             strokeWeight: 2,
             fillColor: '#FF0000',
-            fillOpacity: 0.10,
+            fillOpacity: 0.1,
             map: mapInstance.current,
             center,
             radius: geofenceRadius,
@@ -100,7 +139,6 @@ export default function GoogleMapEmbed({
 
     return () => {
       mounted = false;
-      // cleanup
       try {
         if (markerRef.current) { markerRef.current.setMap(null); markerRef.current = null; }
         if (circleRef.current) { circleRef.current.setMap(null); circleRef.current = null; }
@@ -110,7 +148,6 @@ export default function GoogleMapEmbed({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // react to prop changes
   useEffect(() => {
     const google = (window as any).google;
     if (!google || !mapInstance.current) return;
@@ -119,14 +156,17 @@ export default function GoogleMapEmbed({
       lat: typeof lat === 'number' ? lat : (markerRef.current?.getPosition ? markerRef.current.getPosition().lat() : 40.4168),
       lng: typeof lng === 'number' ? lng : (markerRef.current?.getPosition ? markerRef.current.getPosition().lng() : -3.7038),
     };
+
     map.setCenter(center);
     map.setZoom(zoom);
     map.setMapTypeId(mapType === 'satellite' ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP);
 
     if (markerRef.current) {
       markerRef.current.setPosition(center);
+      markerRef.current.setDraggable(draggable);
+      markerRef.current.setTitle(address || 'Location');
     } else {
-      markerRef.current = new google.maps.Marker({ position: center, map });
+      markerRef.current = new google.maps.Marker({ position: center, map, draggable, title: address || 'Location' });
     }
 
     if (showGeofence) {
@@ -140,26 +180,23 @@ export default function GoogleMapEmbed({
           strokeOpacity: 0.6,
           strokeWeight: 2,
           fillColor: '#FF0000',
-          fillOpacity: 0.10,
+          fillOpacity: 0.1,
           map,
           center,
           radius: geofenceRadius,
         });
       }
-    } else {
-      if (circleRef.current) {
-        circleRef.current.setMap(null);
-      }
+    } else if (circleRef.current) {
+      circleRef.current.setMap(null);
     }
-  }, [lat, lng, zoom, mapType, showGeofence, geofenceRadius]);
+  }, [lat, lng, zoom, mapType, showGeofence, geofenceRadius, draggable, address]);
 
-  // If no API key, fallback to iframe like before
-  if (!(import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY) {
-    const coords = (typeof lat === 'number' && typeof lng === 'number') ? `${lat},${lng}` : (address ? encodeURIComponent(address) : '40.4168,-3.7038');
+  if (!apiKey) {
+    const coords = typeof lat === 'number' && typeof lng === 'number' ? `${lat},${lng}` : (address ? encodeURIComponent(address) : '40.4168,-3.7038');
     const tParam = mapType === 'satellite' ? '&t=k' : '';
     const src = `https://maps.google.com/maps?q=${coords}&z=${zoom}${tParam}&output=embed`;
     return (
-      <div className={className}>
+      <div className={className} style={{ height: height ?? '100%' }}>
         <iframe
           title="Google Maps"
           src={src}
@@ -173,5 +210,5 @@ export default function GoogleMapEmbed({
     );
   }
 
-  return <div ref={mapRef} className={className} />;
+  return <div ref={mapRef} className={className} style={{ height: height ?? '100%' }} />;
 }

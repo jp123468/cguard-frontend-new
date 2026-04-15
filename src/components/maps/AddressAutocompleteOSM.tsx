@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MapPin, Search } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import geocodeClient from '@/lib/geocodeClient';
@@ -96,16 +96,13 @@ export default function AddressAutocompleteOSM({
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
-  // Coerce incoming initialLat/initialLng to numbers and fall back to defaults
   const startLat = (typeof initialLat === 'number' && !Number.isNaN(initialLat)) ? initialLat : 40.4168;
   const startLng = (typeof initialLng === 'number' && !Number.isNaN(initialLng)) ? initialLng : -3.7038;
   const [position, setPosition] = useState<[number, number]>([startLat, startLng]);
   const mapRef = useRef<L.Map | null>(null);
-  // Deduplicate address emissions to avoid multiple toasts/notifications
-  // Keep last emitted coords and timestamp; dedupe based on proximity only
   const lastEmitRef = useRef<{ lat: number; lng: number; t: number } | null>(null);
   const EMIT_DEDUP_MS = 2000;
-  const COORD_TOL = 1e-4; // ~11 meters
+  const COORD_TOL = 1e-4;
 
   const coordsClose = (aLat: number, aLng: number, bLat: number, bLng: number) => {
     return Math.abs(aLat - bLat) <= COORD_TOL && Math.abs(aLng - bLng) <= COORD_TOL;
@@ -125,18 +122,14 @@ export default function AddressAutocompleteOSM({
     }
   };
 
-  // Block reverseGeocode emits for a short window after a direct selection
   const blockedUntilRef = useRef<number | null>(null);
 
-  // Debugging: log incoming props to help diagnose center issues
   useEffect(() => {
     try {
-      // eslint-disable-next-line no-console
       console.debug('[AddressAutocompleteOSM] props initialLat/initialLng:', initialLat, initialLng, '-> start:', startLat, startLng);
     } catch (e) {}
   }, [initialLat, initialLng, startLat, startLng]);
 
-  // expose map instance for debugging when available
   useEffect(() => {
     try {
       if ((window as any).__lastAddressMap !== mapRef.current) {
@@ -145,18 +138,14 @@ export default function AddressAutocompleteOSM({
     } catch (e) {}
   }, [mapRef.current]);
 
-  // Centrar el mapa automáticamente cuando cambie la posición
   useEffect(() => {
     try {
       if (mapRef.current) {
         const map = mapRef.current as any;
         const currentZoom = (map && typeof map.getZoom === 'function') ? map.getZoom() : 13;
         const targetZoom = currentZoom || 13;
-        // setView without animation to avoid jumpy behavior and ensure tiles load for correct coords
         map.setView(position, targetZoom, { animate: false });
         try { map.invalidateSize && map.invalidateSize(); } catch (e) {}
-
-        // retry centering a couple times after render/layout completes
         const retry = (delay: number) => setTimeout(() => {
           try {
             map.setView(position, targetZoom, { animate: false });
@@ -166,13 +155,9 @@ export default function AddressAutocompleteOSM({
         retry(250);
         retry(800);
       }
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
   }, [position]);
 
-  // When parent updates initialLat/initialLng (e.g., after async load), update position
-  // If `suppressInitialReverse` is true, do not call reverseGeocode on mount/update.
   useEffect(() => {
     const nl = Number(initialLat as any);
     const nlng = Number(initialLng as any);
@@ -183,18 +168,15 @@ export default function AddressAutocompleteOSM({
       setPosition(newPos);
       if (!suppressInitialReverse) {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           reverseGeocode(nl, nlng);
-        } catch (e) {
-          // ignore
-        }
+        } catch (e) {}
       }
     }
   }, [initialLat, initialLng, suppressInitialReverse]);
+
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Search addresses using Nominatim (OpenStreetMap geocoding)
   const searchAddress = async (query: string) => {
     if (query.length < 2) {
       setSuggestions([]);
@@ -203,7 +185,6 @@ export default function AddressAutocompleteOSM({
     }
     setLoading(true);
     try {
-      // Try several query variants to improve matches for Ecuadorian address formats
       const variants: string[] = [];
       const q = query.trim();
       const normalize = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '');
@@ -215,8 +196,6 @@ export default function AddressAutocompleteOSM({
 
       let data: SearchResult[] = [];
       for (const v of variants) {
-        // Limit forward search to Ecuador to avoid far-away matches
-        // eslint-disable-next-line no-await-in-loop
         const chunk: SearchResult[] = await geocodeClient.searchGeocode(v, { addressdetails: '1', limit: '10', 'accept-language': 'es', countrycodes: 'ec' });
         if (Array.isArray(chunk) && chunk.length > 0) {
           data = chunk;
@@ -228,7 +207,6 @@ export default function AddressAutocompleteOSM({
     } catch (error: any) {
       setSuggestions([]);
       setShowSuggestions(false);
-      // user-friendly error for failed geocode
       try {
         const msg = (error && (error.message || String(error))) ? (error.message || String(error)) : 'Unable to geocode';
         toast.error(msg);
@@ -240,19 +218,14 @@ export default function AddressAutocompleteOSM({
     }
   };
 
-  // If parent requests opening the autocomplete with a prefilled query,
-  // set the query, perform the search and show suggestions.
   useEffect(() => {
     if (openWithQuery && openWithQuery.length > 0) {
       setSearchQuery(openWithQuery);
-      // trigger search immediately
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-      // call searchAddress directly
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       (async () => {
         await searchAddress(openWithQuery);
         setShowSuggestions(true);
-        try { inputRef.current && inputRef.current.focus(); } catch (e) { }
+        try { inputRef.current && inputRef.current.focus(); } catch (e) {}
       })();
     }
   }, [openWithQuery]);
@@ -264,20 +237,17 @@ export default function AddressAutocompleteOSM({
     setSearchQuery(result.display_name);
     setShowSuggestions(false);
     try {
-      // debug: log selection and coords
-      // eslint-disable-next-line no-console
       console.debug('[AddressAutocompleteOSM] selectSuggestion ->', { lat, lng, name: result.display_name });
-        if (mapRef.current) {
+      if (mapRef.current) {
         const map = mapRef.current as any;
         map.setView([lat, lng], 17, { animate: false });
         try { map.invalidateSize && map.invalidateSize(); } catch (e) {}
-        // retry centering to ensure tiles match the new center
         setTimeout(() => { try { map.setView([lat, lng], 17, { animate: false }); map.invalidateSize && map.invalidateSize(); } catch (e) {} }, 300);
         setTimeout(() => { try { map.setView([lat, lng], 17, { animate: false }); map.invalidateSize && map.invalidateSize(); } catch (e) {} }, 900);
       }
     } catch (e) {}
     const addressData: AddressComponents = {
-      address: [result.address.road, result.address.house_number].filter(Boolean).join(' ') || result.display_name,
+      address: result.display_name || [result.address.road, result.address.house_number].filter(Boolean).join(' '),
       city:
         result.address.city ||
         result.address.town ||
@@ -292,8 +262,6 @@ export default function AddressAutocompleteOSM({
       latitude: lat,
       longitude: lng,
     };
-    // Block reverseGeocode re-emits shortly after selection, but do NOT pre-populate
-    // lastEmitRef here — safeEmit will set it. Pre-setting caused safeEmit to no-op.
     const now = Date.now();
     blockedUntilRef.current = now + EMIT_DEDUP_MS;
     safeEmit(addressData);
@@ -302,15 +270,12 @@ export default function AddressAutocompleteOSM({
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
       const data = await geocodeClient.reverseGeocode(lat, lng, { addressdetails: '1' });
-      // Siempre actualizar el campo de dirección, aunque falten datos
-      // debug
-      // eslint-disable-next-line no-console
       console.debug('[AddressAutocompleteOSM] reverseGeocode result for', lat, lng, data.display_name);
       setSearchQuery(data.display_name || '');
       try { onQueryChange && onQueryChange(data.display_name || ''); } catch (err) {}
       const addr = data.address || {};
       const addressData: AddressComponents = {
-        address: (addr && ([addr.road, addr.house_number].filter(Boolean).join(' '))) || data.display_name || '',
+        address: data.display_name || (addr && ([addr.road, addr.house_number].filter(Boolean).join(' '))) || '',
         city:
           addr.city ||
           addr.town ||
@@ -325,38 +290,32 @@ export default function AddressAutocompleteOSM({
         latitude: lat,
         longitude: lng,
       };
-      // If we have a short-term block (user selected a suggestion), skip emitting here
       const now = Date.now();
       if (blockedUntilRef.current && now < blockedUntilRef.current) {
-        // skip emitting to avoid duplicate toasts
       } else {
-        // Avoid re-emitting if we recently emitted nearly-identical coordinates
         const last = lastEmitRef.current;
         if (last && coordsClose(last.lat, last.lng, lat, lng) && now - last.t < EMIT_DEDUP_MS) {
-          // skip emit — already emitted recently
         } else {
           safeEmit(addressData);
         }
       }
     } catch (error: any) {
-        setSearchQuery('');
-        safeEmit({
-          address: '',
-          city: '',
-          postalCode: '',
-          country: '',
-          latitude: lat,
-          longitude: lng,
-        });
-        // show a toast so user knows reverse geocode failed
-        try {
-          const msg = (error && (error.message || String(error))) ? (error.message || String(error)) : 'Unable to reverse geocode';
-          toast.error(msg);
-        } catch (e) {
-          try { toast.error('Unable to reverse geocode'); } catch (e) {}
-        }
-        // eslint-disable-next-line no-console
-        console.warn('[AddressAutocompleteOSM] reverseGeocode failed for', lat, lng, error);
+      setSearchQuery('');
+      safeEmit({
+        address: '',
+        city: '',
+        postalCode: '',
+        country: '',
+        latitude: lat,
+        longitude: lng,
+      });
+      try {
+        const msg = (error && (error.message || String(error))) ? (error.message || String(error)) : 'Unable to reverse geocode';
+        toast.error(msg);
+      } catch (e) {
+        try { toast.error('Unable to reverse geocode'); } catch (e) {}
+      }
+      console.warn('[AddressAutocompleteOSM] reverseGeocode failed for', lat, lng, error);
     }
   };
 
@@ -394,12 +353,9 @@ export default function AddressAutocompleteOSM({
               try { onQueryChange && onQueryChange(v); } catch (err) {}
             }}
             onBlur={async () => {
-              // When user leaves the input without selecting a suggestion,
-              // attempt a lightweight geocode to populate city/postal/country.
               try {
                 const q = (searchQuery || '').trim();
                 if (q.length < 3) return;
-                // do a single, limited geocode
                 const arr = await geocodeClient.searchGeocode(q, { addressdetails: '1', limit: '1', 'accept-language': 'es', countrycodes: 'ec' });
                 if (!Array.isArray(arr) || arr.length === 0) return;
                 const r = arr[0] as SearchResult;
@@ -407,7 +363,7 @@ export default function AddressAutocompleteOSM({
                 const lng = parseFloat(r.lon);
                 const addr = r.address || {};
                 const addressData: AddressComponents = {
-                  address: [addr.road, addr.house_number].filter(Boolean).join(' ') || r.display_name || q,
+                  address: r.display_name || [addr.road, addr.house_number].filter(Boolean).join(' ') || q,
                   city:
                     addr.city || addr.town || addr.village || addr.county || addr.state || (addr as any).city_district || addr.suburb || '',
                   postalCode: addr.postcode || '',
@@ -417,7 +373,6 @@ export default function AddressAutocompleteOSM({
                 };
                 try { onGeocodeResult && onGeocodeResult(addressData); } catch (e) {}
               } catch (e) {
-                // ignore
               }
             }}
             placeholder={placeholder}
@@ -462,7 +417,6 @@ export default function AddressAutocompleteOSM({
             ref={(el: any) => { try { mapRef.current = el as L.Map; } catch (e) { mapRef.current = null; } }}
             style={{ height: '100%', width: '100%' }}
           >
-            {/* Clicking the map to select a point is disabled per UX request; marker drag is used instead */}
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

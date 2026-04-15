@@ -409,6 +409,8 @@ export default function ProfileCompanyForm() {
                       toast.success('Dirección completada automáticamente');
                     }}
                     defaultValue={form.address || ''}
+                    initialLat={form.latitude && !isNaN(Number(form.latitude)) ? Number(form.latitude) : undefined}
+                    initialLng={form.longitude && !isNaN(Number(form.longitude)) ? Number(form.longitude) : undefined}
                     openWithQuery={autocompleteOpenQuery}
                     placeholder="Buscar dirección..."
                     // Mostrar mapa integrado como fuente única de ubicación
@@ -484,14 +486,46 @@ export default function ProfileCompanyForm() {
                   </div>
                 </div>
 
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <Label>Dirección Complementaria</Label>
+              <Input
+                value={form.addressLine2}
+                onChange={(e) => setForm((s) => ({ ...s, addressLine2: e.target.value }))}
+                placeholder="Opcional"
+                disabled={!canEdit}
+              />
+            </div>
+
+            <div className={showAddressAutocomplete && canEdit ? 'opacity-60 pointer-events-none' : ''}>
+              <div className="space-y-4">
                 <div>
-                  <Label>Dirección Complementaria</Label>
-                  <Input
-                    value={form.addressLine2}
-                    onChange={(e) => setForm((s) => ({ ...s, addressLine2: e.target.value }))}
-                    placeholder="Opcional"
-                    disabled={!canEdit || showAddressAutocomplete}
-                  />
+                  <Label>Dirección Principal</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={form.address}
+                      onChange={(e) => setForm((s) => ({ ...s, address: e.target.value }))}
+                      placeholder="Dirección"
+                      disabled={!canEdit || showAddressAutocomplete}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      title="Buscar con autocompletado"
+                      onClick={() => {
+                        setAutocompleteOpenQuery(form.address || '');
+                        setShowAddressAutocomplete(true);
+                      }}
+                      disabled={!canEdit}
+                      className="flex items-center gap-2"
+                    >
+                      <Search className="h-4 w-4" />
+                      <span>Buscar</span>
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -608,7 +642,7 @@ export default function ProfileCompanyForm() {
           </div>
         </div>
 
-        </div>
+      
 
         <div className="mt-6">
           <CompanyDocumentsSection

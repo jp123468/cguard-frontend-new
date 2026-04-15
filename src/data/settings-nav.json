@@ -33,6 +33,16 @@
         ]
       },
       {
+        "label": "MOBIL",
+        "items": [
+          {
+            "id": "mobil",
+            "label": "MOBIL",
+            "path": "/setting/mobil"
+          }
+        ]
+      },
+      {
         "label": "",
         "items": [
           {

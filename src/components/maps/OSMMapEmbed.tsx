@@ -14,16 +14,6 @@ if (typeof window !== 'undefined' && L && L.Icon && L.Icon.Default) {
   });
 }
 
-/**
- * OSMMapEmbed
- * Mapa interactivo con scrollWheelZoom siempre habilitado para mejor experiencia de usuario.
- * Props:
- * - lat, lng: coordenadas
- * - zoom: nivel de zoom inicial
- * - height: altura del mapa
- * - className: clases CSS
- */
-
 interface OSMMapEmbedProps {
   lat?: number | string;
   lng?: number | string;
@@ -31,9 +21,7 @@ interface OSMMapEmbedProps {
   height?: string;
   className?: string;
   mapType?: 'osm' | 'satellite';
-  // onMarkerMove: lat, lng, display_name, and structured address details
   onMarkerMove?: (lat: number, lng: number, address: string, addressDetails?: any) => void;
-  // allow parent to disable marker dragging (readonly views)
   draggable?: boolean;
 }
 
@@ -47,11 +35,10 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
   onMarkerMove,
   draggable = true,
 }) => {
-  if (!lat || !lng) return null;
+  if (lat === undefined || lat === null || lng === undefined || lng === null) return null;
   const initialLat = typeof lat === "string" ? parseFloat(lat) : lat;
   const initialLng = typeof lng === "string" ? parseFloat(lng) : lng;
   if (isNaN(initialLat) || isNaN(initialLng)) return null;
-  // Estado para la posición actual del marcador (movible)
   const [markerPos, setMarkerPos] = useState<[number, number]>([initialLat, initialLng]);
   const [address, setAddress] = useState<string>("");
   const mapRef = useRef<L.Map | null>(null);
@@ -62,7 +49,6 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
       try { (map as any).scrollWheelZoom.enable(); } catch (e) {}
     }
 
-    // Invalidate size after mount to ensure the map is centered and sized correctly
     const invalidate = () => {
       try {
         if (map && typeof (map as any).invalidateSize === 'function') (map as any).invalidateSize();
@@ -74,10 +60,6 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
     return () => { clearTimeout(t); window.removeEventListener('resize', invalidate); };
   }, []);
 
-  // Botón para centrar el mapa en la ubicación del dispositivo usando la API de Geolocalización
-  const [geoError, setGeoError] = useState<string | null>(null);
-
-  // Centra el mapa en las coordenadas originales (props)
   const handleCenter = () => {
     const map = mapRef.current;
     if (map && typeof (map as any).flyTo === 'function') {
@@ -86,7 +68,6 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
     }
   };
 
-  // Geocodificación inversa para mostrar dirección
   const fetchAddress = async (lat: number, lng: number) => {
     try {
       const data = await geocodeClient.reverseGeocode(lat, lng, { addressdetails: '1' });
@@ -100,7 +81,6 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
     }
   };
 
-  // Sync marker when parent updates lat/lng props
   useEffect(() => {
     const newLat = typeof lat === "string" ? parseFloat(lat) : lat;
     const newLng = typeof lng === "string" ? parseFloat(lng) : lng;
@@ -111,12 +91,10 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
         try { (map as any).flyTo([newLat, newLng], Math.max(12, zoom), { animate: true }); } catch (e) {}
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lat, lng]);
+  }, [lat, lng, zoom]);
 
   useEffect(() => {
     fetchAddress(markerPos[0], markerPos[1]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markerPos[0], markerPos[1]]);
 
   return (
@@ -140,28 +118,10 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
       >
         Centrar ubicación
       </button>
-      {geoError && (
-        <div style={{
-          position: 'absolute',
-          top: 50,
-          right: 10,
-          zIndex: 1001,
-          background: '#fff0f0',
-          color: '#b91c1c',
-          border: '1px solid #fca5a5',
-          borderRadius: 4,
-          padding: '6px 12px',
-          fontSize: 13,
-          boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
-        }}>
-          {geoError}
-        </div>
-      )}
-      {/* MapContainer cast to any to avoid TS prop mismatches in different react-leaflet versions */}
       <MapContainer
         center={markerPos}
         zoom={zoom}
-        style={{ height: "100%", width: "100%", zIndex: 0 }}
+        style={{ height: '100%', width: '100%', zIndex: 0 }}
         scrollWheelZoom={true}
         dragging={draggable}
         doubleClickZoom={true}
@@ -187,11 +147,10 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
               const marker = e.target;
               const pos = marker.getLatLng();
               setMarkerPos([pos.lat, pos.lng]);
-              // fetchAddress(pos.lat, pos.lng) se llama por useEffect
             },
           } : undefined}
         />
-        </MapContainer>
+      </MapContainer>
       {address && (
         <div style={{ marginTop: 8, fontSize: 13, color: '#333' }}>
           <b>Dirección actual:</b> {address}
@@ -199,6 +158,6 @@ const OSMMapEmbed: React.FC<OSMMapEmbedProps> = ({
       )}
     </div>
   );
-}
+};
 
 export default OSMMapEmbed;

@@ -2112,6 +2112,9 @@
       "dashboard": "Panel de control"
     },
     "title": "Usuarios de Oficina Administrativa",
+    "roleNames": {
+      "supervisor": "Supervisor"
+    },
     "bulkAction": {
       "placeholder": "Acción",
       "suspend": "Suspender",

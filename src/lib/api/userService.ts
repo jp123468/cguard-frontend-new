@@ -67,14 +67,80 @@ export const userService = {
     return resp?.data || resp || null;
   }
   ,
-  async listUsers(): Promise<any[]> {
+  async listUsers(params?: Record<string, any>): Promise<any[]> {
     const tenantId = getTenantId();
-    const { data: resp } = await api.get<any>(`/tenant/${tenantId}/user`, { toast: { silentError: true } } as any);
+    let url = `/tenant/${tenantId}/user`;
+
+    if (params) {
+      const query = new URLSearchParams();
+
+      const buildParams = (obj: Record<string, any>, prefix = '') => {
+        Object.entries(obj).forEach(([key, value]) => {
+          if (value === undefined || value === null) return;
+          const paramKey = prefix ? `${prefix}[${key}]` : key;
+
+          if (Array.isArray(value)) {
+            value.forEach((item) => {
+              if (item !== undefined && item !== null) {
+                query.append(paramKey, String(item));
+              }
+            });
+          } else if (typeof value === 'object') {
+            buildParams(value, paramKey);
+          } else {
+            query.append(paramKey, String(value));
+          }
+        });
+      };
+
+      buildParams(params);
+      const qs = query.toString();
+      if (qs) {
+        url += `?${qs}`;
+      }
+    }
+
+    const { data: resp } = await api.get<any>(url, { toast: { silentError: true } } as any);
     if (!resp) return [];
     if (Array.isArray(resp)) return resp;
     if (resp.rows && Array.isArray(resp.rows)) return resp.rows;
     if (resp.data && Array.isArray(resp.data)) return resp.data;
     return [];
+  },
+
+  async listUsersByRoles(roles: string[]): Promise<any[]> {
+    const users = await this.listUsers({ limit: 200, offset: 0 });
+
+    const normalizeRoles = (rolesValue: any): string[] => {
+      if (!rolesValue) return [];
+      if (Array.isArray(rolesValue)) {
+        return rolesValue
+          .map((item) =>
+            typeof item === 'string'
+              ? item
+              : item && (item.name || item.role)
+              ? item.name || item.role
+              : ''
+          )
+          .filter(Boolean)
+          .map((item) => String(item).toLowerCase().trim());
+      }
+      if (typeof rolesValue === 'string') {
+        return [rolesValue.toLowerCase().trim()];
+      }
+      if (typeof rolesValue === 'object') {
+        const candidate = rolesValue.name || rolesValue.role || rolesValue.type || '';
+        return candidate ? [String(candidate).toLowerCase().trim()] : [];
+      }
+      return [];
+    };
+
+    const normalizedTargets = roles.map((role) => String(role).toLowerCase().trim());
+
+    return users.filter((user: any) => {
+      const userRoles = normalizeRoles(user.roles || user.role || user.rolesList || user._rolesDisplay);
+      return userRoles.some((role) => normalizedTargets.includes(role));
+    });
   },
 
   async suspendUser(id: string): Promise<void> {

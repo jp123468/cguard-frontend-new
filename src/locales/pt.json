@@ -919,6 +919,9 @@
       "dashboard": "Painel"
     },
     "title": "Usuários do Escritório Administrativo",
+    "roleNames": {
+      "supervisor": "Supervisor"
+    },
     "bulkAction": {
       "placeholder": "Ação",
       "suspend": "Suspender",

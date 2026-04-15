@@ -677,14 +677,15 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                     <div>
                                         <AddressAutocompleteOSM
                                             defaultValue={form.address || ''}
+                                            initialLat={form.latitude && form.latitude !== '' ? parseFloat(form.latitude) : undefined}
+                                            initialLng={form.longitude && form.longitude !== '' ? parseFloat(form.longitude) : undefined}
                                             openWithQuery={autocompleteOpenQuery}
                                             placeholder="Buscar dirección..."
                                             onAddressSelect={(data: AddressComponents) => {
                                                 // Si la dirección sugerida es la de Madrid, no la pongas automáticamente
-                                                const forbidden = 'reloj de la puerta del sol, 7, puerta del sol, barrio de los austrias, sol, centro, madrid, comunidad de madrid, 28013, españa';
+                                                const forbidden = 'reloj de la puerta del sol, 7, puerta del sol, barrio delos austrias, sol, centro, madrid, comunidad de madrid, 28013, españa';
                                                 const incoming = (data.address || '').trim().toLowerCase();
                                                 setForm((s: any) => {
-                                                    // Si la dirección sugerida es la de Madrid, no la pongas
                                                     if (incoming === forbidden) {
                                                         return {
                                                             ...s,
@@ -716,7 +717,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-sm">Dirección Complementaria</label>
-                                        <Input value={form.addressLine2} onChange={(e) => setForm((s: any) => ({ ...s, addressLine2: e.target.value }))} disabled={showAddressAutocomplete} />
+                                        <Input value={form.addressLine2} onChange={(e) => setForm((s: any) => ({ ...s, addressLine2: e.target.value }))} disabled={false} />
                                     </div>
                                     <div>
                                         <label className="text-sm">Código Postal</label>

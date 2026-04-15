@@ -7,9 +7,10 @@ type Props = {
   value: string[];
   onChange: (next: string[]) => void;
   query?: string;
+  readOnly?: boolean;
 };
 
-export default function PermissionsEditor({ value, onChange, query = "" }: Props) {
+export default function PermissionsEditor({ value, onChange, query = "", readOnly = false }: Props) {
   const grouped = React.useMemo(() => groupPermissions(PERMISSIONS), []);
   const filteredGrouped = React.useMemo(() => {
     if (!query) return grouped;
@@ -31,6 +32,7 @@ export default function PermissionsEditor({ value, onChange, query = "" }: Props
   const HIDDEN_GROUPS = React.useMemo(() => new Set(["tenant", "plan"]), [] as unknown as string[]);
 
   const toggle = (p: string, checked: boolean) => {
+    if (readOnly) return;
     if (checked) onChange(Array.from(new Set([...value, p])));
     else onChange(value.filter((x) => x !== p));
   };
@@ -40,6 +42,11 @@ export default function PermissionsEditor({ value, onChange, query = "" }: Props
 
   return (
     <div className="space-y-4">
+      {readOnly && (
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-900">
+          Este rol está bloqueado. No se pueden modificar los permisos predeterminados.
+        </div>
+      )}
       {Object.keys(filteredGrouped).length === 0 ? (
         <div className="text-sm text-muted-foreground">No se encontraron permisos</div>
       ) : (
@@ -75,7 +82,9 @@ export default function PermissionsEditor({ value, onChange, query = "" }: Props
                   <span className="text-sm">Seleccionar todo</span>
                   <Checkbox
                     checked={allSelected}
+                    disabled={readOnly}
                     onCheckedChange={(v) => {
+                      if (readOnly) return;
                       if (v) onChange(Array.from(new Set([...value, ...items])));
                       else onChange(value.filter((x) => !items.includes(x)));
                     }}
@@ -87,9 +96,9 @@ export default function PermissionsEditor({ value, onChange, query = "" }: Props
                   {items.map((p) => (
                     <div
                       key={p}
-                      className="flex items-start gap-3 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700"
+                      className={"flex items-start gap-3 p-2 rounded " + (readOnly ? "bg-slate-50 dark:bg-slate-800" : "hover:bg-slate-50 dark:hover:bg-slate-700")}
                     >
-                      <Checkbox checked={value.includes(p)} onCheckedChange={(v) => toggle(p, Boolean(v))} />
+                      <Checkbox checked={value.includes(p)} disabled={readOnly} onCheckedChange={(v) => toggle(p, Boolean(v))} />
                       <div className="min-w-0">
                         <div className="text-sm truncate">{formatPermissionLabel(p)}</div>
                         <div className="text-xs text-muted-foreground">{p}</div>

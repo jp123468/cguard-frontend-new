@@ -129,10 +129,15 @@ export default function AdminOfficeUsersPage() {
       };
 
       // Mostrar todos los usuarios (incluye guardias). Normalizar roles para mostrar.
-      const filtered = (users || []).map((u) => ({
-        ...u,
-        _rolesDisplay: (normalizeRoles(u.roles || u.role || u.rolesList) || []).join(", "),
-      }));
+      const filtered = (users || [])
+        .map((u) => ({
+          ...u,
+          _rolesDisplay: (normalizeRoles(u.roles || u.role || u.rolesList) || []).join(", "),
+        }))
+        .filter((u) => {
+          const roles = normalizeRoles(u.roles || u.role || u.rolesList || u._rolesDisplay);
+          return !roles.includes('customer');
+        });
 
       setRows(filtered);
     } catch (err) {

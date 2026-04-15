@@ -2,7 +2,7 @@
 
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 
 import AppLayout from "@/layouts/app-layout";
@@ -139,12 +139,46 @@ export default function NewAdminUserPage() {
     mode: "onTouched",
   });
 
-  const { handleSubmit, control, formState, setValue, setError } = form;
+  const { handleSubmit, control, formState, setValue, setError, getValues, reset } = form;
+  type RoleOption = { id: string; name: string; slug?: string };
+
   const [clientOptions, setClientOptions] = useState<Array<{ id: string; name: string }>>(CLIENT_OPTIONS_PLACEHOLDER);
   const [siteOptions, setSiteOptions] = useState<Array<{ id: string; name: string; clientIds?: string[] }>>([]);
   const [stationOptions, setStationOptions] = useState<Array<{ id: string; name: string; postSiteId?: string }>>([]);
-  const [roleOptions, setRoleOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [roleOptions, setRoleOptions] = useState<RoleOption[]>([]);
+  const accessLevelValue = useWatch({ control, name: 'accessLevel' }) as string | undefined;
   const [aclAllowedStationIds, setAclAllowedStationIds] = useState<string[] | null>(null);
+
+  const getRoleDisplayName = useCallback((role: RoleOption) => {
+    const id = (role.id || '').toString().toLowerCase();
+    const name = (role.name || '').toString().toLowerCase();
+    const slug = (role.slug || '').toString().toLowerCase();
+    if (id.includes('supervisor') || slug.includes('supervisor') || name.includes('supervisor')) {
+      return t('adminOfficeUsers.roleNames.supervisor', { defaultValue: 'Supervisor' });
+    }
+    return role.name || '';
+  }, [t]);
+
+  const DEFAULT_SUPERVISOR_ROLE: RoleOption = {
+    id: 'securitySupervisor',
+    name: 'securitySupervisor',
+    slug: 'securitySupervisor',
+  };
+
+  const findSupervisorRole = useCallback((roles: RoleOption[]) => {
+    return roles.find((role) => {
+      const id = (role.id || '').toString().toLowerCase();
+      const name = (role.name || '').toString().toLowerCase();
+      const slug = (role.slug || '').toString().toLowerCase();
+      return (
+        id === 'securitysupervisor' ||
+        slug === 'securitysupervisor' ||
+        id.includes('supervisor') ||
+        slug.includes('supervisor') ||
+        name.includes('supervisor')
+      );
+    });
+  }, []);
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [aclAllowedClientIds, setAclAllowedClientIds] = useState<string[] | null>(null);
@@ -198,14 +232,49 @@ export default function NewAdminUserPage() {
 
         // load roles for access level select
         const res = await ApiService.get(`/tenant/${tenantId}/role`);
-        const rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
-        setRoleOptions(rows.map((r: any) => ({ id: r.id ?? r._id ?? String(r.id), name: r.name ?? r.label ?? "" })));
+        const rows = Array.isArray(res)
+          ? res
+          : res?.rows
+          ? res.rows
+          : Array.isArray(res?.data)
+          ? res.data
+          : res?.data?.rows
+          ? res.data.rows
+          : [];
+        const mappedRoles: RoleOption[] = rows.map((r: any) => {
+          if (typeof r === 'string') {
+            return { id: r, name: r, slug: r };
+          }
+          const id = String(r.id ?? r._id ?? r.slug ?? r.value ?? r.role ?? r.name ?? r.label ?? '');
+          const name = r.name ?? r.label ?? r.slug ?? r.value ?? r.role ?? '';
+          const slug = r.slug ?? r.role ?? r.value ?? r.name ?? undefined;
+          return {
+            id: id || name || slug || '',
+            name: name || slug || id || '',
+            slug,
+          };
+        });
 
+        const supervisorRole = findSupervisorRole(mappedRoles) ?? DEFAULT_SUPERVISOR_ROLE;
+        const mappedRolesWithSupervisor = findSupervisorRole(mappedRoles) ? mappedRoles : [supervisorRole, ...mappedRoles];
+
+        setRoleOptions(mappedRolesWithSupervisor);
+
+        if (!accessLevelValue) {
+          setValue('accessLevel', supervisorRole.id);
+        }
       } catch (err) {
         console.error('Error cargando datos iniciales', err);
       }
     })();
-  }, []);
+  }, [accessLevelValue, setValue]);
+
+  useEffect(() => {
+    if (!accessLevelValue && roleOptions.length > 0) {
+      const supervisorRole = findSupervisorRole(roleOptions) ?? DEFAULT_SUPERVISOR_ROLE;
+      setValue('accessLevel', supervisorRole.id);
+    }
+  }, [accessLevelValue, roleOptions, setValue, findSupervisorRole]);
 
   // load sites whenever selected clients change
   useEffect(() => {
@@ -635,7 +704,7 @@ export default function NewAdminUserPage() {
                       <SelectContent>
                         {roleOptions.map((r) => (
                           <SelectItem key={r.id} value={r.id}>
-                            {r.name}
+                            {getRoleDisplayName(r)}
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -13,6 +13,22 @@ import PermissionsEditor from "./PermissionsEditor";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+const DEFAULT_SYSTEM_ROLE_SLUGS = [
+  'admin',
+  'operationsmanager',
+  'securitysupervisor',
+  'hrmanager',
+  'clientaccountmanager',
+  'dispatcher',
+  'securityguard',
+  'customer',
+];
+
+const isDefaultSystemRole = (role: { slug?: string; name?: string; id?: string }) => {
+  const slug = String(role.slug ?? role.name ?? role.id ?? '').toLowerCase();
+  return DEFAULT_SYSTEM_ROLE_SLUGS.includes(slug);
+};
+
 export default function UserRolesPage() {
   const [query, setQuery] = useState("");
   const [pageSize, setPageSize] = useState("25");
@@ -49,7 +65,7 @@ export default function UserRolesPage() {
           : [];
         if (!mounted) return;
         // map to UserRoleRow shape, tolerate different id fields
-        const mapped: UserRoleRow[] = data.map((r: any) => ({ id: r.id ?? r._id ?? String(r.id), name: r.name ?? r.label ?? "", description: r.description ?? r.desc ?? "", isDefault: !!r.isDefault }));
+        const mapped: UserRoleRow[] = data.map((r: any) => ({ id: r.id ?? r._id ?? String(r.id), name: r.name ?? r.label ?? "", slug: r.slug ?? r.name ?? r.id ?? "", description: r.description ?? r.desc ?? "", isDefault: isDefaultSystemRole(r) }));
         setRows(mapped);
       } catch (err) {
         console.error('Error cargando roles:', err);
@@ -65,9 +81,14 @@ export default function UserRolesPage() {
     return rows.filter((r) => r.name.toLowerCase().includes(q));
   }, [rows, query]);
 
+  const expandedRole = expandedRoleId ? rows.find((r) => r.id === expandedRoleId) : null;
+  const expandedRoleIsLocked = expandedRole ? expandedRole.isDefault : false;
+
   const onCheckAll = (v: boolean) => {
     const next: Record<string, boolean> = {};
-    if (v) filtered.forEach((r) => (next[r.id] = true));
+    if (v) filtered.forEach((r) => {
+      if (!r.isDefault) next[r.id] = true;
+    });
     setChecked(next);
   };
 
@@ -128,6 +149,11 @@ export default function UserRolesPage() {
 
   const saveExpandedPermissions = async (id: string, perms: string[]) => {
     try {
+      const role = rows.find((r) => r.id === id);
+      if (role && role.isDefault) {
+        toast.error('No se pueden modificar los permisos de los roles predeterminados');
+        return;
+      }
       const tenantId = localStorage.getItem("tenantId") || "";
       if (!tenantId) throw new Error('Tenant no configurado');
       await ApiService.put(`/tenant/${tenantId}/role/${id}`, { permissions: perms });
@@ -180,13 +206,23 @@ export default function UserRolesPage() {
 
   const handleConfirmDelete = async () => {
     if (!pendingDeleteIds || pendingDeleteIds.length === 0) return;
+    const idsToDelete = pendingDeleteIds.filter((id) => {
+      const role = rows.find((r) => r.id === id);
+      return role ? !role.isDefault : true;
+    });
+    if (idsToDelete.length === 0) {
+      toast.error('No se pueden eliminar roles bloqueados');
+      setDeleteDialogOpen(false);
+      setPendingDeleteIds([]);
+      return;
+    }
     try {
       const tenantId = localStorage.getItem("tenantId") || "";
       if (!tenantId) throw new Error('Tenant no configurado');
-      for (const id of pendingDeleteIds) {
+      for (const id of idsToDelete) {
         await ApiService.delete(`/tenant/${tenantId}/role/${id}`);
       }
-      setRows((s) => s.filter((r) => !pendingDeleteIds.includes(r.id)));
+      setRows((s) => s.filter((r) => !idsToDelete.includes(r.id)));
       setChecked({});
       toast.success('Roles eliminados');
     } catch (err: any) {
@@ -231,11 +267,17 @@ export default function UserRolesPage() {
                 <div className="mb-2">
                   <input className="border p-2 rounded w-full" placeholder="Buscar permisos..." value={permQuery} onChange={(e) => setPermQuery(e.target.value)} />
                 </div>
-                <PermissionsEditor value={expandedRolePerms} onChange={setExpandedRolePerms} query={permQuery} />
-                <div className="flex gap-2 justify-end mt-3">
-                  <Button variant="outline" onClick={() => { setExpandedRoleId(null); setExpandedRolePerms([]); setPermQuery(""); }}>Cancelar</Button>
-                  <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => saveExpandedPermissions(expandedRoleId as string, expandedRolePerms)}>Guardar</Button>
-                </div>
+                <PermissionsEditor value={expandedRolePerms} onChange={setExpandedRolePerms} query={permQuery} readOnly={expandedRoleIsLocked} />
+                {expandedRoleIsLocked ? (
+                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-900">
+                    Este rol está bloqueado. No se pueden modificar los permisos predeterminados.
+                  </div>
+                ) : (
+                  <div className="flex gap-2 justify-end mt-3">
+                    <Button variant="outline" onClick={() => { setExpandedRoleId(null); setExpandedRolePerms([]); setPermQuery(""); }}>Cancelar</Button>
+                    <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => saveExpandedPermissions(expandedRoleId as string, expandedRolePerms)}>Guardar</Button>
+                  </div>
+                )}
               </div>
             ) : null
           }

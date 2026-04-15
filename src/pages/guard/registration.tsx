@@ -15,8 +15,10 @@ export default function GuardRegistration() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const inviteToken = searchParams.get("token") || searchParams.get("invite") || undefined;
+  const rawInviteToken = searchParams.get("token") || searchParams.get("invitationToken") || searchParams.get("invite") || undefined;
+  const inviteToken = rawInviteToken && rawInviteToken !== 'null' && rawInviteToken !== 'undefined' ? rawInviteToken : undefined;
   const securityGuardId = searchParams.get("securityGuardId") || undefined;
+  const inviteType = searchParams.get("inviteType") || undefined;
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -60,8 +62,12 @@ export default function GuardRegistration() {
 
   useEffect(() => { 
     const fetchInvite = async () => {
-      console.log('[registration] params ->', { inviteToken, securityGuardId });
+      console.log('[registration] params ->', { inviteToken, securityGuardId, inviteType });
       if (!inviteToken && !securityGuardId) return;
+      if (inviteType === 'client' && inviteToken) {
+        navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}&inviteType=client`);
+        return;
+      }
       setIsLoading(true);
       try {
         const endpointBase = `/security-guard/public`;
@@ -78,6 +84,9 @@ export default function GuardRegistration() {
         }
 
         setFetched(data);
+        if (inviteToken || securityGuardId) {
+          setStep(3);
+        }
 
         // nombres / email
         const rootFirst = data.firstName || data.guard?.firstName || (data.fullName ? String(data.fullName).split(" ")[0] : undefined);
@@ -95,6 +104,21 @@ export default function GuardRegistration() {
         // Only `firstName`, `lastName` and `email` are prefilled and locked when present.
 
       } catch (err: any) {
+        // If this token belongs to a client invitation instead of a guard invitation,
+        // redirect to the client registration page.
+        if (inviteToken) {
+          try {
+            const clientResponse = await ApiService.get(`/user/public?token=${encodeURIComponent(inviteToken)}`, { skipAuth: true });
+            const clientData = clientResponse?.data || clientResponse;
+            if (clientData) {
+              navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}`);
+              return;
+            }
+          } catch (_clientErr) {
+            // ignore and preserve original invite error flow
+          }
+        }
+
         const msgCandidates = [
           typeof err?.message === "string" ? err.message : undefined,
           err?.data?.message,

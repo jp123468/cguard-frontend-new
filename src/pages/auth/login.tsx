@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 import AuthLayout from "@/layouts/auth-layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,11 +6,17 @@ import { useAuthForm } from "@/hooks/useAuthForm";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { useTranslation } from 'react-i18next';
+import { ApiService } from '@/services/api/apiService';
 
 export default function Login() {
   const { signIn, signInWithToken } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawInviteToken = searchParams.get('token') || searchParams.get('invitationToken') || searchParams.get('invite') || undefined;
+  const inviteToken = rawInviteToken && rawInviteToken !== 'null' && rawInviteToken !== 'undefined' ? rawInviteToken : undefined;
+  const inviteType = searchParams.get('inviteType') || undefined;
+  const securityGuardId = searchParams.get('securityGuardId') || undefined;
   const {
     email, password, showPassword, isLoading,
     setEmail, setPassword, toggleShowPassword, setIsLoading,
@@ -20,6 +26,43 @@ export default function Login() {
     useEffect(() => {
       document.title = t('auth.login_title') || 'Iniciar Sesión | Cguard';
     }, []);
+
+    useEffect(() => {
+      const redirectIfInviteLink = async () => {
+        if (!inviteToken) return;
+        if (inviteType === 'guard' || securityGuardId) {
+          navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}${securityGuardId ? `&securityGuardId=${encodeURIComponent(securityGuardId)}` : ''}&inviteType=guard`);
+          return;
+        }
+        if (inviteType === 'client') {
+          navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}&inviteType=client`);
+          return;
+        }
+
+        try {
+          const guardResponse = await ApiService.get(`/security-guard/public?token=${encodeURIComponent(inviteToken)}`, { skipAuth: true });
+          const guardData = guardResponse?.data || guardResponse;
+          if (guardData) {
+            navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}${securityGuardId ? `&securityGuardId=${encodeURIComponent(securityGuardId)}` : ''}&inviteType=guard`);
+            return;
+          }
+        } catch (_e) {
+          // not a guard invitation
+        }
+
+        try {
+          const clientResponse = await ApiService.get(`/user/public?token=${encodeURIComponent(inviteToken)}`, { skipAuth: true });
+          const clientData = clientResponse?.data || clientResponse;
+          if (clientData) {
+            navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}&inviteType=client`);
+          }
+        } catch (_e) {
+          // not a client invitation
+        }
+      };
+
+      redirectIfInviteLink();
+    }, [inviteToken, inviteType, securityGuardId, navigate]);
   
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();

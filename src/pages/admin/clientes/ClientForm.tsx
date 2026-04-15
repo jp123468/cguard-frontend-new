@@ -649,28 +649,32 @@ export default function ClientForm({
                                         </FormItem>
                                     )}
                                 />
-
-                                <FormField<ClientInput>
-                                    control={form.control}
-                                    name="addressLine2"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>{t('clients.form.addressLine2', 'Dirección Complementaria')}</FormLabel>
-                                            <FormControl>
-                                                <input
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                                    placeholder={t('clients.form.addressLine2Placeholder', 'Opcional')}
-                                                    {...field}
-                                                    value={typeof field.value === "string" ? field.value : ""}
-                                                    maxLength={100}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
                             </div>
+                        </div>
 
+                        <div className="mt-4">
+                            <FormField<ClientInput>
+                                control={form.control}
+                                name="addressLine2"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>{t('clients.form.addressLine2', 'Dirección Complementaria')}</FormLabel>
+                                        <FormControl>
+                                            <input
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                                placeholder={t('clients.form.addressLine2Placeholder', 'Opcional')}
+                                                {...field}
+                                                value={typeof field.value === "string" ? field.value : ""}
+                                                maxLength={100}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className={showAddressAutocomplete ? 'opacity-60 pointer-events-none' : ''}>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
                                 <FormField<ClientInput>
                                     control={form.control}

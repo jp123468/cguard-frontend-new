@@ -2018,6 +2018,9 @@
         "dashboard": "Dashboard"
       },
       "title": "Administrative Office Users",
+      "roleNames": {
+        "supervisor": "Supervisor"
+      },
       "bulkAction": {
         "placeholder": "Action",
         "suspend": "Suspend",

@@ -49,6 +49,12 @@
     ]
   },
   {
+    "id": "memos",
+    "name": "Memos",
+    "icon": "FileText",
+    "path": "/memos"
+  },
+  {
     "id": "analiticas",
     "name": "Analíticas",
     "icon": "BarChart3",

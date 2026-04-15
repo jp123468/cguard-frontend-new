@@ -239,11 +239,20 @@ export const securityGuardService = {
 
     if (!uploadUrl) throw new Error('Upload URL not available');
 
-    // If backend returned fields (S3 presigned POST), use FormData
-    if (fields) {
+    const isBackendFileUpload = uploadUrl.includes('/file/upload?token=');
+
+    // If backend returned fields (S3/GCS presigned POST), use FormData
+    if (fields || isBackendFileUpload) {
       const form = new FormData();
-      Object.keys(fields).forEach((k) => form.append(k, fields[k]));
-      form.append('file', file, filename);
+      if (fields) {
+        Object.keys(fields).forEach((k) => form.append(k, fields[k]));
+      }
+      if (!isBackendFileUpload) {
+        form.append('file', file, filename);
+      } else {
+        form.append('filename', filename);
+        form.append('file', file);
+      }
 
       const uploadResp = await fetch(uploadUrl, { method: 'POST', body: form });
       if (!uploadResp.ok) {
@@ -315,10 +324,19 @@ export const securityGuardService = {
         }
       };
 
-      if (fields) {
+      const isBackendFileUpload = uploadUrl.includes('/file/upload?token=');
+
+      if (fields || isBackendFileUpload) {
         const form = new FormData();
-        Object.keys(fields).forEach((k) => form.append(k, fields[k]));
-        form.append('file', file, filename);
+        if (fields) {
+          Object.keys(fields).forEach((k) => form.append(k, fields[k]));
+        }
+        if (!isBackendFileUpload) {
+          form.append('file', file, filename);
+        } else {
+          form.append('filename', filename);
+          form.append('file', file);
+        }
         xhr.open('POST', uploadUrl, true);
         xhr.send(form);
       } else {

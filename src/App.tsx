@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from "react-router-dom"
+import { useEffect } from "react"
 import ProtectedRoute, { PublicOnlyRoute } from "@/components/ProtectedRoute"
 import Login from "./pages/auth/login"
 import ForgotPassword from "./pages/auth/forgot-password"
@@ -10,10 +11,13 @@ import { LanguageProvider } from "./contexts/LanguageContext"
 import "./i18n"
 import Register from "./pages/auth/register"
 import VerifyEmail from "./pages/auth/verify-email"
+import { ApiService } from '@/services/api/apiService';
+
 import ProfileUser from "./pages/admin/Configuration/ProfileUserPage"
 import ProfileCompany from "./pages/admin/Configuration/ProfileCompanyPage"
 import TwoFactorAuthentication from "./pages/admin/Configuration/TwoFactorAuthenticationPage"
 import Notification from "./pages/admin/Configuration/NotificationPage"
+import MobilPage from "./pages/admin/Configuration/mobil/MobilPage"
 import { ArrowLeftCircle } from "lucide-react"
 import CompanyPoliciesPage from './pages/admin/Configuration/company-policies/CompanyPoliciesPage';
 import IncidentTypesPage from "./pages/admin/Configuration/types-incidents/IncidentTypePage"
@@ -135,8 +139,64 @@ import GuardAsignarSitiosPage from "./pages/admin/security-guards/components/Gua
 import GuardSkillsPage from "./pages/admin/security-guards/components/GuardSkills/GuardSkillsPage";
 import GuardDepartamentoPage from "./pages/admin/security-guards/components/GuardDepartment/GuardDepartamentoPage";
 import GuardConfiguracionPage from "./pages/admin/security-guards/components/GuardConfiguration/GuardConfiguracionPage";
+import MemosPage from "./pages/admin/memos/MemosPage";
 
 import { ClientSelectionProvider } from "./contexts/ClientSelectionContext";
+
+function normalizeInviteToken(value: string | null | undefined) {
+  return value && value !== 'null' && value !== 'undefined' ? value : undefined;
+}
+
+function LoginRouteResolver() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const inviteToken = normalizeInviteToken(searchParams.get('token') || searchParams.get('invitationToken') || searchParams.get('invite') || undefined);
+  const inviteType = normalizeInviteToken(searchParams.get('inviteType') || undefined);
+  const securityGuardId = normalizeInviteToken(searchParams.get('securityGuardId') || undefined);
+
+  useEffect(() => {
+    if (!inviteToken) return;
+
+    if (inviteType === 'guard' || securityGuardId) {
+      navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}${securityGuardId ? `&securityGuardId=${encodeURIComponent(securityGuardId)}` : ''}&inviteType=guard`, { replace: true });
+      return;
+    }
+
+    if (inviteType === 'client') {
+      navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}&inviteType=client`, { replace: true });
+      return;
+    }
+
+    const resolveInvite = async () => {
+      try {
+        const guardResponse = await ApiService.get(`/security-guard/public?token=${encodeURIComponent(inviteToken)}`, { skipAuth: true });
+        if (guardResponse) {
+          navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}${securityGuardId ? `&securityGuardId=${encodeURIComponent(securityGuardId)}` : ''}&inviteType=guard`, { replace: true });
+          return;
+        }
+      } catch (e) {
+        // not a guard invite
+      }
+
+      try {
+        const clientResponse = await ApiService.get(`/user/public?token=${encodeURIComponent(inviteToken)}`, { skipAuth: true });
+        if (clientResponse) {
+          navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}&inviteType=client`, { replace: true });
+        }
+      } catch (e) {
+        // not a client invite
+      }
+    };
+
+    resolveInvite();
+  }, [inviteToken, inviteType, securityGuardId, navigate]);
+
+  return (
+    <PublicOnlyRoute>
+      <Login />
+    </PublicOnlyRoute>
+  );
+}
 
 export default function App() {
   return (
@@ -165,9 +225,7 @@ export default function App() {
               <Route
                 path="/login"
                 element={
-                  <PublicOnlyRoute>
-                    <Login />
-                  </PublicOnlyRoute>
+                  <LoginRouteResolver />
                 }
               />
               <Route
@@ -178,8 +236,22 @@ export default function App() {
                   </PublicOnlyRoute>
                 }
               />
-              <Route path="/guard_registration" element={<GuardRegistration />} />
-              <Route path="/auth/invitation" element={<GuardRegistration />} />
+              <Route
+                path="/guard_registration"
+                element={
+                  <PublicOnlyRoute>
+                    <GuardRegistration />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/auth/invitation"
+                element={
+                  <PublicOnlyRoute>
+                    <GuardRegistration />
+                  </PublicOnlyRoute>
+                }
+              />
               <Route
                 path="/auth/verify-email"
                 element={
@@ -645,6 +717,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <GuardConfiguracionPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/memos"
+                element={
+                  <ProtectedRoute>
+                    <MemosPage />
                   </ProtectedRoute>
                 }
               />
@@ -1291,6 +1371,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <TwoFactorAuthentication />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/mobil"
+                element={
+                  <ProtectedRoute>
+                    <MobilPage />
                   </ProtectedRoute>
                 }
               />

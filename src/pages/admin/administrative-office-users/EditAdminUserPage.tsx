@@ -2,7 +2,7 @@
 
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -129,8 +129,18 @@ export default function EditAdminUserPage() {
   const { handleSubmit, control, formState, setValue, setError } = form;
   const [clientOptions, setClientOptions] = useState<Array<{ id: string; name: string }>>(CLIENT_OPTIONS_PLACEHOLDER);
   const [siteOptions, setSiteOptions] = useState<Array<{ id: string; name: string; clientIds?: string[] }>>([]);
-  const [roleOptions, setRoleOptions] = useState<Array<{ id: string; name?: string; label?: string }>>([]);
+  const [roleOptions, setRoleOptions] = useState<Array<{ id: string; name?: string; label?: string; slug?: string }>>([]);
   const [fetchedRoleCandidate, setFetchedRoleCandidate] = useState<any>(null);
+
+  const getRoleDisplayName = useCallback((role: { id?: string; name?: string; slug?: string }) => {
+    const id = (role.id || '').toString().toLowerCase();
+    const name = (role.name || '').toString().toLowerCase();
+    const slug = (role.slug || '').toString().toLowerCase();
+    if (id.includes('supervisor') || slug.includes('supervisor') || name.includes('supervisor')) {
+      return t('adminOfficeUsers.roleNames.supervisor', { defaultValue: 'Supervisor' });
+    }
+    return role.name || '';
+  }, [t]);
   const prevClientIdsRef = useRef<string[] | undefined>(undefined);
 
   const watchedClientIds = useWatch({ control: form.control, name: 'clientIds' }) as string[] | undefined;
@@ -151,8 +161,16 @@ export default function EditAdminUserPage() {
         const tenantId = localStorage.getItem("tenantId") || "";
         if (!tenantId) return;
         const res = await ApiService.get(`/tenant/${tenantId}/role`);
-        const rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
-        const opts = rows.map((r: any) => ({ id: r.id ?? r._id ?? String(r.id), name: r.name ?? r.label ?? "" }));
+        const rows = Array.isArray(res)
+          ? res
+          : res?.rows
+          ? res.rows
+          : Array.isArray(res?.data)
+          ? res.data
+          : res?.data?.rows
+          ? res.data.rows
+          : [];
+        const opts = rows.map((r: any) => ({ id: r.id ?? r._id ?? String(r.id), name: r.name ?? r.label ?? "", slug: r.slug ?? r.name ?? undefined }));
         setRoleOptions(opts);
         } catch (e) {
         setRoleOptions([]);
@@ -434,7 +452,7 @@ export default function EditAdminUserPage() {
                       <SelectContent>
                         {roleOptions.map((r) => (
                           <SelectItem key={r.id} value={r.id}>
-                            {r.name}
+                            {getRoleDisplayName(r)}
                           </SelectItem>
                         ))}
                       </SelectContent>

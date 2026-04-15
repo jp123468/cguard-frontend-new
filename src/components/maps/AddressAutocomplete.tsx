@@ -23,6 +23,11 @@ export interface AddressAutocompleteProps {
   mapHeight?: string;
   initialLat?: number;
   initialLng?: number;
+  openWithQuery?: string;
+  suppressInitialReverse?: boolean;
+  onQueryChange?: (query: string) => void;
+  onGeocodeResult?: (address: AddressComponents) => void;
+  countryCodes?: string[];
 }
 
 export default function AddressAutocomplete({
@@ -33,6 +38,11 @@ export default function AddressAutocomplete({
   mapHeight = '300px',
   initialLat,
   initialLng,
+  openWithQuery,
+  suppressInitialReverse = false,
+  onQueryChange,
+  onGeocodeResult,
+  countryCodes,
 }: AddressAutocompleteProps) {
   const { isLoaded, loadError, google } = useGoogleMaps();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,27 +52,33 @@ export default function AddressAutocomplete({
   const markerRef = useRef<any>(null);
 
   const [inputValue, setInputValue] = useState(defaultValue);
-  const [selectedPlace, setSelectedPlace] = useState<any>(null);
+
+  useEffect(() => {
+    if (openWithQuery && openWithQuery.length > 0) {
+      setInputValue(openWithQuery);
+      if (inputRef.current) {
+        inputRef.current.value = openWithQuery;
+        inputRef.current.focus();
+      }
+      onQueryChange?.(openWithQuery);
+    }
+  }, [openWithQuery, onQueryChange]);
 
   useEffect(() => {
     if (!isLoaded || !google || !inputRef.current) return;
 
-    // Initialize autocomplete
     autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-      componentRestrictions: { country: [] }, // Allow all countries, or specify like ['es', 'mx']
+      componentRestrictions: countryCodes ? { country: countryCodes } : undefined,
       fields: ['address_components', 'geometry', 'formatted_address', 'name'],
+      types: ['geocode', 'establishment'],
     });
 
-    // Listen for place selection
     autocompleteRef.current.addListener('place_changed', () => {
       const place = autocompleteRef.current.getPlace();
-      
-      if (!place.geometry) {
-        console.warn('No geometry for place');
+      if (!place || !place.geometry) {
+        console.warn('No geometry for selected place');
         return;
       }
-
-      setSelectedPlace(place);
       handlePlaceSelect(place);
     });
 
@@ -71,31 +87,30 @@ export default function AddressAutocomplete({
         google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
-  }, [isLoaded, google]);
+  }, [isLoaded, google, countryCodes]);
 
   useEffect(() => {
     if (!isLoaded || !google || !showMap || !mapRef.current) return;
 
-    const lat = initialLat ?? 40.4168; // Default to Madrid, Spain
+    const lat = initialLat ?? 40.4168;
     const lng = initialLng ?? -3.7038;
+    const center = new google.maps.LatLng(lat, lng);
 
-    // Initialize map
     mapInstanceRef.current = new google.maps.Map(mapRef.current, {
-      center: { lat, lng },
-      zoom: initialLat && initialLng ? 15 : 5,
+      center,
+      zoom: initialLat !== undefined && initialLng !== undefined ? 15 : 5,
       mapTypeControl: true,
       streetViewControl: false,
+      fullscreenControl: false,
     });
 
-    // Initialize marker
     markerRef.current = new google.maps.Marker({
       map: mapInstanceRef.current,
-      position: { lat, lng },
+      position: center,
       draggable: true,
       animation: google.maps.Animation.DROP,
     });
 
-    // Listen for marker drag
     markerRef.current.addListener('dragend', () => {
       const position = markerRef.current.getPosition();
       if (position) {
@@ -103,53 +118,59 @@ export default function AddressAutocomplete({
       }
     });
 
+    if (!suppressInitialReverse && initialLat !== undefined && initialLng !== undefined) {
+      geocodePosition(center, false);
+    }
+
     return () => {
       if (markerRef.current) {
         google.maps.event.clearInstanceListeners(markerRef.current);
       }
     };
-  }, [isLoaded, google, showMap]);
+  }, [isLoaded, google, showMap, initialLat, initialLng, suppressInitialReverse]);
 
   const handlePlaceSelect = (place: any) => {
     const addressComponents = extractAddressComponents(place);
-    
-    if (addressComponents) {
-      onAddressSelect(addressComponents);
-      setInputValue(place.formatted_address || place.name);
+    if (!addressComponents) return;
 
-      // Update map
-      if (mapInstanceRef.current && markerRef.current) {
-        const location = place.geometry.location;
-        mapInstanceRef.current.setCenter(location);
-        mapInstanceRef.current.setZoom(15);
-        markerRef.current.setPosition(location);
-      }
+    onAddressSelect(addressComponents);
+    onGeocodeResult?.(addressComponents);
+    const location = place.geometry.location;
+
+    setInputValue(place.formatted_address || place.name || inputValue);
+    onQueryChange?.(place.formatted_address || place.name || inputValue);
+
+    if (mapInstanceRef.current && markerRef.current) {
+      mapInstanceRef.current.setCenter(location);
+      mapInstanceRef.current.setZoom(15);
+      markerRef.current.setPosition(location);
     }
   };
 
-  const geocodePosition = (position: any) => {
+  const geocodePosition = (position: any, emit = true) => {
     if (!google) return;
-
     const geocoder = new google.maps.Geocoder();
     geocoder.geocode({ location: position }, (results: any[], status: string) => {
       if (status === 'OK' && results && results.length > 0) {
         const place = results[0];
-        setInputValue(place.formatted_address);
-        
         const addressComponents = extractAddressComponents({
           ...place,
           geometry: { location: position },
         });
-        
-        if (addressComponents) {
+        if (!addressComponents) return;
+
+        setInputValue(place.formatted_address || addressComponents.address);
+        onQueryChange?.(place.formatted_address || addressComponents.address);
+        if (emit) {
           onAddressSelect(addressComponents);
+          onGeocodeResult?.(addressComponents);
         }
       }
     });
   };
 
   const extractAddressComponents = (place: any): AddressComponents | null => {
-    if (!place.address_components) return null;
+    if (!place || !place.address_components) return null;
 
     let streetNumber = '';
     let route = '';
@@ -158,34 +179,17 @@ export default function AddressAutocomplete({
     let country = '';
 
     place.address_components.forEach((component: any) => {
-      const types = component.types;
-
-      if (types.includes('street_number')) {
-        streetNumber = component.long_name;
-      }
-      if (types.includes('route')) {
-        route = component.long_name;
-      }
-      if (types.includes('locality')) {
-        city = component.long_name;
-      }
-      if (types.includes('postal_code')) {
-        postalCode = component.long_name;
-      }
-      if (types.includes('country')) {
-        country = component.long_name;
-      }
-
-      // Fallbacks
-      if (!city && types.includes('administrative_area_level_2')) {
-        city = component.long_name;
-      }
-      if (!city && types.includes('administrative_area_level_1')) {
-        city = component.long_name;
-      }
+      const types: string[] = component.types || [];
+      if (types.includes('street_number')) streetNumber = component.long_name;
+      if (types.includes('route')) route = component.long_name;
+      if (types.includes('locality')) city = component.long_name;
+      if (types.includes('postal_code')) postalCode = component.long_name;
+      if (types.includes('country')) country = component.long_name;
+      if (!city && types.includes('administrative_area_level_2')) city = component.long_name;
+      if (!city && types.includes('administrative_area_level_1')) city = component.long_name;
     });
 
-    const address = [route, streetNumber].filter(Boolean).join(' ') || place.formatted_address || place.name;
+    const address = [route, streetNumber].filter(Boolean).join(' ') || place.formatted_address || place.name || '';
     const latitude = place.geometry.location.lat();
     const longitude = place.geometry.location.lng();
 
@@ -227,6 +231,11 @@ export default function AddressAutocomplete({
     );
   };
 
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    onQueryChange?.(value);
+  };
+
   if (loadError) {
     return (
       <Alert variant="destructive">
@@ -255,7 +264,7 @@ export default function AddressAutocomplete({
             ref={inputRef}
             type="text"
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
             placeholder={placeholder}
             className="w-full"
           />
