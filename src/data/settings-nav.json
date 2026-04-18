@@ -112,7 +112,7 @@
         "items": [
           {
             "id": "publishing-sites",
-            "label": "Sitios de Publicación",
+            "label": "Puestos de Vigilancia",
             "path": "/setting/publishing-sites"
           },
           {

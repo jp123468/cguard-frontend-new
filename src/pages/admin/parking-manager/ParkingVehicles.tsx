@@ -191,7 +191,7 @@ export default function ParkingVehicles() {
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label htmlFor="plate">Matrícula*</Label>
+                                            <Label htmlFor="plate">Placa*</Label>
                                             <Input
                                                 id="plate"
                                                 value={newVehicle.plate}

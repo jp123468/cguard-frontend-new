@@ -1,0 +1,22 @@
+import api from '@/lib/api';
+
+const getTenantId = (): string => {
+  const t = localStorage.getItem('tenantId');
+  if (!t) throw new Error('Tenant ID no configurado');
+  return t;
+};
+
+const telemetryService = {
+  async log(entry: { level?: string; message: string; details?: any }) {
+    const tenantId = getTenantId();
+    try {
+      const { data } = await api.post(`/tenant/${tenantId}/client-log`, { data: entry });
+      return data;
+    } catch (err) {
+      // swallow errors — telemetry should not break UI
+      console.warn('telemetryService.log failed', err);
+    }
+  },
+};
+
+export default telemetryService;

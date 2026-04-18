@@ -7,17 +7,21 @@ export const vehicleCreateSchema = z.object({
     .refine((v) => /^\d{4}$/.test(v), "Año inválido"),
   make: z.string().min(1, "Marca requerida"),
   model: z.string().min(1, "Modelo requerido"),
-  color: z.string().optional(),
-  plate: z.string().min(1, "Matrícula requerida"),
+  color: z.string().min(1, "Color requerido"),
+  plate: z.string().min(1, "Placa requerida"),
   initialMileage: z
     .string()
-    .optional()
-    .refine((v) => !v || /^\d+$/.test(v), "Solo números"),
+    .min(1, "Kilometraje inicial requerido")
+    .refine((v) => /^\d+$/.test(v), "Solo números"),
   ownership: z.enum(["propio", "alquilado", "cliente"]).default("propio"),
   vin: z
     .string()
-    .optional()
-    .refine((v) => !v || /^[A-HJ-NPR-Z0-9]{11,17}$/i.test(v), "VIN inválido"),
+    .min(17, "VIN inválido (debe tener exactamente 17 caracteres)")
+    .max(17, "VIN inválido (debe tener exactamente 17 caracteres)")
+    .refine(
+      (v) => /^[A-HJ-NPR-Z0-9]{17}$/i.test(v),
+      "VIN inválido (debe tener exactamente 17 caracteres alfanuméricos)",
+    ),
   description: z.string().optional(),
   image: z.instanceof(File).optional().or(z.undefined()),
 });

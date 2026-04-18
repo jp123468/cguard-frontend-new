@@ -75,7 +75,7 @@ export default function PostingGlobalForm({ defaultValues, onSubmit }: Props) {
     <Form {...form}>
       <form onSubmit={submit} className="space-y-2">
         <p className="mb-4 text-sm font-semibold text-red-600">
-          Los cambios se reflejarán en todos los sitios de publicación
+          Los cambios se reflejarán en todos los Puestos de Vigilancia
         </p>
 
         <FormField

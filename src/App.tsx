@@ -68,6 +68,7 @@ import DispatchPublicView from '@/pages/public/DispatchPublicView';
 import NewVehiclePage from "./pages/admin/vehicles/NewVehiclePage"
 import RoutesPage from "./pages/admin/routes/RoutesPage"
 import NewRoutePage from "./pages/admin/routes/NewRoutePage"
+import PatrolExecutionPage from "./pages/guard/PatrolExecutionPage"
 import LiveTrackingPage from "./pages/admin/gps-tracker/LiveTracking"
 import TrackingHistoryPage from "./pages/admin/gps-tracker/TrackingHistory"
 import TimeRecorder from "./pages/admin/time-clock/TimeRecorder"
@@ -1331,10 +1332,19 @@ export default function App() {
                 }
               />
               <Route
-                path="/vehicle-patrol/routes/add-new"
+                path="/tenant/:tenantId/vehicle-patrol/routes/add-new"
                 element={
                   <ProtectedRoute>
                     <NewRoutePage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/patrol/:id/execute"
+                element={
+                  <ProtectedRoute>
+                    <PatrolExecutionPage />
                   </ProtectedRoute>
                 }
               />

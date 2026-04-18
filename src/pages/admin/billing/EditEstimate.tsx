@@ -242,7 +242,7 @@ export default function EditEstimate() {
             }));
             setPostSites(mapped.filter((ps: any) => !ps.clientId || ps.clientId === clientId ? true : ps.clientId === clientId));
         } catch (err) {
-            console.error('Error cargando sitios de publicación', err);
+            console.error('Error cargando Puestos de Vigilancia', err);
             setPostSites([]);
         }
     };

@@ -1,4 +1,6 @@
-import { useMemo } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate } from 'react-router-dom';
+import { useWatch } from "react-hook-form";
 import { Link } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -10,6 +12,8 @@ import {
 } from "@/lib/validators/route-create.schema";
 
 import { Button } from "@/components/ui/button";
+import { toast } from 'sonner';
+import telemetryService from '@/lib/api/telemetryService';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -39,21 +43,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 
-const guards = [
-  { id: "g1", name: "Juan Pérez" },
-  { id: "g2", name: "María Gómez" },
-];
+import userService from "@/lib/api/userService";
+import { postSiteService } from "@/lib/api/postSiteService";
+import vehicleService from "@/lib/api/vehicleService";
+import routeService from "@/lib/api/routeService";
 
-const sites = [
-  { id: "s1", name: "Sede Norte" },
-  { id: "s2", name: "Sede Centro" },
-  { id: "s3", name: "Sede Sur" },
-];
-
-const vehicles = [
-  { id: "v1", name: "Toyota Hilux ABC-123" },
-  { id: "v2", name: "Nissan Frontier XYZ-987" },
-];
+// When backend fails, we must not show fallback data — keep vehicles empty.
 
 const notifyTimes = ["00:05", "00:10", "00:15", "00:30", "01:00"];
 
@@ -69,6 +64,35 @@ const DAY_LABEL: Record<string, string> = {
 const ALL_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 export default function NewRoutePage() {
+  const params = useParams<{ tenantId?: string }>();
+  const navigate = useNavigate();
+
+  // If tenantId present in URL, persist to localStorage so services pick it up
+  useEffect(() => {
+    try {
+      if (params && params.tenantId) {
+        localStorage.setItem('tenantId', params.tenantId);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [params]);
+  const parseCoord = (v: any): number | null => {
+    if (v == null) return null;
+    if (typeof v === 'number') {
+      if (Number.isFinite(v)) return v;
+      return null;
+    }
+    let s = String(v).trim();
+    // replace comma decimal separators
+    s = s.replace(/,/g, '.');
+    // remove non-numeric trailing chars
+    const m = s.match(/-?[0-9]+\.?[0-9]*/);
+    if (!m) return null;
+    const num = Number(m[0]);
+    if (!Number.isFinite(num)) return null;
+    return num;
+  };
   const form = useForm<RouteCreateSchema>({
     resolver: zodResolver(routeCreateSchema) as any,
     defaultValues: {
@@ -80,8 +104,7 @@ export default function NewRoutePage() {
       startTime: "00:00",
       endTime: "23:59",
       days: [],
-      guardFilter: { departmentId: "", skillsetId: "", categoryId: "" },
-      guardId: "",
+      supervisorId: "",
       siteIds: [],
       vehicleId: "",
       syncHitsBetweenGuards: false,
@@ -93,26 +116,239 @@ export default function NewRoutePage() {
     mode: "onBlur",
   });
 
+  const watchedDays = useWatch({ control: form.control, name: 'days' as any }) as string[] | undefined;
+
   const daysText = useMemo(() => {
-    const d = form.watch("days") ?? [];
+    const d = watchedDays ?? [];
     if (!d.length) return ", , , , , ,";
     return d.map((k: any) => DAY_LABEL[k]).join(", ");
-  }, [form.watch("days")]);
+  }, [watchedDays]);
+
+  const [supervisors, setSupervisors] = useState<{ id: string; name: string }[]>([]);
+  const [sites, setSites] = useState<{ id: string; name: string; address?: string; lat?: number | string; lng?: number | string }[]>([]);
+  const [vehicles, setVehicles] = useState<{ id: string; name: string; licensePlate?: string }[]>([]);
+  const [points, setPoints] = useState<Array<{
+    siteId: string;
+    siteName?: string;
+    address?: string;
+    duration: number;
+    scheduledHits: number;
+    lat?: number | null;
+    lng?: number | null;
+  }>>([]);
+  const [pointOrder, setPointOrder] = useState<string | ''>('');
+
+  useEffect(() => {
+    let mounted = true;
+
+    // Load supervisors: only active users with supervisor role
+    (async () => {
+      try {
+        const res: any[] = await userService.listUsers({ active: true, limit: 200, offset: 0 });
+        if (!mounted) return;
+
+        const normalizeRoles = (rolesValue: any): string[] => {
+          if (!rolesValue) return [];
+          if (Array.isArray(rolesValue)) {
+            return rolesValue
+              .map((item) => (typeof item === 'string' ? item : item && (item.name || item.role) ? item.name || item.role : ''))
+              .filter(Boolean)
+              .map((item) => String(item).toLowerCase().trim());
+          }
+          if (typeof rolesValue === 'string') {
+            return [rolesValue.toLowerCase().trim()];
+          }
+          if (typeof rolesValue === 'object') {
+            const candidate = rolesValue.name || rolesValue.role || rolesValue.type || '';
+            return candidate ? [String(candidate).toLowerCase().trim()] : [];
+          }
+          return [];
+        };
+
+        const normalizedTargets = ['supervisor'];
+
+        const filtered = (res || []).filter((u: any) => {
+          const userRoles = normalizeRoles(u.roles || u.role || u.rolesList || u._rolesDisplay);
+          return userRoles.some((r) => normalizedTargets.includes(r));
+        });
+
+        setSupervisors(
+          filtered.map((u: any) => ({
+            id: u.id,
+            name: u.displayName || (u.firstName || u.lastName ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : undefined) || u.name || u.email || String(u.id),
+          }))
+        );
+      } catch (e) {
+        console.error('Error loading supervisors', e);
+        try { toast.error(String((e as any)?.message || (e as any)?.toString() || 'Error cargando supervisores')); } catch {}
+        try { telemetryService.log({ level: 'error', message: 'Error cargando supervisores', details: e }); } catch {}
+      }
+    })();
+
+    // Load publish sites
+    (async () => {
+      try {
+        const res: any = await postSiteService.list({}, { limit: 100, offset: 0 });
+        const rows = res && res.rows ? res.rows : (Array.isArray(res) ? res : []);
+        if (!mounted) return;
+        setSites(rows.map((s: any) => {
+          const rawLat = s.latitud ?? s.latitude ?? s.lat ?? s.locationLat ?? undefined;
+          const rawLng = s.longitud ?? s.longitude ?? s.lng ?? s.locationLng ?? undefined;
+          let lat = parseCoord(rawLat);
+          let lng = parseCoord(rawLng);
+          // detect swapped coordinates (lat out of -90..90 but lng looks like a valid lat)
+          const latValid = lat != null && lat >= -90 && lat <= 90;
+          const lngValid = lng != null && lng >= -180 && lng <= 180;
+          if ((!latValid && lng != null && lng >= -90 && lng <= 90) && (lat != null && (lat >= -180 && lat <= 180))) {
+            // swap
+            const tmp = lat;
+            lat = lng;
+            lng = tmp;
+          }
+          return { id: s.id, name: s.name, address: s.address || s.location || s.postalAddress || '', lat, lng };
+        }));
+      } catch (e) {
+        console.error('Error loading sites', e);
+        try { toast.error(String((e as any)?.message || (e as any)?.toString() || 'Error cargando Puestos de Vigilancia')); } catch {}
+        try { telemetryService.log({ level: 'error', message: 'Error cargando Puestos de Vigilancia', details: e }); } catch {}
+      }
+    })();
+
+    // Load vehicles (if backend endpoint exists)
+    (async () => {
+      try {
+        const res: any = await vehicleService.list({ limit: 100 });
+        const rows = res && res.rows ? res.rows : (Array.isArray(res) ? res : []);
+        if (!mounted) return;
+        const mapped = rows.length
+          ? rows.map((v: any) => ({
+              id: v.id,
+              name: v.name || '',
+              licensePlate: v.licensePlate || '',
+            }))
+          : [];
+        setVehicles(mapped);
+      } catch (e) {
+        // Determine if error is due to missing vehicles table. If so,
+        // keep the dropdown empty and avoid showing fallback items
+        console.warn('vehicleService.list failed', e);
+        const rawMsg = String((e as any)?.message || (e as any)?.toString() || '');
+        const isTableMissing = /table.+vehicles.+doesn'?t exist/i.test(rawMsg) || /does not exist/i.test(rawMsg) || /vehicles'.*doesn?t exist/i.test(rawMsg);
+        // On any error, clear vehicles — do not use fallback data
+        setVehicles([]);
+        try { toast.error(String((e as any)?.message || (e as any)?.toString() || 'Error cargando vehículos')); } catch {}
+        try { telemetryService.log({ level: 'error', message: 'Error cargando vehículos', details: e }); } catch {}
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Sync points with selected siteIds: keep order from form.siteIds
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'siteIds') {
+        const selected = (value.siteIds || []) as string[];
+        setPoints((prev) => {
+          // keep existing for unchanged ids
+          const byId = new Map(prev.map((p) => [p.siteId, p]));
+          const next = selected.map((id: string) => {
+            const existing = byId.get(id);
+            const site = sites.find((s) => s.id === id);
+            const latRaw = site?.lat ?? existing?.lat ?? null;
+            const lngRaw = site?.lng ?? existing?.lng ?? null;
+            const lat = latRaw == null ? null : Number(latRaw);
+            const lng = lngRaw == null ? null : Number(lngRaw);
+            return {
+              siteId: id,
+              siteName: site?.name || existing?.siteName,
+              address: site?.address || existing?.address || '',
+              duration: existing?.duration ?? 5,
+              scheduledHits: existing?.scheduledHits ?? 1,
+              lat,
+              lng,
+            };
+          });
+          return next;
+        });
+      }
+    });
+    return () => subscription.unsubscribe && subscription.unsubscribe();
+  }, [form, sites]);
+
+  const movePoint = (index: number, dir: number) => {
+    setPoints((prev) => {
+      const arr = prev.slice();
+      const to = index + dir;
+      if (to < 0 || to >= arr.length) return arr;
+      const tmp = arr[to];
+      arr[to] = arr[index];
+      arr[index] = tmp;
+      return arr;
+    });
+  };
+
+  const removePoint = (siteId: string) => {
+    // also remove from form.siteIds
+    const cur = form.getValues('siteIds') || [];
+    form.setValue('siteIds', (cur as string[]).filter((x) => x !== siteId));
+    setPoints((prev) => prev.filter((p) => p.siteId !== siteId));
+  };
+
+  const updatePointField = (siteId: string, field: 'duration' | 'scheduledHits' | 'address', value: any) => {
+    setPoints((prev) => prev.map((p) => (p.siteId === siteId ? { ...p, [field]: value } : p)));
+  };
 
   const onSubmit = (data: RouteCreateSchema) => {
-    const payload = {
-      ...data,
-      windowStart:
-        data.dateFrom && data.startTime
-          ? new Date(`${data.dateFrom}T${data.startTime}:00`).toISOString()
-          : null,
-      windowEnd:
-        data.dateTo && data.endTime
-          ? new Date(`${data.dateTo}T${data.endTime}:00`).toISOString()
-          : null,
-    };
-    console.log("Nueva ruta:", payload);
+    (async () => {
+      try {
+        setSubmitting(true);
+        const payload = {
+          ...data,
+          assignedGuard: data.supervisorId, // backend expects assignedGuard
+          windowStart:
+            data.dateFrom && data.startTime
+              ? new Date(`${data.dateFrom}T${data.startTime}:00`).toISOString()
+              : null,
+          windowEnd:
+            data.dateTo && data.endTime
+              ? new Date(`${data.dateTo}T${data.endTime}:00`).toISOString()
+              : null,
+          points: points.map((p, idx) => ({
+            siteId: p.siteId,
+            order: idx + 1,
+            duration: p.duration,
+            scheduledHits: p.scheduledHits,
+            address: p.address,
+          })),
+        } as any;
+
+        const resp = await routeService.create(payload);
+        // show success, then navigate back to the routes list
+        console.log('Ruta creada:', resp);
+        toast.success('Ruta creada');
+        try {
+          const path = '/vehicle-patrol/routes';
+          navigate(path, { replace: true });
+        } catch (e) {
+          // ignore navigation errors
+        }
+      } catch (err: any) {
+        console.error('Error creando ruta', err);
+        try {
+          const msg = err?.message || err?.toString() || (err?.details && JSON.stringify(err.details)) || 'Error creando ruta';
+          toast.error(String(msg));
+        } catch {}
+        try { telemetryService.log({ level: 'error', message: 'Error creando ruta', details: err }); } catch {}
+      } finally {
+        setSubmitting(false);
+      }
+    })();
   };
+
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <AppLayout>
@@ -272,85 +508,22 @@ export default function NewRoutePage() {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              <div className="text-sm font-semibold">Filtro de Guardia</div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <FormField
-                  control={form.control}
-                  name="guardFilter.departmentId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Departamento</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Departamento" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="dep-1">Operaciones</SelectItem>
-                          <SelectItem value="dep-2">Seguridad Física</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="guardFilter.skillsetId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Conjunto de Habilidades</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Conjunto de Habilidades" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="sk-1">Primeros Auxilios</SelectItem>
-                          <SelectItem value="sk-2">Conducción</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="guardFilter.categoryId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Categoría</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Categoría" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="cat-1">A</SelectItem>
-                          <SelectItem value="cat-2">B</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+            {/* Filtro de Guardia eliminado según solicitud */}
 
             <FormField
               control={form.control}
-              name="guardId"
+              name="supervisorId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Asignar Guardia*</FormLabel>
+                  <FormLabel>Asignar Supervisor*</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar guardia" />
+                      <SelectValue placeholder="Seleccionar supervisor" />
                     </SelectTrigger>
                     <SelectContent>
-                      {guards.map((g) => (
-                        <SelectItem key={g.id} value={g.id}>
-                          {g.name}
+                      {supervisors.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -365,22 +538,48 @@ export default function NewRoutePage() {
               name="siteIds"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Seleccionar sitios de publicación*</FormLabel>
-                  <Select
-                    value={field.value?.[0] ?? ""}
-                    onValueChange={(v) => field.onChange(v ? [v] : [])}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sites.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Seleccionar Puestos de Vigilancia*</FormLabel>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm"
+                      >
+                        <span className="truncate">
+                          {(field.value || []).length
+                            ? (field.value || [])
+                                .map((id: string) => sites.find((s) => s.id === id)?.name)
+                                .filter((n): n is string => Boolean(n))
+                                .join(', ')
+                            : 'Seleccionar'}
+                        </span>
+                        <ChevronDown className="h-4 w-4 opacity-60" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-[320px]">
+                      {sites.length === 0 ? (
+                        <div className="p-3 text-sm text-muted-foreground">No hay puestos disponibles</div>
+                      ) : (
+                        sites.map((s) => {
+                          const checked = (field.value || []).includes(s.id);
+                          return (
+                            <DropdownMenuCheckboxItem
+                              key={s.id}
+                              checked={checked}
+                              onCheckedChange={(v) => {
+                                const cur = new Set(field.value || []);
+                                if (v) cur.add(s.id);
+                                else cur.delete(s.id);
+                                field.onChange(Array.from(cur));
+                              }}
+                            >
+                              {s.name}
+                            </DropdownMenuCheckboxItem>
+                          );
+                        })
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <FormMessage />
                 </FormItem>
               )}
@@ -391,33 +590,90 @@ export default function NewRoutePage() {
               <div className="rounded-lg border">
                 <div className="flex items-center justify-between border-b px-4 py-3">
                   <div className="text-sm font-medium">Puntos y tiempos</div>
-                  <Select onValueChange={(v) => console.log("Seleccionar:", v)}>
+                  {/* Dropdown de orden deshabilitado temporalmente
+                  <Select value={pointOrder} onValueChange={(v) => {
+                    setPointOrder(v);
+                    if (v === 'aleatorio') {
+                      // shuffle points
+                      setPoints((prev) => {
+                        const a = prev.slice();
+                        for (let i = a.length - 1; i > 0; i--) {
+                          const j = Math.floor(Math.random() * (i + 1));
+                          const tmp = a[i];
+                          a[i] = a[j];
+                          a[j] = tmp;
+                        }
+                        form.setValue('siteIds', a.map(p => p.siteId));
+                        return a;
+                      });
+                    } else if (v === 'distancia') {
+                      // order points by distance using lat/lng via greedy nearest-neighbor
+                      // (temporarily disabled)
+                    }
+                  }}>
                     <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Seleccionar" />
+                      <SelectValue placeholder="Seleccionar">{pointOrder === 'distancia' ? 'Ordenar según la distancia' : pointOrder === 'aleatorio' ? 'Ordenar de manera aleatoria' : undefined}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="distancia">Ordenar según la distancia</SelectItem>
                       <SelectItem value="aleatorio">Ordenar de manera aleatoria</SelectItem>
                     </SelectContent>
                   </Select>
+                  */}
                 </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full border-collapse text-left text-sm">
                     <thead className="bg-gray-50">
                       <tr className="border-b">
+                        <th className="px-4 py-3 font-semibold">#</th>
                         <th className="px-4 py-3 font-semibold">Puesto de seguridad</th>
                         <th className="px-4 py-3 font-semibold">Dirección</th>
-                        <th className="px-4 py-3 font-semibold">Golpes</th>
-                        <th className="px-4 py-3 font-semibold">Duración</th>
-                        <th className="px-4 py-3 font-semibold">Golpes programados</th>
+                        <th className="px-4 py-3 font-semibold">Pasadas</th>
+                        <th className="px-4 py-3 font-semibold">Duración (min)</th>
+                        <th className="px-4 py-3 font-semibold">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td colSpan={5} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                          No hay puntos definidos
-                        </td>
-                      </tr>
+                      {points.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                            No hay puntos definidos
+                          </td>
+                        </tr>
+                      ) : (
+                        points.map((p, idx) => (
+                          <tr key={p.siteId} className="border-b">
+                            <td className="px-4 py-3">{idx + 1}</td>
+                            <td className="px-4 py-3">{p.siteName || p.siteId}</td>
+                            <td className="px-4 py-3">{p.address || <span className="text-muted-foreground">-</span>}</td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                min={0}
+                                value={p.scheduledHits}
+                                onChange={(e) => updatePointField(p.siteId, 'scheduledHits', Number(e.target.value || 0))}
+                                className="w-20 rounded border px-2 py-1"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                min={0}
+                                value={p.duration}
+                                onChange={(e) => updatePointField(p.siteId, 'duration', Number(e.target.value || 0))}
+                                className="w-24 rounded border px-2 py-1"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex gap-2">
+                                <button type="button" onClick={() => movePoint(idx, -1)} className="rounded border px-2 py-1">↑</button>
+                                <button type="button" onClick={() => movePoint(idx, 1)} className="rounded border px-2 py-1">↓</button>
+                                <button type="button" onClick={() => removePoint(p.siteId)} className="rounded border px-2 py-1 text-red-600">Eliminar</button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -432,12 +688,17 @@ export default function NewRoutePage() {
                   <FormLabel>Seleccionar vehículo*</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar vehículo" />
+                      <SelectValue placeholder="Seleccionar vehículo">
+                        {(() => {
+                          const sv = vehicles.find((x) => x.id === field.value);
+                          return sv ? `${sv.name}${sv.licensePlate ? ' • ' + sv.licensePlate : ''}` : undefined;
+                        })()}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {vehicles.map((v) => (
                         <SelectItem key={v.id} value={v.id}>
-                          {v.name}
+                          <span className="truncate">{[v.name, v.licensePlate].filter(Boolean).join(' • ')}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -448,6 +709,7 @@ export default function NewRoutePage() {
             />
 
             <div className="space-y-4">
+                {/* Patrols are created by default; UI option removed */}
               <FormField
                 control={form.control}
                 name="syncHitsBetweenGuards"
@@ -455,7 +717,7 @@ export default function NewRoutePage() {
                   <div className="flex items-center gap-3">
                     <Checkbox id="syncHits" checked={field.value} onCheckedChange={field.onChange} />
                     <Label htmlFor="syncHits" className="cursor-pointer">
-                      Sincronizar golpes entre guardias
+                      Sincronizar pasadas entre guardias
                     </Label>
                   </div>
                 )}
@@ -487,7 +749,7 @@ export default function NewRoutePage() {
                       }
                     />
                     <Label htmlFor="notify" className="cursor-pointer">
-                      Enviar notificación de inicio de golpes programados antes
+                      Enviar notificación antes de las pasadas programadas
                     </Label>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger className="w-28">
@@ -516,7 +778,7 @@ export default function NewRoutePage() {
                       onCheckedChange={field.onChange}
                     />
                     <Label htmlFor="autocheck" className="cursor-pointer">
-                      Registro automático de entrada y salida en sitios de publicación según geocerca
+                      Registro automático de entrada y salida en Puestos de Vigilancia según geocerca
                     </Label>
                   </div>
                 )}
@@ -542,14 +804,14 @@ export default function NewRoutePage() {
 
             <div className="flex items-center justify-end gap-2">
               <Button variant="outline" asChild>
-                <Link to="/routes">Cancelar</Link>
+                <Link to="/vehicle-patrol/routes">Cancelar</Link>
               </Button>
               <Button
                 type="submit"
                 className="bg-orange-500 text-white hover:bg-orange-600"
-                disabled={form.formState.isSubmitting}
+                disabled={submitting || form.formState.isSubmitting}
               >
-                Enviar
+                {submitting ? 'Enviando...' : 'Enviar'}
               </Button>
               <Button
                 variant="secondary"

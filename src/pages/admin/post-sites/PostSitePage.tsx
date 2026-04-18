@@ -195,7 +195,7 @@ export default function PostSitePage() {
     } catch (error: any) {
       console.error(error);
       // Do not show error toast; log instead
-      console.warn(getServerErrorMessage(error, "Error al cargar sitios de publicación"));
+      console.warn(getServerErrorMessage(error, "Error al cargar Puestos de Vigilancia"));
     } finally {
       setLoading(false);
     }
@@ -367,7 +367,7 @@ export default function PostSitePage() {
       <Breadcrumb
         items={[
           { label: t('postSites.postsitdash', 'Panel de control'), path: "/dashboard" },
-          { label: t('postSites.postsite', 'Sitios de publicación') },
+          { label: t('postSites.postsite', 'Puestos de Vigilancia') },
         ]}
       />
 
@@ -450,7 +450,7 @@ export default function PostSitePage() {
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={t('postSites.searchPlaceholder', 'Buscar Sitios de Publicación')}
+                placeholder={t('postSites.searchPlaceholder', 'Buscar Puestos de Vigilancia')}
                 className="pl-9 w-64"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

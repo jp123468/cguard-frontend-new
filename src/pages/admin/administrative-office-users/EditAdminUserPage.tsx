@@ -488,13 +488,13 @@ export default function EditAdminUserPage() {
                 name="postSiteIds"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>{t('adminOfficeUsers.editUser.form.assignSitesLabel', { defaultValue: 'Asignar Sitios de Publicación' })}</FormLabel>
+                    <FormLabel>{t('adminOfficeUsers.editUser.form.assignSitesLabel', { defaultValue: 'Asignar Puestos de Vigilancia' })}</FormLabel>
                     <FormControl>
                       <ClientMultiSelect
                         value={(field.value as string[]) || []}
                         onChange={(ids: string[]) => field.onChange(ids)}
                         options={siteOptions}
-                        placeholder={t('adminOfficeUsers.editUser.form.assignSitesPlaceholder', { defaultValue: 'Asignar Sitios de Publicación' })}
+                        placeholder={t('adminOfficeUsers.editUser.form.assignSitesPlaceholder', { defaultValue: 'Asignar Puestos de Vigilancia' })}
                       />
                     </FormControl>
                     <FormMessage />

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, Pencil, Trash2, FileImage } from 'lucide-react';
 import { toast } from 'sonner';
@@ -23,6 +24,10 @@ import {
   uploadBannerImage,
   uploadCertificationIcon,
   uploadCertificationImage,
+  listServices,
+  updateService,
+  createService,
+  deleteService,
 } from './MobilService';
 
 interface BannerItem {
@@ -80,7 +85,7 @@ export default function MobilPage() {
   const [confirmDeleteItem, setConfirmDeleteItem] = useState<{
     id: string;
     label: string;
-    type: 'banner' | 'certification';
+    type: 'banner' | 'certification' | 'service';
   } | null>(null);
 
   const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api').replace(/\/+$/, '');
@@ -182,9 +187,14 @@ export default function MobilPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [banners, certifications] = await Promise.all([listBanners(), listCertifications()]);
+      const [banners, certifications, services] = await Promise.all([
+        listBanners(),
+        listCertifications(),
+        listServices(),
+      ]);
       setBannerItems(banners);
       setCertItems(certifications);
+      setServices(services);
     } catch (err) {
       console.error(err);
       toast.error('No se pudo cargar la información de Mobil.');
@@ -328,7 +338,7 @@ export default function MobilPage() {
     }
   };
 
-  const openDeleteConfirmation = (id: string, label: string, type: 'banner' | 'certification') => {
+  const openDeleteConfirmation = (id: string, label: string, type: 'banner' | 'certification' | 'service') => {
     setConfirmDeleteItem({ id, label, type });
     setConfirmDeleteOpen(true);
   };
@@ -346,9 +356,12 @@ export default function MobilPage() {
       if (confirmDeleteItem.type === 'banner') {
         await deleteBanner(confirmDeleteItem.id);
         toast.success('Banner eliminado.');
-      } else {
+      } else if (confirmDeleteItem.type === 'certification') {
         await deleteCertification(confirmDeleteItem.id);
         toast.success('Certificación eliminada.');
+      } else if (confirmDeleteItem.type === 'service') {
+        await deleteService(confirmDeleteItem.id);
+        toast.success('Servicio eliminado.');
       }
       loadData();
     } catch (error) {
@@ -356,7 +369,9 @@ export default function MobilPage() {
       toast.error(
         confirmDeleteItem.type === 'banner'
           ? 'No se pudo eliminar el banner.'
-          : 'No se pudo eliminar la certificación.',
+          : confirmDeleteItem.type === 'certification'
+          ? 'No se pudo eliminar la certificación.'
+          : 'No se pudo eliminar el servicio.',
       );
     } finally {
       setLoading(false);
@@ -367,6 +382,17 @@ export default function MobilPage() {
   const bannerTitle = editingBannerId ? 'Editar Banner Superior' : 'Nuevo Banner Superior';
   const certTitle = editingCertificateId ? 'Editar Certificación' : 'Nueva Certificación';
 
+  const [services, setServices] = useState<any[]>([]);
+  const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const defaultServiceForm = {
+    title: '',
+    description: '',
+    price: '' as any,
+    publishedOnMobile: false,
+  };
+  const [serviceForm, setServiceForm] = useState(defaultServiceForm);
+
   return (
     <AppLayout>
       <SettingsLayout navKey="configuracion" title="MOBIL">
@@ -375,6 +401,64 @@ export default function MobilPage() {
             <div>
               <h1 className="text-2xl font-semibold">MOBIL</h1>
               <p className="text-sm text-muted-foreground">Administra banners y certificaciones desde este módulo.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Dialog>
+ 
+                <DialogContent className="w-[800px] max-w-full">
+                  <DialogHeader>
+                    <DialogTitle>Pricebook (Servicios)</DialogTitle>
+                    <DialogDescription>Lista de servicios publicados por este tenant. La app móvil puede consumir estos servicios.</DialogDescription>
+                  </DialogHeader>
+                  <div className="mt-4">
+                    <Table className="table-fixed">
+                      <colgroup>
+                        <col style={{ width: '35%' }} />
+                        <col style={{ width: '45%' }} />
+                        <col style={{ width: '20%' }} />
+                      </colgroup>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Título</TableHead>
+                          <TableHead>Descripción</TableHead>
+                          <TableHead>Precio</TableHead>
+                          <TableHead>Publicado</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {services.map((s) => (
+                          <TableRow key={s.id}>
+                            <TableCell>{s.title}</TableCell>
+                            <TableCell className="truncate">{s.description}</TableCell>
+                            <TableCell>{s.price ?? '-'}</TableCell>
+                            <TableCell>
+                              <Switch
+                                checked={Boolean(s.publishedOnMobile)}
+                                onCheckedChange={async (checked) => {
+                                  try {
+                                    setServices((prev) => prev.map((it) => (it.id === s.id ? { ...it, publishedOnMobile: checked } : it)));
+                                    await updateService(s.id, { publishedOnMobile: checked });
+                                    // refresh full list to reflect server-side transforms
+                                    const latest = await listServices();
+                                    setServices(latest);
+                                  } catch (err) {
+                                    console.error(err);
+                                    toast.error('No se pudo actualizar el estado de publicación.');
+                                    setServices((prev) => prev.map((it) => (it.id === s.id ? { ...it, publishedOnMobile: s.publishedOnMobile } : it)));
+                                  }
+                                }}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="ghost">Cerrar</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -447,6 +531,109 @@ export default function MobilPage() {
                   ))}
               </TableBody>
             </Table>
+          </section>
+
+          <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold">Pricebook (Servicios)</h2>
+                <p className="text-sm text-muted-foreground">Lista de servicios del tenant. Estos son consumidos por la app móvil.</p>
+              </div>
+              <div>
+                <Dialog open={serviceDialogOpen} onOpenChange={setServiceDialogOpen}>
+                    <DialogTrigger asChild>
+                    <Button onClick={() => { setEditingServiceId(null); setServiceForm(defaultServiceForm); setServiceDialogOpen(true); }} className="inline-flex items-center gap-2 bg-orange-500 text-white hover:bg-orange-600">
+                      <Plus className="h-4 w-4" /> Nuevo servicio
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>{editingServiceId ? 'Editar Servicio' : 'Nuevo Servicio'}</DialogTitle>
+                      <DialogDescription>Configura un servicio para la app móvil.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                      <div>
+                        <Label>Título*</Label>
+                        <Input value={serviceForm.title} onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })} placeholder="Título del servicio" />
+                      </div>
+                      <div>
+                        <Label>Descripción</Label>
+                        <Textarea value={serviceForm.description} onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })} rows={4} />
+                      </div>
+                      <div>
+                        <Label>Precio</Label>
+                        <Input value={serviceForm.price} onChange={(e) => setServiceForm({ ...serviceForm, price: e.target.value })} placeholder="0.00" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label>Publicado en App</Label>
+                        <Switch checked={Boolean(serviceForm.publishedOnMobile)} onCheckedChange={(val) => setServiceForm({ ...serviceForm, publishedOnMobile: !!val })} />
+                      </div>
+                    </div>
+                    <DialogFooter className="mt-6 flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setServiceDialogOpen(false)}>Cancelar</Button>
+                      <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={async () => {
+                        try {
+                          const payload: any = {
+                            title: serviceForm.title,
+                            description: serviceForm.description,
+                            price: serviceForm.price || null,
+                            publishedOnMobile: serviceForm.publishedOnMobile,
+                          };
+                          if (editingServiceId) {
+                            await updateService(editingServiceId, payload);
+                            toast.success('Servicio actualizado.');
+                          } else {
+                            await createService(payload);
+                            toast.success('Servicio creado.');
+                          }
+                          setServiceDialogOpen(false);
+                          loadData();
+                        } catch (err) {
+                          console.error(err);
+                          toast.error('No se pudo guardar el servicio.');
+                        }
+                      }}>Guardar</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            <div>
+              <Table className="table-fixed">
+                <colgroup>
+                  <col style={{ width: '30%' }} />
+                  <col style={{ width: '40%' }} />
+                  <col style={{ width: '15%' }} />
+                  <col style={{ width: '15%' }} />
+                </colgroup>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Título</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead>Precio</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {services.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell>{s.title}</TableCell>
+                      <TableCell className="truncate">{s.description}</TableCell>
+                      <TableCell>{s.price ?? '-'}</TableCell>
+                      <TableCell className="text-right space-x-2">
+                        <Button size="sm" variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50" onClick={() => { setEditingServiceId(s.id); setServiceForm({ title: s.title || '', description: s.description || '', price: s.price ?? '', publishedOnMobile: !!s.publishedOnMobile }); setServiceDialogOpen(true); }}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => openDeleteConfirmation(s.id, s.title || 'este servicio', 'service')}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </section>
 
           <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">

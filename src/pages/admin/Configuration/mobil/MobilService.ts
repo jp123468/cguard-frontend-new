@@ -50,6 +50,27 @@ export async function listCertifications() {
   return data?.rows ?? [];
 }
 
+export async function listServices() {
+  const { data } = await api.get(resourceUrl('service'));
+  return data?.rows ?? [];
+}
+
+export async function updateService(id: string, data: any) {
+  const { data: response } = await api.put(resourceUrl(`service/${id}`), { data });
+  return response;
+}
+
+export async function createService(data: any) {
+  const { data: response } = await api.post(resourceUrl('service'), { data });
+  return response;
+}
+
+export async function deleteService(id: string) {
+  await api.delete(resourceUrl('service'), {
+    params: { ids: [id] },
+  });
+}
+
 export async function createCertification(data: any) {
   const { data: response } = await api.post(resourceUrl('certification'), { data });
   return response;

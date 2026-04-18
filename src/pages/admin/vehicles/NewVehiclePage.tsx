@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { useForm } from "react-hook-form";
@@ -10,6 +10,9 @@ import {
 } from "@/lib/validators/vehicle-create.schema";
 
 import { Button } from "@/components/ui/button";
+import vehicleService from '@/lib/api/vehicleService';
+import { securityGuardService } from '@/lib/api/securityGuardService';
+import { toast } from 'sonner';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -30,6 +33,10 @@ import {
 
 export default function NewVehiclePage() {
   const [preview, setPreview] = useState<string | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const isEditing = !!editingId;
 
   const form = useForm<VehicleCreateSchema>({
     resolver: zodResolver(vehicleCreateSchema) as any,
@@ -48,12 +55,114 @@ export default function NewVehiclePage() {
     mode: "onBlur",
   });
 
-  const onSubmit = (data: VehicleCreateSchema) => {
-    const payload = {
-      ...data,
-      initialMileage: data.initialMileage ? Number(data.initialMileage) : 0,
-    };
-    console.log("Nuevo vehículo:", payload);
+  useEffect(() => {
+    // allow passing edit id via location.state or query param ?id=
+    const stateId = (location.state as any)?.editId;
+    const params = new URLSearchParams(location.search);
+    const qId = params.get('id');
+    const id = stateId || qId;
+    if (id) {
+      setEditingId(id);
+      (async () => {
+        try {
+          const resp = await vehicleService.find(id);
+          if (resp) {
+            form.reset({
+              year: resp.year ? String(resp.year) : '',
+              make: resp.make || '',
+              model: resp.model || '',
+              color: resp.color || '',
+              plate: resp.licensePlate || '',
+              initialMileage: resp.initialMileage ? String(resp.initialMileage) : '',
+              ownership: resp.ownership || 'propio',
+              vin: resp.vin || '',
+              description: resp.description || '',
+              image: undefined,
+            });
+            if (resp.imageUrl && resp.imageUrl.length > 0) {
+              setPreview(resp.imageUrl[0].downloadUrl || resp.imageUrl[0].publicUrl || null);
+            }
+          }
+        } catch (err) {
+          console.error('Error cargando vehículo para edición', err);
+        }
+      })();
+    }
+  }, [location]);
+
+  const onSubmit = async (data: VehicleCreateSchema) => {
+    try {
+      // Normalize plate
+      const plate = (data.plate || '').trim();
+
+      // Check duplicate plate only when creating
+      if (!editingId) {
+        try {
+          const matches = await vehicleService.autocomplete(plate, 1);
+          if (matches && matches.length > 0) {
+            form.setError('plate', { type: 'manual', message: 'Ya existe un vehículo con esa Placa' });
+            return;
+          }
+        } catch (e) {
+          // If autocomplete fails, allow submit to continue but log
+          console.warn('No se pudo validar existencia de Placa', e);
+        }
+      }
+
+      // Handle image upload first (if provided)
+      let imageFileObj = null;
+      if (data.image) {
+        try {
+          imageFileObj = await securityGuardService.uploadFileToStorage(
+            data.image as File,
+            'vehicleImage',
+          );
+        } catch (err) {
+          console.error('Error uploading vehicle image', err);
+          toast.error('Error subiendo imagen del vehículo');
+          // continue without image
+          imageFileObj = null;
+        }
+      }
+
+      if (editingId) {
+        // When editing, only allow changing image, ownership and description
+        const updatePayload: any = {
+          ownership: data.ownership,
+          description: data.description,
+        };
+        if (imageFileObj) {
+          updatePayload.imageUrl = imageFileObj;
+        }
+        const resp = await vehicleService.update(editingId, updatePayload);
+        toast.success('Vehículo actualizado');
+        console.log('Vehículo actualizado', resp);
+        navigate('/vehicle-patrol/vehicles');
+      } else {
+        const payload: any = {
+          name: `${data.make} ${data.model}`,
+          licensePlate: plate,
+          year: Number(data.year),
+          make: data.make,
+          model: data.model,
+          color: data.color,
+          initialMileage: data.initialMileage ? Number(data.initialMileage) : 0,
+          ownership: data.ownership,
+          vin: data.vin,
+          description: data.description,
+        };
+        if (imageFileObj) {
+          payload.imageUrl = imageFileObj;
+        }
+        const resp = await vehicleService.create(payload);
+        toast.success('Vehículo creado');
+        console.log('Vehículo creado', resp);
+        navigate('/vehicle-patrol/vehicles');
+      }
+    } catch (err) {
+      console.error('Error creando vehículo', err);
+      toast.error(String((err as any)?.message || 'Error creando vehículo'));
+    }
   };
 
   return (
@@ -113,7 +222,7 @@ export default function NewVehiclePage() {
                   <FormItem>
                     <FormLabel>Año*</FormLabel>
                     <FormControl>
-                      <Input inputMode="numeric" placeholder="2022" {...field} />
+                      <Input inputMode="numeric" placeholder="2022" {...field} disabled={isEditing} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -127,7 +236,7 @@ export default function NewVehiclePage() {
                   <FormItem>
                     <FormLabel>Marca*</FormLabel>
                     <FormControl>
-                      <Input placeholder="Toyota" {...field} />
+                      <Input placeholder="Toyota" {...field} disabled={isEditing} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,7 +250,7 @@ export default function NewVehiclePage() {
                   <FormItem>
                     <FormLabel>Modelo*</FormLabel>
                     <FormControl>
-                      <Input placeholder="Hilux" {...field} />
+                      <Input placeholder="Hilux" {...field} disabled={isEditing} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -153,9 +262,9 @@ export default function NewVehiclePage() {
                 name="color"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Color</FormLabel>
+                    <FormLabel>Color*</FormLabel>
                     <FormControl>
-                      <Input placeholder="Blanco" {...field} />
+                      <Input placeholder="Blanco" {...field} disabled={isEditing} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -167,9 +276,9 @@ export default function NewVehiclePage() {
                 name="plate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Matrícula*</FormLabel>
+                    <FormLabel>Placa*</FormLabel>
                     <FormControl>
-                      <Input placeholder="ABC-1234" {...field} />
+                      <Input placeholder="ABC-1234" {...field} disabled={isEditing} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -181,9 +290,9 @@ export default function NewVehiclePage() {
                 name="initialMileage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Kilometraje Inicial</FormLabel>
+                    <FormLabel>Kilometraje Inicial*</FormLabel>
                     <FormControl>
-                      <Input inputMode="numeric" placeholder="0" {...field} />
+                      <Input inputMode="numeric" placeholder="0" {...field} disabled={isEditing} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -195,7 +304,7 @@ export default function NewVehiclePage() {
                 name="ownership"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Propiedad</FormLabel>
+                    <FormLabel>Propiedad*</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccionar" />
@@ -216,9 +325,9 @@ export default function NewVehiclePage() {
                 name="vin"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Número VIN</FormLabel>
+                    <FormLabel>Número VIN (Número de Identificación del Vehículo)*</FormLabel>
                     <FormControl>
-                      <Input placeholder="1HGCM82633A004352" {...field} />
+                      <Input placeholder="1HGCM82633A004352" {...field} disabled={isEditing} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

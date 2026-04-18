@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import routeService from "@/lib/api/routeService";
 import { Link } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -33,7 +34,24 @@ export default function RoutesPage() {
   const [openFilter, setOpenFilter] = useState(false);
   const [filters, setFilters] = useState<RouteFilters>(defaultRouteFilters);
 
-  const rows: Array<never> = [];
+  const [rows, setRows] = useState<any[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const perPage = Number(filters.perPage || 25);
+        const resp = await routeService.list({ limit: perPage, offset: 0 });
+        if (!mounted) return;
+        setRows(resp.rows || []);
+      } catch (e) {
+        console.error('Error loading routes', e);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [filters.perPage]);
 
   const aplicarFiltros = () => {
     const parse = routeFiltersSchema.safeParse(filters);
@@ -86,7 +104,14 @@ export default function RoutesPage() {
             </div>
 
             <Button className="bg-orange-500 text-white hover:bg-orange-600" asChild>
-              <Link to="/vehicle-patrol/routes/add-new">Nueva ruta</Link>
+              <Link to={(() => {
+                try {
+                  const t = localStorage.getItem('tenantId');
+                  return t ? `/tenant/${t}/vehicle-patrol/routes/add-new` : '/vehicle-patrol/routes/add-new';
+                } catch (e) {
+                  return '/vehicle-patrol/routes/add-new';
+                }
+              })()}>Nueva ruta</Link>
             </Button>
 
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
@@ -190,6 +215,22 @@ export default function RoutesPage() {
                   </td>
                 </tr>
               )}
+              {rows.length > 0 && rows.map((r: any) => (
+                <tr key={r.id || r._id} className="border-b">
+                  <td className="px-4 py-3">
+                    <Checkbox />
+                  </td>
+                  <td className="px-4 py-3 font-medium">{r.name || r.title || '—'}</td>
+                  <td className="px-4 py-3">{(r.points && r.points.length) ? r.points.map((p: any) => p.address || p.siteName || p.siteId).join(', ') : '—'}</td>
+                  <td className="px-4 py-3">{r.assignedGuard || r.supervisorId || '—'}</td>
+                  <td className="px-4 py-3">{(r.vehicle && (r.vehicle.name || r.vehicle.licensePlate)) || r.vehicleId || '—'}</td>
+                  <td className="px-4 py-3">{r.continuous ? 'Continua' : 'Programada'}</td>
+                  <td className="px-4 py-3">{(r.active === false) ? 'Inactivo' : 'Activo'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <Link to="#" className="text-orange-600">Ver</Link>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
 

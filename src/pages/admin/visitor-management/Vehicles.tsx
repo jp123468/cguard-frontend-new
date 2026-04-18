@@ -124,7 +124,7 @@ export default function Vehicles() {
 
                                     <div className="space-y-1.5">
                                         <Label>
-                                            Matrícula<span className="text-red-500">*</span>
+                                            Placa<span className="text-red-500">*</span>
                                         </Label>
                                         <Input placeholder="Número de placa" required />
                                     </div>

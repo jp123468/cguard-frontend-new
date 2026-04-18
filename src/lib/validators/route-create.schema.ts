@@ -12,14 +12,10 @@ export const routeCreateSchema = z
     days: z
       .array(z.enum(["sun","mon","tue","wed","thu","fri","sat"]))
       .min(1, "Seleccionar al menos un día"),
-    guardFilter: z.object({
-      departmentId: z.string().optional(),
-      skillsetId: z.string().optional(),
-      categoryId: z.string().optional(),
-    }),
-    guardId: z.string().min(1, "Guardia requerido"),
+    supervisorId: z.string().min(1, "Supervisor requerido"),
     siteIds: z.array(z.string()).min(1, "Selecciona al menos un puesto de seguridad "),
     vehicleId: z.string().min(1, "Vehículo requerido"),
+    createPatrol: z.boolean().default(false),
     syncHitsBetweenGuards: z.boolean().default(false),
     forceVehicleRouteOrder: z.boolean().default(false),
     notifyBefore: z.enum(["00:05","00:10","00:15","00:30","01:00"]).default("00:15"),

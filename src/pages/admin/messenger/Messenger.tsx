@@ -176,7 +176,7 @@ function NewMessageDialog({
           </div>
 
           <div className="space-y-2">
-            <div className="text-sm font-medium text-slate-500">Sitios de publicación</div>
+            <div className="text-sm font-medium text-slate-500">Puestos de Vigilancia</div>
             <div className=" border-t border-x border-b-0">
               <ScrollArea className="max-h-48">
                 {sitesF.length === 0 && <div className="p-4 text-sm text-muted-foreground border-b">Sin resultados</div>}

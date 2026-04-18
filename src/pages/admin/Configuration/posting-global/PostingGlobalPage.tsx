@@ -9,7 +9,7 @@ export default function PostingGlobalPage() {
         <AppLayout>
             <SettingsLayout
                 navKey="configuracion"
-                title="Configuración Global de Sitios de Publicación"
+                title="Configuración Global de Puestos de Vigilancia"
             >
                 <PostingGlobalForm onSubmit={handleSubmit} />
             </SettingsLayout>

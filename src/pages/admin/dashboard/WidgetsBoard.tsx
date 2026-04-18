@@ -40,8 +40,8 @@ const WIDGETS: WidgetDef[] = [
   },
   {
     id: "sitios",
-    title: "Sitios de publicación",
-    subtitle: "Sitios de Publicación Activos",
+    title: "Puestos de Vigilancia",
+    subtitle: "Puestos de Vigilancia Activos",
     Icon: MapPin,
     color: { text: "text-blue-600", iconBg: "bg-blue-50" },
   },
