@@ -500,6 +500,14 @@ export default function App() {
                 }
               />
               <Route
+                path="/post-sites/:id/inventory"
+                element={
+                  <ProtectedRoute>
+                    <PostSiteDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/post-sites/:id/tasks"
                 element={
                   <ProtectedRoute>

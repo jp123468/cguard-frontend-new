@@ -91,13 +91,16 @@ export default function PostSiteContacts({ site }: { site?: any }) {
     let mounted = true;
     async function loadContacts() {
       if (!postSiteId && !site?.clientId) return;
+      console.debug('[PostSiteContacts] loadContacts start', { postSiteId, clientId: site?.clientId, site });
       setLoading(true);
       try {
         if (postSiteId) {
           // Load contacts specific to this post site via dedicated endpoint
           const resp = await postSiteService.getPostSiteContacts(postSiteId, { limit: 9999, offset: 0 });
+          console.debug('[PostSiteContacts] API response for postSite contacts', { resp });
           if (!mounted) return;
           const rows = Array.isArray(resp?.rows) ? resp.rows : (Array.isArray(resp) ? resp : []);
+          console.debug('[PostSiteContacts] rows length', rows.length);
           setContacts(rows.map((r: any) => ({
             id: String(r.id || r._id || Date.now()),
             name: r.name || r.fullName || r.contactName || '',
@@ -113,8 +116,10 @@ export default function PostSiteContacts({ site }: { site?: any }) {
         const clientId = site?.clientId || (site?.client && site.client.id) || resolvedClientId;
         if (clientId) {
           const resp = await clientService.getClientContacts(String(clientId), { limit: 9999, offset: 0 });
+          console.debug('[PostSiteContacts] API response for client contacts', { resp });
           if (!mounted) return;
           const rows = Array.isArray(resp?.rows) ? resp.rows : [];
+          console.debug('[PostSiteContacts] client rows length', rows.length);
           setContacts(rows.map((r: any) => ({
             id: String(r.id || r._id || Date.now()),
             name: r.name || r.fullName || r.contactName || r.label || '',
@@ -321,9 +326,9 @@ export default function PostSiteContacts({ site }: { site?: any }) {
             </button>
           </div>
         </div>
-        <div className="mt-6 flex-1 min-h-0 overflow-y-auto">
+        <div className="mt-6 flex-1 min-h-0">
           <div className="md:block hidden overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-full table-auto">
             <thead>
               <tr className="border-b bg-gray-50">
                 <th className="px-4 py-3 text-left">
@@ -468,13 +473,15 @@ export default function PostSiteContacts({ site }: { site?: any }) {
               </div>
             </div>
 
-            <div className="fixed bottom-6 md:bottom-8 right-6 md:right-10">
-              <button
-                onClick={handleAdd}
-                disabled={!canSubmit}
-                className={`${canSubmit ? 'bg-orange-600 hover:bg-orange-500' : 'bg-orange-400 cursor-not-allowed opacity-60'} text-white transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300`}>
-                {(form && (form as any).id) ? (t('actions.save') || 'Save') : (t('actions.save') || 'Add Contact')}
-              </button>
+            <div className="mt-4 sm:mt-6 sticky bottom-0 bg-white pt-4 z-10">
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={handleAdd}
+                  disabled={!canSubmit}
+                  className={`${canSubmit ? 'bg-orange-600 hover:bg-orange-500' : 'bg-orange-400 cursor-not-allowed opacity-60'} text-white transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300`}>
+                  {(form && (form as any).id) ? (t('actions.save') || 'Save') : (t('actions.save') || 'Add Contact')}
+                </button>
+              </div>
             </div>
           </div>
         </div>

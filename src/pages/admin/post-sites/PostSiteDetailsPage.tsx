@@ -17,6 +17,7 @@ import Stations from './components/PostsiteStations/Stations';
 import Incidents from './components/PostsiteIncidents/Incidents';
 import Tasks from './components/PostsiteTasks/Tasks';
 import SiteTours from './components/PostsiteSiteTours/SiteTours';
+import Inventory from './components/PostsiteInventory/Inventory';
 import SiteTourTags from './components/PostsiteSiteTourTags/SiteTourTags';
 import TagScans from './components/PostsiteTagScans/TagScans';
 import GeoFence from './components/PostsiteGeoFence/GeoFence';
@@ -91,6 +92,8 @@ export default function PostSiteDetailsPage() {
         return <Tasks site={site} />;
       case 'site-tours':
         return <SiteTours site={site} />;
+      case 'inventory':
+        return <Inventory site={site} />;
       case 'site-tour-tags':
         return <SiteTourTags site={site} />;
       case 'tag-scans':
@@ -113,7 +116,7 @@ export default function PostSiteDetailsPage() {
   
 
   return (
-    <PostSiteLayout title={site?.name || t('postSites.Details.title', '-')} site={site}>
+    <PostSiteLayout title={site?.businessName || site?.companyName || site?.name || t('postSites.Details.title', '-')} site={site}>
       <div className="p-4">
         {loading ? (
           <div className="flex items-center justify-center py-8">

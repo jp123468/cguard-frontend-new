@@ -1,4 +1,8 @@
 import React, { ReactNode, useState, useEffect, useRef } from 'react';
+import { ApiService } from '@/services/api/apiService';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 import AppLayout from '@/layouts/app-layout';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { Menu } from 'lucide-react';
@@ -24,6 +28,7 @@ export default function PostSiteLayout({ title, children, site }: Props) {
         { id: 'files', label: t('postSites.Details.Files', 'Files'), path: `/post-sites/${id || ':id'}/files` },
         { id: 'assignGuards', label: t('postSites.Details.AssignGuards', 'Assign Guards'), path: `/post-sites/${id || ':id'}/assign-guards` },
         { id: 'stations', label: t('postSites.Details.Stations', 'Stations'), path: `/post-sites/${id || ':id'}/stations` },
+        { id: 'inventory', label: t('postSites.Details.Inventories', 'Inventories'), path: `/post-sites/${id || ':id'}/inventory` },
         { id: 'tasks', label: t('postSites.Details.Tasks', 'Tasks'), path: `/post-sites/${id || ':id'}/tasks` },
         { id: 'siteTours', label: t('postSites.Details.SiteTours', 'Site Tours'), path: `/post-sites/${id || ':id'}/site-tours` },
         { id: 'siteTourTags', label: t('postSites.Details.SiteTourTags', 'Site Tour Tags'), path: `/post-sites/${id || ':id'}/site-tour-tags` },
@@ -44,9 +49,60 @@ export default function PostSiteLayout({ title, children, site }: Props) {
     const path = resolve(it.path);
     return location.pathname === path || location.pathname.startsWith(path + '/') || location.pathname.endsWith(path);
   });
-  const headerLabel = activeItem ? activeItem.label : (site?.companyName || site?.name || title || t('postSites.postsite', 'Post Site'));
+  const headerLabel = activeItem ? activeItem.label : (site?.businessName || site?.companyName || site?.name || title || t('postSites.postsite', 'Post Site'));
 
   const navRef = useRef<HTMLDivElement | null>(null);
+
+  const [inventoryModalOpen, setInventoryModalOpen] = useState(false);
+  const [inventoryStations, setInventoryStations] = useState<any[]>([]);
+  const [inventoryStationId, setInventoryStationId] = useState<string | null>(null);
+  const [inventoryName, setInventoryName] = useState<string>('');
+  const [creatingInventory, setCreatingInventory] = useState(false);
+
+  useEffect(() => {
+    if (!inventoryModalOpen) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const tenantId = (site && (site.tenantId || site.tenant && site.tenant.id)) || localStorage.getItem('tenantId') || '';
+        const postSiteId = site?.id || id || '';
+        if (!postSiteId) return;
+        const res = await ApiService.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`);
+        const rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
+        if (!mounted) return;
+        const mapped = rows.map((r: any) => ({ id: r.id || r.stationId, label: r.name || r.stationName || r.station_name || String(r.id) }));
+        setInventoryStations(mapped || []);
+      } catch (e) {
+        console.error('Failed loading stations for inventory modal', e);
+        setInventoryStations([]);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [inventoryModalOpen, site, id]);
+
+  const submitCreateInventory = async () => {
+    try {
+      // Client-side validation: require name
+      if (!String(inventoryName || '').trim()) {
+        toast.error(t('postSites.inventories.nameRequired', 'El nombre es obligatorio'));
+        return;
+      }
+      setCreatingInventory(true);
+      const tenantId = (site && (site.tenantId || site.tenant && site.tenant.id)) || localStorage.getItem('tenantId') || '';
+      const belongsTo = inventoryStationId || site?.id || id;
+      const payload = { data: { belongsTo, name: inventoryName || `Inventario ${belongsTo}` } };
+      await ApiService.post(`/tenant/${tenantId}/inventory`, payload);
+      toast.success('Inventario creado');
+      setInventoryModalOpen(false);
+      setInventoryName('');
+      setInventoryStationId(null);
+    } catch (e: any) {
+      console.error('Create inventory failed', e);
+      toast.error(e?.message || 'No se pudo crear inventario');
+    } finally {
+      setCreatingInventory(false);
+    }
+  };
 
   useEffect(() => {
     if (!activeItem || !navRef.current) return;
@@ -68,7 +124,7 @@ export default function PostSiteLayout({ title, children, site }: Props) {
         <aside className={`shrink-0 transition-all duration-300 ${sidebarOpen ? 'w-60 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
           <div className="h-full flex flex-col">
             <div className="bg-white border rounded-md p-4 m-3 flex-1 overflow-hidden">
-              <div className="text-lg font-semibold mb-4">{site?.companyName || site?.name || title || t('postSites.postsite', 'Post Site')}</div>
+              <div className="text-lg font-semibold mb-4">{site?.businessName || site?.companyName || site?.name || title || t('postSites.postsite', 'Post Site')}</div>
               <nav className="text-base">
                 <div ref={navRef} className="max-h-[calc(100vh-120px)] overflow-y-auto pr-3 pb-20">
                   {sections.map((section, idx) => (
@@ -98,6 +154,8 @@ export default function PostSiteLayout({ title, children, site }: Props) {
                                       <li key={it.id} className="bg-white" dangerouslySetInnerHTML={{ __html: comment }} />
                                     );
                                   }
+
+                                  // Render menu item normally (inventory is included in sections)
 
                                   return (
                                     <li key={it.id} className="bg-white">
@@ -135,8 +193,62 @@ export default function PostSiteLayout({ title, children, site }: Props) {
           </div>
 
           <div className="pb-20">{children}</div>
+          <InventoryModal
+            open={inventoryModalOpen}
+            onClose={() => setInventoryModalOpen(false)}
+            stations={inventoryStations}
+            selectedStationId={inventoryStationId}
+            setSelectedStationId={setInventoryStationId}
+            name={inventoryName}
+            setName={setInventoryName}
+            onCreate={submitCreateInventory}
+            creating={creatingInventory}
+          />
         </main>
       </div>
     </AppLayout>
   );
 }
+
+// Inventory modal appended at file end
+// Modal JSX (placed after component definition to keep component body focused)
+const InventoryModal: React.FC<any> = ({ open, onClose, stations, selectedStationId, setSelectedStationId, name, setName, onCreate, creating }) => {
+  const { t } = useTranslation();
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-60 flex items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/20 z-50" />
+
+      <div className="relative z-70 w-full sm:w-96 bg-white shadow-2xl overflow-y-auto rounded-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-6 border-b bg-white rounded-t-md">
+          <h2 className="text-lg font-semibold text-gray-800">{t('postSites.inventories.createTitle', 'Crear Inventario')}</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100">✕</button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm text-gray-700 mb-1">{t('postSites.inventories.selectStation', 'Seleccionar estación (opcional)')}</label>
+            <select value={selectedStationId || ''} onChange={(e) => setSelectedStationId(e.target.value || null)} className="w-full border rounded px-3 py-2 text-sm">
+              <option value="">{t('postSites.inventories.usePostsite', 'Usar puesto de seguridad (por defecto)')}</option>
+              {(stations || []).map((s: any) => (
+                <option key={s.id} value={s.id}>{s.label || s.id}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-700 mb-1">{t('postSites.inventories.name', 'Nombre de inventario')}<span className="text-red-500">*</span></label>
+            <input aria-required={true} required className="w-full border rounded px-3 py-2 text-sm" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 p-6 border-t bg-white rounded-b-md">
+          <button onClick={onClose} className="px-4 py-2 rounded-md border text-sm">{t('common.cancel', 'Cancelar')}</button>
+          <button onClick={onCreate} disabled={creating} className="px-6 py-2 bg-orange-600 text-white rounded-md">{creating ? t('common.creating','Creando...') : t('postSites.inventories.create','Crear inventario')}</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export { InventoryModal };
