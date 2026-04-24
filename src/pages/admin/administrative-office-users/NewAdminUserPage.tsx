@@ -44,11 +44,13 @@ function ClientMultiSelect({
   onChange,
   options,
   placeholder,
+  disabled,
 }: {
   value: string[];
   onChange: (ids: string[]) => void;
   options: Array<{ id: string; name: string }>;
   placeholder?: string;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -57,7 +59,7 @@ function ClientMultiSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full justify-start">
+        <Button variant="outline" className="w-full justify-start" disabled={disabled}>
           {picked.length ? (
             <span className="truncate">{picked.map((p) => p.name).join(", ")}</span>
           ) : (
@@ -165,6 +167,12 @@ export default function NewAdminUserPage() {
     slug: 'securitySupervisor',
   };
 
+  const DEFAULT_ADMIN_ROLE: RoleOption = {
+    id: 'admin',
+    name: 'admin',
+    slug: 'admin',
+  };
+
   const findSupervisorRole = useCallback((roles: RoleOption[]) => {
     return roles.find((role) => {
       const id = (role.id || '').toString().toLowerCase();
@@ -177,6 +185,15 @@ export default function NewAdminUserPage() {
         slug.includes('supervisor') ||
         name.includes('supervisor')
       );
+    });
+  }, []);
+
+  const findAdminRole = useCallback((roles: RoleOption[]) => {
+    return roles.find((role) => {
+      const id = (role.id || '').toString().toLowerCase();
+      const name = (role.name || '').toString().toLowerCase();
+      const slug = (role.slug || '').toString().toLowerCase();
+      return id === 'admin' || slug === 'admin' || name === 'admin';
     });
   }, []);
   const [loading, setLoading] = useState(false);
@@ -256,9 +273,11 @@ export default function NewAdminUserPage() {
         });
 
         const supervisorRole = findSupervisorRole(mappedRoles) ?? DEFAULT_SUPERVISOR_ROLE;
-        const mappedRolesWithSupervisor = findSupervisorRole(mappedRoles) ? mappedRoles : [supervisorRole, ...mappedRoles];
+        const adminRole = findAdminRole(mappedRoles) ?? DEFAULT_ADMIN_ROLE;
+        const mappedWithSupervisor = findSupervisorRole(mappedRoles) ? mappedRoles : [supervisorRole, ...mappedRoles];
+        const mappedRolesWithAdmin = findAdminRole(mappedWithSupervisor) ? mappedWithSupervisor : [adminRole, ...mappedWithSupervisor];
 
-        setRoleOptions(mappedRolesWithSupervisor);
+        setRoleOptions(mappedRolesWithAdmin);
 
         if (!accessLevelValue) {
           setValue('accessLevel', supervisorRole.id);
@@ -756,26 +775,28 @@ export default function NewAdminUserPage() {
               />
             </div>
             {/* Stations (estaciones) - linked to selected postSite(s) */}
-            <div className="grid grid-cols-1 md:grid-cols-2">
-              <FormField
-                control={control}
-                name="stationIds"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>{t('adminOfficeUsers.newUser.form.assignStationsLabel', { defaultValue: 'Asignar Estaciones' })}</FormLabel>
-                    <FormControl>
-                      <ClientMultiSelect
-                        value={(field.value as string[]) || []}
-                        onChange={(ids: string[]) => field.onChange(ids)}
-                        options={stationOptions}
-                        placeholder={t('adminOfficeUsers.newUser.form.assignStationsPlaceholder', { defaultValue: 'Asignar Estaciones' })}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {watchedPostSiteIds && watchedPostSiteIds.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                <FormField
+                  control={control}
+                  name="stationIds"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>{t('adminOfficeUsers.newUser.form.assignStationsLabel', { defaultValue: 'Asignar Estaciones' })}</FormLabel>
+                      <FormControl>
+                        <ClientMultiSelect
+                          value={(field.value as string[]) || []}
+                          onChange={(ids: string[]) => field.onChange(ids)}
+                          options={stationOptions}
+                          placeholder={t('adminOfficeUsers.newUser.form.assignStationsPlaceholder', { defaultValue: 'Asignar Estaciones' })}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
                 <DialogTrigger asChild>

@@ -14,9 +14,9 @@ type DataTableProps<T> = {
     columns: Column<T>[];
     data: T[];
     loading?: boolean;
-    selectedIds: string[];
-    onSelectOne: (id: string, checked: boolean) => void;
-    onSelectAll: (checked: boolean) => void;
+    selectedIds?: string[];
+    onSelectOne?: (id: string, checked: boolean) => void;
+    onSelectAll?: (checked: boolean) => void;
     rowActions?: (row: T) => RowAction[];
     emptyState?: React.ReactNode;
     // optional sorting
@@ -43,18 +43,22 @@ export function DataTable<T extends { id: string }>({
     onRowClick,
     containerless,
 }: DataTableProps<T>) {
-    const allSelected = data.length > 0 && selectedIds.length === data.length;
+    const allSelected = Array.isArray(selectedIds) && data && data.length > 0 && selectedIds.length === data.length;
+
+    const showSelection = Array.isArray(selectedIds) && typeof onSelectOne === 'function' && typeof onSelectAll === 'function';
 
     const table = (
         <table className="min-w-full text-sm text-left border-collapse">
             <thead className="bg-gray-50">
                 <tr className="border-b">
-                    <th className="px-4 py-3 w-10">
-                        <Checkbox
-                            checked={allSelected}
-                            onCheckedChange={(checked) => onSelectAll(!!checked)}
-                        />
-                    </th>
+                    {showSelection && (
+                        <th className="px-4 py-3 w-10">
+                            <Checkbox
+                                checked={allSelected}
+                                onCheckedChange={(checked) => onSelectAll && onSelectAll(!!checked)}
+                            />
+                        </th>
+                    )}
                     {columns.map((col) => {
                         const key = String(col.key);
                         const isSorted = sortKey === key;
@@ -97,7 +101,7 @@ export function DataTable<T extends { id: string }>({
                 {loading ? (
                     <tr>
                         <td
-                            colSpan={columns.length + (rowActions ? 2 : 1)}
+                            colSpan={columns.length + (rowActions ? 1 : 0) + (showSelection ? 1 : 0)}
                             className="py-20 text-center"
                         >
                             Cargando...
@@ -106,7 +110,7 @@ export function DataTable<T extends { id: string }>({
                 ) : data.length === 0 ? (
                     <tr>
                         <td
-                            colSpan={columns.length + (rowActions ? 2 : 1)}
+                            colSpan={columns.length + (rowActions ? 1 : 0) + (showSelection ? 1 : 0)}
                             className="py-12"
                         >
                             {emptyState ?? (
@@ -124,12 +128,14 @@ export function DataTable<T extends { id: string }>({
                             className={`border-b hover:bg-gray-50 ${onRowClick ? 'cursor-pointer' : ''}`}
                             onClick={onRowClick ? () => onRowClick(row) : undefined}
                         >
-                            <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                                <Checkbox
-                                    checked={selectedIds.includes(row.id)}
-                                    onCheckedChange={(checked) => onSelectOne(row.id, !!checked)}
-                                />
-                            </td>
+                            {showSelection && (
+                                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                                    <Checkbox
+                                        checked={selectedIds?.includes(row.id) ?? false}
+                                        onCheckedChange={(checked) => onSelectOne && onSelectOne(row.id, !!checked)}
+                                    />
+                                </td>
+                            )}
 
                             {columns.map((col) => {
                                 const value = (row as any)[col.key];

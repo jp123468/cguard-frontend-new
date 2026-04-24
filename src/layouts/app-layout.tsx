@@ -16,7 +16,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth >= 1024 : true
   );
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin, isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -104,6 +104,23 @@ export default function AppLayout({ children }: AppLayoutProps) {
     tenantIdNow || (user && userHasActiveTenant(user))
   );
 
+  // Helper: detect if a user holds `superadmin` in any common shape
+  const userIsSuperAdmin = (u: any) => {
+    if (!u) return false;
+    const normalize = (r: any) => {
+      if (!r) return [];
+      if (Array.isArray(r)) return r.map((it) => (typeof it === 'string' ? it : (it?.name || it?.key || it?.slug || ''))).filter(Boolean);
+      if (typeof r === 'string') return [r];
+      return [];
+    };
+
+    const global = normalize(u.roles ?? u.role ?? []);
+    const tenantsArr = Array.isArray(u.tenants) ? u.tenants.flatMap((t: any) => normalize(t.roles ?? t.role ?? [])) : [];
+    const singleTenant = u.tenant ? normalize(u.tenant.roles ?? u.tenant.role ?? []) : [];
+    const all = [...global, ...tenantsArr, ...singleTenant].map((s) => (s || '').toString().toLowerCase());
+    return all.some((n) => n.includes('superadmin'));
+  };
+
   // If the user object contains an active tenant but localStorage isn't
   // populated yet (race on initial load), persist it so other codepaths
   // (permissions, services) pick it up and the modal doesn't show.
@@ -137,7 +154,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
   // Only show the tenant modal after auth has finished loading. This prevents
   // a flash where the modal appears before the user's profile (and tenant)
   // are available and blocks the UI.
-  const showTenantModal = !loading && !hasTenantNow && location.pathname === "/dashboard";
+  // Do not show tenant join/create modal for global admins (superadmin)
+  // Also hide if the `user` object contains `superadmin` anywhere to avoid
+  // showing the modal while auth state is still syncing.
+  // Only show modal for authenticated non-admin users whose profile is loaded
+  const showTenantModal =
+    !loading &&
+    isAuthenticated &&
+    !hasTenantNow &&
+    location.pathname === "/dashboard" &&
+    !isAdmin &&
+    !userIsSuperAdmin(user);
 
   // Close sidebar on mobile when the route changes to avoid it staying open
   useEffect(() => {

@@ -160,12 +160,12 @@ export default function Visitors() {
     const getPostSiteLabelFromRecord = (rec: any) => {
         if (!rec) return '-';
         if (rec.postSite && typeof rec.postSite === 'object') {
-            return rec.postSite.companyName || rec.postSite.name || rec.postSite.postSiteName || '-';
-        }
+                return rec.postSite.companyName || rec.postSite.name || (rec.postSite.company && (rec.postSite.company.name || rec.postSite.company.companyName)) || rec.postSite.postSiteName || '-';
+            }
         const id = rec.postSiteId || rec.postSite || rec.postSite_id || rec.postSiteIdValue;
         if (id && postSites && postSites.length) {
             const found = postSites.find((p) => String(p.id) === String(id) || String(p._id) === String(id));
-            if (found) return found.companyName || found.name || found.postSiteName || String(id);
+            if (found) return found.companyName || found.name || (found.company && (found.company.name || found.company.companyName)) || found.postSiteName || String(id);
         }
         return rec.postSiteName || rec.postSiteTitle || '-';
     };
@@ -870,7 +870,7 @@ export default function Visitors() {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {postSitesForFilter.map((p) => (
-                                                    <SelectItem key={p.id} value={p.id}>{p.companyName || p.name || p.id}</SelectItem>
+                                                    <SelectItem key={p.id} value={p.id}>{p.companyName || p.name || (p.company && (p.company.name || p.company.companyName)) || String(p.id)}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>

@@ -49,6 +49,17 @@
     ]
   },
   {
+    "id": "superadmin",
+    "name": "Superadmin",
+    "icon": "UserCog",
+    "allowedRoles": ["superadmin"],
+    "expandable": true,
+    "subItems": [
+      { "id": "tenants", "name": "Tenants", "path": "/superadmin/tenants" },
+      { "id": "system", "name": "System Settings", "path": "/superadmin/settings" }
+    ]
+  },
+  {
     "id": "memos",
     "name": "Memos",
     "icon": "FileText",
@@ -58,6 +69,7 @@
     "id": "analiticas",
     "name": "Analíticas",
     "icon": "BarChart3",
+    "disabled": true,
     "expandable": true,
     "subItems": [
       {
@@ -91,6 +103,7 @@
     "id": "rastreador",
     "name": "Rastreador GPS",
     "icon": "MapPin",
+    "disabled": true,
     "expandable": true,
     "subItems": [
       {
@@ -109,13 +122,15 @@
     "id": "mensajero",
     "name": "Mensajero",
     "icon": "MessageSquare",
-    "path": "/messenger"
+    "path": "/messenger",
+    "disabled": true
   },
   {
     "id": "reloj",
     "name": "Reloj de Tiempo",
     "icon": "Clock",
     "expandable": true,
+    "disabled": true,
     "subItems": [
       {
         "id": "registro",
@@ -138,13 +153,15 @@
     "id": "informes",
     "name": "Informes",
     "icon": "FileText",
-    "path": "/reports"
+    "path": "/reports",
+    "disabled": true
   },
   {
     "id": "programador",
     "name": "Programador",
     "icon": "Calendar",
     "expandable": true,
+    "disabled": true,
     "subItems": [
       {
         "id": "horario",
@@ -188,6 +205,7 @@
     "name": "Nómina",
     "icon": "DollarSign",
     "expandable": true,
+    "disabled": true,
     "subItems": [
       {
         "id": "ejecutar",
@@ -283,6 +301,7 @@
     "name": "Administrador de estacionamiento",
     "icon": "SquareParking",
     "expandable": true,
+    "disabled": true,
     "subItems": [
       {
         "id": "contacto",

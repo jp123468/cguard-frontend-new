@@ -457,11 +457,13 @@ export default function PostSitePage() {
               />
             </div>
 
-            <Button
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              <Link to="/post-sites/new">{t('postSites.newPostSite', 'Nuevo Puesto de seguridad')}</Link>
-            </Button>
+            {hasPermission('postSiteCreate') && (
+              <Button
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                <Link to="/post-sites/new">{t('postSites.newPostSite', 'Nuevo Puesto de seguridad')}</Link>
+              </Button>
+            )}
 
             {/* Filtros */}
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
@@ -809,7 +811,7 @@ export default function PostSitePage() {
             </div>
 
             <div>
-              {from} – {to} {t('clients.pagination.of')} {totalCount}
+              {page} – {Math.max(1, Math.ceil(totalCount / limit))}
             </div>
 
             <div className="flex gap-2">

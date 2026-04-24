@@ -884,7 +884,7 @@ export default function ClientesPage() {
             </div>
 
             <div>
-              {from} – {to} {t('clients.pagination.of')} {totalCount}
+              {page} – {Math.max(1, Math.ceil(totalCount / limit))}
             </div>
 
             <div className="flex gap-2">

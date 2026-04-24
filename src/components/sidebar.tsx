@@ -13,6 +13,8 @@ type SubMenuItem = { id: string; name: string; path: string };
 type MenuItem = {
   id: string; name: string; icon: LucideIcon; path?: string;
   active?: boolean; expandable?: boolean; subItems?: SubMenuItem[];
+  // optional allowedRoles controls visibility for global roles (e.g. ['superadmin'])
+  allowedRoles?: string[];
 };
 
 // Mapa de nombres de iconos a componentes de iconos
@@ -41,6 +43,15 @@ export default function Sidebar() {
     tenantIdFromStorage ||
     (user && (user.tenant || (Array.isArray(user.tenants) && user.tenants.length > 0)))
   );
+
+  // Determine whether the current user has a global admin role (not tenant-scoped)
+  const isGlobalAdmin = (() => {
+    if (!user) return false;
+    const raw = user.roles ?? user.role ?? [];
+    const arr = Array.isArray(raw) ? raw : [raw];
+    const normalized = arr.map((r: any) => (typeof r === 'string' ? r.toLowerCase() : (r && (r.name || r.role) ? String(r.name || r.role).toLowerCase() : ''))).filter(Boolean);
+    return normalized.includes('admin') || normalized.includes('superadmin') || normalized.includes('super admin');
+  })();
 
   // Función para verificar si un menú debe estar expandido basado en la ruta actual
   const shouldExpandMenu = (item: MenuItem): boolean => {
@@ -82,7 +93,7 @@ export default function Sidebar() {
 
         <div className="sticky top-0 z-20 bg-white flex items-center gap-2 px-5 py-3 border-b border-gray-100">
           <img
-            src="../../assets/logo/logo.png" // 👈 cambia esta ruta por la de tu logo
+            src="/assets/logo/logo.png"
             alt="GuardsPro Logo"
             className="w-10 select-none"
           />
@@ -96,7 +107,21 @@ export default function Sidebar() {
 
         <div className="flex flex-col h-full">
           <nav className="p-2 flex-1 overflow-y-auto">
-            {menuItems.map((item) => {
+            {menuItems
+              .filter(item => {
+                // hide temporarily disabled items
+                if ((item as any).disabled) return false;
+                // If menu item has allowedRoles, only show it when the user has matching global role
+                if (!item.allowedRoles || item.allowedRoles.length === 0) return true;
+                // currently we only need to guard 'superadmin' section; treat allowedRoles matching 'superadmin'
+                if (item.allowedRoles.includes('superadmin')) return isGlobalAdmin;
+                // Fallback: allow if user has any of the allowedRoles in their global roles
+                const raw = user?.roles ?? user?.role ?? [];
+                const arr = Array.isArray(raw) ? raw : [raw];
+                const normalized = arr.map((r: any) => (typeof r === 'string' ? r.toLowerCase() : (r && (r.name || r.role) ? String(r.name || r.role).toLowerCase() : ''))).filter(Boolean);
+                return item.allowedRoles.some((ar: string) => normalized.includes(ar.toLowerCase()));
+              })
+              .map((item) => {
             const isExpanded = !!expandedMenus[item.id];
             const isExpandable = !!item.expandable;
 

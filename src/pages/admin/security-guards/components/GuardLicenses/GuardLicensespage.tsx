@@ -400,7 +400,7 @@ export default function GuardLicenses({ guard }: Props) {
                     </div>
 
                     <div>
-                      {Math.min((page - 1) * limit + 1, totalCount === 0 ? 0 : (page - 1) * limit + 1)} – {Math.min(page * limit, totalCount)} {t('clients.pagination.of')} {totalCount}
+                      {page} – {Math.max(1, Math.ceil(totalCount / limit))}
                     </div>
 
                     <div className="flex gap-2">

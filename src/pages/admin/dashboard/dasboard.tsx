@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import Breadcrumb from "@/components/ui/breadcrumb";
 import AppLayout from "@/layouts/app-layout";
@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import MobileCardList from '@/components/responsive/MobileCardList';
+import useActiveMarkers from '@/hooks/useActiveMarkers';
 
 // Empty state component
 function EmptyState({ title, description, alt }: { title: string; description: string; alt?: string }) {
@@ -69,6 +70,34 @@ export default function DashboardPage() {
   const [data, setData] = useState({ clientes: 0, sitios: 0, guardias: 0, equipo: 0, registros: 0, fichados: 0 });
   const [loadingStats, setLoadingStats] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const [requestingLocation, setRequestingLocation] = useState(false);
+  const bestCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const bestAccuracyRef = useRef<number | null>(null);
+  const accTimerRef = useRef<any>(null);
+  const DESIRED_ACCURACY = 100; // meters
+  const ACC_WAIT_MS = 15000; // wait up to 15s for better accuracy
+  const [manualMarkMode, setManualMarkMode] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const [ipFallbackUsed, setIpFallbackUsed] = useState(false);
+  const { activeMarkers, userFallbackMarker, centerRequest } = useActiveMarkers();
+  const IP_FALLBACK_ACCURACY_THRESHOLD = 2000; // meters
+
+  const formatCoord = (v?: number | null) => {
+    if (v == null) return '–';
+    // Choose decimals based on current accuracy: more precise -> more decimals
+    let decimals = 6;
+    if (accuracy != null) {
+      if (accuracy <= 1) decimals = 8;
+      else if (accuracy <= 10) decimals = 7;
+      else if (accuracy <= 100) decimals = 6;
+      else if (accuracy <= 1000) decimals = 5;
+      else decimals = 4;
+    }
+    return Number(v).toFixed(decimals);
+  };
 
   const toggleWidget = (key: string, checked: boolean) => {
     setVisibleWidgets((prev) => ({ ...prev, [key]: checked }));
@@ -110,22 +139,12 @@ export default function DashboardPage() {
     return () => { mounted = false; };
   }, []);
 
-  // Try to obtain the user's current position (for dashboard map centering)
-  useEffect(() => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
-    let mounted = true;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        if (!mounted) return;
-        setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      },
-      (err) => {
-        console.warn('Geolocation not available or permission denied', err);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-    return () => { mounted = false; };
-  }, []);
+  // marker loading and fallback handled by `useActiveMarkers` hook
+
+  // When map becomes ready and we already have userCoords, force centering
+  // map centering will be controlled via `centerRequest` or marker selection
+
+  // User geolocation is intentionally disabled for the Live Tracker: only on-duty guards/supervisors are shown.
 
   return (
     <AppLayout>
@@ -261,14 +280,24 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {/* Google Maps */}
-              <div className="w-full h-[400px] rounded-lg overflow-hidden">
+              <div className="w-full h-[400px] rounded-lg overflow-hidden relative">
                 <GoogleMapEmbed
                   className="w-full h-full"
                   mapType={mapType}
                   showGeofence={showGeofence}
-                  lat={userCoords?.lat}
-                  lng={userCoords?.lng}
+                  markers={activeMarkers.length > 0 ? activeMarkers : (userFallbackMarker ? [userFallbackMarker] : [])}
+                  lat={(activeMarkers.length > 0 ? activeMarkers[0]?.lat : userFallbackMarker?.lat)}
+                  lng={(activeMarkers.length > 0 ? activeMarkers[0]?.lng : userFallbackMarker?.lng)}
+                  centerRequest={centerRequest}
+                  enableClickToSet={false}
+                  onReady={() => setMapReady(true)}
                 />
+
+            
+
+                <div className="mt-2 text-xs text-slate-600">
+                  <div>Guardias activos mostrados: {activeMarkers.length}</div>
+                </div>
               </div>
 
               {/* Tracker Table */}

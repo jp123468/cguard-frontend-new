@@ -68,6 +68,7 @@ import DispatchPublicView from '@/pages/public/DispatchPublicView';
 import NewVehiclePage from "./pages/admin/vehicles/NewVehiclePage"
 import RoutesPage from "./pages/admin/routes/RoutesPage"
 import NewRoutePage from "./pages/admin/routes/NewRoutePage"
+import EditRoutePage from "./pages/admin/routes/EditRoutePage"
 import PatrolExecutionPage from "./pages/guard/PatrolExecutionPage"
 import LiveTrackingPage from "./pages/admin/gps-tracker/LiveTracking"
 import TrackingHistoryPage from "./pages/admin/gps-tracker/TrackingHistory"
@@ -141,6 +142,8 @@ import GuardSkillsPage from "./pages/admin/security-guards/components/GuardSkill
 import GuardDepartamentoPage from "./pages/admin/security-guards/components/GuardDepartment/GuardDepartamentoPage";
 import GuardConfiguracionPage from "./pages/admin/security-guards/components/GuardConfiguration/GuardConfiguracionPage";
 import MemosPage from "./pages/admin/memos/MemosPage";
+import TenantsPage from "./pages/admin/superadmin/TenantsPage";
+import RequireGlobalAdmin from "./components/RequireGlobalAdmin";
 
 import { ClientSelectionProvider } from "./contexts/ClientSelectionContext";
 
@@ -296,6 +299,16 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <ClientesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/superadmin/tenants"
+                element={
+                  <ProtectedRoute>
+                    <RequireGlobalAdmin>
+                      <TenantsPage />
+                    </RequireGlobalAdmin>
                   </ProtectedRoute>
                 }
               />
@@ -1344,6 +1357,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <NewRoutePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tenant/:tenantId/vehicle-patrol/routes/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <EditRoutePage />
                   </ProtectedRoute>
                 }
               />

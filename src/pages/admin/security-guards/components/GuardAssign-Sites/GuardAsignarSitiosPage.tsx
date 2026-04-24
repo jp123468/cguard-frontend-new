@@ -155,7 +155,7 @@ export default function GuardAsignarSitiosPage() {
                 // Treat businessInfoId as a postSite id and list its stations
                 try {
                   const list = await stationService.list({ postSiteId: it.businessInfoId } as any, { limit: 50, offset: 0 });
-                  const rows = (list.rows || []).map((r: any) => r.stationName || r.name || r.companyName || r.postSiteName || r.label || r.id).filter(Boolean);
+                  const rows = (list.rows || []).map((r: any) => r.stationName || r.name || r.companyName || (r.company && (r.company.name || r.company.companyName)) || r.postSiteName || r.label || r.id).filter(Boolean);
                   if (rows.length) stationVal = rows.join(', ');
                 } catch (e) {
                   // ignore station list errors

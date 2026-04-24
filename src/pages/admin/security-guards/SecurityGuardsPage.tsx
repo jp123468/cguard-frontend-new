@@ -604,7 +604,7 @@ export default function SecurityGuardsPage() {
                         <SelectContent>
                           <SelectItem value="todos">{t('guards.list.filter.siteAll', 'Todos')}</SelectItem>
                           {availablePostSites.map((s) => (
-                            <SelectItem key={s.id} value={String(s.id)}>{s.name ?? s.companyName ?? s.id}</SelectItem>
+                            <SelectItem key={s.id} value={String(s.id)}>{s.companyName || s.name || (s.company && (s.company.name || s.company.companyName)) || String(s.id)}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

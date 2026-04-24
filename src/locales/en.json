@@ -22,6 +22,13 @@
     "createdAt": "Created At",
     "updatedAt": "Updated At"
   },
+  "actions": {
+    "more": "Actions",
+    "view": "View",
+    "add": "Add",
+    "delete": "Delete",
+    "edit": "Edit"
+  },
   "tenantJoinModal": {
     "title": "Join or Create Company",
     "description": "Join an existing company with an invitation code, or create a new company.",
@@ -913,6 +920,21 @@
           "import": "Import",
           "completed": "Import completed"
         }
+      }
+    },
+    "tenants": {
+      "columns": {
+        "name": "Name",
+        "url": "URL",
+        "email": "Email",
+        "plan": "Plan",
+        "status": "Status"
+      },
+      "searchPlaceholder": "Search tenants",
+      "actions": {
+        "more": "More",
+        "add": "Add",
+        "delete": "Delete"
       }
     },
     "clients": {

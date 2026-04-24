@@ -167,9 +167,23 @@ export default function NewRoutePage() {
 
         const normalizedTargets = ['supervisor'];
 
+        const isUserActive = (u: any) => {
+          if (!u) return false;
+          const truthyFlag = (v: any) => v === true || v === 'true' || v === 1 || v === '1';
+          const hasTruthy = truthyFlag(u.active) || truthyFlag(u.isActive) || truthyFlag(u.enabled);
+          const st = (u.status || u.state || u.accountStatus || '').toString().toLowerCase().trim();
+          const pendingPatterns = ['pend', 'pendiente', 'pending', 'inactive', 'inactivo', 'disabled'];
+          const isPending = pendingPatterns.some((p) => st.includes(p));
+          if (hasTruthy && !isPending) return true;
+          if (['active', 'activo', 'enabled', 'habilitado'].includes(st)) return true;
+          return false;
+        };
+
         const filtered = (res || []).filter((u: any) => {
           const userRoles = normalizeRoles(u.roles || u.role || u.rolesList || u._rolesDisplay);
-          return userRoles.some((r) => normalizedTargets.includes(r));
+          const isSupervisor = userRoles.some((r) => normalizedTargets.includes(r));
+          if (!isSupervisor) return false;
+          return isUserActive(u);
         });
 
         setSupervisors(

@@ -18,7 +18,7 @@ export default function SplashScreen() {
       {/* Logo y texto */}
       <div className="flex flex-col items-center">
         <img
-          src="../../assets/logo/logo.png" // 👈 cambia esta ruta por la de tu logo
+          src="/assets/logo/logo.png"
           alt="GuardsPro Logo"
           className="w-40 select-none"
         />

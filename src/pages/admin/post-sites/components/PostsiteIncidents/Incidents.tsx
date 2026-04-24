@@ -969,7 +969,7 @@ export default function Incidents({ site }: { site?: any }) {
               </div>
 
               <div>
-                {totalCount === 0 ? 0 : ((page - 1) * limit + 1)} – {Math.min(page * limit, totalCount)} {t('incidents.of') || 'of'} {totalCount}
+                {page} – {Math.max(1, Math.ceil(totalCount / limit))}
               </div>
 
               <div className="flex gap-2">

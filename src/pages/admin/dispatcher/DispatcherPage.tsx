@@ -585,6 +585,49 @@ export default function DispatcherPage() {
     return rows.slice(start, start + limit);
   }, [rows, page, limit]);
 
+  // Helper to resolve a client's display name from various shapes
+  const getClientDisplay = (r: any) => {
+    try {
+      if (!r) return '-';
+      // If client is an object with an explicit name, prefer that
+      if (r.client && typeof r.client === 'object') {
+        return r.client.name || r.client.fullName || r.client.displayName || String(r.client.id || '-') || '-';
+      }
+
+      // Collect candidate client id strings from multiple possible fields
+      const candidates: string[] = [];
+      if (r.clientId) candidates.push(String(r.clientId));
+      if (r.client && typeof r.client === 'string') candidates.push(String(r.client));
+      if (r.clientAccountId) candidates.push(String(r.clientAccountId));
+      if (r.clientAccount && (r.clientAccount.id || r.clientAccount.clientId)) candidates.push(String(r.clientAccount.id || r.clientAccount.clientId));
+
+      // Also consider callerName or clientName fields that may already contain display name
+      if (r.callerName && typeof r.callerName === 'string') return r.callerName;
+      if (r.clientName && typeof r.clientName === 'string') return r.clientName;
+
+      const list = (allClients && allClients.length > 0 ? allClients : clients) || [];
+      for (const cid of candidates) {
+        if (!cid) continue;
+        const found = list.find((c: any) => {
+          try {
+            if (!c) return false;
+            const keys = [c.id, c.clientId, c.clientAccountId, c.uuid, c._id, c.externalId, c.code];
+            return keys.some((k: any) => typeof k !== 'undefined' && String(k) === String(cid));
+          } catch (e) {
+            return false;
+          }
+        });
+        if (found) return found.name || found.fullName || found.displayName || found.businessName || String(found.id);
+      }
+
+      // Fallbacks: use primitive client field if present, or display callerName
+      if (r.client && typeof r.client === 'string') return String(r.client);
+      return '-';
+    } catch (e) {
+      return '-';
+    }
+  };
+
   // (Removed combined date-time range) separate created/incident dates used below
 
 
@@ -720,7 +763,7 @@ export default function DispatcherPage() {
         const records = responses.map((r) => (r && (r as any).data ? (r as any).data : r));
 
         const rows = records.map((r: any) => ({
-          'Client Name': r.client?.name || r.client || '',
+          'Client Name': getClientDisplay(r),
           'Post Site': r.site?.name || r.site || '',
           'Caller Type': r.callerType || '',
           'Caller Name': r.callerName || (r.guardName && (r.guardName.fullName || r.guardName.name)) || '',
@@ -1416,7 +1459,7 @@ export default function DispatcherPage() {
                         })()
                       }
                     </td>
-                    <td className="px-4 py-3">{(r.client && typeof r.client === 'object') ? (r.client.name || r.client.fullName || r.client.displayName || String(r.client.id || '')) : (r.client || r.clientId || '-')}</td>
+                    <td className="px-4 py-3">{getClientDisplay(r)}</td>
                     <td className="px-4 py-3">{(r.site && typeof r.site === 'object') ? (r.site.name || r.site.companyName || r.site.address || String(r.site.id || '')) : (r.site || r.siteId || '-')}</td>
                     <td className="px-4 py-3">{(r.callerType && typeof r.callerType === 'object') ? (r.callerType.name || r.callerType.id || '-') : (r.callerType || r.guardName?.fullName || r.guardName?.name || '-')}</td>
                     <td className="px-4 py-3">{(r.incidentType && typeof r.incidentType === 'object') ? (r.incidentType.name || r.incidentType.id || '-') : (r.incidentType || r.incidentTypeId || '-')}</td>
@@ -1554,7 +1597,7 @@ export default function DispatcherPage() {
             </div>
 
             <div>
-              {totalCount === 0 ? 0 : ((page - 1) * limit + 1)} – {Math.min(page * limit, totalCount)} of {totalCount}
+              {page} – {Math.max(1, Math.ceil(totalCount / limit))}
             </div>
 
             <div className="flex gap-2">

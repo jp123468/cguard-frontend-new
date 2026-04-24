@@ -99,6 +99,12 @@ export const securityGuardService = {
     return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
+  async activeLocations() {
+    const tenantId = getTenantId();
+    const resp = await api.get(`/tenant/${tenantId}/security-guard/active-locations`);
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+  },
+
   async export(format: "excel" | "pdf" | "csv", params?: Record<string, any>) {
     const tenantId = getTenantId();
     const qs = params ? `?${new URLSearchParams(params).toString()}&format=${format}` : `?format=${format}`;

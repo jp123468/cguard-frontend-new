@@ -41,6 +41,27 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
         }
     });
 
+    // Defensive helper: detect superadmin presence in profile or persisted flag
+    const userIsSuperAdmin = (u: any) => {
+        try {
+            // quick check from persisted admin flag
+            const cached = typeof window !== 'undefined' ? localStorage.getItem('userIsAdmin') : null;
+            if (cached === 'true') return true;
+        } catch (e) {}
+        if (!u) return false;
+        const normalize = (r: any) => {
+            if (!r) return [];
+            if (Array.isArray(r)) return r.map((it) => (typeof it === 'string' ? it : (it?.name || it?.key || it?.slug || ''))).filter(Boolean);
+            if (typeof r === 'string') return [r];
+            return [];
+        };
+        const global = normalize(u.roles ?? u.role ?? []);
+        const tenantsArr = Array.isArray(u.tenants) ? u.tenants.flatMap((t: any) => normalize(t.roles ?? t.role ?? [])) : [];
+        const singleTenant = u.tenant ? normalize(u.tenant.roles ?? u.tenant.role ?? []) : [];
+        const all = [...global, ...tenantsArr, ...singleTenant].map((s) => (s || '').toString().toLowerCase());
+        return all.some((n) => n.includes('superadmin'));
+    };
+
     // helper to detect tenant presence in various profile shapes
     const profileHasTenant = (u: any) => {
         if (!u) return false;
@@ -53,9 +74,10 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
 
     useEffect(() => {
         // If parent requests open but the current authenticated user already
-        // has a tenant, immediately close the modal and suppress reopen.
+        // has a tenant, or the user is a superadmin, immediately close the modal
+        // and suppress reopen.
         if (open) {
-            if (!authLoading && profileHasTenant(user)) {
+            if (!authLoading && (profileHasTenant(user) || userIsSuperAdmin(user))) {
                 try { suppressReopen.current = true; } catch {}
                 try { setInternalOpen(false); } catch {}
                 try { onOpenChange(false); } catch {}
@@ -78,6 +100,17 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
         // keep internal synced when parent opens/closes externally
         setInternalOpen(open);
     }, [open, user, authLoading]);
+
+    // Ensure modal is closed whenever the authenticated user becomes a superadmin
+    // or gains a tenant, even if the modal was opened via draft/auto-open preference.
+    useEffect(() => {
+        if (authLoading) return;
+        if (user && (profileHasTenant(user) || userIsSuperAdmin(user))) {
+            try { suppressReopen.current = true; } catch {}
+            try { setInternalOpen(false); } catch {}
+            try { onOpenChange(false); } catch {}
+        }
+    }, [user, authLoading]);
 
     const handleAccept = async () => {
             if (!token) {
@@ -612,7 +645,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                         <div className="grid gap-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm">{t('tenantJoinModal.companyName')}</label>
+                                    <label className="text-sm">{t('tenantJoinModal.companyName')}<span className="text-red-500 ml-1">*</span></label>
                                     <Input value={form.name} onChange={(e) => setForm((s: any) => ({ ...s, name: e.target.value }))} />
                                 </div>
                                 <div>
@@ -626,7 +659,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                     {landlineError && <div className="text-red-500 text-xs mt-1">{landlineError}</div>}
                                 </div>
                                 <div>
-                                    <label className="text-sm">{t('tenantJoinModal.mobilePhone')}</label>
+                                    <label className="text-sm">{t('tenantJoinModal.mobilePhone')}<span className="text-red-500 ml-1">*</span></label>
                                     <PhoneInput
                                         value={form.phone}
                                         onChange={(v) => setForm((s: any) => ({ ...s, phone: v }))}
@@ -636,7 +669,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                     {phoneError && <p className="text-sm text-red-600 mt-1">{phoneError}</p>}
                                 </div>
                                 <div>
-                                    <label className="text-sm">Email</label>
+                                    <label className="text-sm">Email<span className="text-red-500 ml-1">*</span></label>
                                     <Input
                                         value={form.email}
                                         onChange={e => setForm((s: any) => ({ ...s, email: e.target.value }))}
@@ -649,11 +682,11 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm">{t('tenantJoinModal.businessTitle')}</label>
+                                    <label className="text-sm">{t('tenantJoinModal.businessTitle')}<span className="text-red-500 ml-1">*</span></label>
                                     <Input value={form.businessTitle} onChange={(e) => setForm((s: any) => ({ ...s, businessTitle: e.target.value }))} />
                                 </div>
                                 <div>
-                                    <label className="text-sm">{t('tenantJoinModal.taxNumber')}</label>
+                                    <label className="text-sm">{t('tenantJoinModal.taxNumber')}<span className="text-red-500 ml-1">*</span></label>
                                     <Input value={form.taxNumber} onChange={(e) => setForm((s: any) => ({ ...s, taxNumber: e.target.value }))} />
                                     {taxError && <p className="text-sm text-red-600 mt-1">{taxError}</p>}
                                 </div>
@@ -661,7 +694,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
 
                             <div className="grid gap-3">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-sm">{t('tenantJoinModal.searchAddress')}</label>
+                                    <label className="text-sm">{t('tenantJoinModal.searchAddress')}<span className="text-red-500 ml-1">*</span></label>
                                     <Button
                                         type="button"
                                         variant="outline"

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { AuthService, LoginCredentials, SignUpData } from "../services/auth/authService";
 import { setAuthToken, clearAuthToken } from "@/lib/api";
-import { setTenantId as setClientServiceTenantId } from "@/lib/api/clientService";
+import { setTenantId as setClientServiceTenantId, clearTenantId as clearClientServiceTenantId } from "@/lib/api/clientService";
 import { setTenantId as setCategoryTenantId } from "@/lib/api/categoryService";
 import { ApiError } from "../services/api/apiService";
 
@@ -17,6 +17,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasPermission: (perm: string) => boolean;
   hasAny: (perms: string[]) => boolean;
+  // global admin flag (true only for global admin/superadmin roles)
+  isAdmin: boolean;
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -44,6 +46,7 @@ export const useAuth = () => {
       isAuthenticated: false,
       hasPermission: () => false,
       hasAny: () => false,
+      isAdmin: false,
     } as AuthContextType;
   }
   return ctx;
@@ -59,6 +62,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
   const [isAdmin, setIsAdmin] = useState<boolean>(() => {
     try { return localStorage.getItem('userIsAdmin') === 'true'; } catch { return false; }
+  });
+  const [tenantAdmin, setTenantAdmin] = useState<boolean>(() => {
+    try { return localStorage.getItem('userTenantAdmin') === 'true'; } catch { return false; }
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,20 +91,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         permissions,
         isAdmin,
+        tenantAdmin,
         loading,
         authToken: localStorage.getItem('authToken'),
         tenantId: localStorage.getItem('tenantId'),
       };
     } catch (e) {}
-  }, [user, permissions, isAdmin, loading]);
+  }, [user, permissions, isAdmin, tenantAdmin, loading]);
 
-  // Persist permissions and isAdmin whenever they change
+  // Persist permissions and admin flags whenever they change
   useEffect(() => {
     try {
       localStorage.setItem('userPermissions', JSON.stringify(permissions || []));
       localStorage.setItem('userIsAdmin', isAdmin ? 'true' : 'false');
+      localStorage.setItem('userTenantAdmin', tenantAdmin ? 'true' : 'false');
     } catch (e) {}
-  }, [permissions, isAdmin]);
+  }, [permissions, isAdmin, tenantAdmin]);
 
   // Persist tenantId derived from user when user changes, and restore into clientService
   useEffect(() => {
@@ -139,9 +147,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const userData = await AuthService.getProfile();
+
+      // If the user is a global superadmin, ensure they are not tenant-scoped:
+      const isGlobalSuperadmin = (u: any) => {
+        if (!u) return false;
+        const roles = u.roles ?? u.role ?? [];
+        const normalize = (r: any) => {
+          if (!r) return [];
+          if (Array.isArray(r)) return r.map((it) => (typeof it === 'string' ? it : (it?.name || it?.key || it?.slug || ''))).filter(Boolean);
+          if (typeof r === 'string') return [r];
+          return [];
+        };
+        const names = normalize(roles);
+        // Also check tenant-scoped roles: some deployments attach `superadmin` at tenantUser
+        // level when there's no separate global role. Treat any `superadmin` occurrence
+        // as global to ensure the UI behaves correctly for platform superadmins.
+        const tenantRoles: string[] = Array.isArray(u.tenants)
+          ? u.tenants.flatMap((t: any) => normalize(t.roles ?? t.role ?? []))
+          : [];
+        const allNames = [...names, ...tenantRoles].map((n) => (n || '').toString().toLowerCase());
+        return allNames.includes('superadmin') || allNames.includes('super_admin');
+      };
+
+      if (isGlobalSuperadmin(userData)) {
+        try { localStorage.removeItem('tenantId'); } catch (e) {}
+        try { clearClientServiceTenantId(); } catch (e) {}
+        // Avoid exposing tenant associations in the client for superadmin users
+        if (Array.isArray(userData.tenants)) userData.tenants = [];
+      }
+
       setUser(userData);
       // normalize permissions and admin flag
-      const { perms, admin } = extractPermissionsFromUser(userData);
+      const { perms, admin, tenantAdmin } = extractPermissionsFromUser(userData);
       // Only overwrite cached permissions if the backend returned a non-empty set.
       // This protects against responses that do not include tenant-scoped permissions
       // and would otherwise clear permissions that were persisted at login.
@@ -154,6 +191,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try { console.debug('[AuthContext] profile returned no permissions; keeping cached permissions'); } catch (e) {}
       }
 
+      setTenantAdmin(tenantAdmin);
       // Only set admin flag to true if backend indicates admin; avoid clearing a cached admin flag
       if (admin) {
         setIsAdmin(admin);
@@ -205,18 +243,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Ensure tenantId is persisted and client services configured BEFORE
         // extracting tenant-scoped permissions (extractPermissionsFromUser
         // reads localStorage.tenantId to pick tenantEntry).
-        try {
-          const tenantId = (u.tenants && u.tenants[0] && (u.tenants[0].tenantId || (u.tenants[0].tenant && u.tenants[0].tenant.id))) || null;
-          if (tenantId) {
-            localStorage.setItem('tenantId', tenantId);
-            try { setClientServiceTenantId(String(tenantId)); } catch {}
-            try { setCategoryTenantId(String(tenantId)); } catch {}
-          }
-        } catch (e) {}
+        // If user is superadmin, do not persist tenantId or tenant associations
+        const isGlobalSuperadminLocal = (u: any) => {
+          const roles = u.roles ?? u.role ?? [];
+          const normalize = (r: any) => {
+            if (!r) return [];
+            if (Array.isArray(r)) return r.map((it) => (typeof it === 'string' ? it : (it?.name || it?.key || it?.slug || ''))).filter(Boolean);
+            if (typeof r === 'string') return [r];
+            return [];
+          };
+          const globalNames = normalize(roles);
+          const tenantNames = Array.isArray(u.tenants)
+            ? u.tenants.flatMap((t: any) => normalize(t.roles ?? t.role ?? []))
+            : [];
+          const all = [...globalNames, ...tenantNames].map((n) => (n || '').toString().toLowerCase());
+          return all.some((n) => n.includes('superadmin'));
+        };
+        if (!isGlobalSuperadminLocal(u)) {
+          try {
+            const tenantId = (u.tenants && u.tenants[0] && (u.tenants[0].tenantId || (u.tenants[0].tenant && u.tenants[0].tenant.id))) || null;
+            if (tenantId) {
+              localStorage.setItem('tenantId', tenantId);
+              try { setClientServiceTenantId(String(tenantId)); } catch {}
+              try { setCategoryTenantId(String(tenantId)); } catch {}
+            }
+          } catch (e) {}
+        } else {
+          try { localStorage.removeItem('tenantId'); } catch (e) {}
+          try { clearClientServiceTenantId(); } catch (e) {}
+          if (Array.isArray(u.tenants)) u.tenants = [];
+        }
 
         setUser(u);
-        const { perms, admin } = extractPermissionsFromUser(u);
+        const { perms, admin, tenantAdmin } = extractPermissionsFromUser(u);
         setPermissions(perms);
+        setTenantAdmin(tenantAdmin);
         try { localStorage.setItem('userPermissions', JSON.stringify(perms)); localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
         // store tenantId quickly if available and configure services immediately
         try {
@@ -258,9 +319,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try { await AuthService.signOut(); } catch {} finally {
       localStorage.removeItem("authToken");
-      try { localStorage.removeItem('userPermissions'); localStorage.removeItem('userIsAdmin'); localStorage.removeItem('tenantId'); } catch {}
+      try { localStorage.removeItem('userPermissions'); localStorage.removeItem('userIsAdmin'); localStorage.removeItem('userTenantAdmin'); localStorage.removeItem('tenantId'); } catch {}
       try { clearAuthToken(); } catch {}
       setUser(null);
+      setTenantAdmin(false);
     }
   };
 
@@ -280,20 +342,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         // Persist tenantId and configure services before extracting permissions
         try {
-          const tenantId = (u.tenants && u.tenants[0] && (u.tenants[0].tenantId || (u.tenants[0].tenant && u.tenants[0].tenant.id))) || null;
-          if (tenantId) {
-            localStorage.setItem('tenantId', tenantId);
-            try { setClientServiceTenantId(String(tenantId)); } catch {}
-            try { setCategoryTenantId(String(tenantId)); } catch {}
+          const isGlobalSuper = (u: any) => {
+            const roles = u.roles ?? u.role ?? [];
+            const arr = Array.isArray(roles) ? roles : [roles];
+            return arr.some((r: any) => (typeof r === 'string' ? r : (r?.name || r?.key || '')).toString().toLowerCase().includes('superadmin'));
+          };
+          if (!isGlobalSuper(u)) {
+            const tenantId = (u.tenants && u.tenants[0] && (u.tenants[0].tenantId || (u.tenants[0].tenant && u.tenants[0].tenant.id))) || null;
+            if (tenantId) {
+              localStorage.setItem('tenantId', tenantId);
+              try { setClientServiceTenantId(String(tenantId)); } catch {}
+              try { setCategoryTenantId(String(tenantId)); } catch {}
+            }
+          } else {
+            try { localStorage.removeItem('tenantId'); } catch (e) {}
+            try { clearClientServiceTenantId(); } catch (e) {}
+            if (Array.isArray(u.tenants)) u.tenants = [];
           }
         } catch (e) {}
 
         setUser(u);
-        const { perms, admin } = extractPermissionsFromUser(u);
+        const { perms, admin, tenantAdmin } = extractPermissionsFromUser(u);
         if (Array.isArray(perms) && perms.length > 0) {
           setPermissions(perms);
           try { localStorage.setItem('userPermissions', JSON.stringify(perms)); } catch {}
         }
+        setTenantAdmin(tenantAdmin);
         if (admin) {
           setIsAdmin(admin);
           try { localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
@@ -303,11 +377,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           const u = await AuthService.getProfile();
           setUser(u);
-          const { perms, admin } = extractPermissionsFromUser(u);
+          const { perms, admin, tenantAdmin } = extractPermissionsFromUser(u);
           if (Array.isArray(perms) && perms.length > 0) {
             setPermissions(perms);
             try { localStorage.setItem('userPermissions', JSON.stringify(perms)); } catch {}
           }
+          setTenantAdmin(tenantAdmin);
           if (admin) {
             setIsAdmin(admin);
             try { localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
@@ -350,6 +425,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const hasPermission = (perm: string) => {
     if (isAdmin) return true;
+    if (tenantAdmin) return true;
     if (!permissions || permissions.length === 0) return false;
     const ok = matchesByAlias(perm);
     // Debug: only log client-related permission checks to avoid noisy logs
@@ -362,20 +438,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const hasAny = (perms: string[]) => {
-    if (isAdmin) return true;
+    if (isAdmin || tenantAdmin) return true;
     if (!perms || perms.length === 0) return false;
     return perms.some((p) => hasPermission(p));
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, signIn, signUp, signOut, signInWithToken, isAuthenticated: !!user, hasPermission, hasAny }}>
+    <AuthContext.Provider value={{ user, loading, error, signIn, signUp, signOut, signInWithToken, isAuthenticated: !!user, hasPermission, hasAny, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-function extractPermissionsFromUser(u: any): { perms: string[]; admin: boolean } {
-  if (!u) return { perms: [], admin: false };
+function extractPermissionsFromUser(u: any): { perms: string[]; admin: boolean; tenantAdmin: boolean } {
+  if (!u) return { perms: [], admin: false, tenantAdmin: false };
   // If user has a tenants array, prefer tenant-scoped permissions for current tenant
   const tenantId = localStorage.getItem('tenantId');
   let tenantEntry: any = null;
@@ -386,23 +462,59 @@ function extractPermissionsFromUser(u: any): { perms: string[]; admin: boolean }
     if (!tenantEntry) tenantEntry = u.tenants[0];
   }
 
-  // candidate permission sources
-  const p = (tenantEntry && (tenantEntry.permissions ?? tenantEntry.perms)) ?? u.permissions ?? u.perms ?? u.role?.permissions ?? u.roles?.permissions;
-  const roles = (tenantEntry && tenantEntry.roles) ?? u.roles ?? u.role ?? [];
-
-  // Normalize roles: allow array of strings or array of objects like { name: 'admin' }
-  let roleNames: string[] = [];
-  if (Array.isArray(roles)) {
-    roleNames = roles.map((r: any) => {
-      if (!r) return '';
-      if (typeof r === 'string') return r;
-      return r.name || r.key || r.slug || r.id || '';
-    }).filter(Boolean);
-  } else if (typeof roles === 'string') {
-    roleNames = [roles];
+  if (!tenantEntry && u.tenant) {
+    const tenant = u.tenant;
+    if (tenant.tenantId || (tenant.tenant && (tenant.tenant.id || tenant.tenant.tenantId))) {
+      tenantEntry = tenant;
+    }
   }
 
-  const admin = roleNames.includes('admin');
+  // candidate permission sources
+  const p = (
+    (tenantEntry && (tenantEntry.permissions ?? tenantEntry.perms)) ||
+    (u.tenant && (u.tenant.permissions ?? u.tenant.perms)) ||
+    u.permissions ||
+    u.perms ||
+    u.role?.permissions ||
+    u.roles?.permissions
+  );
+
+  // Separate tenant-scoped roles from global roles so tenant `admin` doesn't become global admin
+  // Also consider `u.tenant` (single-tenant shape) which may contain roles even when the
+  // tenant object has no tenantId set (common for global accounts attached to a placeholder).
+  const tenantRolesRaw = (
+    (tenantEntry && ((tenantEntry.roles && tenantEntry.roles) || (tenantEntry.role ? [tenantEntry.role] : []))) ||
+    (u.tenant && ((u.tenant.roles && u.tenant.roles) || (u.tenant.role ? [u.tenant.role] : []))) ||
+    []
+  );
+  const globalRolesRaw = u.roles ?? u.role ?? [];
+
+  const normalizeRoles = (rolesInput: any) => {
+    if (!rolesInput) return [] as string[];
+    if (Array.isArray(rolesInput)) {
+      return rolesInput.map((r: any) => {
+        if (!r) return '';
+        if (typeof r === 'string') return r;
+        return r.name || r.key || r.slug || r.id || '';
+      }).filter(Boolean);
+    }
+    if (typeof rolesInput === 'string') return [rolesInput];
+    return [] as string[];
+  };
+
+  const roleNamesTenant = normalizeRoles(tenantRolesRaw);
+  const roleNamesGlobal = normalizeRoles(globalRolesRaw);
+
+  // Only global roles should normally grant isAdmin. However, treat `superadmin`
+  // specially: if it appears anywhere (global or tenant-scoped), promote to admin
+  // so platform-level superadmins see all tenants and do not get tenant-only UX.
+  const admin =
+    roleNamesGlobal.includes('admin') ||
+    roleNamesGlobal.includes('superadmin') ||
+    roleNamesGlobal.includes('super_admin') ||
+    roleNamesTenant.includes('superadmin') ||
+    roleNamesTenant.includes('super_admin');
+  const tenantAdmin = roleNamesTenant.includes('admin') || roleNamesTenant.includes('superadmin') || roleNamesTenant.includes('super_admin');
 
   // Normalize permissions: handle arrays of strings, arrays of objects, or comma-separated strings
   let perms: string[] = [];
@@ -427,5 +539,5 @@ function extractPermissionsFromUser(u: any): { perms: string[]; admin: boolean }
     perms = Object.keys(p).filter(Boolean);
   }
 
-  return { perms, admin };
+  return { perms, admin, tenantAdmin };
 }

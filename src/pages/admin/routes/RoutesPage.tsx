@@ -1,6 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
 import routeService from "@/lib/api/routeService";
+import { postSiteService } from '@/lib/api/postSiteService';
 import { Link } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -23,6 +25,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Search, Filter as FilterIcon } from "lucide-react";
+import RouteDetailModal from './RouteDetailModal';
 
 import {
   routeFiltersSchema,
@@ -35,23 +38,73 @@ export default function RoutesPage() {
   const [filters, setFilters] = useState<RouteFilters>(defaultRouteFilters);
 
   const [rows, setRows] = useState<any[]>([]);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const { t } = useTranslation();
+
+  const [limit, setLimit] = useState<number>(Number(filters.perPage || 25));
+  const [page, setPage] = useState<number>(1);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const perPage = Number(filters.perPage || 25);
-        const resp = await routeService.list({ limit: perPage, offset: 0 });
+        setLoading(true);
+        const resp = await routeService.list({ limit, offset: (page - 1) * limit });
         if (!mounted) return;
-        setRows(resp.rows || []);
+        const initialRows = resp.rows || [];
+        setRows(initialRows);
+        setTotalCount(typeof resp.count === 'number' ? resp.count : (initialRows || []).length);
+
+        // Resolve missing post-site names for points if backend didn't include them
+        (async () => {
+          try {
+            const missingSiteIds = new Set<string>();
+            (initialRows || []).forEach((r: any) => {
+              if (r.points && Array.isArray(r.points)) {
+                r.points.forEach((p: any) => {
+                  if (!p.siteName && (p.siteId || p.postSiteId)) {
+                    missingSiteIds.add(String(p.siteId || p.postSiteId));
+                  }
+                });
+              }
+            });
+
+            if (missingSiteIds.size === 0) return;
+
+            const ids = Array.from(missingSiteIds);
+            const results = await Promise.all(ids.map((id) => postSiteService.get(id).catch(() => null)));
+            const map = new Map<string, any>();
+            results.forEach((res: any, i: number) => {
+              const id = ids[i];
+              if (res) map.set(id, res.companyName || res.name || (res.company && (res.company.name || res.company.companyName)) || String(res.id));
+            });
+
+            if (map.size > 0) {
+              setRows((prev) => (prev || []).map((r: any) => ({
+                ...r,
+                points: (r.points || []).map((p: any) => ({
+                  ...p,
+                  siteName: p.siteName || map.get(String(p.siteId || p.postSiteId)) || p.siteName,
+                })),
+              })));
+            }
+          } catch (e) {
+            console.warn('Failed to resolve post site names for routes', e);
+          }
+        })();
       } catch (e) {
         console.error('Error loading routes', e);
+      } finally {
+        setLoading(false);
       }
     })();
     return () => {
       mounted = false;
     };
-  }, [filters.perPage]);
+  }, [limit, page]);
 
   const aplicarFiltros = () => {
     const parse = routeFiltersSchema.safeParse(filters);
@@ -62,12 +115,6 @@ export default function RoutesPage() {
     console.log("Aplicando filtros:", parse.data);
     setOpenFilter(false);
   };
-
-  const perPageText = useMemo(() => {
-    if (filters.perPage === "10") return "10";
-    if (filters.perPage === "25") return "25";
-    return "50";
-  }, [filters.perPage]);
 
   return (
     <AppLayout>
@@ -189,7 +236,7 @@ export default function RoutesPage() {
                 </th>
                 <th className="px-4 py-3 font-semibold">Nombre</th>
                 <th className="px-4 py-3 font-semibold">Puesto de seguridad</th>
-                <th className="px-4 py-3 font-semibold">Guardia</th>
+                <th className="px-4 py-3 font-semibold">Supervisor</th>
                 <th className="px-4 py-3 font-semibold">Vehículo</th>
                 <th className="px-4 py-3 font-semibold">Tipo</th>
                 <th className="px-4 py-3 font-semibold">Estado</th>
@@ -220,40 +267,96 @@ export default function RoutesPage() {
                   <td className="px-4 py-3">
                     <Checkbox />
                   </td>
-                  <td className="px-4 py-3 font-medium">{r.name || r.title || '—'}</td>
-                  <td className="px-4 py-3">{(r.points && r.points.length) ? r.points.map((p: any) => p.address || p.siteName || p.siteId).join(', ') : '—'}</td>
-                  <td className="px-4 py-3">{r.assignedGuard || r.supervisorId || '—'}</td>
-                  <td className="px-4 py-3">{(r.vehicle && (r.vehicle.name || r.vehicle.licensePlate)) || r.vehicleId || '—'}</td>
-                  <td className="px-4 py-3">{r.continuous ? 'Continua' : 'Programada'}</td>
+                  <td className="px-4 py-3 font-medium">{r.name || r.title || r.routeName || '—'}</td>
+                  <td className="px-4 py-3">{(() => {
+                    const pts = r.points && Array.isArray(r.points) ? r.points : [];
+                    if (pts.length > 0) {
+                      const names = pts.map((p: any) => p.siteName || p.address || p.postSiteId).filter(Boolean);
+                      if (names.length === 0) return r.address || '—';
+                      if (names.length <= 2) return names.join(', ');
+                      return `${names.slice(0, 2).join(', ')} (+${names.length - 2} más)`;
+                    }
+                    return r.address || '—';
+                  })()}</td>
+                  <td className="px-4 py-3">{(() => {
+                    const g = r.assignedGuard || r.guard || r.supervisor || r.supervisorId || r.guardId;
+                    if (!g) return '—';
+                    if (typeof g === 'string') return g;
+                    if (typeof g === 'object') {
+                      const first = g.firstName || g.first_name || g.name || '';
+                      const last = g.lastName || g.last_name || '';
+                      const full = `${first} ${last}`.trim();
+                      if (full) return full;
+                      return g.email || g.id || '—';
+                    }
+                    return String(g);
+                  })()}</td>
+                  <td className="px-4 py-3">{(r.vehicle && (r.vehicle.plate || r.vehicle.name)) || r.vehicleId || '—'}</td>
+                  <td className="px-4 py-3">{(() => {
+                    if (r.continuous !== undefined && r.continuous !== null) {
+                      return r.continuous ? 'Continua' : 'Programada';
+                    }
+                    const t = r.type || r.routeType;
+                    if (!t) return r.isPatrol ? 'Patrulla' : '—';
+                    if (typeof t === 'string') return t;
+                    if (typeof t === 'object') return t.name || t.label || t.type || '—';
+                    return String(t);
+                  })()}</td>
                   <td className="px-4 py-3">{(r.active === false) ? 'Inactivo' : 'Activo'}</td>
                   <td className="px-4 py-3 text-right">
-                    <Link to="#" className="text-orange-600">Ver</Link>
+                    <button type="button" className="text-orange-600" onClick={() => { setDetailId(r.id); setDetailOpen(true); }}>Ver</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          <div className="flex items-center justify-between bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-gray-600 bg-gray-50 border-x border-b rounded-b-lg">
             <div className="flex items-center gap-2">
-              <span>Elementos por página</span>
+              <span>{t('clients.pagination.itemsPerPage', 'Elementos por página')}</span>
               <Select
-                value={filters.perPage}
-                onValueChange={(v) => setFilters((s: any) => ({ ...s, perPage: v }))}
+                value={limit.toString()}
+                onValueChange={(v) => {
+                  setLimit(Number(v));
+                  setPage(1);
+                }}
               >
-                <SelectTrigger className="h-8 w-20">
-                  <SelectValue placeholder={perPageText} />
+                <SelectTrigger className="h-8 min-w-[70px]">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="25">25</SelectItem>
                   <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
                   <SelectItem value="50">50</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div>0 of 0</div>
+
+            <div>
+              {page} – {Math.max(1, Math.ceil(totalCount / limit))}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 1 || loading}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                {t('clients.pagination.prev', 'Anterior')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page * limit >= totalCount || loading}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                {t('clients.pagination.next', 'Siguiente')}
+              </Button>
+            </div>
           </div>
         </div>
+        <RouteDetailModal open={detailOpen} onOpenChange={(v) => { if (!v) setDetailId(null); setDetailOpen(v); }} routeId={detailId} />
       </section>
     </AppLayout>
   );

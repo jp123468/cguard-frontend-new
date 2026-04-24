@@ -27,7 +27,7 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
           {/* Logo grande */}
           <div className="mb-10 flex justify-center">
             <img
-              src="../assets/logo/logo.png"
+              src="/assets/logo/logo.png"
               alt="CG Guard"
               width={150}
               height={150}

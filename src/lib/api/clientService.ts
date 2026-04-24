@@ -20,6 +20,15 @@ export const setTenantId = (id: string) => {
 };
 
 /**
+ * Clear any configured tenant id from memory and storage.
+ * Useful for global users (superadmin) that should not be tenant-scoped.
+ */
+export const clearTenantId = () => {
+    globalTenantId = null;
+    try { localStorage.removeItem('tenantId'); } catch (e) {}
+};
+
+/**
  * Obtiene el tenantId configurado.
  * Si no está en memoria, intenta recuperarlo de localStorage.
  * Si no existe, lanza un error.
