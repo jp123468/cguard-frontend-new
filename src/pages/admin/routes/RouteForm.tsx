@@ -285,7 +285,7 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
           return [];
         };
 
-        const normalizedTargets = ['supervisor'];
+        const normalizedTargets = ['supervisor', 'securitysupervisor', 'admin'];
 
         const isUserActive = (u: any) => {
           if (!u) return false;
@@ -301,7 +301,7 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
 
         const filtered = (res || []).filter((u: any) => {
           const userRoles = normalizeRoles(u.roles || u.role || u.rolesList || u._rolesDisplay);
-          const isSupervisor = userRoles.some((r) => normalizedTargets.includes(r));
+          const isSupervisor = userRoles.some((r) => normalizedTargets.some(target => r.includes(target)));
           if (!isSupervisor) return false;
           return isUserActive(u);
         });

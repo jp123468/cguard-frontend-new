@@ -161,38 +161,16 @@ function LoginRouteResolver() {
   useEffect(() => {
     if (!inviteToken) return;
 
-    if (inviteType === 'guard' || securityGuardId) {
-      navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}${securityGuardId ? `&securityGuardId=${encodeURIComponent(securityGuardId)}` : ''}&inviteType=guard`, { replace: true });
-      return;
-    }
-
+    // If token explicitly marks a client invite, go to client registration
     if (inviteType === 'client') {
       navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}&inviteType=client`, { replace: true });
       return;
     }
 
-    const resolveInvite = async () => {
-      try {
-        const guardResponse = await ApiService.get(`/security-guard/public?token=${encodeURIComponent(inviteToken)}`, { skipAuth: true });
-        if (guardResponse) {
-          navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}${securityGuardId ? `&securityGuardId=${encodeURIComponent(securityGuardId)}` : ''}&inviteType=guard`, { replace: true });
-          return;
-        }
-      } catch (e) {
-        // not a guard invite
-      }
-
-      try {
-        const clientResponse = await ApiService.get(`/user/public?token=${encodeURIComponent(inviteToken)}`, { skipAuth: true });
-        if (clientResponse) {
-          navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}&inviteType=client`, { replace: true });
-        }
-      } catch (e) {
-        // not a client invite
-      }
-    };
-
-    resolveInvite();
+    // Default behavior: treat as guard invitation and open the public invitation
+    // registration page directly. Avoid probing backend endpoints here because
+    // that can return 400/204 preflight errors and leave the user on the login page.
+    navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}${securityGuardId ? `&securityGuardId=${encodeURIComponent(securityGuardId)}` : ''}&inviteType=guard`, { replace: true });
   }, [inviteToken, inviteType, securityGuardId, navigate]);
 
   return (

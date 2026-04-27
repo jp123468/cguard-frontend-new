@@ -63,6 +63,18 @@ export default function GuardRegistration() {
   useEffect(() => { 
     const fetchInvite = async () => {
       console.log('[registration] params ->', { inviteToken, securityGuardId, inviteType });
+      
+      // Si hay un token de invitación, limpiar cualquier sesión activa para evitar conflictos
+      if (inviteToken) {
+        try {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+          console.log('[registration] cleared any active session for invitation flow');
+        } catch (e) {
+          console.warn('[registration] could not clear session:', e);
+        }
+      }
+      
       if (!inviteToken && !securityGuardId) return;
       if (inviteType === 'client' && inviteToken) {
         navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}&inviteType=client`);
@@ -84,10 +96,10 @@ export default function GuardRegistration() {
         }
 
         setFetched(data);
-        if (inviteToken || securityGuardId) {
-          setStep(3);
-        }
-
+        // Invitation users should start at step 1 and complete the full form
+        // Only set step if not already set by user navigation
+        // Default to step 1 for new invitation flows
+        
         // nombres / email
         const rootFirst = data.firstName || data.guard?.firstName || (data.fullName ? String(data.fullName).split(" ")[0] : undefined);
         const rootLast = data.lastName || data.guard?.lastName || (data.fullName ? String(data.fullName).split(" ").slice(1).join(" ") : undefined);
@@ -106,16 +118,38 @@ export default function GuardRegistration() {
       } catch (err: any) {
         // If this token belongs to a client invitation instead of a guard invitation,
         // redirect to the client registration page.
-        if (inviteToken) {
+        if (inviteToken && !securityGuardId) {
           try {
             const clientResponse = await ApiService.get(`/user/public?token=${encodeURIComponent(inviteToken)}`, { skipAuth: true });
             const clientData = clientResponse?.data || clientResponse;
             if (clientData) {
-              navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}`);
-              return;
+              // Check roles to determine if it should go to client registration
+              const roles = clientData.roles || [];
+              if (!roles.includes('securityGuard')) {
+                // This is a supervisor, customer, or other staff role
+                navigate(`/client/registration?token=${encodeURIComponent(inviteToken)}&inviteType=client`);
+                return;
+              }
+              // If it has securityGuard role but guard endpoint failed, something is wrong
+              console.error('[registration] User has securityGuard role but guard endpoint failed');
             }
           } catch (_clientErr) {
-            // ignore and preserve original invite error flow
+            // Both guard and client endpoints failed - likely expired token
+            console.error('[registration] Both endpoints failed:', { err, _clientErr });
+            
+            // Check if it's an expired token error
+            const isExpiredToken = 
+              err?.data?.message?.toLowerCase().includes('expirado') ||
+              err?.data?.message?.toLowerCase().includes('expired') ||
+              err?.message?.toLowerCase().includes('expirado') ||
+              err?.message?.toLowerCase().includes('expired') ||
+              (_clientErr as any)?.data?.message?.toLowerCase().includes('expirado') ||
+              (_clientErr as any)?.data?.message?.toLowerCase().includes('expired');
+            
+            if (isExpiredToken) {
+              setIsLoading(false);
+              return;
+            }
           }
         }
 
@@ -143,9 +177,11 @@ export default function GuardRegistration() {
         const MAX = 140;
         if (msg.length > MAX) msg = msg.slice(0, MAX - 3).trim() + "...";
 
-        // If message indicates already-created user, show it once and redirect
+        // If message indicates already-created user WITHOUT an active invitation,
+        // redirect to login. But if they're completing an invitation (have inviteToken),
+        // this is expected - don't redirect.
         const lower = msg.toLowerCase();
-        if (lower.includes("ya fue creado") || lower.includes("ya fue creado y no puede")) {
+        if ((lower.includes("ya fue creado") || lower.includes("ya fue creado y no puede")) && !inviteToken) {
           if (shownToastRef.current !== msg) {
             shownToastRef.current = msg;
             toast.error(msg || "La cuenta ya fue creada — serás redirigido al inicio de sesión.");
@@ -175,8 +211,8 @@ export default function GuardRegistration() {
         else if (!validateEmail(email)) nextErrors.email = "Correo electrónico inválido";
       }
       if (stepNum === 2) {
-        if (!governmentId?.trim()) nextErrors.governmentId = "El documento de identidad es obligatorio";
-        if (!birthDate) nextErrors.birthDate = "La fecha de nacimiento es obligatoria";
+        if (!governmentId?.trim()) nextErrors.governmentId = " ";
+        if (!birthDate) nextErrors.birthDate = " ";
         if (!birthPlace?.trim()) nextErrors.birthPlace = "El lugar de nacimiento es obligatorio";
         if (!gender) nextErrors.gender = "El género es obligatorio";
         if (!maritalStatus) nextErrors.maritalStatus = "El estado civil es obligatorio";

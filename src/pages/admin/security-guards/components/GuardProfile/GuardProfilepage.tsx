@@ -13,6 +13,45 @@ type Props = {
   onGuardUpdate?: (updatedGuard: any) => void;
 };
 
+// Componentes auxiliares fuera del componente principal para evitar recreación en cada render
+const InfoCard = ({ title, children, t }: { title: string; children: React.ReactNode; t: any }) => (
+  <div className="bg-white border rounded-lg p-6 shadow-sm">
+    <h4 className="font-semibold mb-4 text-base">{t(title)}</h4>
+    {children}
+  </div>
+);
+
+const InfoField = ({ 
+  label, 
+  value, 
+  field, 
+  isEditing, 
+  editedGuard, 
+  setEditedGuard, 
+  t 
+}: { 
+  label: string; 
+  value: string | number | null | undefined; 
+  field?: string;
+  isEditing: boolean;
+  editedGuard: any;
+  setEditedGuard: (guard: any) => void;
+  t: any;
+}) => (
+  <div>
+    <div className="text-xs text-gray-500 mb-1">{t(label)}</div>
+    {isEditing && field ? (
+      <Input
+        value={editedGuard?.[field] || ''}
+        onChange={(e) => setEditedGuard({ ...editedGuard, [field]: e.target.value })}
+        className="h-8 text-sm"
+      />
+    ) : (
+      <div className="font-medium text-sm">{value || '--'}</div>
+    )}
+  </div>
+);
+
 export default function GuardProfile({ guard, onGuardUpdate }: Props) {
   const { id } = useParams();
   const { t } = useTranslation()
@@ -20,28 +59,6 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
   const [saving, setSaving] = useState(false);
   const [editedGuard, setEditedGuard] = useState({ ...guard });
   const [loading, setLoading] = useState(false);
-
-  const InfoCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="bg-white border rounded-lg p-6 shadow-sm">
-      <h4 className="font-semibold mb-4 text-base">{t(title)}</h4>
-      {children}
-    </div>
-  );
-
-  const InfoField = ({ label, value, field }: { label: string; value: string | number | null | undefined; field?: string }) => (
-    <div>
-      <div className="text-xs text-gray-500 mb-1">{t(label)}</div>
-      {isEditing && field ? (
-        <Input
-          value={editedGuard?.[field] || ''}
-          onChange={(e) => setEditedGuard({ ...editedGuard, [field]: e.target.value })}
-          className="h-8 text-sm"
-        />
-      ) : (
-        <div className="font-medium text-sm">{value || '--'}</div>
-      )}
-    </div>
-  );
 
   const handleSave = async () => {
     if (!id) return;
@@ -224,42 +241,42 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
             {/* Left Column */}
             <div className="space-y-6">
               {/* General Information */}
-              <InfoCard title="guards.profile.cards.general">
+              <InfoCard title="guards.profile.cards.general" t={t}>
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.firstName" value={editedGuard?.guard?.firstName} field="firstName" />
-                  <InfoField label="guards.profile.fields.lastName" value={editedGuard?.guard?.lastName} field="lastName" />
-                  <InfoField label="guards.profile.fields.id1" value={editedGuard?.governmentId} field="governmentId" />
-                  <InfoField label="guards.profile.fields.id2" value={editedGuard?.secondaryId} field="secondaryId" />
-                  <InfoField label="guards.profile.fields.birthDate" value={editedGuard?.birthDate ? new Date(editedGuard.birthDate).toLocaleDateString('en-US') : null} field="birthDate" />
-                  <InfoField label="guards.profile.fields.address" value={editedGuard?.address} field="address" />
+                  <InfoField label="guards.profile.fields.firstName" value={editedGuard?.guard?.firstName} field="firstName" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.lastName" value={editedGuard?.guard?.lastName} field="lastName" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.id1" value={editedGuard?.governmentId} field="governmentId" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.id2" value={editedGuard?.secondaryId} field="secondaryId" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.birthDate" value={editedGuard?.birthDate ? new Date(editedGuard.birthDate).toLocaleDateString('en-US') : null} field="birthDate" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.address" value={editedGuard?.address} field="address" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                 </div>
               </InfoCard>
 
               {/* Contact Details */}
-              <InfoCard title="guards.profile.cards.contact">
+              <InfoCard title="guards.profile.cards.contact" t={t}>
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.email" value={editedGuard?.guard?.email} field="email" />
-                  <InfoField label="guards.profile.fields.mobile" value={editedGuard?.guard?.phoneNumber || editedGuard?.phoneNumber} field="phoneNumber" />
+                  <InfoField label="guards.profile.fields.email" value={editedGuard?.guard?.email} field="email" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.mobile" value={editedGuard?.guard?.phoneNumber || editedGuard?.phoneNumber} field="phoneNumber" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                 </div>
               </InfoCard>
 
               {/* Emergency Contact Details */}
-              <InfoCard title="guards.profile.cards.emergency">
+              <InfoCard title="guards.profile.cards.emergency" t={t}>
                 <div className="space-y-4">
-                  <InfoField label="guards.profile.fields.emergencyContact" value={editedGuard?.emergencyContactName} field="emergencyContactName" />
-                  <InfoField label="guards.profile.fields.emergencyContactNumber" value={editedGuard?.emergencyContactPhone} field="emergencyContactPhone" />
-                  <InfoField label="guards.profile.fields.emergencyRelation" value={editedGuard?.emergencyContactRelation} field="emergencyContactRelation" />
+                  <InfoField label="guards.profile.fields.emergencyContact" value={editedGuard?.emergencyContactName} field="emergencyContactName" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.emergencyContactNumber" value={editedGuard?.emergencyContactPhone} field="emergencyContactPhone" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.emergencyRelation" value={editedGuard?.emergencyContactRelation} field="emergencyContactRelation" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                 </div>
               </InfoCard>
               {/* Personal Information */}
-              <InfoCard title="guards.profile.cards.personal">
+              <InfoCard title="guards.profile.cards.personal" t={t}>
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.birthPlace" value={editedGuard?.birthPlace} field="birthPlace" />
-                  <InfoField label="guards.profile.fields.maritalStatus" value={editedGuard?.maritalStatus} field="maritalStatus" />
-                  <InfoField label="guards.profile.fields.bloodType" value={editedGuard?.bloodType} field="bloodType" />
-                  <InfoField label="guards.profile.fields.education" value={editedGuard?.academicInstruction} field="academicInstruction" />
-                  <InfoField label="guards.profile.fields.gender" value={editedGuard?.gender} field="gender" />
-                  <InfoField label="guards.profile.fields.governmentId" value={editedGuard?.governmentId} field="governmentId" />
+                  <InfoField label="guards.profile.fields.birthPlace" value={editedGuard?.birthPlace} field="birthPlace" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.maritalStatus" value={editedGuard?.maritalStatus} field="maritalStatus" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.bloodType" value={editedGuard?.bloodType} field="bloodType" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.education" value={editedGuard?.academicInstruction} field="academicInstruction" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.gender" value={editedGuard?.gender} field="gender" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.governmentId" value={editedGuard?.governmentId} field="governmentId" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                 </div>
               </InfoCard>
               {/* More Information */}
@@ -283,39 +300,43 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
             {/* Right Column */}
             <div className="space-y-6">
               {/* Device Information */}
-              <InfoCard title="guards.profile.cards.deviceInfo">
+              <InfoCard title="guards.profile.cards.deviceInfo" t={t}>
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.deviceType" value={editedGuard?.deviceInfo?.platform || editedGuard?.deviceType} />
-                  <InfoField label="guards.profile.fields.deviceModel" value={editedGuard?.deviceInfo?.model} />
-                  <InfoField label="guards.profile.fields.osVersion" value={editedGuard?.deviceInfo?.osVersion} />
-                  <InfoField label="guards.profile.fields.appVersion" value={editedGuard?.deviceInfo?.appVersion} />
+                  <InfoField label="guards.profile.fields.deviceType" value={editedGuard?.deviceInfo?.platform || editedGuard?.deviceType} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.deviceModel" value={editedGuard?.deviceInfo?.model} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.osVersion" value={editedGuard?.deviceInfo?.osVersion} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.appVersion" value={editedGuard?.deviceInfo?.appVersion} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                 </div>
               </InfoCard>
 
               {/* Device Permissions */}
-              <InfoCard title="guards.profile.cards.devicePermissions">
+              <InfoCard title="guards.profile.cards.devicePermissions" t={t}>
                 <div className="grid grid-cols-2 gap-4">
                   <InfoField
                     label="guards.profile.fields.pushNotifications"
                     value={editedGuard?.permissions?.pushNotifications ? t('guards.profile.values.enabled') : t('guards.profile.values.disabled')}
+                    isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
                   />
                   <InfoField
                     label="guards.profile.fields.gpsPermission"
                     value={editedGuard?.permissions?.gpsPermission || t('guards.profile.values.background')}
+                    isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
                   />
                   <InfoField
                     label="guards.profile.fields.camera"
                     value={editedGuard?.permissions?.camera ? t('guards.profile.values.enabled') : t('guards.profile.values.disabled')}
+                    isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
                   />
                   <InfoField
                     label="guards.profile.fields.microphone"
                     value={editedGuard?.permissions?.microphone ? t('guards.profile.values.enabled') : t('guards.profile.values.disabled')}
+                    isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
                   />
                 </div>
               </InfoCard>
 
               {/* Languages & Skills */}
-              <InfoCard title="guards.profile.cards.languagesSkills">
+              <InfoCard title="guards.profile.cards.languagesSkills" t={t}>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-xs text-gray-500 mb-1">{t('guards.profile.fields.languages')}</div>
@@ -347,7 +368,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
               </InfoCard>
 
               {/* Attendance / GuardShift */}
-              <InfoCard title="guards.profile.cards.attendance">
+              <InfoCard title="guards.profile.cards.attendance" t={t}>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <button onClick={handlePunchInNow} className="bg-green-600 text-white px-3 py-2 rounded">Punch In (now)</button>
@@ -377,16 +398,16 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
               </InfoCard>
 
               {/* Detalles de la Licencia */}
-              <InfoCard title="guards.profile.cards.licenseDetails">
+              <InfoCard title="guards.profile.cards.licenseDetails" t={t}>
                 {editedGuard?.licenses && editedGuard.licenses.length > 0 ? (
                   <div className="space-y-3">
                     {editedGuard.licenses.map((license: any, idx: number) => (
                       <div key={idx} className="border-b last:border-b-0 pb-3 last:pb-0">
                         <div className="grid grid-cols-2 gap-3">
-                          <InfoField label="guards.profile.fields.licenseType" value={license.type} />
-                          <InfoField label="guards.profile.fields.licenseNumber" value={license.number} />
-                          <InfoField label="guards.profile.fields.issueDate" value={license.issueDate ? new Date(license.issueDate).toLocaleDateString('en-US') : null} />
-                          <InfoField label="guards.profile.fields.expiryDate" value={license.expiryDate ? new Date(license.expiryDate).toLocaleDateString('en-US') : null} />
+                          <InfoField label="guards.profile.fields.licenseType" value={license.type} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                          <InfoField label="guards.profile.fields.licenseNumber" value={license.number} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                          <InfoField label="guards.profile.fields.issueDate" value={license.issueDate ? new Date(license.issueDate).toLocaleDateString('en-US') : null} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                          <InfoField label="guards.profile.fields.expiryDate" value={license.expiryDate ? new Date(license.expiryDate).toLocaleDateString('en-US') : null} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                         </div>
                       </div>
                     ))}

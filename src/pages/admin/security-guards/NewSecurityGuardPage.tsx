@@ -71,8 +71,7 @@ export default function NewSecurityGuardPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("invite");
   const [clients, setClients] = useState<Array<{ id: string; name: string; lastName?: string }>>([]);
   const [sites, setSites] = useState<Array<any>>([]);
-  const [showCreatePassword, setShowCreatePassword] = useState(false);
-  const [showCreateConfirm, setShowCreateConfirm] = useState(false);
+  // Password fields removed from create profile form - guard will set password via invitation link
 
   useEffect(() => {
     const loadData = async () => {
@@ -212,24 +211,23 @@ export default function NewSecurityGuardPage() {
   const createIntentRef = useRef<"create" | "create_send">("create");
   const createForm = useForm<CreateProfileValues>({
     resolver: zodResolver(createProfileSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "", clientId: [] as string[], postSiteId: [] as string[] },
+    defaultValues: { firstName: "", lastName: "", email: "", phone: "", clientId: [] as string[], postSiteId: [] as string[] },
     mode: "onTouched",
   });
   const { control: createCtrl, handleSubmit: submitCreate, formState: createState, setError: setCreateError } = createForm;
 
   const onSubmitCreate = async (v: CreateProfileValues) => {
     try {
-      const payload = { ...v, sendVerificationEmails: true };
+      // Don't send password fields - guard will set password via invitation link
+      const { password, confirmPassword, ...payload } = v;
       console.log('[NewSecurityGuardPage] createProfile payload ->', payload, 'intent:', createIntentRef.current)
       await securityGuardService.create(payload);
       console.log('[NewSecurityGuardPage] createProfile response: created')
-      if (createIntentRef.current === "create_send") {
-        toast.success(t('guards.new.toasts.profile_created_sent'));
-      } else {
-        toast.success(t('guards.new.toasts.profile_created'));
-      }
+      toast.success(t('guards.new.toasts.profile_created_sent'));
       // Reset the create form after successful creation so fields are cleared
       try { createForm.reset(); } catch (_) {}
+      // Navigate back to guards list after successful creation
+      navigate('/security-guards');
     } catch (e: any) {
       console.error('[NewSecurityGuardPage] createProfile error <-', e)
       try {
@@ -480,58 +478,6 @@ export default function NewSecurityGuardPage() {
                           />
                         </FormControl>
                         <FormDescription>{t('guards.new.form.contactPhSms')}</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormField control={createCtrl} name="password" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('guards.new.form.password')}</FormLabel>
-                        <div className="relative">
-                          <FormControl>
-                            <Input
-                              type={showCreatePassword ? "text" : "password"}
-                              placeholder={t('guards.new.form.passwordPlaceholder')}
-                              {...field}
-                              className="w-full h-12 rounded-lg border border-slate-200 px-4 pr-10"
-                            />
-                          </FormControl>
-                          <button
-                            type="button"
-                            aria-label={showCreatePassword ? t('guards.new.actions.hide_password') : t('guards.new.actions.show_password')}
-                            onClick={() => setShowCreatePassword((s) => !s)}
-                            className="absolute right-3 top-0 bottom-0 h-12 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
-                          >
-                            {showCreatePassword ? <EyeOff className="h-6 w-6 translate-y-1" /> : <Eye className="h-6 w-6 translate-y-1" />}
-                          </button>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={createCtrl} name="confirmPassword" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('guards.new.form.confirmPassword')}</FormLabel>
-                        <div className="relative">
-                          <FormControl>
-                            <Input
-                              type={showCreateConfirm ? "text" : "password"}
-                              placeholder={t('guards.new.form.confirmPasswordPlaceholder')}
-                              {...field}
-                              className="w-full h-12 rounded-lg border border-slate-200 px-4 pr-10"
-                            />
-                          </FormControl>
-                          <button
-                            type="button"
-                            aria-label={showCreateConfirm ? t('guards.new.actions.hide_confirm_password') : t('guards.new.actions.show_confirm_password')}
-                            onClick={() => setShowCreateConfirm((s) => !s)}
-                            className="absolute right-3 top-0 bottom-0 h-12 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
-                          >
-                            {showCreateConfirm ? <EyeOff className="h-6 w-6 translate-y-1" /> : <Eye className="h-6 w-6 translate-y-1" />}
-                          </button>
-                        </div>
                         <FormMessage />
                       </FormItem>
                     )} />

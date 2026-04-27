@@ -795,6 +795,10 @@ export default function SecurityGuardsPage() {
                                       } else if (guard.raw?.contact) {
                                         payload.contact = guard.raw.contact;
                                       }
+                                      // Include the securityGuardId if available
+                                      if (guard.id) {
+                                        payload.securityGuardId = guard.id;
+                                      }
                                       // Include names when available
                                       if (guard.raw?.guard?.firstName || guard.raw?.firstName) {
                                         payload.firstName = guard.raw?.guard?.firstName || guard.raw?.firstName;

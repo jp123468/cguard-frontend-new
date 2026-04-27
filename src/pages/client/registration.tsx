@@ -36,11 +36,23 @@ export default function ClientRegistration() {
 
   useEffect(() => {
     const fetchInvite = async () => {
+      // Si hay un token de invitación, limpiar cualquier sesión activa para evitar conflictos
+      if (inviteToken) {
+        try {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+          console.log('[client-registration] cleared any active session for invitation flow');
+        } catch (e) {
+          console.warn('[client-registration] could not clear session:', e);
+        }
+      }
+      
       if (!inviteToken) return;
       if (inviteType === 'guard') {
         navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}&inviteType=guard`);
         return;
       }
+      // inviteType puede ser 'client' o 'staff' (supervisores, admins, etc.)
       setIsLoading(true);
       try {
         const endpointBase = `/user/public`;
@@ -66,11 +78,13 @@ export default function ClientRegistration() {
             const guardResponse = await ApiService.get(`/security-guard/public?token=${encodeURIComponent(inviteToken)}`, { skipAuth: true });
             const guardData = guardResponse?.data || guardResponse;
             if (guardData) {
-              navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}`);
+              // This is a security guard invitation
+              navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}&inviteType=guard`);
               return;
             }
           } catch (_guardErr) {
-            // ignore and preserve original error flow
+            // Both endpoints failed - show error
+            console.error('[client-registration] Both endpoints failed:', { err, _guardErr });
           }
         }
         setInviteNotFound(true);
@@ -125,12 +139,57 @@ export default function ClientRegistration() {
     }
   };
 
+  // Determine el título basado en el tipo de invitación o los roles
+  const getTitle = () => {
+    // Si tenemos datos de la invitación, usar los roles para determinar el título
+    if (fetched && fetched.roles && Array.isArray(fetched.roles)) {
+      const roles = fetched.roles;
+      if (roles.includes('supervisor') || roles.includes('securitySupervisor')) {
+        return t('supervisor.registration_title', { defaultValue: 'Registro de Supervisor' });
+      }
+      if (roles.includes('customer')) {
+        return t('customer.registration_title', { defaultValue: 'Registro de Cliente' });
+      }
+      if (roles.includes('admin')) {
+        return t('admin.registration_title', { defaultValue: 'Registro de Administrador' });
+      }
+    }
+    
+    // Fallback a inviteType
+    if (inviteType === 'staff') {
+      return t('staff.registration_title', { defaultValue: 'Registro de usuario' });
+    }
+    return t('client.registration_title', { defaultValue: 'Registro de cliente' });
+  };
+
+  // Función para obtener el texto descriptivo del rol
+  const getRoleDescription = () => {
+    if (fetched && fetched.roles && Array.isArray(fetched.roles)) {
+      const roles = fetched.roles;
+      if (roles.includes('supervisor') || roles.includes('securitySupervisor')) {
+        return 'Estás completando tu registro como Supervisor. Por favor, ingresa una contraseña para tu cuenta.';
+      }
+      if (roles.includes('customer')) {
+        return 'Estás completando tu registro como Cliente. Por favor, ingresa una contraseña para tu cuenta.';
+      }
+      if (roles.includes('admin')) {
+        return 'Estás completando tu registro como Administrador. Por favor, ingresa una contraseña para tu cuenta.';
+      }
+    }
+    return 'Por favor, completa tu registro ingresando una contraseña para tu cuenta.';
+  };
+
   return (
-    <AuthLayout title={t('client.registration_title', { defaultValue: 'Registro de cliente' })}>
+    <AuthLayout title={getTitle()}>
       <form className="space-y-3" onSubmit={handleSubmit}>
         {inviteNotFound && (
           <div className="rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800">
             {t('client.invite_not_found', { defaultValue: 'Invitación no encontrada o inválida.' })}
+          </div>
+        )}
+        {fetched && !inviteNotFound && (
+          <div className="rounded-md border border-blue-300 bg-blue-50 p-3 text-sm text-blue-800 mb-4">
+            {getRoleDescription()}
           </div>
         )}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

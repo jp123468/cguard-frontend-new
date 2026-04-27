@@ -55,7 +55,20 @@ export function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Si ya está autenticado, redirigir al dashboard
+  // Permitir acceso si hay un token de invitación en la URL (flujo de registro)
+  const searchParams = new URLSearchParams(location.search)
+  const hasInviteToken = searchParams.has('token') || searchParams.has('invitationToken') || searchParams.has('invite')
+  const isInvitationFlow = location.pathname.includes('/invitation') || 
+                           location.pathname.includes('/registration') ||
+                           searchParams.get('inviteType') === 'guard' ||
+                           searchParams.get('inviteType') === 'client'
+
+  // Si hay un token de invitación o es flujo de registro, permitir acceso sin importar autenticación
+  if (hasInviteToken || isInvitationFlow) {
+    return <>{children}</>
+  }
+
+  // Si ya está autenticado y NO es flujo de invitación, redirigir al dashboard
   if (isAuthenticated) {
     const from = (location.state as any)?.from?.pathname || "/dashboard"
     return <Navigate to={from} replace />

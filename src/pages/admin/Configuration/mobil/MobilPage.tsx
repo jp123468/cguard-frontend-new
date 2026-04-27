@@ -740,7 +740,6 @@ export default function MobilPage() {
             <DialogHeader className="text-center">
               <DialogTitle className="mx-auto">{bannerTitle}</DialogTitle>
               <DialogDescription>Configura el banner que se mostrará en el módulo MOBIL.</DialogDescription>
-              <p className="text-xs text-muted-foreground">Los campos marcados con * son obligatorios.</p>
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div>
@@ -807,19 +806,16 @@ export default function MobilPage() {
             <DialogHeader className="text-center">
               <DialogTitle className="mx-auto">{certTitle}</DialogTitle>
               <DialogDescription>Configura los datos de la certificación y sus archivos.</DialogDescription>
-              <p className="text-xs text-muted-foreground">Los campos marcados con * son obligatorios.</p>
             </DialogHeader>
             <div className="space-y-4 mt-4">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <Label>Título*</Label>
-                  <Input
-                    value={certForm.title}
-                    onChange={(e) => setCertForm({ ...certForm, title: e.target.value })}
-                    placeholder="Título de la certificación"
-                    required
-                  />
-                </div>
+              <div>
+                <Label>Título*</Label>
+                <Input
+                  value={certForm.title}
+                  onChange={(e) => setCertForm({ ...certForm, title: e.target.value })}
+                  placeholder="Título de la certificación"
+                  required
+                />
               </div>
               <div>
                 <Label>Código*</Label>

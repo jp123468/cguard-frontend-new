@@ -20,18 +20,13 @@ export const createProfileSchema = z
       .regex(nameRegex, "El apellido no debe contener números ni caracteres inválidos"),
     email: z.string().trim().email("Ingrese un correo válido"),
     phone: z.string().trim().regex(e164, "Use formato e.g. +12015550123"),
-    password: z
-      .string()
-      .min(8, "Mínimo 8 caracteres")
-      .max(64, "Máximo 64 caracteres"),
-    confirmPassword: z.string(),
+    // Password is optional - when creating profile, invitation email will be sent
+    // for guard to complete their own password and additional information
+    password: z.string().optional(),
+    confirmPassword: z.string().optional(),
     // Support multiple assignments
     clientId: z.array(z.string().trim()).min(1, "Seleccione al menos un cliente"),
     postSiteId: z.array(z.string().trim()).min(1, "Asigne al menos un puesto de seguridad"),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: "Las contraseñas no coinciden",
-    path: ["confirmPassword"],
   });
 
 export type CreateProfileValues = z.infer<typeof createProfileSchema>;

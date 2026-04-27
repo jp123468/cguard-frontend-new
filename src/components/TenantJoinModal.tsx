@@ -30,16 +30,9 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
     const AUTO_OPEN_KEY = 'tenantModalAutoOpen';
     // El borrador y el auto-open siempre están activos por defecto
     const [autoOpen, setAutoOpen] = useState<boolean>(true);
-    const [internalOpen, setInternalOpen] = useState<boolean>(() => {
-        try {
-            const draft = localStorage.getItem(DRAFT_KEY);
-            const pref = localStorage.getItem(AUTO_OPEN_KEY);
-            const auto = pref === null ? true : pref === 'true';
-            return Boolean(open) || (auto && Boolean(draft));
-        } catch (e) {
-            return Boolean(open);
-        }
-    });
+    // Start closed to avoid a flash while auth/profile loads. We'll decide
+    // whether to open after authLoading is false to prevent microsecond flashes.
+    const [internalOpen, setInternalOpen] = useState<boolean>(false);
 
     // Defensive helper: detect superadmin presence in profile or persisted flag
     const userIsSuperAdmin = (u: any) => {
@@ -73,32 +66,45 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
     };
 
     useEffect(() => {
-        // If parent requests open but the current authenticated user already
-        // has a tenant, or the user is a superadmin, immediately close the modal
-        // and suppress reopen.
-        if (open) {
-            if (!authLoading && (profileHasTenant(user) || userIsSuperAdmin(user))) {
-                try { suppressReopen.current = true; } catch {}
-                try { setInternalOpen(false); } catch {}
-                try { onOpenChange(false); } catch {}
+        // Avoid opening modal until auth/profile is loaded to prevent a flash.
+        // Read draft/auto-open preferences but only act when `authLoading` is false.
+        try {
+            if (authLoading) return; // wait until auth/profile ready
+
+            const pref = localStorage.getItem(AUTO_OPEN_KEY);
+            const auto = pref === null ? true : pref === 'true';
+            const draft = Boolean(localStorage.getItem(DRAFT_KEY));
+
+            // If parent requested open, respect it but close immediately if
+            // user already has tenant or is superadmin.
+            if (open) {
+                if (profileHasTenant(user) || userIsSuperAdmin(user)) {
+                    try { suppressReopen.current = true; } catch {}
+                    try { setInternalOpen(false); } catch {}
+                    try { onOpenChange(false); } catch {}
+                    return;
+                }
+                // show 'create' tab if a draft exists
+                setMode(draft ? 'create' : 'join');
+                setToken('');
+                setInternalOpen(true);
                 return;
             }
-            // otherwise decide which tab to show: if a draft exists, open 'create'
-            try {
-                const draft = localStorage.getItem(DRAFT_KEY);
-                if (draft) {
-                    setMode('create');
-                } else {
-                    setMode('join');
-                }
-            } catch (e) {
-                setMode('join');
-            }
-            setToken('');
-        }
 
-        // keep internal synced when parent opens/closes externally
-        setInternalOpen(open);
+            // If parent didn't open but we have a draft + autoOpen preference,
+            // and user lacks tenant, open modal on mount.
+            if (auto && draft && !profileHasTenant(user) && !userIsSuperAdmin(user)) {
+                setMode('create');
+                setInternalOpen(true);
+                return;
+            }
+
+            // Otherwise ensure modal is closed
+            setInternalOpen(false);
+        } catch (e) {
+            // If anything goes wrong, keep modal closed to avoid flashing it.
+            setInternalOpen(false);
+        }
     }, [open, user, authLoading]);
 
     // Ensure modal is closed whenever the authenticated user becomes a superadmin

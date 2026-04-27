@@ -48,11 +48,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
       if (user) {
         if (Array.isArray(user.tenants) && user.tenants.length > 0) {
           const t = user.tenants[0];
-          tenantId = t.tenantId || (t.tenant && (t.tenant.id || t.tenant.tenantId)) || null;
+          tenantId = t.tenantId || t.id || t._id || (t.tenant && (t.tenant.id || t.tenant.tenantId)) || null;
         }
         if (!tenantId) {
           // legacy shapes
-          tenantId = (user.tenant && (user.tenant.tenant?.id || user.tenant.tenantId)) || (user.tenantId || null);
+          tenantId = (user.tenant && (user.tenant.tenant?.id || user.tenant.tenantId || user.tenant.id || user.tenant._id)) || (user.tenantId || null);
         }
       }
       if (tenantId) {
@@ -81,22 +81,31 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   const userHasActiveTenant = (u: any) => {
     if (!u) return false;
-    // Direct tenant shape (single-tenant mode)
-    if (u.tenant) {
+
+    // Top-level tenantId or tenant as string
+    if (u.tenantId) return true;
+    if (typeof u.tenant === 'string' && u.tenant) return true;
+
+    // Direct tenant shape (single-tenant mode) as object
+    if (u.tenant && typeof u.tenant === 'object') {
       const t = u.tenant;
-      const tid = t.tenantId || (t.tenant && (t.tenant.id || t.tenant.tenantId));
+      const tid = t.tenantId || t.id || t._id || (t.tenant && (t.tenant.id || t.tenant.tenantId));
       if (tid) return true;
     }
+
     // Tenants array (multi-tenant or legacy shapes)
     if (Array.isArray(u.tenants) && u.tenants.length > 0) {
       // consider tenantUser entries that are active or have a tenantId
       return u.tenants.some((tu: any) => {
         if (!tu) return false;
-        const tid = tu.tenantId || (tu.tenant && (tu.tenant.id || tu.tenant.tenantId));
+        // If tenant entry is a string (legacy simple id array), consider it active
+        if (typeof tu === 'string' && tu) return true;
+        const tid = tu.tenantId || tu.id || tu._id || (tu.tenant && (tu.tenant.id || tu.tenant.tenantId));
         const status = tu.status || null;
         return Boolean(tid) && status !== 'invited';
       });
     }
+
     return false;
   };
 
@@ -134,11 +143,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
     try {
       if (user.tenant) {
         const t = user.tenant;
-        derived = t.tenantId || (t.tenant && (t.tenant.id || t.tenant.tenantId)) || null;
+        derived = t.tenantId || t.id || t._id || (t.tenant && (t.tenant.id || t.tenant.tenantId)) || null;
       }
       if (!derived && Array.isArray(user.tenants) && user.tenants.length > 0) {
         const first = user.tenants[0];
-        derived = first.tenantId || (first.tenant && (first.tenant.id || first.tenant.tenantId)) || null;
+        derived = first.tenantId || first.id || first._id || (first.tenant && (first.tenant.id || first.tenant.tenantId)) || null;
       }
     } catch (e) {
       derived = null;
