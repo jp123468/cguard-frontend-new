@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import MobileCardList from '@/components/responsive/MobileCardList';
 import useActiveMarkers from '@/hooks/useActiveMarkers';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Empty state component
 function EmptyState({ title, description, alt }: { title: string; description: string; alt?: string }) {
@@ -52,6 +53,7 @@ function EmptyState({ title, description, alt }: { title: string; description: s
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
   const [showGeofence, setShowGeofence] = useState(false);
   const [visibleWidgets, setVisibleWidgets] = useState({
@@ -84,6 +86,10 @@ export default function DashboardPage() {
   const [ipFallbackUsed, setIpFallbackUsed] = useState(false);
   const { activeMarkers, userFallbackMarker, centerRequest } = useActiveMarkers();
   const IP_FALLBACK_ACCURACY_THRESHOLD = 2000; // meters
+  const hasTenantContext = Boolean(
+    (user && Array.isArray((user as any).tenants) && (user as any).tenants.length > 0) ||
+    localStorage.getItem('tenantId')
+  );
 
   const formatCoord = (v?: number | null) => {
     if (v == null) return '–';
@@ -105,6 +111,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let mounted = true;
+
+    if (!hasTenantContext) {
+      setData({ clientes: 0, sitios: 0, guardias: 0, equipo: 0, registros: 0, fichados: 0 });
+      setLoadingStats(false);
+      return () => { mounted = false; };
+    }
+
     const getCount = (res: any) => {
       if (!res) return 0;
       return res.total ?? res.count ?? (Array.isArray(res.rows) ? res.rows.length : 0);
@@ -130,14 +143,17 @@ export default function DashboardPage() {
 
         setData((d) => ({ ...d, clientes, sitios, guardias, equipo }));
       } catch (e) {
-        console.error('Error loading dashboard stats', e);
+        const msg = (e as any)?.message || '';
+        if (!String(msg).toLowerCase().includes('debe estar vinculado')) {
+          console.error('Error loading dashboard stats', e);
+        }
       } finally {
         if (mounted) setLoadingStats(false);
       }
     })();
 
     return () => { mounted = false; };
-  }, []);
+  }, [hasTenantContext]);
 
   // marker loading and fallback handled by `useActiveMarkers` hook
 

@@ -9,6 +9,17 @@ export default function useActiveMarkers(pollInterval = 10000) {
   const [userFallbackMarker, setUserFallbackMarker] = useState<Marker | null>(null);
   const [centerRequest, setCenterRequest] = useState<number>(0);
 
+  const hasTenantContext = () => {
+    try {
+      if (localStorage.getItem('tenantId')) return true;
+      const info = (window as any)?.__APP_AUTH;
+      const tenants = info?.user?.tenants;
+      return Array.isArray(tenants) && tenants.length > 0;
+    } catch {
+      return false;
+    }
+  };
+
   const extractCoords = (raw: any): { lat?: number; lng?: number } | null => {
     if (!raw) return null;
     const maybe = (k: string) => raw[k] ?? raw?.raw?.[k] ?? raw?.guard?.[k] ?? raw?.location?.[k] ?? undefined;
@@ -31,12 +42,18 @@ export default function useActiveMarkers(pollInterval = 10000) {
 
     const loadMarkers = async () => {
       try {
+        if (!hasTenantContext()) {
+          if (mounted) {
+            setActiveMarkers([]);
+            setUserFallbackMarker(null);
+          }
+          return;
+        }
+
         // Primary source: call consolidated backend endpoint that prefers guardShift coords
         const guardMarkers: Marker[] = [];
         const activeLocsRes: any = await securityGuardService.activeLocations().catch(() => null);
         const activeRows = activeLocsRes && Array.isArray(activeLocsRes.rows) ? activeLocsRes.rows : Array.isArray(activeLocsRes) ? activeLocsRes : [];
-        try { console.debug('useActiveMarkers: activeLocations items:', (activeRows || []).length); } catch (e) {}
-        try { console.info('useActiveMarkers: activeLocations sample:', (activeRows || []).slice(0, 5)); } catch (e) {}
 
         const seenGuards = new Set<string>();
         (activeRows || []).forEach((s: any) => {
@@ -56,8 +73,6 @@ export default function useActiveMarkers(pollInterval = 10000) {
         if (guardMarkers.length === 0) {
           const guardsRes: any = await securityGuardService.list({ limit: 1000, offset: 0 } as any).catch(() => null);
           const guardRows = guardsRes && Array.isArray(guardsRes.rows) ? guardsRes.rows : Array.isArray(guardsRes) ? guardsRes : [];
-          try { console.debug('useActiveMarkers: guardsRes items:', (guardRows || []).length); } catch (e) {}
-          try { console.info('useActiveMarkers: guardsRes sample:', (guardRows || []).slice(0, 5)); } catch (e) {}
 
           (guardRows || []).forEach((g: any) => {
             const isOnDuty = (g.isOnDuty ?? g.onDuty ?? g.raw?.isOnDuty ?? g.raw?.onDuty) ?? false;
@@ -66,7 +81,6 @@ export default function useActiveMarkers(pollInterval = 10000) {
             if (!guardId) return;
             if (seenGuards.has(String(guardId))) return;
             const coords = extractCoords(g) || extractCoords(g.raw) || null;
-            try { console.debug(`useActiveMarkers: guard id=${g && g.id} isOnDuty=${Boolean(isOnDuty)} coords=${coords ? JSON.stringify(coords) : 'null'}`); } catch (e) {}
             if (!coords) return;
             const label = (g.name || g.fullName || g.guard?.name || g.raw?.name) ?? (g.firstName ? `${g.firstName} ${g.lastName || ''}`.trim() : `Guard ${g.id}`);
             guardMarkers.push({ id: `guard-${g.id}`, lat: coords.lat!, lng: coords.lng!, label, role: 'guard' });
@@ -74,7 +88,6 @@ export default function useActiveMarkers(pollInterval = 10000) {
         }
 
         const usersRes: any[] = await userService.listUsers({ limit: 1000, offset: 0 }).catch(() => []);
-        try { console.debug('useActiveMarkers: usersRes items:', (usersRes || []).length); } catch (e) {}
         const userMarkers: Marker[] = [];
         (usersRes || []).forEach((u: any) => {
           const roles = (u.roles || u.role || u.rolesList || []).map ? (u.roles || u.role || u.rolesList) : (u.roles ?? u.role ?? []);
@@ -106,7 +119,10 @@ export default function useActiveMarkers(pollInterval = 10000) {
           setUserFallbackMarker(null);
         }
       } catch (e) {
-        console.warn('useActiveMarkers: failed loading markers', e);
+        const msg = (e as any)?.message || '';
+        if (!String(msg).toLowerCase().includes('debe estar vinculado')) {
+          console.warn('useActiveMarkers: failed loading markers', e);
+        }
       }
     };
 

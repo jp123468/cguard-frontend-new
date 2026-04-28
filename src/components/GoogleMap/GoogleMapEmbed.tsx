@@ -102,7 +102,7 @@ export default function GoogleMapEmbed({
         return;
       }
 
-      const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&v=weekly&libraries=places,marker`;
       try {
         await loadScript(src);
         // some environments may have an existing script tag but the global
@@ -290,27 +290,56 @@ export default function GoogleMapEmbed({
       if (!m || typeof m.lat !== 'number' || typeof m.lng !== 'number') return;
       keep.add(m.id);
       if (existing[m.id]) {
-        // update
-        try { existing[m.id].setPosition({ lat: m.lat, lng: m.lng }); } catch {}
-        try { existing[m.id].setTitle(m.label || m.id); } catch {}
+        // update (supports both Marker and AdvancedMarkerElement)
+        try {
+          if (typeof existing[m.id].setPosition === 'function') {
+            existing[m.id].setPosition({ lat: m.lat, lng: m.lng });
+          } else {
+            existing[m.id].position = { lat: m.lat, lng: m.lng };
+          }
+        } catch {}
+        try {
+          if (typeof existing[m.id].setTitle === 'function') {
+            existing[m.id].setTitle(m.label || m.id);
+          } else {
+            existing[m.id].title = m.label || m.id;
+          }
+        } catch {}
       } else {
         // create marker
         try {
-          const icon = {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 7,
-            fillColor: m.role === 'supervisor' ? '#2563eb' : '#059669',
-            fillOpacity: 1,
-            strokeWeight: 1,
-            strokeColor: '#fff',
-          } as any;
+          let mk: any;
+          if (google.maps.marker && (google.maps.marker as any).AdvancedMarkerElement) {
+            const dot = document.createElement('div');
+            dot.style.width = '14px';
+            dot.style.height = '14px';
+            dot.style.borderRadius = '999px';
+            dot.style.border = '1px solid #fff';
+            dot.style.background = m.role === 'supervisor' ? '#2563eb' : '#059669';
 
-          const mk = new google.maps.Marker({
-            position: { lat: m.lat, lng: m.lng },
-            map: mapInstance.current,
-            title: m.label || m.id,
-            icon,
-          });
+            mk = new google.maps.marker.AdvancedMarkerElement({
+              position: { lat: m.lat, lng: m.lng },
+              map: mapInstance.current,
+              title: m.label || m.id,
+              content: dot,
+            });
+          } else {
+            const icon = {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 7,
+              fillColor: m.role === 'supervisor' ? '#2563eb' : '#059669',
+              fillOpacity: 1,
+              strokeWeight: 1,
+              strokeColor: '#fff',
+            } as any;
+
+            mk = new google.maps.Marker({
+              position: { lat: m.lat, lng: m.lng },
+              map: mapInstance.current,
+              title: m.label || m.id,
+              icon,
+            });
+          }
           markersRef.current[m.id] = mk;
         } catch (e) {
           console.warn('Failed to create marker', e);
@@ -321,7 +350,13 @@ export default function GoogleMapEmbed({
     // remove old markers
     Object.keys(existing).forEach((id) => {
       if (!keep.has(id)) {
-        try { existing[id].setMap(null); } catch {}
+        try {
+          if (typeof existing[id].setMap === 'function') {
+            existing[id].setMap(null);
+          } else {
+            existing[id].map = null;
+          }
+        } catch {}
         delete existing[id];
       }
     });
