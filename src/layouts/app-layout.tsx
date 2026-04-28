@@ -8,7 +8,7 @@ import { setTenantId as setCategoryTenantId } from "@/lib/api/categoryService";
 import { useLocation, useNavigate } from "react-router-dom";
 import TenantJoinModal from "@/components/TenantJoinModal";
 import tenantService from "@/services/tenant.service";
-import { cacheTenantLocation } from "@/utils/tenantLocation";
+import { cacheTenantLocation, cacheTenantCountry } from "@/utils/tenantLocation";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -166,6 +166,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           const res: any = await tenantService.findById(String(derived));
           const t = (res && (res.data || res.tenant)) ? (res.data || res.tenant) : res;
           cacheTenantLocation((t as any)?.latitude, (t as any)?.longitude);
+          cacheTenantCountry((t as any)?.countryCode ?? (t as any)?.country_code ?? null);
         } catch {}
       })();
     }

@@ -1,10 +1,12 @@
 /**
- * Caches the tenant's (business) default map center in localStorage so that map
- * components can center on the business city without hardcoding any coordinates.
+ * Caches the tenant's (business) default map center and country in localStorage
+ * so that map components and phone inputs can use the correct business locale
+ * without hardcoding any values.
  */
 
 const LAT_KEY = 'tenantLat';
 const LNG_KEY = 'tenantLng';
+const COUNTRY_KEY = 'tenantCountry';
 
 export function cacheTenantLocation(lat: number | string | null | undefined, lng: number | string | null | undefined): void {
     const latNum = typeof lat === 'string' ? parseFloat(lat) : (lat ?? NaN);
@@ -29,5 +31,29 @@ export function clearTenantLocation(): void {
     try {
         localStorage.removeItem(LAT_KEY);
         localStorage.removeItem(LNG_KEY);
+    } catch {}
+}
+
+/** Stores a 2-letter ISO country code (e.g. "EC", "US") for phone dial-code defaulting. */
+export function cacheTenantCountry(countryCode: string | null | undefined): void {
+    if (!countryCode || typeof countryCode !== 'string') return;
+    const normalized = countryCode.trim().toUpperCase();
+    if (normalized.length < 2) return;
+    try {
+        localStorage.setItem(COUNTRY_KEY, normalized);
+    } catch {}
+}
+
+/** Returns the cached ISO-2 country code, or null if not set. */
+export function getTenantCountry(): string | null {
+    try {
+        return localStorage.getItem(COUNTRY_KEY);
+    } catch {}
+    return null;
+}
+
+export function clearTenantCountry(): void {
+    try {
+        localStorage.removeItem(COUNTRY_KEY);
     } catch {}
 }
