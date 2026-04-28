@@ -779,7 +779,6 @@ export default function ClientForm({
                             </details>
                         </div>
                     </div>
-                    </div>{/* end address card inner */}
                     </div>{/* end address card */}
 
                     <Accordion type="single" collapsible defaultValue="more">
