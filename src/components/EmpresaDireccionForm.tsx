@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import AddressAutocompleteOSM from './maps/AddressAutocompleteOSM';
-import OSMMapEmbed from './maps/OSMMapEmbed';
+import AddressAutocomplete from './maps/AddressAutocomplete';
+import GoogleMapEmbed from './GoogleMap/GoogleMapEmbed';
 
 export default function EmpresaDireccionForm() {
   const [direccion, setDireccion] = useState('');
@@ -16,7 +16,7 @@ export default function EmpresaDireccionForm() {
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
       <label style={{ fontWeight: 600 }}>Dirección de la Empresa*</label>
-      <AddressAutocompleteOSM
+      <AddressAutocomplete
         defaultValue={direccion}
         initialLat={lat}
         initialLng={lng}
@@ -44,11 +44,12 @@ export default function EmpresaDireccionForm() {
         />
       </div>
       {lat && lng && (
-        <OSMMapEmbed
+        <GoogleMapEmbed
           lat={lat}
           lng={lng}
           zoom={17}
           height="320px"
+          draggable={false}
         />
       )}
     </div>

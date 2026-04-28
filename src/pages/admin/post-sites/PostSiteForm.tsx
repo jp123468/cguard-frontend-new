@@ -6,8 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { categoryService } from "@/lib/api/categoryService";
 import { stationService } from "@/lib/api/stationService";
-import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
-import geocodeClient from '@/lib/geocodeClient';
+import AddressAutocomplete, { AddressComponents } from "@/components/maps/AddressAutocomplete";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +40,7 @@ import {
 } from "@/components/ui/form";
 import { PostSiteInput, postSiteSchema } from "@/lib/validators/post-site";
 import { PhoneInput } from "@/components/phone/PhoneInput";
-import OSMMapEmbed from "@/components/maps/OSMMapEmbed";
+import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
 import { useTranslation } from 'react-i18next';
 
 import { useClientSelection } from '@/contexts/ClientSelectionContext';
@@ -166,25 +165,33 @@ export default function PostSiteForm({
                 const typed = form.getValues('address') || '';
                         if (typed && typed.length > 0) {
                             try {
-                                const arr = await geocodeClient.searchGeocode(typed, { addressdetails: '1', limit: '1', 'accept-language': 'es', countrycodes: 'ec' });
-                                if (Array.isArray(arr) && arr.length > 0) {
-                                    const r = arr[0] as any;
-                                    const lat = parseFloat(r.lat);
-                                    const lng = parseFloat(r.lon);
-                                    const addr = r.address || {};
-                                    values.address = [addr.road, addr.house_number].filter(Boolean).join(' ') || r.display_name || typed;
-                                    values.city = addr.city || addr.town || addr.village || addr.county || addr.state || (addr as any).city_district || addr.suburb || '';
-                                    values.postalCode = addr.postcode || '';
-                                    values.country = addr.country || '';
-                                    values.latitud = String(lat);
-                                    values.longitud = String(lng);
-                                    // sync form fields
-                                    setFormValue('address', values.address);
-                                    setFormValue('city', values.city);
-                                    setFormValue('postalCode', values.postalCode);
-                                    setFormValue('country', values.country);
-                                    setFormValue('latitud', values.latitud);
-                                    setFormValue('longitud', values.longitud);
+                                const google = (window as any).google;
+                                if (google?.maps) {
+                                    const geocoder = new google.maps.Geocoder();
+                                    const results: any[] = await new Promise((resolve) => {
+                                        geocoder.geocode({ address: typed, region: 'ec' }, (res: any, status: string) => {
+                                            resolve(status === 'OK' ? res : []);
+                                        });
+                                    });
+                                    if (Array.isArray(results) && results.length > 0) {
+                                        const r = results[0];
+                                        const loc = r.geometry?.location;
+                                        const comps: Record<string, string> = {};
+                                        (r.address_components || []).forEach((c: any) =>
+                                            c.types.forEach((tp: string) => { comps[tp] = c.long_name; })
+                                        );
+                                        values.address = r.formatted_address || typed;
+                                        values.city = comps.locality || comps.administrative_area_level_2 || comps.administrative_area_level_1 || '';
+                                        values.postalCode = comps.postal_code || '';
+                                        values.country = comps.country || '';
+                                        if (loc) { values.latitud = String(loc.lat()); values.longitud = String(loc.lng()); }
+                                        setFormValue('address', values.address);
+                                        setFormValue('city', values.city);
+                                        setFormValue('postalCode', values.postalCode);
+                                        setFormValue('country', values.country);
+                                        if (values.latitud) setFormValue('latitud', values.latitud);
+                                        if (values.longitud) setFormValue('longitud', values.longitud);
+                                    }
                                 }
                             } catch (err) {
                                 // ignore and fallthrough to validation errors below
@@ -428,7 +435,7 @@ export default function PostSiteForm({
     }, [is24Hours]);
 
     // Estado para tipo de mapa
-    const [mapType, setMapType] = useState<'osm' | 'satellite'>('osm');
+    const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
 
     return (
         <div className="max-w-[1400px] mx-auto">
@@ -440,28 +447,37 @@ export default function PostSiteForm({
                         const typed = form.getValues('address') || '';
                         if (typed && typed.length > 2) {
                             try {
-                                const arr = await geocodeClient.searchGeocode(typed, { addressdetails: '1', limit: '1', 'accept-language': 'es', countrycodes: 'ec' });
-                                if (Array.isArray(arr) && arr.length > 0) {
-                                    const r = arr[0] as any;
-                                    const lat = parseFloat(r.lat);
-                                    const lng = parseFloat(r.lon);
-                                    const addr = r.address || {};
-                                    const derived = {
-                                        address: [addr.road, addr.house_number].filter(Boolean).join(' ') || r.display_name || typed,
-                                        city: addr.city || addr.town || addr.village || addr.county || addr.state || (addr as any).city_district || addr.suburb || '',
-                                        postalCode: addr.postcode || '',
-                                        country: addr.country || '',
-                                        latitude: lat,
-                                        longitude: lng,
-                                    };
-                                    // Populate form values so RHF validation can succeed
-                                    setAddressComponents(derived as any);
-                                    setFormValue('address', derived.address);
-                                    setFormValue('city', derived.city);
-                                    setFormValue('postalCode', derived.postalCode);
-                                    setFormValue('country', derived.country);
-                                    setFormValue('latitud', String(derived.latitude));
-                                    setFormValue('longitud', String(derived.longitude));
+                                const google = (window as any).google;
+                                if (google?.maps) {
+                                    const geocoder = new google.maps.Geocoder();
+                                    const results: any[] = await new Promise((resolve) => {
+                                        geocoder.geocode({ address: typed, region: 'ec' }, (res: any, status: string) => {
+                                            resolve(status === 'OK' ? res : []);
+                                        });
+                                    });
+                                    if (Array.isArray(results) && results.length > 0) {
+                                        const r = results[0];
+                                        const loc = r.geometry?.location;
+                                        const comps: Record<string, string> = {};
+                                        (r.address_components || []).forEach((c: any) =>
+                                            c.types.forEach((tp: string) => { comps[tp] = c.long_name; })
+                                        );
+                                        const derived = {
+                                            address: r.formatted_address || typed,
+                                            city: comps.locality || comps.administrative_area_level_2 || comps.administrative_area_level_1 || '',
+                                            postalCode: comps.postal_code || '',
+                                            country: comps.country || '',
+                                            latitude: loc?.lat() ?? 0,
+                                            longitude: loc?.lng() ?? 0,
+                                        };
+                                        setAddressComponents(derived as any);
+                                        setFormValue('address', derived.address);
+                                        setFormValue('city', derived.city);
+                                        setFormValue('postalCode', derived.postalCode);
+                                        setFormValue('country', derived.country);
+                                        setFormValue('latitud', String(derived.latitude));
+                                        setFormValue('longitud', String(derived.longitude));
+                                    }
                                 }
                             } catch (err) {
                                 // ignore
@@ -534,7 +550,7 @@ export default function PostSiteForm({
                                     <FormItem>
                                         <FormLabel>Dirección del sitio</FormLabel>
                                         <FormControl>
-                                            <AddressAutocompleteOSM
+                                            <AddressAutocomplete
                                                 key={direccionDiferente ? 'address-different' : 'address-same'}
                                                 onAddressSelect={handleAddressSelect}
                                                 defaultValue={form.watch('address') || ''}
@@ -818,9 +834,9 @@ export default function PostSiteForm({
                                         <select
                                             className="border rounded px-2 py-1 text-xs"
                                             value={mapType}
-                                            onChange={e => setMapType(e.target.value as 'osm' | 'satellite')}
+                                            onChange={e => setMapType(e.target.value as 'roadmap' | 'satellite')}
                                         >
-                                            <option value="osm">OpenStreetMap</option>
+                                            <option value="roadmap">Mapa</option>
                                             <option value="satellite">Satélite</option>
                                         </select>
                                     </div>
@@ -828,7 +844,7 @@ export default function PostSiteForm({
                                 <div>{/* placeholder for future quick actions */}</div>
                             </div>
 
-                            <OSMMapEmbed lat={lat} lng={lng} mapType={mapType} />
+                            <GoogleMapEmbed lat={lat} lng={lng} mapType={mapType} draggable={false} />
                         </div>
                     )}
                     {/* Más Información (Accordion) */}

@@ -9,8 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Edit, Search } from 'lucide-react';
 import tenantService from "@/services/tenant.service";
-import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
-import OSMMapEmbed from "@/components/maps/OSMMapEmbed";
+import AddressAutocomplete, { AddressComponents } from "@/components/maps/AddressAutocomplete";
 import { AuthService } from "@/services/auth/authService";
 import { setTenantId as setClientTenantId } from "@/lib/api/clientService";
 import { useAuth } from "@/contexts/AuthContext";
@@ -818,7 +817,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
 
                                 {showAddressAutocomplete && (
                                     <div>
-                                        <AddressAutocompleteOSM
+                                        <AddressAutocomplete
                                             defaultValue={form.address || ''}
                                             initialLat={form.latitude && form.latitude !== '' ? parseFloat(form.latitude) : undefined}
                                             initialLng={form.longitude && form.longitude !== '' ? parseFloat(form.longitude) : undefined}
