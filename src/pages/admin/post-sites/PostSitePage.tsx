@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import AppLayout from "@/layouts/app-layout";
+import { usePageTitle } from '@/hooks/usePageTitle';
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 
 export default function PostSitePage() {
   const { t } = useTranslation();
+  usePageTitle('Puestos de Vigilancia');
 
   const [openFilter, setOpenFilter] = useState(false);
   const [postSites, setPostSites] = useState<PostSite[]>([]);

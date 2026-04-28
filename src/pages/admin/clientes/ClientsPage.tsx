@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from '@/i18n';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -98,6 +99,7 @@ const getServerErrorMessage = (error: any, defaultMessage = "Error") => {
 
 export default function ClientesPage() {
   const { t } = useTranslation();
+  usePageTitle('Clientes');
   const { hasPermission } = usePermissions();
   const navigate = useNavigate();
   const [openFilter, setOpenFilter] = useState(false);

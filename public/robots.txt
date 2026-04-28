@@ -1,0 +1,28 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+Allow: /reset-password
+Allow: /verify-email
+
+# Block authenticated app routes
+Disallow: /dashboard
+Disallow: /post-sites
+Disallow: /clients
+Disallow: /security-guards
+Disallow: /dispatcher
+Disallow: /routes
+Disallow: /reports
+Disallow: /billing
+Disallow: /payroll
+Disallow: /analytics
+Disallow: /gps-tracker
+Disallow: /configuration
+Disallow: /superadmin
+Disallow: /messenger
+Disallow: /memos
+Disallow: /actividades
+Disallow: /admin
+
+Sitemap: https://app.cguardpro.com/sitemap.xml

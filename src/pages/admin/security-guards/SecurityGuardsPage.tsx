@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import AppLayout from "@/layouts/app-layout";
 
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,7 @@ interface SecurityGuard {
 
 export default function SecurityGuardsPage() {
   const { t } = useTranslation();
+  usePageTitle('Guardias de Seguridad');
   const { hasPermission } = usePermissions();
   const [openFilter, setOpenFilter] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

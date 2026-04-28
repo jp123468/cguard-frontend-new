@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import Breadcrumb from "@/components/ui/breadcrumb";
 import AppLayout from "@/layouts/app-layout";
 import WidgetsBoard from "./WidgetsBoard";
@@ -53,6 +54,7 @@ function EmptyState({ title, description, alt }: { title: string; description: s
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  usePageTitle('Dashboard');
   const { user } = useAuth();
   const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
   const [showGeofence, setShowGeofence] = useState(false);
