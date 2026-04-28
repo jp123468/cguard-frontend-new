@@ -1,40 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { loadGoogleMaps } from '@/utils/loadGoogleMaps';
 
 type MapType = 'roadmap' | 'satellite';
 
 type AddressDetails = Record<string, any> | undefined;
-
-function loadScript(src: string) {
-  return new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector(`script[src="${src}"]`);
-    if (existing) {
-        // If google maps already initialized, resolve immediately
-        if ((window as any).google && (window as any).google.maps) return resolve();
-        // Script tag exists but maps may still be initializing — resolve here
-        // and let waitForGoogleMaps poll for the global to be ready.
-        return resolve();
-    }
-    const s = document.createElement('script');
-    s.src = src;
-    s.async = true;
-    s.defer = true;
-    s.onload = () => resolve();
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
-
-async function waitForGoogleMaps(timeout = 5000, interval = 200) {
-  const start = Date.now();
-  return new Promise<void>((resolve, reject) => {
-    const check = () => {
-      if ((window as any).google && (window as any).google.maps) return resolve();
-      if (Date.now() - start > timeout) return reject(new Error('Google Maps not available after loading script'));
-      setTimeout(check, interval);
-    };
-    check();
-  });
-}
 
 function parsePlaceAddress(place: any) {
   const components: Record<string, string> = {};
@@ -97,17 +66,8 @@ export default function GoogleMapEmbed({
     async function init() {
       if (!mapRef.current) return;
 
-      if (!apiKey) {
-        setReady(false);
-        return;
-      }
-
-      const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
       try {
-        await loadScript(src);
-        // some environments may have an existing script tag but the global
-        // `google.maps` may still not be ready; wait a short time for it.
-        await waitForGoogleMaps(6000, 250);
+        await loadGoogleMaps();
         if (!mounted) return;
         const google = (window as any).google;
         if (!google || !google.maps) {
@@ -157,8 +117,8 @@ export default function GoogleMapEmbed({
           const defLng = parseFloat((import.meta as any).env?.VITE_DEFAULT_CLIENT_LNG);
           if (!Number.isNaN(defLat) && !Number.isNaN(defLng)) return { lat: defLat, lng: defLng, zoom: 12 };
 
-          // 6) final fallback to a reasonable default (Madrid)
-          return { lat: 40.4168, lng: -3.7038, zoom: 12 };
+          // 6) final fallback — Quito, Ecuador
+          return { lat: -0.2295, lng: -78.5236, zoom: 12 };
         }
 
         const c = await determineCenter();
@@ -169,27 +129,12 @@ export default function GoogleMapEmbed({
         mapInstance.current = new google.maps.Map(mapRef.current, {
           center,
           zoom: initialZoom,
-          mapTypeId: mapType === 'satellite' ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP,
-          mapTypeControl: !isMobile,
-          mapTypeControlOptions: { position: google.maps.ControlPosition.TOP_LEFT },
-          zoomControl: !isMobile,
+          mapTypeId: mapType === 'satellite' ? 'satellite' : 'roadmap',
+          mapTypeControl: true,
           streetViewControl: false,
           fullscreenControl: false,
-          gestureHandling: isMobile ? 'greedy' : 'auto',
+          mapId: 'DEMO_MAP_ID',
         });
-
-        // Adjust controls when viewport resizes to avoid overlap on small screens
-        const onResize = () => {
-          try {
-            const mobileNow = window.innerWidth < 768;
-            if (mapInstance.current) {
-              mapInstance.current.setOptions({ mapTypeControl: !mobileNow, zoomControl: !mobileNow });
-            }
-          } catch (e) {
-            // ignore
-          }
-        };
-        window.addEventListener('resize', onResize);
 
         // If click-to-set mode is enabled, attach listener
         if (typeof enableClickToSet === 'boolean' && enableClickToSet) {
@@ -201,7 +146,7 @@ export default function GoogleMapEmbed({
               if (markerRef.current) {
                 try { markerRef.current.setPosition({ lat, lng }); } catch {}
               } else {
-                try { markerRef.current = new google.maps.Marker({ position: { lat, lng }, map: mapInstance.current }); } catch {}
+                try { markerRef.current = new google.maps.marker.AdvancedMarkerElement({ position: { lat, lng }, map: mapInstance.current }); } catch {}
               }
               if (typeof onMapClick === 'function') onMapClick(lat, lng);
             } catch (err) {
@@ -217,22 +162,12 @@ export default function GoogleMapEmbed({
         // Create marker for single-location mode only when no markers list is provided
         try {
           if (!Array.isArray(markers) || markers.length === 0) {
-            if (google.maps.marker && (google.maps.marker as any).AdvancedMarkerElement) {
-              // single main marker (for single-location mode)
-              // @ts-ignore
-              markerRef.current = new google.maps.marker.AdvancedMarkerElement({
-                position: center,
-                map: mapInstance.current,
-                title: address || 'Location',
-              });
-            } else {
-              markerRef.current = new google.maps.Marker({
-                position: center,
-                map: mapInstance.current,
-                title: address || 'Location',
-                draggable,
-              });
-            }
+            markerRef.current = new google.maps.marker.AdvancedMarkerElement({
+              position: center,
+              map: mapInstance.current,
+              title: address || 'Location',
+              gmpDraggable: draggable,
+            });
           } else {
             // Do not create a main/center marker when an explicit markers list is provided
             markerRef.current = null;
@@ -243,10 +178,13 @@ export default function GoogleMapEmbed({
         }
 
         if (draggable && markerRef.current) {
-          markerRef.current.addListener('dragend', () => {
-            const position = markerRef.current.getPosition();
-            if (!position) return;
-            const latLng = { lat: position.lat(), lng: position.lng() };
+          markerRef.current.addListener('gmp-dragend', () => {
+            const pos = markerRef.current.position as any;
+            if (!pos) return;
+            const latLng = {
+              lat: typeof pos.lat === 'function' ? pos.lat() : (pos.lat as number),
+              lng: typeof pos.lng === 'function' ? pos.lng() : (pos.lng as number),
+            };
 
             if (typeof onMarkerMove === 'function') {
               const geocoder = new google.maps.Geocoder();
@@ -285,7 +223,7 @@ export default function GoogleMapEmbed({
     return () => {
       mounted = false;
       try {
-        if (markerRef.current) { markerRef.current.setMap(null); markerRef.current = null; }
+        if (markerRef.current) { try { markerRef.current.map = null; } catch { /* ignore */ } markerRef.current = null; }
         if (circleRef.current) { circleRef.current.setMap(null); circleRef.current = null; }
         mapInstance.current = null;
       } catch {}
@@ -307,27 +245,36 @@ export default function GoogleMapEmbed({
       if (!m || typeof m.lat !== 'number' || typeof m.lng !== 'number') return;
       keep.add(m.id);
       if (existing[m.id]) {
-        // update
-        try { existing[m.id].setPosition({ lat: m.lat, lng: m.lng }); } catch {}
-        try { existing[m.id].setTitle(m.label || m.id); } catch {}
+        // update (supports both Marker and AdvancedMarkerElement)
+        try {
+          if (typeof existing[m.id].setPosition === 'function') {
+            existing[m.id].setPosition({ lat: m.lat, lng: m.lng });
+          } else {
+            existing[m.id].position = { lat: m.lat, lng: m.lng };
+          }
+        } catch {}
+        try {
+          if (typeof existing[m.id].setTitle === 'function') {
+            existing[m.id].setTitle(m.label || m.id);
+          } else {
+            existing[m.id].title = m.label || m.id;
+          }
+        } catch {}
       } else {
         // create marker
         try {
-          const icon = {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 7,
-            fillColor: m.role === 'supervisor' ? '#2563eb' : '#059669',
-            fillOpacity: 1,
-            strokeWeight: 1,
-            strokeColor: '#fff',
-          } as any;
-
-          const mk = new google.maps.Marker({
-            position: { lat: m.lat, lng: m.lng },
-            map: mapInstance.current,
-            title: m.label || m.id,
-            icon,
-          });
+          let mk: any;
+          {
+            const color = m.role === 'supervisor' ? '#2563eb' : '#059669';
+            const dot = document.createElement('div');
+            dot.style.cssText = `width:14px;height:14px;background:${color};border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);`;
+            mk = new google.maps.marker.AdvancedMarkerElement({
+              position: { lat: m.lat, lng: m.lng },
+              map: mapInstance.current,
+              title: m.label || m.id,
+              content: dot,
+            });
+          }
           markersRef.current[m.id] = mk;
         } catch (e) {
           console.warn('Failed to create marker', e);
@@ -338,7 +285,13 @@ export default function GoogleMapEmbed({
     // remove old markers
     Object.keys(existing).forEach((id) => {
       if (!keep.has(id)) {
-        try { existing[id].setMap(null); } catch {}
+        try {
+          if (typeof existing[id].setMap === 'function') {
+            existing[id].setMap(null);
+          } else {
+            existing[id].map = null;
+          }
+        } catch {}
         delete existing[id];
       }
     });
@@ -351,23 +304,23 @@ export default function GoogleMapEmbed({
     if (!google || !mapInstance.current) return;
     const map = mapInstance.current;
     const center = {
-      lat: typeof lat === 'number' ? lat : (markerRef.current?.getPosition ? markerRef.current.getPosition().lat() : 40.4168),
-      lng: typeof lng === 'number' ? lng : (markerRef.current?.getPosition ? markerRef.current.getPosition().lng() : -3.7038),
+      lat: typeof lat === 'number' ? lat : (markerRef.current?.getPosition ? markerRef.current.getPosition().lat() : -0.2295),
+      lng: typeof lng === 'number' ? lng : (markerRef.current?.getPosition ? markerRef.current.getPosition().lng() : -78.5236),
     };
 
     map.setCenter(center);
     map.setZoom(zoom);
-    map.setMapTypeId(mapType === 'satellite' ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP);
+    map.setMapTypeId(mapType === 'satellite' ? 'satellite' : 'roadmap');
 
     if (markerRef.current) {
-      markerRef.current.setPosition(center);
-      markerRef.current.setDraggable(draggable);
-      markerRef.current.setTitle(address || 'Location');
+      markerRef.current.position = center;
+      markerRef.current.gmpDraggable = draggable;
+      markerRef.current.title = address || 'Location';
     } else {
       // Only create a main marker if no explicit markers list was provided
       if (!Array.isArray(markers) || markers.length === 0) {
         try {
-          markerRef.current = new google.maps.Marker({ position: center, map, draggable, title: address || 'Location' });
+          markerRef.current = new google.maps.marker.AdvancedMarkerElement({ position: center, map, gmpDraggable: draggable, title: address || 'Location' });
         } catch (e) {
           console.warn('Failed to create fallback main marker', e);
           markerRef.current = null;
@@ -406,7 +359,7 @@ export default function GoogleMapEmbed({
     try {
       const center = { lat, lng };
       mapInstance.current.panTo(center);
-      if (markerRef.current) markerRef.current.setPosition(center);
+      if (markerRef.current) markerRef.current.position = center;
       if (showGeofence && circleRef.current) circleRef.current.setCenter(center);
       console.debug('[GoogleMapEmbed] centered to', center, 'via centerRequest');
     } catch (err) {
@@ -415,7 +368,7 @@ export default function GoogleMapEmbed({
   }, [centerRequest]);
 
   if (!apiKey) {
-    const coords = typeof lat === 'number' && typeof lng === 'number' ? `${lat},${lng}` : (address ? encodeURIComponent(address) : '40.4168,-3.7038');
+    const coords = typeof lat === 'number' && typeof lng === 'number' ? `${lat},${lng}` : (address ? encodeURIComponent(address) : '-0.2295,-78.5236');
     const tParam = mapType === 'satellite' ? '&t=k' : '';
     const src = `https://maps.google.com/maps?q=${coords}&z=${zoom}${tParam}&output=embed`;
     return (

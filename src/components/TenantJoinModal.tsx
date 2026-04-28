@@ -9,8 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Edit, Search } from 'lucide-react';
 import tenantService from "@/services/tenant.service";
-import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
-import OSMMapEmbed from "@/components/maps/OSMMapEmbed";
+import AddressAutocomplete, { AddressComponents } from "@/components/maps/AddressAutocomplete";
 import { AuthService } from "@/services/auth/authService";
 import { setTenantId as setClientTenantId } from "@/lib/api/clientService";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,6 +26,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
     const reopenDelayMs = 25 * 1000; // 25 seconds
     const suppressReopen = useRef(false as boolean);
     const reopenTimer = useRef<number | null>(null);
+    const logoInputRef = useRef<HTMLInputElement | null>(null);
     const AUTO_OPEN_KEY = 'tenantModalAutoOpen';
     // El borrador y el auto-open siempre están activos por defecto
     const [autoOpen, setAutoOpen] = useState<boolean>(true);
@@ -199,6 +199,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
         phone: '',
         landline: '',
         email: '',
+        website: '',
         taxNumber: '',
         businessTitle: '',
     };
@@ -206,8 +207,11 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
     const [phoneError, setPhoneError] = useState<string | null>(null);
     const [taxError, setTaxError] = useState<string | null>(null);
     const [emailError, setEmailError] = useState<string | null>(null);
+    const [websiteError, setWebsiteError] = useState<string | null>(null);
     const [landlineCountry, setLandlineCountry] = useState<string>('EC');
     const [landlineError, setLandlineError] = useState<string | null>(null);
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [logoError, setLogoError] = useState<string | null>(null);
     // Validación de teléfono fijo
     const getLandlineErrorMessage = (landline: string | undefined, country?: string) => {
         const p = (landline || '').toString().trim();
@@ -347,13 +351,30 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
         if (!emailRe.test(v)) return 'Correo electrónico inválido. Ej: nombre@dominio.com';
         return null;
     };
+
+    const getWebsiteErrorMessage = (website: string | undefined) => {
+        const v = (website || '').toString().trim();
+        if (!v) return null;
+        try {
+            const normalized = /^https?:\/\//i.test(v) ? v : `https://${v}`;
+            const u = new URL(normalized);
+            if (!u.hostname || !u.hostname.includes('.')) {
+                return 'Sitio web inválido. Ej: empresa.com';
+            }
+            return null;
+        } catch {
+            return 'Sitio web inválido. Ej: empresa.com';
+        }
+    };
     const [showAddressAutocomplete, setShowAddressAutocomplete] = useState(true);
     const [autocompleteOpenQuery, setAutocompleteOpenQuery] = useState('');
 
     const clearDraft = () => {
         try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
         try { setForm({ ...EMPTY_FORM }); } catch (e) {}
-        try { setPhoneError(null); setTaxError(null); setEmailError(null); } catch (e) {}
+        try { setPhoneError(null); setTaxError(null); setEmailError(null); setWebsiteError(null); } catch (e) {}
+        try { setLogoFile(null); setLogoError(null); } catch (e) {}
+        try { if (logoInputRef.current) logoInputRef.current.value = ''; } catch (e) {}
     };
 
     // Live-validate phone as user types or country changes
@@ -424,6 +445,40 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
         setEmailError(getEmailErrorMessage(form.email));
     }, [form.email]);
 
+    // Live-validate website
+    useEffect(() => {
+        if (!form.website) {
+            setWebsiteError(null);
+            return;
+        }
+        setWebsiteError(getWebsiteErrorMessage(form.website));
+    }, [form.website]);
+
+    const handleLogoChange = (file?: File | null) => {
+        if (!file) {
+            setLogoFile(null);
+            setLogoError(null);
+            return;
+        }
+
+        const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml'];
+        if (!allowed.includes(file.type)) {
+            setLogoFile(null);
+            setLogoError('El logo debe ser PNG, JPG, SVG o WEBP.');
+            return;
+        }
+
+        const maxBytes = 5 * 1024 * 1024;
+        if (file.size > maxBytes) {
+            setLogoFile(null);
+            setLogoError('El logo no debe superar 5MB.');
+            return;
+        }
+
+        setLogoFile(file);
+        setLogoError(null);
+    };
+
         const handleCreate = async () => {
             // Validaciones según especificación del cliente
 
@@ -445,6 +500,14 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
             return;
         } else {
             setEmailError(null);
+        }
+
+        const websiteMsg = getWebsiteErrorMessage(form.website);
+        if (websiteMsg) {
+            setWebsiteError(websiteMsg);
+            return;
+        } else {
+            setWebsiteError(null);
         }
 
         // celular: validar en base al país (usa país de dirección; si no, usa selector de teléfono)
@@ -508,6 +571,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                     phone: form.phone || undefined,
                     landline: form.landline || undefined,
                     email: form.email || undefined,
+                    website: (form.website || '').trim() || undefined,
                 // Provide defaults for required tenant fields to avoid DB validation errors
                 // Use a temporary placeholder for taxNumber if user didn't provide one
                 taxNumber: (form.taxNumber && String(form.taxNumber).trim()) || 'PENDING',
@@ -522,6 +586,14 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
             if (tenantId) {
                 try { setClientTenantId(String(tenantId)); } catch (e) { }
                 try { localStorage.setItem('tenantId', String(tenantId)); } catch (e) { }
+
+                if (logoFile) {
+                    try {
+                        await tenantService.uploadLogo(logoFile, String(tenantId));
+                    } catch (uploadErr: any) {
+                        toast.error(uploadErr?.message || 'Empresa creada, pero no se pudo subir el logo');
+                    }
+                }
             }
             // Refresh profile until backend reflects the new tenant assignment.
             await refreshProfileAndSignIn();
@@ -531,6 +603,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
             onOpenChange(false);
             // clear saved draft after successful create
             try { localStorage.removeItem(DRAFT_KEY); } catch (e) { }
+            try { setLogoFile(null); setLogoError(null); } catch (e) {}
             // Refresh the page so the frontend picks up the new tenant context
             try { setTimeout(() => window.location.reload(), 300); } catch {}
         } catch (err: any) {
@@ -688,6 +761,36 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
+                                    <label className="text-sm">{t('tenantJoinModal.website')}</label>
+                                    <Input
+                                        value={form.website}
+                                        onChange={e => setForm((s: any) => ({ ...s, website: e.target.value }))}
+                                        placeholder="empresa.com"
+                                        type="url"
+                                    />
+                                    {websiteError && <p className="text-sm text-red-600 mt-1">{websiteError}</p>}
+                                </div>
+                                <div>
+                                    <label className="text-sm">{t('tenantJoinModal.businessLogo')}</label>
+                                    <input
+                                        ref={logoInputRef}
+                                        type="file"
+                                        accept=".png,.jpg,.jpeg,.webp,.svg"
+                                        className="hidden"
+                                        onChange={(e) => handleLogoChange(e.target.files?.[0] || null)}
+                                    />
+                                    <div className="flex items-center gap-2">
+                                        <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}>
+                                            {t('tenantJoinModal.uploadLogo')}
+                                        </Button>
+                                        {logoFile && <span className="text-xs text-gray-600 truncate max-w-[220px]">{logoFile.name}</span>}
+                                    </div>
+                                    {logoError && <p className="text-sm text-red-600 mt-1">{logoError}</p>}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
                                     <label className="text-sm">{t('tenantJoinModal.businessTitle')}<span className="text-red-500 ml-1">*</span></label>
                                     <Input value={form.businessTitle} onChange={(e) => setForm((s: any) => ({ ...s, businessTitle: e.target.value }))} />
                                 </div>
@@ -714,7 +817,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
 
                                 {showAddressAutocomplete && (
                                     <div>
-                                        <AddressAutocompleteOSM
+                                        <AddressAutocomplete
                                             defaultValue={form.address || ''}
                                             initialLat={form.latitude && form.latitude !== '' ? parseFloat(form.latitude) : undefined}
                                             initialLng={form.longitude && form.longitude !== '' ? parseFloat(form.longitude) : undefined}
@@ -801,6 +904,8 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                             Boolean(phoneError) ||
                                             Boolean(taxError) ||
                                             Boolean(emailError) ||
+                                            Boolean(websiteError) ||
+                                            Boolean(logoError) ||
                                             form.address && form.address.trim().toLowerCase() === 'reloj de la puerta del sol, 7, puerta del sol, barrio de los austrias, sol, centro, madrid, comunidad de madrid, 28013, españa'
                                         }
                                     >

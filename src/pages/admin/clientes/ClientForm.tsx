@@ -9,7 +9,7 @@ import { categoryService } from "@/lib/api/categoryService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { validateCedulaOrRuc } from '@/lib/validators/id';
-import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
+import AddressAutocomplete, { AddressComponents } from "@/components/maps/AddressAutocomplete";
 import { toastOnce } from '@/lib/toastOnce';
 
 import { Button } from "@/components/ui/button";
@@ -557,7 +557,7 @@ export default function ClientForm({
                                 try { console.debug('[ClientForm] address initial values', { latitude: form.getValues('latitude' as any), longitude: form.getValues('longitude' as any) }); } catch (e) {}
                                 return null;
                             })()}
-                            <AddressAutocompleteOSM
+                            <AddressAutocomplete
                                 key={addressMapKey}
                                 onAddressSelect={(addressData: AddressComponents) => {
                                     // Support different shapes returned by OSM/Nominatim or custom components

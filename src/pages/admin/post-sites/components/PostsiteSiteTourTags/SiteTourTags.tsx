@@ -1,22 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Plus, X, ChevronDown } from 'lucide-react';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaflet';
-// Use an embedded SVG data URL for the marker icon to avoid asset resolution issues in Vite
-const svgMarker = `
-<svg xmlns='http://www.w3.org/2000/svg' width='28' height='41' viewBox='0 0 28 41'>
-    <defs>
-        <filter id='s' x='-50%' y='-50%' width='200%' height='200%'>
-            <feDropShadow dx='0' dy='1' stdDeviation='1' flood-color='#000' flood-opacity='0.25'/>
-        </filter>
-    </defs>
-    <path filter='url(#s)' d='M14 0 C8 0 2.5 5.5 2.5 11.7 C2.5 20.3 14 41 14 41 C14 41 25.5 20.3 25.5 11.7 C25.5 5.5 20 0 14 0 Z' fill='#FF5722'/>
-    <circle cx='14' cy='12' r='5.5' fill='white'/>
-    <circle cx='14' cy='12' r='3' fill='#FF5722'/>
-</svg>`;
+import { loadGoogleMaps } from '@/utils/loadGoogleMaps';
 
-// We'll use a div icon per-marker to ensure the SVG renders fully
 import { ApiService, ApiError } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -50,13 +35,11 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
     const [mapQuery, setMapQuery] = useState<string>('Guayaquil');
     const [mapError, setMapError] = useState<string | null>(null);
     const [markerPos, setMarkerPos] = useState<{ lat: number; lng: number } | null>(null);
-    const customDivIcon = useMemo(() => L.divIcon({
-        html: svgMarker,
-        className: 'custom-marker',
-        iconSize: [28, 41],
-        iconAnchor: [14, 41],
-    }), []);
-    const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+    // Google Maps refs
+    const gMapRef = useRef<HTMLDivElement | null>(null);
+    const gMapInstanceRef = useRef<any>(null);
+    const gMainMarkerRef = useRef<any>(null);
+    const gStationMarkersRef = useRef<any[]>([]);
     const [tags, setTags] = useState<any[]>([]);
     const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
     const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
@@ -99,27 +82,11 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         if ((g as any).displayName) return (g as any).displayName;
         return null;
     }
-    const stationsCoords = useMemo<{ lat: number; lng: number; name?: string }[]>(() => {
-        return (stations || []).map((s: any) => {
-            const lat = parseFloat(String(s.latitude || s.latitud || s.lat || (s.coords && s.coords.lat) || ''));
-            const lng = parseFloat(String(s.longitude || s.longitud || s.lng || (s.coords && s.coords.lng) || ''));
-            if (!isNaN(lat) && !isNaN(lng)) return { lat, lng, name: s.stationName || s.name || s.station_name };
-            return null as any;
-        }).filter((x: any) => x) as { lat: number; lng: number; name?: string }[];
-    }, [stations]);
 
     useScrollToTopOnMount(containerRef);
 
-    const initialCenter = useMemo(() => {
-        if (markerPos) return [markerPos.lat, markerPos.lng];
-        if (stationsCoords && stationsCoords.length > 0) return [stationsCoords[0].lat, stationsCoords[0].lng];
-        if (!isNaN(parseFloat(String(form.latitude))) && !isNaN(parseFloat(String(form.longitude)))) return [parseFloat(String(form.latitude)), parseFloat(String(form.longitude))];
-        return [-2.170998, -79.922359];
-    }, [markerPos, stationsCoords, form.latitude, form.longitude]);
-    // Small wrapper to avoid strict react-leaflet prop typing in this file
     // Ajusta el zoom inicial a 18 para acercar dos niveles más la vista
     const DEFAULT_MAP_ZOOM = 18;
-    const MapWrapper: any = (props: any) => <MapContainer {...props} />;
     function update(k: string, v: any) {
         setForm((s: any) => ({ ...s, [k]: v }));
     }
@@ -132,10 +99,11 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         if (markerPos) {
             lat = markerPos.lat;
             lng = markerPos.lng;
-        } else if (mapInstance && typeof mapInstance.getCenter === 'function') {
-            const center = mapInstance.getCenter();
-            lat = center.lat;
-            lng = center.lng;
+        } else if (gMapInstanceRef.current) {
+            try {
+                const center = gMapInstanceRef.current.getCenter();
+                if (center) { lat = center.lat(); lng = center.lng(); }
+            } catch (e) { /* ignore */ }
         }
 
         if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
@@ -148,20 +116,6 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         update('coords', `${lat}, ${lng}`);
         update('latitude', lat.toString());
         update('longitude', lng.toString());
-        // Center the map to the chosen coordinates (use animated pan/fly to avoid abrupt jumps)
-        if (mapInstance) {
-            try {
-                if (typeof mapInstance.flyTo === 'function') {
-                    mapInstance.flyTo([lat, lng], DEFAULT_MAP_ZOOM, { animate: true, duration: 0.6 });
-                } else if (typeof mapInstance.panTo === 'function') {
-                    mapInstance.panTo([lat, lng], { animate: true, duration: 0.6 });
-                } else if (typeof mapInstance.setView === 'function') {
-                    mapInstance.setView([lat, lng], DEFAULT_MAP_ZOOM, { animate: true });
-                }
-            } catch (e) {
-                try { if (typeof mapInstance.setView === 'function') mapInstance.setView([lat, lng], DEFAULT_MAP_ZOOM); } catch (err) { /* ignore */ }
-            }
-        }
     }
 
     useEffect(() => {
@@ -174,38 +128,21 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         }
     }, [form.latitude, form.longitude]);
 
-    // When marker position changes, center the map there
+    // When marker position changes, pan the Google Map and update the marker
     useEffect(() => {
-        if (markerPos && mapInstance) {
-            const zoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : DEFAULT_MAP_ZOOM;
-            try {
-                if (typeof mapInstance.flyTo === 'function') {
-                    mapInstance.flyTo([markerPos.lat, markerPos.lng], zoom, { animate: true, duration: 0.6 });
-                } else if (typeof mapInstance.panTo === 'function') {
-                    mapInstance.panTo([markerPos.lat, markerPos.lng], { animate: true, duration: 0.6 });
-                } else if (typeof mapInstance.setView === 'function') {
-                    mapInstance.setView([markerPos.lat, markerPos.lng], zoom, { animate: true });
-                }
-            } catch (e) {
-                try { if (typeof mapInstance.setView === 'function') mapInstance.setView([markerPos.lat, markerPos.lng], zoom); } catch (err) { /* ignore */ }
-            }
+        if (!markerPos || !gMapInstanceRef.current) return;
+        const google = (window as any).google;
+        if (!google?.maps) return;
+        try { gMapInstanceRef.current.panTo({ lat: markerPos.lat, lng: markerPos.lng }); } catch (e) { /* ignore */ }
+        if (gMainMarkerRef.current) {
+            try { gMainMarkerRef.current.position = { lat: markerPos.lat, lng: markerPos.lng }; } catch (e) { /* ignore */ }
+        } else {
+            gMainMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({
+                position: { lat: markerPos.lat, lng: markerPos.lng },
+                map: gMapInstanceRef.current,
+            });
         }
-    }, [markerPos, mapInstance]);
-
-    function MapClickHandler() {
-        useMapEvents({
-            click(e) {
-                const lat = e.latlng.lat;
-                const lng = e.latlng.lng;
-                setMarkerPos({ lat, lng });
-                update('latitude', lat.toString());
-                update('longitude', lng.toString());
-                update('coords', `${lat}, ${lng}`);
-                setMapError(null);
-            },
-        });
-        return null;
-    }
+    }, [markerPos]);
 
     const [searchQuery, setSearchQuery] = useState<Record<string, string>>({});
     const actionOptionsMap: Record<string, string[]> = {
@@ -774,15 +711,92 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         }
     }, [showNewTag, activeTabKey]);
 
-    // When the create-tag modal opens, Leaflet needs to invalidate size
-    // so tiles render correctly at the new dimensions.
+    // Initialize Google Map when the create-tag modal opens
     useEffect(() => {
-        if (!showNewTag || !mapInstance) return;
-        const t = setTimeout(() => {
-            try { mapInstance.invalidateSize(); } catch (e) { /* ignore */ }
+        if (!showNewTag) return;
+        let mounted = true;
+
+        const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
+        if (!apiKey) return;
+
+        const timer = setTimeout(async () => {
+            if (!mounted || !gMapRef.current) return;
+
+            try {
+                await loadGoogleMaps();
+            } catch (e) {
+                console.warn('Google Maps failed to load', e);
+                return;
+            }
+
+            if (!mounted || !gMapRef.current) return;
+            const google = (window as any).google;
+            if (!google?.maps) return;
+
+            // Compute initial center from site data (not from potentially-stale markerPos)
+            const siteLat = parseFloat(String(site?.latitude || site?.latitud || site?.lat || ''));
+            const siteLng = parseFloat(String(site?.longitude || site?.longitud || site?.lng || ''));
+            const hasValidCoords = !isNaN(siteLat) && !isNaN(siteLng);
+            const center = hasValidCoords
+                ? { lat: siteLat, lng: siteLng }
+                : { lat: -2.170998, lng: -79.922359 };
+
+            if (gMapInstanceRef.current) {
+                // Re-use existing map instance — just pan and trigger resize
+                gMapInstanceRef.current.panTo(center);
+                try { google.maps.event.trigger(gMapInstanceRef.current, 'resize'); } catch (e) { /* ignore */ }
+            } else {
+                const map = new google.maps.Map(gMapRef.current, {
+                    center,
+                    zoom: DEFAULT_MAP_ZOOM,
+                    mapTypeId: 'roadmap',
+                    mapId: 'DEMO_MAP_ID',
+                });
+                gMapInstanceRef.current = map;
+
+                map.addListener('click', (e: any) => {
+                    if (!mounted) return;
+                    const lat = e.latLng.lat();
+                    const lng = e.latLng.lng();
+                    setMarkerPos({ lat, lng });
+                    setForm((s: any) => ({
+                        ...s,
+                        latitude: lat.toString(),
+                        longitude: lng.toString(),
+                        coords: `${lat}, ${lng}`,
+                    }));
+                    setMapError(null);
+                    // Update/create marker imperatively
+                    if (gMainMarkerRef.current) {
+                        try { gMainMarkerRef.current.setPosition({ lat, lng }); } catch (_) {
+                            try { gMainMarkerRef.current.position = { lat, lng }; } catch (_2) { /* ignore */ }
+                        }
+                    } else {
+                        gMainMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({ position: { lat, lng }, map });
+                    }
+                });
+
+                // Place initial marker at site position
+                if (hasValidCoords) {
+                    gMainMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({ position: center, map });
+                }
+            }
+
+            // Add station markers
+            if (gStationMarkersRef.current.length === 0) {
+                const stCoords: { lat: number; lng: number; name?: string }[] = (stations || []).map((s: any) => {
+                    const lat = parseFloat(String(s.latitude || s.latitud || s.lat || ''));
+                    const lng = parseFloat(String(s.longitude || s.longitud || s.lng || ''));
+                    return (!isNaN(lat) && !isNaN(lng)) ? { lat, lng, name: s.stationName || s.name } : null as any;
+                }).filter(Boolean);
+                gStationMarkersRef.current = stCoords.map((sc: any) =>
+                    new google.maps.marker.AdvancedMarkerElement({ position: { lat: sc.lat, lng: sc.lng }, map: gMapInstanceRef.current, title: sc.name || 'Station' })
+                );
+            }
         }, 150);
-        return () => clearTimeout(t);
-    }, [showNewTag, mapInstance]);
+
+        return () => { mounted = false; clearTimeout(timer); };
+    }, [showNewTag]);
 
     useEffect(() => {
         // load stations for quick mapping (quick solution)
@@ -1116,37 +1130,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
 
                                     <div className="border rounded-md overflow-hidden">
                                         <div style={{ height: '60vh', minHeight: 220 }}>
-                                            <MapWrapper
-                                                center={initialCenter}
-                                                zoom={DEFAULT_MAP_ZOOM}
-                                                maxZoom={19}
-                                                style={{ height: '100%', width: '100%' }}
-                                                whenCreated={(map: any) => {
-                                                    const m = map as L.Map;
-                                                    setMapInstance(m);
-                                                    try {
-                                                        if (typeof m.setZoom === 'function') {
-                                                            m.setZoom(DEFAULT_MAP_ZOOM);
-                                                        }
-                                                    } catch (e) {
-                                                        // ignore any errors when forcing zoom
-                                                    }
-                                                }}
-                                            >
-                                                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                                                {markerPos ? (
-                                                    <Marker position={[markerPos.lat, markerPos.lng]} icon={customDivIcon}>
-                                                        <Popup>{`Selected: ${markerPos.lat.toFixed(6)}, ${markerPos.lng.toFixed(6)}`}</Popup>
-                                                    </Marker>
-                                                ) : null}
-                                                {/* render station markers */}
-                                                {stationsCoords.map((sc: any, idx: number) => (
-                                                    <Marker key={`st-${idx}`} position={[sc.lat, sc.lng]}>
-                                                        <Popup>{sc.name || t('siteTourTag.placeholders.tagName', 'Station')}</Popup>
-                                                    </Marker>
-                                                ))}
-                                                <MapClickHandler />
-                                            </MapWrapper>
+                                            <div ref={gMapRef} style={{ height: '100%', width: '100%' }} />
                                         </div>
                                     </div>
                                 </>

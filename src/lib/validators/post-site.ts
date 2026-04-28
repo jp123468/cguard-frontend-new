@@ -3,7 +3,7 @@ import { z } from "zod";
 export const postSiteSchema = z.object({
     name: z.string().trim().min(1, "Nombre del sitio requerido"),
     clientId: z.string().trim().min(1, "Cliente requerido"),
-    address: z.string().trim().min(1, "Dirección requerida").max(200, "Máximo 200 caracteres"),
+    address: z.string().trim().max(200, "Máximo 200 caracteres").optional().or(z.literal("")),
     addressLine2: z
         .string()
         .trim()
@@ -13,32 +13,34 @@ export const postSiteSchema = z.object({
     postalCode: z
         .string()
         .trim()
-        .min(1, "Código postal requerido")
         .max(20, "Máximo 20 caracteres")
-        .regex(/^[0-9]+$/, "El código postal sólo debe contener dígitos"),
+        .optional()
+        .or(z.literal("")),
     city: z
         .string()
         .trim()
-        .min(1, "Ciudad requerida")
         .max(100, "Máximo 100 caracteres")
-        .regex(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/, "La ciudad no debe contener números"),
+        .optional()
+        .or(z.literal("")),
     country: z
         .string()
         .trim()
-        .min(1, "País requerido")
         .max(100, "Máximo 100 caracteres")
-        .regex(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/, "El país no debe contener números"),
+        .optional()
+        .or(z.literal("")),
     description: z.string().trim().min(1, "Descripción requerida").max(5000, "Máximo 5000 caracteres"),
     email: z
         .string()
         .trim()
-        .min(1, "Correo requerido")
-        .email("Correo electrónico inválido"),
+        .max(200, "Máximo 200 caracteres")
+        .optional()
+        .or(z.literal("")),
     phone: z
         .string()
         .trim()
-        .min(7, "El teléfono debe tener al menos 10 dígitos")
-        .max(20, "El teléfono puede tener como máximo 20 caracteres"),
+        .max(20, "El teléfono puede tener como máximo 20 caracteres")
+        .optional()
+        .or(z.literal("")),
     latitud: z
         .string()
         .trim()

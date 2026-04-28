@@ -14,9 +14,8 @@ import { useTranslation } from 'react-i18next';
 import { Camera, Edit, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import tenantService from '@/services/tenant.service';
-import AddressAutocompleteOSM, { AddressComponents } from "@/components/maps/AddressAutocompleteOSM";
-import OSMMapEmbed from "@/components/maps/OSMMapEmbed";
-import geocodeClient from '@/lib/geocodeClient';
+import AddressAutocomplete, { AddressComponents } from "@/components/maps/AddressAutocomplete";
+import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
 import CompanyDocumentsSection, { CompanyDocument } from "./profile/documents/CompanyDocumentsSection";
 import { validateCedulaOrRuc } from '@/lib/validators/id';
 
@@ -218,20 +217,32 @@ export default function ProfileCompanyForm() {
     timer = setTimeout(async () => {
       try {
         const q = form.address + ' Ecuador';
-        const data = await geocodeClient.searchGeocode(q, { addressdetails: '1', countrycodes: 'ec', limit: '1' });
+        const google = (window as any).google;
+        if (!google?.maps) return;
+        const geocoder = new google.maps.Geocoder();
+        const results: any[] = await new Promise((resolve) => {
+          geocoder.geocode({ address: q, region: 'ec' }, (res: any, status: string) => {
+            resolve(status === 'OK' ? res : []);
+          });
+        });
         if (cancelled) return;
-        if (Array.isArray(data) && data.length > 0) {
-          const best = data[0];
+        if (Array.isArray(results) && results.length > 0) {
+          const best = results[0];
+          const loc = best.geometry?.location;
+          const comps: Record<string, string> = {};
+          (best.address_components || []).forEach((c: any) =>
+            c.types.forEach((tp: string) => { comps[tp] = c.long_name; })
+          );
           setForm((s) => ({
             ...s,
-            latitude: String(best.lat),
-            longitude: String(best.lon),
-            address: best.display_name || s.address,
-            city: best.address && (best.address.city || best.address.town || best.address.village) ? (best.address.city || best.address.town || best.address.village) : s.city,
-            postalCode: best.address && (best.address.postcode || '') ? (best.address.postcode || s.postalCode) : s.postalCode,
-            country: best.address && best.address.country ? best.address.country : s.country,
+            latitude: String(loc.lat()),
+            longitude: String(loc.lng()),
+            address: best.formatted_address || s.address,
+            city: comps.locality || comps.administrative_area_level_2 || comps.sublocality_level_1 || s.city,
+            postalCode: comps.postal_code || s.postalCode,
+            country: comps.country || s.country,
           }));
-          toast && toast.success && toast.success('Coordenadas encontradas para la dirección');
+          toast?.success?.('Coordenadas encontradas para la dirección');
         }
       } catch (err) {
         // ignore
@@ -391,7 +402,7 @@ export default function ProfileCompanyForm() {
             {showAddressAutocomplete && canEdit ? (
               <>
                 <div style={{ position: 'relative', zIndex: 0 }}>
-                  <AddressAutocompleteOSM
+                  <AddressAutocomplete
                     onAddressSelect={(addressData: AddressComponents) => {
                       setForm((s) => ({
                         ...s,
@@ -430,19 +441,20 @@ export default function ProfileCompanyForm() {
                   const latVal = form.latitude && !isNaN(Number(form.latitude)) ? Number(form.latitude) : defaultLat;
                   const lngVal = form.longitude && !isNaN(Number(form.longitude)) ? Number(form.longitude) : defaultLng;
                     return (
-                      <OSMMapEmbed
+                      <GoogleMapEmbed
                         lat={latVal}
                         lng={lngVal}
                         zoom={form.latitude && form.longitude ? 17 : 6}
                         height="320px"
+                        draggable={true}
                         onMarkerMove={(lat: number, lng: number, address: string, addressDetails?: any) => {
                           setForm((s) => ({
                             ...s,
                             latitude: String(lat),
                             longitude: String(lng),
                             address: address || s.address,
-                            city: (addressDetails && (addressDetails.city || addressDetails.town || addressDetails.village)) || s.city,
-                            postalCode: (addressDetails && addressDetails.postcode) || s.postalCode,
+                            city: (addressDetails && (addressDetails.locality || addressDetails.administrative_area_level_2 || addressDetails.administrative_area_level_1)) || s.city,
+                            postalCode: (addressDetails && addressDetails.postal_code) || s.postalCode,
                             country: (addressDetails && addressDetails.country) || s.country,
                           }));
                         }}
