@@ -51,15 +51,10 @@ export default function AddressAutocomplete({
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
 
-  const [inputValue, setInputValue] = useState(defaultValue);
-
   useEffect(() => {
     if (openWithQuery && openWithQuery.length > 0) {
-      setInputValue(openWithQuery);
-      if (inputRef.current) {
-        inputRef.current.value = openWithQuery;
-        inputRef.current.focus();
-      }
+      if (inputRef.current) inputRef.current.value = openWithQuery;
+      inputRef.current?.focus();
       onQueryChange?.(openWithQuery);
     }
   }, [openWithQuery, onQueryChange]);
@@ -102,20 +97,21 @@ export default function AddressAutocomplete({
       mapTypeControl: true,
       streetViewControl: false,
       fullscreenControl: false,
+      mapId: 'DEMO_MAP_ID',
     });
 
-    markerRef.current = new google.maps.Marker({
+    markerRef.current = new google.maps.marker.AdvancedMarkerElement({
       map: mapInstanceRef.current,
       position: center,
-      draggable: true,
-      animation: google.maps.Animation.DROP,
+      gmpDraggable: true,
     });
 
-    markerRef.current.addListener('dragend', () => {
-      const position = markerRef.current.getPosition();
-      if (position) {
-        geocodePosition(position);
-      }
+    markerRef.current.addListener('gmp-dragend', () => {
+      const pos = markerRef.current?.position;
+      if (!pos) return;
+      const lat = typeof (pos as any).lat === 'function' ? (pos as any).lat() : (pos as any).lat;
+      const lng = typeof (pos as any).lng === 'function' ? (pos as any).lng() : (pos as any).lng;
+      geocodePosition(new google.maps.LatLng(lat, lng));
     });
 
     if (!suppressInitialReverse && initialLat !== undefined && initialLng !== undefined) {
@@ -124,7 +120,8 @@ export default function AddressAutocomplete({
 
     return () => {
       if (markerRef.current) {
-        google.maps.event.clearInstanceListeners(markerRef.current);
+        try { markerRef.current.map = null; } catch { /* ignore */ }
+        markerRef.current = null;
       }
     };
   }, [isLoaded, google, showMap, initialLat, initialLng, suppressInitialReverse]);
@@ -137,13 +134,14 @@ export default function AddressAutocomplete({
     onGeocodeResult?.(addressComponents);
     const location = place.geometry.location;
 
-    setInputValue(place.formatted_address || place.name || inputValue);
-    onQueryChange?.(place.formatted_address || place.name || inputValue);
+    const label = place.formatted_address || place.name || '';
+    if (inputRef.current) inputRef.current.value = label;
+    onQueryChange?.(label);
 
     if (mapInstanceRef.current && markerRef.current) {
       mapInstanceRef.current.setCenter(location);
       mapInstanceRef.current.setZoom(15);
-      markerRef.current.setPosition(location);
+      markerRef.current.position = location;
     }
   };
 
@@ -159,7 +157,7 @@ export default function AddressAutocomplete({
         });
         if (!addressComponents) return;
 
-        setInputValue(place.formatted_address || addressComponents.address);
+        if (inputRef.current) inputRef.current.value = place.formatted_address || addressComponents.address;
         onQueryChange?.(place.formatted_address || addressComponents.address);
         if (emit) {
           onAddressSelect(addressComponents);
@@ -218,7 +216,7 @@ export default function AddressAutocomplete({
         if (mapInstanceRef.current && markerRef.current) {
           mapInstanceRef.current.setCenter(location);
           mapInstanceRef.current.setZoom(15);
-          markerRef.current.setPosition(location);
+          markerRef.current.position = location;
         }
 
         geocodePosition(location);
@@ -229,11 +227,6 @@ export default function AddressAutocomplete({
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  };
-
-  const handleInputChange = (value: string) => {
-    setInputValue(value);
-    onQueryChange?.(value);
   };
 
   if (loadError) {
@@ -263,8 +256,8 @@ export default function AddressAutocomplete({
           <Input
             ref={inputRef}
             type="text"
-            value={inputValue}
-            onChange={(e) => handleInputChange(e.target.value)}
+            defaultValue={defaultValue}
+            onChange={(e) => onQueryChange?.(e.target.value)}
             placeholder={placeholder}
             className="w-full"
           />

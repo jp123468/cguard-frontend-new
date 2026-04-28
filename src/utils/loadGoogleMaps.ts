@@ -9,7 +9,7 @@ export function loadGoogleMaps(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve();
 
   // Already fully loaded — resolve immediately.
-  if ((window as any).google?.maps) return Promise.resolve();
+  if ((window as any).google?.maps?.places?.Autocomplete) return Promise.resolve();
 
   // Loading already in progress — return the same Promise.
   if (_promise) return _promise;
@@ -45,7 +45,8 @@ export function loadGoogleMaps(): Promise<void> {
 }
 
 function poll(resolve: () => void, reject: (e: Error) => void, start = Date.now()): void {
-  if ((window as any).google?.maps) { resolve(); return; }
+  // Wait until both core maps AND places.Autocomplete are available
+  if ((window as any).google?.maps?.places?.Autocomplete) { resolve(); return; }
   if (Date.now() - start > 8000) { reject(new Error('Google Maps API timed out')); return; }
   setTimeout(() => poll(resolve, reject, start), 200);
 }
