@@ -535,134 +535,94 @@ export default function ClientForm({
                         />
                     </div>
 
-                    {/* Address Autocomplete Section */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-medium">{t('clients.form.addressSearch', 'Búsqueda de Dirección')}</h3>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowAddressAutocomplete(!showAddressAutocomplete)}
-                            >
-                                {showAddressAutocomplete 
-                                    ? t('clients.form.switchToManual', 'Entrada manual') 
-                                    : t('clients.form.switchToAutocomplete', 'Búsqueda automática')}
-                            </Button>
+                    {/* Address Section */}
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden">
+                        {/* Section header */}
+                        <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-slate-200">
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C8860A]/10">
+                                    <svg className="h-4 w-4 text-[#C8860A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </div>
+                                <span className="text-sm font-semibold text-slate-800">{t('clients.form.addressSearch', 'Dirección')}</span>
+                            </div>
+                            {/* Mode toggle pills */}
+                            <div className="flex items-center rounded-lg bg-slate-100 p-0.5 gap-0.5">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAddressAutocomplete(true)}
+                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${showAddressAutocomplete ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    {t('clients.form.switchToAutocomplete', 'Búsqueda')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAddressAutocomplete(false)}
+                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!showAddressAutocomplete ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    {t('clients.form.switchToManual', 'Manual')}
+                                </button>
+                            </div>
                         </div>
 
+                    <div className="p-5 space-y-4">
+
                         {showAddressAutocomplete ? (
-                            <>
-                            {(() => {
-                                try { console.debug('[ClientForm] address initial values', { latitude: form.getValues('latitude' as any), longitude: form.getValues('longitude' as any) }); } catch (e) {}
-                                return null;
-                            })()}
                             <AddressAutocomplete
                                 key={addressMapKey}
                                 onAddressSelect={(addressData: AddressComponents) => {
-                                    // Support different shapes returned by OSM/Nominatim or custom components
                                     const anyAddr = addressData as any;
                                     const addrObj = typeof anyAddr.address === 'object' && anyAddr.address ? anyAddr.address : {};
 
-                                    const latRaw = anyAddr.lat ?? anyAddr.lat ?? anyAddr.latitude ?? anyAddr.lat ?? anyAddr.lat ?? anyAddr.lat ?? anyAddr.latitude ?? anyAddr.latitude ?? anyAddr.latitude;
-                                    const lngRaw = anyAddr.lon ?? anyAddr.lng ?? anyAddr.longitude ?? anyAddr.long ?? anyAddr.lon ?? anyAddr.lng ?? anyAddr.longitude;
+                                    const latRaw = anyAddr.lat ?? anyAddr.latitude;
+                                    const lngRaw = anyAddr.lon ?? anyAddr.lng ?? anyAddr.longitude;
 
                                     const addressStr = typeof anyAddr.address === 'string'
                                         ? anyAddr.address
                                         : (anyAddr.display_name || [
-                                            addrObj.road,
-                                            addrObj.suburb,
-                                            addrObj.town,
-                                            addrObj.village,
-                                            addrObj.county,
-                                            addrObj.municipality,
-                                            addrObj.state,
-                                            addrObj.postcode,
-                                            addrObj.country
+                                            addrObj.road, addrObj.suburb, addrObj.town, addrObj.village,
+                                            addrObj.county, addrObj.municipality, addrObj.state, addrObj.postcode, addrObj.country
                                         ].filter(Boolean).join(', ') || '');
 
                                     const cityStr = anyAddr.city ?? anyAddr.town ?? anyAddr.village ?? addrObj.town ?? addrObj.city ?? addrObj.village ?? '';
                                     const postal = anyAddr.postcode ?? anyAddr.postalCode ?? addrObj.postcode ?? '';
                                     const country = anyAddr.country ?? addrObj.country ?? '';
 
-                                    // Update form values and mark them as dirty/touched so they are picked up by submit
                                     const setOpts = { shouldDirty: true, shouldTouch: true, shouldValidate: false } as const;
                                     form.setValue('address', addressStr, setOpts);
                                     form.setValue('city', cityStr, setOpts);
                                     form.setValue('postalCode', postal, setOpts);
                                     form.setValue('country', country, setOpts);
-
-                                    if (latRaw !== undefined && latRaw !== null) {
-                                        // store as string in the form (existing code expects strings in many places)
-                                        form.setValue('latitude' as any, String(latRaw), setOpts);
-                                    }
-                                    if (lngRaw !== undefined && lngRaw !== null) {
-                                        form.setValue('longitude' as any, String(lngRaw), setOpts);
-                                    }
-
-                                    // Ensure react-hook-form triggers any validation or watchers that depend on coords
-                                    try {
-                                        form.trigger(['latitude' as any, 'longitude' as any, 'address', 'city', 'postalCode']);
-                                    } catch (e) {}
-
-                                    // minimal debug to help trace why values might not persist
-                                    try { console.debug('[ClientForm] address selected -> form values:', {
-                                        address: form.getValues('address'),
-                                        city: form.getValues('city'),
-                                        postalCode: form.getValues('postalCode'),
-                                        country: form.getValues('country'),
-                                        latitude: form.getValues('latitude'),
-                                        longitude: form.getValues('longitude'),
-                                    }); } catch (e) {}
-
-                                    // deduplicated toast
+                                    if (latRaw != null) form.setValue('latitude' as any, String(latRaw), setOpts);
+                                    if (lngRaw != null) form.setValue('longitude' as any, String(lngRaw), setOpts);
+                                    try { form.trigger(['latitude' as any, 'longitude' as any, 'address', 'city', 'postalCode']); } catch (e) {}
                                     toastOnce.success(t('clients.form.addressAutoFilled', 'Dirección completada automáticamente'));
                                 }}
                                 defaultValue={form.getValues('address') || ''}
                                 placeholder={t('clients.form.searchAddress', 'Buscar dirección...')}
                                 showMap={true}
-                                mapHeight="350px"
+                                mapHeight="320px"
                                 initialLat={watchedLat ? Number.parseFloat(String(watchedLat)) : undefined}
                                 initialLng={watchedLng ? Number.parseFloat(String(watchedLng)) : undefined}
                             />
-                            </>
                         ) : null}
 
-                        {/* Manual Address Fields - Always show for editing */}
-                        <div className={showAddressAutocomplete ? 'opacity-60 pointer-events-none' : ''}>
-                            <div className="grid grid-cols-1 gap-6">
-                                <FormField<ClientInput>
-                                    control={form.control}
-                                    name="address"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>{t('clients.form.address', 'Dirección *')}</FormLabel>
-                                            <FormControl>
-                                                <input
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                                    {...field}
-                                                    value={typeof field.value === "string" ? field.value : ""}
-                                                    maxLength={100}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="mt-4">
+                        {/* Address fields — editable in manual mode, read-only preview in autocomplete mode */}
+                        <div className={`space-y-4 ${showAddressAutocomplete ? 'opacity-70 pointer-events-none' : ''}`}>
+                            {/* Address line 1 */}
                             <FormField<ClientInput>
                                 control={form.control}
-                                name="addressLine2"
+                                name="address"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>{t('clients.form.addressLine2', 'Dirección Complementaria')}</FormLabel>
+                                        <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            {t('clients.form.address', 'Dirección')} <span className="text-[#C8860A]">*</span>
+                                        </FormLabel>
                                         <FormControl>
                                             <input
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                                placeholder={t('clients.form.addressLine2Placeholder', 'Opcional')}
+                                                className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                 {...field}
                                                 value={typeof field.value === "string" ? field.value : ""}
                                                 maxLength={100}
@@ -672,20 +632,45 @@ export default function ClientForm({
                                     </FormItem>
                                 )}
                             />
-                        </div>
 
-                        <div className={showAddressAutocomplete ? 'opacity-60 pointer-events-none' : ''}>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                            {/* Address line 2 */}
+                            <FormField<ClientInput>
+                                control={form.control}
+                                name="addressLine2"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            {t('clients.form.addressLine2', 'Dirección (línea 2)')}
+                                            <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <input
+                                                className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20"
+                                                placeholder={t('clients.form.addressLine2Placeholder', 'Piso, oficina, departamento…')}
+                                                {...field}
+                                                value={typeof field.value === "string" ? field.value : ""}
+                                                maxLength={100}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Postal / City / Country row */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField<ClientInput>
                                     control={form.control}
                                     name="postalCode"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>{t('clients.form.postalCode', 'Código postal/Zip *')}</FormLabel>
+                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                {t('clients.form.postalCode', 'Código postal')} <span className="text-[#C8860A]">*</span>
+                                            </FormLabel>
                                             <FormControl>
                                                 <input
                                                     type="text"
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                     {...field}
                                                     value={String(field.value || "")}
                                                     maxLength={20}
@@ -695,16 +680,17 @@ export default function ClientForm({
                                         </FormItem>
                                     )}
                                 />
-
                                 <FormField<ClientInput>
                                     control={form.control}
                                     name="city"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>{t('clients.form.city', 'Ciudad *')}</FormLabel>
+                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                {t('clients.form.city', 'Ciudad')} <span className="text-[#C8860A]">*</span>
+                                            </FormLabel>
                                             <FormControl>
                                                 <input
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                     {...field}
                                                     value={typeof field.value === "string" ? field.value : ""}
                                                     maxLength={100}
@@ -714,16 +700,17 @@ export default function ClientForm({
                                         </FormItem>
                                     )}
                                 />
-
                                 <FormField<ClientInput>
                                     control={form.control}
                                     name="country"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>{t('clients.form.country', 'País *')}</FormLabel>
+                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                {t('clients.form.country', 'País')} <span className="text-[#C8860A]">*</span>
+                                            </FormLabel>
                                             <FormControl>
                                                 <input
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                     {...field}
                                                     value={typeof field.value === "string" ? field.value : ""}
                                                     maxLength={100}
@@ -735,52 +722,65 @@ export default function ClientForm({
                                 />
                             </div>
 
-                            {/* Coordinates */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <FormField<ClientInput>
-                                    control={form.control}
-                                    name="latitude"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>{t('clients.form.latitude', 'Latitud')}</FormLabel>
-                                            <FormControl>
-                                                <input
-                                                    type="text"
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                                    placeholder="-90 a 90"
-                                                    {...field}
-                                                    value={String(field.value ?? "")}
-                                                    maxLength={20}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField<ClientInput>
-                                    control={form.control}
-                                    name="longitude"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>{t('clients.form.longitude', 'Longitud')}</FormLabel>
-                                            <FormControl>
-                                                <input
-                                                    type="text"
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                                    placeholder="-180 a 180"
-                                                    {...field}
-                                                    value={String(field.value ?? "")}
-                                                    maxLength={20}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
+                            {/* Coordinates — collapsible */}
+                            <details className="group">
+                                <summary className="flex items-center gap-1.5 cursor-pointer text-xs font-medium text-slate-400 hover:text-slate-600 list-none select-none w-fit">
+                                    <svg className="h-3.5 w-3.5 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    {t('clients.form.coordinates', 'Coordenadas GPS')}
+                                </summary>
+                                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField<ClientInput>
+                                        control={form.control}
+                                        name="latitude"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                    {t('clients.form.latitude', 'Latitud')}
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <input
+                                                        type="text"
+                                                        className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-mono placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                        placeholder="-90 a 90"
+                                                        {...field}
+                                                        value={String(field.value ?? "")}
+                                                        maxLength={20}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField<ClientInput>
+                                        control={form.control}
+                                        name="longitude"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                    {t('clients.form.longitude', 'Longitud')}
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <input
+                                                        type="text"
+                                                        className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-mono placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                        placeholder="-180 a 180"
+                                                        {...field}
+                                                        value={String(field.value ?? "")}
+                                                        maxLength={20}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </details>
                         </div>
                     </div>
+                    </div>{/* end address card inner */}
+                    </div>{/* end address card */}
 
                     <Accordion type="single" collapsible defaultValue="more">
                         <AccordionItem value="more" className="border rounded-md">
