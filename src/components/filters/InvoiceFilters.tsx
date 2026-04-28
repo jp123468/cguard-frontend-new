@@ -46,7 +46,7 @@ export default function InvoiceFilters({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
-        <Button variant="outline" className="text-orange-600 border-orange-200">
+        <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30">
           <Filter className="mr-2 h-4 w-4" />
           Filtros
         </Button>
@@ -149,7 +149,7 @@ export default function InvoiceFilters({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white mt-2" onClick={() => onOpenChange(false)}>
+            <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white mt-2" onClick={() => onOpenChange(false)}>
               {applyLabel}
             </Button>
             {showClearButton ? (

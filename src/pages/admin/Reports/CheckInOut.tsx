@@ -93,7 +93,7 @@ export default function CheckInOut() {
             </div>
 
             <Button
-              className="bg-orange-500 text-white hover:bg-orange-600"
+              className="bg-[#C8860A] text-white hover:bg-[#B37809]"
               onClick={() => setIsNewEntryOpen(true)}
             >
               Nueva entrada
@@ -101,7 +101,7 @@ export default function CheckInOut() {
 
             <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="border-orange-200 text-orange-600">
+                <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A]">
                   <Filter className="mr-2 h-4 w-4" />
                   Filtros
                 </Button>
@@ -167,7 +167,7 @@ export default function CheckInOut() {
                     <Label htmlFor="archived" className="text-sm font-normal text-slate-600">Mostrar datos archivados</Label>
                   </div>
 
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                  <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white">
                     Filtro
                   </Button>
                 </div>
@@ -362,7 +362,7 @@ export default function CheckInOut() {
                 <Label className="text-slate-600 font-medium">Haga clic en el mapa para obtener Latitud y Longitud</Label>
                 <div className="flex gap-4">
                   <Input placeholder="Dirección" className="flex-1" />
-                  <Button variant="outline" className="text-orange-500 border-orange-200">Ubicación en el Mapa</Button>
+                  <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30">Ubicación en el Mapa</Button>
                 </div>
 
                 {/* Map Placeholder */}
@@ -399,7 +399,7 @@ export default function CheckInOut() {
             </div>
 
             <DialogFooter className="px-6 py-4 border-t">
-              <Button className="bg-orange-500 hover:bg-orange-600 text-white">GUARDAR</Button>
+              <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white">GUARDAR</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

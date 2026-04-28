@@ -529,7 +529,7 @@ export default function SecurityGuardsPage() {
               </div>
 
               {hasPermission('securityGuardCreate') && (
-                  <Button className="bg-orange-500 hover:bg-orange-600 text-white" asChild>
+                  <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" asChild>
                   <Link to="/security-guards/new">{t('guards.list.newGuard', 'Nuevo Guardia')}</Link>
                 </Button>
               )}
@@ -539,7 +539,7 @@ export default function SecurityGuardsPage() {
                 <SheetTrigger asChild>
                   <Button
                     variant="outline"
-                    className="text-orange-600 border-orange-200"
+                    className="text-[#C8860A] border-[#C8860A]/30"
                   >
                     <Filter className="mr-2 h-4 w-4" />
                     {t('guards.list.filters', 'Filtros')}
@@ -659,7 +659,7 @@ export default function SecurityGuardsPage() {
                     
 
                     <Button
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                      className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
                       onClick={() => {
                         // Aplica tus filtros reales aquí
                         setOpenFilter(false);
@@ -1065,7 +1065,7 @@ export default function SecurityGuardsPage() {
               {t('actions.cancel', 'Cancelar')}
             </Button>
             <Button
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-[#C8860A] hover:bg-[#B37809] text-white"
               onClick={async () => {
                 if (!guardToArchive) return;
                 setArchiveLoading(true);
@@ -1253,7 +1253,7 @@ export default function SecurityGuardsPage() {
               {t('actions.cancel', 'Cancelar')}
             </Button>
             <Button
-              className={bulkActionType === "eliminar" ? "bg-red-600 hover:bg-red-700 text-white" : "bg-orange-500 hover:bg-orange-600 text-white"}
+              className={bulkActionType === "eliminar" ? "bg-red-600 hover:bg-red-700 text-white" : "bg-[#C8860A] hover:bg-[#B37809] text-white"}
               onClick={async () => {
                 setBulkActionLoading(true);
                 try {
@@ -1402,7 +1402,7 @@ export default function SecurityGuardsPage() {
               </Button>
               {hasPermission('securityGuardEdit') && (
                 <Button
-                  className="bg-orange-500 hover:bg-orange-600 text-white text-sm px-4 py-1"
+                  className="bg-[#C8860A] hover:bg-[#B37809] text-white text-sm px-4 py-1"
                   onClick={() => {
                     setDetailsOpen(false);
                     const realId = detailsGuard.raw?.id || detailsGuard.id;
@@ -1436,7 +1436,7 @@ export default function SecurityGuardsPage() {
               </ul>
               <Button
                 variant="link"
-                className="px-0 text-orange-500"
+                className="px-0 text-[#C8860A]"
                 onClick={() => {
                   const csvContent = `Nombre,Correo,Teléfono,Estado,Cédula,Fecha Contrato,Género,Tipo Sangre,Credenciales,Fecha Nac.,Lugar Nac.,Estado Civ.,Educación,Dirección\nFrank Mendoza,frankmendoza12@gmail.com,+593123456789,Activo,12345678888,30/11/2025,Femenino,AB-,7878787887878usahuia,10/6/2004,Pastocalle,Casado,Universidad,Calle principal`;
                   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

@@ -430,7 +430,7 @@ export default function NewIncidentType() {
                     <Link to="/parking-manager/incident-type">
                         <Button variant="outline">Cancelar</Button>
                     </Link>
-                    <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                    <Button className="bg-[#C8860A] hover:bg-[#C8860A] text-white">
                         <Save className="h-4 w-4 mr-2" />
                         Enviar
                     </Button>

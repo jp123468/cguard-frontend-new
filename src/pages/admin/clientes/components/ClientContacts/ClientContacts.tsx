@@ -151,6 +151,22 @@ export default function ClientContacts({ client }: { client: any }) {
   // scroll to top when this component mounts/shows
   useScrollToTopOnMount(containerRef);
 
+  // compact mode for narrow viewports (<= 768px) to avoid horizontal scroll
+  const [isCompact, setIsCompact] = useState<boolean>(false);
+  useEffect(() => {
+    function updateCompact() {
+      try {
+        // Consider compact only for widths strictly less than 768
+        setIsCompact(window.innerWidth < 768);
+      } catch (e) {
+        setIsCompact(false);
+      }
+    }
+    updateCompact();
+    window.addEventListener('resize', updateCompact);
+    return () => window.removeEventListener('resize', updateCompact);
+  }, []);
+
   function handleOpenAdd() {
     setForm({});
     setPhoneCountry('us');
@@ -364,52 +380,52 @@ export default function ClientContacts({ client }: { client: any }) {
 
   return (
     <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center w-full">
-            <div className="flex-shrink-0">
-              <div className="relative">
-                <button
-                  onClick={() => setHeaderMenuOpen(v => !v)}
-                  className="px-3 py-2 border rounded-md inline-flex items-center gap-2 bg-white"
-                >
-                  <span>{t('actions.action')}</span>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-                {headerMenuOpen && (
-                  <div className="absolute mt-2 bg-white shadow-lg rounded-md z-20">
-                    <button onClick={() => setConfirmDeleteIds(selectedIds)} disabled={selectedIds.length === 0} className={`block px-4 py-2 text-sm hover:bg-gray-50 ${selectedIds.length === 0 ? 'text-gray-400 cursor-not-allowed' : ''}`}>{t('actions.delete')}</button>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex-1 flex justify-center">
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t('clients.contacts.searchcontact') || 'Search contact'}
-                  aria-label={t('clients.contacts.searchcontact') || 'Search contact'}
-                  className="w-full max-w-lg h-10 rounded-full border pl-10 pr-3"
-                />
-              </div>
+      <div className={`bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0 ${isCompact ? 'overflow-x-hidden' : ''}`}>
+        <div className="grid grid-cols-1 gap-4 md:flex md:items-center md:gap-4">
+          <div className="flex-shrink-0">
+            <div className="relative">
+              <button
+                onClick={() => setHeaderMenuOpen(v => !v)}
+                className="px-3 py-2 border rounded-md inline-flex items-center gap-2 bg-white justify-center"
+              >
+                <span className="text-center">{t('actions.action')}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              {headerMenuOpen && (
+                <div className="absolute left-0 mt-2 bg-white shadow-lg rounded-md z-20 sm:w-56">
+                  <button onClick={() => setConfirmDeleteIds(selectedIds)} disabled={selectedIds.length === 0} className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-50 ${selectedIds.length === 0 ? 'text-gray-400 cursor-not-allowed' : ''}`}>{t('actions.delete')}</button>
+                </div>
+              )}
             </div>
           </div>
-          <div>
+
+          <div className="min-w-0 flex-1">
+            <div className="relative">
+              <span className="absolute left-3 top-2 text-gray-400 pointer-events-none">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t('clients.contacts.searchcontact') || 'Buscar contactos...'}
+                aria-label={t('clients.contacts.searchcontact') || 'Buscar contactos'}
+                className="w-full min-w-0 h-10 rounded-md border pl-9 pr-3 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex-shrink-0">
             <button
               onClick={handleOpenAdd}
-              className="px-6 py-2 bg-orange-600 text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors whitespace-nowrap min-w-[160px]"
+              className={`w-full md:w-auto ${isCompact ? 'px-3 py-1' : 'px-6 py-2'} bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#B37809] transition-colors whitespace-nowrap`}
             >
-              <Plus size={18} />
-              <span>{t('clients.contacts.addcontact') || 'nuevo contacto'}</span>
+              <Plus size={isCompact ? 14 : 18} />
+              <span>{t('clients.contacts.addcontact') || 'Agregar contacto'}</span>
             </button>
           </div>
         </div>
@@ -431,7 +447,7 @@ export default function ClientContacts({ client }: { client: any }) {
                   <td colSpan={6} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-orange-100">
+                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
                           <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                           <circle cx="85" cy="100" r="8" fill="white" />
                           <circle cx="115" cy="100" r="8" fill="white" />
@@ -458,30 +474,30 @@ export default function ClientContacts({ client }: { client: any }) {
                         onClick={() => setOpenMenuId(prev => (prev === c.id ? null : c.id))}
                         aria-expanded={openMenuId === c.id}
                         aria-controls={`actions-${c.id}-menu`}
-                        className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+                        className={`${isCompact ? 'p-1' : 'p-2'} rounded-full hover:bg-gray-100 focus:outline-none`}
                         title="Actions"
                       >
-                        <EllipsisVertical size={18} />
+                        <EllipsisVertical size={isCompact ? 14 : 18} />
                       </button>
 
                       {openMenuId === c.id && (
                         <div id={`actions-${c.id}-menu`} className="absolute right-0 mt-2 w-36 bg-white border rounded-md shadow-lg z-50">
                           <button
                             onClick={() => { setForm(c); setShowAdd(true); setOpenMenuId(null); }}
-                            className="w-full flex items-center justify-start gap-2 px-3 py-2 hover:bg-gray-50 focus:outline-none"
+                            className={`w-full flex items-center justify-start gap-2 px-3 py-2 hover:bg-gray-50 focus:outline-none`}
                             aria-label={t('actions.edit')}
                             title={t('actions.edit')}
                           >
-                            <Pencil size={16} />
+                            <Pencil size={isCompact ? 14 : 16} />
                             <span className="text-sm">{t('actions.edit') || 'Edit'}</span>
                           </button>
                           <button
                             onClick={() => { setConfirmDeleteIds([c.id]); setOpenMenuId(null); }}
-                            className="w-full flex items-center justify-start gap-2 px-3 py-2 text-red-600 hover:bg-gray-50 focus:outline-none"
+                            className={`w-full flex items-center justify-start gap-2 px-3 py-2 text-red-600 hover:bg-gray-50 focus:outline-none`}
                             aria-label={t('actions.delete')}
                             title={t('actions.delete')}
                           >
-                            <Trash size={16} />
+                            <Trash size={isCompact ? 14 : 16} />
                             <span className="text-sm">{t('actions.delete') || 'Delete'}</span>
                           </button>
                         </div>
@@ -521,16 +537,15 @@ export default function ClientContacts({ client }: { client: any }) {
       </div>
 
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center">
+        <div className={`fixed inset-0 z-50 flex ${isCompact ? 'items-end' : 'items-center'} justify-center`}> 
           <div className="absolute inset-0 bg-black opacity-30 z-40" onClick={handleCloseAdd} />
-          <div className="w-full sm:ml-auto sm:w-96 bg-white rounded-t-lg sm:rounded-md h-full sm:h-auto shadow-xl p-6 pb-24 overflow-auto z-50" onClick={e => e.stopPropagation()}>
+          <div className={`relative w-full sm:ml-auto sm:w-96 bg-white rounded-t-lg sm:rounded-md ${isCompact ? 'h-auto p-4 pb-6 max-h-[90vh]' : 'h-auto p-6 pb-24 max-h-[92vh]'} shadow-xl overflow-auto z-50`} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{form && (form as any).id ? t('clients.contacts.editcontact') : t('clients.contacts.form.AddClientContact')}</h3>
               <button onClick={handleCloseAdd} className="text-gray-500 hover:text-gray-700">✕</button>
             </div>
-
-
-            <div className="space-y-4">
+            <div className={`overflow-auto pr-2 pb-20 ${isCompact ? '' : 'max-h-[calc(92vh-220px)]'}`}>
+              <div className="space-y-4">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">{t('clients.contacts.form.Name')}</label>
                 <input aria-invalid={!!errors.name} className="w-full border rounded-md h-10 px-3" value={form.name || ''} onChange={e => handleChange('name', e.target.value)} />
@@ -541,6 +556,7 @@ export default function ClientContacts({ client }: { client: any }) {
                 <input aria-invalid={!!errors.email} className="w-full border rounded-md h-10 px-3" value={form.email || ''} onChange={e => handleChange('email', e.target.value)} />
                 {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
               </div>
+            </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1">{t('clients.contacts.form.Mobile Number')}</label>
                 <div aria-invalid={!!errors.mobile}>
@@ -554,7 +570,9 @@ export default function ClientContacts({ client }: { client: any }) {
                         handleChange('mobile', val);
                         if (data && data.countryCode) setPhoneCountry(String(data.countryCode).toLowerCase());
                       },
-                      placeholder: "e.g. +12015550123"
+                      placeholder: "e.g. +12015550123",
+                      // prefer Ecuador first, then United States
+                      preferredCountries: ['ec', 'us']
                     } as any)}
                   />
                 </div>
@@ -584,11 +602,11 @@ export default function ClientContacts({ client }: { client: any }) {
               </div>
             </div>
 
-            <div className="fixed bottom-6 md:bottom-8 right-6 md:right-10">
+            <div className={isCompact ? 'fixed bottom-6 md:bottom-8 right-6 md:right-10' : 'absolute bottom-6 right-6'}>
               <button
                 onClick={handleAdd}
                 disabled={!canSubmit}
-                className={`${canSubmit ? 'bg-orange-600 hover:bg-orange-500' : 'bg-orange-400 cursor-not-allowed opacity-60'} text-white transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300`}
+                className={`${canSubmit ? 'bg-[#C8860A] hover:bg-[#C8860A]' : 'bg-[#C8860A]/60 cursor-not-allowed opacity-60'} text-white transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]/30`}
               >
                 {(form && (form as any).id) ? (t('save') || 'Save') : (t('clients.contacts.form.Addcontact') || 'ADD')}
               </button>

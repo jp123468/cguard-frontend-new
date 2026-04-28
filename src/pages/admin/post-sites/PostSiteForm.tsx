@@ -900,7 +900,7 @@ export default function PostSiteForm({
                         <Button type="button" variant="outline" className="min-w-28" onClick={handleCancel}>
                             {t('postSites.form.cancel', 'Cancelar')}
                         </Button>
-                        <Button type="submit" className="min-w-28 bg-orange-500 text-white  cursor-pointer border border-orange-500 hover:bg-orange-600">
+                        <Button type="submit" className="min-w-28 bg-[#C8860A] text-white  cursor-pointer border border-[#C8860A] hover:bg-[#B37809]">
                             {t('postSites.form.submit', 'Enviar')}
                         </Button>
                     </div>

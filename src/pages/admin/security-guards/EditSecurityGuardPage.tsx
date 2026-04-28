@@ -257,7 +257,7 @@ export default function EditSecurityGuardPage() {
             <Button type="button" variant="outline" onClick={() => navigate(-1)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading} className="bg-orange-500 hover:bg-orange-600 text-white">
+            <Button type="submit" disabled={loading} className="bg-[#C8860A] hover:bg-[#B37809] text-white">
               Guardar cambios
             </Button>
           </div>

@@ -216,7 +216,7 @@ export default function GuardNotes({ guard }: Props) {
                                         placeholder={t('guards.notes.searchPlaceholder', { defaultValue: 'Search note' })}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                        className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
                                     />
                                 </div>
                             </div>
@@ -224,7 +224,7 @@ export default function GuardNotes({ guard }: Props) {
                             {/* Right: Add Button */}
                             <button
                                 onClick={handleAddNote}
-                                className="px-6 py-2 bg-orange-600 text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors"
+                                className="px-6 py-2 bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors"
                             >
                                 <Plus size={18} />
                                 {t('guards.notes.addButton', { defaultValue: 'New Note' })}
@@ -251,7 +251,7 @@ export default function GuardNotes({ guard }: Props) {
                                             <td colSpan={6} className="px-4 py-12">
                                                 <div className="flex flex-col items-center justify-center gap-4">
                                                     <div className="w-32 h-32">
-                                                        <svg viewBox="0 0 200 200" className="w-full h-full text-orange-100">
+                                                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
                                                             <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                                                             <circle cx="85" cy="100" r="8" fill="white" />
                                                             <circle cx="115" cy="100" r="8" fill="white" />
@@ -322,7 +322,7 @@ export default function GuardNotes({ guard }: Props) {
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                             placeholder={t('guards.notes.form.title.placeholder', { defaultValue: 'Enter note title' })}
-                                            className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                            className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
                                         />
                                     </div>
 
@@ -335,7 +335,7 @@ export default function GuardNotes({ guard }: Props) {
                                             value={formData.description}
                                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                             placeholder={t('guards.notes.form.description.placeholder', { defaultValue: 'Enter note description' })}
-                                            className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                                            className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none"
                                             rows={6}
                                         />
                                     </div>
@@ -349,7 +349,7 @@ export default function GuardNotes({ guard }: Props) {
                                             type="date"
                                             value={formData.date}
                                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                            className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
+                                            className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A] cursor-pointer"
                                         />
                                     </div>
 
@@ -375,7 +375,7 @@ export default function GuardNotes({ guard }: Props) {
                                                                     {/* Progress Bar */}
                                                                     {typeof uploadProgress[i] !== 'undefined' && (
                                                                         <div className="w-full bg-gray-100 rounded h-2 overflow-hidden">
-                                                                            <div className="bg-orange-600 h-2" style={{ width: `${uploadProgress[i]}%` }} />
+                                                                            <div className="bg-[#C8860A] h-2" style={{ width: `${uploadProgress[i]}%` }} />
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -411,7 +411,7 @@ export default function GuardNotes({ guard }: Props) {
                                     </button>
                                     <button
                                         onClick={handleSubmitNote}
-                                        className="px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700"
+                                        className="px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809]"
                                     >
                                         {t('guards.notes.modal.save', { defaultValue: 'Save' })}
                                     </button>

@@ -64,7 +64,7 @@ export default function ClientUserAccess({ client }: Props) {
           </div>
 
           <div className="ml-4">
-            <button onClick={openInvite} className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-full shadow hover:bg-orange-700">
+            <button onClick={openInvite} className="flex items-center gap-2 bg-[#C8860A] text-white px-4 py-2 rounded-full shadow hover:bg-[#B37809]">
               <Plus size={16} />
               Invite User
             </button>
@@ -87,7 +87,7 @@ export default function ClientUserAccess({ client }: Props) {
                   <td colSpan={6} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-orange-100">
+                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
                           <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                           <circle cx="85" cy="100" r="8" fill="white" />
                           <circle cx="115" cy="100" r="8" fill="white" />
@@ -182,7 +182,7 @@ export default function ClientUserAccess({ client }: Props) {
             <div className="p-4 border-t bg-white sticky bottom-0 z-20">
               <div className="flex items-center justify-end gap-3">
                 <button onClick={() => setShowInvite(false)} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">Cancel</button>
-                <button onClick={handleInvite} className="px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700">Invite</button>
+                <button onClick={handleInvite} className="px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809]">Invite</button>
               </div>
             </div>
           </div>

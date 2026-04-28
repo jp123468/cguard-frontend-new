@@ -14,7 +14,8 @@ type Props = {
 
 export default function ClientsLayout({ navKey, title, children, client }: Props) {
   const { t } = useTranslation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
+  const [isLargeScreen, setIsLargeScreen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
   const [postSitesCount, setPostSitesCount] = useState<number | undefined>(undefined);
   const cfg: any = (clientsNav as any)[navKey] || null;
   const { id } = useParams();
@@ -41,11 +42,34 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
     return path;
   };
 
+  // Keep sidebar responsive: auto-open on large screens, auto-close on small screens
+  useEffect(() => {
+    const onResize = () => {
+      const large = window.innerWidth >= 768;
+      setIsLargeScreen(large);
+      if (large) setSidebarOpen(true);
+      else setSidebarOpen(false);
+    };
+    try {
+      onResize();
+      window.addEventListener('resize', onResize);
+    } catch (e) {}
+    return () => { try { window.removeEventListener('resize', onResize); } catch (e) {} };
+  }, []);
+
   // Scrolling is handled by Consumers to avoid hook ordering problems during HMR.
+
+    const sidebarClass = isLargeScreen
+      ? `shrink-0 transition-all duration-300 ${sidebarOpen ? 'w-64 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`
+      : `${sidebarOpen ? 'fixed inset-y-0 left-0 w-64 z-40' : 'hidden'}`;
 
     return (
     <div className="flex gap-4 h-[calc(100vh-64px)] overflow-hidden">
-      <div className={`shrink-0 transition-all duration-300 ${sidebarOpen ? 'w-64 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
+      {!isLargeScreen && sidebarOpen && (
+        <div className="fixed inset-0 bg-black/30 z-30" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      <div className={sidebarClass}>
         <div className="h-full flex flex-col">
           <div className="bg-white border rounded-md p-3 m-3 flex-1 overflow-hidden">
             <div className="text-base font-semibold mb-3">{
@@ -80,11 +104,11 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
                           <li key={it.id} className="bg-white">
                             <Link
                               to={resolvedPath}
-                              className={`flex items-center justify-between px-4 py-3 text-sm ${isActive ? 'bg-orange-50 text-orange-600 font-medium' : 'text-gray-700 hover:bg-gray-50'} `}
+                              className={`flex items-center justify-between px-4 py-3 text-sm ${isActive ? 'bg-[#C8860A]/10 text-[#C8860A] font-medium' : 'text-gray-700 hover:bg-gray-50'} `}
                             >
                               <span className="text-sm">{t(it.label)}</span>
                               {typeof badgeCount === 'number' && (
-                                <span className="ml-3 inline-flex items-center justify-center min-w-[20px] h-6 px-2 text-sm font-semibold rounded-md bg-orange-600 text-white">{badgeCount}</span>
+                                <span className="ml-3 inline-flex items-center justify-center min-w-[20px] h-6 px-2 text-sm font-semibold rounded-md bg-[#C8860A] text-white">{badgeCount}</span>
                               )}
                             </Link>
                           </li>
@@ -104,7 +128,7 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
         <FetchPostSitesCount clientId={client.id} initial={client?.postSites?.length ?? client?.postSiteIds?.length ?? client?.postSitesCount} onCount={(c: number) => setPostSitesCount(c)} />
       )}
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <div className="bg-white rounded-md p-4 mb-4 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <button 
@@ -122,7 +146,7 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
           <div className="text-sm text-gray-600"></div>
         </div>
 
-        <div className="pb-6">{children}</div>
+        <div className="flex-1 overflow-auto pb-6">{children}</div>
       </div>
     </div>
   );

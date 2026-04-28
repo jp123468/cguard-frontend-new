@@ -468,7 +468,7 @@ export default function MobilPage() {
                 <h2 className="text-lg font-semibold">Banner Superior</h2>
                 <p className="text-sm text-muted-foreground">Crea, edita o elimina banners superiores.</p>
               </div>
-              <Button onClick={openCreateBanner} className="inline-flex items-center gap-2 bg-orange-500 text-white hover:bg-orange-600">
+              <Button onClick={openCreateBanner} className="inline-flex items-center gap-2 bg-[#C8860A] text-white hover:bg-[#B37809]">
                 <Plus className="h-4 w-4" /> Nuevo banner
               </Button>
             </div>
@@ -505,7 +505,7 @@ export default function MobilPage() {
                           <button
                             type="button"
                             onClick={() => openBannerPreview(resolveBannerImageUrl(item))}
-                            className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-0 shadow-sm hover:border-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                            className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-0 shadow-sm hover:border-[#C8860A]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]"
                           >
                             <img
                               src={resolveBannerImageUrl(item)}
@@ -520,7 +520,7 @@ export default function MobilPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button size="sm" variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50" onClick={() => openEditBanner(item)}>
+                        <Button size="sm" variant="outline" className="text-[#C8860A] border-[#C8860A] hover:bg-[#C8860A]/10" onClick={() => openEditBanner(item)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button size="sm" variant="destructive" onClick={() => openDeleteConfirmation(item.id, item.title || 'este banner', 'banner')}>
@@ -542,7 +542,7 @@ export default function MobilPage() {
               <div>
                 <Dialog open={serviceDialogOpen} onOpenChange={setServiceDialogOpen}>
                     <DialogTrigger asChild>
-                    <Button onClick={() => { setEditingServiceId(null); setServiceForm(defaultServiceForm); setServiceDialogOpen(true); }} className="inline-flex items-center gap-2 bg-orange-500 text-white hover:bg-orange-600">
+                    <Button onClick={() => { setEditingServiceId(null); setServiceForm(defaultServiceForm); setServiceDialogOpen(true); }} className="inline-flex items-center gap-2 bg-[#C8860A] text-white hover:bg-[#B37809]">
                       <Plus className="h-4 w-4" /> Nuevo servicio
                     </Button>
                   </DialogTrigger>
@@ -571,7 +571,7 @@ export default function MobilPage() {
                     </div>
                     <DialogFooter className="mt-6 flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setServiceDialogOpen(false)}>Cancelar</Button>
-                      <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={async () => {
+                      <Button className="bg-[#C8860A] text-white hover:bg-[#B37809]" onClick={async () => {
                         try {
                           const payload: any = {
                             title: serviceForm.title,
@@ -622,7 +622,7 @@ export default function MobilPage() {
                       <TableCell className="truncate">{s.description}</TableCell>
                       <TableCell>{s.price ?? '-'}</TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button size="sm" variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50" onClick={() => { setEditingServiceId(s.id); setServiceForm({ title: s.title || '', description: s.description || '', price: s.price ?? '', publishedOnMobile: !!s.publishedOnMobile }); setServiceDialogOpen(true); }}>
+                        <Button size="sm" variant="outline" className="text-[#C8860A] border-[#C8860A] hover:bg-[#C8860A]/10" onClick={() => { setEditingServiceId(s.id); setServiceForm({ title: s.title || '', description: s.description || '', price: s.price ?? '', publishedOnMobile: !!s.publishedOnMobile }); setServiceDialogOpen(true); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button size="sm" variant="destructive" onClick={() => openDeleteConfirmation(s.id, s.title || 'este servicio', 'service')}>
@@ -642,7 +642,7 @@ export default function MobilPage() {
                 <h2 className="text-lg font-semibold">Certificaciones</h2>
                 <p className="text-sm text-muted-foreground">Administra certificaciones con fechas, archivos e íconos.</p>
               </div>
-              <Button onClick={openCreateCertification} className="inline-flex items-center gap-2 bg-orange-500 text-white hover:bg-orange-600">
+              <Button onClick={openCreateCertification} className="inline-flex items-center gap-2 bg-[#C8860A] text-white hover:bg-[#B37809]">
                 <Plus className="h-4 w-4" /> Nueva certificación
               </Button>
             </div>
@@ -685,7 +685,7 @@ export default function MobilPage() {
                         <button
                           type="button"
                           onClick={() => openBannerPreview(resolveCertificationImageUrl(item))}
-                          className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-0 shadow-sm hover:border-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                          className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-0 shadow-sm hover:border-[#C8860A]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]"
                         >
                           <img
                             src={resolveCertificationImageUrl(item)}
@@ -704,7 +704,7 @@ export default function MobilPage() {
                         <button
                           type="button"
                           onClick={() => openBannerPreview(resolveCertificationIconUrl(item))}
-                          className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-0 shadow-sm hover:border-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                          className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-0 shadow-sm hover:border-[#C8860A]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]"
                         >
                           <img
                             src={resolveCertificationIconUrl(item)}
@@ -721,7 +721,7 @@ export default function MobilPage() {
                     <TableCell>{item.acquisitionDate || '-'}</TableCell>
                     <TableCell>{item.expirationDate || '-'}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button size="sm" variant="outline" className="text-orange-600 border-orange-600 hover:bg-orange-50" onClick={() => openEditCertification(item)}>
+                      <Button size="sm" variant="outline" className="text-[#C8860A] border-[#C8860A] hover:bg-[#C8860A]/10" onClick={() => openEditCertification(item)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => openDeleteConfirmation(item.id, item.title || 'esta certificación', 'certification')}>
@@ -769,7 +769,7 @@ export default function MobilPage() {
                         <TooltipTrigger asChild>
                           <label
                             htmlFor="bannerImage"
-                            className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-600 cursor-pointer"
+                            className="inline-flex items-center rounded-md bg-[#C8860A] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#B37809] cursor-pointer"
                           >
                             Seleccionar archivo
                           </label>
@@ -794,7 +794,7 @@ export default function MobilPage() {
             </div>
             <DialogFooter className="mt-6 flex justify-end gap-2">
               <Button variant="outline" className="text-black border-black hover:bg-slate-100" onClick={() => setBannerDialogOpen(false)}>Cancelar</Button>
-              <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={handleSaveBanner} disabled={loading}>
+              <Button className="bg-[#C8860A] text-white hover:bg-[#B37809]" onClick={handleSaveBanner} disabled={loading}>
                 Guardar
               </Button>
             </DialogFooter>
@@ -863,7 +863,7 @@ export default function MobilPage() {
                         <TooltipTrigger asChild>
                           <label
                             htmlFor="certImage"
-                            className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-600 cursor-pointer"
+                            className="inline-flex items-center rounded-md bg-[#C8860A] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#B37809] cursor-pointer"
                           >
                             Seleccionar archivo
                           </label>
@@ -894,7 +894,7 @@ export default function MobilPage() {
                         <TooltipTrigger asChild>
                           <label
                             htmlFor="certIcon"
-                            className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-600 cursor-pointer"
+                            className="inline-flex items-center rounded-md bg-[#C8860A] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#B37809] cursor-pointer"
                           >
                             Seleccionar archivo
                           </label>
@@ -919,7 +919,7 @@ export default function MobilPage() {
             </div>
             <DialogFooter className="mt-6 flex justify-end gap-2">
               <Button variant="outline" className="text-black border-black hover:bg-slate-100" onClick={() => setCertDialogOpen(false)}>Cancelar</Button>
-              <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={handleSaveCertification} disabled={loading}>
+              <Button className="bg-[#C8860A] text-white hover:bg-[#B37809]" onClick={handleSaveCertification} disabled={loading}>
                 Guardar
               </Button>
             </DialogFooter>

@@ -79,7 +79,7 @@ export function ClientDetailsDialog({
 
                 {loading ? (
                     <div className="flex items-center justify-center py-4">
-                        <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+                        <Loader2 className="h-6 w-6 animate-spin text-[#C8860A]" />
                     </div>
                 ) : error ? (
                     <div className="py-4 text-center text-red-500 text-sm">
@@ -157,7 +157,7 @@ export function ClientDetailsDialog({
                                         href={client.website}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-orange-500 hover:underline truncate block"
+                                        className="text-[#C8860A] hover:underline truncate block"
                                     >
                                         {client.website}
                                     </a>
@@ -175,7 +175,7 @@ export function ClientDetailsDialog({
                                 return hasPermission('clientAccountEdit') ? (
                                     <Button
                                         size="sm"
-                                        className="bg-orange-500 hover:bg-orange-600"
+                                        className="bg-[#C8860A] hover:bg-[#B37809]"
                                         asChild
                                     >
                                         <Link to={`/clients/edit/${client.id}`}>

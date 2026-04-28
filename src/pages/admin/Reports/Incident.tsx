@@ -122,13 +122,13 @@ export default function Incident() {
               />
             </div>
 
-            <Button variant="outline" size="icon" className="border-orange-200 text-orange-600">
+            <Button variant="outline" size="icon" className="border-[#C8860A]/30 text-[#C8860A]">
               <Activity className="h-4 w-4" />
             </Button>
 
             <Sheet open={isNewReportOpen} onOpenChange={setIsNewReportOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="border-orange-200 text-orange-600">
+                <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A]">
                   Nuevo informe
                 </Button>
               </SheetTrigger>
@@ -208,7 +208,7 @@ export default function Incident() {
                   </div>
 
                   <div className="pt-4">
-                    <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                    <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white">
                       AÑADIR
                     </Button>
                   </div>
@@ -218,7 +218,7 @@ export default function Incident() {
 
             <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="border-orange-200 text-orange-600">
+                <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A]">
                   <Filter className="mr-2 h-4 w-4" />
                   Filtros
                 </Button>
@@ -317,10 +317,10 @@ export default function Incident() {
                   </div>
 
                   <div className="space-y-2 pt-2">
-                    <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                    <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white">
                       Filtro
                     </Button>
-                    <Button variant="outline" className="w-full bg-orange-500 hover:bg-orange-600 text-white border-none">
+                    <Button variant="outline" className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white border-none">
                       Guardar Filtro
                     </Button>
                   </div>

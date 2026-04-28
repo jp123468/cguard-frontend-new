@@ -170,8 +170,8 @@ export default function OvertimeMultiplier() {
                                                 "px-4 py-2 text-xs font-medium transition-colors",
                                                 "border-r border-slate-200 last:border-r-0",
                                                 active
-                                                    ? "bg-orange-500 text-white"
-                                                    : "bg-white text-slate-700 hover:bg-orange-50",
+                                                    ? "bg-[#C8860A] text-white"
+                                                    : "bg-white text-slate-700 hover:bg-[#C8860A]/10",
                                             ].join(" ")}
                                             onClick={() => toggleDay(day.key)}
                                         >
@@ -255,7 +255,7 @@ export default function OvertimeMultiplier() {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="rounded-lg border-orange-200 bg-white px-6 text-sm font-semibold text-orange-500 hover:bg-orange-50"
+                                    className="rounded-lg border-[#C8860A]/30 bg-white px-6 text-sm font-semibold text-[#C8860A] hover:bg-[#C8860A]/10"
                                     onClick={handleAddRule}
                                 >
                                     Agregar
@@ -268,14 +268,14 @@ export default function OvertimeMultiplier() {
                         <Button
                             type="button"
                             variant="outline"
-                            className="rounded-lg border-slate-200 px-6 text-sm font-semibold text-orange-500 hover:bg-slate-50"
+                            className="rounded-lg border-slate-200 px-6 text-sm font-semibold text-[#C8860A] hover:bg-slate-50"
                             onClick={() => setMode("list")}
                         >
                             Cancelar
                         </Button>
                         <Button
                             type="button"
-                            className="rounded-lg bg-orange-500 px-8 text-sm font-semibold text-white hover:bg-orange-600"
+                            className="rounded-lg bg-[#C8860A] px-8 text-sm font-semibold text-white hover:bg-[#B37809]"
                             onClick={handleSubmit}
                         >
                             Enviar
@@ -299,7 +299,7 @@ export default function OvertimeMultiplier() {
                 <div className="mb-4 flex items-center justify-between">
                     <div />
                     <Button
-                        className="rounded-lg bg-orange-500 px-5 text-sm font-semibold text-white hover:bg-orange-600"
+                        className="rounded-lg bg-[#C8860A] px-5 text-sm font-semibold text-white hover:bg-[#B37809]"
                         type="button"
                         onClick={() => setMode("create")}
                     >

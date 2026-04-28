@@ -209,7 +209,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="bg-orange-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50"
+                  className="bg-[#C8860A] text-white px-6 py-3 rounded-full shadow-lg hover:bg-[#B37809] transition-colors font-medium disabled:opacity-50"
                 >
                   {saving ? t('guards.profile.actions.saving') : t('guards.profile.actions.save')}
                 </button>
@@ -217,7 +217,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="bg-orange-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-orange-700 transition-colors font-medium"
+                className="bg-[#C8860A] text-white px-6 py-3 rounded-full shadow-lg hover:bg-[#B37809] transition-colors font-medium"
               >
                 {t('guards.profile.actions.edit')}
               </button>
@@ -445,7 +445,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                 </div>
                 <div className="flex justify-end gap-2">
                   <button onClick={() => setShowCreateShiftModal(false)} className="px-3 py-2 rounded border">Cancel</button>
-                  <button onClick={handleCreateManual} className="px-3 py-2 rounded bg-orange-600 text-white">Create</button>
+                  <button onClick={handleCreateManual} className="px-3 py-2 rounded bg-[#C8860A] text-white">Create</button>
                 </div>
               </div>
             </aside>

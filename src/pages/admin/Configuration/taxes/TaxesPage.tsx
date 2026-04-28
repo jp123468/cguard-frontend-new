@@ -227,7 +227,7 @@ function TaxesContent() {
             <DialogClose asChild>
               <Button variant="outline" onClick={() => { setPendingDeactivateId(null); setPendingDeactivateName(null); }}>Cancelar</Button>
             </DialogClose>
-            <Button className="bg-orange-600 hover:bg-orange-700" onClick={handleConfirmDeactivate}>Desactivar</Button>
+            <Button className="bg-[#C8860A] hover:bg-[#B37809]" onClick={handleConfirmDeactivate}>Desactivar</Button>
           </div>
         </DialogContent>
       </Dialog>

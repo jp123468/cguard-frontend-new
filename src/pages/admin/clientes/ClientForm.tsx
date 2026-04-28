@@ -853,7 +853,7 @@ export default function ClientForm({
                         </Button>
                         <Button
                             type="submit"
-                            className="min-w-28 bg-orange-500 text-white  cursor-pointer border border-orange-500 hover:bg-orange-600"
+                            className="min-w-28 bg-[#C8860A] text-white  cursor-pointer border border-[#C8860A] hover:bg-[#C8860A]"
                         >
                             {t('profile.save', 'Guardar')}
                         </Button>

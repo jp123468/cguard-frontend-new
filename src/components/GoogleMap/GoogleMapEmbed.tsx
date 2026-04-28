@@ -165,14 +165,31 @@ export default function GoogleMapEmbed({
         const center = { lat: c.lat, lng: c.lng };
         const initialZoom = c.zoom ?? (typeof lat === 'number' && typeof lng === 'number' ? zoom : 12);
 
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
         mapInstance.current = new google.maps.Map(mapRef.current, {
           center,
           zoom: initialZoom,
           mapTypeId: mapType === 'satellite' ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP,
-          mapTypeControl: true,
+          mapTypeControl: !isMobile,
+          mapTypeControlOptions: { position: google.maps.ControlPosition.TOP_LEFT },
+          zoomControl: !isMobile,
           streetViewControl: false,
           fullscreenControl: false,
+          gestureHandling: isMobile ? 'greedy' : 'auto',
         });
+
+        // Adjust controls when viewport resizes to avoid overlap on small screens
+        const onResize = () => {
+          try {
+            const mobileNow = window.innerWidth < 768;
+            if (mapInstance.current) {
+              mapInstance.current.setOptions({ mapTypeControl: !mobileNow, zoomControl: !mobileNow });
+            }
+          } catch (e) {
+            // ignore
+          }
+        };
+        window.addEventListener('resize', onResize);
 
         // If click-to-set mode is enabled, attach listener
         if (typeof enableClickToSet === 'boolean' && enableClickToSet) {

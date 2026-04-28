@@ -102,7 +102,7 @@ export default function NewOrEditPostSitePage() {
                             <div className="max-w-[900px] mx-auto">
                                 {loadingSite ? (
                                     <div className="flex items-center justify-center py-8">
-                                        <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+                                        <Loader2 className="h-6 w-6 animate-spin text-[#C8860A]" />
                                     </div>
                                 ) : site ? (
                                     <div className="space-y-4">

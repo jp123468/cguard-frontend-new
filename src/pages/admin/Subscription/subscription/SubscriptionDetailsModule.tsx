@@ -60,13 +60,13 @@ export default function SubscriptionDetailsModule() {
   return (
     <div className="space-y-6">
       {/* Banner */}
-      <Card className="p-4 bg-orange-50 border-orange-200">
+      <Card className="p-4 bg-[#C8860A]/10 border-[#C8860A]/30">
         <p className="text-sm">
           <span className="font-semibold">Special Offer!!</span> Update Now and
           Get 15% Off For Next 3 Months!! Your account will be immediately
           charged based on number of active users in the system.{" "}
           <button
-            className="text-orange-600 underline-offset-2 hover:underline"
+            className="text-[#C8860A] underline-offset-2 hover:underline"
             onClick={() => console.log("Click en oferta")}
           >
             (Click Here)
@@ -233,7 +233,7 @@ export default function SubscriptionDetailsModule() {
               I have read, understand and accept the GuardsPro Customer{" "}
               <a
                 href="#"
-                className="text-orange-600 underline"
+                className="text-[#C8860A] underline"
                 onClick={(e) => {
                   e.preventDefault();
                   console.log("Open Terms of Service");
@@ -244,7 +244,7 @@ export default function SubscriptionDetailsModule() {
               , including the GuardsPro{" "}
               <a
                 href="#"
-                className="text-orange-600 underline"
+                className="text-[#C8860A] underline"
                 onClick={(e) => {
                   e.preventDefault();
                   console.log("Open Privacy Policy");

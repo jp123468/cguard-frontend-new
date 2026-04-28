@@ -59,7 +59,7 @@ export default function LicenseTypesTable({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-          <Button className="border border-orange-500 text-orange-500 bg-transparent hover:bg-orange-50 hover:text-orange-600 transition duration-200 px-3" disabled={!idsChecked.length} onClick={() => onBulkDelete(idsChecked)}>
+          <Button className="border border-[#C8860A] text-[#C8860A] bg-transparent hover:bg-[#C8860A]/10 hover:text-[#C8860A] transition duration-200 px-3" disabled={!idsChecked.length} onClick={() => onBulkDelete(idsChecked)}>
             {t('licenseTypes.table.bulkDelete', { defaultValue: 'Eliminar' })}
           </Button>
         </div>
@@ -67,7 +67,7 @@ export default function LicenseTypesTable({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder={t('licenseTypes.table.searchPlaceholder', { defaultValue: 'Buscar tipo de licencia' })} className="pl-9" value={query} onChange={(e) => onQueryChange(e.target.value)} />
         </div>
-        <Button onClick={onCreate} className="bg-orange-500 text-white hover:bg-orange-600 px-4 py-2">
+        <Button onClick={onCreate} className="bg-[#C8860A] text-white hover:bg-[#B37809] px-4 py-2">
           <Plus className="mr-2 h-4 w-4" />
           {t('licenseTypes.table.create', { defaultValue: 'Nuevo Tipo de Licencia' })}
         </Button>

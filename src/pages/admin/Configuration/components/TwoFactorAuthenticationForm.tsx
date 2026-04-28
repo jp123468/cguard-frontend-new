@@ -100,7 +100,7 @@ export default function TwoFactorAuthenticationForm() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-lg">Aplicación de Autenticación</CardTitle>
                   {!totpSetupVisible && (
-                    <Button variant="ghost" className="text-orange-500 hover:text-orange-600" onClick={handleTotpStart}>
+                    <Button variant="ghost" className="text-[#C8860A] hover:text-[#C8860A]" onClick={handleTotpStart}>
                       Agregar
                     </Button>
                   )}
@@ -157,7 +157,7 @@ export default function TwoFactorAuthenticationForm() {
                   <CardTitle className="text-lg">SMS/Texto</CardTitle>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-orange-500 hover:text-orange-600">
+                      <Button variant="ghost" size="icon" className="text-[#C8860A] hover:text-[#C8860A]">
                         <MoreVertical className="h-5 w-5" />
                         <span className="sr-only">Más</span>
                       </Button>

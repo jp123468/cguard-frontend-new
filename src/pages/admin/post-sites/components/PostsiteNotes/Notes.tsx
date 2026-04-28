@@ -186,11 +186,11 @@ export default function PostSiteNotes({ site }: Props) {
           <div className="flex-1 max-w-xs">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-3 text-gray-400" />
-              <input type="text" placeholder={t('clients.notes.notesearchPlaceholder', 'Search note')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+              <input type="text" placeholder={t('clients.notes.notesearchPlaceholder', 'Search note')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
             </div>
           </div>
 
-          <button onClick={handleAddNote} className="px-6 py-2 bg-orange-600 text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors">
+          <button onClick={handleAddNote} className="px-6 py-2 bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors">
             <Plus size={18} />
            {(t('clients.notes.addNote', 'Add Note'))}
           </button>
@@ -226,7 +226,7 @@ export default function PostSiteNotes({ site }: Props) {
                   <td colSpan={6} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-orange-100">
+                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
                           <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                           <circle cx="85" cy="100" r="8" fill="white" />
                           <circle cx="115" cy="100" r="8" fill="white" />
@@ -316,17 +316,17 @@ export default function PostSiteNotes({ site }: Props) {
             <div className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('clients.notes.form.Titlenote', 'Title *')} </label>
-                <input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder={t('clients.notes.form.Titlenote', 'Title *')} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                <input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder={t('clients.notes.form.Titlenote', 'Title *')} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('clients.notes.form.Description', 'Description *')} </label>
-                <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder={t('clients.notes.form.Descriptioninput', 'Description *')} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none" rows={6} />
+                <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder={t('clients.notes.form.Descriptioninput', 'Description *')} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none" rows={6} />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('clients.notes.form.Date', 'Date *')} </label>
-                <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer" />
+                <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A] cursor-pointer" />
               </div>
 
               <div>
@@ -363,7 +363,7 @@ export default function PostSiteNotes({ site }: Props) {
               <button
                 onClick={handleSubmitNote}
                 disabled={!isFormValid}
-                className={`px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700 ${!isFormValid ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809] ${!isFormValid ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {t('actions.save', 'Save')}
               </button>
@@ -430,7 +430,7 @@ export default function PostSiteNotes({ site }: Props) {
             <div className="text-sm text-gray-700 mb-4"><strong>{t('clients.notes.form.Description', 'Description')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
             <div className="text-sm text-gray-700 mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdBy || detailsNote.createdById || '-'}</div>
             <div className="flex justify-end gap-3">
-              <button onClick={() => { setFormData({ title: detailsNote.title, description: detailsNote.description, date: detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0], attachments: [], id: detailsNote.id || detailsNote._id }); setViewOnly(false); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-orange-600 text-white rounded-md">{t('actions.edit', 'Edit')}</button>
+              <button onClick={() => { setFormData({ title: detailsNote.title, description: detailsNote.description, date: detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0], attachments: [], id: detailsNote.id || detailsNote._id }); setViewOnly(false); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('actions.edit', 'Edit')}</button>
             </div>
           </div>
         </div>

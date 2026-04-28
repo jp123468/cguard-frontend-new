@@ -4,7 +4,7 @@ import ClientForm from '@/pages/admin/clientes/ClientForm';
 import { useEffect, useState as useStateReact } from 'react';
 import { categoryService } from '@/lib/api/categoryService';
 import { Button } from '@/components/ui/button';
-import MobileCardList from '@/components/responsive/MobileCardList';
+// MobileCardList removed: render full details on mobile for complete info
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function ClientProfile({ client }: { client: any }) {
@@ -79,23 +79,94 @@ export default function ClientProfile({ client }: { client: any }) {
         </div>
       ) : (
         <>
-          {/* Mobile summary card */}
+          {/* Mobile: show full client details (same fields as desktop) */}
           <div className="md:hidden">
-            <MobileCardList
-              items={client ? [client] : []}
-              loading={false}
-              emptyMessage={t('clients.empty.title') as string}
-              renderCard={(c: any) => (
-                <div>
-                  <div className="font-medium text-lg">{c.name || '-'} {c.lastName ? ` ${c.lastName}` : ''}</div>
-                  <div className="mt-2 text-sm text-muted-foreground">{c.email || '-'}</div>
-                  <div className="mt-1 text-sm text-muted-foreground">{c.phoneNumber || '-'}</div>
-                  <div className="mt-1 text-sm text-muted-foreground">
-                    {c.personType === 'PJ' ? (t('clients.form.ruc', 'RUC') + ': ' + (c.documentNumber || '-')) : (t('clients.form.cedula', 'Cédula') + ': ' + (c.documentNumber || '-'))}
-                  </div>
-                </div>
-              )}
-            />
+            <div className="bg-white border rounded-md p-4 space-y-4">
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.name', 'Nombre')}</p>
+                <p className="text-lg text-gray-800">{client.name || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.lastName', 'Apellidos')}</p>
+                <p className="text-lg text-gray-800">{client.lastName || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.email', 'Email')}</p>
+                <p className="text-lg text-gray-800">{client.email || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.personType', 'Tipo de persona')}</p>
+                <p className="text-lg text-gray-800">{client.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{client.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</p>
+                <p className="text-lg text-gray-800">{client.documentNumber || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.phone', 'Teléfono')}</p>
+                <p className="text-lg text-gray-800">{client.phoneNumber || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.address', 'Dirección')}</p>
+                <p className="text-lg text-gray-800">{client.address || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.addressLine2', 'Dirección Complementaria')}</p>
+                <p className="text-lg text-gray-800">{client.addressLine2 || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.postalCode', 'Código postal')}</p>
+                <p className="text-lg text-gray-800">{client.postalCode || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.city', 'Ciudad')}</p>
+                <p className="text-lg text-gray-800">{client.city || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.country', 'País')}</p>
+                <p className="text-lg text-gray-800">{client.country || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.fax', 'Landline')}</p>
+                <p className="text-lg text-gray-800">{client.landline || client.faxNumber || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.website', 'Website')}</p>
+                <p className="text-lg text-gray-800">{client.website || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.latitude', 'Latitud')}</p>
+                <p className="text-lg text-gray-800">{client.latitude ?? client.lat ?? '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.longitude', 'Longitud')}</p>
+                <p className="text-lg text-gray-800">{client.longitude ?? client.lng ?? '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.active', 'Activo')}</p>
+                <p className="text-lg text-gray-800">{client.active === false ? 'No' : client.active === true ? 'Sí' : '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600">{t('clients.form.categories', 'Sectores')}</p>
+                <p className="text-lg text-gray-800">{(categoryNames && categoryNames.length) ? categoryNames.join(', ') : ((client.categoryNames && client.categoryNames.length) ? client.categoryNames.join(', ') : ((client.categoryIds && client.categoryIds.length) ? client.categoryIds.join(', ') : '-'))}</p>
+              </div>
+            </div>
           </div>
 
           <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-6">

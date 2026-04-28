@@ -607,12 +607,12 @@ export default function Stations({ site }: { site?: any }) {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.9 14.32a8 8 0 111.41-1.41l4.3 4.3a1 1 0 01-1.42 1.42l-4.3-4.3zM8 14a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" /></svg>
                 </div>
-                <input value={''} onChange={() => { }} placeholder={t('postSites.stations.searchPlaceholder', 'Search stations...')} className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm pl-10 shadow-sm focus:ring-2 focus:ring-orange-200" />
+                <input value={''} onChange={() => { }} placeholder={t('postSites.stations.searchPlaceholder', 'Search stations...')} className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm pl-10 shadow-sm focus:ring-2 focus:ring-[#C8860A]/30" />
               </div>
             </div>
 
             <div className="flex-shrink-0">
-              <button onClick={() => setShowNew(true)} className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors shadow">
+              <button onClick={() => setShowNew(true)} className="px-4 py-2 bg-[#C8860A] text-white rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors shadow">
                 <Plus size={16} /> {t('postSites.stations.add', 'Add')}
               </button>
             </div>
@@ -735,12 +735,12 @@ export default function Stations({ site }: { site?: any }) {
             <div className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('postSites.stations.form.name', 'Name *')}</label>
-                <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('postSites.stations.placeholderName', 'Station name')} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('postSites.stations.placeholderName', 'Station name')} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('postSites.stations.form.schedule', 'Schedule *')}</label>
-                <select value={stationSchedule} onChange={e => setStationSchedule(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <select value={stationSchedule} onChange={e => setStationSchedule(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A]">
                   <option value="">{t('postSites.stations.form.selectSchedule', 'Select schedule')}</option>
                   <option value="1 hora">1 hora</option>
                   <option value="4 horas">4 horas</option>
@@ -775,7 +775,7 @@ export default function Stations({ site }: { site?: any }) {
 
             <div className="flex items-center justify-end gap-3 p-6 border-t bg-white rounded-b-md">
               <button onClick={() => setShowNew(false)} className="px-4 py-2 rounded-md border text-sm">{t('actions.cancel') || 'Cancel'}</button>
-              <button onClick={createStation} disabled={!newName} className={`px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700 text-sm ${!newName ? 'opacity-50 cursor-not-allowed' : ''}`}>{t('actions.save', 'Save')}</button>
+              <button onClick={createStation} disabled={!newName} className={`px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809] text-sm ${!newName ? 'opacity-50 cursor-not-allowed' : ''}`}>{t('actions.save', 'Save')}</button>
             </div>
           </div>
         </div>
@@ -832,7 +832,7 @@ export default function Stations({ site }: { site?: any }) {
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-medium text-gray-700">{t('postSites.stations.assignedGuardsTitle', 'Assigned guards')}</h4>
                       <div>
-                        <button onClick={() => navigate(`/post-sites/${site?.id}/assign-guards`)} className="px-2 py-1 text-sm border border-orange-100 text-orange-600 rounded">{t('postSites.stations.manageAssignments', 'Manage assignments')}</button>
+                        <button onClick={() => navigate(`/post-sites/${site?.id}/assign-guards`)} className="px-2 py-1 text-sm border border-[#C8860A]/10 text-[#C8860A] rounded">{t('postSites.stations.manageAssignments', 'Manage assignments')}</button>
                       </div>
                     </div>
 
@@ -917,7 +917,7 @@ export default function Stations({ site }: { site?: any }) {
                                         }
                                       })();
                                     }}
-                                    className="text-sm text-gray-800 hover:text-orange-600 underline"
+                                    className="text-sm text-gray-800 hover:text-[#C8860A] underline"
                                   >
                                     {g.fullName || g.label || g.name || g.email || g.id}
                                     </button>
@@ -979,7 +979,7 @@ export default function Stations({ site }: { site?: any }) {
 
             <div className="flex items-center justify-end gap-3 p-6 border-t bg-white rounded-b-md">
               <button onClick={() => setShowShiftModal(false)} className="px-4 py-2 rounded-md border text-sm">{t('actions.cancel') || 'Cancel'}</button>
-              <button onClick={saveShift} disabled={!shiftStart || !shiftEnd} className={`px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700 text-sm ${(!shiftStart || !shiftEnd) ? 'opacity-50 cursor-not-allowed' : ''}`}>{t('actions.save', 'Save')}</button>
+              <button onClick={saveShift} disabled={!shiftStart || !shiftEnd} className={`px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809] text-sm ${(!shiftStart || !shiftEnd) ? 'opacity-50 cursor-not-allowed' : ''}`}>{t('actions.save', 'Save')}</button>
             </div>
           </div>
         </div>

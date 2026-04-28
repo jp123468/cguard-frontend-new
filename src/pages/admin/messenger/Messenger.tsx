@@ -292,7 +292,7 @@ function NewGroupDialog({
               onClick={() => onCreate({ name: name.trim(), siteId, userIds: Array.from(picked) })}
               disabled={!name.trim() || picked.size === 0}
               variant="outline"
-              className="text-orange-500 border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+              className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10 hover:text-[#C8860A]"
             >
               Crear
             </Button>
@@ -352,7 +352,7 @@ export function Messenger({
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2 text-orange-500 border-orange-200 hover:bg-orange-50 hover:text-orange-600 h-9">
+                  <Button variant="outline" className="gap-2 text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10 hover:text-[#C8860A] h-9">
                     <Plus className="h-4 w-4" />
                     Añadir Nuevo
                   </Button>
@@ -413,7 +413,7 @@ export function Messenger({
                     {c.title.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium text-orange-500 text-[15px]">{c.title}</div>
+                    <div className="truncate font-medium text-[#C8860A] text-[15px]">{c.title}</div>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {c.isSite && (
                         <Badge className="bg-emerald-50 text-emerald-700 border-0 font-normal px-2 py-0.5 h-auto" variant="secondary">

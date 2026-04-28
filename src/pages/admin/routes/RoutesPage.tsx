@@ -150,7 +150,7 @@ export default function RoutesPage() {
               />
             </div>
 
-            <Button className="bg-orange-500 text-white hover:bg-orange-600" asChild>
+            <Button className="bg-[#C8860A] text-white hover:bg-[#C8860A]" asChild>
               <Link to={(() => {
                 try {
                   const t = localStorage.getItem('tenantId');
@@ -163,7 +163,7 @@ export default function RoutesPage() {
 
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="border-orange-200 text-orange-600">
+                <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A]">
                   <FilterIcon className="mr-2 h-4 w-4" />
                   Filtros
                 </Button>
@@ -216,7 +216,7 @@ export default function RoutesPage() {
                   </div>
 
                   <Button
-                    className="w-full bg-orange-500 text-white hover:bg-orange-600"
+                    className="w-full bg-[#C8860A] text-white hover:bg-[#C8860A]"
                     onClick={aplicarFiltros}
                   >
                     Filtro
@@ -304,7 +304,7 @@ export default function RoutesPage() {
                   })()}</td>
                   <td className="px-4 py-3">{(r.active === false) ? 'Inactivo' : 'Activo'}</td>
                   <td className="px-4 py-3 text-right">
-                    <button type="button" className="text-orange-600" onClick={() => { setDetailId(r.id); setDetailOpen(true); }}>Ver</button>
+                    <button type="button" className="text-[#C8860A]" onClick={() => { setDetailId(r.id); setDetailOpen(true); }}>Ver</button>
                   </td>
                 </tr>
               ))}

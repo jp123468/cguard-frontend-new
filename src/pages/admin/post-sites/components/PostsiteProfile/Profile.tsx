@@ -210,7 +210,7 @@ export default function PostSiteProfile({ site }: { site?: any }) {
                     {/* Floating edit button in bottom-right of this card area */}
                     {id && (
                         <div className="absolute right-6 bottom-6">
-                            <Link to={`/post-sites/${id}/edit`} className="px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700"
+                            <Link to={`/post-sites/${id}/edit`} className="px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809]"
                             >
                                 {t('postSites.profile.Edit', 'Edit')}
                             </Link>
@@ -231,7 +231,7 @@ export default function PostSiteProfile({ site }: { site?: any }) {
                                     <div className="text-xs text-gray-500">{clientName}</div>
                                 </div>
                                 {id && (
-                                    <Link to={`/post-sites/${id}/edit`} className="px-3 py-1 bg-orange-600 text-white rounded-md text-sm">{t('postSites.profile.Edit', 'Edit')}</Link>
+                                    <Link to={`/post-sites/${id}/edit`} className="px-3 py-1 bg-[#C8860A] text-white rounded-md text-sm">{t('postSites.profile.Edit', 'Edit')}</Link>
                                 )}
                             </div>
 

@@ -611,7 +611,7 @@ export default function Incidents({ site }: { site?: any }) {
 
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="border-orange-200 text-orange-600">
+                <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A]">
                   <Filter className="mr-2 h-4 w-4" />
                   {t('incidents.filters') || 'Filters'}
                 </Button>
@@ -732,7 +732,7 @@ export default function Incidents({ site }: { site?: any }) {
 
                 <div className="mt-6 flex gap-2 justify-end">
                   <Button variant="secondary" className="px-3 py-1 text-sm" onClick={clearFilters}>{t('incidents.clearFilters') || 'Clear filters'}</Button>
-                  <Button className="bg-orange-500 text-white hover:bg-orange-600 px-3 py-1 text-sm" onClick={applyFilters}>{t('incidents.applyFilters') || 'Apply filters'}</Button>
+                  <Button className="bg-[#C8860A] text-white hover:bg-[#C8860A] px-3 py-1 text-sm" onClick={applyFilters}>{t('incidents.applyFilters') || 'Apply filters'}</Button>
                 </div>
               </SheetContent>
             </Sheet>
@@ -757,7 +757,7 @@ export default function Incidents({ site }: { site?: any }) {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={() => navigate('/dispatch-tickets/new', { state: { duplicate: { clientId: site?.clientAccountId || site?.clientId || site?.client?.id || undefined, siteId: site?.id, siteName: site?.name } } })}>{t('incidents.newIncident')}</Button>
+            <Button className="bg-[#C8860A] text-white hover:bg-[#C8860A]" onClick={() => navigate('/dispatch-tickets/new', { state: { duplicate: { clientId: site?.clientAccountId || site?.clientId || site?.client?.id || undefined, siteId: site?.id, siteName: site?.name } } })}>{t('incidents.newIncident')}</Button>
           </div>
         </div>
 

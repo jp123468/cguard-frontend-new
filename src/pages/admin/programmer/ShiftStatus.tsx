@@ -116,7 +116,7 @@ export default function ShiftStatus() {
             <div className="flex items-center gap-2">
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50 hover:text-orange-600">
+                  <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10 hover:text-[#C8860A]">
                     <Filter className="h-4 w-4 mr-2" /> Filtros
                   </Button>
                 </SheetTrigger>
@@ -224,12 +224,12 @@ export default function ShiftStatus() {
                     </div>
 
                     <div className="space-y-2 pt-4">
-                      <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                      <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white">
                         Filtro
                       </Button>
                       <Button
                         variant="outline"
-                        className="w-full text-orange-500 border-orange-200 hover:bg-orange-50"
+                        className="w-full text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10"
                         onClick={() => setFilters({
                           client: "",
                           site: "",
@@ -250,7 +250,7 @@ export default function ShiftStatus() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-orange-500">
+                  <Button variant="ghost" size="icon" className="text-[#C8860A]">
                     <EllipsisVertical className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>

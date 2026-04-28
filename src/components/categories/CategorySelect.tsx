@@ -149,7 +149,7 @@ export function CategorySelect({
                                     >
                                         <Checkbox checked={false} className="pointer-events-none" />
                                         <span>{t('categories.addcategory', 'Agregar categoría')}</span>
-                                        <Plus className="ml-auto h-4 w-4 text-orange-500" />
+                                        <Plus className="ml-auto h-4 w-4 text-[#C8860A]" />
                                     </CommandItem>
                                 </CommandGroup>
                             )}
@@ -232,7 +232,7 @@ export function CategorySelect({
                         <Button
                             onClick={handleCreate}
                             disabled={isCreating}
-                            className="bg-orange-500 hover:bg-orange-600 text-white disable:opacity-50 disabled:pointer-event-none">
+                            className="bg-[#C8860A] hover:bg-[#B37809] text-white disable:opacity-50 disabled:pointer-event-none">
                             {isCreating ? t('categories.creating', 'Creating...') : t('categories.create', 'Create')}
                         </Button>
                     </DialogFooter>

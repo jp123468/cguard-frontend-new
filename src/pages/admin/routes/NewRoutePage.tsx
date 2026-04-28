@@ -1,4 +1,4 @@
-ï»¿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWatch } from "react-hook-form";
 import { Link } from "react-router-dom";
@@ -48,7 +48,7 @@ import { postSiteService } from "@/lib/api/postSiteService";
 import vehicleService from "@/lib/api/vehicleService";
 import routeService from "@/lib/api/routeService";
 
-// When backend fails, we must not show fallback data â€” keep vehicles empty.
+// When backend fails, we must not show fallback data — keep vehicles empty.
 
 const notifyTimes = ["00:05", "00:10", "00:15", "00:30", "01:00"];
 
@@ -56,10 +56,10 @@ const DAY_LABEL: Record<string, string> = {
   sun: "Domingo",
   mon: "Lunes",
   tue: "Martes",
-  wed: "MiÃ©rcoles",
+  wed: "Miércoles",
   thu: "Jueves",
   fri: "Viernes",
-  sat: "SÃ¡bado",
+  sat: "Sábado",
 };
 const ALL_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
@@ -248,10 +248,10 @@ export default function NewRoutePage() {
         console.warn('vehicleService.list failed', e);
         const rawMsg = String((e as any)?.message || (e as any)?.toString() || '');
         const isTableMissing = /table.+vehicles.+doesn'?t exist/i.test(rawMsg) || /does not exist/i.test(rawMsg) || /vehicles'.*doesn?t exist/i.test(rawMsg);
-        // On any error, clear vehicles â€” do not use fallback data
+        // On any error, clear vehicles — do not use fallback data
         setVehicles([]);
-        try { toast.error(String((e as any)?.message || (e as any)?.toString() || 'Error cargando vehÃ­culos')); } catch {}
-        try { telemetryService.log({ level: 'error', message: 'Error cargando vehÃ­culos', details: e }); } catch {}
+        try { toast.error(String((e as any)?.message || (e as any)?.toString() || 'Error cargando vehículos')); } catch {}
+        try { telemetryService.log({ level: 'error', message: 'Error cargando vehículos', details: e }); } catch {}
       }
     })();
 
@@ -395,9 +395,9 @@ export default function NewRoutePage() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>DescripciÃ³n</FormLabel>
+                  <FormLabel>Descripción</FormLabel>
                   <FormControl>
-                    <Textarea rows={3} placeholder="DescripciÃ³n de la ruta" {...field} />
+                    <Textarea rows={3} placeholder="Descripción de la ruta" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -482,7 +482,7 @@ export default function NewRoutePage() {
                       name="days"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
-                          <FormLabel>Seleccionar DÃ­as*</FormLabel>
+                          <FormLabel>Seleccionar Días*</FormLabel>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
@@ -522,7 +522,7 @@ export default function NewRoutePage() {
               </Card>
             </div>
 
-            {/* Filtro de Guardia eliminado segÃºn solicitud */}
+            {/* Filtro de Guardia eliminado según solicitud */}
 
             <FormField
               control={form.control}
@@ -626,10 +626,10 @@ export default function NewRoutePage() {
                     }
                   }}>
                     <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Seleccionar">{pointOrder === 'distancia' ? 'Ordenar segÃºn la distancia' : pointOrder === 'aleatorio' ? 'Ordenar de manera aleatoria' : undefined}</SelectValue>
+                      <SelectValue placeholder="Seleccionar">{pointOrder === 'distancia' ? 'Ordenar según la distancia' : pointOrder === 'aleatorio' ? 'Ordenar de manera aleatoria' : undefined}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="distancia">Ordenar segÃºn la distancia</SelectItem>
+                      <SelectItem value="distancia">Ordenar según la distancia</SelectItem>
                       <SelectItem value="aleatorio">Ordenar de manera aleatoria</SelectItem>
                     </SelectContent>
                   </Select>
@@ -641,9 +641,9 @@ export default function NewRoutePage() {
                       <tr className="border-b">
                         <th className="px-4 py-3 font-semibold">#</th>
                         <th className="px-4 py-3 font-semibold">Puesto de seguridad</th>
-                        <th className="px-4 py-3 font-semibold">DirecciÃ³n</th>
+                        <th className="px-4 py-3 font-semibold">Dirección</th>
                         <th className="px-4 py-3 font-semibold">Pasadas</th>
-                        <th className="px-4 py-3 font-semibold">DuraciÃ³n (min)</th>
+                        <th className="px-4 py-3 font-semibold">Duración (min)</th>
                         <th className="px-4 py-3 font-semibold">Acciones</th>
                       </tr>
                     </thead>
@@ -680,8 +680,8 @@ export default function NewRoutePage() {
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex gap-2">
-                                <button type="button" onClick={() => movePoint(idx, -1)} className="rounded border px-2 py-1">â†‘</button>
-                                <button type="button" onClick={() => movePoint(idx, 1)} className="rounded border px-2 py-1">â†“</button>
+                                <button type="button" onClick={() => movePoint(idx, -1)} className="rounded border px-2 py-1">?</button>
+                                <button type="button" onClick={() => movePoint(idx, 1)} className="rounded border px-2 py-1">?</button>
                                 <button type="button" onClick={() => removePoint(p.siteId)} className="rounded border px-2 py-1 text-red-600">Eliminar</button>
                               </div>
                             </td>
@@ -699,20 +699,20 @@ export default function NewRoutePage() {
               name="vehicleId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Seleccionar vehÃ­culo*</FormLabel>
+                  <FormLabel>Seleccionar vehículo*</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar vehÃ­culo">
+                      <SelectValue placeholder="Seleccionar vehículo">
                         {(() => {
                           const sv = vehicles.find((x) => x.id === field.value);
-                          return sv ? `${sv.name}${sv.licensePlate ? ' â€¢ ' + sv.licensePlate : ''}` : undefined;
+                          return sv ? `${sv.name}${sv.licensePlate ? ' • ' + sv.licensePlate : ''}` : undefined;
                         })()}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {vehicles.map((v) => (
                         <SelectItem key={v.id} value={v.id}>
-                          <span className="truncate">{[v.name, v.licensePlate].filter(Boolean).join(' â€¢ ')}</span>
+                          <span className="truncate">{[v.name, v.licensePlate].filter(Boolean).join(' • ')}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -763,7 +763,7 @@ export default function NewRoutePage() {
                       }
                     />
                     <Label htmlFor="notify" className="cursor-pointer">
-                      Enviar notificaciÃ³n antes de las pasadas programadas
+                      Enviar notificación antes de las pasadas programadas
                     </Label>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger className="w-28">
@@ -792,7 +792,7 @@ export default function NewRoutePage() {
                       onCheckedChange={field.onChange}
                     />
                     <Label htmlFor="autocheck" className="cursor-pointer">
-                      Registro automÃ¡tico de entrada y salida en Puestos de Vigilancia segÃºn geocerca
+                      Registro automático de entrada y salida en Puestos de Vigilancia según geocerca
                     </Label>
                   </div>
                 )}
@@ -822,7 +822,7 @@ export default function NewRoutePage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-orange-500 text-white hover:bg-orange-600"
+                className="bg-[#C8860A] text-white hover:bg-[#C8860A]"
                 disabled={submitting || form.formState.isSubmitting}
               >
                 {submitting ? 'Enviando...' : 'Enviar'}

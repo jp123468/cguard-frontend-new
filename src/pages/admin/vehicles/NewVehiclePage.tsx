@@ -355,7 +355,7 @@ export default function NewVehiclePage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-orange-500 text-white hover:bg-orange-600"
+                className="bg-[#C8860A] text-white hover:bg-[#B37809]"
                 disabled={form.formState.isSubmitting}
               >
                 Enviar

@@ -120,7 +120,7 @@ export default function PostSiteDetailsPage() {
       <div className="p-4">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="animate-spin text-orange-500" />
+            <Loader2 className="animate-spin text-[#C8860A]" />
           </div>
         ) : error ? (
           <div className="text-red-600">{error}</div>

@@ -275,7 +275,7 @@ export default function UserRolesPage() {
                 ) : (
                   <div className="flex gap-2 justify-end mt-3">
                     <Button variant="outline" onClick={() => { setExpandedRoleId(null); setExpandedRolePerms([]); setPermQuery(""); }}>Cancelar</Button>
-                    <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => saveExpandedPermissions(expandedRoleId as string, expandedRolePerms)}>Guardar</Button>
+                    <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={() => saveExpandedPermissions(expandedRoleId as string, expandedRolePerms)}>Guardar</Button>
                   </div>
                 )}
               </div>

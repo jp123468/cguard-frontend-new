@@ -447,13 +447,13 @@ export default function GuardAsignarSitiosPage() {
                       placeholder={t('guards.assignSites.searchPlaceholder', { defaultValue: 'Search Post Sites' })}
                       value={''}
                       onChange={() => {}}
-                      className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
                     />
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setAssignModalOpen(true)} className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-orange-700">
+                    <button onClick={() => setAssignModalOpen(true)} className="px-4 py-2 bg-[#C8860A] text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809]">
                     <Plus size={14} />
                     {t('guards.assignSites.assignButton', { defaultValue: 'Assign Post Sites' })}
                   </button>
@@ -555,7 +555,7 @@ export default function GuardAsignarSitiosPage() {
 
                 <div className="flex items-center justify-end gap-3 p-4 border-t bg-white">
                 <button onClick={() => setAssignModalOpen(false)} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancel' })}</button>
-                <button onClick={assignSite} className="px-4 py-2 bg-orange-600 text-white rounded-md">{t('guards.assignSites.modal.assign', { defaultValue: 'Assign' })}</button>
+                <button onClick={assignSite} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('guards.assignSites.modal.assign', { defaultValue: 'Assign' })}</button>
               </div>
             </div>
           </div>

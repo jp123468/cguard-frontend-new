@@ -656,7 +656,7 @@ export default function EditEstimate() {
                         <div className="flex gap-4">
                             <Button
                                 variant="outline"
-                                className="text-orange-500 border-orange-200 hover:bg-orange-50"
+                                className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10"
                                 onClick={() => setIsPreviewMode(false)}
                             >
                                 Editar Presupuesto
@@ -672,7 +672,7 @@ export default function EditEstimate() {
                             </DialogHeader>
                             <DialogFooter className="mt-4 flex justify-end gap-2">
                                 <Button variant="outline" onClick={() => setSendConfirmOpen(false)} disabled={actionLoading}>Cancelar</Button>
-                                <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={performSendEstimate} disabled={actionLoading}>{actionLoading ? 'Enviando...' : 'Enviar'}</Button>
+                                <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={performSendEstimate} disabled={actionLoading}>{actionLoading ? 'Enviando...' : 'Enviar'}</Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
@@ -697,11 +697,11 @@ export default function EditEstimate() {
                                 <div>
                                     <h3 className="text-lg font-semibold">{title || `Presupuesto #${estimateNumber}`}</h3>
                                     <div className="mt-3 flex flex-wrap gap-2">
-                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50"
+                                        <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10"
                                             onClick={() => setSendConfirmOpen(true)}>Enviar</Button>
-                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50"
+                                        <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10"
                                             onClick={() => setConvertConfirmOpen(true)}>Convertir a Factura</Button>
-                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50"
+                                        <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10"
                                             onClick={handleDownload}>Descargar</Button>
 
                                     </div>
@@ -1218,7 +1218,7 @@ export default function EditEstimate() {
                         <div className="p-4 bg-white border-t">
                             <Button
                                 variant="ghost"
-                                className="text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+                                className="text-[#C8860A] hover:text-[#C8860A] hover:bg-[#C8860A]/10"
                                 onClick={addItem}
                             >
                                 <Plus className="h-4 w-4 mr-2" />
@@ -1259,7 +1259,7 @@ export default function EditEstimate() {
                                 </div>
                                 <DialogFooter>
                                     <Button variant="outline" onClick={() => { setCreateModalOpen(false); setCreateForItemId(null); }}>Cancelar</Button>
-                                    <Button className="bg-orange-500 text-white" disabled={creatingService || !newServiceTitle} onClick={createService}>{creatingService ? 'Creando...' : 'Crear'}</Button>
+                                    <Button className="bg-[#C8860A] text-white" disabled={creatingService || !newServiceTitle} onClick={createService}>{creatingService ? 'Creando...' : 'Crear'}</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -1299,12 +1299,12 @@ export default function EditEstimate() {
                     <div className="flex justify-end gap-4 mt-8 pt-4 border-t">
                         <Button
                             variant="outline"
-                            className="text-orange-500 border-orange-200 hover:bg-orange-50"
+                            className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10"
                             onClick={handlePreview}
                         >
                             Vista previa
                         </Button>
-                        <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleSaveLog}>
+                        <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={handleSaveLog}>
                             Guardar y continuar
                         </Button>
                     </div>

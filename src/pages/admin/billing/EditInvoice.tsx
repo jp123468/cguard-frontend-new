@@ -712,7 +712,7 @@ export default function EditInvoice() {
                         <div className="flex gap-4">
                             <Button
                                 variant="outline"
-                                className="text-orange-500 border-orange-200 hover:bg-orange-50"
+                                className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10"
                                 onClick={() => setIsPreviewMode(false)}
                             >
                                 {t('billing.editInvoice.edit', { defaultValue: 'Editar Factura' })}
@@ -727,9 +727,9 @@ export default function EditInvoice() {
                                 <div>
                                     <h3 className="text-lg font-semibold">{title || `Factura #${invoiceNumber}`}</h3>
                                     <div className="mt-3 flex flex-wrap gap-2">
-                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleSendInvoice} title={t('billing.invoices.actions.send', { defaultValue: 'Enviar' })}>{t('billing.invoices.actions.send', { defaultValue: 'Enviar' })}</Button>
-                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleDownloadInvoice}>{t('billing.common.download')}</Button>
-                                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handleRegisterPayment} disabled={isFullyPaid}>{t('billing.invoices.actions.register_payment', { defaultValue: 'Registrar un Pago' })}</Button>
+                                        <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10" onClick={handleSendInvoice} title={t('billing.invoices.actions.send', { defaultValue: 'Enviar' })}>{t('billing.invoices.actions.send', { defaultValue: 'Enviar' })}</Button>
+                                        <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10" onClick={handleDownloadInvoice}>{t('billing.common.download')}</Button>
+                                        <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10" onClick={handleRegisterPayment} disabled={isFullyPaid}>{t('billing.invoices.actions.register_payment', { defaultValue: 'Registrar un Pago' })}</Button>
                                     </div>
                                 </div>
 
@@ -1011,7 +1011,7 @@ export default function EditInvoice() {
                         <DialogFooter>
                             <div className="flex gap-2">
                                 <Button variant="outline" onClick={() => setPaymentModalOpen(false)}>Cancelar</Button>
-                                <Button  className="bg-orange-500 hover:bg-orange-600 text-white" onClick={submitPayment} disabled={savingPayment}>{savingPayment ? 'Guardando...' : 'Registrar Pago'}</Button>
+                                <Button  className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={submitPayment} disabled={savingPayment}>{savingPayment ? 'Guardando...' : 'Registrar Pago'}</Button>
                             </div>
                         </DialogFooter>
                     </DialogContent>
@@ -1025,7 +1025,7 @@ export default function EditInvoice() {
                         </DialogHeader>
                         <DialogFooter className="mt-4 flex justify-end gap-2">
                             <Button variant="outline" onClick={() => setSendConfirmOpen(false)}>Cancelar</Button>
-                            <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={performSendInvoice}>Enviar</Button>
+                            <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={performSendInvoice}>Enviar</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -1193,12 +1193,12 @@ export default function EditInvoice() {
                                 ))}
                             </TableBody>
                         </Table>
-                        <div className="p-4 bg-white border-t"><Button variant="ghost" className="text-orange-500" onClick={addItem}><Plus className="h-4 w-4 mr-2" />Añadir un artículo</Button></div>
+                        <div className="p-4 bg-white border-t"><Button variant="ghost" className="text-[#C8860A]" onClick={addItem}><Plus className="h-4 w-4 mr-2" />Añadir un artículo</Button></div>
                     </div>
 
                     <div className="flex justify-end gap-4 mt-8 pt-4 border-t">
-                        <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50" onClick={handlePreview}>Vista previa</Button>
-                        <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleSave}>Actualizar Factura</Button>
+                        <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10" onClick={handlePreview}>Vista previa</Button>
+                        <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={handleSave}>Actualizar Factura</Button>
                     </div>
                 </div>
             </div>

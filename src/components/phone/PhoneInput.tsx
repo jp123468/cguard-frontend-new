@@ -28,13 +28,20 @@ type PhoneInputProps = {
      * If provided, takes precedence over the country default maxLength.
      */
     maxLocalDigits?: number;
+    /**
+     * Limit the number of countries initially shown in the dropdown.
+     * If omitted, all countries are shown. When set, a "Show all" toggle
+     * will be rendered to expand the full list.
+     */
+    maxCountries?: number;
 };
 
-export function PhoneInput({ value, onChange, placeholder, onCountryChange, maxLocalDigits }: PhoneInputProps) {
+export function PhoneInput({ value, onChange, placeholder, onCountryChange, maxLocalDigits, maxCountries }: PhoneInputProps) {
     // notify parent of selected country via onCountryChange when provided
     const defaultCountry = COUNTRIES[0];
     const [open, setOpen] = useState(false);
     const [country, setCountry] = useState<Country>(defaultCountry);
+    const [showAllCountries, setShowAllCountries] = useState(false);
 
     // notify initial country to parent once
     useEffect(() => {
@@ -116,12 +123,14 @@ export function PhoneInput({ value, onChange, placeholder, onCountryChange, maxL
 
                     <PopoverContent
                         align="start"
-                        className="p-0 w-[320px] max-h-[320px] overflow-hidden"
+                        sideOffset={40}
+                        className="pt-3 p-0 w-screen left-0 right-0 max-w-[calc(100vw-32px)] md:w-[300px] md:left-auto md:right-auto md:max-w-none md:pt-0 max-h-[36vh] overflow-hidden"
+                        side="bottom"
                     >
                         <Command>
-                            <CommandInput placeholder="Search..." />
-                                    <CommandList
-                                        className="max-h-[240px] overflow-auto overscroll-contain touch-auto"
+                            <CommandInput className="sticky top-4 md:top-0 z-10 bg-white px-2 py-1 text-sm" placeholder="Search..." />
+                                            <CommandList
+                                                className="text-sm max-h-[36vh] overflow-auto overscroll-contain touch-auto"
                                         onWheel={(e: any) => {
                                             const el = e.currentTarget as HTMLElement;
                                             const delta = e.deltaY;
@@ -141,7 +150,31 @@ export function PhoneInput({ value, onChange, placeholder, onCountryChange, maxL
                                     >
                                 <CommandEmpty>No se encontraron países.</CommandEmpty>
                                 <CommandGroup>
-                                    {COUNTRIES.map((c) => (
+                                    {(showAllCountries || typeof maxCountries !== 'number') ? COUNTRIES.map((c) => (
+                                         <CommandItem
+                                             key={c.code}
+                                             value={`${c.name} +${c.dialCode}`}
+                                             onSelect={() => {
+                                                 handleCountrySelect(c);
+                                                 setOpen(false);
+                                             }}
+                                             className="flex items-center gap-2 py-1.5"
+                                         >
+                                            <span className="text-lg">{c.flag}</span>
+                                            <span className="flex-1 text-sm">{c.name}</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                +{c.dialCode}
+                                            </span>
+                                            <Check
+                                                className={cn(
+                                                    "ml-1 h-3 w-3",
+                                                    c.code === country.code
+                                                        ? "opacity-100"
+                                                        : "opacity-0"
+                                                )}
+                                            />
+                                        </CommandItem>
+                                    )) : COUNTRIES.slice(0, maxCountries).map((c) => (
                                         <CommandItem
                                             key={c.code}
                                             value={`${c.name} +${c.dialCode}`}
@@ -149,7 +182,7 @@ export function PhoneInput({ value, onChange, placeholder, onCountryChange, maxL
                                                 handleCountrySelect(c);
                                                 setOpen(false);
                                             }}
-                                            className="flex items-center gap-2"
+                                            className="flex items-center gap-2 py-1.5"
                                         >
                                             <span className="text-lg">{c.flag}</span>
                                             <span className="flex-1 text-sm">{c.name}</span>
@@ -167,6 +200,17 @@ export function PhoneInput({ value, onChange, placeholder, onCountryChange, maxL
                                         </CommandItem>
                                     ))}
                                 </CommandGroup>
+                                {typeof maxCountries === 'number' && (
+                                    <CommandGroup>
+                                        <CommandItem
+                                            value={showAllCountries ? 'show-less' : 'show-all'}
+                                            onSelect={() => setShowAllCountries(s => !s)}
+                                            className="justify-center text-sm text-muted-foreground py-1.5"
+                                        >
+                                            {showAllCountries ? 'Mostrar menos' : 'Mostrar todos'}
+                                        </CommandItem>
+                                    </CommandGroup>
+                                )}
                             </CommandList>
                         </Command>
                     </PopoverContent>

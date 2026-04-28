@@ -99,7 +99,7 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
                         </ul>
                         <Button
                             variant="link"
-                            className="px-0 text-orange-500"
+                            className="px-0 text-[#C8860A]"
                             onClick={downloadTemplate}
                         >
                             Descargar plantilla de ejemplo

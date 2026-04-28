@@ -140,7 +140,7 @@ type Props = {
               </div>
             </div>
               <div className="mt-4 flex justify-end">
-              <button onClick={handleSaveAvailability} className="px-4 py-2 bg-orange-600 text-white rounded">{t('guards.availability.save', { defaultValue: 'Save' })}</button>
+              <button onClick={handleSaveAvailability} className="px-4 py-2 bg-[#C8860A] text-white rounded">{t('guards.availability.save', { defaultValue: 'Save' })}</button>
             </div>
           </div>
         </div>

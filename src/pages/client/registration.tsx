@@ -223,7 +223,7 @@ export default function ClientRegistration() {
           </div>
         </div>
         <div className="flex justify-end mt-4">
-          <button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-2 rounded" disabled={isLoading}>{isLoading ? t('client.registering', { defaultValue: 'Registrando...' }) : t('client.register', { defaultValue: 'Registrar' })}</button>
+          <button type="submit" className="bg-[#C8860A] hover:bg-[#B37809] text-white px-8 py-2 rounded" disabled={isLoading}>{isLoading ? t('client.registering', { defaultValue: 'Registrando...' }) : t('client.register', { defaultValue: 'Registrar' })}</button>
         </div>
       </form>
     </AuthLayout>

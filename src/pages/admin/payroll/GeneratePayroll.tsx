@@ -105,7 +105,7 @@ export default function GeneratePayroll() {
                         <SheetTrigger asChild>
                             <Button
                                 variant="outline"
-                                className="rounded-full border-orange-200 px-5 text-orange-600 hover:bg-orange-50"
+                                className="rounded-full border-[#C8860A]/30 px-5 text-[#C8860A] hover:bg-[#C8860A]/10"
                             >
                                 <FilterIcon className="mr-2 h-4 w-4" />
                                 Filtros
@@ -215,7 +215,7 @@ export default function GeneratePayroll() {
                                 </div>
 
                                 <Button
-                                    className="w-full bg-orange-500 text-white hover:bg-orange-600"
+                                    className="w-full bg-[#C8860A] text-white hover:bg-[#B37809]"
                                     onClick={applyFilters}
                                 >
                                     Filtro

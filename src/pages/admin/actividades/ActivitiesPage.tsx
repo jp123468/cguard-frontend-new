@@ -31,7 +31,7 @@ export default function ActivitiesPage() {
         <div className="mt-4 flex items-center justify-end gap-3">
           <Button
             variant="outline"
-            className="text-orange-600 border-orange-200 hover:text-orange-700"
+            className="text-[#C8860A] border-[#C8860A]/30 hover:text-[#C8860A]"
             onClick={() => console.log(t('activity.markAllRead'))}
           >
             <CheckCheck className="mr-2 h-4 w-4" />
@@ -151,7 +151,7 @@ export default function ActivitiesPage() {
                     {/* Acciones */}
                     <div className="space-y-2 pt-2">
                       <Button
-                        className="w-full bg-orange-500 hover:bg-orange-600"
+                        className="w-full bg-[#C8860A] hover:bg-[#B37809]"
                         onClick={() => {
                           console.log(t('activity.filter.apply'));
                           setOpen(false);

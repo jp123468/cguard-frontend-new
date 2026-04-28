@@ -45,7 +45,7 @@ export default function IncidentTypeDialog({ open, onOpenChange, title = "Nuevo 
             />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button type="submit" disabled={submitting} className="bg-orange-500 hover:bg-orange-600 text-white px-8 min-w-28">{submitting ? "Guardando…" : "Guardar"}</Button>
+              <Button type="submit" disabled={submitting} className="bg-[#C8860A] hover:bg-[#B37809] text-white px-8 min-w-28">{submitting ? "Guardando…" : "Guardar"}</Button>
             </DialogFooter>
           </form>
         </Form>

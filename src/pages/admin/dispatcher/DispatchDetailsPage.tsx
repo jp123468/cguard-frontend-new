@@ -436,7 +436,7 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
               </div>
               <div className="mt-4 flex justify-end gap-2">
                 <Button variant="outline" onClick={() => { setNewComment(''); setSelectedFile(null); setShowCommentModal(false); }}>{t('dispatcher.cancel', { defaultValue: 'Cancelar' })}</Button>
-                <Button className="bg-orange-500 text-white" onClick={handleAddComment}>{t('dispatcher.comment.add')}</Button>
+                <Button className="bg-[#C8860A] text-white" onClick={handleAddComment}>{t('dispatcher.comment.add')}</Button>
               </div>
             </div>
           </div>
@@ -535,7 +535,7 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
         </div>
 
       </div>
-      <Button className="bg-orange-500 text-white text-sm" onClick={() => setShowCommentModal((s) => !s)}>
+      <Button className="bg-[#C8860A] text-white text-sm" onClick={() => setShowCommentModal((s) => !s)}>
         {showCommentModal ? t('dispatcher.close') : t('dispatcher.add_comment_button')}
       </Button>
     </div>

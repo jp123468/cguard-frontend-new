@@ -204,7 +204,7 @@ export function CategoryManagerDialog({ open, onOpenChange, module, onChanged }:
               </div>
 
               {hasPermission('categoryCreate') && (
-                <Button onClick={startCreate} className="bg-orange-500 hover:bg-orange-600 text-white">
+                <Button onClick={startCreate} className="bg-[#C8860A] hover:bg-[#B37809] text-white">
                   <Plus className="mr-2 h-4 w-4" /> {t('categories.addcategory', 'Add Category')}
                 </Button>
               )}
@@ -289,7 +289,7 @@ export function CategoryManagerDialog({ open, onOpenChange, module, onChanged }:
                   <Button variant="outline" onClick={() => { setModalMode(undefined); setEditing(null); }}>{t('categories.cancel', 'Cancel')}</Button>
                   <Button
                     onClick={submitCreate}
-                    className="bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50 disabled:pointer-events-none">
+                    className="bg-[#C8860A] hover:bg-[#B37809] text-white disabled:opacity-50 disabled:pointer-events-none">
                     {t('categories.save', 'Save')}
                   </Button>
                 </div>
@@ -324,7 +324,7 @@ export function CategoryManagerDialog({ open, onOpenChange, module, onChanged }:
                   <Button variant="outline" onClick={() => { setModalMode(undefined); setEditing(null); }}>Cancelar</Button>
                   <Button
                     onClick={submitEdit}
-                    className="bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50 disabled:pointer-events-none">
+                    className="bg-[#C8860A] hover:bg-[#B37809] text-white disabled:opacity-50 disabled:pointer-events-none">
                     {t('categories.save', 'Save')}
                   </Button>
                 </div>

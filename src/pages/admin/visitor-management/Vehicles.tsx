@@ -86,7 +86,7 @@ export default function Vehicles() {
 
                         <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
                             <SheetTrigger asChild>
-                                <Button className="bg-orange-500 text-white hover:bg-orange-600">
+                                <Button className="bg-[#C8860A] text-white hover:bg-[#B37809]">
                                     Añadir vehículo
                                 </Button>
                             </SheetTrigger>
@@ -196,7 +196,7 @@ export default function Vehicles() {
                                         </Button>
                                         <Button
                                             type="submit"
-                                            className="bg-orange-500 text-white hover:bg-orange-600"
+                                            className="bg-[#C8860A] text-white hover:bg-[#B37809]"
                                         >
                                             Enviar
                                         </Button>

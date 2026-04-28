@@ -29,10 +29,10 @@ export default function PostSiteOverview({ site }: { site?: any }) {
   };
   const stats = [
     { id: 'assigned', label: t('postSites.overview.Stats.guardsAssigned'), value: 0, color: 'text-blue-600' },
-    { id: 'onsite', label: t('postSites.overview.Stats.guardOnSite'), value: 0, color: 'text-orange-500' },
+    { id: 'onsite', label: t('postSites.overview.Stats.guardOnSite'), value: 0, color: 'text-[#C8860A]' },
     { id: 'tours', label: t('postSites.overview.Stats.toursCompleted'), value: 0, color: 'text-gray-600' },
     { id: 'tasks', label: t('postSites.overview.Stats.tasksCompleted'), value: 0, color: 'text-blue-600' },
-    { id: 'incidents', label: t('postSites.overview.Stats.incidentsReported'), value: 0, color: 'text-orange-500' },
+    { id: 'incidents', label: t('postSites.overview.Stats.incidentsReported'), value: 0, color: 'text-[#C8860A]' },
     { id: 'hrs', label: t('postSites.overview.Stats.hoursLogged'), value: '00:00', color: 'text-red-500' },
   ];
 
@@ -279,7 +279,7 @@ export default function PostSiteOverview({ site }: { site?: any }) {
                   </div>
 
                   <div className="flex gap-2 justify-end pt-4">
-                    <button onClick={() => setOpenFilter(false)} className="px-4 py-2 bg-orange-600 text-white rounded-md">{t('common.apply', 'Filtrar')}</button>
+                    <button onClick={() => setOpenFilter(false)} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('common.apply', 'Filtrar')}</button>
                   </div>
                 </div>
               </SheetContent>

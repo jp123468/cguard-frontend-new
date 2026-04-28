@@ -61,7 +61,7 @@ export default function LicenseTypeDialog({ open, onOpenChange, title = "Nuevo T
               )}
             />
             <DialogFooter>
-              <Button type="submit" className="bg-orange-500 text-white hover:bg-orange-600">{t('licenseTypes.dialog.save', { defaultValue: 'Guardar' })}</Button>
+              <Button type="submit" className="bg-[#C8860A] text-white hover:bg-[#B37809]">{t('licenseTypes.dialog.save', { defaultValue: 'Guardar' })}</Button>
             </DialogFooter>
           </form>
         </Form>

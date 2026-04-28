@@ -97,7 +97,7 @@ export default function TimeCard() {
                         {/* Mostrar información (toggle stats) */}
                         <Button
                             variant="outline"
-                            className="border-orange-200 text-orange-600"
+                            className="border-[#C8860A]/30 text-[#C8860A]"
                             onClick={() => setShowStats((prev) => !prev)}
                             title={showStats ? "Ocultar información" : "Mostrar información"}
                         >
@@ -105,7 +105,7 @@ export default function TimeCard() {
                         </Button>
 
                         {/* Nueva entrada */}
-                        <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                        <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white">
                             Nueva entrada
                         </Button>
 
@@ -114,7 +114,7 @@ export default function TimeCard() {
                             <SheetTrigger asChild>
                                 <Button
                                     variant="outline"
-                                    className="text-orange-600 border-orange-300"
+                                    className="text-[#C8860A] border-[#C8860A]/30"
                                 >
                                     <Filter className="mr-2 h-4 w-4" /> Filtros
                                 </Button>
@@ -179,7 +179,7 @@ export default function TimeCard() {
                                         </label>
 
                                         {/* Botón Filtrar */}
-                                        <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                                        <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white">
                                             Filtro
                                         </Button>
                                     </div>

@@ -132,7 +132,7 @@ export default function TaxDialog({ open, onOpenChange, title = "Nuevo Impuesto"
               <DialogClose asChild>
                 <Button variant="outline">Cancelar</Button>
               </DialogClose>
-              <Button  className="bg-orange-500 hover:bg-orange-600" type="submit">Guardar</Button>
+              <Button  className="bg-[#C8860A] hover:bg-[#B37809]" type="submit">Guardar</Button>
             </div>
           </form>
         </Form>

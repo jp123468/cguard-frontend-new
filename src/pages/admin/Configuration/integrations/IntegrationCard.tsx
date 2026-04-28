@@ -24,7 +24,7 @@ export default function IntegrationCard({ image, title, subtitle, active, href }
       </div>
       <div className="w-full border-t py-1">
         <div className="flex items-center justify-between">
-          <div className="text-xs font-semibold text-center text-orange-600">{subtitle ?? title}</div>
+          <div className="text-xs font-semibold text-center text-[#C8860A]">{subtitle ?? title}</div>
           <Button variant="ghost" size="icon" asChild>
             <Link to={href} aria-label={`Gestionar ${subtitle ?? title}`}>
               <Settings className="h-5 w-5" />

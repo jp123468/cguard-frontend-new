@@ -446,12 +446,12 @@ export default function PostSitePage() {
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t('postSites.searchPlaceholder', 'Buscar Puestos de Vigilancia')}
-                className="pl-9 w-64"
+                className="pl-9 w-full sm:w-64"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -459,7 +459,7 @@ export default function PostSitePage() {
 
             {hasPermission('postSiteCreate') && (
               <Button
-                className="bg-orange-500 hover:bg-orange-600 text-white"
+                className="bg-[#C8860A] hover:bg-[#B37809] text-white w-full sm:w-auto"
               >
                 <Link to="/post-sites/new">{t('postSites.newPostSite', 'Nuevo Puesto de seguridad')}</Link>
               </Button>
@@ -470,7 +470,7 @@ export default function PostSitePage() {
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  className="text-orange-600 border-orange-200"
+                  className="text-[#C8860A] border-[#C8860A]/30"
                 >
                   <Filter className="mr-2 h-4 w-4" />
                   {t('postSites.filtersTitle', 'Filtros')}
@@ -595,7 +595,7 @@ export default function PostSitePage() {
                   </div>
 
                   <Button
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                    className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
                     onClick={() => {
                       const next = { ...tempFilters } as PostSiteFilters;
                       setFilters(next);

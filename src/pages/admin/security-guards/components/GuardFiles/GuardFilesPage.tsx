@@ -91,7 +91,7 @@ export default function GuardFilesPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setShowUploadModal(true)} className="px-4 py-2 bg-orange-600 text-white rounded-md">{t('guards.files.uploadButton', { defaultValue: 'Upload' })}</button>
+                    <button onClick={() => setShowUploadModal(true)} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('guards.files.uploadButton', { defaultValue: 'Upload' })}</button>
                 </div>
               </div>
 
@@ -251,7 +251,7 @@ export default function GuardFilesPage() {
                     setFilesData((prev) => [...newFiles, ...prev]);
                     setUploadFiles([]);
                     setShowUploadModal(false);
-                  }} className="px-4 py-2 bg-orange-600 text-white rounded-md">{t('guards.files.modal.upload', { defaultValue: 'Upload' })}</button>
+                  }} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('guards.files.modal.upload', { defaultValue: 'Upload' })}</button>
                 </div>
               </div>
             </div>

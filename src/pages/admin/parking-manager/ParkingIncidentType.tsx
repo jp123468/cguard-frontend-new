@@ -84,7 +84,7 @@ export default function ParkingIncidentType() {
 
                         <div className="flex items-center gap-2">
                             <Link to="/parking-manager/incident-type/new">
-                                <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50 hover:text-orange-600">
+                                <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10 hover:text-[#C8860A]">
                                     Nuevo Tipo de Incidente
                                 </Button>
                             </Link>

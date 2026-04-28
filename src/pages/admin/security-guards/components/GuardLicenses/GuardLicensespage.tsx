@@ -333,7 +333,7 @@ export default function GuardLicenses({ guard }: Props) {
               {/* Right: Add Button */}
               <button
                 onClick={handleAddLicense}
-                className="px-6 py-2 bg-orange-600 text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors"
+                className="px-6 py-2 bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors"
               >
                 <Plus size={18} />
                 {t('guards.licenses.newLicense', { defaultValue: 'New License' })}
@@ -558,7 +558,7 @@ export default function GuardLicenses({ guard }: Props) {
                 {/* Footer */}
                 <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-white">
                   <Button variant="ghost" onClick={handleCloseModal}>{t('guards.licenses.modal.cancel', { defaultValue: 'Cancelar' })}</Button>
-                  <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={handleSubmitLicense}>{t('guards.licenses.modal.save', { defaultValue: 'Guardar' })}</Button>
+                  <Button className="bg-[#C8860A] text-white hover:bg-[#C8860A]" onClick={handleSubmitLicense}>{t('guards.licenses.modal.save', { defaultValue: 'Guardar' })}</Button>
                 </div>
               </div>
             </div>

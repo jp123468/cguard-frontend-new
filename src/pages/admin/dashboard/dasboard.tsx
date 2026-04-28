@@ -160,7 +160,7 @@ export default function DashboardPage() {
         <div className="flex justify-end">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="border-orange-200 text-orange-600 hover:bg-orange-50">
+              <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A] hover:bg-[#C8860A]/10">
                 {t('dashboard.manageWidgets')}
               </Button>
             </PopoverTrigger>
@@ -259,25 +259,27 @@ export default function DashboardPage() {
         {/* Live Tracker Map */}
         {visibleWidgets.tracker && (
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-medium">{t('dashboard.page.liveTracker')}</CardTitle>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={showGeofence ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setShowGeofence((s) => !s)}
-                >
-                  {showGeofence ? t('dashboard.page.hideGeofence') : t('dashboard.page.showGeofence')}
-                </Button>
-                <Button
-                  variant={mapType === 'satellite' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setMapType((t) => (t === 'roadmap' ? 'satellite' : 'roadmap'))}
-                >
-                  {mapType === 'satellite' ? t('dashboard.page.roadmap') : t('dashboard.page.satellite')}
-                </Button>
-              </div>
-            </CardHeader>
+            <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="text-lg font-medium">{t('dashboard.page.liveTracker')}</CardTitle>
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
+                  <Button
+                    variant={showGeofence ? 'default' : 'outline'}
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    onClick={() => setShowGeofence((s) => !s)}
+                  >
+                    {showGeofence ? t('dashboard.page.hideGeofence') : t('dashboard.page.showGeofence')}
+                  </Button>
+                  <Button
+                    variant={mapType === 'satellite' ? 'default' : 'outline'}
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    onClick={() => setMapType((t) => (t === 'roadmap' ? 'satellite' : 'roadmap'))}
+                  >
+                    {mapType === 'satellite' ? t('dashboard.page.roadmap') : t('dashboard.page.satellite')}
+                  </Button>
+                </div>
+              </CardHeader>
             <CardContent>
               {/* Google Maps */}
               <div className="w-full h-[400px] rounded-lg overflow-hidden relative">
@@ -358,7 +360,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-medium">{t('dashboard.page.lastActivity')}</CardTitle>
-              <Button variant="link" className="text-orange-600 hover:text-orange-700">
+              <Button variant="link" className="text-[#C8860A] hover:text-[#B37809]">
                 {t('dashboard.page.viewAll')}
               </Button>
             </CardHeader>
@@ -373,7 +375,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-medium">{t('dashboard.page.timeLog')}</CardTitle>
-              <span className="text-sm text-orange-600">{t('dashboard.page.entriesCount', { count: 0 })}</span>
+              <span className="text-sm text-[#C8860A]">{t('dashboard.page.entriesCount', { count: 0 })}</span>
             </CardHeader>
             <CardContent>
               <div>
@@ -425,7 +427,7 @@ export default function DashboardPage() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg font-medium">{t('dashboard.page.checkIns')}</CardTitle>
-                <span className="text-sm text-orange-600">{t('dashboard.page.entriesCount', { count: 0 })}</span>
+                <span className="text-sm text-[#C8860A]">{t('dashboard.page.entriesCount', { count: 0 })}</span>
               </CardHeader>
               <CardContent>
                 <div className="md:block hidden">
@@ -471,7 +473,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg font-medium">{t('dashboard.page.checkOuts')}</CardTitle>
-                <span className="text-sm text-orange-600">{t('dashboard.page.entriesCount', { count: 0 })}</span>
+                <span className="text-sm text-[#C8860A]">{t('dashboard.page.entriesCount', { count: 0 })}</span>
               </CardHeader>
               <CardContent>
                 <div className="md:block hidden">
@@ -518,7 +520,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-medium">{t('dashboard.page.incidents')}</CardTitle>
-              <Button variant="link" className="text-orange-600 hover:text-orange-700">
+              <Button variant="link" className="text-[#C8860A] hover:text-[#B37809]">
                 {t('dashboard.page.viewAll')}
               </Button>
             </CardHeader>
@@ -563,7 +565,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-medium">{t('dashboard.page.reports')}</CardTitle>
-              <Button variant="link" className="text-orange-600 hover:text-orange-700">
+              <Button variant="link" className="text-[#C8860A] hover:text-[#B37809]">
                 {t('dashboard.page.viewAll')}
               </Button>
             </CardHeader>
@@ -608,7 +610,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-medium">{t('dashboard.page.tours')}</CardTitle>
-              <Button variant="link" className="text-orange-600 hover:text-orange-700">
+              <Button variant="link" className="text-[#C8860A] hover:text-[#B37809]">
                 {t('dashboard.page.viewAll')}
               </Button>
             </CardHeader>
@@ -654,7 +656,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-medium">{t('dashboard.page.scans')}</CardTitle>
-              <Button variant="link" className="text-orange-600 hover:text-orange-700">
+              <Button variant="link" className="text-[#C8860A] hover:text-[#B37809]">
                 {t('dashboard.page.viewAll')}
               </Button>
             </CardHeader>

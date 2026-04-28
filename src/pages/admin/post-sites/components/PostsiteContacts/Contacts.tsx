@@ -317,7 +317,7 @@ export default function PostSiteContacts({ site }: { site?: any }) {
           <div>
             <button
               onClick={handleOpenAdd}
-              className="px-6 py-2 bg-orange-600 text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors whitespace-nowrap min-w-[160px]"
+              className="px-6 py-2 bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors whitespace-nowrap min-w-[160px]"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                 <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -345,7 +345,7 @@ export default function PostSiteContacts({ site }: { site?: any }) {
                   <td colSpan={6} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-orange-100">
+                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
                           <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                           <circle cx="85" cy="100" r="8" fill="white" />
                           <circle cx="115" cy="100" r="8" fill="white" />
@@ -478,7 +478,7 @@ export default function PostSiteContacts({ site }: { site?: any }) {
                 <button
                   onClick={handleAdd}
                   disabled={!canSubmit}
-                  className={`${canSubmit ? 'bg-orange-600 hover:bg-orange-500' : 'bg-orange-400 cursor-not-allowed opacity-60'} text-white transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300`}>
+                  className={`${canSubmit ? 'bg-[#C8860A] hover:bg-[#C8860A]' : 'bg-[#C8860A]/60 cursor-not-allowed opacity-60'} text-white transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]/30`}>
                   {(form && (form as any).id) ? (t('actions.save') || 'Save') : (t('actions.save') || 'Add Contact')}
                 </button>
               </div>

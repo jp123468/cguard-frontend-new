@@ -233,7 +233,7 @@ export default function Schedule() {
             <Button
               variant="outline"
               size="icon"
-              className={`${showIncomeCards ? 'text-orange-500 hover:bg-orange-50' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
+              className={`${showIncomeCards ? 'text-[#C8860A] hover:bg-[#C8860A]/10' : 'bg-[#C8860A] text-white hover:bg-[#B37809]'}`}
               onClick={() => setShowIncomeCards(!showIncomeCards)}
               title="Mostrar/Ocultar Tarjetas de Ingresos"
             >
@@ -242,7 +242,7 @@ export default function Schedule() {
             <Button
               variant="outline"
               size="icon"
-              className={`${showStatsCards ? 'text-orange-500 hover:bg-orange-50' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
+              className={`${showStatsCards ? 'text-[#C8860A] hover:bg-[#C8860A]/10' : 'bg-[#C8860A] text-white hover:bg-[#B37809]'}`}
               onClick={() => setShowStatsCards(!showStatsCards)}
               title="Mostrar/Ocultar Tarjetas de Estadísticas"
             >
@@ -251,7 +251,7 @@ export default function Schedule() {
 
             <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="text-orange-500 border-orange-200 hover:bg-orange-50 hover:text-orange-600">
+                <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10 hover:text-[#C8860A]">
                   <Filter className="h-4 w-4 mr-2" /> Filtros
                 </Button>
               </SheetTrigger>
@@ -380,7 +380,7 @@ export default function Schedule() {
                   </div>
 
                   <div className="space-y-2 pt-4">
-                    <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                    <Button className="w-full bg-[#C8860A] hover:bg-[#C8860A] text-white">
                       Filtro
                     </Button>
                   </div>
@@ -390,7 +390,7 @@ export default function Schedule() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-orange-500">
+                <Button variant="ghost" size="icon" className="text-[#C8860A]">
                   <EllipsisVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>

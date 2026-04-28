@@ -246,13 +246,13 @@ export default function VehiclesPage() {
                             />
                         </div>
 
-                        <Button className="bg-orange-500 text-white hover:bg-orange-600" asChild>
+                        <Button className="bg-[#C8860A] text-white hover:bg-[#B37809]" asChild>
                             <Link to="/vehicle-patrol/vehicles/add-vehicle">Nuevo vehículo</Link>
                         </Button>
 
                         <Sheet open={openFilter} onOpenChange={setOpenFilter}>
                             <SheetTrigger asChild>
-                                <Button variant="outline" className="border-orange-200 text-orange-600">
+                                <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A]">
                                     <FilterIcon className="mr-2 h-4 w-4" />
                                     Filtros
                                 </Button>
@@ -300,7 +300,7 @@ export default function VehiclesPage() {
                                     </div>
 
                                     <Button
-                                        className="w-full bg-orange-500 text-white hover:bg-orange-600"
+                                        className="w-full bg-[#C8860A] text-white hover:bg-[#B37809]"
                                         onClick={aplicarFiltros}
                                     >
                                         Filtro

@@ -45,12 +45,12 @@ export default function PostSiteFiles({ site }: Props) {
           <div className="flex-1 max-w-md">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-3 text-gray-400" />
-              <input type="text" placeholder="Search Files" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+              <input type="text" placeholder="Search Files" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <button onClick={() => setShowUploadModal(true)} className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-orange-700">
+            <button onClick={() => setShowUploadModal(true)} className="px-4 py-2 bg-[#C8860A] text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809]">
               <Plus size={14} />
               Upload New Files
             </button>
@@ -188,7 +188,7 @@ export default function PostSiteFiles({ site }: Props) {
                 setFilesData(prev => [...newFiles, ...prev]);
                 setUploadFiles([]);
                 setShowUploadModal(false);
-              }} className="px-4 py-2 bg-orange-600 text-white rounded-md">Upload</button>
+              }} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">Upload</button>
             </div>
           </div>
         </div>

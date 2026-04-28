@@ -109,9 +109,9 @@ const toneStyles: Record<
     border: "border-red-100",
   },
   orange: {
-    value: "text-orange-500",
-    title: "text-orange-600",
-    border: "border-orange-100",
+    value: "text-[#C8860A]",
+    title: "text-[#C8860A]",
+    border: "border-[#C8860A]/10",
   },
   slate: {
     value: "text-slate-600",
@@ -152,7 +152,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
           <Button
             type="button"
             variant="outline"
-            className="flex items-center gap-2 rounded-full border-orange-200 bg-white px-4 text-sm font-semibold text-orange-500 hover:bg-orange-50"
+            className="flex items-center gap-2 rounded-full border-[#C8860A]/30 bg-white px-4 text-sm font-semibold text-[#C8860A] hover:bg-[#C8860A]/10"
             onClick={() => setIsFilterOpen(true)}
           >
             <Filter className="h-4 w-4" />
@@ -453,7 +453,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
             <div className="pt-4">
               <Button
                 type="submit"
-                className="w-full rounded-lg bg-orange-500 text-sm font-semibold text-white hover:bg-orange-600"
+                className="w-full rounded-lg bg-[#C8860A] text-sm font-semibold text-white hover:bg-[#B37809]"
               >
                 Filtro
               </Button>

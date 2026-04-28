@@ -340,7 +340,7 @@ export default function Inventory({ site }: { site?: any }) {
                 {t('postSites.inventories.sendToPatrol', 'Enviar seleccion a patrulla')}
               </button>
             )}
-            <button onClick={openCreateWindow} className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold flex items-center gap-2">
+            <button onClick={openCreateWindow} className="px-4 py-2 bg-[#C8860A] text-white rounded-lg text-sm font-semibold flex items-center gap-2">
               <Plus size={16} /> {t('postSites.inventories.add', 'Crear inventario')}
             </button>
           </div>
@@ -353,7 +353,7 @@ export default function Inventory({ site }: { site?: any }) {
             <div className="min-h-[160px] flex items-center justify-center">
               <div className="flex flex-col items-center justify-center gap-4">
                 <div className="w-40 h-40">
-                  <svg viewBox="0 0 200 200" className="w-full h-full text-orange-100">
+                  <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
                     <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                     <circle cx="85" cy="100" r="8" fill="white" />
                     <circle cx="115" cy="100" r="8" fill="white" />
@@ -491,7 +491,7 @@ export default function Inventory({ site }: { site?: any }) {
                 const stationDisplay = stationLabelNormalized || normalizeWords(stationFromSiteProp) || null;
 
                 return (
-                  <div key={id || JSON.stringify(inv)} className={`border-b last:border-b-0 py-3 px-3 flex items-center gap-2 ${selectedIds.includes(id) ? 'bg-orange-50' : ''}`}>
+                  <div key={id || JSON.stringify(inv)} className={`border-b last:border-b-0 py-3 px-3 flex items-center gap-2 ${selectedIds.includes(id) ? 'bg-[#C8860A]/10' : ''}`}>
                     <div className="w-10 flex items-center"><input type="checkbox" checked={selectedIds.includes(id)} onChange={() => toggleSelect(id)} /></div>
                     <div className="flex-1 min-w-0 overflow-hidden pr-2">
                       <div className="font-medium truncate">{displayName}</div>
@@ -627,7 +627,7 @@ export default function Inventory({ site }: { site?: any }) {
                 setObservations(d.observations || ''); setTransportation(d.transportation || '');
                 setDetailOpen(false);
                 setOpenCreate(true);
-              }} className="px-4 py-2 bg-orange-600 text-white rounded-md">{t('common.edit','Editar')}</button>
+              }} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('common.edit','Editar')}</button>
             </div>
           </div>
         </div>
@@ -826,7 +826,7 @@ export default function Inventory({ site }: { site?: any }) {
 
             <div className="flex items-center justify-end gap-3 p-6 border-t bg-white rounded-b-md">
               <button onClick={closeCreateWindow} className="px-4 py-2 rounded-md border text-sm">{t('common.cancel', 'Cancelar')}</button>
-              <button onClick={submitCreate} disabled={creating} className="px-6 py-2 bg-orange-600 text-white rounded-md">{creating ? t('common.creating','Creando...') : (editingId ? t('postSites.inventories.update','Guardar cambios') : t('postSites.inventories.create','Crear inventario'))}</button>
+              <button onClick={submitCreate} disabled={creating} className="px-6 py-2 bg-[#C8860A] text-white rounded-md">{creating ? t('common.creating','Creando...') : (editingId ? t('postSites.inventories.update','Guardar cambios') : t('postSites.inventories.create','Crear inventario'))}</button>
             </div>
           </div>
         </div>

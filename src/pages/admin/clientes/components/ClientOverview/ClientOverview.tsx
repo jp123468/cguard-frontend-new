@@ -82,12 +82,12 @@ export default function ClientOverview({ client }: { client: any }) {
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-gray-500">{t('clients.overview.cards.postSites')}</div>
-                  <div className="font-semibold text-orange-500">{postSitesCount}</div>
+                  <div className="font-semibold text-[#C8860A]">{postSitesCount}</div>
                 </div>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                 <div>{t('clients.overview.cards.guardsAssigned')}: <span className="font-medium text-blue-600">{guardsAssigned}</span></div>
-                <div>{t('clients.overview.cards.incidents')}: <span className="font-medium text-orange-500">{incidents}</span></div>
+                <div>{t('clients.overview.cards.incidents')}: <span className="font-medium text-[#C8860A]">{incidents}</span></div>
                 <div>{t('clients.overview.cards.toursCompleted')}: <span className="font-medium">{toursCompleted}</span></div>
                 <div>{t('clients.overview.cards.hoursWorked')}: <span className="font-medium text-red-500">{hoursWorked}</span></div>
               </div>
@@ -109,7 +109,7 @@ export default function ClientOverview({ client }: { client: any }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 border rounded-md bg-white text-center">
             <div className="text-sm text-gray-500">{t('clients.overview.cards.postSites')}</div>
-            <div className="text-2xl font-bold text-orange-500">{postSitesCount}</div>
+            <div className="text-2xl font-bold text-[#C8860A]">{postSitesCount}</div>
           </div>
           <div className="p-4 border rounded-md bg-white text-center">
             <div className="text-sm text-gray-500">{t('clients.overview.cards.guardsAssigned')}</div>
@@ -125,7 +125,7 @@ export default function ClientOverview({ client }: { client: any }) {
           </div>
           <div className="p-4 border rounded-md bg-white text-center">
             <div className="text-sm text-gray-500">{t('clients.overview.cards.incidents')}</div>
-            <div className="text-2xl font-bold text-orange-500">{incidents}</div>
+            <div className="text-2xl font-bold text-[#C8860A]">{incidents}</div>
           </div>
           <div className="p-4 border rounded-md bg-white text-center">
             <div className="text-sm text-gray-500">{t('clients.overview.cards.hoursWorked')}</div>

@@ -61,11 +61,11 @@ export default function ClientPostSites({ client }: { client: any }) {
   return (
     <div ref={containerRef} className="min-h-screen flex flex-col">
       <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <div className="relative" ref={actionRef}>
+        <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:w-auto" ref={actionRef}>
             <button
               onClick={() => setActionOpen(!actionOpen)}
-              className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]"
+              className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 w-full sm:min-w-[100px] justify-center"
             >
               {actionSelection}
               <ChevronDown size={16} />
@@ -77,7 +77,7 @@ export default function ClientPostSites({ client }: { client: any }) {
             )}
           </div>
 
-          <div className="flex-1 flex justify-center">
+          <div className="w-full sm:flex-1 flex justify-center">
             <div className="relative w-full max-w-lg">
               <Search size={16} className="absolute left-3 top-3 text-gray-400" />
               <input
@@ -85,22 +85,33 @@ export default function ClientPostSites({ client }: { client: any }) {
                 placeholder={t('clientPostSites.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
               />
             </div>
           </div>
 
-          <Link to="/post-sites/new" className="px-6 py-2 bg-orange-600 text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors">
-            <Plus size={16} />
-            {t('clientPostSites.newPostSite')}
-          </Link>
+          <div className="w-full sm:w-auto">
+            <Link to="/post-sites/new" className="px-6 py-2 bg-[#C8860A] text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors w-full justify-center">
+            
+            
+              {t('clientPostSites.newPostSite')}
+            </Link>
+          </div>
         </div>
 
         <div className="mt-6 md:block hidden flex-1 min-h-0 overflow-y-auto overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full table-fixed">
+            <colgroup>
+              <col style={{ width: '48px' }} />
+              <col style={{ width: '38%' }} />
+              <col style={{ width: '32%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '48px' }} />
+            </colgroup>
             <thead>
               <tr className="border-b bg-gray-50">
-                <th className="px-4 py-3 text-left">
+                <th className="px-3 py-2 text-left">
                   <input
                     type="checkbox"
                     className="rounded"
@@ -111,21 +122,20 @@ export default function ClientPostSites({ client }: { client: any }) {
                     checked={filtered.length > 0 && selectedIds.length === filtered.length}
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.postSite')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.client')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.email')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.phoneNumber')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.status')}</th>
-                <th className="px-4 py-3 text-left"></th>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.postSite')}</th>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.email')}</th>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.phoneNumber')}</th>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.status')}</th>
+                <th className="px-3 py-2 text-left"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12">
+                  <td colSpan={6} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-40 h-40">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-orange-100">
+                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
                           <rect x="30" y="60" width="140" height="100" fill="currentColor" rx="12" />
                           <circle cx="80" cy="95" r="8" fill="white" />
                           <circle cx="120" cy="95" r="8" fill="white" />
@@ -142,7 +152,7 @@ export default function ClientPostSites({ client }: { client: any }) {
               ) : (
                 filtered.map((s) => (
                   <tr key={s.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-2 py-2 text-sm text-gray-700">
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(s.id)}
@@ -152,10 +162,9 @@ export default function ClientPostSites({ client }: { client: any }) {
                         }}
                       />
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{s.companyName ?? s.name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{(s.client && (s.client.name || s.client.companyName)) || (s.clientAccount && (s.clientAccount.name || s.clientAccount.companyName)) || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{s.contactEmail ?? s.email ?? '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{s.contactPhone ?? s.phone ?? '-'}</td>
+                    <td className="px-3 py-2 text-sm text-gray-700"><div className="truncate max-w-full">{s.companyName ?? s.name}</div></td>
+                    <td className="px-3 py-2 text-sm text-gray-700"><div className="truncate max-w-full">{s.contactEmail ?? s.email ?? '-'}</div></td>
+                    <td className="px-3 py-2 text-sm text-gray-700"><div className="truncate">{s.contactPhone ?? s.phone ?? '-'}</div></td>
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {s.status === 'active' ? (
                         <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">{t('common.active')}</span>
@@ -163,7 +172,7 @@ export default function ClientPostSites({ client }: { client: any }) {
                         <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">{t('common.inactive')}</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 relative overflow-visible">
+                    <td className="px-3 py-2 text-sm text-gray-700 relative overflow-visible">
                       <Popover>
                         <PopoverTrigger asChild>
                           <button aria-label="Open menu" className="p-2 rounded-full hover:bg-gray-100"><EllipsisVertical className="h-5 w-5 text-slate-400" /></button>

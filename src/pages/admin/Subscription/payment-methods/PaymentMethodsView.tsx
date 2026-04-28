@@ -33,7 +33,7 @@ export default function PaymentMethodsView() {
           <DialogTrigger asChild>
             <Button
               variant="outline"
-              className="text-orange-600 border-orange-200 hover:text-orange-700"
+              className="text-[#C8860A] border-[#C8860A]/30 hover:text-[#B37809]"
             >
               Añadir Método de Pago
             </Button>
@@ -98,8 +98,8 @@ function AddPaymentMethodDialog({ onSubmit }: { onSubmit: () => void }) {
               className="
                 flex flex-col items-center justify-center gap-2 px-3 py-4 text-xs font-medium
                 rounded-lg border-2 border-gray-200 bg-white transition-all
-                data-[state=active]:border-orange-500 data-[state=active]:bg-orange-50
-                data-[state=active]:text-orange-700 data-[state=active]:shadow-sm
+                data-[state=active]:border-[#C8860A] data-[state=active]:bg-[#C8860A]/10
+                data-[state=active]:text-[#B37809] data-[state=active]:shadow-sm
                 data-[state=inactive]:text-gray-600 hover:border-gray-300 hover:bg-gray-50
               "
             >
@@ -181,9 +181,9 @@ function AddPaymentMethodDialog({ onSubmit }: { onSubmit: () => void }) {
 
         {/* Amazon Pay */}
         <TabsContent value="amazon" className="space-y-4 mt-6">
-          <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-orange-50 to-white p-8 space-y-4 shadow-sm text-center">
+          <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-[#C8860A]/10 to-white p-8 space-y-4 shadow-sm text-center">
             <div className="flex justify-center">
-              <div className="h-16 w-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="h-16 w-16 bg-gradient-to-br from-[#C8860A] to-[#B37809] rounded-2xl flex items-center justify-center shadow-lg">
                 <Package className="h-8 w-8 text-white" />
               </div>
             </div>
@@ -251,7 +251,7 @@ function AddPaymentMethodDialog({ onSubmit }: { onSubmit: () => void }) {
                 ].map((b) => (
                   <button
                     key={b}
-                    className="p-4 text-center text-xs font-semibold border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all bg-white"
+                    className="p-4 text-center text-xs font-semibold border-2 border-gray-200 rounded-lg hover:border-[#C8860A] hover:bg-[#C8860A]/10 transition-all bg-white"
                   >
                     {b}
                   </button>
@@ -286,7 +286,7 @@ function AddPaymentMethodDialog({ onSubmit }: { onSubmit: () => void }) {
         </Button>
         <Button 
           onClick={onSubmit}
-          className="flex-1 sm:flex-none h-11 bg-orange-600 hover:bg-orange-700"
+          className="flex-1 sm:flex-none h-11 bg-[#C8860A] hover:bg-[#B37809]"
         >
           Agregar método de pago
         </Button>

@@ -29,7 +29,7 @@ export default function CompanyDocumentsSection({ documents, onUpload, onDelete,
         <h4 className="font-semibold text-md">Documentos Legales de la Empresa</h4>
         {canEdit && (
           <button
-            className="px-3 py-1 bg-orange-500 text-white rounded text-sm hover:bg-orange-600"
+            className="px-3 py-1 bg-[#C8860A] text-white rounded text-sm hover:bg-[#C8860A]"
             onClick={() => fileInputRef.current?.click()}
           >
             Subir Documento

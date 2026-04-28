@@ -59,7 +59,7 @@ const Reports: React.FC<ReportsProps> = ({ onNavigate }) => {
                   <Button
                     type="button"
                     variant="ghost"
-                    className="flex h-10 items-center gap-1 px-3 text-sm font-semibold text-orange-500 hover:bg-orange-50"
+                    className="flex h-10 items-center gap-1 px-3 text-sm font-semibold text-[#C8860A] hover:bg-[#C8860A]/10"
                     onClick={() => handleNavigate(section.viewAllHref)}
                   >
                     Ver Todo
@@ -88,7 +88,7 @@ const Reports: React.FC<ReportsProps> = ({ onNavigate }) => {
                         report.closedCount !== undefined) && (
                           <div className="flex gap-1">
                             {report.openCount !== undefined && (
-                              <span className="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-orange-50 px-1 text-xs font-semibold text-orange-500">
+                              <span className="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-[#C8860A]/10 px-1 text-xs font-semibold text-[#C8860A]">
                                 {report.openCount}
                               </span>
                             )}

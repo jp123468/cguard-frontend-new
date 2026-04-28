@@ -505,7 +505,7 @@ export default function AdminOfficeUsersPage() {
               />
             </div>
 
-            <PermissionedButton permission="userCreate" asChild className="bg-orange-500 text-white hover:bg-orange-600">
+            <PermissionedButton permission="userCreate" asChild className="bg-[#C8860A] text-white hover:bg-[#B37809]">
               <Link to="/back-office/new">{t('adminOfficeUsers.newUser.breadcrumb.new', { defaultValue: 'Nuevo Usuario' })}</Link>
             </PermissionedButton>
 
@@ -514,7 +514,7 @@ export default function AdminOfficeUsersPage() {
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  className="border-orange-200 text-orange-600"
+                  className="border-[#C8860A]/30 text-[#C8860A]"
                 >
                   <Filter className="mr-2 h-4 w-4" />
                   {t('adminOfficeUsers.filters.title', { defaultValue: 'Filtros' })}
@@ -569,7 +569,7 @@ export default function AdminOfficeUsersPage() {
                   </div>
 
                   <Button
-                    className="w-full bg-orange-500 text-white hover:bg-orange-600"
+                    className="w-full bg-[#C8860A] text-white hover:bg-[#B37809]"
                     onClick={() => {
                       // aplica filtros y cierra
                       setOpenFilter(false);
@@ -846,7 +846,7 @@ export default function AdminOfficeUsersPage() {
       <AlertDialogFooter>
         <AlertDialogCancel onClick={() => setSelectedUserToAct(null)}>{t('adminOfficeUsers.dialogs.common.cancel', { defaultValue: 'Cancelar' })}</AlertDialogCancel>
         <AlertDialogAction
-          className="bg-orange-500 text-white hover:bg-orange-600"
+          className="bg-[#C8860A] text-white hover:bg-[#B37809]"
           onClick={async () => {
             if (!selectedUserToAct) return;
             try {
@@ -881,7 +881,7 @@ export default function AdminOfficeUsersPage() {
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setSelectedUserToAct(null)}>{t('adminOfficeUsers.dialogs.common.cancel', { defaultValue: 'Cancelar' })}</AlertDialogCancel>
               <AlertDialogAction
-                className="bg-orange-500 text-white hover:bg-orange-600"
+                className="bg-[#C8860A] text-white hover:bg-[#B37809]"
                 onClick={async () => {
                   if (!selectedUserToAct) return;
                     try {

@@ -525,7 +525,7 @@ export default function ClientesPage() {
                   <div className="text-xs text-muted-foreground truncate">{row.email || '-'}</div>
                   <div className="text-xs text-muted-foreground truncate">{row.phoneNumber || '-'}</div>
                   <div className="mt-2">
-                    <Link to={`/clients/${row.id}/overview`} className="text-sm text-orange-600">{t('actions.viewDetails', 'Ver')}</Link>
+                    <Link to={`/clients/${row.id}/overview`} className="text-sm text-[#C8860A]">{t('actions.viewDetails', 'Ver')}</Link>
                   </div>
                 </div>
               </DropdownMenuContent>
@@ -619,6 +619,26 @@ export default function ClientesPage() {
   const from = clients.length > 0 ? (page - 1) * limit + 1 : 0;
   const to = Math.min(page * limit, totalCount);
 
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => {
+      try {
+        setIsSmallScreen(window.innerWidth < 640);
+      } catch {
+        setIsSmallScreen(false);
+      }
+    };
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const sheetSide = isSmallScreen ? ('bottom' as const) : ('right' as const);
+  const sheetClass = isSmallScreen
+    ? 'w-full h-[85vh] overflow-y-auto rounded-t-lg px-4 py-3'
+    : 'w-full sm:w-[400px] md:w-[460px] h-[calc(100vh-6rem)] sm:h-auto overflow-y-auto';
+
   return (
     <AppLayout>
       <Breadcrumb
@@ -629,13 +649,13 @@ export default function ClientesPage() {
       />
 
       <section className="p-4">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_320px] items-center gap-3">
             <div className="flex items-center gap-2">
               <BulkActionsSelect key={bulkKey} actions={bulkActions} onChange={handleBulkAction} />
             </div>
 
-            <div className="flex-1 flex justify-center">
-              <div className="relative w-full max-w-md">
+            <div className="flex justify-center">
+              <div className="relative w-full">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t('clients.searchPlaceholder')}
@@ -646,186 +666,104 @@ export default function ClientesPage() {
               </div>
             </div>
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className="flex flex-col md:flex-row items-center gap-2 justify-end w-full md:w-auto">
+              <div className="flex w-full md:w-auto gap-2">
+                <Sheet open={openFilter} onOpenChange={setOpenFilter}>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="text-[#C8860A] border-[#C8860A]/30 flex-1 md:flex-none justify-center"
+                    >
+                      <Filter className="mr-2 h-4 w-4" />
+                      {t('clients.filters.title')}
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side={sheetSide} className={sheetClass}>
+                    <SheetHeader>
+                      <SheetTitle>{t('clients.filters.title')}</SheetTitle>
+                    </SheetHeader>
+
+                    <div className="mt-6 space-y-4">
+                      <div className="space-y-2">
+                        <Label>{t('clients.filters.email')}</Label>
+                        <Input placeholder={t('clients.placeholders.emailExample')} value={filters.email || ""} onChange={(e) => setFilters({ ...filters, email: e.target.value || undefined })} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>{t('clients.filters.phone')}</Label>
+                        <Input placeholder={t('clients.placeholders.phoneExample')} value={filters.phoneNumber || ""} onChange={(e) => setFilters({ ...filters, phoneNumber: e.target.value || undefined })} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>{t('clients.filters.city')}</Label>
+                        <Input placeholder={t('clients.placeholders.cityExample')} value={filters.city || ""} onChange={(e) => setFilters({ ...filters, city: e.target.value || undefined })} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>{t('clients.filters.country')}</Label>
+                        <Input placeholder={t('clients.placeholders.countryExample')} value={filters.country || ""} onChange={(e) => setFilters({ ...filters, country: e.target.value || undefined })} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>{t('clients.filters.categories')}</Label>
+                        <Select value={filters.category || "all"} onValueChange={(v: string) => setFilters({ ...filters, category: v === "all" ? undefined : v })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('clients.filters.all')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">{t('clients.filters.all')}</SelectItem>
+                            {categories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>{t('clients.filters.status')}</Label>
+                        <Select value={filters.active === undefined ? "all" : filters.active ? "active" : "inactive"} onValueChange={(v: string) => { if (v === "all") setFilters({ ...filters, active: undefined }); else if (v === "active") setFilters({ ...filters, active: true }); else setFilters({ ...filters, active: false }); }}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('clients.filters.all')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">{t('clients.filters.all')}</SelectItem>
+                            <SelectItem value="active">{t('clients.filters.active')}</SelectItem>
+                            <SelectItem value="inactive">{t('clients.filters.archived')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={() => setOpenFilter(false)}>{t('clients.applyFilters')}</Button>
+                      <Button variant="outline" className="w-full" onClick={() => { setFilters({ active: true }); setOpenFilter(false); }}>{t('clients.clearFilters')}</Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="border w-12 md:w-auto flex items-center justify-center">
+                      <EllipsisVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={handleExportPDF}><FileDown className="mr-2 h-4 w-4" /> {t('clients.exportPDF', 'Exportar PDF')}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> {t('clients.exportExcel', 'Exportar Excel')}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setOpenImport(true)}><ArrowDownUp className="mr-2 h-4 w-4" /> {t('clients.import', 'Importar')}</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
               {hasPermission('clientAccountCreate') && (
-                <Button
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
-                  asChild
-                >
-                  <Link to="/clients/add-new">{t('clients.newClient')}</Link>
-                </Button>
-              )}
-
-              <Sheet open={openFilter} onOpenChange={setOpenFilter}>
-                <SheetTrigger asChild>
+                <div className="w-full md:w-auto">
                   <Button
-                    variant="outline"
-                    className="text-orange-600 border-orange-200"
+                    className="bg-[#C8860A] hover:bg-[#B37809] text-white w-full md:w-auto"
+                    asChild
                   >
-                    <Filter className="mr-2 h-4 w-4" />
-                    {t('clients.filters.title')}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:w-[400px] md:w-[460px] h-full sm:h-auto">
-                  <SheetHeader>
-                    <SheetTitle>{t('clients.filters.title')}</SheetTitle>
-                  </SheetHeader>
-
-                  <div className="mt-6 space-y-4">
-                  <div className="space-y-2">
-                    <Label>{t('clients.filters.email')}</Label>
-                    <Input
-                      placeholder={t('clients.placeholders.emailExample')}
-                      value={filters.email || ""}
-                      onChange={(e) =>
-                        setFilters({
-                          ...filters,
-                          email: e.target.value || undefined,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>{t('clients.filters.phone')}</Label>
-                    <Input
-                      placeholder={t('clients.placeholders.phoneExample')}
-                      value={filters.phoneNumber || ""}
-                      onChange={(e) =>
-                        setFilters({
-                          ...filters,
-                          phoneNumber: e.target.value || undefined,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>{t('clients.filters.city')}</Label>
-                    <Input
-                      placeholder={t('clients.placeholders.cityExample')}
-                      value={filters.city || ""}
-                      onChange={(e) =>
-                        setFilters({
-                          ...filters,
-                          city: e.target.value || undefined,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>{t('clients.filters.country')}</Label>
-                    <Input
-                      placeholder={t('clients.placeholders.countryExample')}
-                      value={filters.country || ""}
-                      onChange={(e) =>
-                        setFilters({
-                          ...filters,
-                          country: e.target.value || undefined,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>{t('clients.filters.categories')}</Label>
-                    <Select
-                      value={filters.category || "all"}
-                      onValueChange={(v) =>
-                        setFilters({
-                          ...filters,
-                          category: v === "all" ? undefined : v,
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('clients.filters.all')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('clients.filters.all')}</SelectItem>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>{t('clients.filters.status')}</Label>
-                    <Select
-                      value={
-                        filters.active === undefined
-                          ? "all"
-                          : filters.active
-                            ? "active"
-                            : "inactive"
-                      }
-                      onValueChange={(v) => {
-                        if (v === "all") {
-                          setFilters({ ...filters, active: undefined });
-                        } else if (v === "active") {
-                          setFilters({ ...filters, active: true });
-                        } else {
-                          setFilters({ ...filters, active: false });
-                        }
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('clients.filters.all')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('clients.filters.all')}</SelectItem>
-                        <SelectItem value="active">{t('clients.filters.active')}</SelectItem>
-                        <SelectItem value="inactive">{t('clients.filters.archived')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                    onClick={() => setOpenFilter(false)}
-                  >
-                    {t('clients.applyFilters')}
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      setFilters({ active: true });
-                      setOpenFilter(false);
-                    }}
-                  >
-                    {t('clients.clearFilters')}
+                    <Link to="/clients/add-new">{t('clients.newClient')}</Link>
                   </Button>
                 </div>
-              </SheetContent>
-            </Sheet>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <EllipsisVertical className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem disabled={!hasPermission('clientAccountRead')} onClick={async () => { if (!hasPermission('clientAccountRead')) return; await handleExportPDF(); }}>
-                  <FileDown className="mr-2 h-4 w-4" /> {t('actions.exportPdf')}
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled={!hasPermission('clientAccountRead')} onClick={async () => { if (!hasPermission('clientAccountRead')) return; await handleExportExcel(); }}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" /> {t('actions.exportExcel')}
-                </DropdownMenuItem>
-                {hasPermission('clientAccountImport') && (
-                  <DropdownMenuItem onClick={() => setOpenImport(true)}>
-                    <ArrowDownUp className="mr-2 h-4 w-4" /> {t('actions.import')}
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              )}
+            </div>
         </div>
 
         <div className="mt-4 md:block hidden">
@@ -865,9 +803,9 @@ export default function ClientesPage() {
           <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50 border-x border-b rounded-b-lg">
             <div className="flex items-center gap-2">
               <span>{t('clients.pagination.itemsPerPage')}</span>
-              <Select
+                <Select
                 value={limit.toString()}
-                onValueChange={(v) => {
+                onValueChange={(v: string) => {
                   setLimit(Number(v));
                   setPage(1);
                 }}
@@ -917,20 +855,17 @@ export default function ClientesPage() {
             renderCard={(client: any) => (
               <div className="p-4 bg-white border rounded-lg">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium text-sm truncate">{client.name}{client.lastName ? ` ${client.lastName}` : ''}</div>
                     <div className="text-xs text-muted-foreground truncate">{client.email || '-'}</div>
                   </div>
-                  <div className="text-right flex-shrink-0 flex flex-col items-end">
-                    <div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${client.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {client.active ? t('clients.status.active') : t('clients.status.archived')}
-                      </span>
-                    </div>
+
+                  <div className="flex-shrink-0 flex flex-col items-end ml-2">
+                    <span className={`px-2 py-1 text-xs rounded-full ${client.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {client.active ? t('clients.status.active') : t('clients.status.archived')}
+                    </span>
                     <div className="mt-2">
-                      <div className="-mr-2">
-                        <RowActionsMenu actions={rowActions(client)} />
-                      </div>
+                      <RowActionsMenu actions={rowActions(client)} />
                     </div>
                   </div>
                 </div>
@@ -1006,7 +941,7 @@ export default function ClientesPage() {
               {t('clients.cancel')}
             </Button>
             <Button
-              className="bg-orange-500 hover:bg-orange-600"
+              className="bg-[#C8860A]-500 hover:bg-[#C8860A]-600"
               onClick={handleCategorizeSubmit} disabled={categorizeSaving || categorizeLoading}
               >
               {categorizeSaving ? t('clients.saving') : t('clients.save')}
@@ -1061,7 +996,7 @@ export default function ClientesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-[#C8860A] hover:bg-[#B37809] text-white"
               onClick={async () => {
                 try {
                   await Promise.all(
@@ -1095,7 +1030,7 @@ export default function ClientesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-500 hover:bg-orange-600 text-white"
+              className="bg-red-500 hover:bg-red-600 text-white"
               onClick={async () => {
                 try {
                   await clientService.deleteClients(selectedIds);
@@ -1126,7 +1061,7 @@ export default function ClientesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-500 hover:bg-orange-600 text-white"
+              className="bg-red-500 hover:bg-red-600 text-white"
               onClick={async () => {
                 if (!deleteClient) return;
                 try {
@@ -1155,7 +1090,7 @@ export default function ClientesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-[#C8860A] hover:bg-[#B37809] text-white"
               onClick={async () => {
                 if (!restoreClient) return;
                 try {

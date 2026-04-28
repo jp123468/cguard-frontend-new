@@ -28,7 +28,7 @@ export default function DeveloperTokensView({
           <div>
             <span className="font-medium">API Base URL : </span>
             <a
-              className="text-orange-600 hover:underline"
+              className="text-[#C8860A] hover:underline"
               href="https://developer.guardspro.com/"
               target="_blank"
               rel="noreferrer"
@@ -39,7 +39,7 @@ export default function DeveloperTokensView({
           <div>
             <span className="font-medium">API Documentation : </span>
             <a
-              className="text-orange-600 hover:underline"
+              className="text-[#C8860A] hover:underline"
               href="https://developerdocument.guardspro.com"
               target="_blank"
               rel="noreferrer"
@@ -52,7 +52,7 @@ export default function DeveloperTokensView({
         <div className="mt-4 flex justify-end">
           <Button
             variant="outline"
-            className="text-orange-600 border-orange-200 hover:text-orange-700"
+            className="text-[#C8860A] border-[#C8860A]/30 hover:text-[#B37809]"
             onClick={() => {
               onCreate?.();
             }}

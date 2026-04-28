@@ -813,7 +813,7 @@ export default function Visitors() {
                         </div>
 
                         <Button
-                            className="bg-orange-500 text-white hover:bg-orange-600"
+                            className="bg-[#C8860A] text-white hover:bg-[#B37809]"
                             type="button"
                             onClick={() => setOpenAddVisitor(true)}
                         >
@@ -825,7 +825,7 @@ export default function Visitors() {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="border-orange-200 text-orange-600"
+                                    className="border-[#C8860A]/30 text-[#C8860A]"
                                 >
                                     <FilterIcon className="mr-2 h-4 w-4" />
                                     {t('visitantes.filters') || 'Filtros'}
@@ -939,7 +939,7 @@ export default function Visitors() {
 
                                     <Button
                                         type="submit"
-                                        className="mt-4 w-full bg-orange-500 text-white hover:bg-orange-600"
+                                        className="mt-4 w-full bg-[#C8860A] text-white hover:bg-[#B37809]"
                                     >
                                         {t('visitantes.filterButton') || 'Filtro'}
                                     </Button>
@@ -1398,7 +1398,7 @@ export default function Visitors() {
                     <div className="flex justify-end pt-4">
                         <Button
                             type="submit"
-                            className="bg-orange-500 text-white hover:bg-orange-600"
+                            className="bg-[#C8860A] text-white hover:bg-[#B37809]"
                         >
                             {t('visitantes.save') || 'Guardar'}
                         </Button>

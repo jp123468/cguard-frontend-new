@@ -84,7 +84,7 @@ export default function TrackingHistoryPage() {
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  className="text-orange-600 border-orange-300"
+                  className="text-[#C8860A] border-[#C8860A]/30"
                 >
                   <Filter className="mr-2 h-4 w-4" />
                   Filtros
@@ -186,7 +186,7 @@ export default function TrackingHistoryPage() {
                   </label>
 
                   {/* Botón Filtro */}
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                  <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white">
                     Filtro
                   </Button>
                 </div>

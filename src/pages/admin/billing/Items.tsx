@@ -446,7 +446,7 @@ export default function Items() {
                         <Sheet open={isSheetOpen} onOpenChange={(open) => { setIsSheetOpen(open); if (!open) setEditingId(null); }}>
                             <SheetTrigger asChild>
                                     <Button
-                                        className="bg-white text-orange-500 border border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                                        className="bg-white text-[#C8860A] border border-[#C8860A]/30 hover:bg-[#C8860A]/10 hover:text-[#C8860A]"
                                         onClick={() => {
                                             // Ensure sheet opens in "create" mode, clear any editing state
                                             setEditingId(null);
@@ -508,7 +508,7 @@ export default function Items() {
                                 </div>
                                 <SheetFooter>
                                     <Button
-                                        className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                                        className="w-full bg-[#C8860A] hover:bg-[#C8860A] text-white"
                                         onClick={handleAddItem}
                                     >
                                         {t('billing.items.form.save')}

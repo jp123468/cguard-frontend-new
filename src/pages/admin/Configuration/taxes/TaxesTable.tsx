@@ -71,7 +71,7 @@ export default function TaxesTable({
           <Input value={query} onChange={(e) => onQueryChange(e.target.value)} placeholder="Buscar Impuesto" className="pl-9" />
         </div>
 
-        <Button  className="bg-orange-500 hover:bg-orange-600" onClick={onNew}>Nuevo Impuesto</Button>
+        <Button  className="bg-[#C8860A] hover:bg-[#B37809]" onClick={onNew}>Nuevo Impuesto</Button>
       </div>
 
       <div className="rounded-md border">

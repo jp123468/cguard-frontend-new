@@ -110,7 +110,7 @@ export default function ClientPortal({ client }: Props) {
               <input
                 type="text"
                 placeholder="Search client portal"
-                className="w-full pl-9 pr-3 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full pl-9 pr-3 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
               />
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function ClientPortal({ client }: Props) {
           <div className="flex-shrink-0">
             <button
               onClick={() => setShowInvite(true)}
-              className="px-4 py-2 bg-orange-600 text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-orange-700 transition-colors"
+              className="px-4 py-2 bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors"
             >
               <Plus size={16} />
               Invite
@@ -148,7 +148,7 @@ export default function ClientPortal({ client }: Props) {
                   <td colSpan={6} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-orange-100">
+                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
                           <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                           <circle cx="85" cy="100" r="8" fill="white" />
                           <circle cx="115" cy="100" r="8" fill="white" />
@@ -274,7 +274,7 @@ export default function ClientPortal({ client }: Props) {
 
             <div className="p-4 border-t bg-white sticky bottom-0 z-20">
               <div className="flex items-center justify-end gap-3">
-                <button onClick={handleInvite} className="px-6 py-2 bg-orange-600 text-white rounded-md font-semibold hover:bg-orange-700">
+                <button onClick={handleInvite} className="px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809]">
                   Invite
                 </button>
               </div>

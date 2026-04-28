@@ -49,7 +49,7 @@ export default function CheckpointAction({ patrolId, scannedBy, proximityThresho
   };
 
   return (
-    <Button onClick={handleClick} disabled={loading} className="bg-orange-500 text-white hover:bg-orange-600">
+    <Button onClick={handleClick} disabled={loading} className="bg-[#C8860A] text-white hover:bg-[#B37809]">
       {loading ? 'Enviando...' : label}
     </Button>
   );

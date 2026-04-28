@@ -940,7 +940,7 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
           <Button variant="outline" type="button" onClick={() => window.history.back()}>
             Cancelar
           </Button>
-          <Button type="submit" className="bg-orange-500 text-white hover:bg-orange-600" disabled={submitting || form.formState.isSubmitting}>
+          <Button type="submit" className="bg-[#C8860A] text-white hover:bg-[#C8860A]" disabled={submitting || form.formState.isSubmitting}>
             {submitting ? 'Enviando...' : (mode === 'edit' ? 'Actualizar' : 'Enviar')}
           </Button>
         </div>

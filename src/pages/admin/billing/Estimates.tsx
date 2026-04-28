@@ -283,7 +283,7 @@ export default function Estimates() {
             Enviado: "bg-blue-100 text-blue-800",
             Aceptado: "bg-green-100 text-green-800",
             Rechazado: "bg-red-100 text-red-800",
-            Expirado: "bg-orange-100 text-orange-800",
+            Expirado: "bg-[#C8860A]/10 text-[#B37809]",
         };
         return (
             <Badge className={`${styles[status]} hover:${styles[status]}`}>
@@ -468,7 +468,7 @@ export default function Estimates() {
                                 />
                             </div>
 
-                            <Button className="bg-orange-500 hover:bg-orange-600 text-white" asChild>
+                            <Button className="bg-[#C8860A] hover:bg-[#C8860A] text-white" asChild>
                                 <Link to="/estimates/add-new">{t('billing.estimates.top_actions.create')}</Link>
                             </Button>
 
@@ -606,7 +606,7 @@ export default function Estimates() {
                             </DialogHeader>
                             <DialogFooter className="mt-4 flex justify-end gap-2">
                                 <Button variant="outline" onClick={() => setSendConfirmOpen(false)} disabled={actionLoading}>Cancelar</Button>
-                                <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={performSendEstimate} disabled={actionLoading}>{actionLoading ? 'Enviando...' : 'Enviar'}</Button>
+                                <Button className="bg-[#C8860A] hover:bg-[#C8860A] text-white" onClick={performSendEstimate} disabled={actionLoading}>{actionLoading ? 'Enviando...' : 'Enviar'}</Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>

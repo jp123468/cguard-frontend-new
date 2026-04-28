@@ -382,7 +382,7 @@ export default function MemosPage() {
             <p className="mt-1 text-sm text-slate-500">Lista de memos del equipo de seguridad.</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => setCreateOpen(true)}>
+            <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={() => setCreateOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Nuevo Memo
             </Button>
           </div>
@@ -409,7 +409,7 @@ export default function MemosPage() {
             <div className="ml-auto flex flex-wrap items-center gap-2">
               <Sheet open={openFilter} onOpenChange={setOpenFilter}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="text-orange-600 border-orange-200">
+                  <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30">
                     <Filter className="mr-2 h-4 w-4" /> Filtros
                   </Button>
                 </SheetTrigger>
@@ -474,7 +474,7 @@ export default function MemosPage() {
                       </Select>
                     </div>
                     <Button
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                      className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
                       onClick={() => setOpenFilter(false)}
                     >
                       Aplicar filtros
@@ -585,7 +585,7 @@ export default function MemosPage() {
               <DialogClose asChild>
                 <Button variant="outline">Cancelar</Button>
               </DialogClose>
-              <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleCreate} disabled={saving}>
+              <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={handleCreate} disabled={saving}>
                 {saving ? 'Guardando...' : 'Guardar Memo'}
               </Button>
             </DialogFooter>

@@ -54,7 +54,7 @@ export default function GuardRegistration() {
   const errorClass = (field: string) => (errors[field] ? "border-red-600 ring-1 ring-red-600" : "");
 
   const formControl = "h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm text-slate-900 placeholder-slate-400";
-  const labelClass = "mb-2 block text-sm font-medium text-slate-700 min-h-[3rem] leading-5";
+  const labelClass = "mb-2 block text-sm font-medium text-slate-700 min-h-[2rem] md:min-h-[3rem] leading-5";
 
   const validateEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -579,7 +579,7 @@ export default function GuardRegistration() {
           </div>
         )}
 
-        <div className="mb-2 flex items-center gap-6">
+        <div className="mb-2 flex items-center gap-4 md:gap-6">
           <div className="flex-1 text-sm text-slate-600">Paso {step} de {totalSteps}</div>
           <div className="flex gap-2">
             {[1, 2, 3].map((s) => (
@@ -589,7 +589,7 @@ export default function GuardRegistration() {
         </div>
 
         {step === 1 && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
             <div>
               <label className={labelClass}>Nombre<span style={{ color: "#F75638" }}>*</span></label>
               <Input className={`${formControl} ${errorClass('firstName')}`} value={firstName} onChange={(e: any) => { setFirstName(e.target.value); setErrors((p) => ({ ...p, firstName: undefined })); }} placeholder="Nombre" disabled={isLoading || lockedFirstName} />
@@ -610,7 +610,7 @@ export default function GuardRegistration() {
 
         {step === 2 && (
           <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-3">
               <div>
                 <label className={labelClass}>Documento de identidad<span style={{ color: "#F75638" }}>*</span></label>
                   <Input className={`${formControl} ${errorClass('governmentId')}`} value={governmentId} onChange={(e: any) => { setGovernmentId(e.target.value); setErrors((p) => ({ ...p, governmentId: undefined })); }} placeholder="Documento de identidad" disabled={isLoading} />
@@ -627,7 +627,7 @@ export default function GuardRegistration() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-3">
               <div>
                 <label className={labelClass}>Género<span style={{ color: "#F75638" }}>*</span></label>
                 <select value={gender} onChange={(e) => setGender(e.target.value)} className={`${formControl} ${errorClass('gender')}`} disabled={isLoading}>
@@ -661,7 +661,7 @@ export default function GuardRegistration() {
 
         {step === 3 && (
           <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-3">
               <div>
                 <label className={labelClass}>Fecha de contratación<span style={{ color: "#F75638" }}>*</span></label>
                 <Input className={`${formControl} ${errorClass('hiringContractDate')}`} type="date" value={hiringContractDate} onChange={(e: any) => setHiringContractDate(e.target.value)} disabled={isLoading} />
@@ -686,10 +686,10 @@ export default function GuardRegistration() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
               <div>
                 <label className={labelClass}>Dirección<span style={{ color: "#F75638" }}>*</span></label>
-                <textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Dirección" className={`${formControl} min-h-[88px] resize-none ${errorClass('address')}`} disabled={isLoading} />
+                <textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Dirección" className={`${formControl} min-h-[72px] md:min-h-[88px] resize-none ${errorClass('address')}`} disabled={isLoading} />
               </div>
               <div>
                 <label className={labelClass}>Teléfono móvil<span style={{ color: "#F75638" }}>*</span></label>
@@ -746,15 +746,15 @@ export default function GuardRegistration() {
         <div className="flex items-center justify-between gap-3 pt-2">
           <div>
             {step > 1 && (
-              <button type="button" onClick={handlePrev} className="px-4 py-2 rounded-lg border">Volver</button>
+              <button type="button" onClick={handlePrev} className="px-3 py-1 md:px-4 md:py-2 rounded-lg border">Volver</button>
             )}
           </div>
           <div className="ml-auto flex gap-2">
             {step < totalSteps && (
-              <button type="button" onClick={handleNext} className="px-4 py-2 rounded-lg bg-blue-600 text-white">Siguiente</button>
+              <button type="button" onClick={handleNext} className="px-3 py-1 md:px-4 md:py-2 rounded-lg bg-blue-600 text-white">Siguiente</button>
             )}
             {step === totalSteps && (
-              <button type="submit" disabled={isLoading} className="px-4 py-2 rounded-lg bg-blue-600 text-white">{isLoading ? "Registrando..." : "Registrarse"}</button>
+              <button type="submit" disabled={isLoading} className="px-3 py-1 md:px-4 md:py-2 rounded-lg bg-blue-600 text-white">{isLoading ? "Registrando..." : "Registrarse"}</button>
             )}
           </div>
         </div>

@@ -370,7 +370,7 @@ export default function Invoices() {
             Enviado: "bg-blue-100 text-blue-800",
             Pagado: "bg-green-100 text-green-800",
             Vencido: "bg-red-100 text-red-800",
-            Parcial: "bg-orange-100 text-orange-800",
+            Parcial: "bg-[#C8860A]/10 text-[#B37809]",
         };
         return (
             <Badge className={`${styles[status]} hover:${styles[status]}`}>
@@ -450,7 +450,7 @@ export default function Invoices() {
                                 />
                             </div>
 
-                            <Button className="bg-orange-500 hover:bg-orange-600 text-white" asChild>
+                            <Button className="bg-[#C8860A] hover:bg-[#C8860A] text-white" asChild>
                                 <Link to="/billing/invoices/new">Nueva Factura</Link>
                             </Button>
 

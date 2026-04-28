@@ -221,7 +221,7 @@ export default function TimeRecorder() {
             {/* Mostrar información (toggle stats) */}
             <Button
               variant="outline"
-              className="border-orange-200 text-orange-600"
+              className="border-[#C8860A]/30 text-[#C8860A]"
               onClick={() => setShowStats((prev) => !prev)}
               title={showStats ? "Ocultar información" : "Mostrar información"}
             >
@@ -231,7 +231,7 @@ export default function TimeRecorder() {
             {/* Nueva entrada */}
             <Sheet open={openNewEntry} onOpenChange={setOpenNewEntry}>
               <SheetTrigger asChild>
-                <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white">
                   Nueva entrada
                 </Button>
               </SheetTrigger>
@@ -350,13 +350,13 @@ export default function TimeRecorder() {
                       variant="outline"
                       className="border-dashed w-16 justify-center"
                     >
-                      <Plus className="h-4 w-4 text-orange-500" />
+                      <Plus className="h-4 w-4 text-[#C8860A]" />
                     </Button>
                   </div>
 
                   {/* Botón Añadir */}
                   <div className="pt-2 pb-4 flex justify-end">
-                    <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                    <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white">
                       AÑADIR
                     </Button>
                   </div>
@@ -369,7 +369,7 @@ export default function TimeRecorder() {
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  className="text-orange-600 border-orange-300"
+                  className="text-[#C8860A] border-[#C8860A]/30"
                 >
                   <Filter className="mr-2 h-4 w-4" />
                   Filtros
@@ -384,13 +384,13 @@ export default function TimeRecorder() {
                   <TabsList className="w-full justify-start border-b  bg-transparent px-0 pb-0">
                     <TabsTrigger
                       value="filters"
-                      className=" border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-orange-600 px-0 mr-6 pb-2"
+                      className=" border-b-2 border-transparent data-[state=active]:border-[#C8860A] data-[state=active]:text-[#C8860A] px-0 mr-6 pb-2"
                     >
                       Filtros
                     </TabsTrigger>
                     <TabsTrigger
                       value="saved"
-                      className=" border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-orange-600 px-0 pb-2"
+                      className=" border-b-2 border-transparent data-[state=active]:border-[#C8860A] data-[state=active]:text-[#C8860A] px-0 pb-2"
                     >
                       Filtros Guardados
                     </TabsTrigger>
@@ -511,10 +511,10 @@ export default function TimeRecorder() {
                       </label>
 
                       <div className="space-y-3 pt-2 pb-5">
-                        <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                        <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white">
                           Filtro
                         </Button>
-                        <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                        <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white">
                           Guardar Filtro
                         </Button>
                       </div>

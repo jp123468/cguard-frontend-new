@@ -199,7 +199,7 @@ export default function Breaks() {
 
             <Sheet open={openNewBreak} onOpenChange={setOpenNewBreak}>
               <SheetTrigger asChild>
-                <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white">
                   Nuevo descanso
                 </Button>
               </SheetTrigger>
@@ -331,7 +331,7 @@ export default function Breaks() {
                   {/* Botón Añadir */}
                   <div className="pt-4">
                     <Button
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                      className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
                       onClick={handleAddBreak}
                     >
                       AÑADIR

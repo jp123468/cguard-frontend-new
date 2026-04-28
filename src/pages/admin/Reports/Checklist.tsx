@@ -80,7 +80,7 @@ export default function Checklist() {
 
             <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="border-orange-200 text-orange-600">
+                <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A]">
                   <Filter className="mr-2 h-4 w-4" />
                   Filtros
                 </Button>
@@ -146,7 +146,7 @@ export default function Checklist() {
                     <Label htmlFor="archived" className="text-sm font-normal text-slate-600">Mostrar datos archivados</Label>
                   </div>
 
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                  <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white">
                     Filtro
                   </Button>
                 </div>
