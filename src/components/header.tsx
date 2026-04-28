@@ -121,52 +121,54 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm h-14">
+    <header className="sticky top-0 z-50 bg-white border-b border-slate-200/80 shadow-sm h-14" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
       <div className="h-14 px-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded hover:bg-gray-100"
+            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
             aria-label={t('header.openMenu')}
             title={t('header.openMenu')}
           >
-            <Menu className="w-5 h-5 text-gray-600" />
+            <Menu className="w-4.5 h-4.5 text-slate-500" />
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setFeedbackOpen(true)}
-            className="p-2 rounded hover:bg-gray-100"
+            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
             aria-label={t('header.feedback')}
             title={t('header.feedback')}
           >
-            <MessageSquare className="w-5 h-5 text-gray-600" />
+            <MessageSquare className="w-4.5 h-4.5 text-slate-500" />
           </button>
-          <button className="p-2 rounded hover:bg-gray-100" aria-label={t('header.search')} title={t('header.search')}>
-            <Search className="w-5 h-5 text-gray-600" />
+          <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors" aria-label={t('header.search')} title={t('header.search')}>
+            <Search className="w-4.5 h-4.5 text-slate-500" />
           </button>
           <button
             onClick={() => setHelpOpen(true)}
-            className="p-2 rounded hover:bg-gray-100"
+            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
             aria-label={t('header.help')}
             title={t('header.help')}
           >
-            <HelpCircle className="w-5 h-5 text-gray-600" />
+            <HelpCircle className="w-4.5 h-4.5 text-slate-500" />
           </button>
           <button
             onClick={() => setNotificationsOpen(true)}
-            className="relative p-2 rounded hover:bg-gray-100"
+            className="relative p-2 rounded-lg hover:bg-slate-100 transition-colors"
             aria-label={t('header.notifications')}
             title={t('header.notifications')}
           >
-            <Bell className="w-5 h-5 text-gray-600" />
+            <Bell className="w-4.5 h-4.5 text-slate-500" />
             {notificationsCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 h-4 min-w-4 px-1 rounded-full bg-emerald-500 text-white text-[10px] leading-4 text-center">
+              <span className="absolute -right-0.5 -top-0.5 h-4 min-w-4 px-1 rounded-full bg-[#C8860A] text-white text-[10px] leading-4 text-center font-medium">
                 {notificationsCount}
               </span>
             )}
           </button>
+
+          <div className="w-px h-6 bg-slate-200 mx-1" />
 
           <div ref={userRef} className="relative">
             <button
@@ -174,87 +176,82 @@ export default function Header({
                 setOpenUser((v) => !v);
                 setOpenTheme(false);
               }}
-              className="flex items-center gap-2 rounded px-2 py-1 hover:bg-gray-100"
+              className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 hover:bg-slate-100 transition-colors"
               title={userName || t('header.account')}
               aria-label={t('header.account')}
             >
               {avatar ? (
-                <img src={avatar} alt={userName} className="w-7 h-7 rounded-full object-cover" />
+                <img src={avatar} alt={userName} className="w-7 h-7 rounded-full object-cover ring-2 ring-[#C8860A]/30" />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-gray-300 text-gray-700 text-xs font-semibold grid place-items-center">
+                <div
+                  className="w-7 h-7 rounded-full text-white text-xs font-semibold grid place-items-center"
+                  style={{ background: "linear-gradient(135deg, #C8860A, #F5C300)" }}
+                >
                   {getInitials(userName)}
                 </div>
               )}
-              <div className="leading-tight hidden sm:block mr-1">
-                <div className="text-[11px] text-gray-500">{showTenant ? tenantName : ''}</div>
-                <div className="text-[11px] text-gray-800">{userName}</div>
+              <div className="leading-tight hidden sm:block">
+                {showTenant && <div className="text-[10px] text-slate-400 font-medium">{tenantName}</div>}
+                <div className="text-[12px] font-medium text-slate-700">{userName}</div>
               </div>
-              <ChevronDown className="w-4 h-4 text-gray-600" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
 
             {openUser && (
-              <div className="absolute right-0 mt-2 w-[320px] rounded-md border border-gray-200 bg-white shadow-lg">
-                <div className="px-4 py-3 border-b border-gray-200">
-                  <div className="text-[12px] text-gray-600">Conectado como</div>
-                  <div className="text-[13px] font-medium text-gray-800 truncate">{userEmail}</div>
+              <div className="absolute right-0 mt-2 w-[300px] rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+                <div className="px-4 py-3.5 bg-gradient-to-r from-slate-50 to-amber-50/40 border-b border-slate-100">
+                  <div className="text-[11px] text-slate-400 mb-0.5">Conectado como</div>
+                  <div className="text-[13px] font-semibold text-slate-800 truncate">{userEmail}</div>
                 </div>
 
-                <div className="py-1">
-                  <NavLink to="/setting/user-profile" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-sm text-gray-800">
-                    <Settings className="w-4 h-4 text-gray-600" />
+                <div className="py-1.5">
+                  <NavLink to="/setting/user-profile" className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-sm text-slate-700 transition-colors">
+                    <Settings className="w-4 h-4 text-slate-400" />
                     {t('header.settings')}
                   </NavLink>
-                  <NavLink to="/billing" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-sm text-gray-800">
-                    <CreditCard className="w-4 h-4 text-gray-600" />
+                  <NavLink to="/billing" className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-sm text-slate-700 transition-colors">
+                    <CreditCard className="w-4 h-4 text-slate-400" />
                     {t('header.subscription')}
                   </NavLink>
-                  <NavLink to="/branch" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-sm text-gray-800">
-                    <StoreIcon className="w-4 h-4 text-gray-600" />
+                  <NavLink to="/branch" className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-sm text-slate-700 transition-colors">
+                    <StoreIcon className="w-4 h-4 text-slate-400" />
                     {t('header.branches')}
                   </NavLink>
-                  <NavLink to="/registros-sistema" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-sm text-gray-800">
-                    <Clock className="w-4 h-4 text-gray-600" />
+                  <NavLink to="/registros-sistema" className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-sm text-slate-700 transition-colors">
+                    <Clock className="w-4 h-4 text-slate-400" />
                     {t('header.system_logs')}
                   </NavLink>
-                  <NavLink to="/historial-inicio-sesion" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-sm text-gray-800">
-                    <History className="w-4 h-4 text-gray-600" />
+                  <NavLink to="/historial-inicio-sesion" className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-sm text-slate-700 transition-colors">
+                    <History className="w-4 h-4 text-slate-400" />
                     {t('header.login_history')}
                   </NavLink>
 
                   <div className="relative">
                     <button
                       onClick={() => setOpenTheme((v) => !v)}
-                      className="w-full flex items-center justify-between px-4 py-2 hover:bg-gray-50 text-sm text-gray-800"
+                      className="w-full flex items-center justify-between px-4 py-2 hover:bg-slate-50 text-sm text-slate-700 transition-colors"
                     >
-                        <span className="inline-flex items-center gap-3">
-                        <Droplet className="w-4 h-4 text-gray-600" />
+                      <span className="inline-flex items-center gap-3">
+                        <Droplet className="w-4 h-4 text-slate-400" />
                         {t('header.light_mode')}
                       </span>
-                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                     </button>
 
                     {openTheme && (
-                      <div className="absolute right-full top-0 mr-2 w-44 rounded-md border border-gray-200 bg-white shadow-lg">
+                      <div className="absolute right-full top-0 mr-2 w-44 rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
                         <button
-                          onClick={() => {
-                            onChangeTheme?.("dark");
-                            setOpenUser(false);
-                            setOpenTheme(false);
-                          }}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 ${theme === "dark" ? "font-semibold text-gray-900" : "text-gray-800"}`}
+                          onClick={() => { onChangeTheme?.("dark"); setOpenUser(false); setOpenTheme(false); }}
+                          className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors ${theme === "dark" ? "font-semibold text-slate-900" : "text-slate-700"}`}
                         >
-                          <Moon className="w-4 h-4 text-gray-600" />
+                          <Moon className="w-4 h-4 text-slate-400" />
                           {t('header.dark_mode')}
                         </button>
                         <button
-                          onClick={() => {
-                            onChangeTheme?.("light");
-                            setOpenUser(false);
-                            setOpenTheme(false);
-                          }}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 ${theme === "light" ? "font-semibold text-gray-900" : "text-gray-800"}`}
+                          onClick={() => { onChangeTheme?.("light"); setOpenUser(false); setOpenTheme(false); }}
+                          className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors ${theme === "light" ? "font-semibold text-slate-900" : "text-slate-700"}`}
                         >
-                          <Sun className="w-4 h-4 text-gray-600" />
+                          <Sun className="w-4 h-4 text-slate-400" />
                           Modo claro
                         </button>
                       </div>
@@ -262,8 +259,8 @@ export default function Header({
                   </div>
                 </div>
 
-                <div className="border-t border-gray-200 p-1">
-                    <button onClick={handleLogout} className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                <div className="border-t border-slate-100 p-1.5">
+                  <button onClick={handleLogout} className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                     <LogOut className="w-4 h-4" />
                     {t('header.logout')}
                   </button>

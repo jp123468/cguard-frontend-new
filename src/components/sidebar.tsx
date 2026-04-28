@@ -79,140 +79,132 @@ export default function Sidebar() {
   }, [location.pathname]);
 
   return (
-    <aside className="h-full w-full bg-white border-r border-gray-200 overflow-y-auto hide-scrollbar">
-      <div className="h-full">
-        {/* <div className="flex items-center gap-2 px-4 py-6">
-          <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
-            <Shield className="w-5 h-5 text-white" />
-          </div>
-          <span className="font-bold text-xl">
-            <span className="text-[#0C2459]">Guards</span>
-            <span className="text-[#F36A6D]">Pro</span>
-          </span>
-        </div> */}
+    <aside
+      className="h-full w-full overflow-y-auto hide-scrollbar flex flex-col"
+      style={{ background: "linear-gradient(180deg, #0F1923 0%, #1C2B3A 100%)" }}
+    >
+      {/* Logo / brand */}
+      <div
+        className="sticky top-0 z-20 flex items-center gap-3 px-5 py-4"
+        style={{ background: "#0F1923", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <img
+          src="/assets/logo/c-guard-logo.png"
+          alt="C-Guard"
+          className="w-10 select-none brightness-0 invert"
+        />
+        <span className="font-extrabold text-2xl tracking-tight">
+          <span className="text-white">C</span>
+          <span style={{ color: "#F5C300" }}>Guard</span>
+        </span>
+      </div>
 
-        <div className="sticky top-0 z-20 bg-white flex items-center gap-2 px-5 py-3 border-b border-gray-100">
-          <img
-            src="/assets/logo/c-guard-logo.png"
-            alt="C Guard logo"
-            className="w-14 select-none"
-          />
+      <div className="flex flex-col flex-1">
+        <nav className="p-3 flex-1 overflow-y-auto">
+          {menuItems
+            .filter(item => {
+              if ((item as any).disabled) return false;
+              if (!item.allowedRoles || item.allowedRoles.length === 0) return true;
+              if (item.allowedRoles.includes('superadmin')) return isGlobalAdmin;
+              const raw = user?.roles ?? user?.role ?? [];
+              const arr = Array.isArray(raw) ? raw : [raw];
+              const normalized = arr.map((r: any) => (typeof r === 'string' ? r.toLowerCase() : (r && (r.name || r.role) ? String(r.name || r.role).toLowerCase() : ''))).filter(Boolean);
+              return item.allowedRoles.some((ar: string) => normalized.includes(ar.toLowerCase()));
+            })
+            .map((item) => {
+              const isExpanded = !!expandedMenus[item.id];
+              const isExpandable = !!item.expandable;
+              const isDisabled = !hasTenant && item.path && item.path !== "/dashboard";
 
-          <span className="font-bold text-3xl">
-            <span className="text-[#1A1A1A]">C</span>
-            <span className="text-[#C8860A]">Guard</span>
-          </span>
-
-        </div>
-
-        <div className="flex flex-col h-full">
-          <nav className="p-2 flex-1 overflow-y-auto">
-            {menuItems
-              .filter(item => {
-                // hide temporarily disabled items
-                if ((item as any).disabled) return false;
-                // If menu item has allowedRoles, only show it when the user has matching global role
-                if (!item.allowedRoles || item.allowedRoles.length === 0) return true;
-                // currently we only need to guard 'superadmin' section; treat allowedRoles matching 'superadmin'
-                if (item.allowedRoles.includes('superadmin')) return isGlobalAdmin;
-                // Fallback: allow if user has any of the allowedRoles in their global roles
-                const raw = user?.roles ?? user?.role ?? [];
-                const arr = Array.isArray(raw) ? raw : [raw];
-                const normalized = arr.map((r: any) => (typeof r === 'string' ? r.toLowerCase() : (r && (r.name || r.role) ? String(r.name || r.role).toLowerCase() : ''))).filter(Boolean);
-                return item.allowedRoles.some((ar: string) => normalized.includes(ar.toLowerCase()));
-              })
-              .map((item) => {
-            const isExpanded = !!expandedMenus[item.id];
-            const isExpandable = !!item.expandable;
-
-            const ItemWrapper = ({ children }: { children: React.ReactNode }) => {
-              // If user has no tenant, only allow Dashboard (panel) navigation; disable others
-              if (!hasTenant && item.path && item.path !== "/dashboard") {
-                return <div className="block rounded-lg mb-1 transition-colors font-bold text-gray-400 cursor-not-allowed">{children}</div>;
-              }
-              return !isExpandable && item.path ? (
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `block rounded-lg mb-1 transition-colors font-bold ${isActive
-                      ? "bg-gradient-to-r font-bold hover:bg-[#F8F8F8] from-[#FFF0F0] to-[#FFEAEA] text-[#F36A6D] border-l-4 border-[#F36A6D]"
-                      : "text-[#0C2459] font-bold hover:bg-[#F8F8F8]"
-                    }`
-                  }
-                >
-                  {children}
-                </NavLink>
-              ) : (
-                <div className="rounded-lg mb-1 font-bold text-[#0C2459]">{children}</div>
-              );
-            };
-
-            return (
-              <div key={item.id}>
-                <ItemWrapper>
-                    <button
-                    type="button"
-                    onClick={() => {
-                      if (!hasTenant && item.path !== "/dashboard") return; // block navigation when no tenant
-                      if (isExpandable) toggleMenu(item.id);
-                      else if (item.path) navigate(item.path);
-                    }}
-                    className={`w-full hover:bg-[#F8F8F8] rounded hover:cursor-pointer font-semibold flex items-center justify-between px-3 py-3 text-sm ${!hasTenant && item.path !== "/dashboard" ? 'opacity-60' : ''}`}
-                    aria-disabled={!hasTenant && item.path !== "/dashboard"}
+              const ItemWrapper = ({ children }: { children: React.ReactNode }) => {
+                if (isDisabled) {
+                  return <div className="mb-0.5 cursor-not-allowed opacity-40">{children}</div>;
+                }
+                return !isExpandable && item.path ? (
+                  <NavLink
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `block mb-0.5 rounded-lg transition-all ${isActive
+                        ? "text-white"
+                        : "text-slate-400 hover:text-white"
+                      }`
+                    }
                   >
-                    <div className="flex items-center gap-3">
-                      <item.icon className="w-5 h-5" />
-                      <span className="text-start text-sm">
-                        {(() => {
-                          // Prefer explicit label key: sidebar.<id>.label
-                          const label = t(`sidebar.${item.id}.label`, { defaultValue: '' });
-                          if (label) return label;
-                          // Fallback to flattened key sidebar.<id>
-                          const flat = t(`sidebar.${item.id}`, { defaultValue: '' });
-                          if (flat) return flat;
-                          return item.name;
-                        })()}
-                      </span>
-                    </div>
-                    {isExpandable && (
-                      <ChevronRight className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-                    )}
-                  </button>
-                </ItemWrapper>
+                    {children}
+                  </NavLink>
+                ) : (
+                  <div className="mb-0.5 rounded-lg text-slate-400">{children}</div>
+                );
+              };
 
-                {isExpandable && isExpanded && item.subItems && hasTenant && (
-                  <div className="ml-8 mb-2">
-                    {item.subItems.map((sub) => {
-                      const isActive = location.pathname.startsWith(sub.path);
-                      return (
-                        <NavLink
-                          key={sub.id}
-                          to={sub.path}
-                          className={
-                              `block w-full rounded font-semibold px-2 py-1.5 mb-1 text-sm ${isActive
-                              ? "bg-gradient-to-r from-[#FFF0F0] to-[#FFEAEA] text-[#F36A6D] border-l-2 border-[#F36A6D]"
-                              : "text-[#0C2459] hover:text-[#F36A6D]"
-                            }`
-                          }
-                        >
+              return (
+                <div key={item.id}>
+                  <ItemWrapper>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isDisabled) return;
+                        if (isExpandable) toggleMenu(item.id);
+                        else if (item.path) navigate(item.path);
+                      }}
+                      className={`w-full rounded-lg flex items-center justify-between px-3 py-2.5 text-sm font-medium transition-all group ${isDisabled ? '' : 'hover:bg-white/5'}`}
+                      aria-disabled={!!isDisabled}
+                      style={
+                        !isExpandable && item.path && location.pathname === item.path
+                          ? { background: "rgba(200,134,10,0.15)", color: "#F5C300", borderLeft: "3px solid #C8860A" }
+                          : {}
+                      }
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon className="w-4 h-4 shrink-0" />
+                        <span className="text-start text-[13px] leading-tight">
                           {(() => {
-                            // Try specific subkey under parent, then flat sub key, then fallback
-                            const parentSub = t(`sidebar.${item.id}.${sub.id}`, { defaultValue: '' });
-                            if (parentSub) return parentSub;
-                            const flat = t(`sidebar.${sub.id}`, { defaultValue: '' });
+                            const label = t(`sidebar.${item.id}.label`, { defaultValue: '' });
+                            if (label) return label;
+                            const flat = t(`sidebar.${item.id}`, { defaultValue: '' });
                             if (flat) return flat;
-                            return sub.name;
+                            return item.name;
                           })()}
-                        </NavLink>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
+                        </span>
+                      </div>
+                      {isExpandable && (
+                        <ChevronRight className={`w-3.5 h-3.5 transition-transform opacity-50 ${isExpanded ? "rotate-90" : ""}`} />
+                      )}
+                    </button>
+                  </ItemWrapper>
+
+                  {isExpandable && isExpanded && item.subItems && hasTenant && (
+                    <div className="ml-7 mb-1 border-l border-white/10 pl-3">
+                      {item.subItems.map((sub) => {
+                        const isActive = location.pathname.startsWith(sub.path);
+                        return (
+                          <NavLink
+                            key={sub.id}
+                            to={sub.path}
+                            className={`block rounded px-2 py-2 mb-0.5 text-[12px] font-medium transition-all ${isActive
+                              ? "text-[#F5C300]"
+                              : "text-slate-400 hover:text-white hover:bg-white/5"
+                            }`}
+                            style={isActive ? { background: "rgba(200,134,10,0.12)" } : {}}
+                          >
+                            {(() => {
+                              const parentSub = t(`sidebar.${item.id}.${sub.id}`, { defaultValue: '' });
+                              if (parentSub) return parentSub;
+                              const flat = t(`sidebar.${sub.id}`, { defaultValue: '' });
+                              if (flat) return flat;
+                              return sub.name;
+                            })()}
+                          </NavLink>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
             })}
-          </nav>
-          <div className="px-3 py-3 text-sm text-slate-500">{/* bottom spacer / place for footer */}</div>
+        </nav>
+        <div className="px-4 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <p className="text-[10px] text-slate-600 text-center">© {new Date().getFullYear()} CGUARD</p>
         </div>
       </div>
     </aside>

@@ -27,6 +27,7 @@ type WidgetDef = {
   color: {
     text: string;         // para el número y título
     iconBg: string;       // fondo suave del icono
+    accent: string;       // hex color for top bar + shadow
   };
 };
 
@@ -36,42 +37,42 @@ const WIDGETS: WidgetDef[] = [
     title: "Clientes",
     subtitle: "Clientes Activos",
     Icon: Users,
-    color: { text: "text-emerald-600", iconBg: "bg-emerald-50" },
+    color: { text: "text-emerald-600", iconBg: "bg-emerald-50", accent: "#10b981" },
   },
   {
     id: "sitios",
     title: "Puestos de Vigilancia",
     subtitle: "Puestos de Vigilancia Activos",
     Icon: MapPin,
-    color: { text: "text-blue-600", iconBg: "bg-blue-50" },
+    color: { text: "text-blue-600", iconBg: "bg-blue-50", accent: "#3b82f6" },
   },
   {
     id: "guardias",
     title: "security-guards",
     subtitle: "Guardias Activos",
     Icon: Shield,
-    color: { text: "text-violet-600", iconBg: "bg-violet-50" },
+    color: { text: "text-violet-600", iconBg: "bg-violet-50", accent: "#8b5cf6" },
   },
   {
     id: "equipo",
     title: "Equipo administrativo",
     subtitle: "Usuarios Activos",
     Icon: UserSquare2,
-    color: { text: "text-cyan-600", iconBg: "bg-cyan-50" },
+    color: { text: "text-cyan-600", iconBg: "bg-cyan-50", accent: "#06b6d4" },
   },
   {
     id: "registros",
     title: "Registros",
     subtitle: "Hoy",
     Icon: MapPinned,
-    color: { text: "text-amber-600", iconBg: "bg-amber-50" },
+    color: { text: "text-amber-600", iconBg: "bg-amber-50", accent: "#C8860A" },
   },
   {
     id: "fichados",
     title: "Fichados",
     subtitle: "Hoy",
     Icon: ActivitySquare,
-    color: { text: "text-rose-600", iconBg: "bg-rose-50" },
+    color: { text: "text-rose-600", iconBg: "bg-rose-50", accent: "#f43f5e" },
   },
 ];
 
@@ -142,6 +143,7 @@ export default function WidgetsBoard({
               Icon={w.Icon}
               colorText={w.color.text}
               iconBg={w.color.iconBg}
+              accentColor={w.color.accent}
             />
           ))}
         </div>
@@ -152,7 +154,7 @@ export default function WidgetsBoard({
 
 /* ----- Tarjeta de métrica ----- */
 function StatCard({
-  title, value, subtitle, Icon, colorText, iconBg,
+  title, value, subtitle, Icon, colorText, iconBg, accentColor,
 }: {
   title: string;
   value: number | string;
@@ -160,19 +162,35 @@ function StatCard({
   Icon: any;
   colorText: string;
   iconBg: string;
+  accentColor: string;
 }) {
   return (
-    <Card className="rounded-2xl p-4 md:p-5">
-      <div className="flex items-center gap-3 text-sm font-medium">
-        <div className={cn("h-8 w-8 md:h-6 md:w-6 grid place-items-center rounded-full flex-shrink-0", iconBg)}>
-          <Icon className={cn("h-4 w-4 md:h-3.5 md:w-3.5", colorText)} />
+    <div
+      className="relative rounded-2xl bg-white overflow-hidden"
+      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04)" }}
+    >
+      {/* Accent bar on top */}
+      <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: accentColor }} />
+
+      <div className="p-4 md:p-5">
+        <div className="flex items-start justify-between mb-3">
+          <div
+            className={cn("h-9 w-9 grid place-items-center rounded-xl flex-shrink-0", iconBg)}
+            style={{ boxShadow: `0 2px 8px ${accentColor}30` }}
+          >
+            <Icon className={cn("h-4.5 w-4.5", colorText)} />
+          </div>
         </div>
-        <span className={cn(colorText, "truncate")}>{title}</span>
+
+        <div className={cn("text-3xl md:text-4xl font-bold tabular-nums", colorText)}>
+          {value}
+        </div>
+
+        <div className="mt-1.5">
+          <div className="text-[12px] font-semibold text-slate-700 truncate leading-tight">{title}</div>
+          <div className="text-[11px] text-slate-400 truncate">{subtitle}</div>
+        </div>
       </div>
-
-      <div className={cn("mt-3 text-2xl md:text-4xl font-semibold truncate", colorText)}>{value}</div>
-
-      <div className="mt-2 text-sm text-muted-foreground truncate">{subtitle}</div>
-    </Card>
+    </div>
   );
 }
