@@ -153,7 +153,7 @@ export default function Login() {
       <form className="space-y-4" onSubmit={handleLogin}>
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-            {t('auth.email_label')}<span style={{ color: "#F75638" }}>*</span>
+            {t('auth.email_label')}<span style={{ color: "#C8860A" }}>*</span>
           </label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -164,7 +164,7 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 transition-all focus:border-[#0C2459] focus:outline-none focus:ring-2 focus:ring-[#0C2459]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#F75638] dark:focus:ring-[#F75638]/20"
+              className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 transition-all focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#C8860A] dark:focus:ring-[#C8860A]/20"
               autoComplete="email"
             />
           </div>
@@ -172,7 +172,7 @@ export default function Login() {
 
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-            {t('auth.password_label')}<span style={{ color: "#F75638" }}>*</span>
+            {t('auth.password_label')}<span style={{ color: "#C8860A" }}>*</span>
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -183,7 +183,7 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-12 text-slate-900 placeholder-slate-400 transition-all focus:border-[#0C2459] focus:outline-none focus:ring-2 focus:ring-[#0C2459]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#F75638] dark:focus:ring-[#F75638]/20"
+              className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-12 text-slate-900 placeholder-slate-400 transition-all focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#C8860A] dark:focus:ring-[#C8860A]/20"
               autoComplete="current-password"
             />
             <button
@@ -197,7 +197,7 @@ export default function Login() {
         </div>
 
         <div className="text-right">
-          <NavLink to="/forgot-password" className="text-sm font-medium hover:underline" style={{ color: "#F75638" }}>
+          <NavLink to="/forgot-password" className="text-sm font-medium hover:underline" style={{ color: "#C8860A" }}>
             {t('auth.forgot_password')}
           </NavLink>
         </div>
@@ -206,7 +206,7 @@ export default function Login() {
           type="submit"
           disabled={isLoading}
           className="w-full rounded-lg py-3 font-semibold text-white transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg, #0C2459 0%, #1a3a7d 100%)" }}
+          style={{ background: "linear-gradient(135deg, #C8860A 0%, #F5C300 100%)" }}
         >
           {isLoading ? t('auth.signing_in') : t('auth.login')}
         </button>
@@ -222,7 +222,7 @@ export default function Login() {
 
         <div className="text-center">
           <span className="text-sm text-slate-600 dark:text-slate-400">{t('auth.no_account_text')} </span>
-          <NavLink to="/register" className="text-sm font-semibold hover:underline" style={{ color: "#F75638" }}>
+          <NavLink to="/register" className="text-sm font-semibold hover:underline" style={{ color: "#C8860A" }}>
             {t('auth.create_account')}
           </NavLink>
         </div>

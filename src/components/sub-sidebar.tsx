@@ -71,8 +71,8 @@ export default function SubSidebar({
                       [
                         "block rounded-md px-3 py-2 text-[12px] font-semibold transition-colors",
                         isActive
-                          ? "bg-gradient-to-r from-[#FFF0F0] to-[#FFEAEA] text-[#F36A6D] border-l-4 border-[#F36A6D]"
-                          : "text-[#0C2459] hover:bg-gray-50",
+                          ? "bg-gradient-to-r from-[#FFF8E6] to-[#FFF0C4] text-[#C8860A] border-l-4 border-[#C8860A]"
+                          : "text-[#1A1A1A] hover:bg-gray-50",
                       ].join(" ")
                     }
                   >

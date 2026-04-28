@@ -18,9 +18,9 @@ export default function SplashScreen() {
       {/* Logo y texto */}
       <div className="flex flex-col items-center">
         <img
-          src="/assets/logo/logo.png"
-          alt="GuardsPro Logo"
-          className="w-40 select-none"
+          src="/assets/logo/c-guard-logo.png"
+          alt="C Guard logo"
+          className="w-52 select-none"
         />
 
         {/* <div className="text-center">
@@ -31,9 +31,9 @@ export default function SplashScreen() {
 
         {/* Tres puntos animados */}
         <div className="flex space-x-2 mt-5">
-          <span className="w-3 h-3 bg-[#FE6F05] rounded-full animate-bounce [animation-delay:-0.10s]" />
-          <span className="w-3 h-3 bg-[#FE6F05] rounded-full animate-bounce [animation-delay:-0.15s]" />
-          <span className="w-3 h-3 bg-[#FE6F05] rounded-full animate-bounce" />
+          <span className="w-3 h-3 bg-[#C8860A] rounded-full animate-bounce [animation-delay:-0.10s]" />
+          <span className="w-3 h-3 bg-[#C8860A] rounded-full animate-bounce [animation-delay:-0.15s]" />
+          <span className="w-3 h-3 bg-[#C8860A] rounded-full animate-bounce" />
         </div>
       </div>
     </div>

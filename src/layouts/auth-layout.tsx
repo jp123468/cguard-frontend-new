@@ -19,7 +19,7 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
   if (loading) return <SplashScreen />;
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
         
         {/* LADO IZQUIERDO */}
@@ -27,10 +27,10 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
           {/* Logo grande */}
           <div className="mb-10 flex justify-center">
             <img
-              src="/assets/logo/logo.png"
+              src="/assets/logo/c-guard-logo.png"
               alt="CG Guard"
-              width={150}
-              height={150}
+              width={320}
+              height={320}
               className="object-contain"
             />
           </div>
@@ -38,7 +38,7 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
           {/* Título + descripción */}
           <h1
             className="text-5xl font-bold leading-tight mb-4"
-            style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: "#0C2459" }}
+            style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: "#1A1A1A" }}
           >
             {t('auth.landing.title_part1')} <br />
             {t('auth.landing.title_part2')}
@@ -55,9 +55,9 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
                 key={tag}
                 className="rounded-full border px-4 py-2 text-sm font-medium"
                 style={{
-                  borderColor: "rgba(12,36,89,0.15)",
-                  backgroundColor: "rgba(12,36,89,0.05)",
-                  color: "#0C2459",
+                  borderColor: "rgba(200,134,10,0.25)",
+                  backgroundColor: "rgba(200,134,10,0.07)",
+                  color: "#C8860A",
                 }}
               >
                 {tag}
@@ -66,8 +66,8 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
           </div>
 
           {/* Fondos decorativos suaves */}
-          <div className="absolute top-20 right-20 h-64 w-64 rounded-full bg-gradient-to-br from-[#0C2459]/10 to-[#F75638]/10 blur-3xl" />
-          <div className="absolute bottom-20 left-10 h-80 w-80 rounded-full bg-gradient-to-tr from-[#F75638]/10 to-[#0C2459]/10 blur-3xl" />
+          <div className="absolute top-20 right-20 h-64 w-64 rounded-full bg-gradient-to-br from-[#C8860A]/10 to-[#F5C300]/10 blur-3xl" />
+          <div className="absolute bottom-20 left-10 h-80 w-80 rounded-full bg-gradient-to-tr from-[#F5C300]/10 to-[#C8860A]/10 blur-3xl" />
         </div>
 
         {/* LADO DERECHO - Autenticación */}
@@ -78,7 +78,7 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
                 <div className="mb-8">
                   <h2
                     className="text-3xl font-bold"
-                    style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: "#F75638" }}
+                    style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: "#1A1A1A" }}
                   >
                     {title}
                   </h2>

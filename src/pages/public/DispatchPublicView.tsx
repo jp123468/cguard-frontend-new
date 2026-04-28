@@ -145,7 +145,7 @@ export default function DispatchPublicView() {
       <div className="max-w-4xl mx-auto">
         {/* Logo + Map header */}
         <div className="flex flex-col items-center mb-4">
-          <img src="/assets/logo/logo.png" alt="Logo" className="h-25 mb-4" style={{ objectFit: 'contain' }} />
+          <img src="/assets/logo/c-guard-logo.png" alt="C Guard logo" className="h-32 mb-4" style={{ objectFit: 'contain' }} />
           {coords && <div className="w-full mb-2"><IncidentMap lat={coords.lat} lng={coords.lng} label={payload?.ticketId || payload?.id} /></div>}
         </div>
 

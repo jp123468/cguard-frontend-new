@@ -93,14 +93,14 @@ export default function Sidebar() {
 
         <div className="sticky top-0 z-20 bg-white flex items-center gap-2 px-5 py-3 border-b border-gray-100">
           <img
-            src="/assets/logo/logo.png"
-            alt="GuardsPro Logo"
-            className="w-10 select-none"
+            src="/assets/logo/c-guard-logo.png"
+            alt="C Guard logo"
+            className="w-14 select-none"
           />
 
           <span className="font-bold text-3xl">
-            <span className="text-[#010B40]">C</span>
-            <span className="text-[#FE6F02]">Guard</span>
+            <span className="text-[#1A1A1A]">C</span>
+            <span className="text-[#C8860A]">Guard</span>
           </span>
 
         </div>

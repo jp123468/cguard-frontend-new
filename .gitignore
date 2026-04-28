@@ -22,6 +22,11 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment files
+.env
+.env.*
+!.env.example
+
 
 pnpm-lock.yaml
 yarn.lock
