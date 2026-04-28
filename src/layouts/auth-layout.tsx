@@ -1,6 +1,7 @@
 import SplashScreen from "@/components/SplashScreen";
 import { ReactNode, useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
+import { Shield, Clock, BarChart3, CheckCircle2 } from "lucide-react";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -18,78 +19,118 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
 
   if (loading) return <SplashScreen />;
 
+  const features = [
+    { icon: Shield, label: t('auth.landing.tag_cloud') },
+    { icon: Clock, label: t('auth.landing.tag_realtime') },
+    { icon: BarChart3, label: t('auth.landing.tag_analytics') },
+  ];
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
-        
-        {/* LADO IZQUIERDO */}
-        <div className="flex flex-col justify-center p-12 xl:p-20 bg-transparent relative">
-          {/* Logo grande */}
-          <div className="mb-10 flex justify-center">
-            <img
-              src="/assets/logo/c-guard-logo.png"
-              alt="CG Guard"
-              width={320}
-              height={320}
-              className="object-contain"
-            />
+    <div className="min-h-screen w-full flex">
+      {/* LADO IZQUIERDO — panel de marca oscuro */}
+      <div
+        className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden"
+        style={{ background: "linear-gradient(145deg, #0F1923 0%, #1C2B3A 50%, #0F1923 100%)" }}
+      >
+        {/* Patrón de cuadrícula sutil */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(#C8860A 1px, transparent 1px), linear-gradient(90deg, #C8860A 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+
+        {/* Orbes decorativos */}
+        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#C8860A] opacity-10 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 -left-32 h-[32rem] w-[32rem] rounded-full bg-[#F5C300] opacity-5 blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-[#C8860A] opacity-5 blur-2xl pointer-events-none" />
+
+        {/* Logo */}
+        <div className="relative z-10">
+          <img
+            src="/assets/logo/c-guard-logo.png"
+            alt="C-Guard"
+            className="h-16 object-contain brightness-0 invert"
+          />
+        </div>
+
+        {/* Contenido central */}
+        <div className="relative z-10 flex-1 flex flex-col justify-center py-12">
+          <div
+            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold tracking-widest uppercase mb-8 w-fit"
+            style={{ background: "rgba(200,134,10,0.15)", color: "#F5C300", border: "1px solid rgba(200,134,10,0.3)" }}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[#F5C300] animate-pulse" />
+            Plataforma de Seguridad
           </div>
 
-          {/* Título + descripción */}
-          <h1
-            className="text-5xl font-bold leading-tight mb-4"
-            style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: "#1A1A1A" }}
-          >
-            {t('auth.landing.title_part1')} <br />
-            {t('auth.landing.title_part2')}
+          <h1 className="text-5xl xl:text-6xl font-extrabold leading-[1.1] text-white mb-6">
+            {t('auth.landing.title_part1')}{" "}
+            <span
+              className="block"
+              style={{ WebkitTextFillColor: "transparent", WebkitBackgroundClip: "text", backgroundClip: "text", backgroundImage: "linear-gradient(90deg, #C8860A, #F5C300)" }}
+            >
+              {t('auth.landing.title_part2')}
+            </span>
           </h1>
 
-          <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
+          <p className="text-base xl:text-lg text-slate-400 leading-relaxed max-w-md mb-10">
             {t('auth.landing.desc', { product: 'CGUARD' })}
           </p>
 
-          {/* Etiquetas */}
-          <div className="flex flex-wrap gap-3">
-            {[t('auth.landing.tag_cloud'), t('auth.landing.tag_realtime'), t('auth.landing.tag_analytics')].map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border px-4 py-2 text-sm font-medium"
-                style={{
-                  borderColor: "rgba(200,134,10,0.25)",
-                  backgroundColor: "rgba(200,134,10,0.07)",
-                  color: "#C8860A",
-                }}
-              >
-                {tag}
-              </span>
+          {/* Feature pills */}
+          <div className="flex flex-col gap-3">
+            {features.map(({ icon: Icon, label }) => (
+              <div key={label} className="flex items-center gap-3">
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
+                  style={{ background: "rgba(200,134,10,0.15)" }}
+                >
+                  <Icon className="h-4 w-4" style={{ color: "#F5C300" }} />
+                </div>
+                <span className="text-sm font-medium text-slate-300">{label}</span>
+                <CheckCircle2 className="h-4 w-4 ml-auto shrink-0" style={{ color: "#C8860A" }} />
+              </div>
             ))}
           </div>
-
-          {/* Fondos decorativos suaves */}
-          <div className="absolute top-20 right-20 h-64 w-64 rounded-full bg-gradient-to-br from-[#C8860A]/10 to-[#F5C300]/10 blur-3xl" />
-          <div className="absolute bottom-20 left-10 h-80 w-80 rounded-full bg-gradient-to-tr from-[#F5C300]/10 to-[#C8860A]/10 blur-3xl" />
         </div>
 
-        {/* LADO DERECHO - Autenticación */}
-        <div className="flex items-start justify-center p-6 lg:p-12 pt-12 lg:pt-20 relative">
-          <div className="w-full max-w-xl relative">
-            {/* Tarjeta del formulario */}
-            <div className="rounded-2xl border border-slate-200/50 bg-white/90 backdrop-blur-xl p-10 shadow-2xl dark:border-white/10 dark:bg-slate-900/80">
-                <div className="mb-8">
-                  <h2
-                    className="text-3xl font-bold"
-                    style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: "#1A1A1A" }}
-                  >
-                    {title}
-                  </h2>
-                </div>
-                {children}
-            </div>
+        {/* Footer izquierdo */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="h-px flex-1 bg-white/10" />
+          <span className="text-xs text-slate-500">Seguridad Inteligente</span>
+          <div className="h-px flex-1 bg-white/10" />
+        </div>
+      </div>
 
-            <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
-              {t('auth.footer_copyright', { defaultValue: `© 2025-{{year}} CGUARD. All rights reserved.`, year: new Date().getFullYear() })}
+      {/* LADO DERECHO — formulario */}
+      <div className="flex flex-1 flex-col items-center justify-center p-6 lg:p-12 bg-[#F8F7F4] dark:bg-slate-950 relative">
+        {/* Logo solo en móvil */}
+        <div className="mb-8 lg:hidden">
+          <img src="/assets/logo/c-guard-logo.png" alt="C-Guard" className="h-12 object-contain" />
+        </div>
+
+        <div className="w-full max-w-md">
+          {/* Encabezado de la tarjeta */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-1">
+              {title}
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {t('auth.landing.desc', { product: 'CGUARD' })}
             </p>
           </div>
+
+          {/* Tarjeta del formulario */}
+          <div className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-100 dark:border-white/5">
+            {children}
+          </div>
+
+          <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
+            {t('auth.footer_copyright', { defaultValue: `© 2025-{{year}} CGUARD. All rights reserved.`, year: new Date().getFullYear() })}
+          </p>
         </div>
       </div>
     </div>
