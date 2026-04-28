@@ -18,6 +18,7 @@ import AddressAutocomplete, { AddressComponents } from "@/components/maps/Addres
 import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
 import CompanyDocumentsSection, { CompanyDocument } from "./profile/documents/CompanyDocumentsSection";
 import { validateCedulaOrRuc } from '@/lib/validators/id';
+import { cacheTenantLocation } from '@/utils/tenantLocation';
 
 // useEffect imported above
 
@@ -144,6 +145,7 @@ export default function ProfileCompanyForm() {
         };
 
         await tenantService.update(String(tenantId), payload);
+        cacheTenantLocation(payload.latitude, payload.longitude);
         toast.success('Datos de la empresa guardados correctamente');
       } catch (err: any) {
         console.error('Error guardando tenant:', err);
@@ -183,6 +185,9 @@ export default function ProfileCompanyForm() {
           ruc: t.taxNumber ?? t.ruc ?? "",
           timezone: t.timezone ?? s.timezone,
         }));
+
+        // Keep the business location cache in sync
+        cacheTenantLocation((t as any).latitude, (t as any).longitude);
 
         if (t.phone) setPhoneE164(String(t.phone));
 

@@ -7,6 +7,8 @@ import { setTenantId } from "@/lib/api/clientService";
 import { setTenantId as setCategoryTenantId } from "@/lib/api/categoryService";
 import { useLocation, useNavigate } from "react-router-dom";
 import TenantJoinModal from "@/components/TenantJoinModal";
+import tenantService from "@/services/tenant.service";
+import { cacheTenantLocation } from "@/utils/tenantLocation";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -157,6 +159,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
       try { localStorage.setItem('tenantId', derived); } catch {}
       try { setTenantId(derived); } catch {}
       try { setCategoryTenantId(derived); } catch {}
+
+      // Warm the business location cache so maps center on the business city
+      (async () => {
+        try {
+          const res: any = await tenantService.findById(String(derived));
+          const t = (res && (res.data || res.tenant)) ? (res.data || res.tenant) : res;
+          cacheTenantLocation((t as any)?.latitude, (t as any)?.longitude);
+        } catch {}
+      })();
     }
   }, [user]);
 

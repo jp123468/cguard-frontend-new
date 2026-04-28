@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { loadGoogleMaps } from '@/utils/loadGoogleMaps';
+import { getTenantLocation } from '@/utils/tenantLocation';
 
 type MapType = 'roadmap' | 'satellite';
 
@@ -117,7 +118,9 @@ export default function GoogleMapEmbed({
           const defLng = parseFloat((import.meta as any).env?.VITE_DEFAULT_CLIENT_LNG);
           if (!Number.isNaN(defLat) && !Number.isNaN(defLng)) return { lat: defLat, lng: defLng, zoom: 12 };
 
-          // 6) final fallback — Quito, Ecuador
+          // 6) final fallback — use business location or generic Ecuador center
+          const biz = getTenantLocation();
+          if (biz) return { lat: biz.lat, lng: biz.lng, zoom: 12 };
           return { lat: -0.2295, lng: -78.5236, zoom: 12 };
         }
 
@@ -304,8 +307,8 @@ export default function GoogleMapEmbed({
     if (!google || !mapInstance.current) return;
     const map = mapInstance.current;
     const center = {
-      lat: typeof lat === 'number' ? lat : (markerRef.current?.getPosition ? markerRef.current.getPosition().lat() : -0.2295),
-      lng: typeof lng === 'number' ? lng : (markerRef.current?.getPosition ? markerRef.current.getPosition().lng() : -78.5236),
+      lat: typeof lat === 'number' ? lat : (markerRef.current?.getPosition ? markerRef.current.getPosition().lat() : (getTenantLocation()?.lat ?? -0.2295)),
+      lng: typeof lng === 'number' ? lng : (markerRef.current?.getPosition ? markerRef.current.getPosition().lng() : (getTenantLocation()?.lng ?? -78.5236)),
     };
 
     map.setCenter(center);
@@ -368,7 +371,8 @@ export default function GoogleMapEmbed({
   }, [centerRequest]);
 
   if (!apiKey) {
-    const coords = typeof lat === 'number' && typeof lng === 'number' ? `${lat},${lng}` : (address ? encodeURIComponent(address) : '-0.2295,-78.5236');
+    const bizFallback = getTenantLocation();
+    const coords = typeof lat === 'number' && typeof lng === 'number' ? `${lat},${lng}` : (address ? encodeURIComponent(address) : `${bizFallback?.lat ?? -0.2295},${bizFallback?.lng ?? -78.5236}`);
     const tParam = mapType === 'satellite' ? '&t=k' : '';
     const src = `https://maps.google.com/maps?q=${coords}&z=${zoom}${tParam}&output=embed`;
     return (
