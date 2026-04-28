@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Plus, X, ChevronDown } from 'lucide-react';
+import { loadGoogleMaps } from '@/utils/loadGoogleMaps';
 
 import { ApiService, ApiError } from '@/services/api/apiService';
 import { toast } from 'sonner';
@@ -134,21 +135,12 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         if (!google?.maps) return;
         try { gMapInstanceRef.current.panTo({ lat: markerPos.lat, lng: markerPos.lng }); } catch (e) { /* ignore */ }
         if (gMainMarkerRef.current) {
-            try { gMainMarkerRef.current.setPosition({ lat: markerPos.lat, lng: markerPos.lng }); } catch (e) {
-                try { gMainMarkerRef.current.position = { lat: markerPos.lat, lng: markerPos.lng }; } catch (e2) { /* ignore */ }
-            }
+            try { gMainMarkerRef.current.position = { lat: markerPos.lat, lng: markerPos.lng }; } catch (e) { /* ignore */ }
         } else {
-            try {
-                gMainMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({
-                    position: { lat: markerPos.lat, lng: markerPos.lng },
-                    map: gMapInstanceRef.current,
-                });
-            } catch (e) {
-                gMainMarkerRef.current = new google.maps.Marker({
-                    position: { lat: markerPos.lat, lng: markerPos.lng },
-                    map: gMapInstanceRef.current,
-                });
-            }
+            gMainMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({
+                position: { lat: markerPos.lat, lng: markerPos.lng },
+                map: gMapInstanceRef.current,
+            });
         }
     }, [markerPos]);
 
@@ -727,28 +719,15 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
         if (!apiKey) return;
 
-        const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&v=weekly&libraries=places,marker`;
-
         const timer = setTimeout(async () => {
             if (!mounted || !gMapRef.current) return;
 
-            // Ensure script is loaded
-            if (!document.querySelector(`script[src="${src}"]`)) {
-                const s = document.createElement('script');
-                s.src = src; s.async = true; s.defer = true;
-                document.head.appendChild(s);
+            try {
+                await loadGoogleMaps();
+            } catch (e) {
+                console.warn('Google Maps failed to load', e);
+                return;
             }
-
-            // Wait for google.maps to be ready
-            const start = Date.now();
-            await new Promise<void>((resolve) => {
-                const check = () => {
-                    if ((window as any).google?.maps) return resolve();
-                    if (Date.now() - start > 8000) return resolve();
-                    setTimeout(check, 200);
-                };
-                check();
-            });
 
             if (!mounted || !gMapRef.current) return;
             const google = (window as any).google;
@@ -793,21 +772,13 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                             try { gMainMarkerRef.current.position = { lat, lng }; } catch (_2) { /* ignore */ }
                         }
                     } else {
-                        try {
-                            gMainMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({ position: { lat, lng }, map });
-                        } catch (_) {
-                            gMainMarkerRef.current = new google.maps.Marker({ position: { lat, lng }, map });
-                        }
+                        gMainMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({ position: { lat, lng }, map });
                     }
                 });
 
                 // Place initial marker at site position
                 if (hasValidCoords) {
-                    try {
-                        gMainMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({ position: center, map });
-                    } catch (_) {
-                        gMainMarkerRef.current = new google.maps.Marker({ position: center, map });
-                    }
+                    gMainMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({ position: center, map });
                 }
             }
 
@@ -819,7 +790,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                     return (!isNaN(lat) && !isNaN(lng)) ? { lat, lng, name: s.stationName || s.name } : null as any;
                 }).filter(Boolean);
                 gStationMarkersRef.current = stCoords.map((sc: any) =>
-                    new google.maps.Marker({ position: { lat: sc.lat, lng: sc.lng }, map: gMapInstanceRef.current, title: sc.name || 'Station' })
+                    new google.maps.marker.AdvancedMarkerElement({ position: { lat: sc.lat, lng: sc.lng }, map: gMapInstanceRef.current, title: sc.name || 'Station' })
                 );
             }
         }, 150);
