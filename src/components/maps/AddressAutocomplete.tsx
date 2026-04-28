@@ -87,8 +87,8 @@ export default function AddressAutocomplete({
   useEffect(() => {
     if (!isLoaded || !google || !showMap || !mapRef.current) return;
 
-    const lat = initialLat ?? 40.4168;
-    const lng = initialLng ?? -3.7038;
+    const lat = initialLat ?? -0.2295;
+    const lng = initialLng ?? -78.5236;
     const center = new google.maps.LatLng(lat, lng);
 
     mapInstanceRef.current = new google.maps.Map(mapRef.current, {

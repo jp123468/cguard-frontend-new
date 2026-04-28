@@ -117,8 +117,8 @@ export default function GoogleMapEmbed({
           const defLng = parseFloat((import.meta as any).env?.VITE_DEFAULT_CLIENT_LNG);
           if (!Number.isNaN(defLat) && !Number.isNaN(defLng)) return { lat: defLat, lng: defLng, zoom: 12 };
 
-          // 6) final fallback to a reasonable default (Madrid)
-          return { lat: 40.4168, lng: -3.7038, zoom: 12 };
+          // 6) final fallback — Quito, Ecuador
+          return { lat: -0.2295, lng: -78.5236, zoom: 12 };
         }
 
         const c = await determineCenter();
@@ -303,8 +303,8 @@ export default function GoogleMapEmbed({
     if (!google || !mapInstance.current) return;
     const map = mapInstance.current;
     const center = {
-      lat: typeof lat === 'number' ? lat : (markerRef.current?.getPosition ? markerRef.current.getPosition().lat() : 40.4168),
-      lng: typeof lng === 'number' ? lng : (markerRef.current?.getPosition ? markerRef.current.getPosition().lng() : -3.7038),
+      lat: typeof lat === 'number' ? lat : (markerRef.current?.getPosition ? markerRef.current.getPosition().lat() : -0.2295),
+      lng: typeof lng === 'number' ? lng : (markerRef.current?.getPosition ? markerRef.current.getPosition().lng() : -78.5236),
     };
 
     map.setCenter(center);
@@ -367,7 +367,7 @@ export default function GoogleMapEmbed({
   }, [centerRequest]);
 
   if (!apiKey) {
-    const coords = typeof lat === 'number' && typeof lng === 'number' ? `${lat},${lng}` : (address ? encodeURIComponent(address) : '40.4168,-3.7038');
+    const coords = typeof lat === 'number' && typeof lng === 'number' ? `${lat},${lng}` : (address ? encodeURIComponent(address) : '-0.2295,-78.5236');
     const tParam = mapType === 'satellite' ? '&t=k' : '';
     const src = `https://maps.google.com/maps?q=${coords}&z=${zoom}${tParam}&output=embed`;
     return (
