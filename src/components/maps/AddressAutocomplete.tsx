@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, MapPin, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getTenantLocation } from '@/utils/tenantLocation';
 
 export interface AddressComponents {
   address: string;
@@ -87,8 +88,9 @@ export default function AddressAutocomplete({
   useEffect(() => {
     if (!isLoaded || !google || !showMap || !mapRef.current) return;
 
-    const lat = initialLat ?? -0.2295;
-    const lng = initialLng ?? -78.5236;
+    const biz = getTenantLocation();
+    const lat = initialLat ?? biz?.lat ?? -0.2295;
+    const lng = initialLng ?? biz?.lng ?? -78.5236;
     const center = new google.maps.LatLng(lat, lng);
 
     mapInstanceRef.current = new google.maps.Map(mapRef.current, {
