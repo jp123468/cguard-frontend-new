@@ -95,7 +95,7 @@ export default function AddressAutocomplete({
 
     mapInstanceRef.current = new google.maps.Map(mapRef.current, {
       center,
-      zoom: initialLat !== undefined && initialLng !== undefined ? 15 : 5,
+      zoom: initialLat !== undefined && initialLng !== undefined ? 15 : 12,
       mapTypeControl: true,
       streetViewControl: false,
       fullscreenControl: false,
