@@ -172,8 +172,9 @@ export default function ProfileCompanyForm() {
         try {
           const res: any = await tenantService.findById(String(resolvedTenantId));
           const t = (res && (res.data || res.tenant)) ? (res.data || res.tenant) : res;
-          if (t && (t.logoUrl || (t.settings && t.settings.logoUrl))) {
-            setLogo(t.logoUrl || (t.settings && t.settings.logoUrl) || null);
+          if (t) {
+            const settingsLogoUrl = Array.isArray(t.settings) ? (t.settings[0] && t.settings[0].logoUrl) : (t.settings && (t.settings.logoUrl || t.settings[0]?.logoUrl));
+            setLogo(t.logoUrl || settingsLogoUrl || null);
           }
         } catch (e) {
           // ignore
@@ -224,6 +225,15 @@ export default function ProfileCompanyForm() {
         cacheTenantLocation((t as any).latitude, (t as any).longitude);
 
         if (t.phone) setPhoneE164(String(t.phone));
+
+        // Set existing logo preview if available
+        try {
+          const settingsLogoUrl = Array.isArray(t.settings) ? (t.settings[0] && t.settings[0].logoUrl) : (t.settings && (t.settings.logoUrl || t.settings[0]?.logoUrl));
+          const existingLogo = t.logoUrl || settingsLogoUrl || (t.logo && t.logo.downloadUrl);
+          if (existingLogo) setLogo(String(existingLogo));
+        } catch (e) {
+          // ignore
+        }
 
         // Load company legal documents if present
         if (Array.isArray(t.legalDocuments)) {
