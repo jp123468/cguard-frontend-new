@@ -80,8 +80,17 @@ const tenantService = {
       privateUrl: creds.privateUrl,
       publicUrl: creds.uploadCredentials?.publicUrl ?? null,
     };
+    // Ensure we include existing theme (backend requires `settings.theme`)
+    let theme = 'default';
+    try {
+      const tenantResp: any = await ApiService.get(`/tenant/${tenantId}`);
+      const t = (tenantResp && (tenantResp.data || tenantResp.tenant)) ? (tenantResp.data || tenantResp.tenant) : tenantResp;
+      theme = t?.settings?.theme || t?.theme || theme;
+    } catch (e) {
+      // ignore and fallback to default
+    }
 
-    return ApiService.put(`/tenant/${tenantId}/settings`, { settings: { logos: [fileObj] } });
+    return ApiService.put(`/tenant/${tenantId}/settings`, { settings: { logos: [fileObj], theme } });
   },
   destroy(ids: string[] = []) {
     return ApiService.delete(`/tenant?ids=${ids.join(',')}`);

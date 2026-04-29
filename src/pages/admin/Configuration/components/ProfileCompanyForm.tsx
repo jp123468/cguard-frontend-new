@@ -54,6 +54,8 @@ export default function ProfileCompanyForm() {
 
   const canEdit = isAdmin;
   const [logo, setLogo] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [showAddressAutocomplete, setShowAddressAutocomplete] = useState(true);
   const [autocompleteOpenQuery, setAutocompleteOpenQuery] = useState('');
   const [showBillingAddressAutocomplete, setShowBillingAddressAutocomplete] = useState(true);
@@ -110,6 +112,7 @@ export default function ProfileCompanyForm() {
     const reader = new FileReader();
     reader.onload = () => setLogo(String(reader.result));
     reader.readAsDataURL(f);
+    setLogoFile(f);
   };
 
   const onSubmit = (e: React.FormEvent) => {
@@ -153,6 +156,37 @@ export default function ProfileCompanyForm() {
       }
     })();
   };
+
+  // Auto-upload logo when user selects a file for an existing tenant
+  useEffect(() => {
+    if (!logoFile || !resolvedTenantId) return;
+    let cancelled = false;
+    (async () => {
+      if (uploadingLogo) return;
+      setUploadingLogo(true);
+      try {
+        await tenantService.uploadLogo(logoFile, String(resolvedTenantId));
+        if (cancelled) return;
+        toast.success('Logo subido correctamente');
+        // Refresh tenant to get new logoUrl for preview
+        try {
+          const res: any = await tenantService.findById(String(resolvedTenantId));
+          const t = (res && (res.data || res.tenant)) ? (res.data || res.tenant) : res;
+          if (t && (t.logoUrl || (t.settings && t.settings.logoUrl))) {
+            setLogo(t.logoUrl || (t.settings && t.settings.logoUrl) || null);
+          }
+        } catch (e) {
+          // ignore
+        }
+        setLogoFile(null);
+      } catch (err: any) {
+        if (!cancelled) toast.error('No se pudo subir el logo: ' + (err?.message || ''));
+      } finally {
+        setUploadingLogo(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [logoFile, resolvedTenantId]);
 
   useEffect(() => {
     let mounted = true;
