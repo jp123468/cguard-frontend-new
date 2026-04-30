@@ -1,284 +1,188 @@
-import React, { useEffect, useRef, useState } from 'react';
-import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
-import { Search, Plus, X, ChevronDown } from 'lucide-react';
-import MobileCardList from '@/components/responsive/MobileCardList';
+import React, { useState } from 'react';
+import { Globe, Mail, CheckCircle2, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
+import { clientService } from '@/lib/api/clientService';
+import { toast } from 'sonner';
 
 type Props = { client?: any };
 
+type DialogState = 'idle' | 'confirm' | 'sending' | 'sent' | 'error';
+
 export default function ClientPortal({ client }: Props) {
-  const [showInvite, setShowInvite] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [form, setForm] = useState({ name: '', email: '' });
-  const [touched, setTouched] = useState({ name: false, email: false });
-  const [selectAll, setSelectAll] = useState(false);
+  const [dialog, setDialog] = useState<DialogState>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [sentTo, setSentTo] = useState('');
 
-  const permissions = [
-    { label: 'Checked-In/Out Reports', type: 'option' },
-    { label: 'DAR Reports', type: 'option' },
-    { label: 'Site Tour Reports', type: 'option' },
-    { label: 'Task Reports', type: 'option' },
-    { label: 'Passdown Logs', type: 'option' },
-    { label: 'Watch Mode Logs', type: 'option' },
-    { label: 'Tour Checkpoint Logs', type: 'option' },
-    { label: 'Checklist Report', type: 'option' },
-    { label: 'Vehicle Patrol Reports', type: 'option' },
-    { label: 'Post Order', type: 'header' },
-    { label: 'View Post Order', type: 'option' },
-    { label: 'Add/Update Post Order', type: 'option' },
-    { label: 'Visitor Manager', type: 'header' },
-    { label: 'View Visitor Manager', type: 'option' },
-    { label: 'Add/Update Visitor', type: 'option' },
-    { label: 'Add/Update Vehicle', type: 'option' },
-    { label: 'Dispatcher', type: 'header' },
-    { label: 'View Dispatcher Log', type: 'option' },
-    { label: 'View Dispatcher Log Details', type: 'option' },
-    { label: 'Add/Update Dispatcher', type: 'option' },
-    { label: 'Time Clock', type: 'header' },
-    { label: 'View Time Log', type: 'option' },
-    { label: 'View Time Card', type: 'option' },
-    { label: 'Scheduler', type: 'header' },
-    { label: 'View Scheduler', type: 'option' },
-    { label: 'Allow Request Shifts', type: 'option' },
-    { label: 'View Shift Status', type: 'option' },
-    { label: 'Parking Manager', type: 'header' },
-    { label: 'View Contacts', type: 'option' },
-    { label: 'Add/Update Contacts', type: 'option' },
-    { label: 'View Vehicles', type: 'option' },
-    { label: 'Add/Update Vehicles', type: 'option' },
-    { label: 'View Parking Areas', type: 'option' },
-    { label: 'Add/Update Parking Areas', type: 'option' },
-    { label: 'View Parking Lots', type: 'option' },
-    { label: 'Add/Update Parking Lots', type: 'option' },
-    { label: 'View Parking Incidents', type: 'option' },
-    { label: 'GPS Tracker', type: 'header' },
-    { label: 'View Tracking History', type: 'option' },
-    { label: 'View Live Tracking', type: 'option' },
-  ];
+  const email = client?.email || client?.contactEmail || '';
+  const name = client?.name || client?.contactName || 'este cliente';
+  const userId = client?.userId;
 
-  const [checks, setChecks] = useState<boolean[]>(permissions.map(() => false));
-
-  const actionRef = useRef<HTMLDivElement | null>(null);
-  const [actionOpen, setActionOpen] = useState(false);
-  const [actionSelection, setActionSelection] = useState<string>('Action');
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (actionRef.current && !actionRef.current.contains(event.target as Node)) setActionOpen(false);
-    };
-    if (actionOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+  async function handleSendInvitation() {
+    if (!userId) {
+      setErrorMsg(
+        'Este cliente no tiene un usuario vinculado. Edita el cliente y agrega un correo electrónico para crear su usuario primero.',
+      );
+      setDialog('error');
+      return;
     }
-  }, [actionOpen]);
-
-  useScrollToTopOnMount(containerRef);
-
-  function handleToggleCheck(idx: number) {
-    setChecks((prev) => {
-      const next = [...prev];
-      next[idx] = !next[idx];
-      return next;
-    });
-  }
-
-  function handleSelectAll(v: boolean) {
-    setSelectAll(v);
-    setChecks(permissions.map((p) => (p.type === 'option' ? v : false)));
-  }
-
-  function handleInvite() {
-    setTouched({ name: true, email: true });
-    if (!form.name.trim() || !form.email.trim()) return;
-    // TODO: send invite to API
-    // temporary feedback
-    // eslint-disable-next-line no-alert
-    alert(`Invited ${form.name} <${form.email}>`);
-    setShowInvite(false);
-    setForm({ name: '', email: '' });
-    setChecks(permissions.map(() => false));
-    setSelectAll(false);
+    setDialog('sending');
+    try {
+      const result = await clientService.sendPortalInvitation(userId, email || undefined);
+      setSentTo(result?.recipient || email);
+      setDialog('sent');
+      toast.success('Invitación enviada correctamente');
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'No se pudo enviar la invitación. Intenta de nuevo.';
+      setErrorMsg(msg);
+      setDialog('error');
+    }
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
-        <div className="flex items-start justify-between gap-4 mb-4">
+    <div className="p-6 flex flex-col gap-6 max-w-2xl">
+      {/* Header */}
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Globe className="w-5 h-5 text-[#C8860A]" />
+          Acceso al Portal del Cliente
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">
+          Permite que el cliente acceda al portal para ver sus facturas, guardias asignados y más.
+        </p>
+      </div>
 
-          <div className="flex-1 flex justify-center">
-            <div className="relative w-full max-w-md">
-              <Search size={16} className="absolute left-3 top-3 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search client portal"
-                className="w-full pl-9 pr-3 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
-              />
-            </div>
-          </div>
-
-          <div className="flex-shrink-0">
-            <button
-              onClick={() => setShowInvite(true)}
-              className="px-4 py-2 bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors"
-            >
-              <Plus size={16} />
-              Invite
-            </button>
-          </div>
-        </div>
-
-
-
-        <div className="mt-6 md:block hidden flex-1 min-h-0 overflow-y-auto overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="px-4 py-3 text-left">
-                  <input type="checkbox" className="rounded" />
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Contact Name</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Access Level</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Access Status</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Role</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(Array.isArray(client?.portalUsers) ? client.portalUsers : []).length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
-                          <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                          <circle cx="85" cy="100" r="8" fill="white" />
-                          <circle cx="115" cy="100" r="8" fill="white" />
-                          <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">No results found</h3>
-                        <p className="text-sm text-gray-500 mt-1">We couldn't find<br />any items matching<br />your search</p>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                (client.portalUsers || []).map((u: any, idx: number) => (
-                  <tr key={u.id || idx} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      <input type="checkbox" />
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{u.name || u.contactName}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{u.email || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{u.accessLevel || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{u.status || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{u.role || '-'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-6 md:hidden">
-          <MobileCardList
-            items={(Array.isArray(client?.portalUsers) ? client.portalUsers : [])}
-            loading={false}
-            emptyMessage={'No results found'}
-            renderCard={(u: any) => (
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="font-medium">{u.name || u.contactName}</div>
-                  <div className="text-xs text-muted-foreground">{u.email || '-'}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-700">{u.role || '-'}</div>
-                </div>
-              </div>
-            )}
-          />
+      {/* Info card */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+        <ShieldCheck className="w-5 h-5 text-[#C8860A] flex-shrink-0 mt-0.5" />
+        <div className="text-sm text-amber-800 space-y-1">
+          <p className="font-medium">¿Cómo funciona?</p>
+          <ul className="list-disc list-inside space-y-0.5 text-amber-700">
+            <li>Se envía un correo de invitación a <strong>{email || 'la dirección del cliente'}</strong></li>
+            <li>El cliente hace clic en el enlace y crea su contraseña</li>
+            <li>Inicia sesión en la app con su correo y contraseña</li>
+          </ul>
         </div>
       </div>
 
-      {showInvite && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setShowInvite(false)} />
+      {/* Client summary */}
+      <div className="bg-white border rounded-lg p-4 flex items-center gap-4">
+        <div className="w-10 h-10 rounded-full bg-[#C8860A]/10 flex items-center justify-center">
+          <span className="text-[#C8860A] font-semibold text-sm">
+            {(name || '?').charAt(0).toUpperCase()}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
+          <p className="text-xs text-gray-500 truncate">{email || 'Sin correo electrónico'}</p>
+        </div>
+        {userId ? (
+          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+            Usuario vinculado
+          </span>
+        ) : (
+          <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
+            Sin usuario
+          </span>
+        )}
+      </div>
 
-          <div className="w-full sm:fixed sm:right-0 sm:top-0 sm:bottom-0 sm:w-[540px] bg-white rounded-t-lg sm:rounded-md shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
-              <h3 className="text-lg font-semibold">Invite Client</h3>
-              <button onClick={() => setShowInvite(false)} className="text-gray-400 hover:text-gray-600">
-                <X />
+      {/* Action button */}
+      {dialog === 'idle' && (
+        <button
+          onClick={() => setDialog('confirm')}
+          disabled={!email && !userId}
+          className="flex items-center gap-2 px-5 py-2.5 bg-[#C8860A] text-white text-sm font-semibold rounded-lg hover:bg-[#B37809] transition-colors disabled:opacity-40 disabled:cursor-not-allowed w-fit"
+        >
+          <Mail className="w-4 h-4" />
+          Enviar invitación al portal
+        </button>
+      )}
+
+      {/* Sent state */}
+      {dialog === 'sent' && (
+        <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-lg p-4">
+          <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-green-800">¡Invitación enviada!</p>
+            <p className="text-sm text-green-700 mt-0.5">
+              Se envió un correo de invitación a <strong>{sentTo}</strong>. El cliente debe revisar su bandeja de entrada.
+            </p>
+            <button
+              onClick={() => setDialog('idle')}
+              className="mt-3 text-xs text-green-700 underline hover:text-green-900"
+            >
+              Enviar otra invitación
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {dialog === 'error' && (
+        <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
+          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-red-800">Error al enviar la invitación</p>
+            <p className="text-sm text-red-700 mt-0.5">{errorMsg}</p>
+            <button
+              onClick={() => { setDialog('idle'); setErrorMsg(''); }}
+              className="mt-3 text-xs text-red-700 underline hover:text-red-900"
+            >
+              Intentar de nuevo
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm dialog */}
+      {dialog === 'confirm' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                <Mail className="w-5 h-5 text-[#C8860A]" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 text-sm">Enviar invitación al portal</h3>
+                <p className="text-xs text-gray-500">Esta acción enviará un correo a:</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg px-4 py-3 text-center">
+              <p className="text-sm font-semibold text-gray-900">{name}</p>
+              <p className="text-sm text-[#C8860A]">{email || '(sin correo registrado)'}</p>
+            </div>
+
+            <p className="text-xs text-gray-500 text-center">
+              El cliente recibirá un enlace para crear su contraseña y acceder al portal.
+            </p>
+
+            <div className="flex gap-3 mt-1">
+              <button
+                onClick={() => setDialog('idle')}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSendInvitation}
+                className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-[#C8860A] rounded-lg hover:bg-[#B37809] transition-colors"
+              >
+                Enviar
               </button>
             </div>
+          </div>
+        </div>
+      )}
 
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="mb-4 text-sm text-gray-700">
-                <span className="font-semibold text-gray-800 mr-2">First user is by default the super admin account.
-                </span>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-600 mb-2">Contact Name*</label>
-                  <input
-                    value={form.name}
-                    onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                    onBlur={() => setTouched((prev) => ({ ...prev, name: true }))}
-                    className={`w-full border rounded-md h-10 px-3 ${touched.name && !form.name.trim() ? 'border-red-500' : ''}`}
-                  />
-                  {touched.name && !form.name.trim() && <div className="text-red-600 text-sm mt-1">Contact name required</div>}
-                </div>
-
-                <div>
-                  <label className="block text-sm text-gray-600 mb-2">Email*</label>
-                  <input
-                    value={form.email}
-                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                    onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
-                    className={`w-full border rounded-md h-10 px-3 ${touched.email && !form.email.trim() ? 'border-red-500' : ''}`}
-                  />
-                  {touched.email && !form.email.trim() && <div className="text-red-600 text-sm mt-1">Email required</div>}
-                </div>
-
-                <div className="text-sm text-gray-700">Select the access level for the super admin client portal user, all subsequent users will have same access level</div>
-
-                <div className="pt-2">
-                  <div className="flex items-center gap-3 mb-3">
-                    <input id="selectAll" type="checkbox" checked={selectAll} onChange={(e) => handleSelectAll(e.target.checked)} className="h-4 w-4" />
-                    <label htmlFor="selectAll" className="text-sm font-medium">
-                      Select All
-                    </label>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                    {permissions.map((p, i) =>
-                      p.type === 'header' ? (
-                        <div key={p.label} className="col-span-2 mt-3">
-                          <label className="flex items-center gap-3 text-sm font-semibold text-blue-600">
-                            <input type="checkbox" checked={checks[i]} onChange={() => handleToggleCheck(i)} className="h-4 w-4" />
-                            <span>{p.label}</span>
-                          </label>
-                        </div>
-                      ) : (
-                        <label key={p.label} className="flex items-center gap-3 text-sm">
-                          <input type="checkbox" checked={checks[i]} onChange={() => handleToggleCheck(i)} className="h-4 w-4" />
-                          <span>{p.label}</span>
-                        </label>
-                      )
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 border-t bg-white sticky bottom-0 z-20">
-              <div className="flex items-center justify-end gap-3">
-                <button onClick={handleInvite} className="px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809]">
-                  Invite
-                </button>
-              </div>
-            </div>
+      {/* Sending state */}
+      {dialog === 'sending' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-8 flex flex-col items-center gap-4">
+            <Loader2 className="w-8 h-8 text-[#C8860A] animate-spin" />
+            <p className="text-sm font-medium text-gray-700">Enviando invitación…</p>
           </div>
         </div>
       )}

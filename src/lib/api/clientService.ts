@@ -566,4 +566,15 @@ export const clientService = {
         const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/overview`, { toast: { silentError: true } } as any);
         return data;
     },
+
+    /**
+     * Send (or re-send) a client portal invitation email to the user linked to this client.
+     * userId is the user id stored on the clientAccount (client.userId)
+     */
+    async sendPortalInvitation(userId: string, email?: string): Promise<{ sent: boolean; recipient: string }> {
+        const tenantId = getTenantId();
+        const body = email ? { email } : {};
+        const { data } = await api.post<any>(`/tenant/${tenantId}/user/${userId}/send-portal-invitation`, body);
+        return data?.data || data;
+    },
 };
