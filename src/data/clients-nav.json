@@ -11,6 +11,7 @@
           { "id": "notes", "path": "/clients/:id/notes", "label": "clients.nav.notes" },
           { "id": "files", "path": "/clients/:id/files", "label": "clients.nav.files" },
           { "id": "postSites", "path": "/clients/:id/post-sites", "label": "clients.nav.postSites" },
+          { "id": "projects", "path": "/clients/:id/projects", "label": "clients.nav.projects" },
           { "id": "clientPortal", "path": "/clients/:id/portal", "label": "clients.nav.clientPortal" },
           { "id": "userAccess", "path": "/clients/:id/user-access", "label": "clients.nav.userAccess" },
           { "id": "emailReports", "path": "/clients/:id/email-reports", "label": "clients.nav.emailReports" }

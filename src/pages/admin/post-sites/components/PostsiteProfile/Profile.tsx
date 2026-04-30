@@ -5,6 +5,7 @@ import IncidentMap from "@/components/IncidentMap/IncidentMap";
 import { categoryService } from '@/lib/api/categoryService';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
+import { ServiceTypeBadge } from '@/components/post-sites/ServiceTypeBadge';
 
 function formatDate(d?: string) {
     if (!d) return '-';
@@ -99,8 +100,10 @@ export default function PostSiteProfile({ site }: { site?: any }) {
             <div className="md:block hidden bg-white border rounded-md p-6 shadow-sm">
                 <div className="flex items-start justify-between">
                     <div>
-                        <h3 className="text-lg font-semibold">{t('postSites.profile.title')}</h3>
-                        <p className="text-sm text-gray-600">{siteName || '-'}</p>
+                        <div className="flex items-center gap-3 mb-1">
+                            <h3 className="text-lg font-semibold">{siteName || '-'}</h3>
+                            <ServiceTypeBadge value={site?.serviceType} size="md" />
+                        </div>
                         <p className="text-sm text-gray-600">{site?.description || '-'}</p>
                     </div>
                 </div>

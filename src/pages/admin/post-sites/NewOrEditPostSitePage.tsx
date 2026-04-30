@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
-import PostSiteForm, { Client, Category } from "./PostSiteForm";
+import PostSiteForm, { Client } from "./PostSiteForm";
+
+type Category = { id: string; name: string };
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { postSiteService } from "@/lib/api/postSiteService";
 import { categoryService } from "@/lib/api/categoryService";
@@ -89,13 +90,15 @@ export default function NewOrEditPostSitePage() {
             <section className="p-4">
                 {id ? (
                     <Tabs defaultValue="edit">
-                        
+                        <TabsList className="mb-4">
+                            <TabsTrigger value="edit">Editar</TabsTrigger>
+                            <TabsTrigger value="details">Detalles</TabsTrigger>
+                        </TabsList>
                         <TabsContent value="edit">
                             <PostSiteForm
                                 mode={id ? "edit" : "create"}
                                 id={id}
                                 clients={clients}
-                                categories={categories}
                             />
                         </TabsContent>
                         <TabsContent value="details">
@@ -179,7 +182,6 @@ export default function NewOrEditPostSitePage() {
                     <PostSiteForm
                         mode="create"
                         clients={clients}
-                        categories={categories}
                     />
                 )}
             </section>

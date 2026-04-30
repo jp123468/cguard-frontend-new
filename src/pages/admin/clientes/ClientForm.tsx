@@ -43,7 +43,7 @@ import {
     CategoryOption,
 } from "@/components/categories/CategorySelect";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info, User, Mail, Phone, Tag, Globe } from "lucide-react";
+import { Info, User, Mail, Phone, Tag, Globe, Building2, Upload, X, Image } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export type Category = { id: string; name: string };
@@ -95,6 +95,15 @@ export default function ClientForm({
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [showAddressAutocomplete, setShowAddressAutocomplete] = useState(true);
 
+    // File upload state for logo and place picture
+    type UploadedFile = { new?: boolean; name: string; sizeInBytes?: number; privateUrl?: string; publicUrl?: string; fileToken?: string | null; id?: string; downloadUrl?: string };
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [logoExisting, setLogoExisting] = useState<UploadedFile | null>(null);
+    const [placePicFile, setPlacePicFile] = useState<File | null>(null);
+    const [placePicPreview, setPlacePicPreview] = useState<string | null>(null);
+    const [placePicExisting, setPlacePicExisting] = useState<UploadedFile | null>(null);
+
     type FormValues = ClientInput & { personType?: 'PN' | 'PJ'; documentNumber?: string };
 
     const form = useForm<FormValues>({
@@ -104,6 +113,8 @@ export default function ClientForm({
             lastName: "",
             personType: "PN",
             documentNumber: "",
+            commercialName: "",
+            contractDate: "",
             email: "",
             phoneNumber: defaultPhonePrefix,
             address: "",
@@ -162,6 +173,8 @@ export default function ClientForm({
                         lastName: data.lastName ?? "",
                         personType: (data as any)?.personType ?? 'PN',
                         documentNumber: (data as any)?.documentNumber ?? '',
+                        commercialName: (data as any)?.commercialName ?? '',
+                        contractDate: (data as any)?.contractDate ? String((data as any).contractDate).slice(0, 10) : '',
                         email: data.email ?? "",
                         phoneNumber: data.phoneNumber ?? "",
                         address: data.address ?? "",
@@ -176,6 +189,20 @@ export default function ClientForm({
                         active: data.active ?? true,
                         categoryIds: (data as any).categoryIds ?? [],
                     } as FormValues;
+
+                    // Load existing file objects for logo and place picture
+                    const logoArr = (data as any).logoUrl;
+                    if (Array.isArray(logoArr) && logoArr.length > 0) {
+                        const f = logoArr[0];
+                        setLogoExisting(f);
+                        setLogoPreview(f.downloadUrl || f.publicUrl || null);
+                    }
+                    const picArr = (data as any).placePictureUrl;
+                    if (Array.isArray(picArr) && picArr.length > 0) {
+                        const f = picArr[0];
+                        setPlacePicExisting(f);
+                        setPlacePicPreview(f.downloadUrl || f.publicUrl || null);
+                    }
 
                     // store initial values to compute diffs on submit
                     initialDataRef.current = initial;
@@ -211,14 +238,14 @@ export default function ClientForm({
         if (values.lastName !== undefined) basePayload.lastName = values.lastName;
         if ((values as any).personType !== undefined) basePayload.personType = (values as any).personType;
         if ((values as any).documentNumber !== undefined) basePayload.documentNumber = (values as any).documentNumber;
-        // Ensure categoryIds is present (zod will also validate)
+        if ((values as any).commercialName !== undefined) basePayload.commercialName = (values as any).commercialName || null;
+        if ((values as any).contractDate !== undefined) basePayload.contractDate = (values as any).contractDate || null;
         if (values.addressLine2 !== undefined) basePayload.addressLine2 = values.addressLine2;
         if (values.postalCode !== undefined) basePayload.postalCode = values.postalCode;
         if (values.city !== undefined) basePayload.city = values.city;
         if (values.country !== undefined) basePayload.country = values.country;
         if (values.faxNumber !== undefined) basePayload.faxNumber = values.faxNumber;
         if (values.website !== undefined && String(values.website).trim() !== "") basePayload.website = values.website;
-        // Ensure latitude/longitude are sent as numbers (or null) to backend
         if ((values as any).latitude !== undefined) {
             const rawLat = (values as any).latitude;
             basePayload.latitude = rawLat === '' || rawLat === null ? null : Number.parseFloat(String(rawLat));
@@ -228,6 +255,32 @@ export default function ClientForm({
             basePayload.longitude = rawLng === '' || rawLng === null ? null : Number.parseFloat(String(rawLng));
         }
         if (values.active !== undefined) basePayload.active = values.active;
+
+        // Handle file uploads before saving
+        try {
+            // Logo
+            if (logoFile) {
+                const fileObj = await clientService.uploadFile(logoFile, 'clientAccountLogoUrl');
+                basePayload.logoUrl = [fileObj];
+            } else if (logoExisting) {
+                basePayload.logoUrl = [logoExisting];
+            } else {
+                basePayload.logoUrl = [];
+            }
+
+            // Place picture
+            if (placePicFile) {
+                const fileObj = await clientService.uploadFile(placePicFile, 'clientAccountPlacePictureUrl');
+                basePayload.placePictureUrl = [fileObj];
+            } else if (placePicExisting) {
+                basePayload.placePictureUrl = [placePicExisting];
+            } else {
+                basePayload.placePictureUrl = [];
+            }
+        } catch (uploadErr: any) {
+            toast.error(`Error al subir imagen: ${uploadErr?.message || 'Error desconocido'}`);
+            return;
+        }
 
         try {
             if (mode === "create") {
@@ -244,11 +297,15 @@ export default function ClientForm({
                 for (const k of keys) {
                     const cur = (basePayload as any)[k];
                     const init = (initial as any)[k];
+                    // Always include file fields (they use array comparison)
+                    if ((k as string) === 'logoUrl' || (k as string) === 'placePictureUrl') {
+                        changed[k as string] = cur;
+                        continue;
+                    }
                     // Normalize arrays and primitives for comparison
                     const curVal = Array.isArray(cur) ? JSON.stringify(cur) : (cur === undefined ? null : String(cur));
                     const initVal = Array.isArray(init) ? JSON.stringify(init) : (init === undefined ? null : String(init));
                     if (curVal !== initVal) {
-                        // for arrays, send actual array; for others preserve original type
                         changed[k as string] = Array.isArray((basePayload as any)[k]) ? (basePayload as any)[k] : (basePayload as any)[k];
                     }
                 }
@@ -455,7 +512,157 @@ export default function ClientForm({
                         </div>
                     </div>
 
-                    {/* ── Section 2: Contact ────────────────────────────────── */}
+                    {/* ── Section 2: Business Info ──────────────────────────── */}
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden">
+                        <div className="flex items-center gap-2 px-5 py-3.5 bg-white border-b border-slate-200">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C8860A]/10">
+                                <Building2 className="h-4 w-4 text-[#C8860A]" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-800">{t('clients.form.businessInfo', 'Información de empresa')}</span>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField<ClientInput>
+                                    control={form.control}
+                                    name={"commercialName" as any}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                {t('clients.form.commercialName', 'Nombre comercial')}
+                                                <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
+                                            </FormLabel>
+                                            <FormControl>
+                                                <input
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                    placeholder={t('clients.form.commercialNamePlaceholder', 'Ej. Empresa Segura S.A.')}
+                                                    {...field}
+                                                    value={typeof field.value === "string" ? field.value : ""}
+                                                    maxLength={200}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField<ClientInput>
+                                    control={form.control}
+                                    name={"contractDate" as any}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                {t('clients.form.contractDate', 'Fecha de contrato')}
+                                                <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
+                                            </FormLabel>
+                                            <FormControl>
+                                                <input
+                                                    type="date"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                    {...field}
+                                                    value={typeof field.value === "string" ? field.value : ""}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            {/* Logo & Place Picture uploads */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                                {/* Logo upload */}
+                                <div className="space-y-2">
+                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                        {t('clients.form.logo', 'Logo de la empresa')}
+                                        <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
+                                    </p>
+                                    <div
+                                        className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-white hover:border-[#C8860A]/40 transition-colors cursor-pointer min-h-[140px] p-4"
+                                        onClick={() => document.getElementById('logo-upload-input')?.click()}
+                                    >
+                                        <input
+                                            id="logo-upload-input"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                setLogoFile(file);
+                                                setLogoPreview(URL.createObjectURL(file));
+                                                setLogoExisting(null);
+                                            }}
+                                        />
+                                        {logoPreview ? (
+                                            <>
+                                                <img src={logoPreview} alt="logo" className="max-h-24 max-w-full object-contain rounded" />
+                                                <button
+                                                    type="button"
+                                                    className="absolute top-2 right-2 rounded-full bg-white border border-slate-200 p-0.5 shadow-sm text-slate-500 hover:text-red-500 hover:border-red-300"
+                                                    onClick={(e) => { e.stopPropagation(); setLogoFile(null); setLogoPreview(null); setLogoExisting(null); }}
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                                <p className="mt-2 text-xs text-slate-400 truncate max-w-full">{logoFile?.name ?? logoExisting?.name}</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Upload className="h-8 w-8 text-slate-300 mb-2" />
+                                                <p className="text-xs text-slate-500 text-center">{t('clients.form.clickToUpload', 'Clic para subir')}</p>
+                                                <p className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WEBP</p>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Place picture upload */}
+                                <div className="space-y-2">
+                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                        {t('clients.form.placePicture', 'Foto del lugar')}
+                                        <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
+                                    </p>
+                                    <div
+                                        className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-white hover:border-[#C8860A]/40 transition-colors cursor-pointer min-h-[140px] p-4"
+                                        onClick={() => document.getElementById('place-upload-input')?.click()}
+                                    >
+                                        <input
+                                            id="place-upload-input"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                setPlacePicFile(file);
+                                                setPlacePicPreview(URL.createObjectURL(file));
+                                                setPlacePicExisting(null);
+                                            }}
+                                        />
+                                        {placePicPreview ? (
+                                            <>
+                                                <img src={placePicPreview} alt="place" className="max-h-24 max-w-full object-contain rounded" />
+                                                <button
+                                                    type="button"
+                                                    className="absolute top-2 right-2 rounded-full bg-white border border-slate-200 p-0.5 shadow-sm text-slate-500 hover:text-red-500 hover:border-red-300"
+                                                    onClick={(e) => { e.stopPropagation(); setPlacePicFile(null); setPlacePicPreview(null); setPlacePicExisting(null); }}
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                                <p className="mt-2 text-xs text-slate-400 truncate max-w-full">{placePicFile?.name ?? placePicExisting?.name}</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Image className="h-8 w-8 text-slate-300 mb-2" />
+                                                <p className="text-xs text-slate-500 text-center">{t('clients.form.clickToUpload', 'Clic para subir')}</p>
+                                                <p className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WEBP</p>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── Section 3: Contact ────────────────────────────────── */}
                     <div className="rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden">
                         <div className="flex items-center gap-2 px-5 py-3.5 bg-white border-b border-slate-200">
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C8860A]/10">

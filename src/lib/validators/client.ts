@@ -7,14 +7,13 @@ export const clientSchema = z
         .string()
         .trim()
         .min(1, "Nombre del cliente requerido")
-        .max(200, "Máximo 200 caracteres")
-        .regex(/^[A-Za-zÀ-ÿ'\-\s]+$/, "Solo letras, espacios, ' y -"),
+        .max(200, "Máximo 200 caracteres"),
     lastName: z
         .string()
         .trim()
-        .min(1, "Apellido requerido")
         .max(200, "Máximo 200 caracteres")
-        .regex(/^[A-Za-zÀ-ÿ'\-\s]+$/, "Solo letras, espacios, ' y -"),
+        .optional()
+        .or(z.literal("")),
     email: z
         .string()
         .trim()
@@ -45,15 +44,15 @@ export const clientSchema = z
     city: z
         .string()
         .trim()
-        .min(1, "Ciudad requerida")
         .max(100, "Máximo 100 caracteres")
-        .regex(/^[A-Za-zÀ-ÿ'\-\s]+$/, "Solo letras, espacios, ' y -"),
+        .optional()
+        .or(z.literal("")),
     country: z
         .string()
         .trim()
-        .min(1, "País requerido")
         .max(100, "Máximo 100 caracteres")
-        .regex(/^[A-Za-zÀ-ÿ'\-\s]+$/, "Solo letras, espacios, ' y -"),
+        .optional()
+        .or(z.literal("")),
     faxNumber: z
         .string()
         .trim()
@@ -70,33 +69,46 @@ export const clientSchema = z
     latitude: z
         .string()
         .trim()
-        .min(1, "Latitud requerida")
-        .refine((val) => !Number.isNaN(Number(val)), {
+        .optional()
+        .or(z.literal(""))
+        .refine((val) => !val || !Number.isNaN(Number(val)), {
             message: "Latitud debe ser numérica",
         })
-        .refine((val) => Number(val) >= -90 && Number(val) <= 90, {
+        .refine((val) => !val || (Number(val) >= -90 && Number(val) <= 90), {
             message: "Latitud entre -90 y 90",
         }),
     longitude: z
         .string()
         .trim()
-        .min(1, "Longitud requerida")
-        .refine((val) => !Number.isNaN(Number(val)), {
+        .optional()
+        .or(z.literal(""))
+        .refine((val) => !val || !Number.isNaN(Number(val)), {
             message: "Longitud debe ser numérica",
         })
-        .refine((val) => Number(val) >= -180 && Number(val) <= 180, {
+        .refine((val) => !val || (Number(val) >= -180 && Number(val) <= 180), {
             message: "Longitud entre -180 y 180",
         }),
     active: z.boolean().optional(),
+    commercialName: z
+        .string()
+        .trim()
+        .max(200, "Máximo 200 caracteres")
+        .optional()
+        .or(z.literal("")),
+    contractDate: z
+        .string()
+        .optional()
+        .or(z.literal("")),
     // Tipo de persona (Persona Natural / Persona Jurídica)
     personType: z.enum(['PN', 'PJ']).optional(),
-    // RUC o Cédula: obligatorio según requerimiento
+    // RUC o Cédula: opcional
     documentNumber: z
         .string()
         .trim()
-        .min(1, "RUC/Cédula requerido")
-        .max(50, "Máximo 50 caracteres"),
-    categoryIds: z.array(z.string()).min(1, "Selecciona al menos una categoría"),
+        .max(50, "Máximo 50 caracteres")
+        .optional()
+        .or(z.literal("")),
+    categoryIds: z.array(z.string()).optional(),
 })
 .superRefine((data, ctx) => {
     const personType = data.personType || 'PN';

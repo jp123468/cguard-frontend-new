@@ -1,20 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect } from "react";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { categoryService } from "@/lib/api/categoryService";
 import { stationService } from "@/lib/api/stationService";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-    CategorySelect,
-    CategoryOption,
-} from "@/components/categories/CategorySelect";
-import { Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
     Form,
     FormControl,
@@ -26,38 +19,47 @@ import {
 import { PostSiteInput, postSiteSchema } from "@/lib/validators/post-site";
 import { useTranslation } from 'react-i18next';
 import { useClientSelection } from '@/contexts/ClientSelectionContext';
+import { ServiceTypePicker } from "@/components/post-sites/ServiceTypeBadge";
+import ServiceTypeConfigFields from "@/components/post-sites/ServiceTypeConfigFields";
+import AddressAutocomplete, { AddressComponents } from "@/components/maps/AddressAutocomplete";
 
 export type Client = { id: string; name: string; lastName?: string };
-export type Category = { id: string; name: string; description?: string };
 
 export type PostSiteFormProps = {
     mode: "create" | "edit";
     id?: string;
     clients?: Client[];
-    categories?: Category[];
     baseUrl?: string;
     onSaved?: (payload: { id: string; data: PostSiteInput }) => void;
 };
 
-export default function PostSiteForm({
-    mode,
-    id,
-    categories: initialCategories,
-    onSaved,
-}: PostSiteFormProps) {
+export default function PostSiteForm({ mode, id, onSaved }: PostSiteFormProps) {
     const { t } = useTranslation();
     const { selectedClient } = useClientSelection();
     const navigate = useNavigate();
-    const [categories, setCategories] = useState<Category[]>(initialCategories || []);
-    const [loadingCategories, setLoadingCategories] = useState(false);
 
     const form = useForm<PostSiteInput>({
         resolver: zodResolver(postSiteSchema as any),
         defaultValues: {
             name: "",
+            serviceType: undefined,
+            serviceConfig: undefined,
             description: "",
             clientId: "",
             categoryId: "",
+            address: "",
+            addressLine2: "",
+            city: "",
+            country: "",
+            postalCode: "",
+            email: "",
+            phone: "",
+            latitud: "",
+            longitud: "",
+            stationSchedule: undefined,
+            startingTimeInDay: "",
+            finishTimeInDay: "",
+            fax: "",
             status: "active",
         },
     });
@@ -69,45 +71,50 @@ export default function PostSiteForm({
         }
     }, [selectedClient]);
 
+    // Auto-inject categoryId from client's first category (create mode only)
     useEffect(() => {
-        loadCategories();
+        if (mode !== 'create') return;
+        const ids: string[] = (selectedClient as any)?.categoryIds ?? [];
+        if (ids.length > 0) {
+            form.setValue('categoryId', ids[0], { shouldValidate: true, shouldDirty: true });
+        }
+    }, [selectedClient, mode]);
+
+    useEffect(() => {
         if (mode === "edit" && id) {
             loadPostSite(id);
         }
     }, []);
 
-    const loadCategories = async () => {
-        setLoadingCategories(true);
-        try {
-            const response = await categoryService.list({
-                filter: { module: "postSite" },
-                limit: 1000,
-                offset: 0,
-            });
-            setCategories(response?.rows || []);
-        } catch {
-            toast.error("No se pudieron cargar los sectores");
-        } finally {
-            setLoadingCategories(false);
-        }
-    };
-
     const loadPostSite = async (siteId: string) => {
         try {
             const data = await stationService.get(siteId);
             form.reset({
-                name: (data as any).companyName ?? (data as any).name ?? "",
+                name: (data as any).companyName ?? (data as any).stationName ?? (data as any).name ?? "",
+                serviceType: (data as any).serviceType ?? undefined,
                 description: (data as any).description ?? "",
                 clientId: (data as any).clientAccountId ?? (data as any).clientId ?? "",
                 categoryId:
                     Array.isArray((data as any).categoryIds) && (data as any).categoryIds.length > 0
                         ? (data as any).categoryIds[0]
                         : (data as any).categoryId || "",
+                address: (data as any).address ?? "",
+                addressLine2: (data as any).secondAddress ?? (data as any).addressLine2 ?? "",
+                serviceConfig: (data as any).serviceConfig ?? undefined,
+                city: (data as any).city ?? "",
+                country: (data as any).country ?? "",
+                postalCode: (data as any).postalCode ?? (data as any).zipCode ?? "",
+                email: (data as any).contactEmail ?? (data as any).email ?? "",
+                phone: (data as any).contactPhone ?? (data as any).phone ?? "",
+                latitud: String((data as any).latitud ?? (data as any).latitude ?? ""),
+                longitud: String((data as any).longitud ?? (data as any).longitude ?? ""),
+                stationSchedule: (data as any).stationSchedule ?? undefined,
+                startingTimeInDay: (data as any).startingTimeInDay ?? "",
+                finishTimeInDay: (data as any).finishTimeInDay ?? "",
+                fax: (data as any).fax ?? "",
                 status:
                     typeof (data as any).active === "boolean"
-                        ? (data as any).active
-                            ? "active"
-                            : "inactive"
+                        ? (data as any).active ? "active" : "inactive"
                         : (data as any).status ?? "active",
             });
         } catch (e) {
@@ -117,18 +124,8 @@ export default function PostSiteForm({
         }
     };
 
-    const handleCategoryCreated = () => {
-        loadCategories();
-    };
-
-    const cats: CategoryOption[] = useMemo(() => {
-        if (!Array.isArray(categories)) return [];
-        return categories.map((c) => ({ id: c.id, name: c.name }));
-    }, [categories]);
-
     const onSubmit = async (values: PostSiteInput) => {
         try {
-            const sc = selectedClient as any;
             const payload: any = {
                 ...values,
                 companyName: values.name,
@@ -136,15 +133,6 @@ export default function PostSiteForm({
                     values.categoryId && String(values.categoryId).length > 0
                         ? values.categoryId
                         : undefined,
-                // Auto-fill address fields from selected client
-                address: sc?.address || '',
-                city: sc?.city || '',
-                postalCode: sc?.postalCode || '',
-                country: sc?.country || '',
-                email: sc?.contactEmail || sc?.email || sc?.mail || '',
-                phone: sc?.contactPhone || sc?.phone || sc?.phoneNumber || sc?.mobile || '',
-                latitud: String(sc?.latitud ?? sc?.latitude ?? ''),
-                longitud: String(sc?.longitud ?? sc?.longitude ?? ''),
             };
 
             if (mode === "create") {
@@ -171,90 +159,357 @@ export default function PostSiteForm({
         }
     };
 
+    const SCHEDULES = ["1 hora","4 horas","8 horas","10 horas","12 horas","14 horas","16 horas","24 horas"];
+
+    const serviceType = useWatch({ control: form.control, name: 'serviceType' });
+
+    const handleAddressSelect = (ac: AddressComponents) => {
+        form.setValue('address',    ac.address,   { shouldDirty: true });
+        form.setValue('city',       ac.city,      { shouldDirty: true });
+        form.setValue('country',    ac.country,   { shouldDirty: true });
+        form.setValue('postalCode', ac.postalCode, { shouldDirty: true });
+        form.setValue('latitud',    String(ac.latitude),  { shouldDirty: true });
+        form.setValue('longitud',   String(ac.longitude), { shouldDirty: true });
+    };
+
     return (
         <div className="max-w-2xl mx-auto">
+            {/* Client context banner */}
+            {selectedClient && (
+                <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    <span className="font-semibold">Cliente: </span>
+                    {(selectedClient as any).name ?? (selectedClient as any).companyName ?? ''}
+                </div>
+            )}
+
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <FormField<PostSiteInput>
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>{t('postSites.form.siteName', 'Nombre del puesto *')}</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        placeholder=""
-                                        {...field}
-                                        value={field.value ? String(field.value) : ""}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-                    <FormField<PostSiteInput>
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>{t('postSites.form.description', 'Descripción *')}</FormLabel>
-                                <FormControl>
-                                    <Textarea
-                                        placeholder={t('postSites.form.descriptionPlaceholder', 'Descripción del sitio')}
-                                        rows={3}
-                                        {...field}
-                                        value={field.value ? String(field.value) : ""}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField<PostSiteInput>
-                        control={form.control}
-                        name="categoryId"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="flex items-center gap-2">
-                                    {t('clients.form.categoryLabel', 'Sector de seguridad')}
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <span className="text-muted-foreground cursor-help">
-                                                    <Info size={16} />
-                                                </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="top">
-                                                {t('postSites.form.categoryTooltip', 'Selecciona el sector de seguridad asociado al puesto de vigilancia')}
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </FormLabel>
-                                <CategorySelect
-                                    options={cats}
-                                    value={field.value ? String(field.value) : undefined}
-                                    onChange={field.onChange}
-                                    placeholder={
-                                        loadingCategories
-                                            ? t('categories.loading', 'Cargando...')
-                                            : t('postSites.form.selectcategory', 'Seleccionar sector de seguridad')
-                                    }
-                                    module="postSite"
-                                    onCategoryCreated={handleCategoryCreated}
+                    {/* ── Tipo de servicio ─────────────────────────── */}
+                    <section>
+                        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                            Tipo de servicio
+                        </h2>
+                        <Controller
+                            control={form.control}
+                            name="serviceType"
+                            render={({ field, fieldState }) => (
+                                <ServiceTypePicker
+                                    value={field.value as string | undefined}
+                                    onChange={(val) => field.onChange(val)}
+                                    error={fieldState.error?.message}
                                 />
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                            )}
+                        />
+                    </section>
 
-                    <div className="flex justify-end gap-3">
+                    {/* ── Service-type specific config ───────────────── */}
+                    {serviceType && (
+                        <ServiceTypeConfigFields
+                            serviceType={serviceType as string}
+                            form={form as any}
+                        />
+                    )}
+
+                    {/* ── Información básica ───────────────────────── */}
+                    <section className="space-y-4">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                            Información básica
+                        </h2>
+
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{t('postSites.form.siteName', 'Nombre del puesto *')}</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Ej. Edificio Central" {...field} value={field.value ? String(field.value) : ""} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{t('postSites.form.description', 'Descripción')}</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder={t('postSites.form.descriptionPlaceholder', 'Descripción del sitio')}
+                                            rows={3}
+                                            {...field}
+                                            value={field.value ? String(field.value) : ""}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <FormField<PostSiteInput>
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Correo electrónico</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="correo@empresa.com" {...field} value={field.value ? String(field.value) : ""} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField<PostSiteInput>
+                                control={form.control}
+                                name="phone"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Teléfono de contacto</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="+1 555 000 0000" {...field} value={field.value ? String(field.value) : ""} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </section>
+
+                    {/* ── Ubicación del servicio ────────────────────── */}
+                    <section className="space-y-4">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                            Ubicación del servicio
+                        </h2>
+
+                        {/* Google Maps autocomplete — populates all address fields */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Buscar dirección
+                            </label>
+                            <AddressAutocomplete
+                                onAddressSelect={handleAddressSelect}
+                                defaultValue={form.getValues('address') ?? ''}
+                                placeholder="Calle, número, ciudad…"
+                                showMap={true}
+                                mapHeight="220px"
+                                initialLat={form.getValues('latitud') ? Number(form.getValues('latitud')) : undefined}
+                                initialLng={form.getValues('longitud') ? Number(form.getValues('longitud')) : undefined}
+                                suppressInitialReverse={true}
+                            />
+                        </div>
+
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="address"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Dirección</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Calle, número, piso…" {...field} value={field.value ? String(field.value) : ""} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="addressLine2"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Dirección complementaria</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Aptto., oficina, referencia…" {...field} value={field.value ? String(field.value) : ""} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <FormField<PostSiteInput>
+                                control={form.control}
+                                name="city"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Ciudad</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} value={field.value ? String(field.value) : ""} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField<PostSiteInput>
+                                control={form.control}
+                                name="country"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>País</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} value={field.value ? String(field.value) : ""} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField<PostSiteInput>
+                                control={form.control}
+                                name="postalCode"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Código postal</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} value={field.value ? String(field.value) : ""} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <FormField<PostSiteInput>
+                                control={form.control}
+                                name="latitud"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Latitud</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="0.000000" {...field} value={field.value ? String(field.value) : ""} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField<PostSiteInput>
+                                control={form.control}
+                                name="longitud"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Longitud</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="0.000000" {...field} value={field.value ? String(field.value) : ""} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </section>
+
+                    {/* ── Horario de servicio ───────────────────────── */}
+                    <section className="space-y-4">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                            Horario de servicio
+                        </h2>
+
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="stationSchedule"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Jornada de guardia</FormLabel>
+                                    <FormControl>
+                                        <select
+                                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                            value={String(field.value ?? "")}
+                                            onChange={(e) => field.onChange(e.target.value || undefined)}
+                                        >
+                                            <option value="">Sin definir</option>
+                                            {SCHEDULES.map((s) => (
+                                                <option key={s} value={s}>{s}</option>
+                                            ))}
+                                        </select>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <FormField<PostSiteInput>
+                                control={form.control}
+                                name="startingTimeInDay"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Hora de inicio</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="08:00" {...field} value={field.value ? String(field.value) : ""} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField<PostSiteInput>
+                                control={form.control}
+                                name="finishTimeInDay"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Hora de fin</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="20:00" {...field} value={field.value ? String(field.value) : ""} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="fax"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Teléfono fijo / Fax</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="+1 555 000 0001" {...field} value={field.value ? String(field.value) : ""} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </section>
+
+                    {/* ── Estado ───────────────────────────────────── */}
+                    <section>
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="status"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Estado</FormLabel>
+                                    <FormControl>
+                                        <select
+                                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                            value={String(field.value ?? "active")}
+                                            onChange={(e) => field.onChange(e.target.value)}
+                                        >
+                                            <option value="active">Activo</option>
+                                            <option value="inactive">Inactivo</option>
+                                        </select>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </section>
+
+                    {/* ── Acciones ──────────────────────────────────── */}
+                    <div className="flex justify-end gap-3 pt-2">
                         <Button type="button" variant="outline" className="min-w-28" onClick={handleCancel}>
                             {t('postSites.form.cancel', 'Cancelar')}
                         </Button>
-                        <Button type="submit" className="min-w-28 bg-[#C8860A] text-white  cursor-pointer border border-[#C8860A] hover:bg-[#B37809]">
-                            {t('postSites.form.submit', 'Enviar')}
+                        <Button
+                            type="submit"
+                            className="min-w-28 bg-[#C8860A] text-white border border-[#C8860A] hover:bg-[#B37809] cursor-pointer"
+                        >
+                            {t('postSites.form.submit', 'Guardar')}
                         </Button>
                     </div>
                 </form>

@@ -31,12 +31,8 @@ export default function NewOrEditClientPage() {
     }, [id, hasPermission, navigate]);
 
 
-    useEffect(() => {
-        (async () => {
-            const { data } = await axios.get("/api/categories", { params: { type: "client" } });
-            setCats(data ?? []);
-        })().catch(console.error);
-    }, []);
+    // Categories are loaded directly inside ClientForm via categoryService
+    // (the /api/categories endpoint does not exist; no-op here)
 
 
     return (

@@ -23,11 +23,26 @@
     "updatedAt": "Última actualización"
   },
   "actions": {
-    "more": "Acciones",
-    "view": "Ver",
-    "add": "Agregar",
+    "action": "Acción",
+    "viewDetails": "Ver detalles",
+    "edit": "Editar",
+    "categorize": "Sectorizar",
+    "categorize_label": "Sectorizar",
+    "archive": "Archivar",
     "delete": "Eliminar",
-    "edit": "Editar"
+    "deleting": "Eliminando...",
+    "restore": "Restaurar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "manageCategories": "Gestionar Sectores",
+    "exportPdf": "Exportar como PDF",
+    "exportExcel": "Exportar como Excel",
+    "import": "Importar",
+    "move": "Mover Categoría",
+    "desactivate": "Desactivar",
+    "activate": "Activar",
+    "close": "Cerrar",
+    "confirm": "Confirmar"
   },
   "tenantJoinModal": {
     "title": "Unirse o crear empresa",
@@ -86,11 +101,9 @@
   "sidebar": {
     "panel": "Panel de control",
     "actividad": "Actividad",
-    "clientes": {
-      "label": "Clientes",
-      "clientes": "Clientes",
-      "sitios-publicacion": "Puestos de seguridad"
-    },
+    "clientes": "Clientes",
+    "sitios-publicacion": "Sitios de Servicio",
+    "projects": "Proyectos",
     "equipo": {
       "label": "Equipo de seguridad",
       "guardias": "Guardias de seguridad",
@@ -972,10 +985,11 @@
       "contacts": "Contactos",
       "notes": "Notas",
       "files": "Archivos",
-      "postSites": "Puestos de vigilancia",
+      "postSites": "Sitios de servicio",
       "clientPortal": "Portal del cliente",
       "userAccess": "Acceso de usuarios",
-      "emailReports": "Reportes por correo"
+      "emailReports": "Reportes por correo",
+      "projects": "Proyectos"
     },
     "validation": {
       "cedula_invalid": "Cédula inválida",
@@ -983,7 +997,7 @@
     },
     "overview": {
       "cards": {
-        "postSites": "Puestos vigilados",
+        "postSites": "Sitios activos",
         "guardsAssigned": "Guardias asignados",
         "toursCompleted": "Recorridos completados (últimos 7 días)",
         "tasksCompleted": "Tareas completadas (últimos 7 días)",
@@ -1315,10 +1329,10 @@
   },
   "postSites": {
     "postsitdash": "Panel de control",
-    "postsite": "puesto de vigilancia",
-    "searchPlaceholder": "Buscar Puestos de vigilancia",
-    "newPostSite": "Nuevo puesto de vigilancia",
-    "editPostSite": "Editar puesto de vigilancia",
+    "postsite": "Sitio de servicio",
+    "searchPlaceholder": "Buscar sitios de servicio",
+    "newPostSite": "Nuevo sitio de servicio",
+    "editPostSite": "Editar sitio de servicio",
     "filtersTitle": "Filtros",
     "action": "Acción",
     "move": "Mover",
@@ -1358,7 +1372,7 @@
     "form": {
       "client": "Cliente *",
       "selectClient": "Selecciona un cliente",
-      "siteName": "Nombre del puesto de seguridad *",
+      "siteName": "Nombre del sitio *",
       "address": "Dirección *",
       "addressLine2": "Dirección línea 2",
       "addressLine2Placeholder": "Opcional",
@@ -1413,8 +1427,7 @@
         "segway": "Segway",
         "pickup": "Camioneta"
       },
-      "observations": "Observaciones"
-      ,
+      "observations": "Observaciones",
       "radioTypeRequired": "El tipo de radio es obligatorio",
       "gunTypeRequired": "El tipo de arma es obligatorio",
       "gunTypeInvalid": "El tipo de arma no es válido",
@@ -1573,8 +1586,7 @@
       "tenantId": "Tenant ID",
       "view": "Ver detalles",
       "detailsTitle": "Detalles de la estación",
-      "noDetails": "No hay detalles disponibles",
-      "remove": "Eliminar"
+      "noDetails": "No hay detalles disponibles"
     },
     "profile": {
       "title": "Perfil del puesto de vigilancia",
@@ -1742,72 +1754,69 @@
     }
   },
   "activity": {
-    "title": "Actividad",
-    "latest": "Actividad reciente",
-    "recent": "Actividad reciente",
-    "noActivity": "Sin actividad reciente",
-    "showMore": "Mostrar más",
-    "markAllRead": "Marcar todo como leído",
-    "filters": "Filtros",
-    "savedFilters": "Filtros guardados",
-    "filter": {
-      "client": "Cliente",
-      "postSite": "puesto de vigilancia",
-      "guard": "Guardia",
-      "type": "Tipo",
-      "type": {
-        "all": "Todos",
-        "checkin": "Registro",
-        "checkout": "Salida",
-        "incident": "Incidente"
-      },
-      "dateFrom": "Desde la fecha",
-      "dateTo": "Hasta la fecha",
-      "time": "Hora",
-      "showArchived": "Mostrar datos archivados",
-      "apply": "Aplicar filtro"
-    },
-    "any": "Cualquiera",
-    "noResults": {
-      "title": "No se encontraron resultados",
-      "description": "No pudimos encontrar ningún elemento que coincida con su búsqueda"
-    },
+    "title": "Actividades",
     "empty": {
-      "alt": "Sin resultados"
+      "title": "Sin actividad",
+      "description": "No hay actividad reciente para mostrar"
     }
   },
   "dashboard": {
     "title": "Panel de control",
-    "welcome": "Bienvenido al panel",
-    "cards": "Tarjetas de resumen",
-    "noWidgets": {
-      "title": "No hay widgets habilitados",
-      "desc": "Por favor, habilita al menos un widget para ver datos en la pantalla."
+    "manageWidgets": "Gestionar Widgets",
+    "popover": {
+      "widgets": {
+        "stats": "Cuadro de Estadísticas",
+        "tracker": "Guardias Activos",
+        "activity": "Última Actividad",
+        "timeLog": "Reloj de Tiempo",
+        "checkIn": "Registros",
+        "checkOut": "Salidas registradas",
+        "incidents": "Últimos Incidentes",
+        "reports": "Informes Estándar",
+        "tours": "Últimos Recorridos por el Sitio",
+        "scans": "Últimas etiquetas escaneadas"
+      }
     },
-    "widgets": {
-      "clientes": {
-        "title": "Clientes",
-        "subtitle": "Clientes activos"
-      },
-      "sitios": {
-        "title": "Puestos de vigilancia",
-        "subtitle": "Sitios activos"
-      },
-      "guardias": {
-        "title": "Guardias",
-        "subtitle": "Guardias activos"
-      },
-      "equipo": {
-        "title": "Equipo administrativo",
-        "subtitle": "Usuarios activos"
-      },
-      "registros": {
-        "title": "Registros",
-        "subtitle": "Hoy"
-      },
-      "fichados": {
-        "title": "Fichados",
-        "subtitle": "Hoy"
+    "page": {
+      "noData": "No hay datos disponibles",
+      "noTrackerData": "No hay datos de rastreo disponibles",
+      "noTimeLogData": "No hay datos de reloj de tiempo disponibles",
+      "noActivityData": "No hay datos de actividad disponibles",
+      "noCheckInData": "No hay datos de registros disponibles",
+      "noCheckOutData": "No hay datos de salidas registradas disponibles",
+      "noIncidentsData": "No hay datos de incidentes disponibles",
+      "noReportsData": "No hay datos de informes disponibles",
+      "noToursData": "No hay datos de recorridos por el sitio disponibles",
+      "noScansData": "No hay datos de etiquetas escaneadas disponibles",
+      "liveTracker": "Rastreador en Vivo",
+      "showGeofence": "Mostrar Geovalla",
+      "hideGeofence": "Ocultar Geovalla",
+      "roadmap": "Roadmap",
+      "satellite": "Satélite",
+      "lastActivity": "Última Actividad",
+      "viewAll": "Ver Todo",
+      "timeLog": "Reloj de Tiempo",
+      "entriesCount": "{{count}} Entradas",
+      "checkIns": "Registros",
+      "checkOuts": "Salidas registradas",
+      "incidents": "Últimos Incidentes",
+      "reports": "Informes Estándar",
+      "tours": "Últimos Recorridos por el Sitio",
+      "scans": "Últimas etiquetas escaneadas"
+    },
+    "table": {
+      "headers": {
+        "index": "#",
+        "image": "Imagen",
+        "guard": "Guardia",
+        "postSite": "puesto de vigilancia",
+        "lastUpdate": "Última Actualización",
+        "battery": "Estado de la Batería",
+        "speed": "Velocidad (MPH)",
+        "lastLocation": "Última Ubicación",
+        "type": "Tipo",
+        "shiftName": "Turno/Descanso Nombre",
+        "time": "Hora de Fichaje"
       }
     }
   },
@@ -2011,10 +2020,10 @@
     "cancel": "Cancelar"
   },
   "clientPostSites": {
-    "searchPlaceholder": "Buscar puestos de vigilancia...",
-    "newPostSite": "Nuevo puesto",
+    "searchPlaceholder": "Buscar sitios de servicio...",
+    "newPostSite": "Nuevo sitio",
     "headers": {
-      "postSite": "Puesto",
+      "postSite": "Sitio de servicio",
       "client": "Cliente",
       "email": "Correo",
       "phoneNumber": "Teléfono",
@@ -2026,38 +2035,16 @@
     },
     "viewDetails": "Ver detalles",
     "archive": "Archivar",
-    "confirmArchiveTitle": "¿Archivar {{count}} puesto(s)?",
-    "confirmArchiveDescription": "¿Estás seguro de archivar {{count}} puesto(s)?",
-    "archivedAll": "Todos los puestos seleccionados archivados",
-    "archivedPartial": "{{count}} puesto(s) archivados",
+    "confirmArchiveTitle": "¿Archivar {{count}} sitio(s)?",
+    "confirmArchiveDescription": "¿Estás seguro de archivar {{count}} sitio(s)?",
+    "archivedAll": "Todos los sitios seleccionados archivados",
+    "archivedPartial": "{{count}} sitio(s) archivados",
     "archivePartialError": "Algunos elementos no se pudieron archivar",
-    "archiveError": "Error al archivar los puestos",
+    "archiveError": "Error al archivar los sitios",
     "archiving": "Archivando...",
     "action": "Acción",
-    "selectAtLeastOne": "Selecciona al menos un puesto",
-    "cannotArchiveLinkedGuards": "No se pueden archivar {{count}} puesto(s) porque tienen guardias asignados. Desvincula los guardias primero."
-  },
-  "actions": {
-    "action": "Acción",
-    "viewDetails": "Ver detalles",
-    "edit": "Editar",
-    "categorize": "Sectorizar",
-    "categorize_label": "Sectorizar",
-    "archive": "Archivar",
-    "delete": "Eliminar",
-    "deleting": "Eliminando...",
-    "restore": "Restaurar",
-    "save": "Guardar",
-    "cancel": "Cancelar",
-    "manageCategories": "Gestionar Sectores",
-    "exportPdf": "Exportar como PDF",
-    "exportExcel": "Exportar como Excel",
-    "import": "Importar",
-    "move": "Mover Categoría",
-    "desactivate": "Desactivar",
-    "activate": "Activar",
-    "close": "Cerrar",
-    "confirm": "Confirmar"
+    "selectAtLeastOne": "Selecciona al menos un sitio",
+    "cannotArchiveLinkedGuards": "No se pueden archivar {{count}} sitio(s) porque tienen guardias asignados. Desvincula los guardias primero."
   },
   "components": {
     "addRemove": {
@@ -2195,7 +2182,55 @@
       "activate": "Activar"
     },
     "searchPlaceholder": "Buscar usuario",
-    "newUser": "Nuevo Usuario",
+    "newUser": {
+      "breadcrumb": {
+        "dashboard": "Panel de control",
+        "new": "Nuevo Usuario"
+      },
+      "form": {
+        "nameLabel": "Nombre*",
+        "namePlaceholder": "Nombre*",
+        "emailLabel": "Correo Electrónico*",
+        "emailPlaceholder": "Correo Electrónico*",
+        "accessLevelLabel": "Nivel de Acceso*",
+        "accessLevelPlaceholder": "Seleccionar nivel de acceso",
+        "selectDefault": "Seleccionar…",
+        "searchPlaceholder": "opción",
+        "deselectAll": "Deseleccionar todos",
+        "selectAll": "Seleccionar todos",
+        "noOptions": "Sin opciones",
+        "assignClientsPlaceholder": "Asignar Clientes",
+        "assignSitesPlaceholder": "Asignar Estacionesde vigilancia",
+        "assignClientsLabel": "Asignar Clientes",
+        "assignSitesLabel": "Asignar Estacionesde vigilancia",
+        "assignStationsPlaceholder": "Asignar Estaciones",
+        "assignStationsLabel": "Asignar Estaciones",
+        "create": "Crear",
+        "creating": "Creando..."
+      },
+      "invite": {
+        "createTrigger": "Crear código de invitación",
+        "title": "Generar código de invitación",
+        "description": "Cree un código temporal para invitar a un usuario (expira en 1 hora).",
+        "placeholderToken": "------",
+        "expiresLabel": "Expira:",
+        "generating": "Generando...",
+        "regen": "Regenerar",
+        "generate": "Generar código"
+      },
+      "toasts": {
+        "codeCopied": "Código copiado",
+        "inviteCreated": "Código de invitación creado",
+        "inviteGeneratedLocal": "Código generado localmente (no guardado en servidor)",
+        "created": "Usuario creado",
+        "updated": "Usuario actualizado"
+      },
+      "errors": {
+        "invalidIds": "IDs inválidos detectados en asignaciones",
+        "unknown": "Error desconocido",
+        "createCode": "Error creando código"
+      }
+    },
     "filters": {
       "title": "Filtros",
       "categories": "Sectores",
@@ -2287,55 +2322,6 @@
       "activatedCount": "Activados {{count}} usuario(s)",
       "activateAllError": "No se pudo activar a todos los usuarios"
     },
-    "newUser": {
-      "breadcrumb": {
-        "dashboard": "Panel de control",
-        "new": "Nuevo Usuario"
-      },
-      "form": {
-        "nameLabel": "Nombre*",
-        "namePlaceholder": "Nombre*",
-        "emailLabel": "Correo Electrónico*",
-        "emailPlaceholder": "Correo Electrónico*",
-        "accessLevelLabel": "Nivel de Acceso*",
-        "accessLevelPlaceholder": "Seleccionar nivel de acceso",
-        "selectDefault": "Seleccionar…",
-        "searchPlaceholder": "opción",
-        "deselectAll": "Deseleccionar todos",
-        "selectAll": "Seleccionar todos",
-        "noOptions": "Sin opciones",
-        "assignClientsPlaceholder": "Asignar Clientes",
-        "assignSitesPlaceholder": "Asignar Estacionesde vigilancia",
-        "assignClientsLabel": "Asignar Clientes",
-        "assignSitesLabel": "Asignar Estacionesde vigilancia",
-        "assignStationsPlaceholder": "Asignar Estaciones",
-        "assignStationsLabel": "Asignar Estaciones",
-        "create": "Crear",
-        "creating": "Creando..."
-      },
-      "invite": {
-        "createTrigger": "Crear código de invitación",
-        "title": "Generar código de invitación",
-        "description": "Cree un código temporal para invitar a un usuario (expira en 1 hora).",
-        "placeholderToken": "------",
-        "expiresLabel": "Expira:",
-        "generating": "Generando...",
-        "regen": "Regenerar",
-        "generate": "Generar código"
-      },
-      "toasts": {
-        "codeCopied": "Código copiado",
-        "inviteCreated": "Código de invitación creado",
-        "inviteGeneratedLocal": "Código generado localmente (no guardado en servidor)",
-        "created": "Usuario creado",
-        "updated": "Usuario actualizado"
-      },
-      "errors": {
-        "invalidIds": "IDs inválidos detectados en asignaciones",
-        "unknown": "Error desconocido",
-        "createCode": "Error creando código"
-      }
-    },
     "editUser": {
       "breadcrumb": {
         "dashboard": "Panel de control",
@@ -2376,73 +2362,6 @@
       "message": "No pudimos encontrar ningún elemento que coincida con tu búsqueda"
     }
   },
-  "dashboard": {
-    "title": "Panel de control",
-    "manageWidgets": "Gestionar Widgets",
-    "popover": {
-      "widgets": {
-        "stats": "Cuadro de Estadísticas",
-        "tracker": "Guardias Activos",
-        "activity": "Última Actividad",
-        "timeLog": "Reloj de Tiempo",
-        "checkIn": "Registros",
-        "checkOut": "Salidas registradas",
-        "incidents": "Últimos Incidentes",
-        "reports": "Informes Estándar",
-        "tours": "Últimos Recorridos por el Sitio",
-        "scans": "Últimas etiquetas escaneadas"
-      }
-    },
-    "page": {
-      "noData": "No hay datos disponibles",
-      "noTrackerData": "No hay datos de rastreo disponibles",
-      "noTimeLogData": "No hay datos de reloj de tiempo disponibles",
-      "noActivityData": "No hay datos de actividad disponibles",
-      "noCheckInData": "No hay datos de registros disponibles",
-      "noCheckOutData": "No hay datos de salidas registradas disponibles",
-      "noIncidentsData": "No hay datos de incidentes disponibles",
-      "noReportsData": "No hay datos de informes disponibles",
-      "noToursData": "No hay datos de recorridos por el sitio disponibles",
-      "noScansData": "No hay datos de etiquetas escaneadas disponibles",
-      "liveTracker": "Rastreador en Vivo",
-      "showGeofence": "Mostrar Geovalla",
-      "hideGeofence": "Ocultar Geovalla",
-      "roadmap": "Roadmap",
-      "satellite": "Satélite",
-      "lastActivity": "Última Actividad",
-      "viewAll": "Ver Todo",
-      "timeLog": "Reloj de Tiempo",
-      "entriesCount": "{{count}} Entradas",
-      "checkIns": "Registros",
-      "checkOuts": "Salidas registradas",
-      "incidents": "Últimos Incidentes",
-      "reports": "Informes Estándar",
-      "tours": "Últimos Recorridos por el Sitio",
-      "scans": "Últimas etiquetas escaneadas"
-    },
-    "table": {
-      "headers": {
-        "index": "#",
-        "image": "Imagen",
-        "guard": "Guardia",
-        "postSite": "puesto de vigilancia",
-        "lastUpdate": "Última Actualización",
-        "battery": "Estado de la Batería",
-        "speed": "Velocidad (MPH)",
-        "lastLocation": "Última Ubicación",
-        "type": "Tipo",
-        "shiftName": "Turno/Descanso Nombre",
-        "time": "Hora de Fichaje"
-      }
-    }
-  },
-  "activity": {
-    "title": "Actividades",
-    "empty": {
-      "title": "Sin actividad",
-      "description": "No hay actividad reciente para mostrar"
-    }
-  },
   "visitantes": {
     "dashboard": "Panel de control",
     "title": "Visitantes",
@@ -2452,7 +2371,6 @@
     "searchVisitor": "Buscar visitante",
     "addVisitor": "Añadir visitante",
     "newVisitor": "Nuevo Visitante",
-    "action": "Acción",
     "action": {
       "activate": "Activar",
       "deactivate": "Inactivar",
@@ -2467,12 +2385,11 @@
     "selectStation": "Selecciona una estación",
     "guard": "Guardia",
     "selectGuard": "Selecciona un guardia",
-    "tag": "Etiqueta",
-    "selectTag": "Selecciona una etiqueta",
     "tag": {
       "vip": "VIP",
       "provider": "Proveedor"
     },
+    "selectTag": "Selecciona una etiqueta",
     "showArchived": "Mostrar datos archivados",
     "filterButton": "Filtro",
     "importVisitors": "Importar visitantes",
@@ -2980,5 +2897,64 @@
     "creating": "Creando...",
     "create": "Crear",
     "created": "Incidente creado"
+  },
+  "projects": {
+    "title": "Proyectos",
+    "newProject": "Nuevo proyecto",
+    "editProject": "Editar proyecto",
+    "searchPlaceholder": "Buscar proyectos",
+    "nav": "Proyectos",
+    "clientNav": "Proyectos",
+    "types": {
+      "event": "Evento de seguridad",
+      "investigation": "Investigación",
+      "alarm_response": "Respuesta a alarma",
+      "consulting": "Consultoría",
+      "other": "Otro servicio"
+    },
+    "statuses": {
+      "active": "Activo",
+      "completed": "Completado",
+      "cancelled": "Cancelado",
+      "on_hold": "En pausa"
+    },
+    "fields": {
+      "name": "Nombre del proyecto *",
+      "type": "Tipo de proyecto *",
+      "client": "Cliente *",
+      "status": "Estado",
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de fin",
+      "location": "Lugar / ubicación",
+      "estimatedHours": "Horas estimadas",
+      "description": "Descripción",
+      "notes": "Notas internas"
+    },
+    "form": {
+      "cancel": "Cancelar",
+      "submit": "Guardar"
+    },
+    "filters": {
+      "all": "Todos",
+      "active": "Activo",
+      "completed": "Completado",
+      "cancelled": "Cancelado",
+      "on_hold": "En pausa",
+      "status": "Estado",
+      "type": "Tipo",
+      "applyFilters": "Aplicar filtros",
+      "clearFilters": "Limpiar filtros"
+    },
+    "actions": {
+      "view": "Ver detalle",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "complete": "Marcar completado"
+    },
+    "noResults": "No se encontraron proyectos",
+    "deleteConfirm": "¿Eliminar este proyecto?",
+    "created": "Proyecto creado",
+    "updated": "Proyecto actualizado",
+    "deleted": "Proyecto eliminado"
   }
 }

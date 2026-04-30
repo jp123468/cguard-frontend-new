@@ -41,6 +41,7 @@ import {
   Archive,
   Trash,
   RotateCcw,
+  Smartphone,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -139,6 +140,9 @@ export default function ClientesPage() {
   const [restoreClient, setRestoreClient] = useState<Client | null>(null);
   const [openRestoreBulkDialog, setOpenRestoreBulkDialog] = useState(false);
   const [openDeleteBulkDialog, setOpenDeleteBulkDialog] = useState(false);
+  const [openSendAccessDialog, setOpenSendAccessDialog] = useState(false);
+  const [sendAccessClient, setSendAccessClient] = useState<Client | null>(null);
+  const [sendingAccess, setSendingAccess] = useState(false);
   const { setSelectedClient } = useClientSelection();
 
   const debouncedSearch = useDebouncedValue(searchQuery, 500);
@@ -549,6 +553,25 @@ export default function ClientesPage() {
           );
         },
       },
+      {
+        key: "onboardingStatus",
+        header: t('clients.columns.appAccess', 'App'),
+        render: (_value: any, row: Client) => {
+          const status = (row as any).onboardingStatus || 'not_invited';
+          const map: Record<string, { label: string; cls: string }> = {
+            not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), cls: 'bg-gray-100 text-gray-500' },
+            invited:     { label: t('clients.onboarding.invited',     'Invitado'),   cls: 'bg-amber-100 text-amber-800' },
+            active:      { label: t('clients.onboarding.active',      'En app'),     cls: 'bg-green-100 text-green-800' },
+            suspended:   { label: t('clients.onboarding.suspended',   'Suspendido'), cls: 'bg-red-100 text-red-700' },
+          };
+          const badge = map[status] || map.not_invited;
+          return (
+            <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${badge.cls}`}>
+              {badge.label}
+            </span>
+          );
+        },
+      },
     ],
     [t]
   );
@@ -583,7 +606,6 @@ export default function ClientesPage() {
             try {
               await clientService.updateClient(client.id, { active: false } as any);
               toast.success(t('clients.clientArchived'));
-              // refresh list
               loadClients();
             } catch (error: any) {
               toast.error(getServerErrorMessage(error, t('clients.errorArchiveClient')));
@@ -591,11 +613,22 @@ export default function ClientesPage() {
           },
         });
       }
+
+      if (hasPermission('clientAccountDestroy')) {
+        actions.push({
+          label: t('actions.delete', 'Eliminar'),
+          icon: <Trash className="h-4 w-4 text-red-500" />,
+          onClick: () => {
+            setDeleteClient(client);
+            setOpenDeleteDialog(true);
+          },
+        });
+      }
     } else {
       if (hasPermission('clientAccountDestroy')) {
         actions.push({
-          label: t('actions.delete'),
-          icon: <Trash className="h-4 w-4" />,
+          label: t('actions.delete', 'Eliminar'),
+          icon: <Trash className="h-4 w-4 text-red-500" />,
           onClick: () => {
             setDeleteClient(client);
             setOpenDeleteDialog(true);
@@ -613,6 +646,19 @@ export default function ClientesPage() {
           },
         });
       }
+    }
+
+    if (hasPermission('clientAccountEdit')) {
+      actions.push({
+        label: (client as any).onboardingStatus === 'invited' || (client as any).onboardingStatus === 'active'
+          ? t('clients.resendAppAccess', 'Reenviar invitación')
+          : t('clients.sendAppAccess', 'Enviar acceso a la app'),
+        icon: <Smartphone className="h-4 w-4" />,
+        onClick: () => {
+          setSendAccessClient(client);
+          setOpenSendAccessDialog(true);
+        },
+      });
     }
 
     return actions;
@@ -866,6 +912,19 @@ export default function ClientesPage() {
                     <span className={`px-2 py-1 text-xs rounded-full ${client.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {client.active ? t('clients.status.active') : t('clients.status.archived')}
                     </span>
+                    {(() => {
+                      const s = (client as any).onboardingStatus || 'not_invited';
+                      const mobileMap: Record<string, { label: string; cls: string }> = {
+                        not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), cls: 'bg-gray-100 text-gray-500' },
+                        invited:     { label: t('clients.onboarding.invited', 'Invitado'),      cls: 'bg-amber-100 text-amber-800' },
+                        active:      { label: t('clients.onboarding.active', 'En app'),         cls: 'bg-green-100 text-green-800' },
+                        suspended:   { label: t('clients.onboarding.suspended', 'Suspendido'),  cls: 'bg-red-100 text-red-700' },
+                      };
+                      const b = mobileMap[s] || mobileMap.not_invited;
+                      return (
+                        <span className={`mt-1 px-2 py-0.5 text-xs rounded-full ${b.cls}`}>{b.label}</span>
+                      );
+                    })()}
                     <div className="mt-2">
                       <RowActionsMenu actions={rowActions(client)} />
                     </div>
@@ -1106,6 +1165,82 @@ export default function ClientesPage() {
             >
               {t('clients.accept')}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Send app access dialog */}
+      <AlertDialog open={openSendAccessDialog} onOpenChange={(v) => { if (!sendingAccess) setOpenSendAccessDialog(v); }}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C8860A]/10">
+                <Smartphone className="h-5 w-5 text-[#C8860A]" />
+              </div>
+              <AlertDialogTitle className="text-base">
+                {(sendAccessClient as any)?.onboardingStatus === 'invited' || (sendAccessClient as any)?.onboardingStatus === 'active'
+                  ? t('clients.resendAppAccess', 'Reenviar invitación')
+                  : t('clients.sendAppAccess', 'Enviar acceso a la app')}
+              </AlertDialogTitle>
+            </div>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-slate-600">
+                {sendAccessClient?.email ? (
+                  <>
+                    <p>
+                      Se enviará un correo de invitación a{' '}
+                      <span className="font-semibold text-slate-800">{sendAccessClient?.email}</span>{' '}
+                      para que <span className="font-semibold text-slate-800">{sendAccessClient?.name}</span> pueda acceder a la app móvil.
+                    </p>
+                    <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-amber-800 text-xs space-y-1">
+                      <p className="font-medium">¿Cómo funciona?</p>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        <li>El cliente recibe un correo con un enlace de acceso</li>
+                        <li>Hace clic en el enlace y establece su contraseña</li>
+                        <li>Inicia sesión en la app con su correo y contraseña</li>
+                      </ul>
+                    </div>
+                  </>
+                ) : (
+                  <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-xs">
+                    <p className="font-medium">Este cliente no tiene correo electrónico configurado.</p>
+                    <p className="mt-1">Edita el cliente, agrega un correo electrónico y vuelve a intentarlo.</p>
+                  </div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={sendingAccess}>{t('clients.cancel', 'Cancelar')}</AlertDialogCancel>
+            {sendAccessClient?.email && (
+              <AlertDialogAction
+                className="bg-[#C8860A] hover:bg-[#B37809] text-white"
+                disabled={sendingAccess}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  if (!sendAccessClient?.id) return;
+                  setSendingAccess(true);
+                  try {
+                    await clientService.sendClientPortalInvitation(
+                      sendAccessClient.id,
+                      sendAccessClient.email || undefined,
+                    );
+                    toast.success(`Invitación enviada a ${sendAccessClient.email || sendAccessClient.name}`);
+                    // Update local state so the badge reflects the new status immediately
+                    setClients(prev => prev.map(c =>
+                      c.id === sendAccessClient.id ? { ...c, onboardingStatus: 'invited' } : c
+                    ));
+                    setOpenSendAccessDialog(false);
+                  } catch (err: any) {
+                    toast.error(err?.response?.data?.message || err?.message || 'No se pudo enviar la invitación');
+                  } finally {
+                    setSendingAccess(false);
+                  }
+                }}
+              >
+                {sendingAccess ? 'Enviando...' : 'Enviar invitación'}
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

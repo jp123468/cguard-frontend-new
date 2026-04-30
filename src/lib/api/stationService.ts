@@ -24,6 +24,7 @@ export interface PostSite {
   assignedGuards?: any[];
   guardsCount?: number;
   numberOfGuardsInStation?: string | number | null;
+  serviceType?: string;
 }
 
 export interface PostSiteFilters {
@@ -38,6 +39,7 @@ export interface PostSiteFilters {
   country?: string;
   status?: 'active' | 'inactive';
   active?: boolean;
+  serviceType?: string;
 }
 
 export interface PaginationOptions {
@@ -145,6 +147,7 @@ const stationService = {
       assignedGuards: Array.isArray(r.assignedGuards) ? r.assignedGuards : undefined,
       guardsCount: typeof r.guardsCount === 'number' ? r.guardsCount : (Array.isArray(r.assignedGuards) ? r.assignedGuards.length : undefined),
       numberOfGuardsInStation: r.numberOfGuardsInStation ?? undefined,
+      serviceType: r.serviceType ?? undefined,
     }));
     return { rows: mappedRows, count: data.count };
   },
@@ -182,6 +185,8 @@ const stationService = {
       stationSchedule: (payload as any).stationSchedule ?? undefined,
       startingTimeInDay: (payload as any).startingTimeInDay ?? undefined,
       finishTimeInDay: (payload as any).finishTimeInDay ?? undefined,
+      serviceType: (payload as any).serviceType ?? undefined,
+      serviceConfig: (payload as any).serviceConfig ?? undefined,
     };
     const { data } = await api.post(`/tenant/${tenantId}/post-site`, body);
     return data;
@@ -227,6 +232,8 @@ const stationService = {
       stationSchedule: (payload as any).stationSchedule ?? existing.stationSchedule,
       startingTimeInDay: (payload as any).startingTimeInDay ?? existing.startingTimeInDay,
       finishTimeInDay: (payload as any).finishTimeInDay ?? existing.finishTimeInDay,
+      serviceType: (payload as any).serviceType ?? existing.serviceType ?? undefined,
+      serviceConfig: (payload as any).serviceConfig ?? existing.serviceConfig ?? undefined,
     };
     const { data } = await api.put(`/tenant/${tenantId}/post-site/${id}`, body);
     return data;

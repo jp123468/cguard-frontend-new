@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -71,10 +71,7 @@ export default function AddressAutocomplete({
 
     autocompleteRef.current.addListener('place_changed', () => {
       const place = autocompleteRef.current.getPlace();
-      if (!place || !place.geometry) {
-        console.warn('No geometry for selected place');
-        return;
-      }
+      if (!place || !place.geometry) return;
       handlePlaceSelect(place);
     });
 

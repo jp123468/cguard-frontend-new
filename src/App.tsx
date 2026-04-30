@@ -48,6 +48,8 @@ import ClientsDetails from "./pages/admin/clientes/ClientsDetails"
 import PostSitePage from "./pages/admin/post-sites/PostSitePage"
 import NewOrEditPostSitePage from "./pages/admin/post-sites/NewOrEditPostSitePage"
 import PostSiteDetailsPage from "./pages/admin/post-sites/PostSiteDetailsPage"
+import ProjectsPage from "./pages/admin/projects/ProjectsPage"
+import NewOrEditProjectPage from "./pages/admin/projects/NewOrEditProjectPage"
 import SecurityGuardsPage from "./pages/admin/security-guards/SecurityGuardsPage"
 import NewSecurityGuardPage from "./pages/admin/security-guards/NewSecurityGuardPage"
 import GuardRegistration from "./pages/guard/registration"
@@ -375,6 +377,38 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <ClientsDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients/:id/projects"
+                element={
+                  <ProtectedRoute>
+                    <ClientsDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/projects"
+                element={
+                  <ProtectedRoute>
+                    <ProjectsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/projects/new"
+                element={
+                  <ProtectedRoute>
+                    <NewOrEditProjectPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/projects/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <NewOrEditProjectPage />
                   </ProtectedRoute>
                 }
               />

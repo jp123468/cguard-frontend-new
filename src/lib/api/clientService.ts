@@ -249,6 +249,42 @@ export const clientService = {
     },
 
     /**
+     * Upload a file to storage for a client account field.
+     * Returns a file object ready to include in create/update payload.
+     * storageId must be one of: 'clientAccountLogoUrl' | 'clientAccountPlacePictureUrl'
+     */
+    async uploadFile(file: File, storageId: 'clientAccountLogoUrl' | 'clientAccountPlacePictureUrl') {
+        const tenantId = getTenantId();
+        const filename = file.name;
+        const creds: any = await api.get(
+            `/tenant/${tenantId}/file/credentials?filename=${encodeURIComponent(filename)}&storageId=${storageId}`,
+        );
+
+        const credData = creds.data ?? creds;
+        const uploadUrl = credData?.uploadCredentials?.url;
+        if (!uploadUrl) throw new Error('Upload URL not available');
+
+        const form = new FormData();
+        form.append('filename', filename);
+        form.append('file', file);
+
+        const uploadResp = await fetch(uploadUrl, { method: 'POST', body: form });
+        if (!uploadResp.ok) {
+            const text = await uploadResp.text().catch(() => null);
+            throw new Error(`Upload failed: ${uploadResp.status} ${text}`);
+        }
+
+        return {
+            new: true,
+            name: filename,
+            sizeInBytes: file.size,
+            privateUrl: credData?.privateUrl,
+            fileToken: credData?.fileToken ?? null,
+            publicUrl: credData?.downloadUrl ?? null,
+        };
+    },
+
+    /**
      * Delete a single client
      */
     async deleteClient(id: string): Promise<void> {
@@ -575,6 +611,18 @@ export const clientService = {
         const tenantId = getTenantId();
         const body = email ? { email } : {};
         const { data } = await api.post<any>(`/tenant/${tenantId}/user/${userId}/send-portal-invitation`, body);
+        return data?.data || data;
+    },
+
+    /**
+     * Send (or re-send) a client portal invitation using the client account id.
+     * Works even when the client doesn't have a linked user yet — the backend
+     * will create one from the client's email address automatically.
+     */
+    async sendClientPortalInvitation(clientAccountId: string, email?: string): Promise<{ sent: boolean; recipient: string }> {
+        const tenantId = getTenantId();
+        const body = email ? { email } : {};
+        const { data } = await api.post<any>(`/tenant/${tenantId}/client-account/${clientAccountId}/send-portal-invitation`, body);
         return data?.data || data;
     },
 };

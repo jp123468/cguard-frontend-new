@@ -3,14 +3,18 @@ import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, ChevronDown, Plus, EllipsisVertical, Eye, Archive } from 'lucide-react';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { stationService } from '@/lib/api/stationService';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { ServiceTypeBadge } from '@/components/post-sites/ServiceTypeBadge';
 import { useTranslation } from 'react-i18next';
+import { useClientSelection } from '@/contexts/ClientSelectionContext';
 
 export default function ClientPostSites({ client }: { client: any }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { setSelectedClient } = useClientSelection();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const actionRef = useRef<HTMLDivElement | null>(null);
   const [actionOpen, setActionOpen] = useState(false);
@@ -91,11 +95,13 @@ export default function ClientPostSites({ client }: { client: any }) {
           </div>
 
           <div className="w-full sm:w-auto">
-            <Link to="/post-sites/new" className="px-6 py-2 bg-[#C8860A] text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors w-full justify-center">
+            <button
+              onClick={() => { setSelectedClient(client); navigate('/post-sites/new'); }}
+              className="px-6 py-2 bg-[#C8860A] text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors w-full justify-center">
             
             
               {t('clientPostSites.newPostSite')}
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -103,10 +109,11 @@ export default function ClientPostSites({ client }: { client: any }) {
           <table className="w-full table-fixed">
             <colgroup>
               <col style={{ width: '48px' }} />
-              <col style={{ width: '38%' }} />
-              <col style={{ width: '32%' }} />
+              <col style={{ width: '28%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '15%' }} />
               <col style={{ width: '12%' }} />
-              <col style={{ width: '8%' }} />
               <col style={{ width: '48px' }} />
             </colgroup>
             <thead>
@@ -123,6 +130,7 @@ export default function ClientPostSites({ client }: { client: any }) {
                   />
                 </th>
                 <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.postSite')}</th>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">Tipo</th>
                 <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.email')}</th>
                 <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.phoneNumber')}</th>
                 <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.status')}</th>
@@ -132,7 +140,7 @@ export default function ClientPostSites({ client }: { client: any }) {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12">
+                  <td colSpan={7} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-40 h-40">
                         <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
@@ -163,10 +171,11 @@ export default function ClientPostSites({ client }: { client: any }) {
                       />
                     </td>
                     <td className="px-3 py-2 text-sm text-gray-700"><div className="truncate max-w-full">{s.companyName ?? s.name}</div></td>
+                    <td className="px-3 py-2"><ServiceTypeBadge value={s.serviceType} /></td>
                     <td className="px-3 py-2 text-sm text-gray-700"><div className="truncate max-w-full">{s.contactEmail ?? s.email ?? '-'}</div></td>
                     <td className="px-3 py-2 text-sm text-gray-700"><div className="truncate">{s.contactPhone ?? s.phone ?? '-'}</div></td>
                     <td className="px-4 py-3 text-sm text-gray-700">
-                      {s.status === 'active' ? (
+                      {(s.status === 'active' || s.active === true) ? (
                         <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">{t('common.active')}</span>
                       ) : (
                         <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">{t('common.inactive')}</span>

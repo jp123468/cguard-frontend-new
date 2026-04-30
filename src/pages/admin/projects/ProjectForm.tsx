@@ -1,0 +1,350 @@
+import { useEffect, useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { projectService } from '@/lib/api/projectService';
+import { PROJECT_TYPES, PROJECT_STATUS_LABELS } from '@/lib/projectTypes';
+import type { ProjectTypeValue } from '@/lib/projectTypes';
+import { ProjectTypePicker } from '@/components/projects/ProjectBadge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { clientService } from '@/lib/api/clientService';
+
+const schema = z.object({
+  name: z.string().trim().min(1, 'Nombre requerido').max(200),
+  type: z.enum(['event', 'investigation', 'alarm_response', 'consulting', 'other']),
+  clientAccountId: z.string().trim().min(1, 'Cliente requerido'),
+  status: z.enum(['active', 'completed', 'cancelled', 'on_hold']),
+  description: z.string().trim().max(5000).optional().or(z.literal('')),
+  startDate: z.string().optional().or(z.literal('')),
+  endDate: z.string().optional().or(z.literal('')),
+  location: z.string().trim().max(300).optional().or(z.literal('')),
+  estimatedHours: z.string().optional().or(z.literal('')),
+  notes: z.string().trim().max(5000).optional().or(z.literal('')),
+});
+
+type FormInput = z.infer<typeof schema>;
+
+interface ProjectFormProps {
+  mode: 'create' | 'edit';
+  projectId?: string;
+  /** Pre-selected clientAccountId (when opened from a client page) */
+  defaultClientId?: string;
+  onSaved?: (project: any) => void;
+  onCancel?: () => void;
+}
+
+export default function ProjectForm({
+  mode,
+  projectId,
+  defaultClientId,
+  onSaved,
+  onCancel,
+}: ProjectFormProps) {
+  const [clients, setClients] = useState<{ id: string; label: string }[]>([]);
+
+  const form = useForm<FormInput, unknown, FormInput>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: '',
+      type: 'event',
+      clientAccountId: defaultClientId ?? '',
+      status: 'active',
+      description: '',
+      startDate: '',
+      endDate: '',
+      location: '',
+      estimatedHours: '',
+      notes: '',
+    },
+  });
+
+  // Load clients for the selector
+  useEffect(() => {
+    clientService.getClients({ limit: 500, offset: 0 } as any).then((resp) => {
+      const rows = resp?.rows ?? [];
+      setClients(
+        rows.map((c: any) => ({
+          id: c.id,
+          label: c.commercialName || [c.name, c.lastName].filter(Boolean).join(' '),
+        })),
+      );
+    }).catch(() => {});
+  }, []);
+
+  // Load existing project in edit mode
+  useEffect(() => {
+    if (mode === 'edit' && projectId) {
+      projectService.get(projectId).then((p) => {
+        form.reset({
+          name: p.name ?? '',
+          type: (p.type as any) ?? 'event',
+          clientAccountId: p.clientAccountId ?? defaultClientId ?? '',
+          status: (p.status as any) ?? 'active',
+          description: p.description ?? '',
+          startDate: p.startDate ?? '',
+          endDate: p.endDate ?? '',
+          location: p.location ?? '',
+          estimatedHours: p.estimatedHours != null ? String(p.estimatedHours) : '',
+          notes: p.notes ?? '',
+        });
+      }).catch(() => {
+        toast.error('No se pudo cargar el proyecto');
+      });
+    }
+  }, [mode, projectId]);
+
+  const onSubmit = async (values: FormInput) => {
+    try {
+      const payload: any = {
+        ...values,
+        estimatedHours: values.estimatedHours ? parseFloat(values.estimatedHours) : undefined,
+        startDate: values.startDate || undefined,
+        endDate: values.endDate || undefined,
+        description: values.description || undefined,
+        location: values.location || undefined,
+        notes: values.notes || undefined,
+      };
+
+      let result: any;
+      if (mode === 'create') {
+        result = await projectService.create(payload);
+        toast.success('Proyecto creado');
+      } else if (mode === 'edit' && projectId) {
+        result = await projectService.update(projectId, payload);
+        toast.success('Proyecto actualizado');
+      }
+      onSaved?.(result);
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Error al guardar');
+    }
+  };
+
+  const STATUSES = Object.entries(PROJECT_STATUS_LABELS) as [string, string][];
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+
+          {/* ── Tipo de proyecto ─────────────────────────── */}
+          <section>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Tipo de proyecto
+            </h2>
+            <Controller
+              control={form.control}
+              name="type"
+              render={({ field, fieldState }) => (
+                <ProjectTypePicker
+                  value={field.value as ProjectTypeValue | undefined}
+                  onChange={(val) => field.onChange(val)}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+          </section>
+
+          {/* ── Información básica ───────────────────────── */}
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Información básica
+            </h2>
+
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre del proyecto *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ej. Evento anual 2026, Investigación #14" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Client selector — hidden when defaultClientId is locked */}
+            {!defaultClientId && (
+              <FormField
+                control={form.control}
+                name="clientAccountId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cliente *</FormLabel>
+                    <FormControl>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                        {...field}
+                      >
+                        <option value="">Selecciona un cliente</option>
+                        {clients.map((c) => (
+                          <option key={c.id} value={c.id}>{c.label}</option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descripción</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Descripción del proyecto, alcance, objetivos…"
+                      rows={3}
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </section>
+
+          {/* ── Fechas y lugar ────────────────────────────── */}
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Fechas y lugar
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fecha de inicio</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fecha de fin</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lugar / ubicación</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Centro de convenciones, Quito" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="estimatedHours"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Horas estimadas</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" step="0.5" placeholder="8" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </section>
+
+          {/* ── Estado y notas ───────────────────────────── */}
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              Estado y notas
+            </h2>
+
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estado</FormLabel>
+                  <FormControl>
+                    <select
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                      {...field}
+                    >
+                      {STATUSES.map(([val, label]) => (
+                        <option key={val} value={val}>{label}</option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notas internas</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Notas privadas, instrucciones especiales…"
+                      rows={3}
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </section>
+
+          {/* ── Acciones ──────────────────────────────────── */}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="outline" className="min-w-28" onClick={onCancel}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              className="min-w-28 bg-[#C8860A] text-white border border-[#C8860A] hover:bg-[#B37809] cursor-pointer"
+            >
+              Guardar
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}

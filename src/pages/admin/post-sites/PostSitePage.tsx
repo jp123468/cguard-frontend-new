@@ -61,6 +61,8 @@ import { categoryService, type Category } from "@/lib/api/categoryService";
 import CategoryManagerDialog from "@/components/categories/CategoryManagerDialog";
 import CategoryAssignDialog from "@/components/categories/CategoryAssignDialog";
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { ServiceTypeBadge } from '@/components/post-sites/ServiceTypeBadge';
+import { SERVICE_TYPES } from '@/lib/serviceTypes';
 // PostSiteDetailsDialog is now rendered as a full page under /post-sites/:id
 import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActionsSelect";
 import { RowActionsMenu, type RowAction } from "@/components/table/RowActionsMenu";
@@ -329,6 +331,14 @@ export default function PostSitePage() {
             }
           },
         },
+        {
+          label: t('actions.delete', 'Eliminar'),
+          icon: <Trash className="h-4 w-4 text-red-500" />,
+          onClick: () => {
+            setDeleteTargetIds([site.id]);
+            setOpenDeleteDialog(true);
+          },
+        },
       ];
     }
 
@@ -566,6 +576,29 @@ export default function PostSitePage() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label>Tipo de servicio</Label>
+                    <Select
+                      value={(tempFilters as any).serviceType || "all"}
+                      onValueChange={(v) =>
+                        setTempFilters({
+                          ...tempFilters,
+                          serviceType: v === "all" ? undefined : v,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Tipo de servicio" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        {SERVICE_TYPES.map((st) => (
+                          <SelectItem key={st.value} value={st.value}>{st.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label>{t('postSites.filters.status', 'Estado')}</Label>
                     <Select
                       value={
@@ -739,6 +772,7 @@ export default function PostSitePage() {
                   </button>
                 </th>
                 {/* Guards and Schedule columns hidden as requested */}
+                <th className="px-4 py-3 font-semibold">Tipo</th>
                 <th className="px-4 py-3 font-semibold">{t('postSites.filters.status', 'Estado')}</th>
                 <th className="px-4 py-3 font-semibold text-right">{t('postSites.actions', 'Acciones')}</th>
               </tr>
@@ -748,7 +782,7 @@ export default function PostSitePage() {
               {/* sin filas por defecto */}
               {(postSites?.length ?? 0) === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-20">
+                  <td colSpan={8} className="py-20">
                     <div className="flex flex-col items-center justify-center text-center">
                       <img
                         src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
@@ -774,6 +808,9 @@ export default function PostSitePage() {
                   <td className="px-4 py-3">{site.client ? formatClientName(site.client) : "-"}</td>
                   <td className="px-4 py-3">{site.email || "-"}</td>
                   <td className="px-4 py-3">{site.phone || "-"}</td>
+                  <td className="px-4 py-3">
+                    <ServiceTypeBadge value={(site as any).serviceType} />
+                  </td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 text-xs rounded-full ${site.status === "active"
                       ? "bg-green-100 text-green-800"

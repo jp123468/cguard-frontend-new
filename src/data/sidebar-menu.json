@@ -16,19 +16,19 @@
     "id": "clientes",
     "name": "Clientes",
     "icon": "Users",
-    "expandable": true,
-    "subItems": [
-      {
-        "id": "clientes",
-        "name": "Clientes",
-        "path": "/clients"
-      },
-      {
-        "id": "sitios-publicacion",
-        "name": "Puestos de Vigilancia",
-        "path": "/post-sites"
-      }
-    ]
+    "path": "/clients"
+  },
+  {
+    "id": "sitios-publicacion",
+    "name": "Sitios de Servicio",
+    "icon": "Building2",
+    "path": "/post-sites"
+  },
+  {
+    "id": "projects",
+    "name": "Proyectos",
+    "icon": "Briefcase",
+    "path": "/projects"
   },
   {
     "id": "equipo",
@@ -52,11 +52,21 @@
     "id": "superadmin",
     "name": "Superadmin",
     "icon": "UserCog",
-    "allowedRoles": ["superadmin"],
+    "allowedRoles": [
+      "superadmin"
+    ],
     "expandable": true,
     "subItems": [
-      { "id": "tenants", "name": "Tenants", "path": "/superadmin/tenants" },
-      { "id": "system", "name": "System Settings", "path": "/superadmin/settings" }
+      {
+        "id": "tenants",
+        "name": "Tenants",
+        "path": "/superadmin/tenants"
+      },
+      {
+        "id": "system",
+        "name": "System Settings",
+        "path": "/superadmin/settings"
+      }
     ]
   },
   {
@@ -69,7 +79,6 @@
     "id": "analiticas",
     "name": "Analíticas",
     "icon": "BarChart3",
-    "disabled": true,
     "expandable": true,
     "subItems": [
       {
@@ -89,7 +98,7 @@
       },
       {
         "id": "sitios-publicacion",
-        "name": "Puestos de Vigilancia",
+        "name": "Sitios de Servicio",
         "path": "/analytics/postsite"
       },
       {
@@ -103,7 +112,6 @@
     "id": "rastreador",
     "name": "Rastreador GPS",
     "icon": "MapPin",
-    "disabled": true,
     "expandable": true,
     "subItems": [
       {
@@ -122,15 +130,13 @@
     "id": "mensajero",
     "name": "Mensajero",
     "icon": "MessageSquare",
-    "path": "/messenger",
-    "disabled": true
+    "path": "/messenger"
   },
   {
     "id": "reloj",
     "name": "Reloj de Tiempo",
     "icon": "Clock",
     "expandable": true,
-    "disabled": true,
     "subItems": [
       {
         "id": "registro",
@@ -153,15 +159,13 @@
     "id": "informes",
     "name": "Informes",
     "icon": "FileText",
-    "path": "/reports",
-    "disabled": true
+    "path": "/reports"
   },
   {
     "id": "programador",
     "name": "Programador",
     "icon": "Calendar",
     "expandable": true,
-    "disabled": true,
     "subItems": [
       {
         "id": "horario",
@@ -205,7 +209,6 @@
     "name": "Nómina",
     "icon": "DollarSign",
     "expandable": true,
-    "disabled": true,
     "subItems": [
       {
         "id": "ejecutar",
@@ -258,7 +261,7 @@
     "name": "Gestión de Visitantes",
     "icon": "UserPlus",
     "expandable": true,
-        "subItems": [
+    "subItems": [
       {
         "id": "visitantes",
         "name": "Visitantes",
@@ -301,7 +304,6 @@
     "name": "Administrador de estacionamiento",
     "icon": "SquareParking",
     "expandable": true,
-    "disabled": true,
     "subItems": [
       {
         "id": "contacto",
