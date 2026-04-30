@@ -168,13 +168,13 @@ function MannedFields({ form }: { form: UseFormReturn<any> }) {
         <SectionTitle icon={<Users className="h-4 w-4" />} title="Despliegue de guardias" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <FieldLabel hint="obligatorio">Guardias requeridos</FieldLabel>
+            <FieldLabel hint="obligatorio">Estaciones requeridas</FieldLabel>
             <Input
               type="number"
               min={1}
               placeholder="Ej. 2"
-              value={get('guardsRequired')}
-              onChange={(e) => set('guardsRequired', e.target.value ? Number(e.target.value) : '')}
+              value={get('stationsRequired')}
+              onChange={(e) => set('stationsRequired', e.target.value ? Number(e.target.value) : '')}
             />
           </div>
           <div>
