@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import sidebarMenuData from "../data/sidebar-menu.json";
 import { useAuth } from "@/contexts/AuthContext";
+import tenantService from "@/services/tenant.service";
 
 type SubMenuItem = { id: string; name: string; path: string };
 type MenuItem = {
@@ -31,6 +32,33 @@ export default function Sidebar() {
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
   const toggleMenu = (menu: string) => setExpandedMenus(prev => ({ ...prev, [menu]: !prev[menu] }));
+
+  // Tenant branding
+  const [tenantName, setTenantName] = useState<string>('');
+  const [tenantLogo, setTenantLogo] = useState<string | null>(null);
+
+  useEffect(() => {
+    const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenantId') : null;
+    if (!tenantId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res: any = await tenantService.findById(tenantId);
+        if (cancelled) return;
+        const t = (res && (res.data || res.tenant)) ? (res.data || res.tenant) : res;
+        if (t?.name) setTenantName(t.name);
+        const logoUrl =
+          t?.logoUrl ||
+          (Array.isArray(t?.settings) ? t.settings[0]?.logoUrl : t?.settings?.logoUrl || t?.settings?.logos?.[0]?.publicUrl) ||
+          t?.logo?.downloadUrl ||
+          null;
+        if (logoUrl) setTenantLogo(logoUrl);
+      } catch {
+        // silently ignore — fall back to initials
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   // Convertir los datos JSON a objetos MenuItem con los componentes de iconos correctos
   const menuItems: MenuItem[] = sidebarMenuData.map(item => ({
@@ -83,20 +111,32 @@ export default function Sidebar() {
       className="h-full w-full overflow-y-auto hide-scrollbar flex flex-col"
       style={{ background: "linear-gradient(180deg, #0F1923 0%, #1C2B3A 100%)" }}
     >
-      {/* Logo / brand */}
+      {/* Tenant branding */}
       <div
-        className="sticky top-0 z-20 flex items-center gap-3 px-5 py-4"
+        className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3.5"
         style={{ background: "#0F1923", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
-        <img
-          src="/assets/logo/c-guard-logo.png"
-          alt="C-Guard"
-          className="w-10 select-none brightness-0 invert"
-        />
-        <span className="font-extrabold text-2xl tracking-tight">
-          <span className="text-white">C</span>
-          <span style={{ color: "#F5C300" }}>Guard</span>
-        </span>
+        {/* Logo or initials avatar */}
+        <div className="shrink-0 h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center bg-amber-500/20 border border-amber-500/30">
+          {tenantLogo ? (
+            <img
+              src={tenantLogo}
+              alt={tenantName || 'Logo'}
+              className="h-full w-full object-contain p-0.5"
+            />
+          ) : (
+            <span className="text-sm font-bold text-amber-400 select-none leading-none">
+              {tenantName ? tenantName.substring(0, 2).toUpperCase() : 'CG'}
+            </span>
+          )}
+        </div>
+        {/* Name */}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-white leading-tight truncate max-w-[140px]" title={tenantName || 'CGuard'}>
+            {tenantName || 'CGuard'}
+          </p>
+          <p className="text-[10px] text-slate-500 leading-tight mt-0.5">Panel de control</p>
+        </div>
       </div>
 
       <div className="flex flex-col flex-1">
