@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import PostSiteForm, { Client } from "./PostSiteForm";
+import PostSiteWizard from "./PostSiteWizard";
 
 type Category = { id: string; name: string };
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -179,10 +180,7 @@ export default function NewOrEditPostSitePage() {
                         </TabsContent>
                     </Tabs>
                 ) : (
-                    <PostSiteForm
-                        mode="create"
-                        clients={clients}
-                    />
+                    <PostSiteWizard clients={clients} />
                 )}
             </section>
         </AppLayout>
