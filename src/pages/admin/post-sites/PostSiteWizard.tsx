@@ -39,19 +39,39 @@ interface WizardProps {
   clients?: WizardClient[];
 }
 
+interface JornadaDraft {
+  id: string;
+  nombre: string;
+  tipo: 'matutina' | 'nocturna' | 'sacafranco' | 'personalizada';
+  startTime: string;
+  endTime: string;
+  guardsCount: string;
+}
+
 interface StationDraft {
   name: string;
   description: string;
-  schedule: string;
-  guardsCount: string;
-  startTime: string;
-  endTime: string;
+  jornadas: JornadaDraft[];
 }
 
 // ─── tiny helpers ─────────────────────────────────────────────────────────────
 
 const STEP_LABELS = ['Tipo', 'Sitio', 'Config.', 'Estaciones', 'Crear'];
 const SCHEDULES = ['1 hora', '4 horas', '8 horas', '10 horas', '12 horas', '14 horas', '16 horas', '24 horas'];
+
+const JORNADA_PRESETS: { tipo: JornadaDraft['tipo']; label: string; startTime: string; endTime: string }[] = [
+  { tipo: 'matutina',     label: 'Matutina',     startTime: '06:00', endTime: '18:00' },
+  { tipo: 'nocturna',     label: 'Nocturna',     startTime: '18:00', endTime: '06:00' },
+  { tipo: 'sacafranco',   label: 'Sacafranco',   startTime: '06:00', endTime: '18:00' },
+  { tipo: 'personalizada',label: 'Personalizada',startTime: '',      endTime: ''      },
+];
+
+const JORNADA_STYLE: Record<JornadaDraft['tipo'], { badge: string; ring: string }> = {
+  matutina:     { badge: 'bg-amber-100 text-amber-800 border-amber-300',   ring: 'ring-amber-200' },
+  nocturna:     { badge: 'bg-indigo-100 text-indigo-800 border-indigo-300', ring: 'ring-indigo-200' },
+  sacafranco:   { badge: 'bg-emerald-100 text-emerald-800 border-emerald-300', ring: 'ring-emerald-200' },
+  personalizada:{ badge: 'bg-gray-100 text-gray-700 border-gray-300',      ring: 'ring-gray-200' },
+};
 
 const DEPLOY_CHECKS: { key: string; label: string; defaultOn?: boolean }[] = [
   { key: 'armedService',    label: 'Guardia armado' },
@@ -202,7 +222,65 @@ function StepBar({ current, total }: { current: number; total: number }) {
   );
 }
 
-// ─── Station mini-form ────────────────────────────────────────────────────────
+// ─── Jornada row ─────────────────────────────────────────────────────────────
+
+function JornadaRow({
+  jornada,
+  onChange,
+  onRemove,
+}: {
+  jornada: JornadaDraft;
+  onChange: (d: Partial<JornadaDraft>) => void;
+  onRemove: () => void;
+}) {
+  const style = JORNADA_STYLE[jornada.tipo];
+  return (
+    <div className={cn('flex items-center gap-2 rounded-lg border bg-white px-3 py-2 ring-1', style.ring)}>
+      {/* Type badge */}
+      <span className={cn('shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide', style.badge)}>
+        {jornada.tipo === 'sacafranco' ? 'SF' : jornada.tipo.slice(0, 3).toUpperCase()}
+      </span>
+      {/* Editable name */}
+      <Input
+        value={jornada.nombre}
+        onChange={(e) => onChange({ nombre: e.target.value })}
+        className="h-7 flex-1 min-w-0 text-xs font-medium border-0 bg-transparent px-0 focus-visible:ring-0 shadow-none"
+        placeholder="Nombre del turno"
+      />
+      {/* Times */}
+      <div className="flex items-center gap-1 shrink-0">
+        <Input
+          value={jornada.startTime}
+          onChange={(e) => onChange({ startTime: e.target.value })}
+          placeholder="HH:MM"
+          className="h-7 w-16 text-[11px] font-mono text-center px-1"
+        />
+        <span className="text-gray-400 text-xs">→</span>
+        <Input
+          value={jornada.endTime}
+          onChange={(e) => onChange({ endTime: e.target.value })}
+          placeholder="HH:MM"
+          className="h-7 w-16 text-[11px] font-mono text-center px-1"
+        />
+      </div>
+      {/* Guards */}
+      <div className="flex items-center gap-1 shrink-0">
+        <Users className="h-3.5 w-3.5 text-gray-400" />
+        <Input
+          type="number" min={1}
+          value={jornada.guardsCount}
+          onChange={(e) => onChange({ guardsCount: e.target.value })}
+          className="h-7 w-10 text-[11px] text-center px-1"
+        />
+      </div>
+      <button type="button" onClick={onRemove} className="shrink-0 text-gray-300 hover:text-red-500 transition-colors">
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
+// ─── Station card ─────────────────────────────────────────────────────────────
 
 function StationRow({
   draft,
@@ -213,74 +291,96 @@ function StationRow({
   onChange: (d: Partial<StationDraft>) => void;
   onRemove: () => void;
 }) {
+  const addJornada = (preset: typeof JORNADA_PRESETS[number]) => {
+    const j: JornadaDraft = {
+      id: Math.random().toString(36).slice(2),
+      nombre: preset.label,
+      tipo: preset.tipo,
+      startTime: preset.startTime,
+      endTime: preset.endTime,
+      guardsCount: '1',
+    };
+    onChange({ jornadas: [...draft.jornadas, j] });
+  };
+
+  const updateJornada = (id: string, delta: Partial<JornadaDraft>) => {
+    onChange({ jornadas: draft.jornadas.map((j) => (j.id === id ? { ...j, ...delta } : j)) });
+  };
+
+  const removeJornada = (id: string) => {
+    onChange({ jornadas: draft.jornadas.filter((j) => j.id !== id) });
+  };
+
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3 shadow-sm">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <Input
-            value={draft.name}
-            onChange={(e) => onChange({ name: e.target.value })}
-            placeholder="Nombre de la estación *"
-            className="font-medium"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="mt-1 text-gray-400 hover:text-red-500 transition-colors"
-        >
+    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      {/* Station name + delete */}
+      <div className="flex items-center gap-2 px-4 pt-4 pb-3">
+        <Input
+          value={draft.name}
+          onChange={(e) => onChange({ name: e.target.value })}
+          placeholder="Nombre del puesto *"
+          className="font-semibold flex-1"
+        />
+        <button type="button" onClick={onRemove} className="shrink-0 text-gray-400 hover:text-red-500 transition-colors">
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
 
-      <Input
-        value={draft.description}
-        onChange={(e) => onChange({ description: e.target.value })}
-        placeholder="Descripción (opcional)"
-        className="text-sm"
-      />
+      <div className="px-4 pb-3">
+        <Input
+          value={draft.description}
+          onChange={(e) => onChange({ description: e.target.value })}
+          placeholder="Descripción del puesto (opcional)"
+          className="text-sm text-gray-500"
+        />
+      </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div>
-          <label className="block text-[11px] text-gray-500 mb-1">Jornada</label>
-          <select
-            value={draft.schedule}
-            onChange={(e) => onChange({ schedule: e.target.value })}
-            className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 py-0 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <option value="">Sin definir</option>
-            {SCHEDULES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+      {/* Jornadas section */}
+      <div className="border-t border-gray-100 bg-gray-50/40 px-4 py-3 space-y-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 flex items-center gap-1">
+            <Clock className="h-3 w-3" /> Jornadas / Turnos
+          </span>
+          <div className="flex gap-1.5 flex-wrap">
+            {JORNADA_PRESETS.map((p) => (
+              <button
+                key={p.tipo}
+                type="button"
+                onClick={() => addJornada(p)}
+                className={cn(
+                  'flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-opacity hover:opacity-70',
+                  JORNADA_STYLE[p.tipo].badge,
+                )}
+              >
+                <Plus className="h-2.5 w-2.5" />
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div>
-          <label className="block text-[11px] text-gray-500 mb-1">Guardias</label>
-          <Input
-            type="number"
-            min={1}
-            value={draft.guardsCount}
-            onChange={(e) => onChange({ guardsCount: e.target.value })}
-            placeholder="1"
-            className="h-8 text-xs"
-          />
-        </div>
-        <div>
-          <label className="block text-[11px] text-gray-500 mb-1">Inicio</label>
-          <Input
-            value={draft.startTime}
-            onChange={(e) => onChange({ startTime: e.target.value })}
-            placeholder="08:00"
-            className="h-8 text-xs"
-          />
-        </div>
-        <div>
-          <label className="block text-[11px] text-gray-500 mb-1">Fin</label>
-          <Input
-            value={draft.endTime}
-            onChange={(e) => onChange({ endTime: e.target.value })}
-            placeholder="20:00"
-            className="h-8 text-xs"
-          />
-        </div>
+
+        {draft.jornadas.length === 0 ? (
+          <p className="text-xs text-gray-400 py-3 text-center italic">
+            Sin turnos — añade Matutina, Nocturna o Sacafranco con los botones de arriba.
+          </p>
+        ) : (
+          <div className="space-y-1.5">
+            {draft.jornadas.map((j) => (
+              <JornadaRow
+                key={j.id}
+                jornada={j}
+                onChange={(d) => updateJornada(j.id, d)}
+                onRemove={() => removeJornada(j.id)}
+              />
+            ))}
+          </div>
+        )}
+
+        {draft.jornadas.length > 0 && (
+          <p className="text-[10px] text-gray-400 pt-1">
+            Cada jornada se guarda como un registro independiente en el puesto.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -400,25 +500,26 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
       const newId = data.id || (data as any).data?.id;
       setCreatedId(newId);
 
-      // Create stations defined in step 4
+      // Create stations — each jornada becomes its own station record
       const toCreate = stations.filter((s) => s.name.trim());
       if (toCreate.length > 0) {
         const tenantId = localStorage.getItem('tenantId') || '';
         try {
+          const records = toCreate.flatMap((s) => {
+            if (s.jornadas.length === 0) {
+              return [{ stationName: s.name.trim(), description: s.description || undefined, postSiteId: newId, numberOfGuardsInStation: '1' }];
+            }
+            return s.jornadas.map((j) => ({
+              stationName: s.jornadas.length === 1 ? s.name.trim() : `${s.name.trim()} - ${j.nombre}`,
+              description: [s.description, s.jornadas.length > 1 ? j.nombre : ''].filter(Boolean).join(' — ') || undefined,
+              postSiteId: newId,
+              numberOfGuardsInStation: j.guardsCount || '1',
+              startingTimeInDay: j.startTime || undefined,
+              finishTimeInDay: j.endTime || undefined,
+            }));
+          });
           await Promise.all(
-            toCreate.map((s) =>
-              ApiService.post(`/tenant/${tenantId}/station`, {
-                data: {
-                  stationName: s.name.trim(),
-                  description: s.description,
-                  postSiteId: newId,
-                  stationSchedule: s.schedule || undefined,
-                  numberOfGuardsInStation: s.guardsCount || '1',
-                  startingTimeInDay: s.startTime,
-                  finishTimeInDay: s.endTime,
-                },
-              }),
-            ),
+            records.map((r) => ApiService.post(`/tenant/${tenantId}/station`, { data: r })),
           );
         } catch {
           toast.error('El sitio fue creado pero algunas estaciones fallaron');
@@ -437,7 +538,7 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
   const addStationDraft = () => {
     setStations((prev) => [
       ...prev,
-      { name: '', description: '', schedule: '', guardsCount: '1', startTime: '', endTime: '' },
+      { name: '', description: '', jornadas: [] },
     ]);
   };
 
@@ -1026,26 +1127,22 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
               </div>
               <div className="divide-y divide-gray-100">
                 {stations.filter((s) => s.name.trim()).map((s, i) => (
-                  <div key={i} className="px-5 py-3 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{s.name}</p>
-                      {s.description && <p className="text-xs text-gray-400 truncate">{s.description}</p>}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
-                      {s.schedule && (
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="h-3 w-3" />{s.schedule}
-                        </span>
-                      )}
-                      {s.guardsCount && (
-                        <span className="inline-flex items-center gap-1">
-                          <Users className="h-3 w-3" />{s.guardsCount} guardia{Number(s.guardsCount) !== 1 ? 's' : ''}
-                        </span>
-                      )}
-                      {s.startTime && s.endTime && (
-                        <span className="font-mono">{s.startTime}–{s.endTime}</span>
-                      )}
-                    </div>
+                  <div key={i} className="px-5 py-3">
+                    <p className="text-sm font-medium text-gray-900">{s.name}</p>
+                    {s.description && <p className="text-xs text-gray-400 mb-1">{s.description}</p>}
+                    {s.jornadas.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {s.jornadas.map((j) => (
+                          <span key={j.id} className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${JORNADA_STYLE[j.tipo].badge}`}>
+                            {j.nombre}
+                            {j.startTime && j.endTime && <span className="font-mono opacity-70 ml-1">{j.startTime}–{j.endTime}</span>}
+                            <span className="flex items-center gap-0.5 opacity-70 ml-1"><Users className="h-2.5 w-2.5" />{j.guardsCount||'1'}</span>
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400 mt-1">Sin jornadas definidas</p>
+                    )}
                   </div>
                 ))}
               </div>
