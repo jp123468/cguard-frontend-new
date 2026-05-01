@@ -37,6 +37,8 @@ export type WizardClient = { id: string; name: string };
 
 interface WizardProps {
   clients?: WizardClient[];
+  mode?: 'create' | 'edit';
+  id?: string;
 }
 
 interface JornadaDraft {
@@ -388,12 +390,13 @@ function StationRow({
 
 // ─── Main Wizard ──────────────────────────────────────────────────────────────
 
-export default function PostSiteWizard({ clients = [] }: WizardProps) {
+export default function PostSiteWizard({ clients = [], mode = 'create', id }: WizardProps) {
   const navigate = useNavigate();
   const { selectedClient } = useClientSelection();
+  const isEdit = mode === 'edit' && !!id;
 
   // ── form state ──────────────────────────────────────────────────────────────
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(isEdit ? 2 : 1);
   const [submitting, setSubmitting] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
 
@@ -430,6 +433,38 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
   useEffect(() => {
     if (selectedClient?.id) setClientId(String(selectedClient.id));
   }, [selectedClient]);
+
+  // Load existing site data in edit mode
+  useEffect(() => {
+    if (!isEdit) return;
+    (async () => {
+      try {
+        const data = await stationService.get(id!);
+        const d = data as any;
+        setServiceType(d.serviceType ?? undefined);
+        setClientId(d.clientAccountId ?? d.clientId ?? '');
+        setAddress(d.address ?? '');
+        setAddressLine2(d.secondAddress ?? d.addressLine2 ?? '');
+        setCity(d.city ?? '');
+        setCountry(d.country ?? '');
+        setPostalCode(d.postalCode ?? '');
+        setLatitud(String(d.latitud ?? d.latitude ?? ''));
+        setLongitud(String(d.longitud ?? d.longitude ?? ''));
+        setDescription(d.description ?? '');
+        setStatus(typeof d.active === 'boolean' ? (d.active ? 'active' : 'inactive') : (d.status ?? 'active'));
+        if (d.serviceConfig && typeof d.serviceConfig === 'object') {
+          const { specialEquipment, trainingRequired, ...rest } = d.serviceConfig;
+          setServiceConfig(rest);
+          if (Array.isArray(specialEquipment)) setEquipment(specialEquipment);
+          if (Array.isArray(trainingRequired)) setTraining(trainingRequired);
+        }
+        if (d.address || d.city) setAddressConfirmed(true);
+      } catch (e) {
+        toast.error('Error al cargar el sitio');
+        navigate('/post-sites');
+      }
+    })();
+  }, [isEdit, id]);
 
   // ── step validation ──────────────────────────────────────────────────────────
   const canGoNext = () => {
@@ -490,6 +525,12 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
     setSubmitting(true);
     try {
       const payload = buildPayload();
+      if (isEdit) {
+        await stationService.update(id!, payload as any);
+        toast.success('Cambios guardados');
+        setStep(6);
+        return;
+      }
       const data = await stationService.create(payload as any);
       const newId = data.id || (data as any).data?.id;
       setCreatedId(newId);
@@ -583,17 +624,20 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
     // ── Step 6: Éxito ─────────────────────────────────────────────────────────
     if (step === 6) {
       const stationCount = stations.filter((s) => s.name.trim()).length;
+      const targetId = isEdit ? id! : (createdId ?? '');
       return (
         <div className="flex flex-col items-center gap-6 py-8 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 ring-8 ring-green-50">
             <CheckCircle2 className="h-10 w-10 text-green-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">¡Puesto creado!</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{isEdit ? '¡Cambios guardados!' : '¡Puesto creado!'}</h2>
             <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
-              {stationCount > 0
-                ? `${stationCount} estación${stationCount !== 1 ? 'es' : ''} configurada${stationCount !== 1 ? 's' : ''} y lista${stationCount !== 1 ? 's' : ''}.`
-                : 'El sitio fue creado. Puedes añadir estaciones desde su perfil.'}
+              {isEdit
+                ? 'El sitio fue actualizado correctamente.'
+                : stationCount > 0
+                  ? `${stationCount} estación${stationCount !== 1 ? 'es' : ''} configurada${stationCount !== 1 ? 's' : ''} y lista${stationCount !== 1 ? 's' : ''}.`
+                  : 'El sitio fue creado. Puedes añadir estaciones desde su perfil.'}
             </p>
           </div>
           <div className="flex gap-3">
@@ -602,7 +646,7 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
             </Button>
             <Button
               type="button"
-              onClick={() => navigate(`/post-sites/${createdId}/profile`)}
+              onClick={() => navigate(`/post-sites/${targetId}/profile`)}
               className="bg-amber-600 text-white hover:bg-amber-700 gap-2"
             >
               <MapPin className="h-4 w-4" />
@@ -1128,14 +1172,14 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
   // ── nav ────────────────────────────────────────────────────────────────────
   const isLastMainStep = step === 5;
   const isStationStep = step === 6;
-  const TOTAL_MAIN_STEPS = 5;
+  const TOTAL_MAIN_STEPS = isEdit ? 4 : 5; // edit skips step 1
 
   return (
     <div className="max-w-2xl mx-auto">
       {/* Progress bar (only on main steps) */}
       {!isStationStep && (
         <div className="mb-8">
-          <StepBar current={step} total={TOTAL_MAIN_STEPS} />
+          <StepBar current={isEdit ? step - 1 : step} total={TOTAL_MAIN_STEPS} />
         </div>
       )}
 
@@ -1151,13 +1195,13 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
             type="button"
             variant="ghost"
             onClick={() => {
-              if (step === 1) navigate('/post-sites');
+              if (step <= (isEdit ? 2 : 1)) navigate(isEdit ? `/post-sites/${id}` : '/post-sites');
               else setStep((s) => s - 1);
             }}
             className="gap-1.5 text-gray-600"
           >
             <ChevronLeft className="h-4 w-4" />
-            {step === 1 ? 'Cancelar' : 'Atrás'}
+            {step <= (isEdit ? 2 : 1) ? 'Cancelar' : 'Atrás'}
           </Button>
 
           {isLastMainStep ? (
@@ -1168,9 +1212,9 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
               className="bg-[#C8860A] text-white hover:bg-[#B37809] gap-2 min-w-36"
             >
               {submitting ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Creando…</>
+                <><Loader2 className="h-4 w-4 animate-spin" /> {isEdit ? 'Guardando…' : 'Creando…'}</>
               ) : (
-                <><CheckCircle2 className="h-4 w-4" /> Crear Sitio</>
+                <><CheckCircle2 className="h-4 w-4" /> {isEdit ? 'Guardar cambios' : 'Crear Sitio'}</>
               )}
             </Button>
           ) : (
