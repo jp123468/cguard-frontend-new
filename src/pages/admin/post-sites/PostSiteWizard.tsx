@@ -399,6 +399,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
   const [step, setStep] = useState(isEdit ? 2 : 1);
   const [submitting, setSubmitting] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [loadingEdit, setLoadingEdit] = useState(isEdit);
 
   // Step 1
   const [serviceType, setServiceType] = useState<string | undefined>(undefined);
@@ -429,8 +430,9 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
   const [stations, setStations] = useState<StationDraft[]>([]);
   const [status, setStatus] = useState<'active' | 'inactive'>('active');
 
-  // Auto-inject client from context
+  // Auto-inject client from context (create mode only — edit loads from API)
   useEffect(() => {
+    if (isEdit) return;
     if (selectedClient?.id) setClientId(String(selectedClient.id));
   }, [selectedClient]);
 
@@ -462,6 +464,8 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
       } catch (e) {
         toast.error('Error al cargar el sitio');
         navigate('/post-sites');
+      } finally {
+        setLoadingEdit(false);
       }
     })();
   }, [isEdit, id]);
@@ -1176,12 +1180,18 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Progress bar (only on main steps) */}
-      {!isStationStep && (
-        <div className="mb-8">
-          <StepBar current={isEdit ? step - 1 : step} total={TOTAL_MAIN_STEPS} />
+      {loadingEdit ? (
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-[#C8860A]" />
         </div>
-      )}
+      ) : (
+        <>
+        {/* Progress bar (only on main steps) */}
+        {!isStationStep && (
+          <div className="mb-8">
+            <StepBar current={isEdit ? step - 1 : step} total={TOTAL_MAIN_STEPS} />
+          </div>
+        )}
 
       {/* Content */}
       <div className="min-h-[420px]">
@@ -1229,6 +1239,8 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
             </Button>
           )}
         </div>
+      )}
+        </>
       )}
     </div>
   );
