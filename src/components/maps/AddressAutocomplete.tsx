@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 import { Button } from '@/components/ui/button';
 import { Loader2, MapPin, AlertCircle, Search } from 'lucide-react';
@@ -45,88 +45,59 @@ export default function AddressAutocomplete({
 }: AddressAutocompleteProps) {
   const { isLoaded, loadError, google } = useGoogleMaps();
 
-  // Container for the PlaceAutocompleteElement web component
-  const pacContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const pacElementRef = useRef<any>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
+  const inputRef        = useRef<HTMLInputElement>(null);
+  const mapRef          = useRef<HTMLDivElement>(null);
+  const autocompleteRef = useRef<any>(null);
+  const mapInstanceRef  = useRef<any>(null);
+  const markerRef       = useRef<any>(null);
   const dragDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Last resolved address from autocomplete selection — carried forward on drag
-  const lastAddressRef = useRef<AddressComponents | null>(null);
+  const lastAddressRef  = useRef<AddressComponents | null>(null);
 
-  // ── PlaceAutocompleteElement setup ───────────────────────────────────────
+  const [inputValue, setInputValue] = useState(openWithQuery || defaultValue || '');
+
+  // ── Classic Autocomplete setup ─────────────────────────────────────────────
   useEffect(() => {
-    if (!isLoaded || !google || !pacContainerRef.current) return;
-    if (pacElementRef.current) return; // already mounted
+    if (!isLoaded || !google || !inputRef.current) return;
+    if (autocompleteRef.current) return;
 
-    const places = google.maps.places;
-    if (!places?.PlaceAutocompleteElement) {
-      console.warn('PlaceAutocompleteElement not available — check Maps API version');
-      return;
-    }
-
-    const pac = new places.PlaceAutocompleteElement({
-      componentRestrictions: countryCodes ? { country: countryCodes } : undefined,
+    const ac = new google.maps.places.Autocomplete(inputRef.current, {
+      ...(countryCodes ? { componentRestrictions: { country: countryCodes } } : {}),
       types: ['geocode', 'establishment'],
+      fields: ['address_components', 'formatted_address', 'geometry', 'name'],
     });
 
-    // Size to fill the flex container and match our input style
-    Object.assign(pac.style, {
-      width: '100%',
-      height: '40px',
-      fontSize: '14px',
-    });
-    if (placeholder) (pac as any).placeholder = placeholder;
+    autocompleteRef.current = ac;
 
-    // Seed the input if a query was passed (TenantJoinModal usage)
-    if (openWithQuery) {
-      try { (pac as any).value = openWithQuery; } catch { /* ignore */ }
-    }
-
-    pacContainerRef.current.appendChild(pac);
-    pacElementRef.current = pac;
-
-    const handler = async (event: any) => {
-      const place = event.place;
-      if (!place) return;
-      try {
-        await place.fetchFields({
-          fields: ['addressComponents', 'formattedAddress', 'location', 'displayName'],
-        });
-      } catch (err) {
-        console.error('[AddressAutocomplete] fetchFields error:', err);
-        return;
-      }
+    const handler = () => {
+      const place = ac.getPlace();
+      if (!place?.geometry?.location) return;
 
       const components = extractAddressComponents(place);
       if (!components) return;
 
       lastAddressRef.current = components;
+      setInputValue(place.formatted_address ?? components.address);
       onAddressSelect(components);
       onGeocodeResult?.(components);
-      onQueryChange?.(place.formattedAddress ?? '');
+      onQueryChange?.(place.formatted_address ?? '');
 
-      if (mapInstanceRef.current && markerRef.current && place.location) {
-        mapInstanceRef.current.setCenter(place.location);
+      const position = place.geometry.location;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.panTo(position);
         mapInstanceRef.current.setZoom(15);
-        markerRef.current.position = place.location;
+      }
+      if (markerRef.current) {
+        markerRef.current.position = position;
       }
     };
 
-    pac.addEventListener('gmp-placeselect', handler);
+    ac.addListener('place_changed', handler);
 
     return () => {
-      pac.removeEventListener('gmp-placeselect', handler);
-      if (dragDebounceRef.current) clearTimeout(dragDebounceRef.current);
-      try {
-        if (pacContainerRef.current?.contains(pac)) {
-          pacContainerRef.current.removeChild(pac);
-        }
-      } catch { /* ignore */ }
-      pacElementRef.current = null;
+      try { google.maps.event.clearInstanceListeners(ac); } catch { /* ignore */ }
+      autocompleteRef.current = null;
     };
-  }, [isLoaded, google, countryCodes]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isLoaded, google]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Map setup ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -181,50 +152,41 @@ export default function AddressAutocomplete({
     };
   }, [isLoaded, google, showMap, initialLat, initialLng]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Helper: extract address fields from new Places API place object ───────
+  // ── Address extraction ─────────────────────────────────────────────────────
   const extractAddressComponents = (place: any): AddressComponents | null => {
-    if (!place?.location) return null;
+    if (!place?.geometry?.location) return null;
 
     let streetNumber = '';
-    let route = '';
-    let city = '';
-    let postalCode = '';
-    let country = '';
+    let route        = '';
+    let city         = '';
+    let postalCode   = '';
+    let country      = '';
 
-    const components: any[] = place.addressComponents ?? [];
-    components.forEach((comp: any) => {
+    (place.address_components ?? []).forEach((comp: any) => {
       const types: string[] = comp.types ?? [];
-      // New Places API uses longText/shortText; legacy uses long_name/short_name
-      const long = comp.longText ?? comp.long_name ?? '';
-      if (types.includes('street_number')) streetNumber = long;
-      if (types.includes('route')) route = long;
-      if (types.includes('locality')) city = long;
-      if (types.includes('postal_code')) postalCode = long;
-      if (types.includes('country')) country = long;
+      const long = comp.long_name ?? '';
+      if (types.includes('street_number'))                        streetNumber = long;
+      if (types.includes('route'))                                route = long;
+      if (types.includes('locality'))                             city = long;
+      if (types.includes('postal_code'))                          postalCode = long;
+      if (types.includes('country'))                              country = long;
       if (!city && types.includes('administrative_area_level_2')) city = long;
       if (!city && types.includes('administrative_area_level_1')) city = long;
     });
 
     const address =
       [route, streetNumber].filter(Boolean).join(' ') ||
-      place.formattedAddress ||
-      place.displayName?.text ||
+      place.formatted_address ||
+      place.name ||
       '';
 
-    const lat = typeof place.location.lat === 'function'
-      ? place.location.lat()
-      : place.location.lat;
-    const lng = typeof place.location.lng === 'function'
-      ? place.location.lng()
-      : place.location.lng;
-
     return {
-      address: address.substring(0, 200),
-      city: city.substring(0, 100),
+      address:    address.substring(0, 200),
+      city:       city.substring(0, 100),
       postalCode: postalCode.substring(0, 20),
-      country: country.substring(0, 100),
-      latitude: lat,
-      longitude: lng,
+      country:    country.substring(0, 100),
+      latitude:   place.geometry.location.lat(),
+      longitude:  place.geometry.location.lng(),
     };
   };
 
@@ -291,10 +253,13 @@ export default function AddressAutocomplete({
       <div className="flex gap-2 items-center">
         <div className="relative flex-1 min-w-0">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
-          {/* The PlaceAutocompleteElement is appended here via useEffect */}
-          <div
-            ref={pacContainerRef}
-            style={{ minHeight: '40px', paddingLeft: '2rem' }}
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder={placeholder}
+            className="w-full h-10 pl-9 pr-3 rounded-md border border-gray-300 bg-white text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
           />
         </div>
         <Button

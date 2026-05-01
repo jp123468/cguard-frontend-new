@@ -9,7 +9,7 @@
  *  5  Resumen & Crear       — review → POST → inline station builder
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,7 @@ import {
   CheckCircle2, ChevronRight, ChevronLeft, Plus, X, Trash2,
   Shield, BellElectric, Camera, Car, Lock, Tag,
   Users, Clock, MapPin, Phone, Mail, Building2,
-  Loader2, Check, Star, Zap, AlertTriangle, Radio,
+  Loader2, Check, Star, Zap, AlertTriangle,
   Navigation2, Globe, Hash, ChevronDown, ChevronUp, Edit3,
 } from 'lucide-react';
 
@@ -27,10 +27,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { stationService } from '@/lib/api/stationService';
 import { ApiService } from '@/services/api/apiService';
 import { ServiceTypePicker } from '@/components/post-sites/ServiceTypeBadge';
-import { ServiceTypeBadge } from '@/components/post-sites/ServiceTypeBadge';
 import AddressAutocomplete, { AddressComponents } from '@/components/maps/AddressAutocomplete';
 import { useClientSelection } from '@/contexts/ClientSelectionContext';
-import { getServiceType, SERVICE_TYPES } from '@/lib/serviceTypes';
+import { getServiceType } from '@/lib/serviceTypes';
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -51,8 +50,23 @@ interface StationDraft {
 
 // ─── tiny helpers ─────────────────────────────────────────────────────────────
 
-const STEP_LABELS = ['Tipo', 'Sitio', 'Config.', 'Horario', 'Crear'];
+const STEP_LABELS = ['Tipo', 'Sitio', 'Config.', 'Estaciones', 'Crear'];
 const SCHEDULES = ['1 hora', '4 horas', '8 horas', '10 horas', '12 horas', '14 horas', '16 horas', '24 horas'];
+
+const DEPLOY_CHECKS: { key: string; label: string; defaultOn?: boolean }[] = [
+  { key: 'armedService',    label: 'Guardia armado' },
+  { key: 'uniformRequired', label: 'Uniforme obligatorio', defaultOn: true },
+  { key: 'periodicPatrol',  label: 'Patrullaje perimetral' },
+  { key: 'k9Service',       label: 'Canes / K9' },
+  { key: 'vehicleControl',  label: 'Control acceso vehicular' },
+  { key: 'cctvMonitoring',  label: 'Monitoreo CCTV' },
+  { key: 'visitorLog',      label: 'Registro de visitantes' },
+  { key: 'incidentLog',     label: 'Libro de novedades' },
+  { key: 'formalHandover',  label: 'Entrega de turno formal' },
+  { key: 'keyCustody',      label: 'Custodia de llaves' },
+  { key: 'alarmResponse',   label: 'Respuesta a alarmas' },
+  { key: 'radioComms',      label: 'Comunicación por radio' },
+];
 
 const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Shield, BellAlert: BellElectric, Camera, Car, Lock,
@@ -282,7 +296,6 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
-  const [savingStations, setSavingStations] = useState(false);
 
   // Step 1
   const [serviceType, setServiceType] = useState<string | undefined>(undefined);
@@ -309,17 +322,12 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
   const [training, setTraining] = useState<string[]>([]);
   const [customTraining, setCustomTraining] = useState<string[]>([]);
 
-  // Step 4
+  // Step 4: Estaciones + Contacto
+  const [stations, setStations] = useState<StationDraft[]>([]);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [fax, setFax] = useState('');
-  const [schedule, setSchedule] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
   const [status, setStatus] = useState<'active' | 'inactive'>('active');
-
-  // Step 5: stations
-  const [stations, setStations] = useState<StationDraft[]>([]);
 
   // Auto-inject client from context
   useEffect(() => {
@@ -379,9 +387,6 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
       fax,
       serviceType,
       serviceConfig: finalConfig,
-      stationSchedule: schedule || undefined,
-      startingTimeInDay: startTime,
-      finishTimeInDay: endTime,
       status,
     };
   };
@@ -394,46 +399,38 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
       const data = await stationService.create(payload as any);
       const newId = data.id || (data as any).data?.id;
       setCreatedId(newId);
+
+      // Create stations defined in step 4
+      const toCreate = stations.filter((s) => s.name.trim());
+      if (toCreate.length > 0) {
+        const tenantId = localStorage.getItem('tenantId') || '';
+        try {
+          await Promise.all(
+            toCreate.map((s) =>
+              ApiService.post(`/tenant/${tenantId}/station`, {
+                data: {
+                  stationName: s.name.trim(),
+                  description: s.description,
+                  postSiteId: newId,
+                  stationSchedule: s.schedule || undefined,
+                  numberOfGuardsInStation: s.guardsCount || '1',
+                  startingTimeInDay: s.startTime,
+                  finishTimeInDay: s.endTime,
+                },
+              }),
+            ),
+          );
+        } catch {
+          toast.error('El sitio fue creado pero algunas estaciones fallaron');
+        }
+      }
+
       toast.success('Puesto de vigilancia creado');
-      setStep(6); // station step
+      setStep(6);
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Error al crear el sitio');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  // ── submit stations ──────────────────────────────────────────────────────────
-  const handleSaveStations = async () => {
-    const toCreate = stations.filter((s) => s.name.trim());
-    if (toCreate.length === 0) {
-      navigate(`/post-sites/${createdId}/profile`);
-      return;
-    }
-    setSavingStations(true);
-    try {
-      const tenantId = localStorage.getItem('tenantId') || '';
-      await Promise.all(
-        toCreate.map((s) =>
-          ApiService.post(`/tenant/${tenantId}/station`, {
-            data: {
-              stationName: s.name.trim(),
-              description: s.description,
-              postSiteId: createdId,
-              stationSchedule: s.schedule || undefined,
-              numberOfGuardsInStation: s.guardsCount || '1',
-              startingTimeInDay: s.startTime,
-              finishTimeInDay: s.endTime,
-            },
-          }),
-        ),
-      );
-      toast.success(`${toCreate.length} estación${toCreate.length > 1 ? 'es' : ''} creada${toCreate.length > 1 ? 's' : ''}`);
-    } catch (e: any) {
-      toast.error('Algunas estaciones no se crearon');
-    } finally {
-      setSavingStations(false);
-      navigate(`/post-sites/${createdId}/profile`);
     }
   };
 
@@ -488,60 +485,33 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
 
   // ── render step content ───────────────────────────────────────────────────────
   const renderStep = () => {
-    // ── Step 6: Stations (post-creation) ──────────────────────────────────────
+    // ── Step 6: Éxito ─────────────────────────────────────────────────────────
     if (step === 6) {
+      const stationCount = stations.filter((s) => s.name.trim()).length;
       return (
-        <div className="space-y-6">
-          <div className="text-center space-y-2 pb-2">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle2 className="h-7 w-7 text-green-600" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900">¡Sitio creado exitosamente!</h2>
-            <p className="text-sm text-gray-500">
-              Ahora puedes añadir estaciones (puestos de guardia) dentro de este sitio, o hacerlo más tarde.
+        <div className="flex flex-col items-center gap-6 py-8 text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 ring-8 ring-green-50">
+            <CheckCircle2 className="h-10 w-10 text-green-600" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">¡Puesto creado!</h2>
+            <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
+              {stationCount > 0
+                ? `${stationCount} estación${stationCount !== 1 ? 'es' : ''} configurada${stationCount !== 1 ? 's' : ''} y lista${stationCount !== 1 ? 's' : ''}.`
+                : 'El sitio fue creado. Puedes añadir estaciones desde su perfil.'}
             </p>
           </div>
-
-          <div className="space-y-3">
-            {stations.map((s, i) => (
-              <StationRow
-                key={i}
-                draft={s}
-                onChange={(d) => updateStation(i, d)}
-                onRemove={() => removeStation(i)}
-              />
-            ))}
-
-            <button
-              type="button"
-              onClick={addStationDraft}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 py-3 text-sm font-medium text-gray-500 hover:border-amber-300 hover:text-amber-700 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              Añadir estación
-            </button>
-          </div>
-
-          <div className="flex gap-3 justify-end pt-4 border-t border-gray-100">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(`/post-sites/${createdId}/profile`)}
-              disabled={savingStations}
-            >
-              Omitir por ahora
+          <div className="flex gap-3">
+            <Button type="button" variant="outline" onClick={() => navigate('/post-sites')}>
+              Ver todos los sitios
             </Button>
             <Button
               type="button"
-              onClick={handleSaveStations}
-              disabled={savingStations}
-              className="bg-amber-600 text-white hover:bg-amber-700"
+              onClick={() => navigate(`/post-sites/${createdId}/profile`)}
+              className="bg-amber-600 text-white hover:bg-amber-700 gap-2"
             >
-              {savingStations ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando…</>
-              ) : stations.filter(s => s.name.trim()).length > 0 ? (
-                `Guardar ${stations.filter(s => s.name.trim()).length} estación${stations.filter(s => s.name.trim()).length > 1 ? 'es' : ''} y terminar`
-              ) : 'Ir al sitio'}
+              <MapPin className="h-4 w-4" />
+              Ir al perfil
             </Button>
           </div>
         </div>
@@ -630,7 +600,7 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
           </div>
 
           {/* ── Map hero block ──────────────────────────────────────── */}
-          <div className="rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-white">
+          <div className="rounded-xl border border-gray-200 shadow-sm bg-white">
             <div className="px-4 pt-4 pb-0">
               <AddressAutocomplete
                 onAddressSelect={handleAddressSelect}
@@ -802,77 +772,64 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
             />
           </div>
 
-          {/* Type-specific deployment fields */}
-          {(serviceType === 'manned' || serviceType === 'patrol' || serviceType === 'custody') && (
-            <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-100 text-amber-700">
-                  <Users className="h-4 w-4" />
-                </span>
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-800">Despliegue</h3>
+          {/* Deployment checks */}
+          <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-100 text-amber-700">
+                <Shield className="h-4 w-4" />
+              </span>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-800">Despliegue operativo</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Nivel de riesgo</label>
+                <select
+                  value={cfgGet('riskLevel')}
+                  onChange={(e) => cfgSet('riskLevel', e.target.value)}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="">Seleccionar…</option>
+                  {[['low','Bajo'],['medium','Medio'],['high','Alto'],['critical','Crítico']].map(([v,l]) => (
+                    <option key={v} value={v}>{l}</option>
+                  ))}
+                </select>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Estaciones requeridas</label>
-                  <Input
-                    type="number" min={1}
-                    placeholder="Ej. 2"
-                    value={cfgGet('stationsRequired')}
-                    onChange={(e) => cfgSet('stationsRequired', e.target.value ? Number(e.target.value) : '')}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Nivel de riesgo</label>
-                  <select
-                    value={cfgGet('riskLevel')}
-                    onChange={(e) => cfgSet('riskLevel', e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    <option value="">Seleccionar…</option>
-                    {[['low','Bajo'],['medium','Medio'],['high','Alto'],['critical','Crítico']].map(([v,l]) => (
-                      <option key={v} value={v}>{l}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Servicio armado</label>
-                  <button
-                    type="button"
-                    onClick={() => cfgSet('armedService', !cfgGet('armedService', false))}
-                    className={cn(
-                      'flex h-9 w-full items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors',
-                      cfgGet('armedService', false)
-                        ? 'border-amber-400 bg-amber-100 text-amber-800'
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
-                    )}
-                  >
-                    <span className={cn('h-4 w-4 rounded-full border-2 flex items-center justify-center', cfgGet('armedService', false) ? 'border-amber-500 bg-amber-500' : 'border-gray-400')}>
-                      {cfgGet('armedService', false) && <Check className="h-2.5 w-2.5 text-white" />}
-                    </span>
-                    Guardia armado
-                  </button>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Uniforme requerido</label>
-                  <button
-                    type="button"
-                    onClick={() => cfgSet('uniformRequired', !cfgGet('uniformRequired', true))}
-                    className={cn(
-                      'flex h-9 w-full items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors',
-                      cfgGet('uniformRequired', true)
-                        ? 'border-amber-400 bg-amber-100 text-amber-800'
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
-                    )}
-                  >
-                    <span className={cn('h-4 w-4 rounded-full border-2 flex items-center justify-center', cfgGet('uniformRequired', true) ? 'border-amber-500 bg-amber-500' : 'border-gray-400')}>
-                      {cfgGet('uniformRequired', true) && <Check className="h-2.5 w-2.5 text-white" />}
-                    </span>
-                    Uniforme obligatorio
-                  </button>
-                </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Mínimo de estaciones</label>
+                <Input
+                  type="number" min={1}
+                  placeholder="Ej. 2"
+                  value={cfgGet('stationsRequired')}
+                  onChange={(e) => cfgSet('stationsRequired', e.target.value ? Number(e.target.value) : '')}
+                />
               </div>
             </div>
-          )}
+
+            <div className="grid grid-cols-2 gap-2">
+              {DEPLOY_CHECKS.map(({ key, label, defaultOn = false }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => cfgSet(key, !cfgGet(key, defaultOn))}
+                  className={cn(
+                    'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors',
+                    cfgGet(key, defaultOn)
+                      ? 'border-amber-400 bg-amber-50 text-amber-800'
+                      : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300',
+                  )}
+                >
+                  <span className={cn(
+                    'h-4 w-4 rounded border-2 flex items-center justify-center shrink-0',
+                    cfgGet(key, defaultOn) ? 'border-amber-500 bg-amber-500' : 'border-gray-300',
+                  )}>
+                    {cfgGet(key, defaultOn) && <Check className="h-2.5 w-2.5 text-white" />}
+                  </span>
+                  <span className="text-xs font-medium leading-tight">{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* SOP field */}
           <div>
@@ -891,47 +848,46 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
       );
     }
 
-    // ── Step 4: Schedule + contact ─────────────────────────────────────────────
+    // ── Step 4: Estaciones + Contacto ──────────────────────────────────────────
     if (step === 4) {
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Horario y contacto</h2>
-            <p className="text-sm text-gray-500">Configure la jornada de servicio y datos de contacto del sitio.</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Estaciones de vigilancia</h2>
+            <p className="text-sm text-gray-500">
+              Define los puestos de guardia. Cada estación tiene su propio horario y número de guardias.
+            </p>
           </div>
 
-          {/* Schedule */}
-          <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-200 text-gray-600">
-                <Clock className="h-4 w-4" />
-              </span>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-600">Horario de servicio</h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="sm:col-span-1">
-                <label className="block text-xs text-gray-500 mb-1">Jornada de guardia</label>
-                <select
-                  value={schedule}
-                  onChange={(e) => setSchedule(e.target.value)}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="">Sin definir</option>
-                  {SCHEDULES.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+          {/* Station builder */}
+          <div className="space-y-3">
+            {stations.length === 0 ? (
+              <div className="rounded-xl border-2 border-dashed border-gray-200 py-10 text-center">
+                <Shield className="mx-auto h-9 w-9 text-gray-300 mb-2" />
+                <p className="text-sm font-medium text-gray-500">Sin estaciones definidas</p>
+                <p className="text-xs text-gray-400 mt-1">Puedes añadirlas ahora o desde el perfil del sitio.</p>
               </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Hora de inicio</label>
-                <Input value={startTime} onChange={(e) => setStartTime(e.target.value)} placeholder="08:00" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Hora de fin</label>
-                <Input value={endTime} onChange={(e) => setEndTime(e.target.value)} placeholder="20:00" />
-              </div>
-            </div>
+            ) : (
+              stations.map((s, i) => (
+                <StationRow
+                  key={i}
+                  draft={s}
+                  onChange={(d) => updateStation(i, d)}
+                  onRemove={() => removeStation(i)}
+                />
+              ))
+            )}
+            <button
+              type="button"
+              onClick={addStationDraft}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 py-3 text-sm font-medium text-gray-500 hover:border-amber-300 hover:text-amber-700 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Añadir estación
+            </button>
           </div>
 
-          {/* Contact */}
+          {/* Contact + status */}
           <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 space-y-4">
             <div className="flex items-center gap-2">
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-200 text-gray-600">
@@ -946,14 +902,14 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Teléfono de contacto</label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 555 000 0000" />
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+593 99 000 0000" />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Fax / Teléfono fijo</label>
-                <Input value={fax} onChange={(e) => setFax(e.target.value)} placeholder="+1 555 000 0001" />
+                <Input value={fax} onChange={(e) => setFax(e.target.value)} placeholder="+593 2 000 0000" />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Estado inicial</label>
+                <label className="block text-xs text-gray-500 mb-1">Estado del sitio</label>
                 <div className="flex gap-2">
                   {(['active', 'inactive'] as const).map((s) => (
                     <button
@@ -1014,16 +970,14 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
               <SummaryRow icon={<Building2 className="h-4 w-4" />} label="Cliente" value={selectedClientLabel ?? undefined} />
               <SummaryRow icon={<MapPin className="h-4 w-4" />} label="Dirección" value={address || undefined} />
               <SummaryRow icon={<MapPin className="h-4 w-4" />} label="Ciudad" value={city || undefined} />
-              <SummaryRow icon={<Clock className="h-4 w-4" />} label="Jornada" value={schedule || undefined} />
-              <SummaryRow icon={<Clock className="h-4 w-4" />} label="Horario" value={startTime && endTime ? `${startTime} – ${endTime}` : undefined} />
               <SummaryRow icon={<Phone className="h-4 w-4" />} label="Teléfono" value={phone || undefined} />
               <SummaryRow icon={<Mail className="h-4 w-4" />} label="Correo" value={email || undefined} />
+              <SummaryRow icon={<Shield className="h-4 w-4" />} label="Estaciones" value={stations.filter(s => s.name.trim()).length > 0 ? `${stations.filter(s => s.name.trim()).length} definida${stations.filter(s => s.name.trim()).length !== 1 ? 's' : ''}` : undefined} />
             </div>
           </div>
 
           {/* Equipment & training chips */}
-          {(allEquip.length > 0 || allTraining.length > 0) && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {(allEquip.length > 0 || allTraining.length > 0) && (            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {allEquip.length > 0 && (
                 <div className="rounded-xl border border-amber-100 bg-amber-50/40 p-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 mb-2 flex items-center gap-1">
@@ -1058,6 +1012,43 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Stations summary */}
+          {stations.filter((s) => s.name.trim()).length > 0 && (
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+              <div className="flex items-center gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100">
+                <Shield className="h-4 w-4 text-amber-700" />
+                <span className="text-sm font-semibold text-gray-700">
+                  Estaciones ({stations.filter((s) => s.name.trim()).length})
+                </span>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {stations.filter((s) => s.name.trim()).map((s, i) => (
+                  <div key={i} className="px-5 py-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{s.name}</p>
+                      {s.description && <p className="text-xs text-gray-400 truncate">{s.description}</p>}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
+                      {s.schedule && (
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="h-3 w-3" />{s.schedule}
+                        </span>
+                      )}
+                      {s.guardsCount && (
+                        <span className="inline-flex items-center gap-1">
+                          <Users className="h-3 w-3" />{s.guardsCount} guardia{Number(s.guardsCount) !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {s.startTime && s.endTime && (
+                        <span className="font-mono">{s.startTime}–{s.endTime}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
