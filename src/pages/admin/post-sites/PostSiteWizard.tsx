@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import {
   CheckCircle2, ChevronRight, ChevronLeft, Plus, X, Trash2,
   Shield, BellElectric, Camera, Car, Lock, Tag,
-  Users, Clock, MapPin, Phone, Mail, Building2,
+  Users, Clock, MapPin, Building2,
   Loader2, Check, Star, Zap, AlertTriangle,
   Navigation2, Globe, Hash, ChevronDown, ChevronUp, Edit3,
 } from 'lucide-react';
@@ -424,9 +424,6 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
 
   // Step 4: Estaciones + Contacto
   const [stations, setStations] = useState<StationDraft[]>([]);
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [fax, setFax] = useState('');
   const [status, setStatus] = useState<'active' | 'inactive'>('active');
 
   // Auto-inject client from context
@@ -482,9 +479,6 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
       postalCode,
       latitud,
       longitud,
-      email,
-      phone,
-      fax,
       serviceType,
       serviceConfig: finalConfig,
       status,
@@ -988,47 +982,25 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
             </button>
           </div>
 
-          {/* Contact + status */}
-          <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-200 text-gray-600">
-                <Phone className="h-4 w-4" />
-              </span>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-600">Contacto del sitio</h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Correo electrónico</label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="correo@empresa.com" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Teléfono de contacto</label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+593 99 000 0000" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Fax / Teléfono fijo</label>
-                <Input value={fax} onChange={(e) => setFax(e.target.value)} placeholder="+593 2 000 0000" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Estado del sitio</label>
-                <div className="flex gap-2">
-                  {(['active', 'inactive'] as const).map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setStatus(s)}
-                      className={cn(
-                        'flex-1 h-9 rounded-md border text-sm font-medium transition-colors',
-                        status === s
-                          ? s === 'active' ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-400 bg-gray-100 text-gray-600'
-                          : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300',
-                      )}
-                    >
-                      {s === 'active' ? 'Activo' : 'Inactivo'}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {/* Status */}
+          <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+            <label className="block text-xs text-gray-500 mb-2">Estado del sitio</label>
+            <div className="flex gap-2 max-w-xs">
+              {(['active', 'inactive'] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStatus(s)}
+                  className={cn(
+                    'flex-1 h-9 rounded-md border text-sm font-medium transition-colors',
+                    status === s
+                      ? s === 'active' ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-400 bg-gray-100 text-gray-600'
+                      : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300',
+                  )}
+                >
+                  {s === 'active' ? 'Activo' : 'Inactivo'}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -1071,8 +1043,6 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
               <SummaryRow icon={<Building2 className="h-4 w-4" />} label="Cliente" value={selectedClientLabel ?? undefined} />
               <SummaryRow icon={<MapPin className="h-4 w-4" />} label="Dirección" value={address || undefined} />
               <SummaryRow icon={<MapPin className="h-4 w-4" />} label="Ciudad" value={city || undefined} />
-              <SummaryRow icon={<Phone className="h-4 w-4" />} label="Teléfono" value={phone || undefined} />
-              <SummaryRow icon={<Mail className="h-4 w-4" />} label="Correo" value={email || undefined} />
               <SummaryRow icon={<Shield className="h-4 w-4" />} label="Estaciones" value={stations.filter(s => s.name.trim()).length > 0 ? `${stations.filter(s => s.name.trim()).length} definida${stations.filter(s => s.name.trim()).length !== 1 ? 's' : ''}` : undefined} />
             </div>
           </div>
