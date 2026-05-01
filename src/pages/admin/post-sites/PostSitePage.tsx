@@ -510,34 +510,6 @@ export default function PostSitePage() {
 
                 <div className="mt-6 space-y-4">
                   <div className="space-y-2">
-                    <Label>{t('postSites.filters.email', 'Correo Electrónico')}</Label>
-                    <Input
-                      placeholder="ejemplo@correo.com"
-                      value={tempFilters.email || ""}
-                      onChange={(e) =>
-                        setTempFilters({
-                          ...tempFilters,
-                          email: e.target.value || undefined,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>{t('postSites.filters.phone', 'Número de Teléfono')}</Label>
-                    <Input
-                      placeholder="+593 123456789"
-                      value={tempFilters.phoneNumber || ""}
-                      onChange={(e) =>
-                        setTempFilters({
-                          ...tempFilters,
-                          phoneNumber: e.target.value || undefined,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
                     <Label>{t('postSites.filters.city', 'Ciudad')}</Label>
                     <Input
                       placeholder="Quito"
@@ -744,48 +716,6 @@ export default function PostSitePage() {
                     <span className="text-xs text-muted-foreground">{sortKey === "client" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
                   </button>
                 </th>
-                <th className="px-4 py-3 font-semibold">
-                  <button
-                    type="button"
-                    className="flex items-center gap-2"
-                    onClick={() => {
-                      if (sortKey !== "email") {
-                        setSortKey("email");
-                        setSortDir("asc");
-                      } else if (sortDir === "asc") {
-                        setSortDir("desc");
-                      } else {
-                        setSortKey(null);
-                        setSortDir(null);
-                      }
-                      setPage(1);
-                    }}
-                  >
-                    <span>{t('postSites.emails', 'Email')}</span>
-                    <span className="text-xs text-muted-foreground">{sortKey === "email" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
-                  </button>
-                </th>
-                <th className="px-4 py-3 font-semibold">
-                  <button
-                    type="button"
-                    className="flex items-center gap-2"
-                    onClick={() => {
-                      if (sortKey !== "phone") {
-                        setSortKey("phone");
-                        setSortDir("asc");
-                      } else if (sortDir === "asc") {
-                        setSortDir("desc");
-                      } else {
-                        setSortKey(null);
-                        setSortDir(null);
-                      }
-                      setPage(1);
-                    }}
-                  >
-                    <span>{t('postSites.phones', 'Teléfono')}</span>
-                    <span className="text-xs text-muted-foreground">{sortKey === "phone" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
-                  </button>
-                </th>
                 {/* Guards and Schedule columns hidden as requested */}
                 <th className="px-4 py-3 font-semibold">Tipo</th>
                 <th className="px-4 py-3 font-semibold">{t('postSites.filters.status', 'Estado')}</th>
@@ -797,7 +727,7 @@ export default function PostSitePage() {
               {/* sin filas por defecto */}
               {(postSites?.length ?? 0) === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-20">
+                  <td colSpan={6} className="py-20">
                     <div className="flex flex-col items-center justify-center text-center">
                       <img
                         src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
@@ -821,8 +751,6 @@ export default function PostSitePage() {
                   </td>
                   <td className="px-4 py-3 font-medium">{site.name}</td>
                   <td className="px-4 py-3">{site.client ? formatClientName(site.client) : "-"}</td>
-                  <td className="px-4 py-3">{site.email || "-"}</td>
-                  <td className="px-4 py-3">{site.phone || "-"}</td>
                   <td className="px-4 py-3">
                     <ServiceTypeBadge value={(site as any).serviceType} />
                   </td>
