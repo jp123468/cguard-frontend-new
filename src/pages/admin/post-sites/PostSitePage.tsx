@@ -39,6 +39,7 @@ import {
   Archive,
   Trash,
   RotateCcw,
+  Pencil,
 } from "lucide-react";
 import PostSiteImportDialog from "@/components/post-sites/PostSiteImportDialog";
 import { Link, useNavigate } from "react-router-dom";
@@ -311,6 +312,13 @@ export default function PostSitePage() {
           },
         },
         {
+          label: t('postSites.edit', 'Editar'),
+          icon: <Pencil className="h-4 w-4" />,
+          onClick: () => {
+            navigate(`/post-sites/${site.id}/edit`);
+          },
+        },
+        {
           label: t('postSites.categorize', 'Sectorizar'),
           icon: <Tag className="h-4 w-4" />,
           onClick: () => {
@@ -348,6 +356,13 @@ export default function PostSitePage() {
         icon: <Eye className="h-4 w-4" />,
         onClick: () => {
           navigate(`/post-sites/${site.id}`);
+        },
+      },
+      {
+        label: t('postSites.edit', 'Editar'),
+        icon: <Pencil className="h-4 w-4" />,
+        onClick: () => {
+          navigate(`/post-sites/${site.id}/edit`);
         },
       },
       {
