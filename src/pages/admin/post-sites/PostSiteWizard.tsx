@@ -625,7 +625,7 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
           </div>
           <ServiceTypePicker
             value={serviceType ?? null}
-            onChange={(v) => setServiceType(v)}
+            onChange={(v) => { setServiceType(v); setStep(2); }}
           />
           <div className="text-center">
             <button
