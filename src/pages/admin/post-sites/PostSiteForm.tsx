@@ -20,8 +20,8 @@ import { PostSiteInput, postSiteSchema } from "@/lib/validators/post-site";
 import { useTranslation } from 'react-i18next';
 import { useClientSelection } from '@/contexts/ClientSelectionContext';
 import ServiceTypeConfigFields from "@/components/post-sites/ServiceTypeConfigFields";
+import { ServiceTypePicker } from "@/components/post-sites/ServiceTypeBadge";
 import AddressAutocomplete, { AddressComponents } from "@/components/maps/AddressAutocomplete";
-import { SERVICE_TYPES } from "@/lib/serviceTypes";
 
 export type Client = { id: string; name: string; lastName?: string };
 
@@ -215,30 +215,17 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
                     </section>
 
                     {/* ── Tipo de servicio ─────────────────────────── */}
-                    <section className="space-y-3">
-                        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-                            Tipo de servicio
-                        </h2>
-                        <FormField<PostSiteInput>
+                    <section>
+                        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Tipo de servicio</h2>
+                        <Controller
                             control={form.control}
                             name="serviceType"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Tipo de servicio *</FormLabel>
-                                    <FormControl>
-                                        <select
-                                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                            value={String(field.value ?? "")}
-                                            onChange={(e) => field.onChange(e.target.value || undefined)}
-                                        >
-                                            <option value="">— Seleccionar tipo —</option>
-                                            {SERVICE_TYPES.map((st) => (
-                                                <option key={st.value} value={st.value}>{st.label}</option>
-                                            ))}
-                                        </select>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
+                            render={({ field, fieldState }) => (
+                                <ServiceTypePicker
+                                    value={field.value as string | undefined}
+                                    onChange={(val) => field.onChange(val)}
+                                    error={fieldState.error?.message}
+                                />
                             )}
                         />
                     </section>
