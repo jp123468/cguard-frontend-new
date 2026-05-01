@@ -33,7 +33,7 @@ export type PostSiteFormProps = {
     onSaved?: (payload: { id: string; data: PostSiteInput }) => void;
 };
 
-export default function PostSiteForm({ mode, id, onSaved }: PostSiteFormProps) {
+export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSiteFormProps) {
     const { t } = useTranslation();
     const { selectedClient } = useClientSelection();
     const navigate = useNavigate();
@@ -126,9 +126,17 @@ export default function PostSiteForm({ mode, id, onSaved }: PostSiteFormProps) {
 
     const onSubmit = async (values: PostSiteInput) => {
         try {
+            // Auto-generate name from address if not provided
+            const autoName = values.name?.trim() ||
+                values.address?.trim() ||
+                (() => {
+                    const c = clients.find((cl) => cl.id === values.clientId);
+                    return c ? `Sitio de ${c.name}` : 'Sitio sin nombre';
+                })();
             const payload: any = {
                 ...values,
-                companyName: values.name,
+                name: autoName,
+                companyName: autoName,
                 categoryId:
                     values.categoryId && String(values.categoryId).length > 0
                         ? values.categoryId
@@ -174,16 +182,37 @@ export default function PostSiteForm({ mode, id, onSaved }: PostSiteFormProps) {
 
     return (
         <div className="max-w-2xl mx-auto">
-            {/* Client context banner */}
-            {selectedClient && (
-                <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    <span className="font-semibold">Cliente: </span>
-                    {(selectedClient as any).name ?? (selectedClient as any).companyName ?? ''}
-                </div>
-            )}
-
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+
+                    {/* ── Cliente ──────────────────────────────────── */}
+                    <section className="space-y-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                            Cliente
+                        </h2>
+                        <FormField<PostSiteInput>
+                            control={form.control}
+                            name="clientId"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Cliente al que pertenece este sitio</FormLabel>
+                                    <FormControl>
+                                        <select
+                                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                            value={String(field.value ?? "")}
+                                            onChange={(e) => field.onChange(e.target.value)}
+                                        >
+                                            <option value="">— Seleccionar cliente —</option>
+                                            {clients.map((c) => (
+                                                <option key={c.id} value={c.id}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </section>
 
                     {/* ── Tipo de servicio ─────────────────────────── */}
                     <section>
@@ -216,20 +245,6 @@ export default function PostSiteForm({ mode, id, onSaved }: PostSiteFormProps) {
                         <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
                             Información básica
                         </h2>
-
-                        <FormField<PostSiteInput>
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{t('postSites.form.siteName', 'Nombre del puesto *')}</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="Ej. Edificio Central" {...field} value={field.value ? String(field.value) : ""} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
 
                         <FormField<PostSiteInput>
                             control={form.control}

@@ -3,7 +3,7 @@ import { z } from "zod";
 export const SERVICE_TYPE_VALUES = ['manned', 'alarm', 'cctv', 'patrol', 'custody'] as const;
 
 export const postSiteSchema = z.object({
-    name: z.string().trim().min(1, "Nombre del sitio requerido"),
+    name: z.string().trim().max(200, "Máximo 200 caracteres").optional().or(z.literal("")),
     serviceType: z.string().trim().max(50, "Máximo 50 caracteres").optional().or(z.literal("")),
     serviceConfig: z.any().optional(),
     clientId: z.string().trim().optional().or(z.literal("")),
