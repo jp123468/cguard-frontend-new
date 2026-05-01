@@ -2,6 +2,7 @@
  * Singleton Google Maps script loader.
  * Guarantees the Maps JS API is injected only once per page, regardless of
  * how many components call this function concurrently.
+ * Uses the new Places API (PlaceAutocompleteElement) — no Geocoding API required.
  */
 let _promise: Promise<void> | null = null;
 
@@ -9,7 +10,7 @@ export function loadGoogleMaps(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve();
 
   // Already fully loaded — resolve immediately.
-  if ((window as any).google?.maps?.places?.Autocomplete) return Promise.resolve();
+  if (isMapsReady()) return Promise.resolve();
 
   // Loading already in progress — return the same Promise.
   if (_promise) return _promise;
@@ -30,7 +31,8 @@ export function loadGoogleMaps(): Promise<void> {
     }
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&v=weekly&libraries=places,marker`;
+    // Use v=beta to ensure PlaceAutocompleteElement is available
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&v=beta&libraries=places,marker`;
     script.async = true;
     script.defer = true;
     script.onload = () => poll(resolve, reject);
@@ -44,9 +46,18 @@ export function loadGoogleMaps(): Promise<void> {
   return _promise;
 }
 
+function isMapsReady(): boolean {
+  const g = (window as any).google;
+  // Ready when we have core Maps + Places (new or legacy)
+  return !!(
+    g?.maps?.Map &&
+    g?.maps?.places &&
+    (g.maps.places.PlaceAutocompleteElement || g.maps.places.Autocomplete)
+  );
+}
+
 function poll(resolve: () => void, reject: (e: Error) => void, start = Date.now()): void {
-  // Wait until both core maps AND places.Autocomplete are available
-  if ((window as any).google?.maps?.places?.Autocomplete) { resolve(); return; }
-  if (Date.now() - start > 8000) { reject(new Error('Google Maps API timed out')); return; }
+  if (isMapsReady()) { resolve(); return; }
+  if (Date.now() - start > 10000) { reject(new Error('Google Maps API timed out')); return; }
   setTimeout(() => poll(resolve, reject, start), 200);
 }
