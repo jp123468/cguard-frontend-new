@@ -18,6 +18,7 @@ import {
   Shield, BellElectric, Camera, Car, Lock, Tag,
   Users, Clock, MapPin, Phone, Mail, Building2,
   Loader2, Check, Star, Zap, AlertTriangle, Radio,
+  Navigation2, Globe, Hash, ChevronDown, ChevronUp, Edit3,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -296,6 +297,8 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
   const [latitud, setLatitud] = useState('');
   const [longitud, setLongitud] = useState('');
   const [description, setDescription] = useState('');
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [showAddressFields, setShowAddressFields] = useState(false);
 
   // Step 3: service config — stored as flat map, custom items tracked separately
   const [serviceConfig, setServiceConfig] = useState<Record<string, any>>({});
@@ -343,6 +346,9 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
     setPostalCode(ac.postalCode);
     setLatitud(String(ac.latitude));
     setLongitud(String(ac.longitude));
+    if (ac.address || ac.city) {
+      setAddressConfirmed(true);
+    }
   };
 
   // ── build payload ────────────────────────────────────────────────────────────
@@ -571,70 +577,168 @@ export default function PostSiteWizard({ clients = [] }: WizardProps) {
 
     // ── Step 2: Site info + address ────────────────────────────────────────────
     if (step === 2) {
+      const selectedClientObj = clients.find((c) => c.id === clientId);
+      const coordsLabel = latitud && longitud
+        ? `${Number(latitud).toFixed(5)}, ${Number(longitud).toFixed(5)}`
+        : null;
+
       return (
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Información del sitio</h2>
-            <p className="text-sm text-gray-500">El cliente y la dirección son los datos más importantes.</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-0.5">Ubicación del sitio</h2>
+            <p className="text-sm text-gray-500">Busca la dirección en el mapa y asigna el sitio a un cliente.</p>
           </div>
 
-          {/* Client */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              <Building2 className="inline h-4 w-4 mr-1 text-amber-600" />
-              Cliente al que pertenece este sitio
-            </label>
-            <select
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              <option value="">— Seleccionar cliente —</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Address autocomplete */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              <MapPin className="inline h-4 w-4 mr-1 text-amber-600" />
-              Buscar dirección
-            </label>
-            <AddressAutocomplete
-              onAddressSelect={handleAddressSelect}
-              defaultValue={address}
-              placeholder="Calle, número, ciudad…"
-              showMap
-              mapHeight="200px"
-              initialLat={latitud ? Number(latitud) : undefined}
-              initialLng={longitud ? Number(longitud) : undefined}
-              suppressInitialReverse
-            />
-          </div>
-
-          {/* Address read-backs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="sm:col-span-2">
-              <label className="block text-xs text-gray-500 mb-1">Dirección</label>
-              <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Calle y número" />
+          {/* ── Client selector — card style ─────────────────────────── */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-100">
+                <Building2 className="h-4 w-4 text-amber-700" />
+              </div>
+              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Cliente</span>
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs text-gray-500 mb-1">Complemento (Apto., piso, referencia…)</label>
-              <Input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} placeholder="Opcional" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Ciudad</label>
-              <Input value={city} onChange={(e) => setCity(e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">País</label>
-              <Input value={country} onChange={(e) => setCountry(e.target.value)} />
+            <div className="px-4 py-3">
+              {selectedClientObj ? (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
+                      {selectedClientObj.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">{selectedClientObj.name}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setClientId('')}
+                    className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors"
+                  >
+                    <Edit3 className="h-3 w-3" /> Cambiar
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="">— Seleccionar cliente —</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 
-          {/* Description */}
+          {/* ── Map hero block ──────────────────────────────────────── */}
+          <div className="rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-white">
+            <div className="px-4 pt-4 pb-0">
+              <AddressAutocomplete
+                onAddressSelect={handleAddressSelect}
+                defaultValue={address}
+                placeholder="Buscar calle, número, ciudad, lugar…"
+                showMap
+                mapHeight="300px"
+                initialLat={latitud ? Number(latitud) : undefined}
+                initialLng={longitud ? Number(longitud) : undefined}
+                suppressInitialReverse
+              />
+            </div>
+          </div>
+
+          {/* ── Address confirmation card — appears after selection ─── */}
+          {addressConfirmed && (address || city) && (
+            <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 shadow-sm overflow-hidden">
+              <div className="flex items-start gap-3 px-4 py-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-500 shadow-sm">
+                  <Check className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-green-900 leading-snug">
+                    {address || city}
+                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {city && (
+                      <span className="inline-flex items-center gap-1 text-xs text-green-700">
+                        <Globe className="h-3 w-3" />
+                        {[city, country].filter(Boolean).join(', ')}
+                      </span>
+                    )}
+                    {postalCode && (
+                      <span className="inline-flex items-center gap-1 text-xs text-green-700">
+                        <Hash className="h-3 w-3" />
+                        CP {postalCode}
+                      </span>
+                    )}
+                    {coordsLabel && (
+                      <span className="inline-flex items-center gap-1 text-xs text-green-600 font-mono">
+                        <Navigation2 className="h-3 w-3" />
+                        {coordsLabel}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddressFields((v) => !v)}
+                  className="flex items-center gap-1 text-xs text-green-700 hover:text-green-900 transition-colors shrink-0"
+                >
+                  <Edit3 className="h-3 w-3" />
+                  Editar
+                  {showAddressFields ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </button>
+              </div>
+
+              {/* Collapsible manual fields */}
+              {showAddressFields && (
+                <div className="border-t border-green-200 bg-white/70 px-4 py-4 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Dirección</label>
+                      <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Calle y número" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Complemento</label>
+                      <Input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} placeholder="Apto., piso, referencia…" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Ciudad</label>
+                      <Input value={city} onChange={(e) => setCity(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">País</label>
+                      <Input value={country} onChange={(e) => setCountry(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Código postal</label>
+                      <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Latitud</label>
+                        <Input value={latitud} onChange={(e) => setLatitud(e.target.value)} placeholder="0.000000" className="font-mono text-xs" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Longitud</label>
+                        <Input value={longitud} onChange={(e) => setLongitud(e.target.value)} placeholder="0.000000" className="font-mono text-xs" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Fallback: show bare fields if no address confirmed yet */}
+          {!addressConfirmed && address && (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 space-y-3">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Dirección</label>
+                <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Calle y número" />
+              </div>
+            </div>
+          )}
+
+          {/* ── Description ─────────────────────────────────────────── */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Descripción del sitio</label>
             <Textarea

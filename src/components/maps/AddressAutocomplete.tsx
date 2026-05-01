@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 import { Button } from '@/components/ui/button';
-import { Loader2, MapPin, AlertCircle } from 'lucide-react';
+import { Loader2, MapPin, AlertCircle, Search } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getTenantLocation } from '@/utils/tenantLocation';
 
@@ -286,34 +286,40 @@ export default function AddressAutocomplete({
   }
 
   return (
-    <div className="space-y-4">
-      {/* PlaceAutocompleteElement + current location button */}
+    <div className="space-y-3">
+      {/* Search row — styled like a prominent search bar */}
       <div className="flex gap-2 items-center">
-        {/* The web component is appended here via useEffect */}
-        <div ref={pacContainerRef} className="flex-1 min-w-0" style={{ minHeight: '40px' }} />
+        <div className="relative flex-1 min-w-0">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+          {/* The PlaceAutocompleteElement is appended here via useEffect */}
+          <div
+            ref={pacContainerRef}
+            style={{ minHeight: '40px', paddingLeft: '2rem' }}
+          />
+        </div>
         <Button
           type="button"
           variant="outline"
           onClick={handleUseCurrentLocation}
-          className="flex items-center gap-2 shrink-0"
+          className="flex items-center gap-1.5 shrink-0 border-gray-300 hover:border-amber-400 hover:bg-amber-50 hover:text-amber-700 transition-colors"
         >
           <MapPin className="h-4 w-4" />
-          <span className="hidden sm:inline">Mi ubicación</span>
+          <span className="hidden sm:inline text-sm">Mi ubicación</span>
         </Button>
       </div>
 
       {showMap && (
-        <div
-          ref={mapRef}
-          style={{ height: mapHeight }}
-          className="w-full rounded-md border overflow-hidden"
-        />
-      )}
-
-      {showMap && (
-        <p className="text-xs text-muted-foreground">
-          💡 Puedes arrastrar el marcador en el mapa para ajustar la ubicación exacta
-        </p>
+        <div className="rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+          <div
+            ref={mapRef}
+            style={{ height: mapHeight }}
+            className="w-full"
+          />
+          <p className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-500 bg-gray-50 border-t border-gray-100">
+            <MapPin className="h-3 w-3 text-amber-500 shrink-0" />
+            Arrastra el marcador rojo para ajustar la ubicación exacta
+          </p>
+        </div>
       )}
     </div>
   );
