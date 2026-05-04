@@ -75,6 +75,7 @@ function normalizeMe(raw: any): MeResponse {
   const phoneNumber = base?.phoneNumber ?? "";
   const language = base?.language ?? "es";
   let avatarUrl = base?.avatarUrl ?? pickAvatarUrl(base?.avatars) ?? null;
+  // Do not fallback to tenant logo here — user avatar must come from `avatarUrl`/`avatars`.
   if (avatarUrl) {
     try {
       // Encode spaces and other characters in the URL path
@@ -254,13 +255,24 @@ export default function ProfileUserForm() {
       }
       if (avatarFile && currentTenantId && currentUserId) {
         try {
-          await AccountService.uploadAvatar(avatarFile, currentTenantId, currentUserId);
+          // Convert file to data URL and send as avatars payload so backend
+          // can handle base64 upload the same way as settings logos.
+          const toDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result));
+            reader.onerror = (e) => reject(e);
+            reader.readAsDataURL(file);
+          });
+
+          const dataUrl = await toDataUrl(avatarFile);
+
+          await AccountService.updateProfile({ avatars: [{ data: dataUrl, name: avatarFile.name, sizeInBytes: avatarFile.size, mimeType: avatarFile.type }] } as any);
+
           const refreshed = await AccountService.getMe();
           const refreshedMe = normalizeMe(refreshed);
           setAvatar(refreshedMe.avatarUrl ?? null);
           didUpdate = true;
         } catch (err) {
-          // ignore upload errors here and let user know via toast
           console.error('Avatar upload failed', err);
           toast.error('No se pudo subir el avatar.');
         }

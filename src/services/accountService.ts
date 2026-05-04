@@ -9,6 +9,7 @@ export type ProfilePayload = {
   skype?: string;
   twoFactorEnabled?: boolean;
   email?: string;
+  avatars?: any[];
 };
 
 export type ChangeEmailPayload = {
