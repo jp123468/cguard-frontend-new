@@ -31,8 +31,8 @@ export function loadGoogleMaps(): Promise<void> {
     }
 
     const script = document.createElement('script');
-    // Use v=beta to ensure PlaceAutocompleteElement is available
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&v=beta&libraries=places,marker`;
+    // Use stable release with places and marker libraries
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker`;
     script.async = true;
     script.defer = true;
     script.onload = () => poll(resolve, reject);

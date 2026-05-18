@@ -783,7 +783,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                         <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}>
                                             {t('tenantJoinModal.uploadLogo')}
                                         </Button>
-                                        {logoFile && <span className="text-xs text-gray-600 truncate max-w-[220px]">{logoFile.name}</span>}
+                                        {logoFile && <span className="text-xs text-foreground/70 truncate max-w-[220px]">{logoFile.name}</span>}
                                     </div>
                                     {logoError && <p className="text-sm text-red-600 mt-1">{logoError}</p>}
                                 </div>
@@ -851,6 +851,13 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                             }}
                                             showMap={true}
                                         />
+                                    </div>
+                                )}
+
+                                {!showAddressAutocomplete && (
+                                    <div>
+                                        <label className="text-sm">Dirección<span className="text-red-500 ml-1">*</span></label>
+                                        <Input value={form.address} onChange={(e) => setForm((s: any) => ({ ...s, address: e.target.value }))} placeholder="Ingrese la dirección completa" />
                                     </div>
                                 )}
 
