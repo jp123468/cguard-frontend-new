@@ -33,24 +33,24 @@ export default function Tasks({ site }: { site?: any }) {
 
     return (
         <div ref={containerRef} className="space-y-4">
-            <div className="bg-white border rounded-lg p-4">
+            <div className="bg-card border rounded-lg p-4">
                 <div className="flex items-center justify-between gap-4 mb-4">
                     <div className="relative">
-                        <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-full bg-white text-sm inline-flex items-center gap-2">
+                        <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-full bg-card text-sm inline-flex items-center gap-2">
                             {t('postSites.tasks.action')}
                             <ChevronDown size={14} />
                         </button>
                         {actionOpen && (
-                            <div className="absolute mt-2 bg-white border rounded-md shadow-lg z-10 w-48">
-                                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50">{t('postSites.tasks.archiveSelected')}</button>
-                                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50">{t('postSites.tasks.export')}</button>
+                            <div className="absolute mt-2 bg-card border rounded-md shadow-lg z-10 w-48">
+                                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-muted/30">{t('postSites.tasks.archiveSelected')}</button>
+                                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-muted/30">{t('postSites.tasks.export')}</button>
                             </div>
                         )}
                     </div>
 
                     <div className="flex-1 flex justify-center">
                         <div className="relative w-full max-w-xl">
-                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none">
                                 <Search size={16} />
                             </span>
                             <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('postSites.tasks.searchPlaceholder')} className="w-full h-10 rounded-full border pl-10 pr-4" />
@@ -70,7 +70,7 @@ export default function Tasks({ site }: { site?: any }) {
                 <div>
                     <div className="md:block hidden overflow-x-auto">
                         <table className="w-full">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-muted/30">
                             <tr>
                                 <th className="px-4 py-3"><input type="checkbox" /></th>
                                 <th className="px-4 py-3 text-left">{t('postSites.tasks.table.taskName')}</th>
@@ -91,8 +91,8 @@ export default function Tasks({ site }: { site?: any }) {
                                             </svg>
                                         </div>
                                         <div className="text-center">
-                                            <h3 className="text-lg font-semibold text-gray-700">{t('postSites.tasks.empty.title')}</h3>
-                                            <p className="text-sm text-gray-500 mt-1">{t('postSites.tasks.empty.message')}</p>
+                                            <h3 className="text-lg font-semibold text-foreground">{t('postSites.tasks.empty.title')}</h3>
+                                            <p className="text-sm text-muted-foreground mt-1">{t('postSites.tasks.empty.message')}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -103,13 +103,13 @@ export default function Tasks({ site }: { site?: any }) {
 
                     <div className="md:hidden">
                         <MobileCardList items={[]} renderCard={(task: any) => (
-                            <div className="p-4 bg-white border rounded-lg">
+                            <div className="p-4 bg-card border rounded-lg">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <div className="text-sm font-semibold">{task.name || 'Task'}</div>
-                                        <div className="text-xs text-gray-500">{task.type || 'Type'}</div>
+                                        <div className="text-xs text-muted-foreground">{task.type || 'Type'}</div>
                                     </div>
-                                    <div className="text-sm text-gray-600">{task.duration || '-'}</div>
+                                    <div className="text-sm text-foreground/70">{task.duration || '-'}</div>
                                 </div>
                             </div>
                         )} />
@@ -120,10 +120,10 @@ export default function Tasks({ site }: { site?: any }) {
                     <div className="fixed inset-0 z-50 flex">
                         <div className="absolute inset-0 bg-black/40" onClick={() => setShowNewTaskModal(false)} />
 
-                        <aside className="relative w-full sm:ml-auto sm:max-w-md bg-white shadow-xl overflow-hidden rounded-t-lg sm:rounded-lg">
+                        <aside className="relative w-full sm:ml-auto sm:max-w-md bg-card shadow-xl overflow-hidden rounded-t-lg sm:rounded-lg">
                             <div className="flex items-center justify-between p-4 border-b">
                                 <h3 className="text-lg font-semibold">{t('postSites.tasks.modal.title')}</h3>
-                                <button onClick={() => setShowNewTaskModal(false)} className="p-2 text-gray-500 hover:text-gray-700">
+                                <button onClick={() => setShowNewTaskModal(false)} className="p-2 text-muted-foreground hover:text-foreground">
                                     <X size={18} />
                                 </button>
                             </div>
@@ -157,38 +157,38 @@ export default function Tasks({ site }: { site?: any }) {
 
                                 <div className="border-t pt-4">
                                     <div className="flex items-center gap-6">
-                                        <button onClick={() => setTab('oneoff')} className={`pb-2 ${tab === 'oneoff' ? 'text-[#C8860A] border-b-2 border-[#C8860A]' : 'text-gray-500'}`}>{t('postSites.tasks.oneoff')}</button>
-                                        <button onClick={() => setTab('recurring')} className={`pb-2 ${tab === 'recurring' ? 'text-[#C8860A] border-b-2 border-[#C8860A]' : 'text-gray-500'}`}>{t('postSites.tasks.recurring')}</button>
+                                        <button onClick={() => setTab('oneoff')} className={`pb-2 ${tab === 'oneoff' ? 'text-[#C8860A] border-b-2 border-[#C8860A]' : 'text-muted-foreground'}`}>{t('postSites.tasks.oneoff')}</button>
+                                        <button onClick={() => setTab('recurring')} className={`pb-2 ${tab === 'recurring' ? 'text-[#C8860A] border-b-2 border-[#C8860A]' : 'text-muted-foreground'}`}>{t('postSites.tasks.recurring')}</button>
                                     </div>
 
                                     {tab === 'oneoff' && (
                                         <div className="mt-4 grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm text-gray-600 mb-2">Start Date</label>
+                                                <label className="block text-sm text-foreground/70 mb-2">Start Date</label>
                                                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full border rounded-lg h-12 px-3" />
                                             </div>
                                             <div>
-                                                <label className="block text-sm text-gray-600 mb-2">Start Time</label>
+                                                <label className="block text-sm text-foreground/70 mb-2">Start Time</label>
                                                 <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full border rounded-lg h-12 px-3" />
                                             </div>
 
                                             <div>
-                                                <label className="block text-sm text-gray-600 mb-2">Due Date</label>
+                                                <label className="block text-sm text-foreground/70 mb-2">Due Date</label>
                                                 <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full border rounded-lg h-12 px-3" />
                                             </div>
                                             <div>
-                                                <label className="block text-sm text-gray-600 mb-2">Due Time</label>
+                                                <label className="block text-sm text-foreground/70 mb-2">Due Time</label>
                                                 <input type="time" value={dueTime} onChange={e => setDueTime(e.target.value)} className="w-full border rounded-lg h-12 px-3" />
                                             </div>
                                         </div>
                                     )}
 
                                     {tab === 'recurring' && (
-                                        <div className="mt-4 text-sm text-gray-500">{t('postSites.tasks.recurringPlaceholder')}</div>
+                                        <div className="mt-4 text-sm text-muted-foreground">{t('postSites.tasks.recurringPlaceholder')}</div>
                                     )}
 
                                     <div className="mt-4">
-                                        <label className="block text-sm text-gray-600 mb-2">{t('postSites.tasks.subtasks')}</label>
+                                        <label className="block text-sm text-foreground/70 mb-2">{t('postSites.tasks.subtasks')}</label>
                                         <div className="flex gap-2">
                                             <input value={newSubTask} onChange={e => setNewSubTask(e.target.value)} placeholder={t('postSites.tasks.form.newSubTask')} className="flex-1 border rounded-lg h-10 px-3" />
                                             <button onClick={() => { if (newSubTask.trim()) { setSubTasks(s => [...s, newSubTask.trim()]); setNewSubTask(''); } }} className="px-3 py-2 border rounded-lg text-[#C8860A]">{t('postSites.tasks.add')}</button>
@@ -196,7 +196,7 @@ export default function Tasks({ site }: { site?: any }) {
 
                                         <ul className="mt-2 space-y-2">
                                             {subTasks.map((s, i) => (
-                                                <li key={i} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                                <li key={i} className="flex items-center justify-between bg-muted/30 p-2 rounded">
                                                     <span>{s}</span>
                                                     <button onClick={() => setSubTasks(st => st.filter((_, idx) => idx !== i))} className="text-sm text-red-500">{t('postSites.tasks.remove')}</button>
                                                 </li>
@@ -209,7 +209,7 @@ export default function Tasks({ site }: { site?: any }) {
                             <div className="p-4 border-t">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <button onClick={() => { /* save as draft behaviour */ setShowNewTaskModal(false); }} className="px-4 py-2 rounded-full bg-gray-100 text-gray-700">{t('postSites.tasks.saveDraft')}</button>
+                                        <button onClick={() => { /* save as draft behaviour */ setShowNewTaskModal(false); }} className="px-4 py-2 rounded-full bg-muted text-foreground">{t('postSites.tasks.saveDraft')}</button>
                                     </div>
                                 </div>
                             </div>

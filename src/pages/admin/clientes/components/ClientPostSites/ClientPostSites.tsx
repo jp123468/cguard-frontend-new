@@ -64,26 +64,26 @@ export default function ClientPostSites({ client }: { client: any }) {
 
   return (
     <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
+      <div className="bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:w-auto" ref={actionRef}>
             <button
               onClick={() => setActionOpen(!actionOpen)}
-              className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 w-full sm:min-w-[100px] justify-center"
+              className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 w-full sm:min-w-[100px] justify-center"
             >
               {actionSelection}
               <ChevronDown size={16} />
             </button>
             {actionOpen && (
-              <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-50 w-44">
-                <button onClick={() => { setActionOpen(false); if (selectedIds.length === 0) { toast.error(t('clientPostSites.selectAtLeastOne') || 'Selecciona al menos un sitio'); return; } setArchiveTargetIds(selectedIds); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">{t('clientPostSites.archive')}</button>
+              <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-50 w-44">
+                <button onClick={() => { setActionOpen(false); if (selectedIds.length === 0) { toast.error(t('clientPostSites.selectAtLeastOne') || 'Selecciona al menos un sitio'); return; } setArchiveTargetIds(selectedIds); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-muted">{t('clientPostSites.archive')}</button>
               </div>
             )}
           </div>
 
           <div className="w-full sm:flex-1 flex justify-center">
             <div className="relative w-full max-w-lg">
-              <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+              <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
               <input
                 type="text"
                 placeholder={t('clientPostSites.searchPlaceholder')}
@@ -117,7 +117,7 @@ export default function ClientPostSites({ client }: { client: any }) {
               <col style={{ width: '48px' }} />
             </colgroup>
             <thead>
-              <tr className="border-b bg-gray-50">
+              <tr className="border-b bg-muted/30">
                 <th className="px-3 py-2 text-left">
                   <input
                     type="checkbox"
@@ -129,11 +129,11 @@ export default function ClientPostSites({ client }: { client: any }) {
                     checked={filtered.length > 0 && selectedIds.length === filtered.length}
                   />
                 </th>
-                <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.postSite')}</th>
-                <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">Tipo</th>
-                <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.email')}</th>
-                <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.phoneNumber')}</th>
-                <th className="px-3 py-2 text-left text-sm font-semibold text-gray-700">{t('clientPostSites.headers.status')}</th>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-foreground">{t('clientPostSites.headers.postSite')}</th>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-foreground">Tipo</th>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-foreground">{t('clientPostSites.headers.email')}</th>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-foreground">{t('clientPostSites.headers.phoneNumber')}</th>
+                <th className="px-3 py-2 text-left text-sm font-semibold text-foreground">{t('clientPostSites.headers.status')}</th>
                 <th className="px-3 py-2 text-left"></th>
               </tr>
             </thead>
@@ -151,16 +151,16 @@ export default function ClientPostSites({ client }: { client: any }) {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">{t('clientPostSites.noResult.title')}</h3>
-                        <p className="text-sm text-gray-500 mt-1">{t('clientPostSites.noResult.description')}</p>
+                        <h3 className="text-lg font-semibold text-foreground">{t('clientPostSites.noResult.title')}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{t('clientPostSites.noResult.description')}</p>
                       </div>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filtered.map((s) => (
-                  <tr key={s.id} className="border-b hover:bg-gray-50">
-                    <td className="px-2 py-2 text-sm text-gray-700">
+                  <tr key={s.id} className="border-b hover:bg-muted/30">
+                    <td className="px-2 py-2 text-sm text-foreground">
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(s.id)}
@@ -170,25 +170,25 @@ export default function ClientPostSites({ client }: { client: any }) {
                         }}
                       />
                     </td>
-                    <td className="px-3 py-2 text-sm text-gray-700"><div className="truncate max-w-full">{s.companyName ?? s.name}</div></td>
+                    <td className="px-3 py-2 text-sm text-foreground"><div className="truncate max-w-full">{s.companyName ?? s.name}</div></td>
                     <td className="px-3 py-2"><ServiceTypeBadge value={s.serviceType} /></td>
-                    <td className="px-3 py-2 text-sm text-gray-700"><div className="truncate max-w-full">{s.contactEmail ?? s.email ?? '-'}</div></td>
-                    <td className="px-3 py-2 text-sm text-gray-700"><div className="truncate">{s.contactPhone ?? s.phone ?? '-'}</div></td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-3 py-2 text-sm text-foreground"><div className="truncate max-w-full">{s.contactEmail ?? s.email ?? '-'}</div></td>
+                    <td className="px-3 py-2 text-sm text-foreground"><div className="truncate">{s.contactPhone ?? s.phone ?? '-'}</div></td>
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {(s.status === 'active' || s.active === true) ? (
                         <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">{t('common.active')}</span>
                       ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">{t('common.inactive')}</span>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-muted text-foreground/70 text-xs font-semibold">{t('common.inactive')}</span>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-sm text-gray-700 relative overflow-visible">
+                    <td className="px-3 py-2 text-sm text-foreground relative overflow-visible">
                       <Popover>
                         <PopoverTrigger asChild>
-                          <button aria-label="Open menu" className="p-2 rounded-full hover:bg-gray-100"><EllipsisVertical className="h-5 w-5 text-slate-400" /></button>
+                          <button aria-label="Open menu" className="p-2 rounded-full hover:bg-muted"><EllipsisVertical className="h-5 w-5 text-muted-foreground" /></button>
                         </PopoverTrigger>
                         <PopoverContent className="w-44 p-1 rounded-md shadow-lg z-50">
-                          <Link to={`/post-sites/${s.id}`} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Eye className="h-4 w-4" />{` ${t('clientPostSites.viewDetails')}`}</Link>
-                          <button onClick={() => { setArchiveTargetIds([s.id]); /* close popover visually */ (document.activeElement as HTMLElement | null)?.blur(); setSelectedIds((p) => p.filter((id) => id !== s.id)); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Archive className="h-4 w-4" />{` ${t('clientPostSites.archive')}`}</button>
+                          <Link to={`/post-sites/${s.id}`} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-muted/30"><Eye className="h-4 w-4" />{` ${t('clientPostSites.viewDetails')}`}</Link>
+                          <button onClick={() => { setArchiveTargetIds([s.id]); /* close popover visually */ (document.activeElement as HTMLElement | null)?.blur(); setSelectedIds((p) => p.filter((id) => id !== s.id)); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-muted/30"><Archive className="h-4 w-4" />{` ${t('clientPostSites.archive')}`}</button>
                         </PopoverContent>
                       </Popover>
                     </td>
@@ -217,17 +217,17 @@ export default function ClientPostSites({ client }: { client: any }) {
                       {s.status === 'active' ? (
                         <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">{t('common.active')}</span>
                       ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">{t('common.inactive')}</span>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-muted text-foreground/70 text-xs font-semibold">{t('common.inactive')}</span>
                       )}
                     </div>
                     <div className="mt-2">
                       <Popover>
                         <PopoverTrigger asChild>
-                          <button aria-label="Open menu" className="p-2 rounded-full hover:bg-gray-100"><EllipsisVertical className="h-5 w-5 text-slate-400" /></button>
+                          <button aria-label="Open menu" className="p-2 rounded-full hover:bg-muted"><EllipsisVertical className="h-5 w-5 text-muted-foreground" /></button>
                         </PopoverTrigger>
                         <PopoverContent className="w-44 p-1 rounded-md shadow-lg z-50">
-                          <Link to={`/post-sites/${s.id}`} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Eye className="h-4 w-4" />{` ${t('clientPostSites.viewDetails')}`}</Link>
-                          <button onClick={() => { setArchiveTargetIds([s.id]); (document.activeElement as HTMLElement | null)?.blur(); setSelectedIds((p) => p.filter((id) => id !== s.id)); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Archive className="h-4 w-4" />{` ${t('clientPostSites.archive')}`}</button>
+                          <Link to={`/post-sites/${s.id}`} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-muted/30"><Eye className="h-4 w-4" />{` ${t('clientPostSites.viewDetails')}`}</Link>
+                          <button onClick={() => { setArchiveTargetIds([s.id]); (document.activeElement as HTMLElement | null)?.blur(); setSelectedIds((p) => p.filter((id) => id !== s.id)); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-muted/30"><Archive className="h-4 w-4" />{` ${t('clientPostSites.archive')}`}</button>
                         </PopoverContent>
                       </Popover>
                     </div>
@@ -242,9 +242,9 @@ export default function ClientPostSites({ client }: { client: any }) {
         {archiveTargetIds.length > 0 && (
           <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="absolute inset-0 bg-black opacity-30" onClick={() => setArchiveTargetIds([])} />
-            <div className="bg-white rounded-t-lg sm:rounded-md shadow-xl p-4 sm:p-6 z-70 w-full sm:max-w-md max-h-full sm:max-h-[90vh] overflow-auto">
+            <div className="bg-card rounded-t-lg sm:rounded-md shadow-xl p-4 sm:p-6 z-70 w-full sm:max-w-md max-h-full sm:max-h-[90vh] overflow-auto">
               <h3 className="text-lg font-semibold mb-2 text-center">{t('clientPostSites.confirmArchiveTitle', { count: archiveTargetIds.length })}</h3>
-              <p className="text-sm text-gray-600 mb-4 text-center">{t('clientPostSites.confirmArchiveDescription', { count: archiveTargetIds.length })}</p>
+              <p className="text-sm text-foreground/70 mb-4 text-center">{t('clientPostSites.confirmArchiveDescription', { count: archiveTargetIds.length })}</p>
               <div className="flex justify-end gap-3">
                 <button onClick={() => setArchiveTargetIds([])} className="px-4 py-2 rounded-md border">{t('common.cancel')}</button>
                 <button onClick={async () => {

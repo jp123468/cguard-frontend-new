@@ -608,7 +608,7 @@ export default function AdminOfficeUsersPage() {
         <div className="mt-4 overflow-hidden rounded-lg border">
           <div className="md:block hidden">
             <table className="min-w-full border-collapse text-left text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted/30">
                 <tr className="border-b">
                   <th className="px-4 py-3">
                     <Checkbox disabled={!canManageUsers} checked={allOnPageSelected} onCheckedChange={(v) => handleSelectAllUsers(Boolean(v))} aria-label="Seleccionar todos" />
@@ -667,7 +667,7 @@ export default function AdminOfficeUsersPage() {
                           // archived (backend) or archivado (spanish) => show red Archivado
                           if (status === "archived" || status === "archivado") {
                             return (
-                              <Badge variant="outline" className="bg-red-50 text-red-700">
+                              <Badge variant="outline" className="bg-red-500/10 text-red-700">
                                 {t('adminOfficeUsers.statuses.archived', { defaultValue: 'Archivado' })}
                               </Badge>
                             );
@@ -675,7 +675,7 @@ export default function AdminOfficeUsersPage() {
 
                           if (status === "invited" || status === "pending") {
                             return (
-                              <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                              <Badge className="bg-yellow-500/15 text-yellow-800 hover:bg-yellow-500/15">
                                 {t('adminOfficeUsers.statuses.pending', { defaultValue: 'Pendiente' })}
                               </Badge>
                             );
@@ -683,7 +683,7 @@ export default function AdminOfficeUsersPage() {
 
                           if (u.active === false) {
                             return (
-                              <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
+                              <Badge className="bg-muted text-foreground hover:bg-muted">
                                 {t('adminOfficeUsers.statuses.inactive', { defaultValue: 'Inactivo' })}
                               </Badge>
                             );
@@ -788,14 +788,14 @@ export default function AdminOfficeUsersPage() {
               loading={false}
               emptyMessage={t('adminOfficeUsers.noData.title', { defaultValue: 'No se encontraron resultados' }) as string}
               renderCard={(u: any) => (
-                <div className="p-4 bg-white border rounded-lg">
+                <div className="p-4 bg-card border rounded-lg">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex-1">
                       <div className="text-sm font-semibold">{[u.firstName, u.lastName].filter(Boolean).join(' ') || u.name || u.email || '-'}</div>
-                      <div className="text-xs text-gray-500">{u.email || '-'}</div>
-                      <div className="text-xs text-gray-400 mt-1">{(u._rolesDisplay) || (Array.isArray(u.roles) ? u.roles.join(', ') : (u.roles || u.role || '-'))}</div>
+                      <div className="text-xs text-muted-foreground">{u.email || '-'}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{(u._rolesDisplay) || (Array.isArray(u.roles) ? u.roles.join(', ') : (u.roles || u.role || '-'))}</div>
                     </div>
-                    <div className="text-xs text-gray-500 text-right">
+                    <div className="text-xs text-muted-foreground text-right">
                       {(() => {
                         const status = (u.status || '').toString().toLowerCase();
                         if (status === 'archived' || status === 'archivado') return t('adminOfficeUsers.statuses.archived', { defaultValue: 'Archivado' });
@@ -803,7 +803,7 @@ export default function AdminOfficeUsersPage() {
                         if (u.active === false) return t('adminOfficeUsers.statuses.inactive', { defaultValue: 'Inactivo' });
                         return t('adminOfficeUsers.statuses.active', { defaultValue: 'Activo' });
                       })()}
-                      <div className="text-xs text-gray-400">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : '-'}</div>
+                      <div className="text-xs text-muted-foreground">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : '-'}</div>
                     </div>
                   </div>
                 </div>
@@ -812,7 +812,7 @@ export default function AdminOfficeUsersPage() {
           </div>
         </div>
         {/* Footer de tabla */}
-        <div className="flex items-center justify-between bg-gray-50 px-4 py-3 text-sm text-gray-600">
+        <div className="flex items-center justify-between bg-muted/30 px-4 py-3 text-sm text-foreground/70">
           <div className="flex items-center gap-2">
             <span>{t('adminOfficeUsers.footer.itemsPerPage', { defaultValue: 'Elementos por página' })}</span>
             <Select

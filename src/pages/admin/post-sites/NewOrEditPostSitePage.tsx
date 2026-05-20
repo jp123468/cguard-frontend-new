@@ -23,7 +23,7 @@ export default function NewOrEditPostSitePage() {
                 const rows = Array.isArray(data?.rows) ? data.rows : [];
                 setClients(rows.map((c: any) => ({
                     id: c.id,
-                    name: [c.name, c.lastName].filter(Boolean).join(' '),
+                    name: c.commercialName || [c.name, c.lastName].filter(Boolean).join(' '),
                 })));
             } catch (e) {
                 console.error(e);

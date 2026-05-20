@@ -149,7 +149,7 @@ export default function TenantsPage() {
                   {selectedTenant && (selectedTenant?.settings?.logos?.[0]?.publicUrl || selectedTenant?.logoUrl || selectedTenant?.logo?.publicUrl || (selectedTenant?.logoId ? `/uploads/${selectedTenant.logoId}` : undefined)) ? (
                     <img src={selectedTenant?.settings?.logos?.[0]?.publicUrl || selectedTenant?.logoUrl || selectedTenant?.logo?.publicUrl || (selectedTenant?.logoId ? `/uploads/${selectedTenant.logoId}` : undefined)} alt={selectedTenant?.name || 'logo'} className="h-12 w-12 object-contain rounded" />
                   ) : (
-                    <div className="h-12 w-12 bg-gray-100 rounded" />
+                    <div className="h-12 w-12 bg-muted rounded" />
                   )}
                 </div>
 
@@ -168,7 +168,7 @@ export default function TenantsPage() {
               {detailLoading ? (
                 <div>Cargando...</div>
               ) : selectedTenant ? (
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-foreground">
                   {/* Helper rows */}
                   {(() => {
                     const v = selectedTenant;
@@ -231,7 +231,7 @@ export default function TenantsPage() {
                         {/* Primary info: responsive grid that wraps inside modal to prevent overflow */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
                           {primary.map(([label, value]) => (
-                            <div key={String(label)} className="p-3 rounded border border-gray-100 bg-white">
+                            <div key={String(label)} className="p-3 rounded border border-border bg-card">
                               <div className="text-xs text-muted-foreground truncate">{label}</div>
                               <div className="text-sm font-medium break-words">{value == null || value === '' ? '-' : value}</div>
                             </div>
@@ -250,7 +250,7 @@ export default function TenantsPage() {
                           {v.settings && Object.keys(v.settings || {}).length > 0 && (
                             <div className="sm:col-span-2">
                               <div className="w-40 text-xs text-muted-foreground">Configuración</div>
-                              <pre className="mt-2 p-2 bg-gray-50 rounded text-xs overflow-auto">{JSON.stringify(v.settings, null, 2)}</pre>
+                              <pre className="mt-2 p-2 bg-muted/30 rounded text-xs overflow-auto">{JSON.stringify(v.settings, null, 2)}</pre>
                             </div>
                           )}
                         </div>

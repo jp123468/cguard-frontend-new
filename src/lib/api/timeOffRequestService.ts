@@ -1,0 +1,81 @@
+import api from "../api";
+
+const getTenantId = (): string => {
+  const t = localStorage.getItem("tenantId");
+  if (!t) throw new Error("Tenant ID no configurado");
+  return t;
+};
+
+const buildQuery = (params?: Record<string, any>): string => {
+  if (!params) return "";
+  const p = new URLSearchParams();
+  for (const k of Object.keys(params)) {
+    const v = params[k];
+    if (Array.isArray(v)) {
+      for (const item of v) {
+        if (item !== undefined && item !== null) p.append(`${k}[]`, String(item));
+      }
+    } else if (v !== undefined && v !== null) {
+      const s = String(v);
+      if (s.trim() !== "") p.append(k, s);
+    }
+  }
+  const s = p.toString();
+  return s ? `?${s}` : "";
+};
+
+export interface TimeOffRecord {
+  id: string;
+  requestDate: string;
+  type: string | null;
+  startDate: string | null;
+  startTime: string | null;
+  endDate: string | null;
+  endTime: string | null;
+  reason: string | null;
+  comment: string | null;
+  status: "pending" | "approved" | "rejected";
+  isPaid: boolean;
+  guardId: string | null;
+  guard: { id: string; fullName?: string; email?: string } | null;
+}
+
+export interface TimeOffCreateInput {
+  requestDate?: string;
+  type?: string;
+  startDate?: string;
+  startTime?: string;
+  endDate?: string;
+  endTime?: string;
+  reason?: string;
+  isPaid?: boolean;
+  guard?: string; // userId
+}
+
+const timeOffRequestService = {
+  async list(params?: Record<string, any>): Promise<{ rows: TimeOffRecord[]; count: number }> {
+    const tenantId = getTenantId();
+    const qs = buildQuery(params);
+    const resp = await api.get(`/tenant/${tenantId}/time-off-request${qs}`);
+    return (resp as any)?.data ?? resp;
+  },
+
+  async create(data: TimeOffCreateInput): Promise<TimeOffRecord> {
+    const tenantId = getTenantId();
+    const resp = await api.post(`/tenant/${tenantId}/time-off-request`, { data });
+    return (resp as any)?.data ?? resp;
+  },
+
+  async updateStatus(id: string, status: "pending" | "approved" | "rejected", comment?: string): Promise<TimeOffRecord> {
+    const tenantId = getTenantId();
+    const resp = await api.patch(`/tenant/${tenantId}/time-off-request/${id}/status`, { data: { status, comment } });
+    return (resp as any)?.data ?? resp;
+  },
+
+  async destroy(id: string): Promise<void> {
+    const tenantId = getTenantId();
+    await api.delete(`/tenant/${tenantId}/time-off-request/${id}`);
+  },
+};
+
+export default timeOffRequestService;

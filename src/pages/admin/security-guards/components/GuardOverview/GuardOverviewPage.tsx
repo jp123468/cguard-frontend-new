@@ -41,13 +41,13 @@ export default function GuardResumenPage() {
       <GuardsLayout navKey="keep-safe" title={t('guards.nav.resumen')}>
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">{t('guards.overview.loading')}</div>
+            <div className="text-muted-foreground">{t('guards.overview.loading')}</div>
           </div>
         ) : guard ? (
           <GuardSummary guard={guard} />
         ) : (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">{t('guards.overview.loadError')}</div>
+            <div className="text-muted-foreground">{t('guards.overview.loadError')}</div>
           </div>
         )}
       </GuardsLayout>

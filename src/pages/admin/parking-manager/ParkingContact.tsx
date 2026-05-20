@@ -115,7 +115,7 @@ export default function ParkingContact() {
 
                     <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
                         <div className="relative w-full md:w-80">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                             <Input
                                 placeholder="Buscar contacto de estacionamiento"
                                 className="pl-9"
@@ -137,7 +137,7 @@ export default function ParkingContact() {
                                     </SheetHeader>
                                     <div className="grid gap-6 py-6">
                                         <div className="flex justify-center">
-                                            <div className="h-24 w-24 bg-gray-200 rounded flex items-center justify-center text-gray-400 relative">
+                                            <div className="h-24 w-24 bg-muted rounded flex items-center justify-center text-muted-foreground relative">
                                                 <User className="h-12 w-12" />
                                                 <div className="absolute bottom-0 right-0 bg-slate-700 text-white p-1 rounded-sm">
                                                     <Upload className="h-3 w-3" />
@@ -354,12 +354,12 @@ export default function ParkingContact() {
                                 <TableHead className="w-[50px]">
                                     <Checkbox />
                                 </TableHead>
-                                <TableHead className="font-bold text-slate-700">Cliente</TableHead>
-                                <TableHead className="font-bold text-slate-700">Puesto de seguridad</TableHead>
-                                <TableHead className="font-bold text-slate-700">Nombre</TableHead>
-                                <TableHead className="font-bold text-slate-700">Apellido</TableHead>
-                                <TableHead className="font-bold text-slate-700">Número de Teléfono</TableHead>
-                                <TableHead className="font-bold text-slate-700">Correo Electrónico</TableHead>
+                                <TableHead className="font-bold text-foreground">Cliente</TableHead>
+                                <TableHead className="font-bold text-foreground">Puesto de seguridad</TableHead>
+                                <TableHead className="font-bold text-foreground">Nombre</TableHead>
+                                <TableHead className="font-bold text-foreground">Apellido</TableHead>
+                                <TableHead className="font-bold text-foreground">Número de Teléfono</TableHead>
+                                <TableHead className="font-bold text-foreground">Correo Electrónico</TableHead>
                                 <TableHead className="w-[50px]"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -367,8 +367,8 @@ export default function ParkingContact() {
                             {contacts.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={8} className="h-[400px] text-center">
-                                        <div className="flex flex-col items-center justify-center text-slate-500">
-                                            <div className="bg-blue-50 p-6 rounded-full mb-4">
+                                        <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                            <div className="bg-blue-500/10 p-6 rounded-full mb-4">
                                                 <svg
                                                     className="w-12 h-12 text-blue-200"
                                                     fill="none"
@@ -383,7 +383,7 @@ export default function ParkingContact() {
                                                     />
                                                 </svg>
                                             </div>
-                                            <h3 className="text-lg font-medium text-slate-700 mb-1">No se encontraron resultados</h3>
+                                            <h3 className="text-lg font-medium text-foreground mb-1">No se encontraron resultados</h3>
                                             <p className="text-sm max-w-xs">
                                                 No pudimos encontrar ningún elemento que coincida con su búsqueda
                                             </p>
@@ -404,7 +404,7 @@ export default function ParkingContact() {
                                         <TableCell>{contact.email}</TableCell>
                                         <TableCell>
                                             <Button variant="ghost" size="icon">
-                                                <ChevronsUpDown className="h-4 w-4 text-slate-400" />
+                                                <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
                                             </Button>
                                         </TableCell>
                                     </TableRow>

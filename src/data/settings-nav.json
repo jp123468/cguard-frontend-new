@@ -76,11 +76,6 @@
             "path": "/setting/departamentos"
           },
           {
-            "id": "impuestos",
-            "label": "Impuestos",
-            "path": "/setting/impuestos"
-          },
-          {
             "id": "roles",
             "label": "Roles de Usuario",
             "path": "/setting/roles"
@@ -149,36 +144,6 @@
             "id": "request-records",
             "label": "Solicitar registros",
             "path": "/setting/request-records"
-          }
-        ]
-      }
-    ]
-  },
-  "suscripcion": {
-    "title": "Suscripción",
-    "sections": [
-      {
-        "label": "",
-        "items": [
-          {
-            "id": "detalle",
-            "label": "Detalles de la Suscripción",
-            "path": "/billing"
-          },
-          {
-            "id": "modulos",
-            "label": "Módulos",
-            "path": "/billing-modulos"
-          },
-          {
-            "id": "metodos-pago",
-            "label": "Métodos de Pago",
-            "path": "/billing-metodos"
-          },
-          {
-            "id": "facturas",
-            "label": "Facturas",
-            "path": "/billing-facturas"
           }
         ]
       }

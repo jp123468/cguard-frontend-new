@@ -54,6 +54,10 @@ import {
   Archive,
   RotateCw,
   Trash,
+  UserPlus,
+  ShieldCheck,
+  Clock,
+  Users,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as XLSX from 'xlsx';
@@ -64,11 +68,12 @@ import securityGuardService from '@/lib/api/securityGuardService';
 import { clientService } from '@/lib/api/clientService';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { categoryService } from '@/lib/api/categoryService';
+import { stationService } from '@/lib/api/stationService';
 // Fallback local Breadcrumb component (avoid missing module error)
 interface BreadcrumbItem { label: string; path?: string; }
 const Breadcrumb: React.FC<{ items: BreadcrumbItem[] }> = ({ items }) => (
   <nav className="py-2" aria-label="breadcrumb">
-    <ol className="flex flex-wrap gap-2 text-sm text-gray-600">
+    <ol className="flex flex-wrap gap-2 text-sm text-foreground/70">
       {items.map((it, idx) => (
         <li key={idx} className="flex items-center">
           {it.path ? (
@@ -91,6 +96,7 @@ interface SecurityGuard {
   email: string;
   phone: string;
   status: GuardStatus;
+  station?: string;
   raw?: any; // Para detalles
 }
 
@@ -104,7 +110,7 @@ export default function SecurityGuardsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   // Mostrar guardias activos por defecto; el usuario puede cambiar el filtro.
-  const [filterStatus, setFilterStatus] = useState<string>("activos");
+  const [filterStatus, setFilterStatus] = useState<string>("todos");
   // Filtros adicionales (controlados) para permitir "Limpiar filtros"
   const [filterCategory, setFilterCategory] = useState<string>("todas");
   const [filterClient, setFilterClient] = useState<string>("todos");
@@ -116,6 +122,8 @@ export default function SecurityGuardsPage() {
   const [availableClients, setAvailableClients] = useState<any[]>([]);
   const [availablePostSites, setAvailablePostSites] = useState<any[]>([]);
   const [loadingFilters, setLoadingFilters] = useState(false);
+  // station lookup: userId -> stationName
+  const [stationByUserId, setStationByUserId] = useState<Record<string, string>>({});
 
   // Estado principal SIN datos de prueba
   const [guards, setGuards] = useState<SecurityGuard[]>([]);
@@ -142,6 +150,13 @@ export default function SecurityGuardsPage() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importLoading, setImportLoading] = useState(false);
+
+  // Quick-assign to station
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [assignGuard, setAssignGuard] = useState<SecurityGuard | null>(null);
+  const [assignStationId, setAssignStationId] = useState<string>("");
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [assignStations, setAssignStations] = useState<{id: string; name: string; postSiteId: string}[]>([]);
 
   // Export helpers
   function exportCSV(list: SecurityGuard[]) {
@@ -220,30 +235,91 @@ export default function SecurityGuardsPage() {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
+  // Load stations for quick-assign (actual stations, not post sites)
+  useEffect(() => {
+    const tenantId = localStorage.getItem('tenantId') || '';
+    if (!tenantId) return;
+    import('@/lib/api').then(({ default: api }) => {
+      api.get(`/tenant/${tenantId}/stations?limit=200&offset=0`)
+        .then((resp: any) => {
+          const rows: any[] = resp?.data?.rows ?? resp?.rows ?? [];
+          setAssignStations(rows.map((s: any) => ({ id: s.id, name: s.stationName || s.name || 'Estación', postSiteId: s.postSiteId || s.businessInfoId || '' })));
+        })
+        .catch(() => {});
+    });
+  }, []);
+
+  const handleQuickAssign = async () => {
+    if (!assignGuard || !assignStationId) return;
+    setAssignLoading(true);
+    try {
+      const tenantId = localStorage.getItem('tenantId') || '';
+      // raw.guard is the nested user object; raw.guardId is the user id on the securityGuard record
+      const guardUserId = assignGuard.raw?.guard?.id || assignGuard.raw?.guardId || assignGuard.raw?.userId || assignGuard.id;
+      const selectedStation = assignStations.find(s => s.id === assignStationId);
+      const postSiteId = selectedStation?.postSiteId || assignStationId;
+      console.debug('[QuickAssign] guardUserId:', guardUserId, 'stationId:', assignStationId, 'postSiteId:', postSiteId);
+      const { default: api } = await import('@/lib/api');
+      // Shift requires: postSite (businessInfoId), station (stationId), guard (userId), startTime, endTime
+      const now = new Date();
+      const startTime = now.toISOString();
+      const endTime = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 year
+      await api.post(`/tenant/${tenantId}/shift`, { data: { postSite: postSiteId, station: assignStationId, guard: guardUserId, startTime, endTime } });
+      toast.success(t('guards.list.toasts.assigned', 'Guardia asignado exitosamente'));
+      setAssignDialogOpen(false);
+      setAssignGuard(null);
+      setAssignStationId("");
+      // Refresh station lookup
+      api.get(`/tenant/${tenantId}/shift?limit=1000&offset=0`)
+        .then((resp: any) => {
+          const rows: any[] = resp?.data?.rows ?? resp?.rows ?? [];
+          const map: Record<string, string> = {};
+          for (const shift of rows) {
+            const uid = shift.guardId ?? shift.guard?.id ?? null;
+            const stationName = shift.station?.stationName ?? shift.station?.name ?? shift.stationName ?? null;
+            if (uid && stationName && !map[uid]) map[uid] = stationName;
+          }
+          setStationByUserId(map);
+        }).catch(() => {});
+    } catch (err: any) {
+      console.error(err);
+      toast.error(t('guards.list.toasts.assignError', 'Error al asignar guardia'));
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  // Load all shifts once to build guardUserId -> stationName lookup
+  useEffect(() => {
+    const tenantId = localStorage.getItem('tenantId') || '';
+    if (!tenantId) return;
+    import('@/lib/api').then(({ default: api }) => {
+      api.get(`/tenant/${tenantId}/shift?limit=1000&offset=0`)
+        .then((resp: any) => {
+          const rows: any[] = resp?.data?.rows ?? resp?.rows ?? [];
+          const map: Record<string, string> = {};
+          for (const shift of rows) {
+            const uid = shift.guardId ?? shift.guard?.id ?? null;
+            const stationName = shift.station?.stationName ?? shift.station?.name ?? shift.stationName ?? null;
+            if (uid && stationName && !map[uid]) {
+              map[uid] = stationName;
+            }
+          }
+          setStationByUserId(map);
+        })
+        .catch(() => {/* ignore */});
+    });
+  }, []);
+
   // Ejemplo de dónde cargar datos reales: carga lista desde backend cuando cambian filtros relevantes
   useEffect(() => {
     let mounted = true;
     setLoading(true);
     setError(null);
-    // Build params according to selected filterStatus so backend can return matching items
-    let params: Record<string, any> | undefined = undefined;
-    if (filterStatus === "archivados") {
-      params = { "filter[archived]": "true" };
-    } else if (filterStatus === "activos") {
-      // backend may support a status filter; try common param name
-      params = { "filter[status]": "active" };
-    } else if (filterStatus === "todos") {
-      // Request all statuses including archived: ask for ALL and archived
-      // Backend will interpret 'ALL,archived' to include both active and soft-deleted rows
-      params = { "filter[status]": "ALL,archived" };
-    } else if (filterStatus === "pendientes") {
-      params = { "filter[status]": "pending" };
-    } else if (filterStatus === "invitados") {
-      params = { "filter[status]": "invited" };
-    }
+    // Always load all guards — status tabs filter client-side for instant switching without refetch
+    const params: Record<string, any> = { "filter[status]": "ALL,archived" };
 
     // Additional filters
-    if (!params) params = {};
     if (filterCategory && filterCategory !== "todas") params["filter[categoryIds]"] = filterCategory;
     if (filterClient && filterClient !== "todos") params["filter[clientId]"] = filterClient;
     if (filterSite && filterSite !== "todos") params["filter[postSiteId]"] = filterSite;
@@ -279,13 +355,15 @@ export default function SecurityGuardsPage() {
             guardObj.phone ?? guardObj.phoneNumber ?? item.guard?.phoneNumber ?? item.phoneNumber ?? item.phone ?? item.mobile ?? "";
           const status: GuardStatus = ((): GuardStatus => {
             const s = (guardObj.status ?? item.status ?? "").toString().toLowerCase();
-            if (s === "active" || s === "activo") return "Activo";
-            if (s === "invited" || s === "invitado") return "Pendiente";
-            if (s === "pending" || s === "pendiente") return "Pendiente";
             if (s === "archived" || s === "archivado") return "Archivado";
-            if (typeof item.isOnDuty === "boolean") return item.isOnDuty ? "Activo" : "Pendiente";
-            return "Pendiente";
+            if (s === "active" || s === "activo") return "Activo";
+            if (s === "invited" || s === "invitado") return "Activo";
+            if (s === "pending" || s === "pendiente") return "Activo";
+            return "Activo";
           })();
+
+          const guardUserId = guardObj.id ?? item.guardId ?? null;
+          const station = guardUserId ? (stationByUserId[guardUserId] ?? '') : '';
 
           return {
             id,
@@ -293,6 +371,7 @@ export default function SecurityGuardsPage() {
             email,
             phone,
             status,
+            station,
             raw: item,
           };
         };
@@ -328,7 +407,7 @@ export default function SecurityGuardsPage() {
     return () => {
       mounted = false;
     };
-  }, [filterStatus, filterCategory, filterClient, filterSite, filterSkills, filterDepartment, searchQuery]);
+  }, [filterCategory, filterClient, filterSite, filterSkills, filterDepartment, searchQuery, stationByUserId]);
 
   // Load filter options when sheet opens
   useEffect(() => {
@@ -425,20 +504,20 @@ export default function SecurityGuardsPage() {
         );
       case "Pendiente":
         return (
-          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+          <Badge className="bg-yellow-500/15 text-yellow-800 hover:bg-yellow-500/15">
             Pendiente
           </Badge>
         );
       case "Invitado":
         // Backwards-compatibility: map legacy "Invitado" to "Pendiente" badge
         return (
-          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+          <Badge className="bg-yellow-500/15 text-yellow-800 hover:bg-yellow-500/15">
             Pendiente
           </Badge>
         );
       case "Archivado":
         return (
-          <Badge className="bg-gray-200 text-gray-700">
+          <Badge className="bg-muted text-foreground">
             Archivado
           </Badge>
         );
@@ -447,22 +526,89 @@ export default function SecurityGuardsPage() {
     }
   }, []);
 
+  const activeCount = useMemo(() => guards.filter(g => g.status === "Activo").length, [guards]);
+  const pendingCount = useMemo(() => guards.filter(g => g.status === "Pendiente").length, [guards]);
+  const archivedCount = useMemo(() => guards.filter(g => g.status === "Archivado").length, [guards]);
+
   return (
     <AppLayout>
-      <Breadcrumb
-        items={[
-          { label: t('sidebar.panel', 'Panel de control'), path: "/dashboard" },
-          { label: t('guards.list.pageTitle', 'Guardias') },
-        ]}
-      />
+      {/* Page Header */}
+      <div className="border-b bg-card px-6 py-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <Breadcrumb
+              items={[
+                { label: t('sidebar.panel', 'Panel de control'), path: "/dashboard" },
+                { label: t('guards.list.pageTitle', 'Guardias') },
+              ]}
+            />
+            <h1 className="mt-1 text-xl font-bold text-foreground">Guardias de Seguridad</h1>
+          </div>
+          {hasPermission('securityGuardCreate') && (
+            <Button className="shrink-0 bg-[#C8860A] hover:bg-[#B37809] text-white" asChild>
+              <Link to="/security-guards/new">
+                <UserPlus className="mr-2 h-4 w-4" />
+                {t('guards.list.newGuard', 'Nuevo Guardia')}
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+
       {error && (
-        <div className="p-4 my-2 rounded-md bg-red-50 text-red-800">
+        <div className="mx-6 mt-4 rounded-md bg-red-500/10 p-4 text-red-700">
           {t('guards.list.error.loading', 'Error cargando guardias: {{msg}}', { msg: error })}
         </div>
       )}
-      <div className="p-4">
-        <section className="">
-          {/* Acciones superiores */}
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-4 px-6 pb-2 pt-5 sm:grid-cols-4">
+        <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+          <div className="rounded-full bg-blue-500/10 p-2"><Users className="h-4 w-4 text-blue-500" /></div>
+          <div><p className="mb-1 text-xs leading-none text-muted-foreground">Total</p><p className="text-2xl font-bold text-foreground">{guards.length}</p></div>
+        </div>
+        <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+          <div className="rounded-full bg-green-500/10 p-2"><ShieldCheck className="h-4 w-4 text-green-500" /></div>
+          <div><p className="mb-1 text-xs leading-none text-muted-foreground">Activos</p><p className="text-2xl font-bold text-green-700">{activeCount}</p></div>
+        </div>
+        <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+          <div className="rounded-full bg-amber-500/10 p-2"><Clock className="h-4 w-4 text-amber-500" /></div>
+          <div><p className="mb-1 text-xs leading-none text-muted-foreground">Pendientes</p><p className="text-2xl font-bold text-amber-700">{pendingCount}</p></div>
+        </div>
+        <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+          <div className="rounded-full bg-muted p-2"><Archive className="h-4 w-4 text-muted-foreground" /></div>
+          <div><p className="mb-1 text-xs leading-none text-muted-foreground">Archivados</p><p className="text-2xl font-bold text-foreground/70">{archivedCount}</p></div>
+        </div>
+      </div>
+
+      <div className="px-6 pb-6 pt-2">
+        <section>
+          {/* Status Tabs */}
+          <div className="mb-4 flex items-center border-b">
+            {[
+              { key: 'todos', label: 'Todos', count: guards.length },
+              { key: 'activos', label: 'Activos', count: activeCount },
+              { key: 'pendientes', label: 'Pendientes', count: pendingCount },
+              { key: 'archivados', label: 'Archivados', count: archivedCount },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => { setFilterStatus(tab.key); setCurrentPage(1); }}
+                className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                  filterStatus === tab.key
+                    ? 'border-[#C8860A] text-[#C8860A]'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.label}
+                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${
+                  filterStatus === tab.key ? 'bg-amber-500/15 text-amber-700' : 'bg-muted text-muted-foreground'
+                }`}>{tab.count}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Toolbar */}
           <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <Select
@@ -529,12 +675,6 @@ export default function SecurityGuardsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-
-              {hasPermission('securityGuardCreate') && (
-                  <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" asChild>
-                  <Link to="/security-guards/new">{t('guards.list.newGuard', 'Nuevo Guardia')}</Link>
-                </Button>
-              )}
 
               {/* Filtros */}
               <Sheet open={openFilter} onOpenChange={setOpenFilter}>
@@ -635,31 +775,6 @@ export default function SecurityGuardsPage() {
                         </SelectContent>
                       </Select>
                     </div>
-
-                    <div className="space-y-2">
-                      <Label>{t('guards.list.filter.status', 'Estado*')}</Label>
-                      <Select
-                        value={filterStatus}
-                        onValueChange={(v) => {
-                          setFilterStatus(v);
-                          // Apply immediately and close the filter sheet
-                          setOpenFilter(false);
-                        }}
-                      >
-                          <SelectTrigger>
-                          <SelectValue placeholder={t('guards.list.filter.statusAllPlaceholder', 'Todos los Guardias')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todos">{t('guards.list.filter.statusAll', 'Todos los Guardias')}</SelectItem>
-                          <SelectItem value="activos">{t('guards.list.filter.statusActive', 'Activos')}</SelectItem>
-                          <SelectItem value="pendientes">{t('guards.list.filter.statusPending', 'Pendientes')}</SelectItem>
-                          <SelectItem value="archivados">{t('guards.list.filter.statusArchived', 'Archivados')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    
-
                     <Button
                       className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
                       onClick={() => {
@@ -670,7 +785,7 @@ export default function SecurityGuardsPage() {
                       {t('guards.list.applyFilters', 'Filtro')}
                     </Button>
                     <Button
-                      className="w-full bg-white text-black border hover:bg-gray-50"
+                      className="w-full bg-card text-black border hover:bg-muted/30"
                       onClick={() => {
                         // Limpiar filtros: resetear filtros controlados y mantener la hoja abierta
                         setFilterCategory("todas");
@@ -716,7 +831,7 @@ export default function SecurityGuardsPage() {
             <div className="mt-2">
               <div className="md:block hidden">
                 <table className="min-w-full text-sm text-left border-collapse">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted/30">
                 <tr className="border-b">
                   <th className="px-4 py-3">
                     <Checkbox
@@ -730,6 +845,7 @@ export default function SecurityGuardsPage() {
                   <th className="px-4 py-3 font-semibold">{t('guards.list.table.name', 'Nombre')}</th>
                   <th className="px-4 py-3 font-semibold">{t('guards.list.table.email', 'Correo Electrónico')}</th>
                   <th className="px-4 py-3 font-semibold">{t('guards.list.table.phone', 'Número de Móvil')}</th>
+                  <th className="px-4 py-3 font-semibold">{t('guards.list.table.assignment', 'Asignación')}</th>
                   <th className="px-4 py-3 font-semibold">{t('guards.list.table.status', 'Estado')}</th>
                   <th />
                 </tr>
@@ -738,7 +854,7 @@ export default function SecurityGuardsPage() {
               <tbody>
                 {paginatedGuards.length > 0 ? (
                   paginatedGuards.map((guard) => (
-                    <tr key={guard.id} className="border-b hover:bg-gray-50">
+                    <tr key={guard.id} className="border-b hover:bg-muted/30">
                       <td className="px-4 py-3">
                         <Checkbox
                           checked={selectedGuards.includes(guard.id)}
@@ -749,7 +865,7 @@ export default function SecurityGuardsPage() {
                         />
                       </td>
                       <td className="px-4 py-3 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground/70">
                           {(guard.name?.trim()?.[0] ?? "G").toUpperCase()}
                         </div>
                         <div
@@ -774,6 +890,7 @@ export default function SecurityGuardsPage() {
                       </td>
                       <td className="px-4 py-3">{guard.email}</td>
                       <td className="px-4 py-3">{guard.phone}</td>
+                      <td className="px-4 py-3 text-sm text-foreground">{guard.station || <span className="text-muted-foreground">Ninguna</span>}</td>
                       <td className="px-4 py-3">{renderStatus(guard.status)}</td>
                       <td className="px-4 py-3 text-right">
                         <DropdownMenu>
@@ -900,6 +1017,50 @@ export default function SecurityGuardsPage() {
                                     <Eye className="mr-2 h-4 w-4" /> {t('guards.list.actions.viewDetails','Ver Detalles')}
                                   </DropdownMenuItem>
                                 )}
+                                {hasPermission('securityGuardEdit') && (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setAssignGuard(guard);
+                                      setAssignStationId("");
+                                      setAssignDialogOpen(true);
+                                    }}
+                                  >
+                                    <ShieldCheck className="mr-2 h-4 w-4" /> {t('guards.list.actions.assignStation','Asignar a estación')}
+                                  </DropdownMenuItem>
+                                )}
+                                {/* Show "Reenviar Invitación" for any active guard that hasn't set up their account yet */}
+                                {(() => {
+                                  const rawStatus = guard.raw?.guard?.status || guard.raw?.status || '';
+                                  const hasPassword = guard.raw?.guard?.hasPassword;
+                                  const needsInvite = !hasPassword || rawStatus === 'invited' || rawStatus === 'pending';
+                                  if (!needsInvite) return null;
+                                  return (
+                                    <>
+                                      <DropdownMenuItem
+                                        onClick={async () => {
+                                          try {
+                                            const payload: any = {};
+                                            if (guard.raw?.guard && guard.raw.guard.id) {
+                                              payload.guard = guard.raw.guard.id;
+                                            } else if (guard.email) {
+                                              payload.contact = guard.email;
+                                            }
+                                            if (guard.id) payload.securityGuardId = guard.id;
+                                            if (guard.raw?.guard?.firstName || guard.raw?.firstName) payload.firstName = guard.raw?.guard?.firstName || guard.raw?.firstName;
+                                            if (guard.raw?.guard?.lastName || guard.raw?.lastName) payload.lastName = guard.raw?.guard?.lastName || guard.raw?.lastName;
+                                            await securityGuardService.resendInvite(payload);
+                                            toast.success(t('guards.list.toasts.inviteResent', 'Invitación reenviada'));
+                                          } catch (err) {
+                                            console.error(err);
+                                            toast.error(t('guards.list.toasts.inviteResendError', 'Error reenviando invitación'));
+                                          }
+                                        }}
+                                      >
+                                        <Send className="mr-2 h-4 w-4" /> {t('guards.list.actions.resendInvite','Reenviar Invitación')}
+                                      </DropdownMenuItem>
+                                    </>
+                                  );
+                                })()}
                                 {guard.status === "Archivado" ? (
                                   <>
                                     {hasPermission('securityGuardEdit') && (
@@ -935,6 +1096,16 @@ export default function SecurityGuardsPage() {
                                         <Archive className="mr-2 h-4 w-4" /> {t('guards.list.actions.archive','Archivar')}
                                       </DropdownMenuItem>
                                     )}
+                                    {hasPermission('securityGuardDestroy') && (
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setGuardToDelete(guard);
+                                          setDeleteDialogOpen(true);
+                                        }}
+                                      >
+                                        <Trash className="mr-2 h-4 w-4" /> {t('guards.list.actions.remove','Remover')}
+                                      </DropdownMenuItem>
+                                    )}
                                   </>
                                 )}
                               </>
@@ -946,19 +1117,31 @@ export default function SecurityGuardsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-20">
+                    <td colSpan={7} className="py-20">
                       <div className="flex flex-col items-center justify-center text-center">
-                        <img
-                          src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
-                          alt="Sin datos"
-                          className="h-36 mb-4"
-                        />
-                        <h3 className="text-lg font-semibold">
-                          {t('guards.list.empty.title', 'No se encontraron resultados')}
+                        <div className="mb-4 rounded-full bg-muted p-6">
+                          <Users className="h-10 w-10 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {filterStatus !== 'todos'
+                            ? 'Sin guardias en este estado'
+                            : 'No se encontraron guardias'}
                         </h3>
-                        <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-                          {t('guards.list.empty.description', 'No pudimos encontrar ningún elemento que coincida con su búsqueda')}
+                        <p className="mt-1 max-w-xs text-sm text-muted-foreground">
+                          {filterStatus !== 'todos'
+                            ? 'Prueba con otro filtro de estado.'
+                            : searchQuery
+                            ? 'Ningún guardia coincide con tu búsqueda.'
+                            : 'Agrega tu primer guardia para comenzar.'}
                         </p>
+                        {hasPermission('securityGuardCreate') && filterStatus === 'todos' && !searchQuery && (
+                          <Button className="mt-4 bg-[#C8860A] hover:bg-[#B37809] text-white" asChild>
+                            <Link to="/security-guards/new">
+                              <UserPlus className="mr-2 h-4 w-4" />
+                              Nuevo Guardia
+                            </Link>
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -973,14 +1156,14 @@ export default function SecurityGuardsPage() {
                   loading={false}
                   emptyMessage={t('guards.list.noData', { defaultValue: 'No guards found' }) as string}
                   renderCard={(g: any) => (
-                    <div className="p-4 bg-white border rounded-lg">
+                    <div className="p-4 bg-card border rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">{(g.name?.trim()?.[0] ?? 'G').toUpperCase()}</div>
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground/70">{(g.name?.trim()?.[0] ?? 'G').toUpperCase()}</div>
                         <div className="flex-1">
                           <div className="text-sm font-semibold">{g.name}</div>
-                          <div className="text-xs text-gray-500">{g.email}</div>
+                          <div className="text-xs text-muted-foreground">{g.email}</div>
                         </div>
-                        <div className="text-xs text-gray-500 text-right">{g.status}</div>
+                        <div className="text-xs text-muted-foreground text-right">{g.status}</div>
                       </div>
                     </div>
                   )}
@@ -989,7 +1172,7 @@ export default function SecurityGuardsPage() {
             </div>
 
             {/* Paginación (única) */}
-            <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50">
+            <div className="flex items-center justify-between px-4 py-3 text-sm text-foreground/70 bg-muted/30">
               <div className="flex items-center gap-2">
                 <span>{t('guards.list.pagination.itemsPerPage', 'Elementos por página')}</span>
                 <Select
@@ -1057,10 +1240,10 @@ export default function SecurityGuardsPage() {
             {t('guards.list.dialog.archive.description', '¿Estás seguro que deseas archivar este guardia? Esta acción se puede revertir desde el filtro.')}
           </DialogDescription>
           <div className="mt-4">
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-foreground">
               <strong>{t('guards.list.labels.name', 'Nombre')}:</strong> {guardToArchive?.name ?? "-"}
             </div>
-            <div className="text-sm text-gray-700">{guardToArchive?.email ?? ""}</div>
+            <div className="text-sm text-foreground">{guardToArchive?.email ?? ""}</div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setArchiveDialogOpen(false)} disabled={archiveLoading}>
@@ -1110,17 +1293,13 @@ export default function SecurityGuardsPage() {
             <DialogTitle>{t('guards.list.dialog.delete.title', 'Eliminar guardia permanentemente')}</DialogTitle>
           </DialogHeader>
           <DialogDescription>
-            {guardToDelete?.status === "Pendiente" ? (
-              <>{t('guards.list.dialog.delete.description.pending', 'Esta acción eliminará permanentemente al guardia pendiente. No podrá recuperarse después de eliminarlo.')}</>
-            ) : (
-              <>{t('guards.list.dialog.delete.description.default', 'Esta acción eliminará permanentemente al guardia. Asegúrate de que el guardia esté archivado y no esté en servicio.')}</>
-            )}
+            {t('guards.list.dialog.delete.description.default', 'Esta acción eliminará permanentemente al guardia y no podrá recuperarse. Si el guardia está activo, será archivado antes de ser eliminado.')}
           </DialogDescription>
           <div className="mt-4">
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-foreground">
               <strong>{t('guards.list.labels.name', 'Nombre')}:</strong> {guardToDelete?.name ?? "-"}
             </div>
-            <div className="text-sm text-gray-700">{guardToDelete?.email ?? ""}</div>
+            <div className="text-sm text-foreground">{guardToDelete?.email ?? ""}</div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleteLoading}>
@@ -1133,34 +1312,13 @@ export default function SecurityGuardsPage() {
                 setDeleteLoading(true);
                 try {
                   const realId = guardToDelete.raw?.id || guardToDelete.id;
-                  try {
-                    await securityGuardService.destroy([realId]);
-                  } catch (err: any) {
-                    const msg = (err?.message || String(err || "")).toString().toLowerCase();
-                    if (msg.includes("debe ser archivado") || msg.includes("must be archived")) {
-                      // Backend requires archived before delete — try to archive then delete
-                      try {
-                        await securityGuardService.archive([realId]);
-                        await securityGuardService.destroy([realId]);
-                      } catch (innerErr) {
-                        throw innerErr;
-                      }
-                    } else {
-                      throw err;
-                    }
-                  }
-
+                  await securityGuardService.destroy([realId]);
                   setGuards((prev) => prev.filter((g) => g.id !== guardToDelete.id));
                   toast.success(t('guards.list.toasts.deleteSuccess', 'Guardia eliminado permanentemente'));
                   setDeleteDialogOpen(false);
                 } catch (err: any) {
                   console.error("Error eliminando guardia:", err);
-                  // Show user-friendly error
-                  try {
-                    toast.error(t('guards.list.toasts.deleteError', 'No se pudo eliminar el guardia: {{msg}}', { msg: err?.message || String(err) }));
-                  } catch (e) {
-                    // ignore toast failures
-                  }
+                  toast.error(t('guards.list.toasts.deleteError', 'No se pudo eliminar el guardia: {{msg}}', { msg: err?.message || String(err) }));
                 } finally {
                   setDeleteLoading(false);
                 }
@@ -1182,10 +1340,10 @@ export default function SecurityGuardsPage() {
             {t('guards.list.dialog.restore.description', '¿Deseas restaurar este guardia? La acción lo devolverá al estado activo.')}
           </DialogDescription>
           <div className="mt-4">
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-foreground">
               <strong>{t('guards.list.labels.name', 'Nombre')}:</strong> {guardToRestore?.name ?? "-"}
             </div>
-            <div className="text-sm text-gray-700">{guardToRestore?.email ?? ""}</div>
+            <div className="text-sm text-foreground">{guardToRestore?.email ?? ""}</div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRestoreDialogOpen(false)} disabled={restoreLoading}>
@@ -1245,7 +1403,7 @@ export default function SecurityGuardsPage() {
             )}
           </DialogDescription>
           <div className="mt-4">
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-foreground">
               <strong>{t('guards.list.labels.selectedGuards', 'Guardias seleccionados')}: </strong>
               {selectedGuards.length}
             </div>
@@ -1322,12 +1480,12 @@ export default function SecurityGuardsPage() {
           }}
         >
           <div
-            className="bg-white rounded-xl shadow-xl max-w-xl w-full p-6 sm:p-10 relative border border-gray-200 animate-fade-in"
+            className="bg-card rounded-xl shadow-xl max-w-xl w-full p-6 sm:p-10 relative border border-border animate-fade-in"
             role="dialog"
             aria-modal="true"
           >
             <button
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl font-bold"
+              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground/70 text-xl font-bold"
               onClick={() => setDetailsOpen(false)}
               aria-label={t('actions.close', 'Cerrar')}
               style={{ lineHeight: 1 }}
@@ -1335,63 +1493,63 @@ export default function SecurityGuardsPage() {
               ×
             </button>
             <h2 className="text-xl sm:text-2xl font-bold mb-1 text-center">{t('guards.list.details.title', 'Detalles del Guardia')}</h2>
-            <div className="mb-4 text-xs sm:text-sm text-gray-500 text-center">{t('guards.list.details.description', 'Información detallada del guardia seleccionado.')}</div>
+            <div className="mb-4 text-xs sm:text-sm text-muted-foreground text-center">{t('guards.list.details.description', 'Información detallada del guardia seleccionado.')}</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-6">
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.firstName', 'Nombre')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.firstName ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.firstName', 'Nombre')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.guard?.firstName ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.lastName', 'Apellidos')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.lastName ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.lastName', 'Apellidos')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.guard?.lastName ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.email', 'Correo')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.email ?? detailsGuard.email ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.email', 'Correo')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.guard?.email ?? detailsGuard.email ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.phone', 'Teléfono')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guard?.phoneNumber ?? detailsGuard.phone ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.phone', 'Teléfono')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.guard?.phoneNumber ?? detailsGuard.phone ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.governmentId', 'Cédula')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.governmentId ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.governmentId', 'Cédula')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.governmentId ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.guardCredentials', 'Credencial Guardia')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.guardCredentials ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.guardCredentials', 'Credencial Guardia')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.guardCredentials ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.address', 'Dirección')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.address ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.address', 'Dirección')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.address ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.birthDate', 'Fecha de nacimiento')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.birthDate ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.birthDate', 'Fecha de nacimiento')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.birthDate ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.birthPlace', 'Lugar de nacimiento')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.birthPlace ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.birthPlace', 'Lugar de nacimiento')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.birthPlace ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.maritalStatus', 'Estado civil')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.maritalStatus ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.maritalStatus', 'Estado civil')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.maritalStatus ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.bloodType', 'Tipo de sangre')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.bloodType ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.bloodType', 'Tipo de sangre')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.bloodType ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.academicInstruction', 'Instrucción académica')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.academicInstruction ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.academicInstruction', 'Instrucción académica')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.academicInstruction ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.hiringContractDate', 'Contrato')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.hiringContractDate ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.hiringContractDate', 'Contrato')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.hiringContractDate ?? "-"}</div>
               </div>
               <div className="sm:col-span-2">
-                <div className="font-semibold text-gray-700 text-sm">{t('guards.list.details.fields.gender', 'Género')}</div>
-                <div className="text-gray-800 text-sm break-words">{detailsGuard.raw?.gender ?? "-"}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.gender', 'Género')}</div>
+                <div className="text-foreground text-sm break-words">{detailsGuard.raw?.gender ?? "-"}</div>
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-2">
@@ -1464,7 +1622,7 @@ export default function SecurityGuardsPage() {
                 id="guard-file-upload"
               />
               <label htmlFor="guard-file-upload" className="cursor-pointer block">
-                <svg className="mx-auto h-12 w-12 text-gray-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                <svg className="mx-auto h-12 w-12 text-muted-foreground mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-8m0 0l-3 3m3-3 3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className="text-sm text-muted-foreground font-medium">{importFile ? importFile.name : t('guards.list.importDialog.browsePlaceholder', 'Explorar tu archivo Excel aquí....')}</p>
@@ -1767,6 +1925,43 @@ export default function SecurityGuardsPage() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick-Assign to Station Dialog */}
+      <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Asignar a estación</DialogTitle>
+            <DialogDescription>
+              {assignGuard ? `Asignar a ${assignGuard.name} a una estación` : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label className="mb-2 block">Estación</Label>
+            <Select value={assignStationId} onValueChange={setAssignStationId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar estación" />
+              </SelectTrigger>
+              <SelectContent>
+                {assignStations.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancelar</Button>
+            </DialogClose>
+            <Button
+              className="bg-[#C8860A] hover:bg-[#B37809] text-white"
+              onClick={handleQuickAssign}
+              disabled={!assignStationId || assignLoading}
+            >
+              {assignLoading ? 'Asignando...' : 'Asignar'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </AppLayout>

@@ -114,8 +114,8 @@ const toneStyles: Record<
     border: "border-[#C8860A]/10",
   },
   slate: {
-    value: "text-slate-600",
-    title: "text-slate-700",
+    value: "text-foreground/70",
+    title: "text-foreground",
     border: "border-slate-100",
   },
 };
@@ -152,7 +152,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
           <Button
             type="button"
             variant="outline"
-            className="flex items-center gap-2 rounded-full border-[#C8860A]/30 bg-white px-4 text-sm font-semibold text-[#C8860A] hover:bg-[#C8860A]/10"
+            className="flex items-center gap-2 rounded-full border-[#C8860A]/30 bg-card px-4 text-sm font-semibold text-[#C8860A] hover:bg-[#C8860A]/10"
             onClick={() => setIsFilterOpen(true)}
           >
             <Filter className="h-4 w-4" />
@@ -163,7 +163,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-slate-50"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-card text-muted-foreground shadow-sm hover:bg-slate-50"
               >
                 <MoreVertical className="h-4 w-4" />
               </button>
@@ -184,7 +184,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
             return (
               <Card
                 key={card.id}
-                className={`h-full rounded-2xl border bg-white shadow-sm ${tone.border}`}
+                className={`h-full rounded-2xl border bg-card shadow-sm ${tone.border}`}
               >
                 <CardContent className="flex h-full flex-col justify-between p-4">
                   <div className="space-y-1">
@@ -200,9 +200,9 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
                     </p>
                   </div>
 
-                  <p className="mt-4 text-xs text-slate-500">
+                  <p className="mt-4 text-xs text-muted-foreground">
                     {card.secondaryLabel}{" "}
-                    <span className="font-semibold text-slate-700">
+                    <span className="font-semibold text-foreground">
                       {card.secondaryValue}
                     </span>
                   </p>
@@ -213,9 +213,9 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
         </div>
 
         {/* INCIDENTE PRINCIPAL + RESUMEN INFERIOR (AÑADIDO / CERRADO) */}
-        <Card className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <Card className="rounded-2xl border border-slate-200 bg-card shadow-sm">
           <CardHeader>
-            <CardTitle className="text-sm font-semibold text-slate-900">
+            <CardTitle className="text-sm font-semibold text-foreground">
               Incidente principal
             </CardTitle>
           </CardHeader>
@@ -226,10 +226,10 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
               <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
                 <span className="text-2xl">📂</span>
               </div>
-              <p className="text-sm font-semibold text-slate-800">
+              <p className="text-sm font-semibold text-foreground">
                 No se encontraron resultados
               </p>
-              <p className="max-w-xs text-xs text-slate-500">
+              <p className="max-w-xs text-xs text-muted-foreground">
                 No pudimos encontrar ningún elemento que coincida con su
                 búsqueda.
               </p>
@@ -238,21 +238,21 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
             {/* RESUMEN INFERIOR DENTRO DEL MISMO CARD */}
             <div className="grid border-t border-slate-100 text-center sm:grid-cols-2">
               <div className="flex flex-col items-center justify-center py-6">
-                <p className="text-3xl font-semibold text-slate-900">0</p>
-                <p className="text-xs text-slate-500">Añadido</p>
+                <p className="text-3xl font-semibold text-foreground">0</p>
+                <p className="text-xs text-muted-foreground">Añadido</p>
               </div>
               <div className="flex flex-col items-center justify-center border-t border-slate-100 py-6 sm:border-l sm:border-t-0">
-                <p className="text-3xl font-semibold text-slate-900">0</p>
-                <p className="text-xs text-slate-500">Cerrado</p>
+                <p className="text-3xl font-semibold text-foreground">0</p>
+                <p className="text-xs text-muted-foreground">Cerrado</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* RESUMEN DEL INCIDENTE */}
-        <Card className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <Card className="rounded-2xl border border-slate-200 bg-card shadow-sm">
           <CardHeader>
-            <CardTitle className="text-sm font-semibold text-slate-900">
+            <CardTitle className="text-sm font-semibold text-foreground">
               Resumen del incidente
             </CardTitle>
           </CardHeader>
@@ -262,9 +262,9 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
         </Card>
 
         {/* RESUMEN ESTÁNDAR */}
-        <Card className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <Card className="rounded-2xl border border-slate-200 bg-card shadow-sm">
           <CardHeader>
-            <CardTitle className="text-sm font-semibold text-slate-900">
+            <CardTitle className="text-sm font-semibold text-foreground">
               Resumen Estándar
             </CardTitle>
           </CardHeader>
@@ -274,9 +274,9 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
         </Card>
 
         {/* RESUMEN DE INFORMES (AJUSTADO COMO LA IMAGEN) */}
-        <Card className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <Card className="rounded-2xl border border-slate-200 bg-card shadow-sm">
           <CardHeader>
-            <CardTitle className="text-sm font-semibold text-slate-900">
+            <CardTitle className="text-sm font-semibold text-foreground">
               Resumen de informes
             </CardTitle>
           </CardHeader>
@@ -287,7 +287,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
               <div className="flex flex-col justify-between">
                 <div className="flex flex-1">
                   {/* Fechas */}
-                  <div className="flex flex-col justify-between text-xs text-slate-700">
+                  <div className="flex flex-col justify-between text-xs text-foreground">
                     {dates.map((date) => (
                       <span key={date}>{date}</span>
                     ))}
@@ -300,7 +300,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
                 </div>
 
                 {/* 0 al final, pegado a la línea */}
-                <div className="mt-4 flex items-center justify-end pr-6 text-xs text-slate-700">
+                <div className="mt-4 flex items-center justify-end pr-6 text-xs text-foreground">
                   <span className="mr-1">0</span>
                 </div>
               </div>
@@ -315,36 +315,36 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
                   </p>
                 </div>
 
-                <div className="col-span-4 lg:col-span-2 flex flex-col items-center justify-center rounded-2xl bg-emerald-50 py-6 text-center">
-                  <p className="text-3xl font-semibold text-emerald-700">0</p>
-                  <p className="mt-1 text-xs font-semibold text-emerald-700">
+                <div className="col-span-4 lg:col-span-2 flex flex-col items-center justify-center rounded-2xl bg-emerald-500/10 py-6 text-center">
+                  <p className="text-3xl font-semibold text-emerald-600">0</p>
+                  <p className="mt-1 text-xs font-semibold text-emerald-600">
                     Tarea
                   </p>
                 </div>
 
                 {/* fila inferior: 4 bloques pequeños */}
                 <div className="col-span-2 lg:col-span-1 flex flex-col items-center justify-center rounded-2xl bg-slate-50 py-5 text-center">
-                  <p className="text-2xl font-semibold text-slate-700">0</p>
-                  <p className="mt-1 text-xs text-slate-600">
+                  <p className="text-2xl font-semibold text-foreground">0</p>
+                  <p className="mt-1 text-xs text-foreground/70">
                     Lista de Verificación
                   </p>
                 </div>
 
                 <div className="col-span-2 lg:col-span-1 flex flex-col items-center justify-center rounded-2xl bg-slate-50 py-5 text-center">
-                  <p className="text-2xl font-semibold text-slate-700">0</p>
-                  <p className="mt-1 text-xs text-slate-600">
+                  <p className="text-2xl font-semibold text-foreground">0</p>
+                  <p className="mt-1 text-xs text-foreground/70">
                     Registros de entrada
                   </p>
                 </div>
 
                 <div className="col-span-2 lg:col-span-1 flex flex-col items-center justify-center rounded-2xl bg-slate-50 py-5 text-center">
-                  <p className="text-2xl font-semibold text-slate-700">0</p>
-                  <p className="mt-1 text-xs text-slate-600">Entrega</p>
+                  <p className="text-2xl font-semibold text-foreground">0</p>
+                  <p className="mt-1 text-xs text-foreground/70">Entrega</p>
                 </div>
 
                 <div className="col-span-2 lg:col-span-1 flex flex-col items-center justify-center rounded-2xl bg-slate-50 py-5 text-center">
-                  <p className="text-2xl font-semibold text-slate-700">0</p>
-                  <p className="mt-1 text-xs text-slate-600">
+                  <p className="text-2xl font-semibold text-foreground">0</p>
+                  <p className="mt-1 text-xs text-foreground/70">
                     Alerta de inactividad
                   </p>
                 </div>
@@ -354,9 +354,9 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
         </Card>
 
         {/* RESUMEN DE RECORRIDOS DEL SITIO */}
-        <Card className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <Card className="rounded-2xl border border-slate-200 bg-card shadow-sm">
           <CardHeader>
-            <CardTitle className="text-sm font-semibold text-slate-900">
+            <CardTitle className="text-sm font-semibold text-foreground">
               Resumen de recorridos del sitio
             </CardTitle>
           </CardHeader>
@@ -370,14 +370,14 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
       <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
         <SheetContent side="right" className="w-full max-w-md">
           <SheetHeader className="mb-4">
-            <SheetTitle className="text-base font-semibold text-slate-900">
+            <SheetTitle className="text-base font-semibold text-foreground">
               Filtros
             </SheetTitle>
           </SheetHeader>
 
           <form className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700">
+              <label className="text-xs font-medium text-foreground">
                 Cliente
               </label>
               <Select>
@@ -392,7 +392,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700">
+              <label className="text-xs font-medium text-foreground">
                 Puesto de seguridad
               </label>
               <Select>
@@ -408,7 +408,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-700">
+                <label className="text-xs font-medium text-foreground">
                   Desde la Fecha
                 </label>
                 <Input
@@ -417,7 +417,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-700">
+                <label className="text-xs font-medium text-foreground">
                   Hora
                 </label>
                 <Input
@@ -430,7 +430,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-700">
+                <label className="text-xs font-medium text-foreground">
                   Hasta la Fecha
                 </label>
                 <Input
@@ -439,7 +439,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-700">
+                <label className="text-xs font-medium text-foreground">
                   Hora
                 </label>
                 <Input

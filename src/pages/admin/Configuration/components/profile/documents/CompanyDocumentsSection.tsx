@@ -24,7 +24,7 @@ export default function CompanyDocumentsSection({ documents, onUpload, onDelete,
   };
 
   return (
-    <div className="border rounded-md p-4 bg-white mt-6">
+    <div className="border rounded-md p-4 bg-card mt-6">
       <div className="flex items-center justify-between mb-3">
         <h4 className="font-semibold text-md">Documentos Legales de la Empresa</h4>
         {canEdit && (
@@ -45,11 +45,11 @@ export default function CompanyDocumentsSection({ documents, onUpload, onDelete,
         />
       </div>
       <ul className="space-y-2">
-        {documents.length === 0 && <li className="text-xs text-gray-400">No hay documentos cargados.</li>}
+        {documents.length === 0 && <li className="text-xs text-muted-foreground">No hay documentos cargados.</li>}
         {documents.map((doc) => (
           <li key={doc.id} className="flex items-center justify-between border-b pb-1">
             <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm">{doc.name}</a>
-            <span className="text-xs text-gray-500 ml-2">{doc.type}</span>
+            <span className="text-xs text-muted-foreground ml-2">{doc.type}</span>
             {canEdit && (
               <button
                 className="ml-4 text-xs text-red-500 hover:underline"

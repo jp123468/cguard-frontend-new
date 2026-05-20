@@ -46,7 +46,7 @@ export function MultiCombobox({ value = [], onChange, placeholder = "Seleccionar
             <div className="flex gap-2 items-center overflow-x-auto pr-2">
               {selectedItems.length > 0 ? (
                 selectedItems.map((item) => (
-                  <span key={item.value} className="text-xs bg-gray-100 px-2 py-0.5 rounded whitespace-nowrap flex-shrink-0">{item.label}</span>
+                  <span key={item.value} className="text-xs bg-muted px-2 py-0.5 rounded whitespace-nowrap flex-shrink-0">{item.label}</span>
                 ))
               ) : (
                 <span className="opacity-60">{placeholder}</span>

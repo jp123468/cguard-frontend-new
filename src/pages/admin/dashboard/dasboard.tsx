@@ -31,7 +31,7 @@ function EmptyState({ title, description, alt }: { title: string; description: s
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-4">
         <svg
-          className="mx-auto h-24 w-24 text-gray-300"
+          className="mx-auto h-24 w-24 text-muted-foreground/40"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -44,8 +44,8 @@ function EmptyState({ title, description, alt }: { title: string; description: s
           />
         </svg>
       </div>
-      <h3 className="text-lg font-medium text-gray-700">{title}</h3>
-      <p className="mt-1 text-sm text-gray-500">
+      <h3 className="text-lg font-medium text-foreground">{title}</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
         {description}
       </p>
     </div>
@@ -315,7 +315,7 @@ export default function DashboardPage() {
 
             
 
-                <div className="mt-2 text-xs text-slate-600">
+                <div className="mt-2 text-xs text-muted-foreground">
                   <div>Guardias activos mostrados: {activeMarkers.length}</div>
                 </div>
               </div>
@@ -352,18 +352,18 @@ export default function DashboardPage() {
                     loading={false}
                     emptyMessage={t('dashboard.page.noTrackerData') as string}
                     renderCard={(it: any) => (
-                      <div className="p-4 bg-white border rounded-lg">
+                      <div className="p-4 bg-card border border-border rounded-lg">
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="text-sm font-semibold">{it.guard || '-'}</div>
-                            <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
+                            <div className="text-xs text-muted-foreground">{it.postSite || '-'}</div>
                           </div>
-                          <div className="text-xs text-gray-500 text-right">
+                          <div className="text-xs text-muted-foreground text-right">
                             <div>{it.lastUpdate || '-'}</div>
                             <div className="mt-1">{it.battery || '-'} • {it.speed || '-'}</div>
                           </div>
                         </div>
-                        <div className="mt-2 text-xs text-gray-600">{it.lastLocation || '-'}</div>
+                        <div className="mt-2 text-xs text-foreground/70">{it.lastLocation || '-'}</div>
                       </div>
                     )}
                   />
@@ -425,10 +425,10 @@ export default function DashboardPage() {
                     loading={false}
                     emptyMessage={t('dashboard.page.noTimeLogData') as string}
                     renderCard={(it: any) => (
-                      <div className="p-4 bg-white border rounded-lg">
+                      <div className="p-4 bg-card border border-border rounded-lg">
                         <div className="text-sm font-semibold">{it.guard || '-'}</div>
-                        <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
-                        <div className="mt-2 text-xs text-gray-600">{it.time || '-'}</div>
+                        <div className="text-xs text-muted-foreground">{it.postSite || '-'}</div>
+                        <div className="mt-2 text-xs text-foreground/70">{it.time || '-'}</div>
                       </div>
                     )}
                   />
@@ -474,10 +474,10 @@ export default function DashboardPage() {
                     loading={false}
                     emptyMessage={t('dashboard.page.noCheckInData') as string}
                     renderCard={(it: any) => (
-                      <div className="p-4 bg-white border rounded-lg">
+                      <div className="p-4 bg-card border border-border rounded-lg">
                         <div className="text-sm font-semibold">{it.guard || '-'}</div>
-                        <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
-                        <div className="mt-2 text-xs text-gray-600">{it.time || '-'}</div>
+                        <div className="text-xs text-muted-foreground">{it.postSite || '-'}</div>
+                        <div className="mt-2 text-xs text-foreground/70">{it.time || '-'}</div>
                       </div>
                     )}
                   />
@@ -520,10 +520,10 @@ export default function DashboardPage() {
                     loading={false}
                     emptyMessage={t('dashboard.page.noCheckOutData') as string}
                     renderCard={(it: any) => (
-                      <div className="p-4 bg-white border rounded-lg">
+                      <div className="p-4 bg-card border border-border rounded-lg">
                         <div className="text-sm font-semibold">{it.guard || '-'}</div>
-                        <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
-                        <div className="mt-2 text-xs text-gray-600">{it.time || '-'}</div>
+                        <div className="text-xs text-muted-foreground">{it.postSite || '-'}</div>
+                        <div className="mt-2 text-xs text-foreground/70">{it.time || '-'}</div>
                       </div>
                     )}
                   />
@@ -567,10 +567,10 @@ export default function DashboardPage() {
 
               <div className="md:hidden">
                 <MobileCardList items={[]} loading={false} emptyMessage={t('dashboard.page.noIncidentsData') as string} renderCard={(it:any) => (
-                  <div className="p-4 bg-white border rounded-lg">
+                  <div className="p-4 bg-card border border-border rounded-lg">
                     <div className="text-sm font-semibold">{it.title || '-'}</div>
-                    <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
-                    <div className="mt-2 text-xs text-gray-600">{it.date || '-'}</div>
+                    <div className="text-xs text-muted-foreground">{it.postSite || '-'}</div>
+                    <div className="mt-2 text-xs text-foreground/70">{it.date || '-'}</div>
                   </div>
                 )} />
               </div>
@@ -612,10 +612,10 @@ export default function DashboardPage() {
 
               <div className="md:hidden">
                 <MobileCardList items={[]} loading={false} emptyMessage={t('dashboard.page.noReportsData') as string} renderCard={(it:any) => (
-                  <div className="p-4 bg-white border rounded-lg">
+                  <div className="p-4 bg-card border border-border rounded-lg">
                     <div className="text-sm font-semibold">{it.report || '-'}</div>
-                    <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
-                    <div className="mt-2 text-xs text-gray-600">{it.date || '-'}</div>
+                    <div className="text-xs text-muted-foreground">{it.postSite || '-'}</div>
+                    <div className="mt-2 text-xs text-foreground/70">{it.date || '-'}</div>
                   </div>
                 )} />
               </div>
@@ -658,10 +658,10 @@ export default function DashboardPage() {
 
               <div className="md:hidden">
                 <MobileCardList items={[]} loading={false} emptyMessage={t('dashboard.page.noToursData') as string} renderCard={(it:any) => (
-                  <div className="p-4 bg-white border rounded-lg">
+                  <div className="p-4 bg-card border border-border rounded-lg">
                     <div className="text-sm font-semibold">{it.name || '-'}</div>
-                    <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
-                    <div className="mt-2 text-xs text-gray-600">{it.start || '-'} — {it.end || '-'}</div>
+                    <div className="text-xs text-muted-foreground">{it.postSite || '-'}</div>
+                    <div className="mt-2 text-xs text-foreground/70">{it.start || '-'} — {it.end || '-'}</div>
                   </div>
                 )} />
               </div>
@@ -701,10 +701,10 @@ export default function DashboardPage() {
 
               <div className="md:hidden">
                 <MobileCardList items={[]} loading={false} emptyMessage={t('dashboard.page.noScansData') as string} renderCard={(it:any) => (
-                  <div className="p-4 bg-white border rounded-lg">
+                  <div className="p-4 bg-card border border-border rounded-lg">
                     <div className="text-sm font-semibold">{it.point || '-'}</div>
-                    <div className="text-xs text-gray-500">{it.postSite || '-'}</div>
-                    <div className="mt-2 text-xs text-gray-600">{it.date || '-'}</div>
+                    <div className="text-xs text-muted-foreground">{it.postSite || '-'}</div>
+                    <div className="mt-2 text-xs text-foreground/70">{it.date || '-'}</div>
                   </div>
                 )} />
               </div>

@@ -107,12 +107,12 @@ export default function AddBranch() {
                             <div
                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 1
                                         ? "bg-blue-600 text-white"
-                                        : "bg-gray-200 text-gray-600"
+                                        : "bg-muted text-foreground/70"
                                     }`}
                             >
                                 1
                             </div>
-                            <span className={currentStep >= 1 ? "text-blue-600 font-medium" : "text-gray-600"}>
+                            <span className={currentStep >= 1 ? "text-blue-600 font-medium" : "text-foreground/70"}>
                                 Detalles de la sucursal
                             </span>
                         </div>
@@ -124,12 +124,12 @@ export default function AddBranch() {
                             <div
                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 2
                                         ? "bg-blue-600 text-white"
-                                        : "bg-gray-200 text-gray-600"
+                                        : "bg-muted text-foreground/70"
                                     }`}
                             >
                                 2
                             </div>
-                            <span className={currentStep >= 2 ? "text-blue-600 font-medium" : "text-gray-600"}>
+                            <span className={currentStep >= 2 ? "text-blue-600 font-medium" : "text-foreground/70"}>
                                 Suscripción
                             </span>
                         </div>
@@ -141,12 +141,12 @@ export default function AddBranch() {
                             <div
                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= 3
                                         ? "bg-blue-600 text-white"
-                                        : "bg-gray-200 text-gray-600"
+                                        : "bg-muted text-foreground/70"
                                     }`}
                             >
                                 3
                             </div>
-                            <span className={currentStep >= 3 ? "text-blue-600 font-medium" : "text-gray-600"}>
+                            <span className={currentStep >= 3 ? "text-blue-600 font-medium" : "text-foreground/70"}>
                                 Método de Pago
                             </span>
                         </div>

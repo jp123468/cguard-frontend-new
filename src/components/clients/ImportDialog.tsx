@@ -115,7 +115,7 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
                             id="file-upload"
                         />
                         <label htmlFor="file-upload" className="cursor-pointer block">
-                            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                            <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
                             <p className="text-sm text-muted-foreground font-medium">
                                 {file ? file.name : "Explorar tu archivo Excel aquí...."}
                             </p>

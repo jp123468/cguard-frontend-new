@@ -65,8 +65,7 @@ export const securityGuardService = {
 
   async destroy(ids: string[]) {
     const tenantId = getTenantId();
-    // Do not silence errors here; let the global interceptor show a helpful message
-    const resp = await api.delete(`/tenant/${tenantId}/security-guard`, { data: { ids } });
+    const resp = await api.delete(`/tenant/${tenantId}/security-guard`, { data: { ids }, toast: { silentError: true } } as any);
 
     return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },

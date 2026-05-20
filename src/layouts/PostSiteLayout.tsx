@@ -28,7 +28,7 @@ export default function PostSiteLayout({ title, children, site }: Props) {
         { id: 'files', label: t('postSites.Details.Files', 'Files'), path: `/post-sites/${id || ':id'}/files` },
         { id: 'assignGuards', label: t('postSites.Details.AssignGuards', 'Assign Guards'), path: `/post-sites/${id || ':id'}/assign-guards` },
         { id: 'stations', label: t('postSites.Details.Stations', 'Stations'), path: `/post-sites/${id || ':id'}/stations` },
-        { id: 'inventory', label: t('postSites.Details.Inventories', 'Inventories'), path: `/post-sites/${id || ':id'}/inventory` },
+        { id: 'inventory', label: t('postSites.Details.Inventories', 'Dotación'), path: `/post-sites/${id || ':id'}/inventory` },
         { id: 'tasks', label: t('postSites.Details.Tasks', 'Tasks'), path: `/post-sites/${id || ':id'}/tasks` },
         { id: 'siteTours', label: t('postSites.Details.SiteTours', 'Site Tours'), path: `/post-sites/${id || ':id'}/site-tours` },
         { id: 'siteTourTags', label: t('postSites.Details.SiteTourTags', 'Site Tour Tags'), path: `/post-sites/${id || ':id'}/site-tour-tags` },
@@ -123,7 +123,7 @@ export default function PostSiteLayout({ title, children, site }: Props) {
         {/* Sidebar */}
         <aside className={`shrink-0 transition-all duration-300 ${sidebarOpen ? 'w-60 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
           <div className="h-full flex flex-col">
-            <div className="bg-white border rounded-md p-4 m-3 flex-1 overflow-hidden">
+            <div className="bg-card border border-border rounded-md p-4 m-3 flex-1 overflow-hidden">
               <div className="text-lg font-semibold mb-4">{site?.businessName || site?.companyName || site?.name || title || t('postSites.postsite', 'Post Site')}</div>
               <nav className="text-base">
                 <div ref={navRef} className="max-h-[calc(100vh-120px)] overflow-y-auto pr-3 pb-20">
@@ -151,19 +151,19 @@ export default function PostSiteLayout({ title, children, site }: Props) {
                                   if (hiddenIds.includes(it.id)) {
                                     const comment = `<!-- hidden-menu: id=${it.id} label=${it.label} path=${path} -->`;
                                     return (
-                                      <li key={it.id} className="bg-white" dangerouslySetInnerHTML={{ __html: comment }} />
+                                      <li key={it.id} className="bg-card" dangerouslySetInnerHTML={{ __html: comment }} />
                                     );
                                   }
 
                                   // Render menu item normally (inventory is included in sections)
 
                                   return (
-                                    <li key={it.id} className="bg-white">
+                                    <li key={it.id} className="bg-card">
                                       <Link
                                         to={path}
                                         data-active={isActive ? 'true' : undefined}
                                         className={`flex items-center justify-between px-5 py-3 text-sm ${
-                                          isActive ? 'bg-[#C8860A]/10 text-[#C8860A] font-medium' : 'text-gray-700 hover:bg-gray-50'
+                                          isActive ? 'bg-[#C8860A]/10 text-[#C8860A] font-medium' : 'text-foreground hover:bg-accent'
                                         }`}
                                       >
                                         <span>{it.label}</span>
@@ -182,14 +182,14 @@ export default function PostSiteLayout({ title, children, site }: Props) {
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="bg-white rounded-md p-4 mb-4 flex items-center justify-between sticky top-0 z-10">
+          <div className="bg-card border-b border-border rounded-md p-4 mb-4 flex items-center justify-between sticky top-0 z-10">
             <div className="flex items-center gap-3">
-              <button onClick={() => setSidebarOpen((v) => !v)} className="text-gray-600 hover:text-gray-800 p-1">
+              <button onClick={() => setSidebarOpen((v) => !v)} className="text-muted-foreground hover:text-foreground p-1">
                 <Menu size={20} />
               </button>
-              <div className="text-sm font-medium text-gray-700">{headerLabel}</div>
+              <div className="text-sm font-medium text-foreground">{headerLabel}</div>
             </div>
-            <div className="text-sm text-gray-600" />
+            <div className="text-sm text-muted-foreground" />
           </div>
 
           <div className="pb-20">{children}</div>
@@ -219,15 +219,15 @@ const InventoryModal: React.FC<any> = ({ open, onClose, stations, selectedStatio
     <div className="fixed inset-0 z-60 flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/20 z-50" />
 
-      <div className="relative z-70 w-full sm:w-96 bg-white shadow-2xl overflow-y-auto rounded-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-6 border-b bg-white rounded-t-md">
-          <h2 className="text-lg font-semibold text-gray-800">{t('postSites.inventories.createTitle', 'Crear Inventario')}</h2>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100">✕</button>
+      <div className="relative z-70 w-full sm:w-96 bg-card shadow-2xl overflow-y-auto rounded-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-6 border-b border-border bg-card rounded-t-md">
+          <h2 className="text-lg font-semibold text-foreground">{t('postSites.inventories.createTitle', 'Crear Inventario')}</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-accent">✕</button>
         </div>
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-sm text-gray-700 mb-1">{t('postSites.inventories.selectStation', 'Seleccionar estación (opcional)')}</label>
+            <label className="block text-sm text-foreground mb-1">{t('postSites.inventories.selectStation', 'Seleccionar estación (opcional)')}</label>
             <select value={selectedStationId || ''} onChange={(e) => setSelectedStationId(e.target.value || null)} className="w-full border rounded px-3 py-2 text-sm">
               <option value="">{t('postSites.inventories.usePostsite', 'Usar puesto de seguridad (por defecto)')}</option>
               {(stations || []).map((s: any) => (
@@ -237,12 +237,12 @@ const InventoryModal: React.FC<any> = ({ open, onClose, stations, selectedStatio
           </div>
 
           <div>
-            <label className="block text-sm text-gray-700 mb-1">{t('postSites.inventories.name', 'Nombre de inventario')}<span className="text-red-500">*</span></label>
+            <label className="block text-sm text-foreground mb-1">{t('postSites.inventories.name', 'Nombre de inventario')}<span className="text-red-500">*</span></label>
             <input aria-required={true} required className="w-full border rounded px-3 py-2 text-sm" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 p-6 border-t bg-white rounded-b-md">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-card rounded-b-md">
           <button onClick={onClose} className="px-4 py-2 rounded-md border text-sm">{t('common.cancel', 'Cancelar')}</button>
           <button onClick={onCreate} disabled={creating} className="px-6 py-2 bg-[#C8860A] text-white rounded-md">{creating ? t('common.creating','Creando...') : t('postSites.inventories.create','Crear inventario')}</button>
         </div>

@@ -77,11 +77,11 @@ export default function ClientOverview({ client }: { client: any }) {
             <div>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-gray-500">{t('clients.overview.generalInfo.clientName')}</div>
+                  <div className="text-sm text-muted-foreground">{t('clients.overview.generalInfo.clientName')}</div>
                   <div className="font-medium">{c?.name} {c?.lastName || ''}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-500">{t('clients.overview.cards.postSites')}</div>
+                  <div className="text-xs text-muted-foreground">{t('clients.overview.cards.postSites')}</div>
                   <div className="font-semibold text-[#C8860A]">{postSitesCount}</div>
                 </div>
               </div>
@@ -95,88 +95,88 @@ export default function ClientOverview({ client }: { client: any }) {
           )}
         />
       </div>
-      <div className="bg-white border rounded-md p-4">
+      <div className="bg-card border rounded-md p-4">
         <h3 className="text-lg font-semibold mb-4">{t('clients.nav.overview') || 'Resumen'}</h3>
         <div className="mb-6">
           {hasCoords ? (
             <IncidentMap lat={lat} lng={lng} label={client?.name || 'Client location'} />
           ) : (
-            <div className="w-full h-64 flex items-center justify-center bg-gray-50 border border-dashed rounded-md text-gray-400">
+            <div className="w-full h-64 flex items-center justify-center bg-muted/30 border border-dashed rounded-md text-muted-foreground">
               No location data available
             </div>
           )}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 border rounded-md bg-white text-center">
-            <div className="text-sm text-gray-500">{t('clients.overview.cards.postSites')}</div>
+          <div className="p-4 border rounded-md bg-card text-center">
+            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.postSites')}</div>
             <div className="text-2xl font-bold text-[#C8860A]">{postSitesCount}</div>
           </div>
-          <div className="p-4 border rounded-md bg-white text-center">
-            <div className="text-sm text-gray-500">{t('clients.overview.cards.guardsAssigned')}</div>
+          <div className="p-4 border rounded-md bg-card text-center">
+            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.guardsAssigned')}</div>
             <div className="text-2xl font-bold text-blue-600">{guardsAssigned}</div>
           </div>
-          <div className="p-4 border rounded-md bg-white text-center">
-            <div className="text-sm text-gray-500">{t('clients.overview.cards.toursCompleted')}</div>
-            <div className="text-2xl font-bold text-gray-800">{toursCompleted}</div>
+          <div className="p-4 border rounded-md bg-card text-center">
+            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.toursCompleted')}</div>
+            <div className="text-2xl font-bold text-foreground">{toursCompleted}</div>
           </div>
-          <div className="p-4 border rounded-md bg-white text-center">
-            <div className="text-sm text-gray-500">{t('clients.overview.cards.tasksCompleted')}</div>
+          <div className="p-4 border rounded-md bg-card text-center">
+            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.tasksCompleted')}</div>
             <div className="text-2xl font-bold text-blue-600">{tasksCompleted}</div>
           </div>
-          <div className="p-4 border rounded-md bg-white text-center">
-            <div className="text-sm text-gray-500">{t('clients.overview.cards.incidents')}</div>
+          <div className="p-4 border rounded-md bg-card text-center">
+            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.incidents')}</div>
             <div className="text-2xl font-bold text-[#C8860A]">{incidents}</div>
           </div>
-          <div className="p-4 border rounded-md bg-white text-center">
-            <div className="text-sm text-gray-500">{t('clients.overview.cards.hoursWorked')}</div>
+          <div className="p-4 border rounded-md bg-card text-center">
+            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.hoursWorked')}</div>
             <div className="text-2xl font-bold text-red-500">{hoursWorked}</div>
           </div>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white border rounded-md p-4">
+        <div className="bg-card border rounded-md p-4">
           <h4 className="text-sm font-semibold mb-3">{t('clients.overview.generalInfo.title')}</h4>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-foreground/70">
             <div className="mb-3">
-              <div className="text-xs text-gray-400">{t('clients.overview.generalInfo.clientName')}</div>
+              <div className="text-xs text-muted-foreground">{t('clients.overview.generalInfo.clientName')}</div>
               <div className="font-medium">{client?.name || '-'} {client?.lastName || ''}</div>
             </div>
             <div className="mb-3">
-              <div className="text-xs text-gray-400">{t('clients.form.personType', 'Tipo de persona')}</div>
+              <div className="text-xs text-muted-foreground">{t('clients.form.personType', 'Tipo de persona')}</div>
               <div className="font-medium">{client?.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}</div>
             </div>
             <div className="mb-3">
-              <div className="text-xs text-gray-400">{client?.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</div>
+              <div className="text-xs text-muted-foreground">{client?.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</div>
               <div className="font-medium">{client?.documentNumber || '-'}</div>
             </div>
             <div className="mb-3">
-              <div className="text-xs text-gray-400">{t('clients.overview.generalInfo.address')}</div>
+              <div className="text-xs text-muted-foreground">{t('clients.overview.generalInfo.address')}</div>
               <div className="font-medium">{client?.address || '-'}</div>
             </div>
             <div>
-              <div className="text-xs text-gray-400">{t('clients.overview.generalInfo.addedOn')}</div>
+              <div className="text-xs text-muted-foreground">{t('clients.overview.generalInfo.addedOn')}</div>
               <div className="font-medium">{addedOn}</div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white border rounded-md p-4">
+        <div className="bg-card border rounded-md p-4">
           <h4 className="text-sm font-semibold mb-3">{t('clients.overview.contactDetails.title')}</h4>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-foreground/70">
             <div className="mb-3">
-              <div className="text-xs text-gray-400">{t('clients.overview.contactDetails.phoneNumber')}</div>
+              <div className="text-xs text-muted-foreground">{t('clients.overview.contactDetails.phoneNumber')}</div>
               <div className="font-medium">{client?.phoneNumber || '--'}</div>
             </div>
             <div className="mb-3">
-              <div className="text-xs text-gray-400">{t('clients.overview.contactDetails.fax')}</div>
+              <div className="text-xs text-muted-foreground">{t('clients.overview.contactDetails.fax')}</div>
               <div className="font-medium">{client?.landline || client?.faxNumber || client?.fax || '--'}</div>
             </div>
             <div className="mb-3">
-              <div className="text-xs text-gray-400">{t('clients.overview.contactDetails.email')}</div>
+              <div className="text-xs text-muted-foreground">{t('clients.overview.contactDetails.email')}</div>
               <div className="font-medium">{client?.email || '--'}</div>
             </div>
             <div>
-              <div className="text-xs text-gray-400">{t('clients.overview.contactDetails.website')}</div>
+              <div className="text-xs text-muted-foreground">{t('clients.overview.contactDetails.website')}</div>
               <div className="font-medium">{client?.website || '--'}</div>
             </div>
           </div>

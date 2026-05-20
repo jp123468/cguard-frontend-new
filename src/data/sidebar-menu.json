@@ -25,6 +25,12 @@
     "path": "/post-sites"
   },
   {
+    "id": "inventario",
+    "name": "Inventario",
+    "icon": "Package",
+    "path": "/inventory"
+  },
+  {
     "id": "projects",
     "name": "Proyectos",
     "icon": "Briefcase",
@@ -90,11 +96,6 @@
         "id": "horario",
         "name": "Horario",
         "path": "/analytics/scheduling"
-      },
-      {
-        "id": "facturador",
-        "name": "Facturador",
-        "path": "/analytics/invoicer"
       },
       {
         "id": "sitios-publicacion",
@@ -224,29 +225,6 @@
         "id": "horas-extras",
         "name": "Multiplicador de Horas Extras",
         "path": "/payroll/overtime-multiplier"
-      }
-    ]
-  },
-  {
-    "id": "facturador",
-    "name": "Facturador",
-    "icon": "Receipt",
-    "expandable": true,
-    "subItems": [
-      {
-        "id": "estimaciones",
-        "name": "Estimaciones",
-        "path": "/estimates"
-      },
-      {
-        "id": "facturas",
-        "name": "Facturas",
-        "path": "/invoices"
-      },
-      {
-        "id": "elementos",
-        "name": "Elementos",
-        "path": "/invoicer/items"
       }
     ]
   },

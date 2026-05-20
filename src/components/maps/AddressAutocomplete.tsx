@@ -104,13 +104,13 @@ export default function AddressAutocomplete({
     if (!isLoaded || !google || !showMap || !mapRef.current) return;
 
     const biz = getTenantLocation();
-    const lat = initialLat ?? biz?.lat ?? -0.2295;
-    const lng = initialLng ?? biz?.lng ?? -78.5236;
+    const lat = (Number.isFinite(initialLat) ? initialLat : undefined) ?? biz?.lat ?? -0.2295;
+    const lng = (Number.isFinite(initialLng) ? initialLng : undefined) ?? biz?.lng ?? -78.5236;
     const center = new google.maps.LatLng(lat, lng);
 
     mapInstanceRef.current = new google.maps.Map(mapRef.current, {
       center,
-      zoom: initialLat !== undefined && initialLng !== undefined ? 15 : 12,
+      zoom: Number.isFinite(initialLat) && Number.isFinite(initialLng) ? 15 : 12,
       mapTypeControl: true,
       streetViewControl: false,
       fullscreenControl: false,
@@ -252,21 +252,21 @@ export default function AddressAutocomplete({
       {/* Search row — styled like a prominent search bar */}
       <div className="flex gap-2 items-center">
         <div className="relative flex-1 min-w-0">
-          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
           <input
             ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder={placeholder}
-            className="w-full h-10 pl-9 pr-3 rounded-md border border-gray-300 bg-white text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
+            className="w-full h-10 pl-9 pr-3 rounded-md border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
           />
         </div>
         <Button
           type="button"
           variant="outline"
           onClick={handleUseCurrentLocation}
-          className="flex items-center gap-1.5 shrink-0 border-gray-300 hover:border-amber-400 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+          className="flex items-center gap-1.5 shrink-0 border-border hover:border-amber-400 hover:bg-amber-500/10 hover:text-amber-700 transition-colors"
         >
           <MapPin className="h-4 w-4" />
           <span className="hidden sm:inline text-sm">Mi ubicación</span>
@@ -274,13 +274,13 @@ export default function AddressAutocomplete({
       </div>
 
       {showMap && (
-        <div className="rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+        <div className="rounded-lg overflow-hidden border border-border shadow-sm">
           <div
             ref={mapRef}
             style={{ height: mapHeight }}
             className="w-full"
           />
-          <p className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-500 bg-gray-50 border-t border-gray-100">
+          <p className="flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground bg-muted/30 border-t border-border">
             <MapPin className="h-3 w-3 text-amber-500 shrink-0" />
             Arrastra el marcador rojo para ajustar la ubicación exacta
           </p>

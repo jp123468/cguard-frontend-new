@@ -5,61 +5,129 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus } from "lucide-react";
+import { Plus, UserCircle2, MapPin, Clock } from "lucide-react";
+import { ShiftRecord } from "@/lib/api/shiftService";
+
+function isSameDay(a: Date, b: Date) {
+    return a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate();
+}
+
+function shiftDurationHours(shift: ShiftRecord): number {
+    const ms = new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime();
+    return Math.round((ms / (1000 * 60 * 60)) * 10) / 10;
+}
 
 interface ListViewProps {
     currentDate: Date;
+    shifts?: ShiftRecord[];
+    onCreateShift?: () => void;
+    onEditShift?: (shift: ShiftRecord) => void;
 }
 
-export default function ListView({ currentDate }: ListViewProps) {
-    const startOfWeek = new Date(currentDate);
-    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay() + 1);
-
-    const weekDays = Array.from({ length: 7 }, (_, i) => {
-        const day = new Date(startOfWeek);
-        day.setDate(startOfWeek.getDate() + i);
-        return day;
+export default function ListView({ currentDate, shifts = [], onCreateShift, onEditShift }: ListViewProps) {
+    // Show 14 days starting from current date
+    const days = Array.from({ length: 14 }, (_, i) => {
+        const d = new Date(currentDate);
+        d.setDate(d.getDate() + i);
+        return d;
     });
+
+    const today = new Date();
 
     return (
         <div className="flex-1 relative">
             <div className="divide-y">
-                {weekDays.map((day, idx) => (
-                    <div
-                        key={idx}
-                        className={`p-6 ${idx % 2 === 0 ? 'bg-blue-50' : 'bg-white'}`}
-                    >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <div className="font-medium text-gray-900">
-                                    {day.toLocaleDateString('es-ES', {
-                                        weekday: 'short',
-                                        day: 'numeric',
-                                        month: 'short',
-                                        year: 'numeric'
-                                    })}
+                {days.map((day, idx) => {
+                    const dayShifts = shifts
+                        .filter(s => isSameDay(new Date(s.startTime), day))
+                        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+                    const isToday = isSameDay(day, today);
+
+                    return (
+                        <div
+                            key={idx}
+                            className={`${
+                                isToday ? 'bg-amber-500/10' : idx % 2 === 0 ? 'bg-card' : 'bg-muted/30'
+                            }`}
+                        >
+                            {/* Day header */}
+                            <div className="px-6 py-3 flex items-center gap-3 border-b border-border">
+                                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${
+                                    isToday ? 'bg-[#C8860A] text-white' : 'bg-muted text-foreground'
+                                }`}>
+                                    {day.getDate()}
                                 </div>
-                                <div className="text-sm text-blue-600 mt-1">
-                                    No se encontró el turno
+                                <div>
+                                    <div className="text-sm font-semibold text-foreground capitalize">
+                                        {day.toLocaleDateString('es-ES', { weekday: 'long', month: 'long', year: 'numeric' })}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {dayShifts.length === 0 ? 'Sin turnos' : `${dayShifts.length} turno${dayShifts.length > 1 ? 's' : ''}`}
+                                    </div>
                                 </div>
                             </div>
+
+                            {/* Shifts */}
+                            {dayShifts.length > 0 && (
+                                <div className="px-6 py-3 space-y-2">
+                                    {dayShifts.map(shift => {
+                                        const startLabel = new Date(shift.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                                        const endLabel = new Date(shift.endTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                                        const hours = shiftDurationHours(shift);
+                                        return (
+                                            <button
+                                                key={shift.id}
+                                                onClick={() => onEditShift?.(shift)}
+                                                className="w-full text-left bg-card border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow flex items-start gap-3"
+                                            >
+                                                <div className="flex-shrink-0 w-10 text-center">
+                                                    <div className="text-xs font-medium text-muted-foreground">{startLabel}</div>
+                                                    <div className="text-xs text-muted-foreground my-0.5">|</div>
+                                                    <div className="text-xs font-medium text-muted-foreground">{endLabel}</div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <UserCircle2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                                        <span className="text-sm font-semibold text-foreground">
+                                                            {shift.guard?.fullName ?? 'Turno abierto'}
+                                                        </span>
+                                                    </div>
+                                                    {shift.station && (
+                                                        <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                                                            <MapPin className="h-3 w-3" />
+                                                            <span>{shift.station.stationName}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-shrink-0 flex items-center gap-1 text-xs text-muted-foreground">
+                                                    <Clock className="h-3.5 w-3.5" />
+                                                    <span>{hours}h</span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
+            {/* FAB */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button
                         size="icon"
-                        className="absolute bottom-6 right-6 h-12 w-12 rounded-full bg-gray-700 hover:bg-gray-800 shadow-lg"
+                        className="sticky bottom-6 float-right mr-6 h-12 w-12 rounded-full bg-[#C8860A] hover:bg-[#B37809] shadow-lg"
                         title="Agregar"
                     >
                         <Plus className="h-6 w-6 text-white" />
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                    <DropdownMenuItem>Crear Turno Estándar</DropdownMenuItem>
+                <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={onCreateShift}>Crear Turno Estándar</DropdownMenuItem>
                     <DropdownMenuItem>Crear Turno Abierto</DropdownMenuItem>
                     <DropdownMenuItem>Crear Turno desde Plantilla</DropdownMenuItem>
                     <DropdownMenuItem>Crear Plantilla de Turno</DropdownMenuItem>

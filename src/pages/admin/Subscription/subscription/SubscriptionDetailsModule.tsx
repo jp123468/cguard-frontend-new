@@ -153,7 +153,7 @@ export default function SubscriptionDetailsModule() {
                     {plan === "professional" && (
                       <Badge
                         variant="secondary"
-                        className="bg-indigo-100 text-indigo-700"
+                        className="bg-indigo-500/15 text-indigo-700"
                       >
                         POPULAR
                       </Badge>

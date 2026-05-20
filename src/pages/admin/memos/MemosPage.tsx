@@ -378,8 +378,8 @@ export default function MemosPage() {
       <div className="px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Memos</h1>
-            <p className="mt-1 text-sm text-slate-500">Lista de memos del equipo de seguridad.</p>
+            <h1 className="text-2xl font-semibold text-foreground">Memos</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Lista de memos del equipo de seguridad.</p>
           </div>
           <div className="flex items-center gap-2">
             <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={() => setCreateOpen(true)}>
@@ -388,7 +388,7 @@ export default function MemosPage() {
           </div>
         </div>
 
-        <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
+        <div className="mb-4 rounded-lg border border-slate-200 bg-card p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex items-center gap-2">
               <BulkActionsSelect key={bulkKey} actions={bulkActions} onChange={handleBulkAction} />
@@ -396,7 +396,7 @@ export default function MemosPage() {
 
             <div className="flex-1 flex justify-center">
               <div className="relative w-full max-w-md">
-                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar memo..."
                   className="pl-10 w-full"
@@ -512,7 +512,7 @@ export default function MemosPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white">
+        <div className="rounded-lg border border-slate-200 bg-card">
           <DataTable<MemoItem>
             columns={columns}
             data={sortedMemos}
@@ -530,7 +530,7 @@ export default function MemosPage() {
             emptyState={
               <div className="flex flex-col items-center justify-center text-center py-16">
                 <p className="text-base font-medium">No se encontraron memos</p>
-                <p className="mt-1 text-sm text-slate-500">Ajusta la búsqueda o crea un nuevo memo.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Ajusta la búsqueda o crea un nuevo memo.</p>
               </div>
             }
           />
@@ -546,7 +546,7 @@ export default function MemosPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">Guardia</label>
+                <label className="mb-2 block text-sm font-medium text-foreground">Guardia</label>
                 <Select value={guardId} onValueChange={(value) => setGuardId(value)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecciona una guardia" />
@@ -561,7 +561,7 @@ export default function MemosPage() {
                 </Select>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">Estado</label>
+                <label className="mb-2 block text-sm font-medium text-foreground">Estado</label>
                 <Select value={wasAccepted ? 'accepted' : 'pending'} onValueChange={(value) => setWasAccepted(value === 'accepted')}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecciona el estado" />
@@ -573,11 +573,11 @@ export default function MemosPage() {
                 </Select>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">Asunto</label>
+                <label className="mb-2 block text-sm font-medium text-foreground">Asunto</label>
                 <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Descripción corta del memo" />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">Contenido</label>
+                <label className="mb-2 block text-sm font-medium text-foreground">Contenido</label>
                 <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={6} placeholder="Detalles del memo" />
               </div>
             </div>
@@ -621,24 +621,24 @@ export default function MemosPage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div>
-                <h3 className="text-sm font-medium text-slate-700">Asunto</h3>
-                <p className="mt-1 text-sm text-slate-900">{viewMemo?.subject || '-'}</p>
+                <h3 className="text-sm font-medium text-foreground">Asunto</h3>
+                <p className="mt-1 text-sm text-foreground">{viewMemo?.subject || '-'}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-slate-700">Guardia</h3>
-                <p className="mt-1 text-sm text-slate-900">{typeof viewMemo?.guardName === 'string' ? viewMemo?.guardName : viewMemo?.guardName?.name || '-'}</p>
+                <h3 className="text-sm font-medium text-foreground">Guardia</h3>
+                <p className="mt-1 text-sm text-foreground">{typeof viewMemo?.guardName === 'string' ? viewMemo?.guardName : viewMemo?.guardName?.name || '-'}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-slate-700">Creado por</h3>
-                <p className="mt-1 text-sm text-slate-900">{typeof viewMemo?.createdBy === 'string' ? viewMemo?.createdBy : viewMemo?.createdBy?.name || '-'}</p>
+                <h3 className="text-sm font-medium text-foreground">Creado por</h3>
+                <p className="mt-1 text-sm text-foreground">{typeof viewMemo?.createdBy === 'string' ? viewMemo?.createdBy : viewMemo?.createdBy?.name || '-'}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-slate-700">Fecha</h3>
-                <p className="mt-1 text-sm text-slate-900">{viewMemo?.dateTime ? new Date(viewMemo.dateTime).toLocaleString() : '-'}</p>
+                <h3 className="text-sm font-medium text-foreground">Fecha</h3>
+                <p className="mt-1 text-sm text-foreground">{viewMemo?.dateTime ? new Date(viewMemo.dateTime).toLocaleString() : '-'}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-slate-700">Contenido</h3>
-                <p className="mt-1 whitespace-pre-line text-sm text-slate-900">{viewMemo?.content || '-'}</p>
+                <h3 className="text-sm font-medium text-foreground">Contenido</h3>
+                <p className="mt-1 whitespace-pre-line text-sm text-foreground">{viewMemo?.content || '-'}</p>
               </div>
             </div>
             <DialogFooter>

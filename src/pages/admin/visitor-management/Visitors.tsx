@@ -952,7 +952,7 @@ export default function Visitors() {
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="h-9 w-9 rounded-full border-slate-200 text-slate-600"
+                                    className="h-9 w-9 rounded-full border-slate-200 text-foreground/70"
                                     type="button"
                                 >
                                     <MoreVertical className="h-4 w-4" />
@@ -983,10 +983,10 @@ export default function Visitors() {
 
                 <div className="mt-4 overflow-hidden rounded-lg border">
                     {/* Desktop table (hidden on small screens) */}
-                    <div className="bg-white border rounded p-4 md:block hidden">
+                    <div className="bg-card border rounded p-4 md:block hidden">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50 text-left text-sm text-gray-600">
+                            <table className="min-w-full divide-y divide-border">
+                                <thead className="bg-muted/30 text-left text-sm text-foreground/70">
                                     <tr>
                                         <th className="px-4 py-2">
                                             <input type="checkbox" onChange={(e) => selectAllLogs(e.target.checked)} checked={logs.length > 0 && Object.keys(selectedLogs).length > 0 && logs.every(l => selectedLogs[l.id])} />
@@ -1001,7 +1001,7 @@ export default function Visitors() {
                                         <th className="px-4 py-2 text-right" />
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-100">
+                                <tbody className="bg-card divide-y divide-border">
                                     {logsLoading ? (
                                         <tr>
                                             <td colSpan={12} className="p-6 text-center">{t('visitantes.loading') || 'Cargando...'}</td>
@@ -1048,20 +1048,20 @@ export default function Visitors() {
                     {/* Mobile list (cards) visible on small screens */}
                     <div className="md:hidden p-2 space-y-3">
                         {logsLoading ? (
-                            <div className="p-4 bg-white rounded text-center">{t('visitantes.loading') || 'Cargando...'}</div>
+                            <div className="p-4 bg-card rounded text-center">{t('visitantes.loading') || 'Cargando...'}</div>
                         ) : logs.length === 0 ? (
-                            <div className="p-4 bg-white rounded text-center text-muted-foreground">{t('visitantes.noLogs') || 'No se encontraron registros de bitácoras'}</div>
+                            <div className="p-4 bg-card rounded text-center text-muted-foreground">{t('visitantes.noLogs') || 'No se encontraron registros de bitácoras'}</div>
                         ) : (
                             logs.map((r) => (
-                                <div key={r.id} className="bg-white rounded-lg border p-3 flex flex-col gap-2">
+                                <div key={r.id} className="bg-card rounded-lg border p-3 flex flex-col gap-2">
                                     <div className="flex items-center justify-between">
                                         <div className="text-base font-medium">{r.firstName} {r.lastName}</div>
-                                        <div className="text-sm text-gray-500">{formatDateTime(r.visitDate)}</div>
+                                        <div className="text-sm text-muted-foreground">{formatDateTime(r.visitDate)}</div>
                                     </div>
-                                    <div className="text-sm text-gray-600">{t('visitantes.logTable.idNumber') || 'ID'}: {r.idNumber || '-'}</div>
-                                    <div className="text-sm text-gray-600">{t('visitantes.logTable.client') || 'Cliente'}: {getClientLabelFromRecord(r)}</div>
-                                    <div className="text-sm text-gray-600">{t('visitantes.logTable.postSite') || 'Post Site'}: {r.postSite?.companyName || r.postSite?.name || r.postSiteName || '-'}</div>
-                                    <div className="text-sm text-gray-600">{t('visitantes.logTable.station') || 'Estación'}: {r.station?.stationName || r.station?.name || r.stationName || '-'}</div>
+                                    <div className="text-sm text-foreground/70">{t('visitantes.logTable.idNumber') || 'ID'}: {r.idNumber || '-'}</div>
+                                    <div className="text-sm text-foreground/70">{t('visitantes.logTable.client') || 'Cliente'}: {getClientLabelFromRecord(r)}</div>
+                                    <div className="text-sm text-foreground/70">{t('visitantes.logTable.postSite') || 'Post Site'}: {r.postSite?.companyName || r.postSite?.name || r.postSiteName || '-'}</div>
+                                    <div className="text-sm text-foreground/70">{t('visitantes.logTable.station') || 'Estación'}: {r.station?.stationName || r.station?.name || r.stationName || '-'}</div>
                                     <div className="flex items-center justify-end mt-2 space-x-2">
                                         <Button size="sm" variant="ghost" onClick={() => viewLog(r.id)}>{t('actions.viewDetails') || 'Ver'}</Button>
                                         <Button size="sm" variant="ghost" onClick={() => markExit(r.id)} disabled={!!r.exitTime}>{t('visitantes.markExit') || 'Salida'}</Button>
@@ -1076,7 +1076,7 @@ export default function Visitors() {
 
                 <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-3">
-                        <span className="text-sm text-gray-600">{t('clients.pagination.itemsPerPage') || 'Elementos por página'}</span>
+                        <span className="text-sm text-foreground/70">{t('clients.pagination.itemsPerPage') || 'Elementos por página'}</span>
                         <select
                             className="rounded border px-2 py-1 text-sm"
                             value={logsLimit}
@@ -1090,7 +1090,7 @@ export default function Visitors() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-foreground/70">
                             {logsCount === 0
                                 ? `0 - 0 de 0`
                                 : `${Math.min(logsOffset + 1, logsCount)} - ${Math.min(logsOffset + logsLimit, logsCount)} de ${logsCount}`}
@@ -1106,7 +1106,7 @@ export default function Visitors() {
                                 ◀
                             </Button>
 
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-foreground/70">
                                 {Math.floor(logsOffset / logsLimit) + 1} / {Math.max(1, Math.ceil(logsCount / logsLimit))}
                             </div>
 
@@ -1127,9 +1127,9 @@ export default function Visitors() {
         confirmDeleteOpen && (
             <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
                 <div className="fixed inset-0 bg-black opacity-40" onClick={() => setConfirmDeleteOpen(false)} />
-                <div className="bg-white rounded-t-lg sm:rounded-lg shadow-lg w-full sm:max-w-md z-10 p-4 sm:p-6">
-                    <h3 className="text-lg font-medium text-gray-900">{t('visitantes.confirmDeleteTitle') || 'Confirmar eliminación'}</h3>
-                    <p className="mt-2 text-sm text-gray-600">{t('visitantes.confirmDeleteMessage') || `¿Estás seguro de que deseas eliminar ${confirmDeleteIds.length} registro(s)? Esta acción no se puede deshacer.`}</p>
+                <div className="bg-card rounded-t-lg sm:rounded-lg shadow-lg w-full sm:max-w-md z-10 p-4 sm:p-6">
+                    <h3 className="text-lg font-medium text-foreground">{t('visitantes.confirmDeleteTitle') || 'Confirmar eliminación'}</h3>
+                    <p className="mt-2 text-sm text-foreground/70">{t('visitantes.confirmDeleteMessage') || `¿Estás seguro de que deseas eliminar ${confirmDeleteIds.length} registro(s)? Esta acción no se puede deshacer.`}</p>
                     <div className="mt-4 flex justify-end gap-2">
                         <Button variant="ghost" onClick={() => { setConfirmDeleteOpen(false); setConfirmDeleteIds([]); }}> {t('actions.cancel') || 'Cancelar'} </Button>
                         <Button className="bg-red-600 text-white hover:bg-red-700" onClick={performDeleteConfirmed}>{t('actions.delete') || 'Eliminar'}</Button>
@@ -1146,52 +1146,52 @@ export default function Visitors() {
                 </SheetHeader>
                 <div className="mt-4 space-y-4">
                     {!selectedLog ? (
-                        <div className="text-gray-500">{t('visitantes.loading') || 'Cargando...'}</div>
+                        <div className="text-muted-foreground">{t('visitantes.loading') || 'Cargando...'}</div>
                     ) : (
                         <dl className="grid grid-cols-1 gap-3">
                             <div>
-                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.date') || 'Fecha'}</dt>
-                                <dd className="text-base text-gray-800">{formatDateTime(selectedLog.visitDate)}</dd>
+                                <dt className="text-sm text-foreground/70">{t('visitantes.logTable.date') || 'Fecha'}</dt>
+                                <dd className="text-base text-foreground">{formatDateTime(selectedLog.visitDate)}</dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.lastName') || 'Apellidos'}</dt>
-                                <dd className="text-base text-gray-800">{selectedLog.lastName || '-'}</dd>
+                                <dt className="text-sm text-foreground/70">{t('visitantes.logTable.lastName') || 'Apellidos'}</dt>
+                                <dd className="text-base text-foreground">{selectedLog.lastName || '-'}</dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.firstName') || 'Nombre'}</dt>
-                                <dd className="text-base text-gray-800">{selectedLog.firstName || '-'}</dd>
+                                <dt className="text-sm text-foreground/70">{t('visitantes.logTable.firstName') || 'Nombre'}</dt>
+                                <dd className="text-base text-foreground">{selectedLog.firstName || '-'}</dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.idNumber') || 'ID'}</dt>
-                                <dd className="text-base text-gray-800">{selectedLog.idNumber || '-'}</dd>
+                                <dt className="text-sm text-foreground/70">{t('visitantes.logTable.idNumber') || 'ID'}</dt>
+                                <dd className="text-base text-foreground">{selectedLog.idNumber || '-'}</dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.reason') || 'Motivo'}</dt>
-                                <dd className="text-base text-gray-800">{selectedLog.reason || selectedLog.visitReason || '-'}</dd>
+                                <dt className="text-sm text-foreground/70">{t('visitantes.logTable.reason') || 'Motivo'}</dt>
+                                <dd className="text-base text-foreground">{selectedLog.reason || selectedLog.visitReason || '-'}</dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.exitTime') || 'Hora de salida'}</dt>
-                                <dd className="text-base text-gray-800">{formatDateTime(selectedLog.exitTime || selectedLog.exitAt || selectedLog.leaveTime)}</dd>
+                                <dt className="text-sm text-foreground/70">{t('visitantes.logTable.exitTime') || 'Hora de salida'}</dt>
+                                <dd className="text-base text-foreground">{formatDateTime(selectedLog.exitTime || selectedLog.exitAt || selectedLog.leaveTime)}</dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.numPeople') || 'Número de personas'}</dt>
-                                <dd className="text-base text-gray-800">{selectedLog.numPeople || selectedLog.peopleCount || selectedLog.numberPeople || '-'}</dd>
+                                <dt className="text-sm text-foreground/70">{t('visitantes.logTable.numPeople') || 'Número de personas'}</dt>
+                                <dd className="text-base text-foreground">{selectedLog.numPeople || selectedLog.peopleCount || selectedLog.numberPeople || '-'}</dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.client') || 'Cliente'}</dt>
-                                <dd className="text-base text-gray-800">{getClientLabelFromRecord(selectedLog)}</dd>
+                                <dt className="text-sm text-foreground/70">{t('visitantes.logTable.client') || 'Cliente'}</dt>
+                                <dd className="text-base text-foreground">{getClientLabelFromRecord(selectedLog)}</dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.postSite') || 'Post Site'}</dt>
-                                <dd className="text-base text-gray-800">{getPostSiteLabelFromRecord(selectedLog)}</dd>
+                                <dt className="text-sm text-foreground/70">{t('visitantes.logTable.postSite') || 'Post Site'}</dt>
+                                <dd className="text-base text-foreground">{getPostSiteLabelFromRecord(selectedLog)}</dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.station') || 'Estación'}</dt>
-                                <dd className="text-base text-gray-800">{selectedLog.station?.stationName || selectedLog.station?.name || selectedLog.stationName || '-'}</dd>
+                                <dt className="text-sm text-foreground/70">{t('visitantes.logTable.station') || 'Estación'}</dt>
+                                <dd className="text-base text-foreground">{selectedLog.station?.stationName || selectedLog.station?.name || selectedLog.stationName || '-'}</dd>
                             </div>
                             <div>
-                                <dt className="text-sm text-gray-600">{t('visitantes.logTable.placeType') || 'Tipo de lugar'}</dt>
-                                <dd className="text-base text-gray-800">{selectedLog.placeType || '-'}</dd>
+                                <dt className="text-sm text-foreground/70">{t('visitantes.logTable.placeType') || 'Tipo de lugar'}</dt>
+                                <dd className="text-base text-foreground">{selectedLog.placeType || '-'}</dd>
                             </div>
                         </dl>
                     )}

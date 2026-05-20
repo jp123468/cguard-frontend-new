@@ -380,13 +380,13 @@ export default function ClientContacts({ client }: { client: any }) {
 
   return (
     <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className={`bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0 ${isCompact ? 'overflow-x-hidden' : ''}`}>
+      <div className={`bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0 ${isCompact ? 'overflow-x-hidden' : ''}`}>
         <div className="grid grid-cols-1 gap-4 md:flex md:items-center md:gap-4">
           <div className="flex-shrink-0">
             <div className="relative">
               <button
                 onClick={() => setHeaderMenuOpen(v => !v)}
-                className="px-3 py-2 border rounded-md inline-flex items-center gap-2 bg-white justify-center"
+                className="px-3 py-2 border rounded-md inline-flex items-center gap-2 bg-card justify-center"
               >
                 <span className="text-center">{t('actions.action')}</span>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -394,8 +394,8 @@ export default function ClientContacts({ client }: { client: any }) {
                 </svg>
               </button>
               {headerMenuOpen && (
-                <div className="absolute left-0 mt-2 bg-white shadow-lg rounded-md z-20 sm:w-56">
-                  <button onClick={() => setConfirmDeleteIds(selectedIds)} disabled={selectedIds.length === 0} className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-50 ${selectedIds.length === 0 ? 'text-gray-400 cursor-not-allowed' : ''}`}>{t('actions.delete')}</button>
+                <div className="absolute left-0 mt-2 bg-card shadow-lg rounded-md z-20 sm:w-56">
+                  <button onClick={() => setConfirmDeleteIds(selectedIds)} disabled={selectedIds.length === 0} className={`block w-full px-4 py-2 text-sm text-left hover:bg-muted/30 ${selectedIds.length === 0 ? 'text-muted-foreground cursor-not-allowed' : ''}`}>{t('actions.delete')}</button>
                 </div>
               )}
             </div>
@@ -403,7 +403,7 @@ export default function ClientContacts({ client }: { client: any }) {
 
           <div className="min-w-0 flex-1">
             <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-400 pointer-events-none">
+              <span className="absolute left-3 top-2 text-muted-foreground pointer-events-none">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                   <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -432,12 +432,12 @@ export default function ClientContacts({ client }: { client: any }) {
         <div className="mt-6 md:block hidden flex-1 min-h-0 overflow-y-auto overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b bg-gray-50">
+              <tr className="border-b bg-muted/30">
                 <th className="px-4 py-3 text-left"><input type="checkbox" onChange={(e) => { const checked = e.target.checked; if (checked) setSelectedIds(contacts.map(c => c.id)); else setSelectedIds([]); }} checked={selectedIds.length === contacts.length && contacts.length > 0} /></th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.contacts.contactName') || 'Name'}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.contacts.contactEmail') || 'Email'}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.contacts.contactPhone') || 'Mobile Number'}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.contacts.contactPostSites') || 'Post Site'}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.contacts.contactName') || 'Name'}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.contacts.contactEmail') || 'Email'}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.contacts.contactPhone') || 'Mobile Number'}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.contacts.contactPostSites') || 'Post Site'}</th>
                 <th className="px-4 py-3 text-left"></th>
               </tr>
             </thead>
@@ -455,36 +455,36 @@ export default function ClientContacts({ client }: { client: any }) {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">{t('clients.empty.title') || 'No results found'}</h3>
-                        <p className="text-sm text-gray-500 mt-1">{t('clients.empty.description') || "We couldn't find any items matching your search."}</p>
+                        <h3 className="text-lg font-semibold text-foreground">{t('clients.empty.title') || 'No results found'}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{t('clients.empty.description') || "We couldn't find any items matching your search."}</p>
                       </div>
                     </div>
                   </td>
                 </tr>
               ) : filtered.map(c => (
-                <tr key={c.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-700"><input type="checkbox" checked={selectedIds.includes(c.id)} onChange={() => toggleSelect(c.id)} /></td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{c.name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{c.email || '-'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{c.mobile || '-'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{resolvePostSiteLabel(c)}</td>
+                <tr key={c.id} className="border-b hover:bg-muted/30">
+                  <td className="px-4 py-3 text-sm text-foreground"><input type="checkbox" checked={selectedIds.includes(c.id)} onChange={() => toggleSelect(c.id)} /></td>
+                  <td className="px-4 py-3 text-sm text-foreground">{c.name}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{c.email || '-'}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{c.mobile || '-'}</td>
+                  <td className="px-4 py-3 text-sm text-foreground">{resolvePostSiteLabel(c)}</td>
                   <td key={`actions-${c.id}`} className="text-right pr-4">
                     <div className="relative inline-block">
                       <button
                         onClick={() => setOpenMenuId(prev => (prev === c.id ? null : c.id))}
                         aria-expanded={openMenuId === c.id}
                         aria-controls={`actions-${c.id}-menu`}
-                        className={`${isCompact ? 'p-1' : 'p-2'} rounded-full hover:bg-gray-100 focus:outline-none`}
+                        className={`${isCompact ? 'p-1' : 'p-2'} rounded-full hover:bg-muted focus:outline-none`}
                         title="Actions"
                       >
                         <EllipsisVertical size={isCompact ? 14 : 18} />
                       </button>
 
                       {openMenuId === c.id && (
-                        <div id={`actions-${c.id}-menu`} className="absolute right-0 mt-2 w-36 bg-white border rounded-md shadow-lg z-50">
+                        <div id={`actions-${c.id}-menu`} className="absolute right-0 mt-2 w-36 bg-card border rounded-md shadow-lg z-50">
                           <button
                             onClick={() => { setForm(c); setShowAdd(true); setOpenMenuId(null); }}
-                            className={`w-full flex items-center justify-start gap-2 px-3 py-2 hover:bg-gray-50 focus:outline-none`}
+                            className={`w-full flex items-center justify-start gap-2 px-3 py-2 hover:bg-muted/30 focus:outline-none`}
                             aria-label={t('actions.edit')}
                             title={t('actions.edit')}
                           >
@@ -493,7 +493,7 @@ export default function ClientContacts({ client }: { client: any }) {
                           </button>
                           <button
                             onClick={() => { setConfirmDeleteIds([c.id]); setOpenMenuId(null); }}
-                            className={`w-full flex items-center justify-start gap-2 px-3 py-2 text-red-600 hover:bg-gray-50 focus:outline-none`}
+                            className={`w-full flex items-center justify-start gap-2 px-3 py-2 text-red-600 hover:bg-muted/30 focus:outline-none`}
                             aria-label={t('actions.delete')}
                             title={t('actions.delete')}
                           >
@@ -539,26 +539,26 @@ export default function ClientContacts({ client }: { client: any }) {
       {showAdd && (
         <div className={`fixed inset-0 z-50 flex ${isCompact ? 'items-end' : 'items-center'} justify-center`}> 
           <div className="absolute inset-0 bg-black opacity-30 z-40" onClick={handleCloseAdd} />
-          <div className={`relative w-full sm:ml-auto sm:w-96 bg-white rounded-t-lg sm:rounded-md ${isCompact ? 'h-auto p-4 pb-6 max-h-[90vh]' : 'h-auto p-6 pb-24 max-h-[92vh]'} shadow-xl overflow-auto z-50`} onClick={e => e.stopPropagation()}>
+          <div className={`relative w-full sm:ml-auto sm:w-96 bg-card rounded-t-lg sm:rounded-md ${isCompact ? 'h-auto p-4 pb-6 max-h-[90vh]' : 'h-auto p-6 pb-24 max-h-[92vh]'} shadow-xl overflow-auto z-50`} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{form && (form as any).id ? t('clients.contacts.editcontact') : t('clients.contacts.form.AddClientContact')}</h3>
-              <button onClick={handleCloseAdd} className="text-gray-500 hover:text-gray-700">✕</button>
+              <button onClick={handleCloseAdd} className="text-muted-foreground hover:text-foreground">✕</button>
             </div>
             <div className={`overflow-auto pr-2 pb-20 ${isCompact ? '' : 'max-h-[calc(92vh-220px)]'}`}>
               <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">{t('clients.contacts.form.Name')}</label>
+                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Name')}</label>
                 <input aria-invalid={!!errors.name} className="w-full border rounded-md h-10 px-3" value={form.name || ''} onChange={e => handleChange('name', e.target.value)} />
                 {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">{t('clients.contacts.form.Email')}</label>
+                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Email')}</label>
                 <input aria-invalid={!!errors.email} className="w-full border rounded-md h-10 px-3" value={form.email || ''} onChange={e => handleChange('email', e.target.value)} />
                 {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
               </div>
             </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">{t('clients.contacts.form.Mobile Number')}</label>
+                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Mobile Number')}</label>
                 <div aria-invalid={!!errors.mobile}>
                   {/* Cast props to any to accommodate differing PhoneInputProps signature */}
                   <PhoneInput
@@ -579,12 +579,12 @@ export default function ClientContacts({ client }: { client: any }) {
                 {errors.mobile && <p className="text-xs text-red-600 mt-1">{errors.mobile}</p>}
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">{t('clients.contacts.form.Description')}</label>
+                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Description')}</label>
                 <textarea className="w-full border rounded-md px-3 py-2 min-h-[90px]" value={(form as any).description || ''} onChange={e => handleChange('description', e.target.value)} placeholder={t('clients.contacts.form.descriptioninput', 'Enter - description')} rows={6} />
 
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">{t('clients.contacts.form.AssignPostSite')}</label>
+                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.AssignPostSite')}</label>
                 <select
                   className="w-full border rounded-md h-10 px-3"
                   value={typeof form.postSite === 'string' ? form.postSite : (form.postSite && (form.postSite as any).id ? String((form.postSite as any).id) : '')}
@@ -598,7 +598,7 @@ export default function ClientContacts({ client }: { client: any }) {
               </div>
               <div className="flex items-center gap-2">
                 <input id="allowGuard" type="checkbox" className="h-4 w-4" checked={!!(form as any).allowGuard} onChange={e => handleChange('allowGuard', e.target.checked)} />
-                <label htmlFor="allowGuard" className="text-sm text-gray-700">{t('clients.contacts.form.checkbox')}</label>
+                <label htmlFor="allowGuard" className="text-sm text-foreground">{t('clients.contacts.form.checkbox')}</label>
               </div>
             </div>
 
@@ -619,10 +619,10 @@ export default function ClientContacts({ client }: { client: any }) {
       {confirmDeleteIds.length > 0 && (
         <div className="fixed inset-0 z-60 flex items-center justify-center">
           <div className="absolute inset-0 bg-black opacity-30" onClick={() => setConfirmDeleteIds([])} />
-          <div className="bg-white rounded-md shadow-xl p-6 z-70 w-full max-w-md">
+          <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-2 text-center">{t('clients.contacts.confirmDeleteTitle', 'Delete contact(s)?')}</h3>
-            <p className="text-sm text-gray-600 mb-2 text-center">{confirmNames.join(', ')}</p>
-            <p className="text-sm text-gray-600 mb-4">{t('clients.contacts.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected contact(s)? This action cannot be undone.')}</p>
+            <p className="text-sm text-foreground/70 mb-2 text-center">{confirmNames.join(', ')}</p>
+            <p className="text-sm text-foreground/70 mb-4">{t('clients.contacts.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected contact(s)? This action cannot be undone.')}</p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setConfirmDeleteIds([])} className="px-4 py-2 rounded-md border">{t('actions.cancel') || 'Cancel'}</button>
               <button

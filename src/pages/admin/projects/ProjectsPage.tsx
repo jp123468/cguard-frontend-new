@@ -213,7 +213,7 @@ export default function ProjectsPage() {
         {/* Table */}
         <div className="mt-4 border rounded-lg overflow-hidden">
           <table className="min-w-full text-sm text-left">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted/30">
               <tr className="border-b">
                 <th className="px-4 py-3 font-semibold">Proyecto</th>
                 <th className="px-4 py-3 font-semibold">Tipo</th>
@@ -227,7 +227,7 @@ export default function ProjectsPage() {
             <tbody>
               {!loading && projects.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-20 text-center text-gray-500">
+                  <td colSpan={7} className="py-20 text-center text-muted-foreground">
                     No se encontraron proyectos
                   </td>
                 </tr>
@@ -238,27 +238,27 @@ export default function ProjectsPage() {
                   ? (p.clientAccount.commercialName || [p.clientAccount.name, p.clientAccount.lastName].filter(Boolean).join(' '))
                   : '-';
                 return (
-                  <tr key={p.id} className="border-b hover:bg-gray-50">
+                  <tr key={p.id} className="border-b hover:bg-muted/30">
                     <td className="px-4 py-3 font-medium max-w-[200px]">
                       <div className="truncate">{p.name}</div>
                       {p.location && (
-                        <div className="text-xs text-gray-500 truncate mt-0.5">{p.location}</div>
+                        <div className="text-xs text-muted-foreground truncate mt-0.5">{p.location}</div>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       <ProjectTypeBadge value={p.type} />
                     </td>
-                    <td className="px-4 py-3 text-gray-700">{clientLabel}</td>
-                    <td className="px-4 py-3 text-gray-600">{p.startDate ?? '-'}</td>
-                    <td className="px-4 py-3 text-gray-600">{p.endDate ?? '-'}</td>
+                    <td className="px-4 py-3 text-foreground">{clientLabel}</td>
+                    <td className="px-4 py-3 text-foreground/70">{p.startDate ?? '-'}</td>
+                    <td className="px-4 py-3 text-foreground/70">{p.endDate ?? '-'}</td>
                     <td className="px-4 py-3">
                       <ProjectStatusBadge value={p.status} />
                     </td>
                     <td className="px-4 py-3 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="p-1.5 rounded hover:bg-gray-100">
-                            <EllipsisVertical className="h-4 w-4 text-gray-500" />
+                          <button className="p-1.5 rounded hover:bg-muted">
+                            <EllipsisVertical className="h-4 w-4 text-muted-foreground" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
@@ -288,7 +288,7 @@ export default function ProjectsPage() {
 
         {/* Pagination */}
         {totalCount > 0 && (
-          <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
+          <div className="mt-3 flex items-center justify-between text-sm text-foreground/70">
             <span>Mostrando {from}–{to} de {totalCount}</span>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>

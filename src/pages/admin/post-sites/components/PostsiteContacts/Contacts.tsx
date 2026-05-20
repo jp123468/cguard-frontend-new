@@ -275,14 +275,14 @@ export default function PostSiteContacts({ site }: { site?: any }) {
 
   return (
     <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
+      <div className="bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center w-full">
             <div className="flex-shrink-0">
               <div className="relative">
                 <button
                   onClick={() => setHeaderMenuOpen(v => !v)}
-                  className="px-3 py-2 border rounded-md inline-flex items-center gap-2 bg-white"
+                  className="px-3 py-2 border rounded-md inline-flex items-center gap-2 bg-card"
                 >
                   <span>{t('actions.action')}</span>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -290,15 +290,15 @@ export default function PostSiteContacts({ site }: { site?: any }) {
                   </svg>
                 </button>
                 {headerMenuOpen && (
-                  <div className="absolute mt-2 bg-white shadow-lg rounded-md z-20">
-                    <button onClick={deleteSelected} className="block px-4 py-2 text-sm hover:bg-gray-50">{t('actions.delete')}</button>
+                  <div className="absolute mt-2 bg-card shadow-lg rounded-md z-20">
+                    <button onClick={deleteSelected} className="block px-4 py-2 text-sm hover:bg-muted/30">{t('actions.delete')}</button>
                   </div>
                 )}
               </div>
             </div>
             <div className="flex-1 flex justify-center">
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                     <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -330,12 +330,12 @@ export default function PostSiteContacts({ site }: { site?: any }) {
           <div className="md:block hidden overflow-x-auto">
             <table className="min-w-full table-auto">
             <thead>
-              <tr className="border-b bg-gray-50">
+              <tr className="border-b bg-muted/30">
                 <th className="px-4 py-3 text-left">
                   <input type="checkbox" onChange={(e) => { const checked = e.target.checked; if (checked) setSelectedIds(contacts.map(c => c.id)); else setSelectedIds([]); }} checked={selectedIds.length === contacts.length && contacts.length > 0} /></th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.contacts.contactName') || 'Name'}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.contacts.contactEmail') || 'Email'}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.contacts.contactPhone') || 'Mobile Number'}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.contacts.contactName') || 'Name'}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.contacts.contactEmail') || 'Email'}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.contacts.contactPhone') || 'Mobile Number'}</th>
                 <th className="px-4 py-3 text-left"></th>
               </tr>
             </thead>
@@ -353,8 +353,8 @@ export default function PostSiteContacts({ site }: { site?: any }) {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">{t('clients.empty.title') || 'No results found'}</h3>
-                        <p className="text-sm text-gray-500 mt-1">{t('clients.empty.description') || "We couldn't find any items matching your search."}</p>
+                        <h3 className="text-lg font-semibold text-foreground">{t('clients.empty.title') || 'No results found'}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{t('clients.empty.description') || "We couldn't find any items matching your search."}</p>
                       </div>
                     </div>
                   </td>
@@ -363,7 +363,7 @@ export default function PostSiteContacts({ site }: { site?: any }) {
                 <tr key={c.id} className="border-t">
                   <td className="px-4 py-3"><input type="checkbox" checked={selectedIds.includes(c.id)} onChange={() => toggleSelect(c.id)} /></td>
                   <td className="px-4 py-3">
-                    <div className="text-sm font-medium text-gray-800">{c.name}</div>
+                    <div className="text-sm font-medium text-foreground">{c.name}</div>
                   </td>
                   <td className="px-4 py-3">{c.email || '-'}</td>
                   <td className="px-4 py-3">{c.mobile || '-'}</td>
@@ -373,17 +373,17 @@ export default function PostSiteContacts({ site }: { site?: any }) {
                         onClick={() => setOpenMenuId(prev => (prev === c.id ? null : c.id))}
                         aria-expanded={openMenuId === c.id}
                         aria-controls={`actions-${c.id}-menu`}
-                        className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+                        className="p-2 rounded-full hover:bg-muted focus:outline-none"
                         title={t('actions.action') || 'Actions'}
                       >
                         <EllipsisVertical size={18} />
                       </button>
 
                       {openMenuId === c.id && (
-                        <div id={`actions-${c.id}-menu`} className="absolute right-0 mt-2 w-36 bg-white border rounded-md shadow-lg z-50">
+                        <div id={`actions-${c.id}-menu`} className="absolute right-0 mt-2 w-36 bg-card border rounded-md shadow-lg z-50">
                           <button
                             onClick={() => { setForm(c); setShowAdd(true); setOpenMenuId(null); }}
-                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 focus:outline-none"
+                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/30 focus:outline-none"
                             aria-label="Edit"
                             title={t('actions.edit') || 'Edit'}
                           >
@@ -392,7 +392,7 @@ export default function PostSiteContacts({ site }: { site?: any }) {
                           </button>
                           <button
                             onClick={() => { setConfirmDeleteIds([c.id]); setOpenMenuId(null); }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-gray-50 focus:outline-none"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-muted/30 focus:outline-none"
                             aria-label="Delete"
                             title={t('actions.delete') || 'Delete'}
                           >
@@ -414,15 +414,15 @@ export default function PostSiteContacts({ site }: { site?: any }) {
               items={filtered}
               loading={loading}
               renderCard={(c: Contact) => (
-                <div className="p-4 bg-white border rounded-lg">
+                <div className="p-4 bg-card border rounded-lg">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="text-sm font-semibold">{c.name}</div>
-                      <div className="text-xs text-gray-500">{c.email || '-'}</div>
-                      <div className="text-xs text-gray-500">{c.mobile || '-'}</div>
+                      <div className="text-xs text-muted-foreground">{c.email || '-'}</div>
+                      <div className="text-xs text-muted-foreground">{c.mobile || '-'}</div>
                     </div>
                     <div className="flex-shrink-0">
-                      <button onClick={() => { setForm(c); setShowAdd(true); }} className="px-3 py-2 bg-gray-100 rounded-md text-sm">Edit</button>
+                      <button onClick={() => { setForm(c); setShowAdd(true); }} className="px-3 py-2 bg-muted rounded-md text-sm">Edit</button>
                     </div>
                   </div>
                 </div>
@@ -435,25 +435,25 @@ export default function PostSiteContacts({ site }: { site?: any }) {
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center">
           <div className="absolute inset-0 bg-black opacity-30 z-40" onClick={handleCloseAdd} />
-          <div className="w-full sm:ml-auto sm:w-96 bg-white h-full sm:h-auto shadow-xl p-6 overflow-auto z-50 rounded-t-lg sm:rounded-md" onClick={e => e.stopPropagation()}>
+          <div className="w-full sm:ml-auto sm:w-96 bg-card h-full sm:h-auto shadow-xl p-6 overflow-auto z-50 rounded-t-lg sm:rounded-md" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{t('clients.contacts.form.AddClientContact') || 'Add Contact to Post Site'}</h3>
-              <button onClick={handleCloseAdd} className="text-gray-500 hover:text-gray-700">✕</button>
+              <button onClick={handleCloseAdd} className="text-muted-foreground hover:text-foreground">✕</button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">{t('clients.contacts.form.Name')}</label>
+                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Name')}</label>
                 <input className="w-full border rounded-md h-10 px-3" value={form.name || ''} onChange={e => handleChange('name', e.target.value)} />
                 {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">{t('clients.contacts.form.Email')}</label>
+                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Email')}</label>
                 <input className="w-full border rounded-md h-10 px-3" value={form.email || ''} onChange={e => handleChange('email', e.target.value)} />
                 {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">{t('clients.contacts.form.Mobile Number')}</label>
+                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Mobile Number')}</label>
                 <div aria-invalid={!!errors.mobile}>
                   <PhoneInput
                     value={form.mobile || ''}
@@ -464,16 +464,16 @@ export default function PostSiteContacts({ site }: { site?: any }) {
                 {errors.mobile && <p className="text-xs text-red-600 mt-1">{errors.mobile}</p>}
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">{t('clients.contacts.form.Description')}</label>
+                <label className="block text-sm text-foreground/70 mb-1">{t('clients.contacts.form.Description')}</label>
                 <textarea className="w-full border rounded-md px-3 py-2 min-h-[90px]" value={(form as any).description || ''} onChange={e => handleChange('description', e.target.value)} />
               </div>
               <div className="flex items-center gap-2">
                 <input id="allowGuard" type="checkbox" className="h-4 w-4" checked={!!(form as any).allowGuard} onChange={e => handleChange('allowGuard', e.target.checked)} />
-                <label htmlFor="allowGuard" className="text-sm text-gray-700">{t('clients.contacts.form.checkbox') || 'Allow guard to view contact'}</label>
+                <label htmlFor="allowGuard" className="text-sm text-foreground">{t('clients.contacts.form.checkbox') || 'Allow guard to view contact'}</label>
               </div>
             </div>
 
-            <div className="mt-4 sm:mt-6 sticky bottom-0 bg-white pt-4 z-10">
+            <div className="mt-4 sm:mt-6 sticky bottom-0 bg-card pt-4 z-10">
               <div className="flex justify-end gap-2">
                 <button
                   onClick={handleAdd}
@@ -491,9 +491,9 @@ export default function PostSiteContacts({ site }: { site?: any }) {
       {confirmDeleteIds.length > 0 && (
         <div className="fixed inset-0 z-60 flex items-center justify-center">
           <div className="absolute inset-0 bg-black opacity-30" onClick={() => setConfirmDeleteIds([])} />
-          <div className="bg-white rounded-md shadow-xl p-6 z-70 w-full max-w-md">
+          <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-2">{t('clients.contacts.confirmDeleteTitle') || 'Confirm delete'}</h3>
-            <p className="text-sm text-gray-600 mb-4">{t('clients.contacts.confirmDeleteMessage') || 'Are you sure you want to delete the selected contact(s)?'}</p>
+            <p className="text-sm text-foreground/70 mb-4">{t('clients.contacts.confirmDeleteMessage') || 'Are you sure you want to delete the selected contact(s)?'}</p>
             <div className="flex justify-end gap-2">
               <button onClick={() => setConfirmDeleteIds([])} className="px-4 py-2 border rounded-md">{t('actions.cancel') || 'Cancel'}</button>
               <button

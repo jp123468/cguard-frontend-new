@@ -140,8 +140,8 @@ export default function TimeRecorder() {
       <div className="p-4 space-y-4">
         {/* Estadísticas (toggleable) */}
         {showStats && (
-          <section className="border rounded-2xl bg-white px-6 py-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">
+          <section className="border rounded-2xl bg-card px-6 py-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground mb-3">
               Estadísticas de Registros de Tiempo
             </h2>
 
@@ -161,10 +161,10 @@ export default function TimeRecorder() {
               </div>
 
               <div className="border rounded-2xl px-4 py-3 flex flex-col justify-between">
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-sm font-medium text-muted-foreground">
                   Total de Horas de Turno
                 </p>
-                <p className="mt-3 text-2xl font-bold text-gray-500">0</p>
+                <p className="mt-3 text-2xl font-bold text-muted-foreground">0</p>
               </div>
 
               <div className="border rounded-2xl px-4 py-3 flex flex-col justify-between">
@@ -308,11 +308,11 @@ export default function TimeRecorder() {
                     <div className="grid grid-cols-[1.6fr,0.9fr] gap-3">
                       <div className="relative">
                         <Input placeholder="Fecha" />
-                        <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-gray-500" />
+                        <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="relative">
                         <Input placeholder="En*" />
-                        <Clock className="absolute right-2 top-2.5 h-4 w-4 text-gray-500" />
+                        <Clock className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
                   </div>
@@ -323,11 +323,11 @@ export default function TimeRecorder() {
                     <div className="grid grid-cols-[1.6fr,0.9fr] gap-3">
                       <div className="relative">
                         <Input placeholder="Fecha" />
-                        <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-gray-500" />
+                        <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="relative">
                         <Input placeholder="En" />
-                        <Clock className="absolute right-2 top-2.5 h-4 w-4 text-gray-500" />
+                        <Clock className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
                   </div>
@@ -485,7 +485,7 @@ export default function TimeRecorder() {
                         <div className="grid grid-cols-2 gap-3">
                           <div className="relative">
                             <Input defaultValue="Nov 11, 2025" />
-                            <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-gray-500" />
+                            <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                           </div>
                           <Input defaultValue="00:00" />
                         </div>
@@ -497,7 +497,7 @@ export default function TimeRecorder() {
                         <div className="grid grid-cols-2 gap-3">
                           <div className="relative">
                             <Input defaultValue="Nov 17, 2025" />
-                            <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-gray-500" />
+                            <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                           </div>
                           <Input defaultValue="23:59" />
                         </div>
@@ -505,7 +505,7 @@ export default function TimeRecorder() {
 
                       <label className="flex items-center gap-2 cursor-pointer">
                         <Checkbox />
-                        <span className="text-sm text-gray-700">
+                        <span className="text-sm text-foreground">
                           Mostrar datos archivados
                         </span>
                       </label>
@@ -523,7 +523,7 @@ export default function TimeRecorder() {
 
                   {/* TAB FILTROS GUARDADOS */}
                   <TabsContent value="saved" className="pt-4">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Aún no tienes filtros guardados.
                     </p>
                   </TabsContent>
@@ -535,7 +535,7 @@ export default function TimeRecorder() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-5 w-5 text-gray-700" />
+                  <MoreVertical className="h-5 w-5 text-foreground" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
@@ -561,9 +561,9 @@ export default function TimeRecorder() {
         </section>
 
         {/* Tabla + estado vacío */}
-        <section className="border rounded-lg overflow-hidden bg-white">
+        <section className="border rounded-lg overflow-hidden bg-card">
           <table className="min-w-full text-sm text-left border-collapse">
-            <thead className="bg-gray-50 text-gray-600">
+            <thead className="bg-muted/30 text-foreground/70">
               <tr className="border-b">
                 <th className="px-4 py-3">
                   <Checkbox
@@ -580,7 +580,7 @@ export default function TimeRecorder() {
                 <th className="px-4 py-3 font-semibold">Desfichado</th>
                 <th className="px-4 py-3 font-semibold flex items-center gap-1">
                   Duración
-                  <ChevronsUpDown className="h-4 w-4 text-gray-400" />
+                  <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
                 </th>
               </tr>
             </thead>
@@ -588,7 +588,7 @@ export default function TimeRecorder() {
             <tbody>
               {paginatedRecords.length > 0 ? (
                 paginatedRecords.map((r) => (
-                  <tr key={r.id} className="border-b hover:bg-gray-50">
+                  <tr key={r.id} className="border-b hover:bg-muted/30">
                     <td className="px-4 py-3">
                       <Checkbox
                         checked={selectedRecords.includes(r.id)}
@@ -630,7 +630,7 @@ export default function TimeRecorder() {
           </table>
 
           {/* Paginación */}
-          <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50">
+          <div className="flex items-center justify-between px-4 py-3 text-sm text-foreground/70 bg-muted/30">
             <div className="flex items-center gap-2">
               <span>Elementos por página</span>
               <Select

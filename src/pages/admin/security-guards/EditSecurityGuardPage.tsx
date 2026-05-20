@@ -192,11 +192,11 @@ export default function EditSecurityGuardPage() {
           className="mb-4"
         />
         {error && (
-          <div className="mb-4 p-3 rounded bg-red-100 text-red-700 border border-red-200">
+          <div className="mb-4 p-3 rounded bg-red-500/15 text-red-700 border border-red-200">
             {error}
           </div>
         )}
-        <form onSubmit={handleSubmit} className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-6 rounded-xl border">
+        <form onSubmit={handleSubmit} className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 bg-card p-6 rounded-xl border">
           <div>
             <label className="block text-sm font-medium mb-1">Nombre *</label>
             <Input name="firstName" value={form.firstName} onChange={handleChange} required />

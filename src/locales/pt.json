@@ -101,7 +101,7 @@
       "tableActions": "Ações",
       "createTitle": "Criar Estação",
       "form": { "name": "Nome *", "description": "Descrição", "descriptionPlaceholder": "Descrição opcional" },
-      "guardsCount": "Seguranças"
+      "guardsCount": "Seguranças",
       "horario": "Agenda",
       "plantillas": "Modelos de turno",
       "asistencia": "Presença",

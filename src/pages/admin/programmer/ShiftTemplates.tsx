@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,36 +45,32 @@ interface ShiftTemplate {
   guard: string;
 }
 
+const STORAGE_KEY = "cguard_shift_templates";
+
+const DEFAULT_TEMPLATES: ShiftTemplate[] = [
+  { id: "1", templateName: "Evening Shift", startTime: "15:00", endTime: "00:00", postSite: "", guard: "" },
+  { id: "2", templateName: "Morning Shift", startTime: "08:00", endTime: "17:00", postSite: "", guard: "" },
+  { id: "3", templateName: "Night Shift", startTime: "23:00", endTime: "08:00", postSite: "", guard: "" },
+];
+
+function loadTemplates(): ShiftTemplate[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as ShiftTemplate[];
+  } catch {/* ignore */}
+  return DEFAULT_TEMPLATES;
+}
+
 export default function ShiftTemplates() {
-  const [templates, setTemplates] = useState<ShiftTemplate[]>([
-    {
-      id: "1",
-      templateName: "Evening Shift",
-      startTime: "15:00",
-      endTime: "00:00",
-      postSite: "",
-      guard: "",
-    },
-    {
-      id: "2",
-      templateName: "Morning Shift",
-      startTime: "08:00",
-      endTime: "17:00",
-      postSite: "",
-      guard: "",
-    },
-    {
-      id: "3",
-      templateName: "Night Shift",
-      startTime: "23:00",
-      endTime: "08:00",
-      postSite: "",
-      guard: "",
-    },
-  ]);
+  const [templates, setTemplates] = useState<ShiftTemplate[]>(loadTemplates);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isNewTemplateOpen, setIsNewTemplateOpen] = useState(false);
+
+  // Persist to localStorage whenever templates change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
+  }, [templates]);
 
   // New Template Form State
   const [newTemplate, setNewTemplate] = useState({
@@ -98,10 +94,17 @@ export default function ShiftTemplates() {
   });
 
   const handleSaveTemplate = () => {
-    // Add validation and save logic here
-    console.log("Saving template:", newTemplate);
+    if (!newTemplate.shiftTitle.trim() || !newTemplate.startTime || !newTemplate.endTime) return;
+    const entry: ShiftTemplate = {
+      id: crypto.randomUUID(),
+      templateName: newTemplate.shiftTitle.trim(),
+      startTime: newTemplate.startTime,
+      endTime: newTemplate.endTime,
+      postSite: newTemplate.postSite,
+      guard: newTemplate.guard,
+    };
+    setTemplates((prev) => [...prev, entry]);
     setIsNewTemplateOpen(false);
-    // Reset form
     setNewTemplate({
       shiftTitle: "",
       startTime: "",
@@ -117,6 +120,14 @@ export default function ShiftTemplates() {
       category: "",
     });
   };
+
+  const handleDeleteTemplate = (id: string) => {
+    setTemplates((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const filteredTemplates = templates.filter((t) =>
+    !searchQuery || t.templateName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <AppLayout>
@@ -143,7 +154,7 @@ export default function ShiftTemplates() {
 
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
             <div className="relative w-full md:w-80">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Buscar Plantilla de Turno"
                 className="pl-9"
@@ -396,20 +407,20 @@ export default function ShiftTemplates() {
                 <TableHead className="w-[50px]">
                   <Checkbox />
                 </TableHead>
-                <TableHead className="font-bold text-slate-700">Nombre de la Plantilla</TableHead>
-                <TableHead className="font-bold text-slate-700">Hora de Inicio</TableHead>
-                <TableHead className="font-bold text-slate-700">Hora de Fin</TableHead>
-                <TableHead className="font-bold text-slate-700">Puesto de seguridad</TableHead>
-                <TableHead className="font-bold text-slate-700">Guardia</TableHead>
+                <TableHead className="font-bold text-foreground">Nombre de la Plantilla</TableHead>
+                <TableHead className="font-bold text-foreground">Hora de Inicio</TableHead>
+                <TableHead className="font-bold text-foreground">Hora de Fin</TableHead>
+                <TableHead className="font-bold text-foreground">Puesto de seguridad</TableHead>
+                <TableHead className="font-bold text-foreground">Guardia</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {templates.length === 0 ? (
+              {filteredTemplates.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-[400px] text-center">
-                    <div className="flex flex-col items-center justify-center text-slate-500">
-                      <div className="bg-blue-50 p-6 rounded-full mb-4">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <div className="bg-blue-500/10 p-6 rounded-full mb-4">
                         <svg
                           className="w-12 h-12 text-blue-200"
                           fill="none"
@@ -424,7 +435,7 @@ export default function ShiftTemplates() {
                           />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-medium text-slate-700 mb-1">No se encontraron resultados</h3>
+                      <h3 className="text-lg font-medium text-foreground mb-1">No se encontraron resultados</h3>
                       <p className="text-sm max-w-xs">
                         No pudimos encontrar ningún elemento que coincida con su búsqueda
                       </p>
@@ -432,7 +443,7 @@ export default function ShiftTemplates() {
                   </TableCell>
                 </TableRow>
               ) : (
-                templates.map((template) => (
+                filteredTemplates.map((template) => (
                   <TableRow key={template.id}>
                     <TableCell>
                       <Checkbox />
@@ -446,14 +457,14 @@ export default function ShiftTemplates() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
-                            <EllipsisVertical className="h-4 w-4 text-slate-400" />
+                            <EllipsisVertical className="h-4 w-4 text-muted-foreground" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>
                             <Edit className="mr-2 h-4 w-4" /> Editar
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteTemplate(template.id)}>
                             <Trash2 className="mr-2 h-4 w-4" /> Eliminar
                           </DropdownMenuItem>
                           <DropdownMenuItem>
@@ -488,7 +499,7 @@ export default function ShiftTemplates() {
             </SelectContent>
           </Select>
           <div className="text-sm text-muted-foreground mx-4">
-            1 – 3 of 3
+            {filteredTemplates.length === 0 ? "0 of 0" : `1 – ${filteredTemplates.length} of ${filteredTemplates.length}`}
           </div>
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="icon" disabled>

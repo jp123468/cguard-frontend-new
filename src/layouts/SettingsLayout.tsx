@@ -32,11 +32,11 @@ export default function SettingsLayout({
   const handleHamburger = () => setOpen((v) => !v);
 
   return (
-    <div className="relative flex h-[calc(100vh-56px)] overflow-hidden bg-white">
+    <div className="relative flex h-[calc(100vh-56px)] overflow-hidden bg-background">
       {/* Sidebar desktop */}
       <aside
         className={[
-          "hidden lg:block shrink-0 bg-white border-gray-200 transition-[width] duration-300",
+          "hidden lg:block shrink-0 bg-background border-border transition-[width] duration-300",
           open ? "w-64 border-r" : "w-0 border-transparent",
         ].join(" ")}
       >
@@ -60,7 +60,7 @@ export default function SettingsLayout({
       {/* Drawer móvil */}
       <div
         className={[
-          "fixed left-0 top-0 z-[60] w-64 h-screen bg-white border-r border-gray-200 lg:hidden transform transition-transform duration-300",
+          "fixed left-0 top-0 z-[60] w-64 h-screen bg-background border-r border-border lg:hidden transform transition-transform duration-300",
           open ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >

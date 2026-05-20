@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { ApiService } from '@/services/api/apiService';
@@ -13,25 +13,86 @@ type Props = {
   onGuardUpdate?: (updatedGuard: any) => void;
 };
 
-// Componentes auxiliares fuera del componente principal para evitar recreación en cada render
-const InfoCard = ({ title, children, t }: { title: string; children: React.ReactNode; t: any }) => (
-  <div className="bg-white border rounded-lg p-6 shadow-sm">
-    <h4 className="font-semibold mb-4 text-base">{t(title)}</h4>
-    {children}
-  </div>
+// Pencil icon for card edit trigger
+const PencilIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-2a2 2 0 01.586-1.414z" />
+  </svg>
 );
 
-const InfoField = ({ 
-  label, 
-  value, 
-  field, 
-  isEditing, 
-  editedGuard, 
-  setEditedGuard, 
-  t 
-}: { 
-  label: string; 
-  value: string | number | null | undefined; 
+// Card with optional per-card edit controls in header
+const InfoCard = ({
+  title,
+  children,
+  t,
+  cardId,
+  editingCard,
+  saving,
+  onEdit,
+  onSave,
+  onCancel,
+}: {
+  title: string;
+  children: React.ReactNode;
+  t: any;
+  cardId?: string;
+  editingCard?: string | null;
+  saving?: boolean;
+  onEdit?: () => void;
+  onSave?: () => void;
+  onCancel?: () => void;
+}) => {
+  const isThisEditing = cardId != null && editingCard === cardId;
+  return (
+    <div className="bg-card border rounded-lg p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="font-semibold text-base">{t(title)}</h4>
+        {cardId && !isThisEditing && (
+          <button
+            onClick={onEdit}
+            className="text-muted-foreground hover:text-[#C8860A] transition-colors p-1 rounded"
+            title={t('guards.profile.actions.edit')}
+          >
+            <PencilIcon />
+          </button>
+        )}
+        {isThisEditing && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onCancel}
+              disabled={saving}
+              className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 border rounded transition-colors disabled:opacity-50"
+            >
+              {t('guards.profile.actions.cancel')}
+            </button>
+            <button
+              onClick={onSave}
+              disabled={saving}
+              className="text-xs bg-[#C8860A] text-white px-3 py-1 rounded hover:bg-[#B37809] transition-colors disabled:opacity-50 flex items-center gap-1"
+            >
+              {saving && <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+              {saving ? t('guards.profile.actions.saving') : t('guards.profile.actions.save')}
+            </button>
+          </div>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+};
+
+const InfoField = ({
+  label,
+  value,
+  field,
+  isEditing,
+  editedGuard,
+  setEditedGuard,
+  t,
+}: {
+  label: string;
+  value: string | number | null | undefined;
   field?: string;
   isEditing: boolean;
   editedGuard: any;
@@ -39,7 +100,7 @@ const InfoField = ({
   t: any;
 }) => (
   <div>
-    <div className="text-xs text-gray-500 mb-1">{t(label)}</div>
+    <div className="text-xs text-muted-foreground mb-1">{t(label)}</div>
     {isEditing && field ? (
       <Input
         value={editedGuard?.[field] || ''}
@@ -55,21 +116,31 @@ const InfoField = ({
 export default function GuardProfile({ guard, onGuardUpdate }: Props) {
   const { id } = useParams();
   const { t } = useTranslation()
-  const [isEditing, setIsEditing] = useState(false);
+  // Which card is currently being edited (null = view mode)
+  const [editingCard, setEditingCard] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [editedGuard, setEditedGuard] = useState({ ...guard });
+  // Track last successfully saved state so cancel reverts correctly
+  const savedGuardRef = useRef({ ...guard });
   const [loading, setLoading] = useState(false);
+  const [sendingInvite, setSendingInvite] = useState(false);
 
-  const handleSave = async () => {
+  const handleCardEdit = (cardId: string) => setEditingCard(cardId);
+
+  const handleCardCancel = () => {
+    setEditedGuard({ ...savedGuardRef.current });
+    setEditingCard(null);
+  };
+
+  const handleCardSave = async () => {
     if (!id) return;
     setSaving(true);
     try {
       await securityGuardService.update(id, editedGuard);
+      savedGuardRef.current = { ...editedGuard };
       toast.success(t('guards.profile.toasts.updated'));
-      setIsEditing(false);
-      if (onGuardUpdate) {
-        onGuardUpdate(editedGuard);
-      }
+      setEditingCard(null);
+      if (onGuardUpdate) onGuardUpdate(editedGuard);
     } catch (error) {
       console.error('Error actualizando guardia:', error);
       toast.error(t('guards.profile.toasts.updateError'));
@@ -90,6 +161,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
         // Some endpoints return { rows, count } for lists; single-get should return object
         const payload = data && data.id ? data : (data && data.data) ? data.data : data;
         setEditedGuard((prev: any) => ({ ...prev, ...payload }));
+        savedGuardRef.current = { ...savedGuardRef.current, ...payload };
         if (onGuardUpdate) onGuardUpdate(payload);
       } catch (err) {
         console.error('Error cargando guardia:', err);
@@ -103,11 +175,6 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
       mounted = false;
     };
   }, [id]);
-
-  const handleCancel = () => {
-    setEditedGuard({ ...guard });
-    setIsEditing(false);
-  };
 
   // GuardShift (attendance) state
   const [guardShifts, setGuardShifts] = useState<any[]>([]);
@@ -188,6 +255,34 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
     }
   };
 
+  const handleSendAppAccess = async () => {
+    if (!id) return;
+    setSendingInvite(true);
+    try {
+      const payload: any = {};
+      if (editedGuard?.guard?.id) {
+        payload.guard = editedGuard.guard.id;
+      } else if (editedGuard?.guard?.email) {
+        payload.contact = editedGuard.guard.email;
+      }
+      payload.securityGuardId = id;
+      if (editedGuard?.guard?.firstName) payload.firstName = editedGuard.guard.firstName;
+      if (editedGuard?.guard?.lastName) payload.lastName = editedGuard.guard.lastName;
+      await securityGuardService.resendInvite(payload);
+      toast.success(t('guards.profile.access.inviteSent'));
+      // Reload guard to update access status
+      const refreshed = await securityGuardService.get(id);
+      const data = refreshed && (refreshed as any).id ? refreshed : (refreshed && (refreshed as any).data) ? (refreshed as any).data : refreshed;
+      setEditedGuard((prev: any) => ({ ...prev, ...data }));
+      if (onGuardUpdate) onGuardUpdate(data);
+    } catch (err: any) {
+      console.error('Send app access failed', err);
+      toast.error(err?.message || t('guards.profile.access.inviteError'));
+    } finally {
+      setSendingInvite(false);
+    }
+  };
+
   return (
 
     <AppLayout>
@@ -195,45 +290,23 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
 
 
         <div className="space-y-6 relative">
-          {/* Edit/Save/Cancel Buttons */}
-          <div className="fixed bottom-8 right-8 z-50 flex gap-3">
-            {isEditing ? (
-              <>
-                <button
-                  onClick={handleCancel}
-                  disabled={saving}
-                  className="bg-gray-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-gray-600 transition-colors font-medium disabled:opacity-50"
-                >
-                  {t('guards.profile.actions.cancel')}
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="bg-[#C8860A] text-white px-6 py-3 rounded-full shadow-lg hover:bg-[#B37809] transition-colors font-medium disabled:opacity-50"
-                >
-                  {saving ? t('guards.profile.actions.saving') : t('guards.profile.actions.save')}
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="bg-[#C8860A] text-white px-6 py-3 rounded-full shadow-lg hover:bg-[#B37809] transition-colors font-medium"
-              >
-                {t('guards.profile.actions.edit')}
-              </button>
-            )}
-          </div>
 
           {/* Profile Image */}
           <div className="flex justify-center mb-6">
-            <div className="w-32 h-32 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
-              {editedGuard?.profileImage ? (
-                <img src={editedGuard.profileImage} alt={editedGuard.fullName} className="w-full h-full object-cover" />
-              ) : (
-                <svg className="w-24 h-24 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                </svg>
-              )}
+            <div className="w-32 h-32 rounded-lg bg-muted flex items-center justify-center overflow-hidden border-2 border-border">
+              {(() => {
+                const pi = editedGuard?.profileImage;
+                const src = Array.isArray(pi)
+                  ? (pi[0]?.downloadUrl || pi[0]?.publicUrl || null)
+                  : (pi?.downloadUrl || pi?.publicUrl || (typeof pi === 'string' && pi ? pi : null));
+                return src ? (
+                  <img src={src} alt={editedGuard?.fullName || ''} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                ) : (
+                  <svg className="w-24 h-24 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                );
+              })()}
             </div>
           </div>
 
@@ -241,42 +314,45 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
             {/* Left Column */}
             <div className="space-y-6">
               {/* General Information */}
-              <InfoCard title="guards.profile.cards.general" t={t}>
+              <InfoCard title="guards.profile.cards.general" t={t} cardId="general" editingCard={editingCard} saving={saving} onEdit={() => handleCardEdit('general')} onSave={handleCardSave} onCancel={handleCardCancel}>
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.firstName" value={editedGuard?.guard?.firstName} field="firstName" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.lastName" value={editedGuard?.guard?.lastName} field="lastName" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.id1" value={editedGuard?.governmentId} field="governmentId" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.id2" value={editedGuard?.secondaryId} field="secondaryId" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.birthDate" value={editedGuard?.birthDate ? new Date(editedGuard.birthDate).toLocaleDateString('en-US') : null} field="birthDate" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.address" value={editedGuard?.address} field="address" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.firstName" value={editedGuard?.guard?.firstName} field="firstName" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.lastName" value={editedGuard?.guard?.lastName} field="lastName" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  {(editedGuard?.guard?.middleName) && (
+                    <InfoField label="guards.profile.fields.middleName" value={editedGuard?.guard?.middleName} field="middleName" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  )}
+                  <InfoField label="guards.profile.fields.id1" value={editedGuard?.governmentId && editedGuard.governmentId !== 'PENDING' ? editedGuard.governmentId : (editedGuard?.guard?.identificationNumber || editedGuard?.governmentId)} field="governmentId" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.id2" value={editedGuard?.secondaryId} field="secondaryId" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.birthDate" value={editedGuard?.birthDate ? new Date(editedGuard.birthDate).toLocaleDateString('en-US') : null} field="birthDate" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.address" value={editedGuard?.address || editedGuard?.guard?.homeAddress} field="address" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                 </div>
               </InfoCard>
 
               {/* Contact Details */}
-              <InfoCard title="guards.profile.cards.contact" t={t}>
+              <InfoCard title="guards.profile.cards.contact" t={t} cardId="contact" editingCard={editingCard} saving={saving} onEdit={() => handleCardEdit('contact')} onSave={handleCardSave} onCancel={handleCardCancel}>
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.email" value={editedGuard?.guard?.email} field="email" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.mobile" value={editedGuard?.guard?.phoneNumber || editedGuard?.phoneNumber} field="phoneNumber" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.email" value={editedGuard?.guard?.email} field="email" isEditing={editingCard === 'contact'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.mobile" value={editedGuard?.guard?.phoneNumber || editedGuard?.guard?.phone || editedGuard?.phoneNumber} field="phoneNumber" isEditing={editingCard === 'contact'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                 </div>
               </InfoCard>
 
               {/* Emergency Contact Details */}
-              <InfoCard title="guards.profile.cards.emergency" t={t}>
+              <InfoCard title="guards.profile.cards.emergency" t={t} cardId="emergency" editingCard={editingCard} saving={saving} onEdit={() => handleCardEdit('emergency')} onSave={handleCardSave} onCancel={handleCardCancel}>
                 <div className="space-y-4">
-                  <InfoField label="guards.profile.fields.emergencyContact" value={editedGuard?.emergencyContactName} field="emergencyContactName" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.emergencyContactNumber" value={editedGuard?.emergencyContactPhone} field="emergencyContactPhone" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.emergencyRelation" value={editedGuard?.emergencyContactRelation} field="emergencyContactRelation" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.emergencyContact" value={editedGuard?.emergencyContactName} field="emergencyContactName" isEditing={editingCard === 'emergency'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.emergencyContactNumber" value={editedGuard?.emergencyContactPhone} field="emergencyContactPhone" isEditing={editingCard === 'emergency'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.emergencyRelation" value={editedGuard?.emergencyContactRelation} field="emergencyContactRelation" isEditing={editingCard === 'emergency'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                 </div>
               </InfoCard>
               {/* Personal Information */}
-              <InfoCard title="guards.profile.cards.personal" t={t}>
+              <InfoCard title="guards.profile.cards.personal" t={t} cardId="personal" editingCard={editingCard} saving={saving} onEdit={() => handleCardEdit('personal')} onSave={handleCardSave} onCancel={handleCardCancel}>
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.birthPlace" value={editedGuard?.birthPlace} field="birthPlace" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.maritalStatus" value={editedGuard?.maritalStatus} field="maritalStatus" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.bloodType" value={editedGuard?.bloodType} field="bloodType" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.education" value={editedGuard?.academicInstruction} field="academicInstruction" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.gender" value={editedGuard?.gender} field="gender" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.governmentId" value={editedGuard?.governmentId} field="governmentId" isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.birthPlace" value={editedGuard?.birthPlace} field="birthPlace" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.maritalStatus" value={editedGuard?.maritalStatus} field="maritalStatus" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.bloodType" value={editedGuard?.bloodType || editedGuard?.guard?.bloodType} field="bloodType" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.education" value={editedGuard?.academicInstruction} field="academicInstruction" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.gender" value={editedGuard?.gender} field="gender" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.guardCredentials" value={editedGuard?.guardCredentials} field="guardCredentials" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                 </div>
               </InfoCard>
               {/* More Information */}
@@ -299,51 +375,131 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
 
             {/* Right Column */}
             <div className="space-y-6">
-              {/* Device Information */}
+              {/* Device Information — read-only (set by mobile app) */}
               <InfoCard title="guards.profile.cards.deviceInfo" t={t}>
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.deviceType" value={editedGuard?.deviceInfo?.platform || editedGuard?.deviceType} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.deviceModel" value={editedGuard?.deviceInfo?.model} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.osVersion" value={editedGuard?.deviceInfo?.osVersion} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.appVersion" value={editedGuard?.deviceInfo?.appVersion} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.deviceType" value={editedGuard?.deviceInfo?.platform || editedGuard?.deviceType} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.deviceModel" value={editedGuard?.deviceInfo?.model} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.osVersion" value={editedGuard?.deviceInfo?.osVersion} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.appVersion" value={editedGuard?.deviceInfo?.appVersion} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                 </div>
               </InfoCard>
 
-              {/* Device Permissions */}
+              {/* Device Permissions — read-only (set by mobile app) */}
               <InfoCard title="guards.profile.cards.devicePermissions" t={t}>
                 <div className="grid grid-cols-2 gap-4">
                   <InfoField
                     label="guards.profile.fields.pushNotifications"
                     value={editedGuard?.permissions?.pushNotifications ? t('guards.profile.values.enabled') : t('guards.profile.values.disabled')}
-                    isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
+                    isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
                   />
                   <InfoField
                     label="guards.profile.fields.gpsPermission"
                     value={editedGuard?.permissions?.gpsPermission || t('guards.profile.values.background')}
-                    isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
+                    isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
                   />
                   <InfoField
                     label="guards.profile.fields.camera"
                     value={editedGuard?.permissions?.camera ? t('guards.profile.values.enabled') : t('guards.profile.values.disabled')}
-                    isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
+                    isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
                   />
                   <InfoField
                     label="guards.profile.fields.microphone"
                     value={editedGuard?.permissions?.microphone ? t('guards.profile.values.enabled') : t('guards.profile.values.disabled')}
-                    isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
+                    isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
                   />
                 </div>
               </InfoCard>
 
+              {/* App Access */}
+              {(() => {
+                const guardStatus = editedGuard?.guard?.status;
+                const hasPassword = editedGuard?.guard?.hasPassword;
+                const lastLogin = editedGuard?.guard?.lastLoginAt;
+                const tokenExpires = editedGuard?.guard?.invitationTokenExpiresAt;
+                const isActivated = hasPassword && guardStatus === 'active';
+                const isPending = !hasPassword || guardStatus === 'invited' || guardStatus === 'pending';
+                const tokenIsExpired = tokenExpires && new Date(tokenExpires) < new Date();
+                return (
+                  <div className="bg-card border rounded-lg p-6 shadow-sm">
+                    <h4 className="font-semibold mb-4 text-base">{t('guards.profile.cards.appAccess')}</h4>
+                    <div className="space-y-3">
+                      {/* Status badge */}
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                          isActivated
+                            ? 'bg-green-100 text-green-700'
+                            : isPending
+                              ? (tokenIsExpired ? 'bg-red-500/15 text-red-700' : 'bg-orange-500/15 text-orange-700')
+                              : 'bg-muted text-foreground/70'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${isActivated ? 'bg-green-500' : isPending ? (tokenIsExpired ? 'bg-red-500' : 'bg-orange-500') : 'bg-gray-400'}`} />
+                          {isActivated
+                            ? t('guards.profile.access.statusActive')
+                            : tokenIsExpired
+                              ? t('guards.profile.access.statusExpired')
+                              : isPending
+                                ? t('guards.profile.access.statusPending')
+                                : t('guards.profile.access.statusNoAccess')}
+                        </span>
+                      </div>
+
+                      {/* Last login */}
+                      {lastLogin && (
+                        <div className="text-xs text-muted-foreground">
+                          {t('guards.profile.access.lastLogin')}: <span className="font-medium text-foreground">{new Date(lastLogin).toLocaleString()}</span>
+                        </div>
+                      )}
+
+                      {/* Token expiry */}
+                      {tokenExpires && !isActivated && (
+                        <div className={`text-xs ${tokenIsExpired ? 'text-red-500' : 'text-muted-foreground'}`}>
+                          {tokenIsExpired
+                            ? t('guards.profile.access.tokenExpired')
+                            : `${t('guards.profile.access.tokenExpires')}: ${new Date(tokenExpires).toLocaleDateString()}`}
+                        </div>
+                      )}
+
+                      {/* Guard email (for context) */}
+                      {editedGuard?.guard?.email && (
+                        <div className="text-xs text-muted-foreground">
+                          {t('guards.profile.access.sendTo')}: <span className="font-medium text-foreground">{editedGuard.guard.email}</span>
+                        </div>
+                      )}
+
+                      {/* Send / Resend invitation button */}
+                      {editedGuard?.guard?.email && (
+                        <button
+                          onClick={handleSendAppAccess}
+                          disabled={sendingInvite}
+                          className="mt-1 w-full flex items-center justify-center gap-2 bg-[#C8860A] hover:bg-[#B37809] disabled:opacity-60 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors"
+                        >
+                          {sendingInvite ? (
+                            <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          )}
+                          {isActivated
+                            ? t('guards.profile.access.resendInvite')
+                            : t('guards.profile.access.sendInvite')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Languages & Skills */}
-              <InfoCard title="guards.profile.cards.languagesSkills" t={t}>
+              <InfoCard title="guards.profile.cards.languagesSkills" t={t} cardId="languages" editingCard={editingCard} saving={saving} onEdit={() => handleCardEdit('languages')} onSave={handleCardSave} onCancel={handleCardCancel}>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">{t('guards.profile.fields.languages')}</div>
-                    {isEditing ? (
+                    <div className="text-xs text-muted-foreground mb-1">{t('guards.profile.fields.languages')}</div>
+                    {editingCard === 'languages' ? (
                       <Input
                         value={editedGuard?.languages?.join(', ') || ''}
-                        onChange={(e) => setEditedGuard({ ...editedGuard, languages: e.target.value.split(',').map(l => l.trim()) })}
+                        onChange={(e) => setEditedGuard({ ...editedGuard, languages: e.target.value.split(',').map((l: string) => l.trim()) })}
                         placeholder={t('guards.profile.placeholders.languages')}
                         className="h-8 text-sm"
                       />
@@ -352,11 +508,11 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                     )}
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">{t('guards.profile.fields.skills')}</div>
-                    {isEditing ? (
+                    <div className="text-xs text-muted-foreground mb-1">{t('guards.profile.fields.skills')}</div>
+                    {editingCard === 'languages' ? (
                       <Input
                         value={editedGuard?.skills?.join(', ') || ''}
-                        onChange={(e) => setEditedGuard({ ...editedGuard, skills: e.target.value.split(',').map(s => s.trim()) })}
+                        onChange={(e) => setEditedGuard({ ...editedGuard, skills: e.target.value.split(',').map((s: string) => s.trim()) })}
                         placeholder={t('guards.profile.placeholders.skills')}
                         className="h-8 text-sm"
                       />
@@ -378,17 +534,17 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
 
                   <div>
                     {loadingShifts ? (
-                      <div className="text-sm text-gray-500">Loading...</div>
+                      <div className="text-sm text-muted-foreground">Loading...</div>
                     ) : guardShifts.length === 0 ? (
-                      <div className="text-sm text-gray-500">No attendance records.</div>
+                      <div className="text-sm text-muted-foreground">No attendance records.</div>
                     ) : (
                       <ul className="space-y-2">
                         {guardShifts.map((s) => (
-                          <li key={s.id} className="border rounded p-2 bg-white">
+                          <li key={s.id} className="border rounded p-2 bg-card">
                             <div className="text-sm font-medium">{s.shiftSchedule || s.schedule || '-'}</div>
-                            <div className="text-xs text-gray-600">In: {s.punchInTime ? new Date(s.punchInTime).toLocaleString() : '-'}</div>
-                            <div className="text-xs text-gray-600">Out: {s.punchOutTime ? new Date(s.punchOutTime).toLocaleString() : '-'}</div>
-                            <div className="text-xs text-gray-500">Station: {s.stationName || (s.station && s.station.name) || '-'}</div>
+                            <div className="text-xs text-foreground/70">In: {s.punchInTime ? new Date(s.punchInTime).toLocaleString() : '-'}</div>
+                            <div className="text-xs text-foreground/70">Out: {s.punchOutTime ? new Date(s.punchOutTime).toLocaleString() : '-'}</div>
+                            <div className="text-xs text-muted-foreground">Station: {s.stationName || (s.station && s.station.name) || '-'}</div>
                           </li>
                         ))}
                       </ul>
@@ -404,16 +560,16 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                     {editedGuard.licenses.map((license: any, idx: number) => (
                       <div key={idx} className="border-b last:border-b-0 pb-3 last:pb-0">
                         <div className="grid grid-cols-2 gap-3">
-                          <InfoField label="guards.profile.fields.licenseType" value={license.type} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                          <InfoField label="guards.profile.fields.licenseNumber" value={license.number} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                          <InfoField label="guards.profile.fields.issueDate" value={license.issueDate ? new Date(license.issueDate).toLocaleDateString('en-US') : null} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                          <InfoField label="guards.profile.fields.expiryDate" value={license.expiryDate ? new Date(license.expiryDate).toLocaleDateString('en-US') : null} isEditing={isEditing} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                          <InfoField label="guards.profile.fields.licenseType" value={license.type} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                          <InfoField label="guards.profile.fields.licenseNumber" value={license.number} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                          <InfoField label="guards.profile.fields.issueDate" value={license.issueDate ? new Date(license.issueDate).toLocaleDateString('en-US') : null} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                          <InfoField label="guards.profile.fields.expiryDate" value={license.expiryDate ? new Date(license.expiryDate).toLocaleDateString('en-US') : null} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">{t('guards.profile.noLicense')}</p>
+                  <p className="text-sm text-muted-foreground">{t('guards.profile.noLicense')}</p>
                 )}
               </InfoCard>
             </div>
@@ -422,22 +578,22 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
         {showCreateShiftModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40" onClick={() => setShowCreateShiftModal(false)} />
-            <aside className="relative mx-auto w-full max-w-md bg-white shadow-xl overflow-auto rounded-lg">
+            <aside className="relative mx-auto w-full max-w-md bg-card shadow-xl overflow-auto rounded-lg">
               <div className="flex items-center justify-between p-4 border-b">
                 <h3 className="text-lg font-semibold">Create Attendance Record</h3>
-                <button onClick={() => setShowCreateShiftModal(false)} className="p-2 text-gray-500 hover:text-gray-700">Close</button>
+                <button onClick={() => setShowCreateShiftModal(false)} className="p-2 text-muted-foreground hover:text-foreground">Close</button>
               </div>
               <div className="p-4 space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Punch In</label>
+                  <label className="block text-sm text-foreground/70 mb-1">Punch In</label>
                   <input type="datetime-local" value={createPunchIn} onChange={e => setCreatePunchIn(e.target.value)} className="w-full border rounded h-10 px-3" />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Punch Out</label>
+                  <label className="block text-sm text-foreground/70 mb-1">Punch Out</label>
                   <input type="datetime-local" value={createPunchOut} onChange={e => setCreatePunchOut(e.target.value)} className="w-full border rounded h-10 px-3" />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Shift Schedule</label>
+                  <label className="block text-sm text-foreground/70 mb-1">Shift Schedule</label>
                   <select value={createSchedule} onChange={e => setCreateSchedule(e.target.value)} className="w-full border rounded h-10 px-3">
                     <option value="Diurno">Diurno</option>
                     <option value="Nocturno">Nocturno</option>

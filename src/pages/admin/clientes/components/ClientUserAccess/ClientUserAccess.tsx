@@ -56,10 +56,10 @@ export default function ClientUserAccess({ client }: Props) {
 
   return (
     <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
+      <div className="bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative w-full max-w-lg">
-            <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search access list" className="w-full pl-9 pr-3 py-2 border rounded-full text-sm" />
           </div>
 
@@ -74,11 +74,11 @@ export default function ClientUserAccess({ client }: Props) {
         <div className="mt-6 md:block hidden flex-1 min-h-0 overflow-y-auto overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Role</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+              <tr className="border-b bg-muted/30">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Name</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Email</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Role</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -95,19 +95,19 @@ export default function ClientUserAccess({ client }: Props) {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">No results found</h3>
-                        <p className="text-sm text-gray-500 mt-1">We couldn't find<br />any items matching<br />your search</p>
+                        <h3 className="text-lg font-semibold text-foreground">No results found</h3>
+                        <p className="text-sm text-muted-foreground mt-1">We couldn't find<br />any items matching<br />your search</p>
                       </div>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filtered.map((u) => (
-                  <tr key={u.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm text-gray-700">{u.name}</td>
-                    <td className="px-4 py-4 text-sm text-gray-700">{u.email}</td>
-                    <td className="px-4 py-4 text-sm text-gray-700">{u.role || 'User'}</td>
-                    <td className="px-4 py-4 text-sm text-gray-700">{u.status || 'Active'}</td>
+                  <tr key={u.id} className="border-b hover:bg-muted/30">
+                    <td className="px-4 py-4 text-sm text-foreground">{u.name}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">{u.email}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">{u.role || 'User'}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">{u.status || 'Active'}</td>
                   </tr>
                 ))
               )}
@@ -127,7 +127,7 @@ export default function ClientUserAccess({ client }: Props) {
                   <div className="text-xs text-muted-foreground">{u.email}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm text-gray-700">{u.role || 'User'}</div>
+                  <div className="text-sm text-foreground">{u.role || 'User'}</div>
                 </div>
               </div>
             )}
@@ -139,14 +139,14 @@ export default function ClientUserAccess({ client }: Props) {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center">
           <div className="absolute inset-0 bg-black/30" onClick={() => setShowInvite(false)} />
 
-          <div className="w-full sm:fixed sm:right-0 sm:top-0 sm:bottom-0 sm:w-[520px] bg-white rounded-t-lg sm:rounded-md shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+          <div className="w-full sm:fixed sm:right-0 sm:top-0 sm:bottom-0 sm:w-[520px] bg-card rounded-t-lg sm:rounded-md shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-10">
               <h3 className="text-lg font-semibold">Invite User</h3>
-              <button onClick={() => setShowInvite(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
+              <button onClick={() => setShowInvite(false)} className="text-muted-foreground hover:text-foreground/70"><X /></button>
             </div>
 
             <div className="p-6 overflow-y-auto flex-1">
-              <div className="mb-4 text-sm text-gray-700">Select Existing User</div>
+              <div className="mb-4 text-sm text-foreground">Select Existing User</div>
               <select className="w-full border rounded-md h-10 px-3 mb-6" value={selectedExisting} onChange={(e) => setSelectedExisting(e.target.value)}>
                 <option value="">Select Existing User</option>
                 {users.map((u) => (
@@ -154,7 +154,7 @@ export default function ClientUserAccess({ client }: Props) {
                 ))}
               </select>
 
-              <div className="text-center text-sm text-gray-500 mb-4">Or Add New User</div>
+              <div className="text-center text-sm text-muted-foreground mb-4">Or Add New User</div>
 
               <div className="space-y-4">
                 <div>
@@ -179,9 +179,9 @@ export default function ClientUserAccess({ client }: Props) {
               </div>
             </div>
 
-            <div className="p-4 border-t bg-white sticky bottom-0 z-20">
+            <div className="p-4 border-t bg-card sticky bottom-0 z-20">
               <div className="flex items-center justify-end gap-3">
-                <button onClick={() => setShowInvite(false)} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">Cancel</button>
+                <button onClick={() => setShowInvite(false)} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">Cancel</button>
                 <button onClick={handleInvite} className="px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809]">Invite</button>
               </div>
             </div>

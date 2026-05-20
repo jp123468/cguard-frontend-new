@@ -49,7 +49,7 @@ export function DataTable<T extends { id: string }>({
 
     const table = (
         <table className="min-w-full text-sm text-left border-collapse">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted/30">
                 <tr className="border-b">
                     {showSelection && (
                         <th className="px-4 py-3 w-10">
@@ -125,7 +125,7 @@ export function DataTable<T extends { id: string }>({
                     data.map((row) => (
                         <tr
                             key={row.id}
-                            className={`border-b hover:bg-gray-50 ${onRowClick ? 'cursor-pointer' : ''}`}
+                            className={`border-b hover:bg-muted/30 ${onRowClick ? 'cursor-pointer' : ''}`}
                             onClick={onRowClick ? () => onRowClick(row) : undefined}
                         >
                             {showSelection && (
@@ -140,7 +140,7 @@ export function DataTable<T extends { id: string }>({
                             {columns.map((col) => {
                                 const value = (row as any)[col.key];
                                 return (
-                                    <td key={String(col.key)} className={`px-4 py-3 text-gray-600 ${col.className ?? ""}`}>
+                                    <td key={String(col.key)} className={`px-4 py-3 text-foreground/70 ${col.className ?? ""}`}>
                                         {col.render ? col.render(value, row) : value}
                                     </td>
                                 );
@@ -160,5 +160,5 @@ export function DataTable<T extends { id: string }>({
 
     if (containerless) return table;
 
-    return <div className="border rounded-lg overflow-hidden bg-white">{table}</div>;
+    return <div className="border rounded-lg overflow-hidden bg-card">{table}</div>;
 }

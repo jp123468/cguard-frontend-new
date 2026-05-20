@@ -884,7 +884,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
 
     return (
         <div ref={containerRef} className="space-y-4">
-            <div className="bg-white border rounded-lg p-4">
+            <div className="bg-card border rounded-lg p-4">
                 <div className="mb-4">
                     <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -894,7 +894,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                         <button
                                             key={ti.key}
                                             onClick={() => { setActiveTabKey(ti.key); update('tagType', ti.key); }}
-                                            className={`flex-1 text-center py-4 border-b-2 ${activeTabKey === ti.key ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-600'}`}
+                                            className={`flex-1 text-center py-4 border-b-2 ${activeTabKey === ti.key ? 'border-violet-600 text-violet-600' : 'border-transparent text-foreground/70'}`}
                                         >
                                             {ti.label}
                                         </button>
@@ -918,14 +918,14 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                     <div ref={actionRef} className="relative">
                         <button
                             onClick={() => setActionOpen(v => !v)}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-white"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-card"
                         >
                             <span className="text-sm">{t('siteTourTag.action')}</span>
                             <ChevronDown size={14} />
                         </button>
 
                         {actionOpen && (
-                            <div className="absolute left-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-20">
+                            <div className="absolute left-0 mt-2 w-40 bg-card border rounded-md shadow-lg z-20">
                                 {(actionOptionsMap[activeTabKey] || []).map((opt: string) => {
                                     const disabled = !(selectedTagIds && selectedTagIds.length > 0);
                                     return (
@@ -937,7 +937,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                                 setActionOpen(false);
                                             }}
                                             disabled={disabled}
-                                            className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${disabled ? 'text-gray-400 cursor-not-allowed' : ''}`}
+                                            className={`block w-full text-left px-4 py-2 text-sm hover:bg-muted/30 ${disabled ? 'text-muted-foreground cursor-not-allowed' : ''}`}
                                         >
                                             {t(`siteTourTag.actions.${opt}`)}
                                         </button>
@@ -962,7 +962,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                 <div className="mt-6">
                     <div className="md:block hidden overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50">
+                            <thead className="bg-muted/30">
                                     <tr>
                                         <th className="px-4 py-3 w-12 text-center">
                                             <div className="flex items-center justify-center">
@@ -1020,7 +1020,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                                 <td className="px-4 py-3">
                                                     <div className="flex flex-col">
                                                         <div className="font-medium">{tag.name}</div>
-                                                        {shiftLabel && <div className="text-xs text-gray-500">{shiftLabel}</div>}
+                                                        {shiftLabel && <div className="text-xs text-muted-foreground">{shiftLabel}</div>}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3 break-words">{tag.tagIdentifier || tag.id || (tag as any)._id}</td>
@@ -1043,8 +1043,8 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                                     </svg>
                                                 </div>
                                                 <div className="text-center">
-                                                    <h3 className="text-lg font-semibold text-gray-700">{t('siteTourTag.empty.title')}</h3>
-                                                    <p className="text-sm text-gray-500 mt-1">{t('siteTourTag.empty.message')}</p>
+                                                    <h3 className="text-lg font-semibold text-foreground">{t('siteTourTag.empty.title')}</h3>
+                                                    <p className="text-sm text-muted-foreground mt-1">{t('siteTourTag.empty.message')}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -1056,11 +1056,11 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
 
                     <div className="md:hidden">
                         <MobileCardList items={[]} renderCard={(it: any) => (
-                            <div className="p-4 bg-white border rounded-lg">
+                            <div className="p-4 bg-card border rounded-lg">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <div className="text-sm font-semibold">{it.name || t('siteTourTag.placeholders.tagName')}</div>
-                                        <div className="text-xs text-gray-500">{it.tagId || it.id || '-'}</div>
+                                        <div className="text-xs text-muted-foreground">{it.tagId || it.id || '-'}</div>
                                     </div>
                                 </div>
                             </div>
@@ -1073,10 +1073,10 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                 <div className="fixed inset-0 z-50 flex items-stretch">
                     <div className="absolute inset-0 bg-black/40" onClick={() => setShowNewTag(false)} />
 
-                    <aside className="relative w-full sm:ml-auto sm:max-w-sm h-screen bg-white shadow-xl overflow-hidden rounded-none sm:rounded-lg flex flex-col">
+                    <aside className="relative w-full sm:ml-auto sm:max-w-sm h-screen bg-card shadow-xl overflow-hidden rounded-none sm:rounded-lg flex flex-col">
                         <div className="flex items-center justify-between p-4 border-b">
                             <h3 className="text-lg font-semibold">{t('siteTourTag.modal.title')}</h3>
-                            <button onClick={() => setShowNewTag(false)} className="p-2 text-gray-500 hover:text-gray-700">
+                            <button onClick={() => setShowNewTag(false)} className="p-2 text-muted-foreground hover:text-foreground">
                                 <X size={18} />
                             </button>
                         </div>
@@ -1087,7 +1087,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">{t('siteTourTag.form.siteTour') || 'Recorrido'}</label>
+                                <label className="block text-sm font-medium text-foreground mb-2">{t('siteTourTag.form.siteTour') || 'Recorrido'}</label>
                                 <div className="flex flex-col gap-2 min-w-0 overflow-hidden">
                                         <select value={form.siteTourId || ''} onChange={(e) => update('siteTourId', e.target.value)} className="w-full px-3 py-2 h-12 border rounded-md">
                                             <option value="">{loadingTours ? t('siteTourTag.form.loadingTours', 'Cargando recorridos...') : (t('siteTourTag.form.selectTour') || 'Seleccione una recorrido')}</option>
@@ -1136,8 +1136,8 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                 </>
                             ) : (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('siteTourTag.form.mapToStationLabel', 'Map to station (quick)')}</label>
-                                    <select value={form.stationId || ''} onChange={e => update('stationId', e.target.value)} className="w-full px-3 py-2 h-12 border rounded-md text-sm text-gray-700">
+                                    <label className="block text-sm font-medium text-foreground mb-2">{t('siteTourTag.form.mapToStationLabel', 'Map to station (quick)')}</label>
+                                    <select value={form.stationId || ''} onChange={e => update('stationId', e.target.value)} className="w-full px-3 py-2 h-12 border rounded-md text-sm text-foreground">
                                         <option value="">{loadingStations ? t('siteTourTag.form.loadingStations', 'Loading stations...') : t('siteTourTag.form.selectStationOptional', 'Select station (optional)')}</option>
                                         {stations.map((s: any) => (
                                             <option key={s.id || s.stationId} value={s.id || s.stationId}>{s.stationName || s.name || s.station_name || s.stationId || s.id}</option>
@@ -1156,13 +1156,13 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                         <div className="p-4 border-t">
                             <div className="flex justify-between items-center">
                                 <div>
-                                    <button onClick={() => { setShowNewTag(false); }} className="px-4 py-2 rounded-full bg-gray-100 text-gray-700">Save As Draft</button>
+                                    <button onClick={() => { setShowNewTag(false); }} className="px-4 py-2 rounded-full bg-muted text-foreground">Save As Draft</button>
                                 </div>
                                 <div>
                                         <button
                                             onClick={() => submitTag()}
                                             disabled={!(form.siteTourId || currentTourId)}
-                                            className={`ml-2 inline-flex items-center justify-center px-4 py-2 rounded-full shadow ${!(form.siteTourId || currentTourId) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-[#C8860A] text-white hover:bg-[#B37809]'}`}
+                                            className={`ml-2 inline-flex items-center justify-center px-4 py-2 rounded-full shadow ${!(form.siteTourId || currentTourId) ? 'bg-gray-300 text-foreground/70 cursor-not-allowed' : 'bg-[#C8860A] text-white hover:bg-[#B37809]'}`}
                                         >
                                             <span className="text-sm font-semibold">{t('siteTourTag.modal.submit') || 'Submit'}</span>
                                         </button>
@@ -1176,16 +1176,16 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                 <div className="fixed inset-0 z-60 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/40" onClick={() => setShowDeleteConfirm(false)} />
 
-                    <div className="relative bg-white rounded-lg p-6 max-w-lg w-full">
+                    <div className="relative bg-card rounded-lg p-6 max-w-lg w-full">
                         <div className="flex justify-between items-start">
                             <h3 className="text-lg font-semibold">{t('siteTourTag.confirm.deleteTitle','Confirmar eliminación')}</h3>
-                            <button onClick={() => setShowDeleteConfirm(false)} className="p-2 text-gray-500 hover:text-gray-700">
+                            <button onClick={() => setShowDeleteConfirm(false)} className="p-2 text-muted-foreground hover:text-foreground">
                                 <X size={18} />
                             </button>
                         </div>
-                        <p className="mt-3 text-sm text-gray-600">{t('siteTourTag.confirm.deleteMessage','¿Eliminar las etiquetas seleccionadas? Esta acción no se puede deshacer.')}</p>
+                        <p className="mt-3 text-sm text-foreground/70">{t('siteTourTag.confirm.deleteMessage','¿Eliminar las etiquetas seleccionadas? Esta acción no se puede deshacer.')}</p>
                         <div className="mt-6 flex justify-end gap-3">
-                            <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 rounded border bg-white text-sm">{t('siteTourTag.confirm.cancel','Cancelar')}</button>
+                            <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 rounded border bg-card text-sm">{t('siteTourTag.confirm.cancel','Cancelar')}</button>
                             <button onClick={async () => { setShowDeleteConfirm(false); await bulkDeleteSelectedTags(); }} className="px-4 py-2 rounded bg-red-600 text-white text-sm">{t('siteTourTag.confirm.confirm','Eliminar')}</button>
                         </div>
                     </div>
@@ -1195,10 +1195,10 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/40" onClick={() => setShowQrModal(false)} />
 
-                    <div className="relative bg-white rounded-lg p-4 max-w-sm w-full">
+                    <div className="relative bg-card rounded-lg p-4 max-w-sm w-full">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-semibold">{t('siteTourTag.qrModal.title', 'QR')}</h3>
-                            <button onClick={() => setShowQrModal(false)} className="p-2 text-gray-500 hover:text-gray-700">
+                            <button onClick={() => setShowQrModal(false)} className="p-2 text-muted-foreground hover:text-foreground">
                                 <X size={18} />
                             </button>
                         </div>
@@ -1209,7 +1209,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                 alt="QR code"
                                 className="max-w-full"
                             />
-                            <div className="text-sm text-gray-700 break-words">{qrValue}</div>
+                            <div className="text-sm text-foreground break-words">{qrValue}</div>
 
                             <div className="flex gap-2">
                                 <button onClick={printQr} className="px-4 py-2 bg-[#C8860A] text-white rounded">{t('siteTourTag.qrModal.print', 'Print')}</button>
@@ -1222,10 +1222,10 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                 <div className="fixed inset-0 z-60 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black/40" onClick={() => setShowCreateTourModal(false)} />
 
-                    <div className="relative bg-white rounded-lg p-4 max-w-sm w-full">
+                    <div className="relative bg-card rounded-lg p-4 max-w-sm w-full">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-semibold">{t('siteTour.form.createTitle') || 'Crear recorrido'}</h3>
-                            <button onClick={() => setShowCreateTourModal(false)} className="p-2 text-gray-500 hover:text-gray-700">
+                            <button onClick={() => setShowCreateTourModal(false)} className="p-2 text-muted-foreground hover:text-foreground">
                                 <X size={18} />
                             </button>
                         </div>
@@ -1234,7 +1234,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                             <input value={tourForm.name} onChange={(e) => setTourForm((s: any) => ({ ...s, name: e.target.value }))} placeholder={t('siteTour.form.name') || 'Nombre del recorrido'} className="w-full border rounded-lg h-12 px-3" />
 
                             <div>
-                                <label className="block text-sm text-gray-700 mb-2">{t('siteTour.form.station') || 'Estación (opcional)'}</label>
+                                <label className="block text-sm text-foreground mb-2">{t('siteTour.form.station') || 'Estación (opcional)'}</label>
                                 <select value={tourForm.stationId || ''} onChange={(e) => setTourForm((s: any) => ({ ...s, stationId: e.target.value }))} className="w-full px-3 py-2 h-12 border rounded-md text-sm">
                                     <option value="">{loadingStations ? 'Cargando estaciones...' : (t('siteTour.form.selectStation') || 'Sin estación')}</option>
                                     {stations.map((s: any) => (

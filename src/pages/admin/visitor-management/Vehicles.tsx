@@ -209,7 +209,7 @@ export default function Vehicles() {
                             <DropdownMenuTrigger asChild>
                                 <button
                                     type="button"
-                                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-slate-50"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-card text-muted-foreground shadow-sm hover:bg-slate-50"
                                 >
                                     <MoreVertical className="h-4 w-4" />
                                 </button>
@@ -242,10 +242,10 @@ export default function Vehicles() {
 
                 <div className="mt-4 overflow-hidden rounded-lg border">
                     <table className="min-w-full border-collapse text-left text-sm">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-muted/30">
                             <tr className="border-b">
                                 <th className="px-4 py-3">
-                                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300" />
+                                    <input type="checkbox" className="h-4 w-4 rounded border-border" />
                                 </th>
                                 <th className="px-4 py-3 font-semibold">Color</th>
                                 <th className="px-4 py-3 font-semibold">Modelo</th>
@@ -278,7 +278,7 @@ export default function Vehicles() {
                         </tbody>
                     </table>
 
-                    <div className="flex items-center justify-between bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                    <div className="flex items-center justify-between bg-muted/30 px-4 py-3 text-sm text-foreground/70">
                         <div className="flex items-center gap-2">
                             <span>Elementos por página</span>
                             <Select value={perPage} onValueChange={setPerPage}>

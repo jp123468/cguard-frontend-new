@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
-import AuthLayout from "@/layouts/auth-layout";
+import { Eye, EyeOff, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { ApiService } from "@/services/api/apiService";
@@ -31,8 +30,8 @@ export default function ClientRegistration() {
   const shownToastRef = useRef<string | null>(null);
 
   const errorClass = (field: string) => (errors[field] ? "border-red-600 ring-1 ring-red-600" : "");
-  const formControl = "h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm text-slate-900 placeholder-slate-400";
-  const labelClass = "mb-2 block text-sm font-medium text-slate-700 min-h-[3rem] leading-5";
+  const formControl = "h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-sm text-foreground placeholder-slate-400";
+  const labelClass = "mb-2 block text-sm font-medium text-foreground min-h-[3rem] leading-5";
 
   useEffect(() => {
     const fetchInvite = async () => {
@@ -180,52 +179,149 @@ export default function ClientRegistration() {
   };
 
   return (
-    <AuthLayout title={getTitle()}>
-      <form className="space-y-3" onSubmit={handleSubmit}>
-        {inviteNotFound && (
-          <div className="rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800">
-            {t('client.invite_not_found', { defaultValue: 'Invitación no encontrada o inválida.' })}
-          </div>
-        )}
-        {fetched && !inviteNotFound && (
-          <div className="rounded-md border border-blue-300 bg-blue-50 p-3 text-sm text-blue-800 mb-4">
+    <div className="min-h-screen w-full flex bg-slate-50 dark:bg-slate-950">
+      {/* Left panel — tenant branding */}
+      <div
+        className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden"
+        style={{ background: "linear-gradient(145deg, #0F1923 0%, #1C2B3A 50%, #0F1923 100%)" }}
+      >
+        {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(#C8860A 1px, transparent 1px), linear-gradient(90deg, #C8860A 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+        {/* Decorative orbs */}
+        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#C8860A] opacity-10 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 -left-32 h-[32rem] w-[32rem] rounded-full bg-[#F5C300] opacity-5 blur-3xl pointer-events-none" />
+
+        {/* Tenant logo or name */}
+        <div className="relative z-10">
+          {fetched?.tenant?.logoUrl ? (
+            <img
+              src={fetched.tenant.logoUrl}
+              alt={fetched?.tenant?.name || 'Logo'}
+              className="h-16 object-contain"
+            />
+          ) : fetched?.tenant?.name ? (
+            <div className="flex items-center gap-3">
+              <Building2 className="h-10 w-10 text-[#C8860A]" />
+              <span className="text-2xl font-bold text-white">{fetched.tenant.name}</span>
+            </div>
+          ) : (
+            <div className="h-16" />
+          )}
+        </div>
+
+        {/* Center content */}
+        <div className="relative z-10 flex-1 flex flex-col justify-center py-12">
+          <h1 className="text-4xl xl:text-5xl font-extrabold leading-[1.1] text-white mb-6">
+            {fetched?.tenant?.name ? (
+              <>
+                Bienvenido a{" "}
+                <span
+                  className="block"
+                  style={{ WebkitTextFillColor: "transparent", WebkitBackgroundClip: "text", backgroundClip: "text", backgroundImage: "linear-gradient(90deg, #C8860A, #F5C300)" }}
+                >
+                  {fetched.tenant.name}
+                </span>
+              </>
+            ) : (
+              "Completar registro"
+            )}
+          </h1>
+          <p className="text-base xl:text-lg text-slate-400 leading-relaxed max-w-md">
             {getRoleDescription()}
-          </div>
-        )}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
-            <label className={labelClass}>Nombre<span style={{ color: "#F75638" }}>*</span></label>
-            <Input className={`${formControl} ${errorClass('name')}`} value={name} onChange={e => { setName(e.target.value); setErrors((p) => ({ ...p, name: undefined })); }} placeholder="Nombre" disabled={isLoading || lockedName} />
-            {errors.name && <div className="text-red-600 text-sm mt-1">{errors.name}</div>}
-          </div>
-          <div>
-            <label className={labelClass}>Email<span style={{ color: "#F75638" }}>*</span></label>
-            <Input className={`${formControl} ${errorClass('email')}`} value={email} onChange={e => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: undefined })); }} placeholder="Email" disabled={isLoading || lockedEmail} />
-            {errors.email && <div className="text-red-600 text-sm mt-1">{errors.email}</div>}
-          </div>
+          </p>
         </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
-            <label className={labelClass}>Contraseña<span style={{ color: "#F75638" }}>*</span></label>
-            <div className="relative">
-              <Input className={`${formControl} ${errorClass('password')}`} type={showPwd ? "text" : "password"} value={password} onChange={e => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: undefined })); }} placeholder="Contraseña" disabled={isLoading} />
-              <button type="button" className="absolute right-2 top-2" tabIndex={-1} onClick={() => setShowPwd((v) => !v)}>{showPwd ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+
+        {/* Footer */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="h-px flex-1 bg-white/10" />
+          <span className="text-xs text-slate-500">{fetched?.tenant?.name || ''}</span>
+          <div className="h-px flex-1 bg-white/10" />
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div className="flex flex-1 flex-col items-center justify-center p-6 lg:p-12 relative">
+        {/* Mobile tenant branding */}
+        <div className="mb-8 lg:hidden text-center">
+          {fetched?.tenant?.logoUrl ? (
+            <img src={fetched.tenant.logoUrl} alt={fetched?.tenant?.name || 'Logo'} className="h-12 object-contain mx-auto" />
+          ) : fetched?.tenant?.name ? (
+            <div className="flex items-center justify-center gap-2">
+              <Building2 className="h-8 w-8 text-[#C8860A]" />
+              <span className="text-xl font-bold text-foreground">{fetched.tenant.name}</span>
             </div>
-            {errors.password && <div className="text-red-600 text-sm mt-1">{errors.password}</div>}
-          </div>
-          <div>
-            <label className={labelClass}>Confirmar contraseña<span style={{ color: "#F75638" }}>*</span></label>
-            <div className="relative">
-              <Input className={`${formControl} ${errorClass('confirm')}`} type={showConfirm ? "text" : "password"} value={confirm} onChange={e => { setConfirm(e.target.value); setErrors((p) => ({ ...p, confirm: undefined })); }} placeholder="Confirmar contraseña" disabled={isLoading} />
-              <button type="button" className="absolute right-2 top-2" tabIndex={-1} onClick={() => setShowConfirm((v) => !v)}>{showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}</button>
-            </div>
-            {errors.confirm && <div className="text-red-600 text-sm mt-1">{errors.confirm}</div>}
-          </div>
+          ) : null}
         </div>
-        <div className="flex justify-end mt-4">
-          <button type="submit" className="bg-[#C8860A] hover:bg-[#B37809] text-white px-8 py-2 rounded" disabled={isLoading}>{isLoading ? t('client.registering', { defaultValue: 'Registrando...' }) : t('client.register', { defaultValue: 'Registrar' })}</button>
+
+        <div className="w-full max-w-md">
+          {/* Card header */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-1">
+              {getTitle()}
+            </h2>
+          </div>
+
+          {/* Form card */}
+          <div className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5">
+            <form className="space-y-3" onSubmit={handleSubmit}>
+              {inviteNotFound && (
+                <div className="rounded-md border border-yellow-300 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 p-3 text-sm text-yellow-800 dark:text-yellow-300">
+                  {t('client.invite_not_found', { defaultValue: 'Invitación no encontrada o inválida.' })}
+                </div>
+              )}
+              {fetched && !inviteNotFound && (
+                <div className="rounded-md border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 p-3 text-sm text-blue-700 dark:text-blue-300 mb-4">
+                  {getRoleDescription()}
+                </div>
+              )}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <label className={labelClass}>Nombre<span style={{ color: "#F75638" }}>*</span></label>
+                  <Input className={`${formControl} ${errorClass('name')}`} value={name} onChange={e => { setName(e.target.value); setErrors((p) => ({ ...p, name: undefined })); }} placeholder="Nombre" disabled={isLoading || lockedName} />
+                  {errors.name && <div className="text-red-600 text-sm mt-1">{errors.name}</div>}
+                </div>
+                <div>
+                  <label className={labelClass}>Email<span style={{ color: "#F75638" }}>*</span></label>
+                  <Input className={`${formControl} ${errorClass('email')}`} value={email} onChange={e => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: undefined })); }} placeholder="Email" disabled={isLoading || lockedEmail} />
+                  {errors.email && <div className="text-red-600 text-sm mt-1">{errors.email}</div>}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <label className={labelClass}>Contraseña<span style={{ color: "#F75638" }}>*</span></label>
+                  <div className="relative">
+                    <Input className={`${formControl} ${errorClass('password')}`} type={showPwd ? "text" : "password"} value={password} onChange={e => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: undefined })); }} placeholder="Contraseña" disabled={isLoading} />
+                    <button type="button" className="absolute right-2 top-2 text-slate-500 dark:text-slate-400" tabIndex={-1} onClick={() => setShowPwd((v) => !v)}>{showPwd ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                  </div>
+                  {errors.password && <div className="text-red-600 text-sm mt-1">{errors.password}</div>}
+                </div>
+                <div>
+                  <label className={labelClass}>Confirmar contraseña<span style={{ color: "#F75638" }}>*</span></label>
+                  <div className="relative">
+                    <Input className={`${formControl} ${errorClass('confirm')}`} type={showConfirm ? "text" : "password"} value={confirm} onChange={e => { setConfirm(e.target.value); setErrors((p) => ({ ...p, confirm: undefined })); }} placeholder="Confirmar contraseña" disabled={isLoading} />
+                    <button type="button" className="absolute right-2 top-2 text-slate-500 dark:text-slate-400" tabIndex={-1} onClick={() => setShowConfirm((v) => !v)}>{showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                  </div>
+                  {errors.confirm && <div className="text-red-600 text-sm mt-1">{errors.confirm}</div>}
+                </div>
+              </div>
+              <div className="flex justify-end mt-4">
+                <button type="submit" className="bg-[#C8860A] hover:bg-[#B37809] text-white px-8 py-2 rounded" disabled={isLoading}>{isLoading ? t('client.registering', { defaultValue: 'Registrando...' }) : t('client.register', { defaultValue: 'Registrar' })}</button>
+              </div>
+            </form>
+          </div>
+
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            {fetched?.tenant?.name ? `© ${new Date().getFullYear()} ${fetched.tenant.name}` : ''}
+          </p>
         </div>
-      </form>
-    </AuthLayout>
+      </div>
+    </div>
   );
 }

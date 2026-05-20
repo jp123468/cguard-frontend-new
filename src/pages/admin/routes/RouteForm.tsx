@@ -685,7 +685,7 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
                 </SelectContent>
               </Select>
               {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugSupervisor') === '1' && (
-                <pre className="mt-2 p-2 rounded bg-gray-50 text-xs text-black">
+                <pre className="mt-2 p-2 rounded bg-muted/30 text-xs text-black">
                   {JSON.stringify({
                     fieldValue: field.value,
                     supervisors,
@@ -760,7 +760,7 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse text-left text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-muted/30">
                   <tr className="border-b">
                     <th className="px-4 py-3 font-semibold">#</th>
                     <th className="px-4 py-3 font-semibold">Puesto de seguridad</th>

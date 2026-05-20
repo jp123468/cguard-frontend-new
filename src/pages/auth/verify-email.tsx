@@ -80,7 +80,7 @@ export default function VerifyEmail() {
     <AuthLayout title={t('auth.verify_email_title') || 'Verificando correo'}>
       <div className="flex flex-col items-center justify-center py-12">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-500" />
-        <p className="mt-4 text-slate-600">{t('auth.verify_email_processing') || 'Procesando verificación...'}</p>
+        <p className="mt-4 text-foreground/70">{t('auth.verify_email_processing') || 'Procesando verificación...'}</p>
       </div>
     </AuthLayout>
   );

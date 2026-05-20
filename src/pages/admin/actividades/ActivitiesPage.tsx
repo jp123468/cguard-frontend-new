@@ -175,7 +175,7 @@ export default function ActivitiesPage() {
             className="h-40 mb-4"
             alt={t('activity.empty.alt')}
           />
-          <h3 className="text-2xl font-semibold text-gray-800">
+          <h3 className="text-2xl font-semibold text-foreground">
             {t('activity.noResults.title')}
           </h3>
           <p className="mt-2 text-sm text-muted-foreground max-w-xs">

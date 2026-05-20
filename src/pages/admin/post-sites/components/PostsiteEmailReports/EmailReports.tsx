@@ -106,10 +106,10 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
 
   return (
     <div ref={containerRef} className="space-y-4">
-      <div className="bg-white border rounded-lg p-4">
+      <div className="bg-card border rounded-lg p-4">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="relative">
-            <select value={action} onChange={e => handleActionChange(e.target.value)} className="h-10 rounded-full border px-3 bg-white text-sm">
+            <select value={action} onChange={e => handleActionChange(e.target.value)} className="h-10 rounded-full border px-3 bg-card text-sm">
               <option value="">Action</option>
               <option value="delete">Delete</option>
             </select>
@@ -117,7 +117,7 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
 
           <div className="flex-1 flex justify-center">
             <div className="relative w-full max-w-xl">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"><Search size={16} /></span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none"><Search size={16} /></span>
               <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search emails" className="w-full h-10 rounded-full border pl-10 pr-4" />
             </div>
           </div>
@@ -133,7 +133,7 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
         <div>
           <div className="md:block hidden overflow-x-auto">
             <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted/30">
               <tr>
                 <th className="px-4 py-3"><input type="checkbox" checked={list.length > 0 && list.filter(i => i.email.toLowerCase().includes(query.toLowerCase())).every(i => selectedIds.includes(i.id))} onChange={toggleSelectAll} /></th>
                 <th className="px-4 py-3 text-left">Email</th>
@@ -157,8 +157,8 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">No Result Found</h3>
-                        <p className="text-sm text-gray-500 mt-1">We can't find any item matching your search</p>
+                        <h3 className="text-lg font-semibold text-foreground">No Result Found</h3>
+                        <p className="text-sm text-muted-foreground mt-1">We can't find any item matching your search</p>
                       </div>
                     </div>
                   </td>
@@ -167,10 +167,10 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
                 filtered.map(i => (
                   <tr key={i.id} className="border-t">
                     <td className="px-4 py-4"><input type="checkbox" checked={selectedIds.includes(i.id)} onChange={() => toggleSelect(i.id)} /></td>
-                    <td className="px-4 py-4 text-sm text-gray-700">{i.email}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500">{i.frequency}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500">{i.addedBy}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500">{i.status}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">{i.email}</td>
+                    <td className="px-4 py-4 text-sm text-muted-foreground">{i.frequency}</td>
+                    <td className="px-4 py-4 text-sm text-muted-foreground">{i.addedBy}</td>
+                    <td className="px-4 py-4 text-sm text-muted-foreground">{i.status}</td>
                     <td className="px-4 py-4 text-right"><button className="px-3 py-1 rounded-full border text-sm">Actions</button></td>
                   </tr>
                 ))
@@ -183,7 +183,7 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
             <MobileCardList items={list} renderCard={(r: any) => (
               <div>
                 <div className="text-sm font-semibold">{r.email}</div>
-                <div className="text-xs text-gray-500">{r.frequency}</div>
+                <div className="text-xs text-muted-foreground">{r.frequency}</div>
               </div>
             )} loading={false} />
           </div>
@@ -195,10 +195,10 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center">
           <div className="absolute inset-0 bg-black/40 z-40" onClick={() => setModalOpen(false)} />
 
-          <div className="w-full sm:ml-auto sm:w-full sm:max-w-md bg-white rounded-t-lg sm:rounded-l-md shadow-lg pointer-events-auto flex flex-col overflow-hidden relative z-50">
-            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-50">
+          <div className="w-full sm:ml-auto sm:w-full sm:max-w-md bg-card rounded-t-lg sm:rounded-l-md shadow-lg pointer-events-auto flex flex-col overflow-hidden relative z-50">
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-50">
               <h3 className="text-lg font-semibold">Add Email</h3>
-              <button className="p-2 text-gray-500 hover:text-gray-700" onClick={() => setModalOpen(false)}><X size={18} /></button>
+              <button className="p-2 text-muted-foreground hover:text-foreground" onClick={() => setModalOpen(false)}><X size={18} /></button>
             </div>
 
             {/* Scrollable content */}
@@ -217,12 +217,12 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
               </div>
 
               <div>
-                <div className="text-sm text-gray-600 mb-3">Select reports to be included in DAR :</div>
+                <div className="text-sm text-foreground/70 mb-3">Select reports to be included in DAR :</div>
                 <div className="space-y-3">
                   {SAMPLE_REPORTS.map(r => (
                     <label key={r} className="flex items-center gap-3">
                       <input type="checkbox" checked={selectedReports.includes(r)} onChange={() => toggleReport(r)} />
-                      <span className={`text-sm ${selectedReports.includes(r) ? 'text-blue-600 font-semibold' : 'text-gray-700'}`}>{r}</span>
+                      <span className={`text-sm ${selectedReports.includes(r) ? 'text-blue-600 font-semibold' : 'text-foreground'}`}>{r}</span>
                     </label>
                   ))}
                 </div>
@@ -233,8 +233,8 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
             </div>
 
             {/* Fixed footer with static Save/Cancel */}
-            <div className="p-4 border-t bg-white flex justify-end sticky bottom-0">
-              <button onClick={() => setModalOpen(false)} className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 mr-3">Cancel</button>
+            <div className="p-4 border-t bg-card flex justify-end sticky bottom-0">
+              <button onClick={() => setModalOpen(false)} className="px-4 py-2 rounded-full bg-muted text-foreground mr-3">Cancel</button>
               <button onClick={saveEmail} className="px-4 py-2 rounded-full bg-blue-600 text-white">Save</button>
             </div>
           </div>
@@ -245,18 +245,18 @@ export default function PostSiteEmailReports({ site }: { site?: any }) {
       {confirmDelete.open && (
         <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }}>
           <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmDelete({ open: false })} />
-          <div className="bg-white rounded-md shadow-lg w-full max-w-md" style={{ zIndex: 10000 }}>
+          <div className="bg-card rounded-md shadow-lg w-full max-w-md" style={{ zIndex: 10000 }}>
             <div className="p-6">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center text-red-600">!</div>
+                <div className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center text-red-600">!</div>
                 <div>
                   <h4 className="text-lg font-semibold">Confirmar eliminación</h4>
-                  <p className="text-sm text-gray-600 mt-1">¿Estás seguro que deseas eliminar los elementos seleccionados?</p>
+                  <p className="text-sm text-foreground/70 mt-1">¿Estás seguro que deseas eliminar los elementos seleccionados?</p>
                 </div>
               </div>
             </div>
             <div className="p-4 border-t flex justify-end gap-3">
-              <button onClick={() => setConfirmDelete({ open: false })} className="px-4 py-2 rounded-full bg-white border">Cancelar</button>
+              <button onClick={() => setConfirmDelete({ open: false })} className="px-4 py-2 rounded-full bg-card border">Cancelar</button>
               <button onClick={() => deleteSelected(confirmDelete.ids)} className="px-4 py-2 rounded-full bg-red-600 text-white">Confirmar</button>
             </div>
           </div>

@@ -185,7 +185,7 @@ export default function NewVehiclePage() {
                 {preview ? (
                   <img src={preview} alt="vehículo" className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center text-slate-500">
+                  <div className="flex h-full w-full flex-col items-center justify-center text-muted-foreground">
                     <svg width="42" height="42" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M5 11l1-3a3 3 0 012.83-2h6.34A3 3 0 0118 8l1 3h1a2 2 0 012 2v3a2 2 0 01-2 2v1a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1H7v1a1 1 0 01-1 1H5a1 1 0 01-1-1v-1a2 2 0 01-2-2v-3a2 2 0 012-2h1zm3.83-4a1 1 0 00-.95.68L7.3 11h9.4l-.58-3.32a1 1 0 00-.95-.68zM5 16h14v-3H5zm5-2.5a1.5 1.5 0 10-1.5 1.5A1.5 1.5 0 0010 13.5zm7 1.5a1.5 1.5 0 10-1.5-1.5A1.5 1.5 0 0017 15z" />
                     </svg>

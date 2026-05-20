@@ -60,24 +60,24 @@ export default function ClientEmailReports({ client }: { client: any }) {
 
   return (
     <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
+      <div className="bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative" ref={actionRef}>
             <button
               onClick={() => setActionOpen(!actionOpen)}
-              className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]"
+              className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
             >
               {actionSelection}
               <ChevronDown size={16} />
             </button>
             {actionOpen && (
-              <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
-                <button onClick={() => { setActionSelection('Eliminar'); setActionOpen(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Eliminar</button>
+              <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
+                <button onClick={() => { setActionSelection('Eliminar'); setActionOpen(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-muted">Eliminar</button>
               </div>
             )}
           </div>
           <div className="relative w-full max-w-lg">
-            <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search access list" className="w-full pl-9 pr-3 py-2 border rounded-full text-sm" />
           </div>
 
@@ -92,12 +92,12 @@ export default function ClientEmailReports({ client }: { client: any }) {
         <div className="mt-6 flex-1 min-h-0 overflow-y-auto overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Frequency</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Post Site</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+              <tr className="border-b bg-muted/30">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Email</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Frequency</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Post Site</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Date</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Status</th>
 
               </tr>
             </thead>
@@ -115,20 +115,20 @@ export default function ClientEmailReports({ client }: { client: any }) {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">No results found</h3>
-                        <p className="text-sm text-gray-500 mt-1">We couldn't find<br />any items matching<br />your search</p>
+                        <h3 className="text-lg font-semibold text-foreground">No results found</h3>
+                        <p className="text-sm text-muted-foreground mt-1">We couldn't find<br />any items matching<br />your search</p>
                       </div>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filtered.map((u) => (
-                  <tr key={u.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm text-gray-700">{u.email}</td>
-                    <td className="px-4 py-4 text-sm text-gray-700">{u.frequency}</td>
-                    <td className="px-4 py-4 text-sm text-gray-700">{(Array.isArray(client?.postSites) ? (client.postSites.find((ps: any) => ps.id === u.postSite)?.name) : u.postSite) || ''}</td>
-                    <td className="px-4 py-4 text-sm text-gray-700">{u.date ? new Date(u.date).toLocaleDateString() : ''}</td>
-                    <td className="px-4 py-4 text-sm text-gray-700">{u.status || 'Active'}</td>
+                  <tr key={u.id} className="border-b hover:bg-muted/30">
+                    <td className="px-4 py-4 text-sm text-foreground">{u.email}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">{u.frequency}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">{(Array.isArray(client?.postSites) ? (client.postSites.find((ps: any) => ps.id === u.postSite)?.name) : u.postSite) || ''}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">{u.date ? new Date(u.date).toLocaleDateString() : ''}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">{u.status || 'Active'}</td>
                   </tr>
                 ))
               )}
@@ -141,17 +141,17 @@ export default function ClientEmailReports({ client }: { client: any }) {
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/30" onClick={() => setShowInvite(false)} />
 
-          <div className="fixed right-0 top-0 bottom-0 w-[520px] bg-white dark:bg-slate-800 shadow-2xl flex flex-col text-gray-900 dark:text-gray-100" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white dark:bg-slate-800 z-10">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Add New Email</h3>
-              <button onClick={() => setShowInvite(false)} className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white"><X /></button>
+          <div className="fixed right-0 top-0 bottom-0 w-[520px] bg-card dark:bg-slate-800 shadow-2xl flex flex-col text-foreground dark:text-gray-100" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card dark:bg-slate-800 z-10">
+              <h3 className="text-lg font-semibold text-foreground dark:text-gray-100">Add New Email</h3>
+              <button onClick={() => setShowInvite(false)} className="text-muted-foreground hover:text-foreground/70 dark:text-muted-foreground/60 dark:hover:text-white"><X /></button>
             </div>
 
             <div className="p-6 overflow-y-auto flex-1">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-700 dark:text-gray-200 mb-2">Post Site*</label>
-                  <select value={form.postSite} onChange={(e) => setForm((p) => ({ ...p, postSite: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, postSite: true }))} className="w-full border rounded-md h-12 px-3 bg-white dark:bg-slate-900 dark:text-white dark:border-white/10">
+                  <label className="block text-sm text-foreground dark:text-muted-foreground/40 mb-2">Post Site*</label>
+                  <select value={form.postSite} onChange={(e) => setForm((p) => ({ ...p, postSite: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, postSite: true }))} className="w-full border rounded-md h-12 px-3 bg-card dark:bg-slate-900 dark:text-white dark:border-white/10">
                     <option value="">Select Post Site</option>
                     {(Array.isArray(client?.postSites) ? client.postSites : []).map((ps: any) => (
                       <option key={ps.id} value={ps.id}>{ps.name}</option>
@@ -161,14 +161,14 @@ export default function ClientEmailReports({ client }: { client: any }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-700 dark:text-gray-200 mb-2">New Email</label>
-                  <input value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, email: true }))} placeholder="New Email..." className="w-full border rounded-md h-12 px-3 bg-white dark:bg-slate-900 dark:text-white dark:border-white/10" />
+                  <label className="block text-sm text-foreground dark:text-muted-foreground/40 mb-2">New Email</label>
+                  <input value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, email: true }))} placeholder="New Email..." className="w-full border rounded-md h-12 px-3 bg-card dark:bg-slate-900 dark:text-white dark:border-white/10" />
                   {touched.email && !form.email && <div className="text-red-600 text-sm mt-1">Required</div>}
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-700 dark:text-gray-200 mb-2">Select Frequency*</label>
-                  <select value={form.frequency} onChange={(e) => setForm((p) => ({ ...p, frequency: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, frequency: true }))} className="w-full border rounded-md h-12 px-3 bg-white dark:bg-slate-900 dark:text-white dark:border-white/10">
+                  <label className="block text-sm text-foreground dark:text-muted-foreground/40 mb-2">Select Frequency*</label>
+                  <select value={form.frequency} onChange={(e) => setForm((p) => ({ ...p, frequency: e.target.value }))} onBlur={() => setTouched((p) => ({ ...p, frequency: true }))} className="w-full border rounded-md h-12 px-3 bg-card dark:bg-slate-900 dark:text-white dark:border-white/10">
                     <option value="">Select Frequency</option>
                     <option value="Daily">Daily</option>
                     <option value="Weekly">Weekly</option>
@@ -178,18 +178,18 @@ export default function ClientEmailReports({ client }: { client: any }) {
                 </div>
 
                 <div>
-                  <div className="text-sm text-gray-700 dark:text-gray-200 mb-3">Select reports to be included in DAR :</div>
+                  <div className="text-sm text-foreground dark:text-muted-foreground/40 mb-3">Select reports to be included in DAR :</div>
                   <div className="grid gap-3">
                     {reportsList.map((r) => {
                       const active = selectedReports.includes(r);
                       return (
                         <label key={r} className="flex items-start gap-3">
-                          <button type="button" onClick={() => toggleReport(r)} className={`w-5 h-5 rounded-sm flex items-center justify-center border ${active ? 'bg-[#C8860A] border-[#C8860A]' : 'bg-white border-gray-300'}`}>
+                          <button type="button" onClick={() => toggleReport(r)} className={`w-5 h-5 rounded-sm flex items-center justify-center border ${active ? 'bg-[#C8860A] border-[#C8860A]' : 'bg-card border-border'}`}>
                             {active ? (
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             ) : null}
                           </button>
-                          <span className={`${active ? 'text-[#C8860A] font-semibold' : 'text-gray-700 dark:text-gray-200'}`}>{r}</span>
+                          <span className={`${active ? 'text-[#C8860A] font-semibold' : 'text-foreground dark:text-muted-foreground/40'}`}>{r}</span>
                         </label>
                       );
                     })}
@@ -198,7 +198,7 @@ export default function ClientEmailReports({ client }: { client: any }) {
               </div>
             </div>
 
-            <div className="p-4 bg-white dark:bg-slate-800 sticky bottom-0 z-20">
+            <div className="p-4 bg-card dark:bg-slate-800 sticky bottom-0 z-20">
               <div className="flex items-center justify-end">
                 <button onClick={handleSaveEmail} className="ml-auto w-12 h-12 rounded-full bg-[#C8860A] text-white flex items-center justify-center shadow-lg hover:bg-[#B37809]">Save</button>
               </div>

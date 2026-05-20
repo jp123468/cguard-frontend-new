@@ -802,7 +802,7 @@ export default function EditDispatchPage() {
                                       return next;
                                     });
                                   }}
-                                  className="text-slate-500 hover:text-red-500"
+                                  className="text-muted-foreground hover:text-red-500"
                                   aria-label={`Eliminar ${f.name}`}
                                 >
                                   <X className="h-4 w-4" />

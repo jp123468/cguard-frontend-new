@@ -141,7 +141,7 @@ export default function DispatchPublicView() {
   })();
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+    <div className="p-6 bg-muted/30 min-h-screen" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
       <div className="max-w-4xl mx-auto">
         {/* Logo + Map header */}
         <div className="flex flex-col items-center mb-4">
@@ -149,46 +149,46 @@ export default function DispatchPublicView() {
           {coords && <div className="w-full mb-2"><IncidentMap lat={coords.lat} lng={coords.lng} label={payload?.ticketId || payload?.id} /></div>}
         </div>
 
-        <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold flex items-center justify-between">
+        <div className="bg-card border rounded-md overflow-hidden">
+          <div className="bg-muted px-4 py-2 text-sm font-semibold flex items-center justify-between">
             <div>Basic Details</div>
           </div>
           <div className="p-0 text-sm">
             <table className="w-full text-sm border-collapse">
               <tbody>
                 <tr className="border-b">
-                  <td className="py-3 px-4 text-xs font-medium text-gray-500">Ticket ID</td>
-                  <td className="py-3 px-4 text-sm text-gray-800">{ticketShort} <span className={`inline-block text-xs ml-2 px-2 py-0.5 rounded-full ${payload.status === 'open' || payload.status === 'abierto' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{payload.status ?? ''}</span></td>
-                  <td className="py-3 px-4 text-xs font-medium text-gray-500">Date/Time</td>
-                  <td className="py-3 px-4 text-sm text-gray-800">{payload.createdAt ? new Date(payload.createdAt).toLocaleString() : '-'}</td>
+                  <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Ticket ID</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{ticketShort} <span className={`inline-block text-xs ml-2 px-2 py-0.5 rounded-full ${payload.status === 'open' || payload.status === 'abierto' ? 'bg-red-500/15 text-red-700' : 'bg-green-100 text-green-700'}`}>{payload.status ?? ''}</span></td>
+                  <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Date/Time</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{payload.createdAt ? new Date(payload.createdAt).toLocaleString() : '-'}</td>
                 </tr>
 
                 <tr className="border-b">
-                  <td className="py-3 px-4 text-xs font-medium text-gray-500">Client Name</td>
-                  <td className="py-3 px-4 text-sm text-gray-800">{((payload.client && (payload.client.name || payload.client.fullName)) || clients.find((c) => c.id === payload.clientId)?.name || clients.find((c) => c.id === payload.clientId)?.fullName || '-')}</td>
-                  <td className="py-3 px-4 text-xs font-medium text-gray-500">Post Site</td>
-                  <td className="py-3 px-4 text-sm text-gray-800">{((payload.site && (payload.site.name || payload.site.companyName)) || postSites.find((s) => s.id === payload.siteId)?.name || '-')}</td>
+                  <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Client Name</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{((payload.client && (payload.client.name || payload.client.fullName)) || clients.find((c) => c.id === payload.clientId)?.name || clients.find((c) => c.id === payload.clientId)?.fullName || '-')}</td>
+                  <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Post Site</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{((payload.site && (payload.site.name || payload.site.companyName)) || postSites.find((s) => s.id === payload.siteId)?.name || '-')}</td>
                 </tr>
 
                 <tr className="border-b">
-                  <td className="py-3 px-4 text-xs font-medium text-gray-500">Caller Type</td>
-                  <td className="py-3 px-4 text-sm text-gray-800">{payload.callerType || '-'}</td>
-                  <td className="py-3 px-4 text-xs font-medium text-gray-500">Caller Name</td>
-                  <td className="py-3 px-4 text-sm text-gray-800">{payload.callerName || '-'}</td>
+                  <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Caller Type</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{payload.callerType || '-'}</td>
+                  <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Caller Name</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{payload.callerName || '-'}</td>
                 </tr>
 
                 <tr className="border-b">
-                  <td className="py-3 px-4 text-xs font-medium text-gray-500">Incident Type</td>
-                  <td className="py-3 px-4 text-sm text-gray-800">{incidentTypeDisplay}</td>
-                  <td className="py-3 px-4 text-xs font-medium text-gray-500">Incident Date/Time</td>
-                  <td className="py-3 px-4 text-sm text-gray-800">{(payload.incidentAt || payload.dateTime) ? new Date(payload.incidentAt || payload.dateTime).toLocaleString() : '-'}</td>
+                  <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Incident Type</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{incidentTypeDisplay}</td>
+                  <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Incident Date/Time</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{(payload.incidentAt || payload.dateTime) ? new Date(payload.incidentAt || payload.dateTime).toLocaleString() : '-'}</td>
                 </tr>
 
                 <tr className="border-b">
-                  <td className="py-3 px-4 text-xs font-medium text-gray-500">Incident Location</td>
-                  <td className="py-3 px-4 text-sm text-gray-800">{payload.location || payload.incidentLocation || '-'}</td>
-                  <td className="py-3 px-4 text-xs font-medium text-gray-500">Dispatcher</td>
-                  <td className="py-3 px-4 text-sm text-gray-800">{(payload.guardName && (payload.guardName.fullName || payload.guardName.name)) || payload.guardName || '-'}</td>
+                  <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Incident Location</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{payload.location || payload.incidentLocation || '-'}</td>
+                  <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Dispatcher</td>
+                  <td className="py-3 px-4 text-sm text-foreground">{(payload.guardName && (payload.guardName.fullName || payload.guardName.name)) || payload.guardName || '-'}</td>
                 </tr>
               </tbody>
             </table>
@@ -196,23 +196,23 @@ export default function DispatchPublicView() {
         </div>
 
         <div className="mt-4 space-y-4">
-          <div className="bg-white border rounded-md overflow-hidden">
-            <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Incident Details</div>
+          <div className="bg-card border rounded-md overflow-hidden">
+            <div className="bg-muted px-4 py-2 text-sm font-semibold">Incident Details</div>
             <div className="p-4 text-sm">{payload?.content || payload?.incidentDetails || payload?.details || '-'}</div>
           </div>
 
-          <div className="bg-white border rounded-md overflow-hidden">
-            <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Action Taken</div>
+          <div className="bg-card border rounded-md overflow-hidden">
+            <div className="bg-muted px-4 py-2 text-sm font-semibold">Action Taken</div>
             <div className="p-4 text-sm">{payload?.actionsTaken || payload?.actionTaken || payload?.action || '-'}</div>
           </div>
 
-          <div className="bg-white border rounded-md overflow-hidden">
-            <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Internal Notes</div>
+          <div className="bg-card border rounded-md overflow-hidden">
+            <div className="bg-muted px-4 py-2 text-sm font-semibold">Internal Notes</div>
             <div className="p-4 text-sm whitespace-pre-wrap">{payload?.internalNotes || payload?.notes || '-'}</div>
           </div>
 
-          <div className="bg-white border rounded-md overflow-hidden">
-            <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Files</div>
+          <div className="bg-card border rounded-md overflow-hidden">
+            <div className="bg-muted px-4 py-2 text-sm font-semibold">Files</div>
             <div className="p-4 text-sm">
               {payload?.requestDocumentPDF && payload.requestDocumentPDF.length > 0 ? (
                 <ul className="list-disc pl-5">
@@ -221,26 +221,26 @@ export default function DispatchPublicView() {
                   ))}
                 </ul>
               ) : (
-                <div className="text-sm text-gray-500">-</div>
+                <div className="text-sm text-muted-foreground">-</div>
               )}
               {typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debugPayload') && payload && (
-                <div className="bg-gray-50 border rounded-md p-4 text-xs whitespace-pre-wrap overflow-auto mt-3">
+                <div className="bg-muted/30 border rounded-md p-4 text-xs whitespace-pre-wrap overflow-auto mt-3">
                   <pre className="text-xs">{JSON.stringify(payload, null, 2)}</pre>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="bg-white border rounded-md overflow-hidden">
-            <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Guard Assigned</div>
+          <div className="bg-card border rounded-md overflow-hidden">
+            <div className="bg-muted px-4 py-2 text-sm font-semibold">Guard Assigned</div>
             <div className="p-4 text-sm">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm table-fixed border-collapse">
                   <thead>
-                    <tr className="bg-gray-50 text-left">
-                      <th className="py-2 px-3 text-xs font-medium text-gray-500">Guard</th>
-                      <th className="py-2 px-3 text-xs font-medium text-gray-500">Status</th>
-                      <th className="py-2 px-3 text-xs font-medium text-gray-500">Date/Time</th>
+                    <tr className="bg-muted/30 text-left">
+                      <th className="py-2 px-3 text-xs font-medium text-muted-foreground">Guard</th>
+                      <th className="py-2 px-3 text-xs font-medium text-muted-foreground">Status</th>
+                      <th className="py-2 px-3 text-xs font-medium text-muted-foreground">Date/Time</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -259,19 +259,19 @@ export default function DispatchPublicView() {
         </div>
 
         <div className="mt-6 max-w-4xl mx-auto">
-          <div className="bg-white border rounded-md overflow-hidden">
-            <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">Ticket Summary</div>
+          <div className="bg-card border rounded-md overflow-hidden">
+            <div className="bg-muted px-4 py-2 text-sm font-semibold">Ticket Summary</div>
             <div className="p-4">
               {payload?.comments && payload.comments.length === 0 ? (
-                <div className="text-sm text-gray-500">No hay comentarios aún</div>
+                <div className="text-sm text-muted-foreground">No hay comentarios aún</div>
               ) : (
                 <div className="space-y-4">
                   {payload.comments && payload.comments.map((c: any) => (
                     <div key={c.id || c.createdAt} className="flex items-start gap-3">
-                      <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700">{(c.author && (c.author.name || c.author.fullName || c.author.username) ? String((c.author.name || c.author.fullName || c.author.username)).charAt(0).toUpperCase() : 'U')}</div>
+                      <div className="flex-shrink-0 h-8 w-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-foreground">{(c.author && (c.author.name || c.author.fullName || c.author.username) ? String((c.author.name || c.author.fullName || c.author.username)).charAt(0).toUpperCase() : 'U')}</div>
                       <div className="flex-1">
-                        <div className="text-xs text-gray-600">{(c.author && (c.author.name || c.author.fullName || c.author.username)) || 'Usuario'} · {c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</div>
-                        <div className="mt-1 text-sm text-gray-800 whitespace-pre-wrap">{c.text || c.body || c.message}</div>
+                        <div className="text-xs text-foreground/70">{(c.author && (c.author.name || c.author.fullName || c.author.username)) || 'Usuario'} · {c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</div>
+                        <div className="mt-1 text-sm text-foreground whitespace-pre-wrap">{c.text || c.body || c.message}</div>
                         {c.attachment && c.attachment.url && (
                           <div className="mt-2">
                             <a className="text-xs text-blue-600 underline" href={c.attachment.url} target="_blank" rel="noreferrer">Adjunto: {c.attachment.name || c.attachment.url}</a>

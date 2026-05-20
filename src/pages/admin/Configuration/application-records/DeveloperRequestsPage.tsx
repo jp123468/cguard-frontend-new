@@ -174,10 +174,10 @@ export default function DeveloperRequestsPage() {
           </div>
 
           {/* Tabla */}
-          <div className="rounded-lg border bg-white">
+          <div className="rounded-lg border bg-card">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50">
+                <TableRow className="bg-muted/30">
                   <TableHead className="font-semibold">
                     Fecha de creación
                   </TableHead>
@@ -257,7 +257,7 @@ export default function DeveloperRequestsPage() {
                             strokeWidth="2"
                           />
                         </svg>
-                        <h3 className="mb-2 text-lg font-semibold text-gray-700">
+                        <h3 className="mb-2 text-lg font-semibold text-foreground">
                           No se encontraron resultados
                         </h3>
                         <p className="text-center text-sm text-muted-foreground">

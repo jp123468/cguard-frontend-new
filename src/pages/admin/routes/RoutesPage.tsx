@@ -229,7 +229,7 @@ export default function RoutesPage() {
 
         <div className="mt-4 overflow-hidden rounded-lg border">
           <table className="min-w-full border-collapse text-left text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted/30">
               <tr className="border-b">
                 <th className="px-4 py-3">
                   <Checkbox />
@@ -311,7 +311,7 @@ export default function RoutesPage() {
             </tbody>
           </table>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-gray-600 bg-gray-50 border-x border-b rounded-b-lg">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-foreground/70 bg-muted/30 border-x border-b rounded-b-lg">
             <div className="flex items-center gap-2">
               <span>{t('clients.pagination.itemsPerPage', 'Elementos por página')}</span>
               <Select

@@ -24,7 +24,7 @@ export function ServiceTypeBadge({ value, className, size = 'sm' }: ServiceTypeB
   if (!value) {
     return (
       <span className={cn(
-        'inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 text-gray-500 font-medium',
+        'inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 text-muted-foreground font-medium',
         size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm',
         className,
       )}>
@@ -37,7 +37,7 @@ export function ServiceTypeBadge({ value, className, size = 'sm' }: ServiceTypeB
     // Custom type – display the raw value
     return (
       <span className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border border-gray-300 bg-gray-100 text-gray-600 font-medium',
+        'inline-flex items-center gap-1.5 rounded-full border border-border bg-muted text-foreground/70 font-medium',
         size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm',
         className,
       )}>
@@ -104,23 +104,23 @@ export function ServiceTypePicker({ value, onChange, error }: ServiceTypePickerP
                 'flex items-start gap-3 rounded-lg border-2 p-4 text-left transition-all duration-150 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]',
                 isSelected
                   ? [st.color, st.borderColor, 'shadow-sm ring-1', st.borderColor.replace('border-', 'ring-')]
-                  : 'border-gray-200 bg-white hover:border-gray-300',
+                  : 'border-border bg-card hover:border-border',
               )}
             >
               <span className={cn(
                 'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-                isSelected ? [st.color, st.textColor] : 'bg-gray-100 text-gray-500',
+                isSelected ? [st.color, st.textColor] : 'bg-muted text-muted-foreground',
               )}>
                 <Icon className="h-4 w-4" />
               </span>
               <span className="min-w-0">
                 <span className={cn(
                   'block text-sm font-semibold',
-                  isSelected ? st.textColor : 'text-gray-900',
+                  isSelected ? st.textColor : 'text-foreground',
                 )}>
                   {st.label}
                 </span>
-                <span className="mt-0.5 block text-xs text-gray-500 leading-relaxed">
+                <span className="mt-0.5 block text-xs text-muted-foreground leading-relaxed">
                   {st.description}
                 </span>
               </span>
@@ -135,21 +135,21 @@ export function ServiceTypePicker({ value, onChange, error }: ServiceTypePickerP
           className={cn(
             'flex items-start gap-3 rounded-lg border-2 p-4 text-left transition-all duration-150 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]',
             isOther
-              ? 'border-gray-400 bg-gray-50 shadow-sm ring-1 ring-gray-400'
-              : 'border-gray-200 bg-white hover:border-gray-300',
+              ? 'border-gray-400 bg-muted/30 shadow-sm ring-1 ring-gray-400'
+              : 'border-border bg-card hover:border-border',
           )}
         >
           <span className={cn(
             'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-            isOther ? 'bg-gray-200 text-gray-600' : 'bg-gray-100 text-gray-500',
+            isOther ? 'bg-muted text-foreground/70' : 'bg-muted text-muted-foreground',
           )}>
             <Tag className="h-4 w-4" />
           </span>
           <span className="min-w-0">
-            <span className={cn('block text-sm font-semibold', isOther ? 'text-gray-700' : 'text-gray-900')}>
+            <span className={cn('block text-sm font-semibold', isOther ? 'text-foreground' : 'text-foreground')}>
               Otro...
             </span>
-            <span className="mt-0.5 block text-xs text-gray-500 leading-relaxed">
+            <span className="mt-0.5 block text-xs text-muted-foreground leading-relaxed">
               Especifique un tipo de servicio personalizado.
             </span>
           </span>

@@ -54,12 +54,12 @@ export default function GuardsLayout({ navKey, title, children }: Props) {
       <div
         className={`shrink-0 overflow-y-auto transition-all duration-300  ${sidebarOpen ? 'w-64 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}
       >
-        <div className="bg-white border rounded-md p-3 sticky top-0">
+        <div className="bg-card border border-border rounded-md p-3 sticky top-0">
           <div className="text-sm font-semibold mb-3">{guardFullName || (title ? t(title) : (cfg?.title ? t(cfg.title) : ''))}</div>
           <nav className="text-sm">
             {cfg?.sections?.map((section: any, idx: number) => (
               <div key={idx} className="mb-3">
-                {section.label ? <div className="text-xs text-gray-500 uppercase mb-2">{section.label}</div> : null}
+                {section.label ? <div className="text-xs text-muted-foreground uppercase mb-2">{section.label}</div> : null}
                 <ul className="space-y-1">
                   {(
                     section.items || []
@@ -79,7 +79,7 @@ export default function GuardsLayout({ navKey, title, children }: Props) {
                             className={`block px-3 py-2.5 rounded text-base ${
                               isActive 
                                 ? 'bg-[#C8860A]/10 text-[#C8860A] font-medium' 
-                                : 'text-gray-700 hover:bg-gray-100'
+                                : 'text-foreground hover:bg-accent'
                             }`}
                           >
                             {t(it.label)}
@@ -95,11 +95,11 @@ export default function GuardsLayout({ navKey, title, children }: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="bg-white rounded-md p-4 mb-4 flex items-center justify-between sticky top-0 z-10">
+        <div className="bg-card border-b border-border rounded-md p-4 mb-4 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-gray-600 hover:text-gray-800 p-1"
+              className="text-muted-foreground hover:text-foreground p-1"
               title={sidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
             >
               <Menu
@@ -107,9 +107,9 @@ export default function GuardsLayout({ navKey, title, children }: Props) {
                 className={`transition-transform duration-300 ${sidebarOpen ? 'rotate-0' : '-rotate-90'}`}
               />
             </button>
-            <div className="text-sm font-medium text-gray-700">{title ? t(title) : ''}</div>
+            <div className="text-sm font-medium text-foreground">{title ? t(title) : ''}</div>
           </div>
-          <div className="text-sm text-gray-600"></div>
+          <div className="text-sm text-muted-foreground"></div>
         </div>
 
         <div className="pb-6">{children}</div>

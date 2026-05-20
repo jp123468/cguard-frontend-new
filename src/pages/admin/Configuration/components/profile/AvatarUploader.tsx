@@ -13,11 +13,11 @@ export default function AvatarUploader({ src, onChange, size = 128 }: Props) {
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
-      <div className="w-full h-full rounded-md border border-gray-300 overflow-hidden bg-gray-50 grid place-items-center">
+      <div className="w-full h-full rounded-md border border-border overflow-hidden bg-muted/30 grid place-items-center">
         {src ? (
           <img src={src} alt="avatar" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-20 h-20 opacity-70 text-gray-400 flex items-center justify-center">
+          <div className="w-20 h-20 opacity-70 text-muted-foreground flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-12 h-12" fill="currentColor">
               <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 3.134-7 7 0 .552.448 1 1 1h12c.552 0 1-.448 1-1 0-3.866-3.134-7-7-7z" />
             </svg>

@@ -76,7 +76,7 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
             </span>
           </h1>
 
-          <p className="text-base xl:text-lg text-slate-400 leading-relaxed max-w-md mb-10">
+          <p className="text-base xl:text-lg text-muted-foreground leading-relaxed max-w-md mb-10">
             {t('auth.landing.desc', { product: 'CGUARD' })}
           </p>
 
@@ -90,7 +90,7 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
                 >
                   <Icon className="h-4 w-4" style={{ color: "#F5C300" }} />
                 </div>
-                <span className="text-sm font-medium text-slate-300">{label}</span>
+                <span className="text-sm font-medium text-muted-foreground/60">{label}</span>
                 <CheckCircle2 className="h-4 w-4 ml-auto shrink-0" style={{ color: "#C8860A" }} />
               </div>
             ))}
@@ -100,7 +100,7 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
         {/* Footer izquierdo */}
         <div className="relative z-10 flex items-center gap-3">
           <div className="h-px flex-1 bg-white/10" />
-          <span className="text-xs text-slate-500">Seguridad Inteligente</span>
+          <span className="text-xs text-muted-foreground">Seguridad Inteligente</span>
           <div className="h-px flex-1 bg-white/10" />
         </div>
       </div>
@@ -115,20 +115,20 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
         <div className="w-full max-w-md">
           {/* Encabezado de la tarjeta */}
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-1">
+            <h2 className="text-3xl font-bold text-foreground dark:text-white mb-1">
               {title}
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               {t('auth.landing.desc', { product: 'CGUARD' })}
             </p>
           </div>
 
           {/* Tarjeta del formulario */}
-          <div className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-100 dark:border-white/5">
+          <div className="rounded-2xl bg-card dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-100 dark:border-white/5">
             {children}
           </div>
 
-          <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
+          <p className="mt-6 text-center text-xs text-muted-foreground dark:text-muted-foreground">
             {t('auth.footer_copyright', { defaultValue: `© 2025-{{year}} CGUARD. All rights reserved.`, year: new Date().getFullYear() })}
           </p>
         </div>

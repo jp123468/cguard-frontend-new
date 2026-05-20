@@ -56,16 +56,16 @@ const TimeInput = ({ value, onChange, disabled }: Props) => {
         type="button"
         onClick={toggle}
         disabled={disabled}
-        className={`w-full text-left border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between ${disabled ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border-gray-300 cursor-pointer'}`}
+        className={`w-full text-left border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between ${disabled ? 'bg-muted/30 border-border text-muted-foreground cursor-not-allowed' : 'bg-card border-border cursor-pointer'}`}
       >
         <span>{value}</span>
-        <span className="ml-2 text-gray-400">▾</span>
+        <span className="ml-2 text-muted-foreground">▾</span>
       </button>
 
       {open && (
         <div
           ref={listRef}
-          className="absolute left-0 right-0 bg-white border border-gray-200 rounded shadow-lg overflow-auto z-50"
+          className="absolute left-0 right-0 bg-card border border-border rounded shadow-lg overflow-auto z-50"
           style={{
             maxHeight: 200,
             top: placement === 'bottom' ? '100%' : 'auto',
@@ -78,7 +78,7 @@ const TimeInput = ({ value, onChange, disabled }: Props) => {
             <div
               key={time}
               onClick={() => !disabled && handleSelect(time)}
-              className={`px-3 py-2 text-sm ${!disabled ? 'hover:bg-gray-100 cursor-pointer' : ''} ${time === value ? 'bg-gray-100 font-semibold' : ''}`}
+              className={`px-3 py-2 text-sm ${!disabled ? 'hover:bg-muted cursor-pointer' : ''} ${time === value ? 'bg-muted font-semibold' : ''}`}
             >
               {time}
             </div>

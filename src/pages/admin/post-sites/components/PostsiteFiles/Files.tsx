@@ -28,23 +28,23 @@ export default function PostSiteFiles({ site }: Props) {
 
   return (
     <div ref={containerRef} className="space-y-4">
-      <div className="bg-white border rounded-lg p-6 shadow-sm">
+      <div className="bg-card border rounded-lg p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative" ref={actionRef}>
-            <button onClick={() => setActionOpen(!actionOpen)} className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]">
+            <button onClick={() => setActionOpen(!actionOpen)} className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]">
               {actionSelection}
               <ChevronDown size={16} />
             </button>
             {actionOpen && (
-              <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
-                <button onClick={() => { setActionSelection('Delete'); setActionOpen(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Delete</button>
+              <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
+                <button onClick={() => { setActionSelection('Delete'); setActionOpen(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-muted">Delete</button>
               </div>
             )}
           </div>
 
           <div className="flex-1 max-w-md">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+              <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
               <input type="text" placeholder="Search Files" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
             </div>
           </div>
@@ -61,13 +61,13 @@ export default function PostSiteFiles({ site }: Props) {
           <div className="md:block hidden overflow-x-auto">
             <table className="w-full">
             <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+              <tr className="border-b bg-muted/30">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
                   <input type="checkbox" aria-label="select all files" checked={filesData.length > 0 && selectedFileIds.length === filesData.length} onChange={(e) => { if (e.target.checked) setSelectedFileIds(filesData.map(f => f.id)); else setSelectedFileIds([]); }} className="h-4 w-4" />
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">File</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Added By</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Date</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">File</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Added By</th>
               </tr>
             </thead>
             <tbody>
@@ -84,19 +84,19 @@ export default function PostSiteFiles({ site }: Props) {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">No Files Found</h3>
-                        <p className="text-sm text-gray-500 mt-1">Upload files using the button on the right</p>
+                        <h3 className="text-lg font-semibold text-foreground">No Files Found</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Upload files using the button on the right</p>
                       </div>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filesData.map((f) => (
-                  <tr key={f.id} className="border-b hover:bg-gray-50">
+                  <tr key={f.id} className="border-b hover:bg-muted/30">
                     <td className="px-4 py-3"><input type="checkbox" checked={selectedFileIds.includes(f.id)} onChange={(e) => { if (e.target.checked) setSelectedFileIds(prev => [...prev, f.id]); else setSelectedFileIds(prev => prev.filter(id => id !== f.id)); }} className="h-4 w-4" /></td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{f.date}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{f.name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{f.addedBy}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{f.date}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{f.name}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{f.addedBy}</td>
                   </tr>
                 ))
               )}
@@ -111,9 +111,9 @@ export default function PostSiteFiles({ site }: Props) {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="text-sm font-semibold">{f.name}</div>
-                    <div className="text-xs text-gray-500">{f.date} • {f.addedBy}</div>
+                    <div className="text-xs text-muted-foreground">{f.date} • {f.addedBy}</div>
                   </div>
-                  <div className="text-sm text-gray-500">...</div>
+                  <div className="text-sm text-muted-foreground">...</div>
                 </div>
               )}
               loading={false}
@@ -126,10 +126,10 @@ export default function PostSiteFiles({ site }: Props) {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowUploadModal(false)} />
 
-          <div className="w-full sm:ml-auto sm:w-96 bg-white shadow-2xl flex flex-col rounded-t-lg sm:rounded-md" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+          <div className="w-full sm:ml-auto sm:w-96 bg-card shadow-2xl flex flex-col rounded-t-lg sm:rounded-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-10">
               <h3 className="text-lg font-semibold">Upload Files</h3>
-              <button onClick={() => setShowUploadModal(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
+              <button onClick={() => setShowUploadModal(false)} className="text-muted-foreground hover:text-foreground/70"><X /></button>
             </div>
 
             <div className="p-6 overflow-y-auto max-h-[70vh] flex-1">
@@ -142,25 +142,25 @@ export default function PostSiteFiles({ site }: Props) {
                   const files = Array.from(e.dataTransfer?.files || [] as File[]);
                   if (files.length) setUploadFiles(prev => [...prev, ...files]);
                 }}
-                className={`w-full border-dashed rounded-md p-8 mb-8 text-center ${dragOver ? 'border-2 border-gray-300 bg-gray-50' : 'border border-gray-200'}`}>
+                className={`w-full border-dashed rounded-md p-8 mb-8 text-center ${dragOver ? 'border-2 border-border bg-muted/30' : 'border border-border'}`}>
                 {uploadFiles.length > 0 ? (
                   <div className="flex justify-center">
-                    <div className="bg-gray-100 rounded-md px-3 py-2 text-sm text-gray-700 w-full min-w-0 overflow-hidden">
+                    <div className="bg-muted rounded-md px-3 py-2 text-sm text-foreground w-full min-w-0 overflow-hidden">
                       <span className="block truncate">{uploadFiles.map(f => f.name).join(', ')}</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-sm text-gray-500">Drop files here..</div>
+                  <div className="text-sm text-muted-foreground">Drop files here..</div>
                 )}
               </div>
 
-              <div className="text-center my-6 text-gray-500">Or Select</div>
+              <div className="text-center my-6 text-muted-foreground">Or Select</div>
 
               <div className="flex items-center gap-3 mt-6">
                 <div className="flex-1 relative min-w-0">
                   <div className="w-full border rounded-md px-3 py-2 text-sm flex items-center justify-between min-w-0">
-                    <span className="block truncate text-sm text-gray-700">{uploadFiles.length > 0 ? uploadFiles.map(f => f.name).join(', ') : 'Elegir archivos Sin archivos seleccionados'}</span>
-                    <span className="text-gray-400 ml-3"><Paperclip /></span>
+                    <span className="block truncate text-sm text-foreground">{uploadFiles.length > 0 ? uploadFiles.map(f => f.name).join(', ') : 'Elegir archivos Sin archivos seleccionados'}</span>
+                    <span className="text-muted-foreground ml-3"><Paperclip /></span>
                   </div>
                   <input type="file" multiple onChange={(e) => { const files = e.target.files ? Array.from(e.target.files) : []; setUploadFiles(prev => [...prev, ...files]); }} className="absolute inset-0 opacity-0 cursor-pointer" />
                 </div>
@@ -173,7 +173,7 @@ export default function PostSiteFiles({ site }: Props) {
                     {uploadFiles.map((f, i) => (
                       <li key={i} className="flex items-center justify-between text-sm min-w-0">
                         <span className="truncate mr-4 block min-w-0">{f.name}</span>
-                        <button onClick={() => setUploadFiles(prev => prev.filter((_, idx) => idx !== i))} className="text-red-500 p-1 rounded hover:bg-red-50" aria-label={`Remove ${f.name}`}><X size={14} /></button>
+                        <button onClick={() => setUploadFiles(prev => prev.filter((_, idx) => idx !== i))} className="text-red-500 p-1 rounded hover:bg-red-500/10" aria-label={`Remove ${f.name}`}><X size={14} /></button>
                       </li>
                     ))}
                   </ul>
@@ -181,7 +181,7 @@ export default function PostSiteFiles({ site }: Props) {
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 p-4 border-t bg-white">
+            <div className="flex items-center justify-end gap-3 p-4 border-t bg-card">
               <button onClick={() => {
                 if (uploadFiles.length === 0) { setShowUploadModal(false); return; }
                 const newFiles = uploadFiles.map((f) => ({ id: Date.now().toString() + Math.random().toString(36).slice(2,7), name: f.name, date: new Date().toISOString().slice(0,10), addedBy: 'You' }));

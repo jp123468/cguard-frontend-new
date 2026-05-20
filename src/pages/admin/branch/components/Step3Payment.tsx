@@ -45,8 +45,8 @@ export default function Step3Payment({ data, updateData, onPrevious, onSubmit }:
                                 type="button"
                                 onClick={() => updateData({ paymentMethod: method.id as any })}
                                 className={`flex items-center gap-2 px-4 py-2 rounded border ${data.paymentMethod === method.id
-                                    ? "border-blue-500 bg-blue-50 text-blue-700"
-                                    : "border-gray-200 hover:bg-gray-50"
+                                    ? "border-blue-500 bg-blue-500/10 text-blue-600"
+                                    : "border-border hover:bg-muted/30"
                                     }`}
                             >
                                 {method.icon && <method.icon className="h-4 w-4" />}
@@ -162,7 +162,7 @@ export default function Step3Payment({ data, updateData, onPrevious, onSubmit }:
                             </div>
 
                             {/* Legal Notice */}
-                            <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+                            <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded">
                                 Al suministrar tus datos de tarjeta, le permites a GuardPro LLC efectuar futuros cargos en
                                 tu tarjeta conforme a las condiciones estipuladas.
                             </div>
@@ -171,7 +171,7 @@ export default function Step3Payment({ data, updateData, onPrevious, onSubmit }:
 
                     {/* Other Payment Methods Placeholder */}
                     {data.paymentMethod !== "card" && (
-                        <div className="py-12 text-center text-gray-500">
+                        <div className="py-12 text-center text-muted-foreground">
                             <p>Método de pago {paymentMethods.find(m => m.id === data.paymentMethod)?.name} no disponible aún</p>
                         </div>
                     )}

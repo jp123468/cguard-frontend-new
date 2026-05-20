@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,49 +24,49 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Filter, EllipsisVertical, FileText, FileSpreadsheet, Printer, Mail, Upload, CheckSquare, ChevronLeft, ChevronRight, DollarSign, BarChart3, Plus } from "lucide-react";
+import { Filter, EllipsisVertical, FileText, FileSpreadsheet, Printer, Mail, Upload, CheckSquare, ChevronLeft, ChevronRight, DollarSign, BarChart3, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import ScheduleSidebar from "@/components/schedule/ScheduleSidebar";
 import DayView from "@/components/schedule/DayView";
 import WeekView from "@/components/schedule/WeekView";
 import MonthView from "@/components/schedule/MonthView";
 import ListView from "@/components/schedule/ListView";
+import ShiftFormModal from "@/components/schedule/ShiftFormModal";
+import shiftService, { ShiftRecord } from "@/lib/api/shiftService";
+import { stationService } from "@/lib/api/stationService";
 
-interface ScheduleStats {
-  totalShifts: number;
-  confirmedShifts: number;
-  unconfirmedShifts: number;
-  openShifts: number;
-  vacantShifts: number;
-  unpublishedShifts: number;
-  requestedShifts: number;
+interface CoverageGap {
+  startTime: string;
+  endTime: string;
+  hoursUncovered: number;
+  stationName?: string;
+}
+
+interface StationCoverage {
+  id: string;
+  stationName: string;
+  coverageScore: number;
+  gaps: CoverageGap[];
 }
 
 export default function Schedule() {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 21)); // Nov 21, 2025
-  const [viewMode, setViewMode] = useState<"day" | "week" | "month" | "list">("day");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<"day" | "week" | "month" | "list">("week");
   const [selectedGuard, setSelectedGuard] = useState("Guardia");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [showStatsCards, setShowStatsCards] = useState(true);
-  const [showIncomeCards, setShowIncomeCards] = useState(true);
+  const [showIncomeCards, setShowIncomeCards] = useState(false);
 
-  // Stats
-  const [stats] = useState<ScheduleStats>({
-    totalShifts: 0,
-    confirmedShifts: 0,
-    unconfirmedShifts: 0,
-    openShifts: 0,
-    vacantShifts: 0,
-    unpublishedShifts: 0,
-    requestedShifts: 0,
-  });
+  // Real shift data
+  const [shifts, setShifts] = useState<ShiftRecord[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Estimated income
-  const [estimatedIncome] = useState({
-    postSiteHours: 0,
-    guardHours: 0,
-    laborCostIncome: 0,
-  });
+  // Coverage gap data
+  const [stationCoverages, setStationCoverages] = useState<StationCoverage[]>([]);
+
+  // Shift modal
+  const [shiftModalOpen, setShiftModalOpen] = useState(false);
+  const [editingShift, setEditingShift] = useState<ShiftRecord | null>(null);
 
   // Filter State
   const [filters, setFilters] = useState({
@@ -75,12 +75,111 @@ export default function Schedule() {
     guard: "",
     shiftStatus: "",
     shiftType: "",
-    startDate: "Nov 21, 2025",
+    startDate: "",
     startTime: "00:00",
-    endDate: "Nov 22, 2025",
+    endDate: "",
     endTime: "00:00",
     showArchived: false,
   });
+
+  // Compute the date window for fetching
+  const dateWindow = useMemo(() => {
+    const from = new Date(currentDate);
+    const to = new Date(currentDate);
+    if (viewMode === 'day') {
+      from.setHours(0, 0, 0, 0);
+      to.setHours(23, 59, 59, 999);
+    } else if (viewMode === 'week') {
+      from.setDate(from.getDate() - from.getDay() + 1);
+      from.setHours(0, 0, 0, 0);
+      to.setDate(from.getDate() + 6);
+      to.setHours(23, 59, 59, 999);
+    } else if (viewMode === 'month') {
+      from.setDate(1);
+      from.setHours(0, 0, 0, 0);
+      to.setMonth(to.getMonth() + 1, 0);
+      to.setHours(23, 59, 59, 999);
+    } else {
+      // list: 14 days from current
+      from.setHours(0, 0, 0, 0);
+      to.setDate(to.getDate() + 13);
+      to.setHours(23, 59, 59, 999);
+    }
+    return { from, to };
+  }, [currentDate, viewMode]);
+
+  const fetchShifts = () => {
+    setLoading(true);
+    shiftService
+      .list({
+        'filter[startTimeRange]': [dateWindow.from.toISOString(), dateWindow.to.toISOString()],
+        limit: 500,
+      })
+      .then((res) => setShifts(res.rows ?? []))
+      .catch(() => setShifts([]))
+      .finally(() => setLoading(false));
+  };
+
+  const fetchCoverageGaps = (postSiteId: string) => {
+    stationService
+      .coverageGaps(postSiteId, dateWindow.from.toISOString(), dateWindow.to.toISOString())
+      .then((res) => {
+        setStationCoverages(
+          res.stations.map((s) => ({
+            id: s.id,
+            stationName: s.stationName,
+            coverageScore: s.coverageScore,
+            gaps: s.gaps.map((g) => ({ ...g, stationName: s.stationName })),
+          }))
+        );
+      })
+      .catch(() => setStationCoverages([]));
+  };
+
+  useEffect(() => {
+    fetchShifts();
+    if (filters.postSite) fetchCoverageGaps(filters.postSite);
+    else setStationCoverages([]);
+  }, [dateWindow, filters.postSite]);
+
+  // Flat list of all gaps across all stations (for view overlays)
+  const allGaps = useMemo<CoverageGap[]>(
+    () => stationCoverages.flatMap((sc) => sc.gaps),
+    [stationCoverages]
+  );
+
+  // Stations with coverage issues
+  const stationsWithGaps = useMemo(
+    () => stationCoverages.filter((sc) => sc.gaps.length > 0),
+    [stationCoverages]
+  );
+
+  // Derived stats from real data
+  const stats = useMemo(() => {
+    const total = shifts.length;
+    const withGuard = shifts.filter(s => s.guardId).length;
+    const open = shifts.filter(s => !s.guardId).length;
+    const totalHours = shifts.reduce((sum, s) => {
+      const ms = new Date(s.endTime).getTime() - new Date(s.startTime).getTime();
+      return sum + ms / (1000 * 60 * 60);
+    }, 0);
+    return {
+      total,
+      withGuard,
+      open,
+      totalHours: Math.round(totalHours * 10) / 10,
+    };
+  }, [shifts]);
+
+  const openCreateModal = () => {
+    setEditingShift(null);
+    setShiftModalOpen(true);
+  };
+
+  const openEditModal = (shift: ShiftRecord) => {
+    setEditingShift(shift);
+    setShiftModalOpen(true);
+  };
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -94,6 +193,8 @@ export default function Schedule() {
       newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
     } else if (viewMode === 'month') {
       newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
+    } else {
+      newDate.setDate(newDate.getDate() + (direction === 'next' ? 14 : -14));
     }
     setCurrentDate(newDate);
   };
@@ -121,63 +222,34 @@ export default function Schedule() {
       <div className="p-6 space-y-6">
         {/* Stats Cards - Conditional */}
         {showStatsCards && (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-            <div className="bg-white border rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-purple-600">{stats.totalShifts}</div>
-              <div className="text-sm text-gray-600 mt-1">Horas</div>
-              <div className="text-xs text-purple-600 font-medium mt-1">Total de Turnos</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-card border rounded-lg p-4 text-center">
+              <div className="text-3xl font-bold text-purple-600">{stats.total}</div>
+              <div className="text-sm text-foreground/70 mt-1">Turnos</div>
+              <div className="text-xs text-purple-600 font-medium mt-1">Total del Período</div>
             </div>
-            <div className="bg-white border rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-green-600">{stats.confirmedShifts}</div>
-              <div className="text-sm text-gray-600 mt-1">Horas</div>
-              <div className="text-xs text-green-600 font-medium mt-1">Turno Confirmado</div>
+            <div className="bg-card border rounded-lg p-4 text-center">
+              <div className="text-3xl font-bold text-green-600">{stats.withGuard}</div>
+              <div className="text-sm text-foreground/70 mt-1">Asignados</div>
+              <div className="text-xs text-green-600 font-medium mt-1">Con Guardia</div>
             </div>
-            <div className="bg-white border rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-gray-600">{stats.unconfirmedShifts}</div>
-              <div className="text-sm text-gray-600 mt-1">Horas</div>
-              <div className="text-xs text-gray-600 font-medium mt-1">Turno No Confirmado</div>
+            <div className="bg-card border rounded-lg p-4 text-center">
+              <div className="text-3xl font-bold text-red-500">{stats.open}</div>
+              <div className="text-sm text-foreground/70 mt-1">Sin Guardia</div>
+              <div className="text-xs text-red-500 font-medium mt-1">Turnos Abiertos</div>
             </div>
-            <div className="bg-white border rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-blue-600">{stats.openShifts}</div>
-              <div className="text-sm text-gray-600 mt-1">Horas</div>
-              <div className="text-xs text-blue-600 font-medium mt-1">Turno Abierto</div>
-            </div>
-            <div className="bg-white border rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-red-600">{stats.vacantShifts}</div>
-              <div className="text-sm text-gray-600 mt-1">Horas</div>
-              <div className="text-xs text-red-600 font-medium mt-1">Turno Vacante</div>
-            </div>
-            <div className="bg-white border rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-blue-600">{stats.unpublishedShifts}</div>
-              <div className="text-sm text-gray-600 mt-1">Horas</div>
-              <div className="text-xs text-blue-600 font-medium mt-1">Despublicar Turno</div>
-            </div>
-            <div className="bg-white border rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-blue-600">{stats.requestedShifts}</div>
-              <div className="text-sm text-gray-600 mt-1">Horas</div>
-              <div className="text-xs text-blue-600 font-medium mt-1">Turno Solicitado</div>
+            <div className="bg-card border rounded-lg p-4 text-center">
+              <div className="text-3xl font-bold text-blue-600">{stats.totalHours}</div>
+              <div className="text-sm text-foreground/70 mt-1">Horas</div>
+              <div className="text-xs text-blue-600 font-medium mt-1">Horas Totales</div>
             </div>
           </div>
         )}
 
-        {/* Income Cards - Conditional */}
+        {/* Income Cards - Conditional (placeholder) */}
         {showIncomeCards && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white border rounded-lg p-4">
-              <div className="text-2xl font-bold text-purple-600">$ {estimatedIncome.postSiteHours}</div>
-              <div className="text-sm text-gray-600 mt-1">Horas del puesto de vigilancia <span className="text-purple-600 font-medium">0</span></div>
-              <div className="text-xs text-purple-600 font-medium mt-1">Ingreso Estimado</div>
-            </div>
-            <div className="bg-white border rounded-lg p-4">
-              <div className="text-2xl font-bold text-blue-600">$ {estimatedIncome.guardHours}</div>
-              <div className="text-sm text-gray-600 mt-1">Horas de Guardia <span className="text-blue-600 font-medium">0</span></div>
-              <div className="text-xs text-blue-600 font-medium mt-1">Costo Laboral Estimado</div>
-            </div>
-            <div className="bg-white border rounded-lg p-4">
-              <div className="text-2xl font-bold text-purple-600">$ {estimatedIncome.laborCostIncome}</div>
-              <div className="text-sm text-gray-600 mt-1">Ingresos - Costo Laboral</div>
-              <div className="text-xs text-purple-600 font-medium mt-1">Ganancia Bruta Estimada</div>
-            </div>
+          <div className="bg-amber-500/10 border border-amber-200 rounded-lg p-4 text-sm text-amber-700">
+            Las tarjetas de ingresos estarán disponibles cuando se configure la tarifa por hora por guardia y puesto.
           </div>
         )}
 
@@ -187,28 +259,28 @@ export default function Schedule() {
             <Button
               variant={viewMode === "day" ? "default" : "outline"}
               onClick={() => setViewMode("day")}
-              className={viewMode === "day" ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
+              className={viewMode === "day" ? "bg-muted text-foreground hover:bg-gray-300" : ""}
             >
               Día
             </Button>
             <Button
               variant={viewMode === "week" ? "default" : "outline"}
               onClick={() => setViewMode("week")}
-              className={viewMode === "week" ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
+              className={viewMode === "week" ? "bg-muted text-foreground hover:bg-gray-300" : ""}
             >
               Semana
             </Button>
             <Button
               variant={viewMode === "month" ? "default" : "outline"}
               onClick={() => setViewMode("month")}
-              className={viewMode === "month" ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
+              className={viewMode === "month" ? "bg-muted text-foreground hover:bg-gray-300" : ""}
             >
               Mes
             </Button>
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               onClick={() => setViewMode("list")}
-              className={viewMode === "list" ? "bg-gray-200 text-gray-800 hover:bg-gray-300" : ""}
+              className={viewMode === "list" ? "bg-muted text-foreground hover:bg-gray-300" : ""}
             >
               Lista
             </Button>
@@ -418,21 +490,94 @@ export default function Schedule() {
           </div>
         </div>
 
+        {/* Coverage Alert Banner */}
+        {stationsWithGaps.length > 0 && (
+          <div className="bg-red-500/10 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-red-700">
+                  {stationsWithGaps.length} estación{stationsWithGaps.length > 1 ? 'es' : ''} sin cobertura completa en este período
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {stationsWithGaps.map((sc) => (
+                    <span key={sc.id} className="inline-flex items-center gap-1.5 text-xs bg-card border border-red-200 text-red-700 px-2 py-1 rounded-full">
+                      <span className={`w-2 h-2 rounded-full ${sc.coverageScore >= 80 ? 'bg-yellow-400' : sc.coverageScore >= 50 ? 'bg-orange-400' : 'bg-red-500'}`} />
+                      {sc.stationName} — {sc.coverageScore}% cobertura
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {stationCoverages.length > 0 && stationCoverages.every(sc => sc.gaps.length === 0) && (
+                <div className="flex items-center gap-1.5 text-xs text-green-700 bg-green-500/10 border border-green-200 px-3 py-1.5 rounded-full">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Cobertura completa
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {stationCoverages.length > 0 && stationsWithGaps.length === 0 && (
+          <div className="bg-green-500/10 border border-green-200 rounded-lg px-4 py-3 flex items-center gap-2 text-sm text-green-800">
+            <ShieldCheck className="h-4 w-4 text-green-600" />
+            Todas las estaciones tienen cobertura completa en este período.
+          </div>
+        )}
+
         {/* Calendar View */}
-        <div className="bg-white border rounded-lg flex relative">
+        <div className="bg-card border rounded-lg flex relative">
           {/* Sidebar */}
           <ScheduleSidebar
             selectedView={selectedGuard}
             onViewChange={setSelectedGuard}
           />
 
+          {/* Loading overlay */}
+          {loading && (
+            <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-20 rounded-lg">
+              <Loader2 className="h-6 w-6 animate-spin text-[#C8860A]" />
+            </div>
+          )}
+
           {/* Main Content Area */}
-          {viewMode === "day" && <DayView currentDate={currentDate} />}
-          {viewMode === "week" && <WeekView currentDate={currentDate} />}
+          {viewMode === "day" && (
+            <DayView
+              currentDate={currentDate}
+              shifts={shifts}
+              gaps={allGaps}
+              onCreateShift={openCreateModal}
+              onEditShift={openEditModal}
+            />
+          )}
+          {viewMode === "week" && (
+            <WeekView
+              currentDate={currentDate}
+              shifts={shifts}
+              gaps={allGaps}
+              onCreateShift={openCreateModal}
+              onEditShift={openEditModal}
+            />
+          )}
           {viewMode === "month" && <MonthView currentDate={currentDate} />}
-          {viewMode === "list" && <ListView currentDate={currentDate} />}
+          {viewMode === "list" && (
+            <ListView
+              currentDate={currentDate}
+              shifts={shifts}
+              onCreateShift={openCreateModal}
+              onEditShift={openEditModal}
+            />
+          )}
         </div>
       </div>
+
+      {/* Shift Create/Edit Modal */}
+      <ShiftFormModal
+        open={shiftModalOpen}
+        onClose={() => setShiftModalOpen(false)}
+        onSuccess={fetchShifts}
+        initialDate={currentDate}
+        editShift={editingShift}
+      />
     </AppLayout>
   );
 }

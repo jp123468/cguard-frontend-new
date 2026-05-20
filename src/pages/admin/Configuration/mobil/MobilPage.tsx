@@ -462,7 +462,7 @@ export default function MobilPage() {
             </div>
           </div>
 
-          <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <section className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold">Banner Superior</h2>
@@ -505,7 +505,7 @@ export default function MobilPage() {
                           <button
                             type="button"
                             onClick={() => openBannerPreview(resolveBannerImageUrl(item))}
-                            className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-0 shadow-sm hover:border-[#C8860A]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]"
+                            className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-border bg-card p-0 shadow-sm hover:border-[#C8860A]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]"
                           >
                             <img
                               src={resolveBannerImageUrl(item)}
@@ -533,7 +533,7 @@ export default function MobilPage() {
             </Table>
           </section>
 
-          <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <section className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold">Pricebook (Servicios)</h2>
@@ -636,7 +636,7 @@ export default function MobilPage() {
             </div>
           </section>
 
-          <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <section className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold">Certificaciones</h2>
@@ -685,7 +685,7 @@ export default function MobilPage() {
                         <button
                           type="button"
                           onClick={() => openBannerPreview(resolveCertificationImageUrl(item))}
-                          className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-0 shadow-sm hover:border-[#C8860A]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]"
+                          className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-border bg-card p-0 shadow-sm hover:border-[#C8860A]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]"
                         >
                           <img
                             src={resolveCertificationImageUrl(item)}
@@ -704,7 +704,7 @@ export default function MobilPage() {
                         <button
                           type="button"
                           onClick={() => openBannerPreview(resolveCertificationIconUrl(item))}
-                          className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white p-0 shadow-sm hover:border-[#C8860A]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]"
+                          className="group inline-flex items-center justify-center overflow-hidden rounded-md border border-border bg-card p-0 shadow-sm hover:border-[#C8860A]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]"
                         >
                           <img
                             src={resolveCertificationIconUrl(item)}
@@ -786,7 +786,7 @@ export default function MobilPage() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 text-center">Límite de tamaño por imagen: {IMAGE_MAX_SIZE_MB} MB.</p>
-                  <div className="min-h-[54px] rounded-md border border-dashed border-gray-300 bg-slate-50 px-4 py-3 text-sm text-muted-foreground flex items-center justify-center text-center">
+                  <div className="min-h-[54px] rounded-md border border-dashed border-border bg-slate-50 px-4 py-3 text-sm text-muted-foreground flex items-center justify-center text-center">
                     {bannerForm.imageFile ? bannerForm.imageFile.name : bannerForm.imageUrl?.[0]?.name || 'No se ha seleccionado archivo'}
                   </div>
                 </div>
@@ -880,7 +880,7 @@ export default function MobilPage() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 text-center">Límite de tamaño por imagen: {IMAGE_MAX_SIZE_MB} MB.</p>
-                  <div className="min-h-[54px] rounded-md border border-dashed border-gray-300 bg-slate-50 px-4 py-3 text-sm text-muted-foreground flex items-center justify-center text-center">
+                  <div className="min-h-[54px] rounded-md border border-dashed border-border bg-slate-50 px-4 py-3 text-sm text-muted-foreground flex items-center justify-center text-center">
                     {certForm.imageFile ? certForm.imageFile.name : certForm.image?.[0]?.name || 'No se ha seleccionado archivo'}
                   </div>
                 </div>
@@ -911,7 +911,7 @@ export default function MobilPage() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 text-center">Límite de tamaño del icono: {ICON_MAX_SIZE_MB} MB.</p>
-                  <div className="min-h-[54px] rounded-md border border-dashed border-gray-300 bg-slate-50 px-4 py-3 text-sm text-muted-foreground flex items-center justify-center text-center">
+                  <div className="min-h-[54px] rounded-md border border-dashed border-border bg-slate-50 px-4 py-3 text-sm text-muted-foreground flex items-center justify-center text-center">
                     {certForm.iconFile ? certForm.iconFile.name : certForm.icon?.[0]?.name || 'No se ha seleccionado archivo'}
                   </div>
                 </div>
@@ -929,22 +929,22 @@ export default function MobilPage() {
         <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
           <DialogContent
             showCloseButton={false}
-            className="w-full max-w-[920px] max-h-[90vh] overflow-hidden rounded-3xl bg-white border border-slate-200 p-0 shadow-2xl"
+            className="w-full max-w-[920px] max-h-[90vh] overflow-hidden rounded-3xl bg-card border border-slate-200 p-0 shadow-2xl"
           >
-            <DialogHeader className="flex items-center justify-center gap-4 border-b border-slate-200 px-4 py-4 bg-white">
-              <DialogTitle className="text-lg font-semibold text-slate-900">Vista previa</DialogTitle>
+            <DialogHeader className="flex items-center justify-center gap-4 border-b border-slate-200 px-4 py-4 bg-card">
+              <DialogTitle className="text-lg font-semibold text-foreground">Vista previa</DialogTitle>
             </DialogHeader>
             <div className="flex min-h-[60vh] items-center justify-center overflow-hidden bg-slate-100 p-4">
               {imagePreviewUrl ? (
                 <img
                   src={imagePreviewUrl}
                   alt="Banner preview"
-                  className="max-h-[82vh] max-w-full rounded-3xl border border-slate-200 bg-white object-contain"
+                  className="max-h-[82vh] max-w-full rounded-3xl border border-slate-200 bg-card object-contain"
                   decoding="async"
                   crossOrigin="anonymous"
                 />
               ) : (
-                <div className="text-sm text-slate-500">No hay imagen para previsualizar.</div>
+                <div className="text-sm text-muted-foreground">No hay imagen para previsualizar.</div>
               )}
             </div>
           </DialogContent>
@@ -958,11 +958,11 @@ export default function MobilPage() {
                 ¿Estás seguro que quieres eliminar {confirmDeleteItem?.label}?
               </DialogDescription>
             </DialogHeader>
-            <div className="mt-4 text-sm text-slate-700">
+            <div className="mt-4 text-sm text-foreground">
               Esta acción no se puede deshacer.
             </div>
             <DialogFooter className="mt-6 flex justify-end gap-2">
-              <Button variant="outline" className="text-slate-700 border-slate-300 hover:bg-slate-100" onClick={closeDeleteConfirmation}>
+              <Button variant="outline" className="text-foreground border-slate-300 hover:bg-slate-100" onClick={closeDeleteConfirmation}>
                 Cancelar
               </Button>
               <Button className="bg-red-600 text-white hover:bg-red-700" onClick={handleDeleteConfirmed}>

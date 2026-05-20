@@ -668,23 +668,23 @@ export default function AssignGuards({ site }: { site?: any }) {
 
     return (
         <div ref={containerRef} className="space-y-4">
-            <div className="bg-white border rounded-lg p-4 flex flex-col">
+            <div className="bg-card border rounded-lg p-4 flex flex-col">
                 <div className="flex items-center justify-between gap-4 mb-4">
                     <div className="relative flex items-center pl-2">
-                        <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-full bg-white text-sm inline-flex items-center gap-2">
+                        <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-full bg-card text-sm inline-flex items-center gap-2">
                             {actionSelection}
                             <ChevronDown size={14} />
                         </button>
                         {actionOpen && (
-                            <div className="absolute mt-20 bg-white border rounded-md shadow-lg z-10 w-48 left-0">
-                                    <button onClick={() => { setActionOpen(false); handleBulkDeleteSelected(); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-red-600">{t('clients.assignGuards.actionDeleteSelected', 'Delete Selected')}</button>
+                            <div className="absolute mt-20 bg-card border rounded-md shadow-lg z-10 w-48 left-0">
+                                    <button onClick={() => { setActionOpen(false); handleBulkDeleteSelected(); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-muted/30 text-red-600">{t('clients.assignGuards.actionDeleteSelected', 'Delete Selected')}</button>
                                 </div>
                         )}
                     </div>
 
                     <div className="flex-1 flex justify-center">
                         <div className="relative w-full max-w-xl">
-                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none">
                                 <Search size={16} />
                             </span>
                             <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('clients.assignGuards.headerSearchPlaceholder','Search Guards')} className="w-full h-10 rounded-full border pl-10 pr-4" />
@@ -704,7 +704,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                 <div>
                     <div className="md:block hidden overflow-x-auto flex-1 min-h-[60vh]">
                         <table className="w-full">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-muted/30">
                                 <tr>
                                 <th className="px-6 py-4 flex items-center justify-center"><input type="checkbox" checked={(assignedGuards.filter(r => matchesQuery(r, query)).length > 0) && selectedGuards.length === assignedGuards.filter(r => matchesQuery(r, query)).length} onChange={toggleSelectAll} /></th>
                                 <th className="px-6 py-4 text-left text-base">{t('clients.assignGuards.table.name', 'Name')}</th>
@@ -728,8 +728,8 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                 </svg>
                                             </div>
                                             <div className="text-center">
-                                                <h3 className="text-lg font-semibold text-gray-700">{t('clients.assignGuards.emptyTitle', 'No Result Found')}</h3>
-                                                <p className="text-sm text-gray-500 mt-1">{t('clients.assignGuards.emptyMessage', 'No guards are assigned to this post site.')}</p>
+                                                <h3 className="text-lg font-semibold text-foreground">{t('clients.assignGuards.emptyTitle', 'No Result Found')}</h3>
+                                                <p className="text-sm text-muted-foreground mt-1">{t('clients.assignGuards.emptyMessage', 'No guards are assigned to this post site.')}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -747,7 +747,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                         <td className="px-6 py-4 text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <button className="p-2 rounded hover:bg-gray-50">
+                                                    <button className="p-2 rounded hover:bg-muted/30">
                                                         <EllipsisVertical size={18} />
                                                     </button>
                                                 </DropdownMenuTrigger>
@@ -775,8 +775,8 @@ export default function AssignGuards({ site }: { site?: any }) {
                                 <MobileCardList items={assignedGuards.filter(r => matchesQuery(r, query))} renderCard={(g: any) => (
                             <div>
                                 <div className="text-sm font-semibold">{g.guardName || (g.firstName || g.lastName) ? `${g.firstName || ''} ${g.lastName || ''}`.trim() : (g.fullName || g.label || g.email || g.userId || '-')}</div>
-                                <div className="text-xs text-gray-500">{g.phoneNumber || g.email || '-'}</div>
-                                <div className="text-xs text-gray-500">{g.businessInfoName || (g.station && (g.station.stationName || g.station.name)) || g.stationName || g.stationId || ''}</div>
+                                <div className="text-xs text-muted-foreground">{g.phoneNumber || g.email || '-'}</div>
+                                <div className="text-xs text-muted-foreground">{g.businessInfoName || (g.station && (g.station.stationName || g.station.name)) || g.stationName || g.stationId || ''}</div>
                             </div>
                         )} loading={false} />
                     </div>
@@ -785,16 +785,16 @@ export default function AssignGuards({ site }: { site?: any }) {
                 {viewModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-black/40" onClick={() => setViewModalOpen(false)} />
-                        <aside className="relative mx-auto w-full max-w-xl max-h-[60vh] bg-white shadow-xl overflow-auto rounded-lg">
+                        <aside className="relative mx-auto w-full max-w-xl max-h-[60vh] bg-card shadow-xl overflow-auto rounded-lg">
                                             <div className="relative p-4 border-b">
                                                 <h3 className="text-2xl font-semibold text-center">{t('clients.assignGuards.viewModalTitle', 'Guard Assignments')}</h3>
-                                                <button aria-label="close" onClick={() => setViewModalOpen(false)} className="absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
+                                                <button aria-label="close" onClick={() => setViewModalOpen(false)} className="absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center text-foreground/70 hover:bg-muted">
                                                     X
                                                 </button>
                                             </div>
                             <div className="p-4">
                                 {viewAssignments.length > 0 ? (
-                                    <div className="border rounded bg-white p-4">
+                                    <div className="border rounded bg-card p-4">
                                         {viewAssignments.map((a: any, idx: number) => {
                                             const format = (v: any) => {
                                                 if (v === null || v === undefined || v === '') return '-';
@@ -808,54 +808,54 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                         <div>
                                                             <dl className="space-y-2 text-base">
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">ID</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.id || '-'}</div></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">ID</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{a.id || '-'}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Tenant User</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.tenantUserName || resolveTenantUserName(a)}</div></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">Tenant User</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{a.tenantUserName || resolveTenantUserName(a)}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Puesto</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.businessInfoName || resolveBusinessInfoName(a)}</div></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">Puesto</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{a.businessInfoName || resolveBusinessInfoName(a)}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Created At</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.createdAt || a.created_at || '-'}</div></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">Created At</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{a.createdAt || a.created_at || '-'}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Updated At</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.updatedAt || a.updated_at || '-'}</div></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">Updated At</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{a.updatedAt || a.updated_at || '-'}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Deleted At</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.deletedAt || a.deleted_at || '-'}</div></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">Deleted At</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{a.deletedAt || a.deleted_at || '-'}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">Guardia</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{resolveSecurityGuardName(a)}</div></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">Guardia</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{resolveSecurityGuardName(a)}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.postSiteLabel','Post Site')}</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.postSiteName || a.businessInfoName || a.businessInfoId || '-'}</div></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">{t('clients.assignGuards.postSiteLabel','Post Site')}</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{a.postSiteName || a.businessInfoName || a.businessInfoId || '-'}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.stationLabel','Station')}</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.stationName || a.station?.name || '-'}</div></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">{t('clients.assignGuards.stationLabel','Station')}</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{a.stationName || a.station?.name || '-'}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.securityGuardLabel','Security Guard')}</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{a.guardName || resolveSecurityGuardName(a) || (a.guardEmail || a.guardUserId || '-')}</div></dd>
-                                                                </div>
-
-                                                                <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.skillSetLabel','Skill Set')}</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{format(a.skillSet)}</div></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">{t('clients.assignGuards.securityGuardLabel','Security Guard')}</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{a.guardName || resolveSecurityGuardName(a) || (a.guardEmail || a.guardUserId || '-')}</div></dd>
                                                                 </div>
 
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.departmentLabel','Department')}</dt>
-                                                                    <dd><div className="bg-gray-50 p-2 rounded text-base text-gray-800">{format(a.department)}</div></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">{t('clients.assignGuards.skillSetLabel','Skill Set')}</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{format(a.skillSet)}</div></dd>
+                                                                </div>
+
+                                                                <div>
+                                                                    <dt className="text-sm font-medium text-foreground/70">{t('clients.assignGuards.departmentLabel','Department')}</dt>
+                                                                    <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{format(a.department)}</div></dd>
                                                                 </div>
                                                             </dl>
                                                         </div>
@@ -863,23 +863,23 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                         <div>
                                                             <dl className="space-y-2 text-base">
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.siteToursLabel','Site Tours')}</dt>
-                                                                    <dd className="text-base text-gray-800"><pre className="whitespace-pre-wrap bg-gray-50 p-2 rounded text-base">{format(a.siteTours)}</pre></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">{t('clients.assignGuards.siteToursLabel','Site Tours')}</dt>
+                                                                    <dd className="text-base text-foreground"><pre className="whitespace-pre-wrap bg-muted/30 p-2 rounded text-base">{format(a.siteTours)}</pre></dd>
                                                                 </div>
 
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.tasksLabel','Tasks')}</dt>
-                                                                    <dd className="text-base text-gray-800"><pre className="whitespace-pre-wrap bg-gray-50 p-2 rounded text-base">{format(a.tasks)}</pre></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">{t('clients.assignGuards.tasksLabel','Tasks')}</dt>
+                                                                    <dd className="text-base text-foreground"><pre className="whitespace-pre-wrap bg-muted/30 p-2 rounded text-base">{format(a.tasks)}</pre></dd>
                                                                 </div>
 
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.postOrdersLabel','Post Orders')}</dt>
-                                                                    <dd className="text-base text-gray-800"><pre className="whitespace-pre-wrap bg-gray-50 p-2 rounded text-base">{format(a.postOrders)}</pre></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">{t('clients.assignGuards.postOrdersLabel','Post Orders')}</dt>
+                                                                    <dd className="text-base text-foreground"><pre className="whitespace-pre-wrap bg-muted/30 p-2 rounded text-base">{format(a.postOrders)}</pre></dd>
                                                                 </div>
 
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-gray-600">{t('clients.assignGuards.checklistsLabel','Checklists')}</dt>
-                                                                    <dd className="text-base text-gray-800"><pre className="whitespace-pre-wrap bg-gray-50 p-2 rounded text-base">{format(a.checklists)}</pre></dd>
+                                                                    <dt className="text-sm font-medium text-foreground/70">{t('clients.assignGuards.checklistsLabel','Checklists')}</dt>
+                                                                    <dd className="text-base text-foreground"><pre className="whitespace-pre-wrap bg-muted/30 p-2 rounded text-base">{format(a.checklists)}</pre></dd>
                                                                 </div>
                                                             </dl>
                                                         </div>
@@ -889,7 +889,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                         })}
                                     </div>
                                 ) : (
-                                    <div className="text-sm text-gray-500">{t('clients.assignGuards.viewNoAssignments','No assignments found.')}</div>
+                                    <div className="text-sm text-muted-foreground">{t('clients.assignGuards.viewNoAssignments','No assignments found.')}</div>
                                 )}
                             </div>
                         </aside>
@@ -902,18 +902,36 @@ export default function AssignGuards({ site }: { site?: any }) {
                     <div className="fixed inset-0 z-50 flex items-end sm:items-center">
                         <div className="absolute inset-0 bg-black/40" onClick={() => setShowAssignModal(false)} />
 
-                        <aside className="relative w-full sm:ml-auto sm:max-w-md bg-white shadow-xl overflow-hidden rounded-t-lg sm:rounded-lg">
+                        <aside className="relative w-full sm:ml-auto sm:max-w-md bg-card shadow-xl overflow-hidden rounded-t-lg sm:rounded-lg">
                             <div className="flex items-center justify-between p-4 border-b">
                                                 <h3 className="text-lg font-semibold">{t('clients.assignGuards.modalTitle', 'Assign Guard')}</h3>
-                                <button onClick={() => setShowAssignModal(false)} className="p-2 text-gray-500 hover:text-gray-700">
+                                <button onClick={() => setShowAssignModal(false)} className="p-2 text-muted-foreground hover:text-foreground">
                                     <X size={18} />
                                 </button>
                             </div>
                             <div className="p-6 overflow-y-auto max-h-[80vh] space-y-4">
+                                {/* Training reminder from serviceConfig */}
+                                {(() => {
+                                  const training: string[] = site?.serviceConfig?.trainingRequired ?? [];
+                                  if (!training.length) return null;
+                                  return (
+                                    <div className="rounded-lg border border-blue-200 bg-blue-500/10 px-4 py-3 flex gap-3">
+                                      <span className="text-blue-500 text-lg leading-none mt-0.5">ℹ</span>
+                                      <div>
+                                        <p className="text-xs font-semibold text-blue-600 mb-1">Capacitación requerida para guardias de este puesto</p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                          {training.map((item: string) => (
+                                            <span key={item} className="inline-block rounded-full bg-blue-500/15 border border-blue-300 text-blue-600 text-[11px] font-medium px-2 py-0.5">{item}</span>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
                                 
 
                                 <div ref={guardDropdownRef} className="relative">
-                                    <label className="block text-sm text-gray-600 mb-2">{t('clients.assignGuards.guardsLabel', 'Guards*')}</label>
+                                    <label className="block text-sm text-foreground/70 mb-2">{t('clients.assignGuards.guardsLabel', 'Guards*')}</label>
                                     <div className="relative">
                                         <input
                                             value={guardQuery || (selectedGuard ? guardOptions.find(g => g.id === selectedGuard)?.name ?? '' : '')}
@@ -924,12 +942,12 @@ export default function AssignGuards({ site }: { site?: any }) {
                                         />
 
                                         {showGuardsDropdown && (
-                                            <ul className="absolute z-40 w-full bg-white border rounded-md mt-1 max-h-48 overflow-auto">
+                                            <ul className="absolute z-40 w-full bg-card border rounded-md mt-1 max-h-48 overflow-auto">
                                                 {guardOptions.filter(g => g.name.toLowerCase().includes((guardQuery || '').toLowerCase())).length === 0 ? (
-                                                    <li className="px-3 py-2 text-sm text-gray-500">{guardQuery ? t('clients.assignGuards.noResults', 'No results') : t('clients.assignGuards.searchHelp', 'Type to search and pick a guard')}</li>
+                                                    <li className="px-3 py-2 text-sm text-muted-foreground">{guardQuery ? t('clients.assignGuards.noResults', 'No results') : t('clients.assignGuards.searchHelp', 'Type to search and pick a guard')}</li>
                                                 ) : (
                                                     guardOptions.filter(g => g.name.toLowerCase().includes((guardQuery || '').toLowerCase())).map(g => (
-                                                        <li key={g.id} onMouseDown={(e) => { e.preventDefault(); setSelectedGuard(g.id); setGuardQuery(g.name || ''); setShowGuardsDropdown(false); }} className="px-3 py-2 hover:bg-gray-50 cursor-pointer">{g.name}</li>
+                                                        <li key={g.id} onMouseDown={(e) => { e.preventDefault(); setSelectedGuard(g.id); setGuardQuery(g.name || ''); setShowGuardsDropdown(false); }} className="px-3 py-2 hover:bg-muted/30 cursor-pointer">{g.name}</li>
                                                     ))
                                                 )}
                                             </ul>
@@ -941,12 +959,12 @@ export default function AssignGuards({ site }: { site?: any }) {
 
                                 <>
                                     <div>
-                                        <label className="block text-sm text-gray-600 mb-2">{t('postSites.stations.form.startTime', 'Start')} <span className="text-red-600">*</span></label>
+                                        <label className="block text-sm text-foreground/70 mb-2">{t('postSites.stations.form.startTime', 'Start')} <span className="text-red-600">*</span></label>
                                         <input type="datetime-local" value={shiftStart} onChange={e => { setShiftStart(e.target.value); if (shiftStartError) setShiftStartError(null); }} className="w-full border rounded-lg h-12 px-3" />
                                         {shiftStartError && <p className="text-xs text-red-600 mt-1">{shiftStartError}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-sm text-gray-600 mb-2">{t('postSites.stations.form.finishTime', 'End')} <span className="text-red-600">*</span></label>
+                                        <label className="block text-sm text-foreground/70 mb-2">{t('postSites.stations.form.finishTime', 'End')} <span className="text-red-600">*</span></label>
                                         <input type="datetime-local" value={shiftEnd} onChange={e => { setShiftEnd(e.target.value); if (shiftEndError) setShiftEndError(null); }} className="w-full border rounded-lg h-12 px-3" />
                                         {shiftEndError && <p className="text-xs text-red-600 mt-1">{shiftEndError}</p>}
                                     </div>
@@ -957,17 +975,17 @@ export default function AssignGuards({ site }: { site?: any }) {
                                 
 
                                 <div>
-                                    <label className="block text-sm text-gray-600 mb-2">{t('clients.assignGuards.stationLabel', 'Station*')}</label>
+                                    <label className="block text-sm text-foreground/70 mb-2">{t('clients.assignGuards.stationLabel', 'Station*')}</label>
                                         {showNewStation ? (
                                         <div className="space-y-2">
                                             <input value={newStationName} onChange={e => setNewStationName(e.target.value)} placeholder={t('clients.stations.placeholderName','Station name')} className="border rounded-lg h-12 px-3 w-full" />
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
-                                                    <label className="block text-xs text-gray-500 mb-1">{t('clients.assignGuards.startShort','Start (hh:mm)')}</label>
+                                                    <label className="block text-xs text-muted-foreground mb-1">{t('clients.assignGuards.startShort','Start (hh:mm)')}</label>
                                                     <input type="time" value={newStationStart} onChange={e => setNewStationStart(e.target.value)} className="border rounded-lg h-10 px-3 w-full" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs text-gray-500 mb-1">{t('clients.assignGuards.endShort','End (hh:mm)')}</label>
+                                                    <label className="block text-xs text-muted-foreground mb-1">{t('clients.assignGuards.endShort','End (hh:mm)')}</label>
                                                     <input type="time" value={newStationEnd} onChange={e => setNewStationEnd(e.target.value)} className="border rounded-lg h-10 px-3 w-full" />
                                                 </div>
                                             </div>
@@ -1011,7 +1029,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                     )}
                                 </div>
                             </div>
-                            <div className="sticky bottom-0 bg-white border-t p-4 flex items-center justify-end gap-3">
+                            <div className="sticky bottom-0 bg-card border-t p-4 flex items-center justify-end gap-3">
                                 <button
                                     disabled={!isFormValid}
                                     onClick={async () => {

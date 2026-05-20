@@ -101,10 +101,10 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
 
   return (
     <div ref={containerRef} className="space-y-4">
-      <div className="bg-white border rounded-lg p-4">
+      <div className="bg-card border rounded-lg p-4">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="relative">
-            <select value={action} onChange={e => handleActionChange(e.target.value)} className="h-10 rounded-full border px-3 bg-white text-sm">
+            <select value={action} onChange={e => handleActionChange(e.target.value)} className="h-10 rounded-full border px-3 bg-card text-sm">
               <option value="">Action</option>
               <option value="delete">Delete</option>
             </select>
@@ -112,7 +112,7 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
 
           <div className="flex-1 flex justify-center">
             <div className="relative w-full max-w-xl">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"><Search size={16} /></span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none"><Search size={16} /></span>
               <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search checklists" className="w-full h-10 rounded-full border pl-10 pr-4" />
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
         <div>
           <div className="md:block hidden overflow-x-auto">
             <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted/30">
               <tr>
                 <th className="px-4 py-3"><input type="checkbox" checked={filtered.length > 0 && filtered.every(c => selectedIds.includes(c.id))} onChange={() => toggleSelectAll()} /></th>
                 <th className="px-4 py-3 text-left">Name</th>
@@ -151,8 +151,8 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
                           </svg>
                         </div>
                         <div className="text-center">
-                          <h3 className="text-lg font-semibold text-gray-700">No Result Found</h3>
-                          <p className="text-sm text-gray-500 mt-1">We can't find any item matching your search</p>
+                          <h3 className="text-lg font-semibold text-foreground">No Result Found</h3>
+                          <p className="text-sm text-muted-foreground mt-1">We can't find any item matching your search</p>
                         </div>
                       </div>
                     </td>
@@ -161,9 +161,9 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
                 filtered.map(c => (
                   <tr key={c.id} className="border-t">
                     <td className="px-4 py-4"><input type="checkbox" checked={selectedIds.includes(c.id)} onChange={() => toggleSelect(c.id)} /></td>
-                    <td className="px-4 py-4 text-sm text-gray-700">{c.name}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500">{new Date(c.date || '').toLocaleString()}</td>
-                    <td className="px-4 py-4 text-sm text-gray-500">{c.addedBy}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">{c.name}</td>
+                    <td className="px-4 py-4 text-sm text-muted-foreground">{new Date(c.date || '').toLocaleString()}</td>
+                    <td className="px-4 py-4 text-sm text-muted-foreground">{c.addedBy}</td>
                     <td className="px-4 py-4 text-right">
                       <button className="px-3 py-1 rounded-full border text-sm">Actions</button>
                     </td>
@@ -178,7 +178,7 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
             <MobileCardList items={filtered} renderCard={(c: Checklist) => (
               <div>
                 <div className="text-sm font-semibold">{c.name}</div>
-                <div className="text-xs text-gray-500">{c.date}</div>
+                <div className="text-xs text-muted-foreground">{c.date}</div>
               </div>
             )} loading={false} />
           </div>
@@ -190,25 +190,25 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center">
           <div className="absolute inset-0 bg-black/40 z-40" onClick={() => setModalOpen(false)} />
 
-          <div className="w-full sm:ml-auto sm:w-full sm:max-w-md bg-white shadow-lg rounded-t-lg sm:rounded-l-md overflow-auto relative z-50">
-            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-50">
+          <div className="w-full sm:ml-auto sm:w-full sm:max-w-md bg-card shadow-lg rounded-t-lg sm:rounded-l-md overflow-auto relative z-50">
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-50">
               <h3 className="text-lg font-semibold">New Checklist</h3>
-              <button className="p-2 text-gray-500 hover:text-gray-700" onClick={() => setModalOpen(false)}><X size={18} /></button>
+              <button className="p-2 text-muted-foreground hover:text-foreground" onClick={() => setModalOpen(false)}><X size={18} /></button>
             </div>
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm text-gray-600">Name*</label>
+                <label className="block text-sm text-foreground/70">Name*</label>
                 <input value={name} onChange={e => setName(e.target.value)} className="w-full border rounded-lg h-12 px-3 mt-2" placeholder="Name*" />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-600">Description</label>
+                <label className="block text-sm text-foreground/70">Description</label>
                 <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full border rounded-md p-3 mt-2 h-28" placeholder="Description" />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-600 mb-2">Assign Guard*</label>
+                <label className="block text-sm text-foreground/70 mb-2">Assign Guard*</label>
                 <select value={assignedGuard} onChange={e => setAssignedGuard(e.target.value)} className="w-full border rounded-lg h-12 px-3">
                   <option value="">Select guard</option>
                   {SAMPLE_GUARDS.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
@@ -217,23 +217,23 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm text-gray-600">Add Checklist Item *</label>
-                  <button onClick={addItem} className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white border text-blue-600">+ Add</button>
+                  <label className="text-sm text-foreground/70">Add Checklist Item *</label>
+                  <button onClick={addItem} className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-card border text-blue-600">+ Add</button>
                 </div>
 
                 <div className="space-y-3">
                   {items.map((it, idx) => (
                     <div key={it.id} className="flex items-center gap-3">
-                      <div className="p-3 bg-gray-100 rounded"><span className="text-gray-400">≡</span></div>
+                      <div className="p-3 bg-muted rounded"><span className="text-muted-foreground">≡</span></div>
                       <input value={it.text} onChange={e => updateItem(it.id, e.target.value)} placeholder="Checklist Item" className="flex-1 border rounded-md h-12 px-3" />
-                      <button onClick={() => removeItem(it.id)} className="px-3 py-2 rounded-full bg-red-50 text-red-600">Remove</button>
+                      <button onClick={() => removeItem(it.id)} className="px-3 py-2 rounded-full bg-red-500/10 text-red-600">Remove</button>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t">
-                <button onClick={() => { submitDraft(true); }} className="px-4 py-2 rounded-full bg-gray-100 text-gray-700">Save As Draft</button>
+                <button onClick={() => { submitDraft(true); }} className="px-4 py-2 rounded-full bg-muted text-foreground">Save As Draft</button>
                 <button onClick={() => { submitDraft(false); }} className="px-4 py-2 rounded-full bg-blue-600 text-white">Submit</button>
               </div>
             </div>
@@ -245,18 +245,18 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
       {confirmDelete.open && (
         <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }}>
           <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmDelete({ open: false })} />
-          <div className="bg-white rounded-md shadow-lg w-full max-w-md" style={{ zIndex: 10000 }}>
+          <div className="bg-card rounded-md shadow-lg w-full max-w-md" style={{ zIndex: 10000 }}>
             <div className="p-6">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center text-red-600">!</div>
+                <div className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center text-red-600">!</div>
                 <div>
                   <h4 className="text-lg font-semibold">Confirmar eliminación</h4>
-                  <p className="text-sm text-gray-600 mt-1">¿Estás seguro que deseas eliminar los elementos seleccionados?</p>
+                  <p className="text-sm text-foreground/70 mt-1">¿Estás seguro que deseas eliminar los elementos seleccionados?</p>
                 </div>
               </div>
             </div>
             <div className="p-4 border-t flex justify-end gap-3">
-              <button onClick={() => setConfirmDelete({ open: false })} className="px-4 py-2 rounded-full bg-white border">Cancelar</button>
+              <button onClick={() => setConfirmDelete({ open: false })} className="px-4 py-2 rounded-full bg-card border">Cancelar</button>
               <button onClick={() => deleteSelected(confirmDelete.ids)} className="px-4 py-2 rounded-full bg-red-600 text-white">Confirmar</button>
             </div>
           </div>

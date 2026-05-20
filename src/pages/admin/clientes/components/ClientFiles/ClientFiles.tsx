@@ -105,26 +105,26 @@ export default function ClientFiles({ client }: Props) {
   return (
 
   <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
+      <div className="bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative" ref={actionRef}>
             <button
               onClick={() => setActionOpen(!actionOpen)}
-              className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]"
+              className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
             >
               {actionSelection}
               <ChevronDown size={16} />
             </button>
             {actionOpen && (
-              <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
-                <button onClick={() => { setActionSelection('Delete'); setActionOpen(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Delete</button>
+              <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
+                <button onClick={() => { setActionSelection('Delete'); setActionOpen(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-muted">Delete</button>
               </div>
             )}
           </div>
 
           <div className="flex-1 flex justify-center">
             <div className="relative w-full max-w-lg">
-              <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+              <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search Files"
@@ -144,11 +144,11 @@ export default function ClientFiles({ client }: Props) {
         <div className="mt-6 md:block hidden flex-1 min-h-0 overflow-y-auto overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b bg-gray-50">
+              <tr className="border-b bg-muted/30">
                 <th className="px-4 py-3 text-left"><input type="checkbox" className="rounded" /></th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">File</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Added By</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Date</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">File</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Added By</th>
               </tr>
             </thead>
             <tbody>
@@ -165,19 +165,19 @@ export default function ClientFiles({ client }: Props) {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">No results found</h3>
-                        <p className="text-sm text-gray-500 mt-1">We couldn't find<br />any items matching<br />your search</p>
+                        <h3 className="text-lg font-semibold text-foreground">No results found</h3>
+                        <p className="text-sm text-muted-foreground mt-1">We couldn't find<br />any items matching<br />your search</p>
                       </div>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filesData.map((f, idx) => (
-                  <tr key={idx} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-700"><input type="checkbox" /></td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{f.date}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{f.file}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{f.addedBy}</td>
+                  <tr key={idx} className="border-b hover:bg-muted/30">
+                    <td className="px-4 py-3 text-sm text-foreground"><input type="checkbox" /></td>
+                    <td className="px-4 py-3 text-sm text-foreground">{f.date}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{f.file}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{f.addedBy}</td>
                   </tr>
                 ))
               )}
@@ -197,7 +197,7 @@ export default function ClientFiles({ client }: Props) {
                   <div className="text-xs text-muted-foreground">{f.date}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-700">{f.addedBy}</div>
+                  <div className="text-sm text-foreground">{f.addedBy}</div>
                 </div>
               </div>
             )}
@@ -208,10 +208,10 @@ export default function ClientFiles({ client }: Props) {
       {showUpload && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center" onClick={handleCloseUpload}>
           <div className="absolute inset-0 bg-black opacity-30" onClick={handleCloseUpload} />
-          <div className="w-full sm:w-96 bg-white rounded-t-lg sm:rounded-md flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+          <div className="w-full sm:w-96 bg-card rounded-t-lg sm:rounded-md flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-10">
               <h3 className="text-lg font-semibold">Upload Files</h3>
-              <button onClick={handleCloseUpload} className="text-gray-400 hover:text-gray-600"><X /></button>
+              <button onClick={handleCloseUpload} className="text-muted-foreground hover:text-foreground/70"><X /></button>
             </div>
 
             <div className="p-6 overflow-y-auto flex-1">
@@ -224,25 +224,25 @@ export default function ClientFiles({ client }: Props) {
                   const files = Array.from(e.dataTransfer?.files || [] as File[]);
                   if (files.length) setUploadFiles((prev) => [...prev, ...files]);
                 }}
-                className={`w-full border-dashed rounded-md p-8 mb-8 text-center ${dragOver ? 'border-2 border-gray-300 bg-gray-50' : 'border border-gray-200'}`}>
+                className={`w-full border-dashed rounded-md p-8 mb-8 text-center ${dragOver ? 'border-2 border-border bg-muted/30' : 'border border-border'}`}>
                 {uploadFiles.length > 0 ? (
                   <div className="flex justify-center">
-                    <div className="bg-gray-100 rounded-md px-3 py-2 text-sm text-gray-700 w-full min-w-0 overflow-hidden">
+                    <div className="bg-muted rounded-md px-3 py-2 text-sm text-foreground w-full min-w-0 overflow-hidden">
                       <span className="block truncate">{uploadFiles.map((f) => f.name).join(', ')}</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-sm text-gray-500">Drop files here..</div>
+                  <div className="text-sm text-muted-foreground">Drop files here..</div>
                 )}
               </div>
 
-              <div className="text-center my-6 text-gray-500">Or Select</div>
+              <div className="text-center my-6 text-muted-foreground">Or Select</div>
 
               <div className="flex items-center gap-3 mt-6">
                 <div className="flex-1 relative min-w-0">
                   <div className="w-full border rounded-md px-3 py-2 text-sm flex items-center justify-between min-w-0">
-                    <span className="block truncate text-sm text-gray-700">{uploadFiles.length > 0 ? uploadFiles.map((f) => f.name).join(', ') : 'Choose files No files selected'}</span>
-                    <span className="text-gray-400 ml-3"><Paperclip /></span>
+                    <span className="block truncate text-sm text-foreground">{uploadFiles.length > 0 ? uploadFiles.map((f) => f.name).join(', ') : 'Choose files No files selected'}</span>
+                    <span className="text-muted-foreground ml-3"><Paperclip /></span>
                   </div>
                   <input type="file" multiple onChange={(e) => { const files = e.target.files ? Array.from(e.target.files) : []; setUploadFiles((prev) => [...prev, ...files]); }} className="absolute inset-0 opacity-0 cursor-pointer" />
                 </div>
@@ -257,7 +257,7 @@ export default function ClientFiles({ client }: Props) {
                         <span className="truncate mr-4 block min-w-0">{f.name}</span>
                         <button
                           onClick={() => setUploadFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                          className="text-red-500 p-1 rounded hover:bg-red-50"
+                          className="text-red-500 p-1 rounded hover:bg-red-500/10"
                           aria-label={`Remove ${f.name}`}
                         >
                           <X size={14} />
@@ -269,8 +269,8 @@ export default function ClientFiles({ client }: Props) {
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 p-4 border-t bg-white">
-              <button onClick={() => { setUploadFiles([]); setShowUpload(false); }} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">Cancel</button>
+            <div className="flex items-center justify-end gap-3 p-4 border-t bg-card">
+              <button onClick={() => { setUploadFiles([]); setShowUpload(false); }} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">Cancel</button>
               <button onClick={() => { handleSubmitUpload(); }} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">Upload</button>
             </div>
           </div>

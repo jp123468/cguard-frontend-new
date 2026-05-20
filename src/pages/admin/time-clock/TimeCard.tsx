@@ -70,7 +70,7 @@ export default function TimeCard() {
                     <div className="grid md:grid-cols-4 gap-4">
                         <StatCard label="Horas regulares" value="0" color="text-pink-500" />
                         <StatCard label="Horas de descanso pagadas" value="0" color="text-green-500" />
-                        <StatCard label="Horas de descanso no pagadas" value="0" color="text-gray-500" />
+                        <StatCard label="Horas de descanso no pagadas" value="0" color="text-muted-foreground" />
                         <StatCard label="Horas totales" value="0" color="text-blue-500" />
                     </div>
                     </div>
@@ -86,7 +86,7 @@ export default function TimeCard() {
                             <Input placeholder="Buscar tarjeta de tiempo" className="pl-10 w-64" />
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4 absolute left-3 top-2.5 text-gray-500"
+                                className="h-4 w-4 absolute left-3 top-2.5 text-muted-foreground"
                                 viewBox="0 0 20 20"
                                 fill="currentColor"
                             >
@@ -175,7 +175,7 @@ export default function TimeCard() {
                                         {/* Mostrar archivados */}
                                         <label className="flex items-center gap-2 cursor-pointer">
                                             <Checkbox />
-                                            <span className="text-sm text-gray-700">Mostrar datos archivados</span>
+                                            <span className="text-sm text-foreground">Mostrar datos archivados</span>
                                         </label>
 
                                         {/* Botón Filtrar */}
@@ -191,7 +191,7 @@ export default function TimeCard() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">
-                                    <MoreVertical className="h-5 w-5 text-gray-700" />
+                                    <MoreVertical className="h-5 w-5 text-foreground" />
                                 </Button>
                             </DropdownMenuTrigger>
 
@@ -216,7 +216,7 @@ export default function TimeCard() {
                 {/* === TABLA ======================================================== */}
                 <div className="border rounded-lg overflow-hidden">
                     <table className="min-w-full text-sm text-left border-collapse">
-                        <thead className="bg-gray-50 text-gray-600">
+                        <thead className="bg-muted/30 text-foreground/70">
                             <tr className="border-b">
                                 <th className="px-4 py-3"></th>
                                 <th className="px-4 py-3">Fecha</th>
@@ -240,7 +240,7 @@ export default function TimeCard() {
                                         <h3 className="text-lg font-semibold">
                                             No se encontraron resultados
                                         </h3>
-                                        <p className="text-sm text-gray-500 max-w-xs mt-1">
+                                        <p className="text-sm text-muted-foreground max-w-xs mt-1">
                                             No pudimos encontrar ningún elemento que coincida con su búsqueda
                                         </p>
                                     </div>
@@ -288,7 +288,7 @@ function DateInput() {
     return (
         <div className="relative">
             <Input defaultValue="Nov 17, 2025" />
-            <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-gray-500" />
+            <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
         </div>
     );
 }

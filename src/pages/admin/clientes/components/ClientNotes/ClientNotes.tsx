@@ -187,26 +187,26 @@ export default function ClientNotes({ client }: Props) {
 
     return (
         <div ref={containerRef} className="min-h-screen flex flex-col">
-            <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
+            <div className="bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
                 <div className="flex items-center justify-between gap-4 mb-6">
                     <div className="relative" ref={actionRef}>
                         <button
                             onClick={() => setActionOpen(!actionOpen)}
-                            className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]"
+                            className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
                         >
                             {t('actions.action', '-')}
                             <ChevronDown size={16} />
                         </button>
                         {actionOpen && (
-                            <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
-                                <button onClick={() => { if (selectedNoteIds.length > 0) setConfirmDeleteIds(selectedNoteIds); setActionOpen(false); }} className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${selectedNoteIds.length === 0 ? 'text-gray-400 cursor-not-allowed' : ''}`}>{t('actions.delete')}</button>
+                            <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
+                                <button onClick={() => { if (selectedNoteIds.length > 0) setConfirmDeleteIds(selectedNoteIds); setActionOpen(false); }} className={`block w-full text-left px-4 py-2 text-sm hover:bg-muted ${selectedNoteIds.length === 0 ? 'text-muted-foreground cursor-not-allowed' : ''}`}>{t('actions.delete')}</button>
                             </div>
                         )}
                     </div>
 
                     <div className="flex-1 max-w-xs">
                         <div className="relative">
-                            <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+                            <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
                             <input
                                 type="text"
                                 placeholder={t('clients.notes.notesearchPlaceholder', 'Search notes')}
@@ -229,7 +229,7 @@ export default function ClientNotes({ client }: Props) {
                                 <div className="flex-1 min-h-0">
                                         <div className="md:block hidden overflow-y-auto overflow-x-auto">
                                             <table className="w-full">
-                        <thead className="-mx-6 px-6 bg-gray-50">
+                        <thead className="-mx-6 px-6 bg-muted/30">
                             <tr className="border-b">
                                 <th className="px-4 py-3 text-left">
                                     <input
@@ -240,9 +240,9 @@ export default function ClientNotes({ client }: Props) {
                                         aria-label="Select all notes"
                                     />
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.notes.Title', 'Title')}</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.notes.Date', 'Date')}</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.notes.Added By', 'Added By')}</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.notes.Title', 'Title')}</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.notes.Date', 'Date')}</th>
+                                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.notes.Added By', 'Added By')}</th>
                                 <th className="px-4 py-3 text-left"></th>
                             </tr>
                         </thead>
@@ -260,16 +260,16 @@ export default function ClientNotes({ client }: Props) {
                                                 </svg>
                                             </div>
                                             <div className="text-center">
-                                                <h3 className="text-lg font-semibold text-gray-700">{t('clients.empty.title', 'No results found')}</h3>
-                                                <p className="text-sm text-gray-500 mt-1">{t('clients.empty.description', "We couldn't find any items matching your search")}</p>
+                                                <h3 className="text-lg font-semibold text-foreground">{t('clients.empty.title', 'No results found')}</h3>
+                                                <p className="text-sm text-muted-foreground mt-1">{t('clients.empty.description', "We couldn't find any items matching your search")}</p>
                                             </div>
                                         </div>
                                     </td>
                                 </tr>
                             ) : (
                                 notesData.map((note) => (
-                                    <tr key={note.id} className="border-b hover:bg-gray-50">
-                                        <td className="px-4 py-3 text-sm text-gray-700">
+                                    <tr key={note.id} className="border-b hover:bg-muted/30">
+                                        <td className="px-4 py-3 text-sm text-foreground">
                                             <input
                                                 type="checkbox"
                                                 className="rounded"
@@ -278,29 +278,29 @@ export default function ClientNotes({ client }: Props) {
                                                 aria-label={`Select note ${note.id}`}
                                             />
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">{note.title}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">{note.noteDate || note.noteDate === null ? note.noteDate : note.createdAt?.split('T')?.[0]}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">
+                                        <td className="px-4 py-3 text-sm text-foreground">{note.title}</td>
+                                        <td className="px-4 py-3 text-sm text-foreground">{note.noteDate || note.noteDate === null ? note.noteDate : note.createdAt?.split('T')?.[0]}</td>
+                                        <td className="px-4 py-3 text-sm text-foreground">
                                             {(() => {
                                                 const cb = note.createdBy as any;
                                                 const name = cb ? ((cb.fullName || cb.name || cb.firstName || '') + (cb.lastName ? ' ' + cb.lastName : '')) : '';
                                                 return (name && name.trim()) ? name : (note.createdById || '-');
                                             })()}
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-gray-700 relative">
+                                        <td className="px-4 py-3 text-sm text-foreground relative">
                                             <Popover open={openPopoverId === note.id} onOpenChange={(open) => setOpenPopoverId(open ? note.id : null)}>
                                                 <PopoverTrigger asChild>
-                                                    <button aria-label={t('header.openMenu') || 'Open menu'} className="p-2 rounded-full hover:bg-gray-100">
-                                                        <EllipsisVertical className="h-5 w-5 text-slate-400" />
+                                                    <button aria-label={t('header.openMenu') || 'Open menu'} className="p-2 rounded-full hover:bg-muted">
+                                                        <EllipsisVertical className="h-5 w-5 text-muted-foreground" />
                                                     </button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-44 p-1 rounded-md shadow-lg">
-                                                    <button onClick={() => { setDetailsNote(note); setOpenPopoverId(null); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50">
-                                                        <Eye className="h-4 w-4 text-slate-400" />
+                                                    <button onClick={() => { setDetailsNote(note); setOpenPopoverId(null); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-muted/30">
+                                                        <Eye className="h-4 w-4 text-muted-foreground" />
                                                         {t('actions.viewDetails', 'Details')}
                                                     </button>
-                                                    <button onClick={() => { setFormData({ title: note.title, description: note.description, date: note.noteDate || note.createdAt?.split('T')?.[0], attachments: [] }); setIsEditing(true); setEditingNoteId(note.id); setShowModal(true); setOpenPopoverId(null); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50"><Pencil className="h-4 w-4" />{t('actions.edit') || 'Edit'}</button>
-                                                    <button onClick={() => { setConfirmDeleteIds([note.id]); setOpenPopoverId(null); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-gray-50 text-red-600"><Trash className="h-4 w-4" />{t('actions.delete') || 'Delete'}</button>
+                                                    <button onClick={() => { setFormData({ title: note.title, description: note.description, date: note.noteDate || note.createdAt?.split('T')?.[0], attachments: [] }); setIsEditing(true); setEditingNoteId(note.id); setShowModal(true); setOpenPopoverId(null); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-muted/30"><Pencil className="h-4 w-4" />{t('actions.edit') || 'Edit'}</button>
+                                                    <button onClick={() => { setConfirmDeleteIds([note.id]); setOpenPopoverId(null); }} className="flex items-center gap-2 px-3 py-2 text-sm w-full hover:bg-muted/30 text-red-600"><Trash className="h-4 w-4" />{t('actions.delete') || 'Delete'}</button>
                                                 </PopoverContent>
                                             </Popover>
                                         </td>
@@ -339,24 +339,24 @@ export default function ClientNotes({ client }: Props) {
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center" onClick={handleCloseModal}>
                     <div className="absolute inset-0 bg-black opacity-30" onClick={handleCloseModal} />
-                    <div className="w-full sm:w-96 bg-white rounded-t-lg sm:rounded-md shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-                            <h2 className="text-lg font-semibold text-gray-800">{t('clients.notes.form.Title', 'Add New Note')}</h2>
+                    <div className="w-full sm:w-96 bg-card rounded-t-lg sm:rounded-md shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-card">
+                            <h2 className="text-lg font-semibold text-foreground">{t('clients.notes.form.Title', 'Add New Note')}</h2>
                         </div>
 
                         <div className="p-6 space-y-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">{t('clients.notes.form.Titlenote', 'Title')} </label>
-                                <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder={t('clients.notes.form.Titleinput', 'Enter note title')} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
+                                <label className="block text-sm font-medium text-foreground mb-2">{t('clients.notes.form.Titlenote', 'Title')} </label>
+                                <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder={t('clients.notes.form.Titleinput', 'Enter note title')} className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">{t('clients.notes.form.Description', 'Description')} </label>
-                                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder={t('clients.notes.form.Descriptioninput', 'Enter note description')} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none" rows={6} />
+                                <label className="block text-sm font-medium text-foreground mb-2">{t('clients.notes.form.Description', 'Description')} </label>
+                                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder={t('clients.notes.form.Descriptioninput', 'Enter note description')} className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none" rows={6} />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">{t('clients.notes.form.Date', 'Date')} </label>
+                                <label className="block text-sm font-medium text-foreground mb-2">{t('clients.notes.form.Date', 'Date')} </label>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button variant="outline" className="w-full justify-between text-left font-normal">
@@ -377,25 +377,25 @@ export default function ClientNotes({ client }: Props) {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">{t('clients.notes.form.AttachFile', 'Attachments')}</label>
-                                <label className="w-full border border-gray-300 rounded-md p-3 flex items-center justify-between gap-3 cursor-pointer hover:border-gray-400">
+                                <label className="block text-sm font-medium text-foreground mb-2">{t('clients.notes.form.AttachFile', 'Attachments')}</label>
+                                <label className="w-full border border-border rounded-md p-3 flex items-center justify-between gap-3 cursor-pointer hover:border-gray-400">
                                     <div className="flex-1">
-                                        <div className="text-sm text-gray-600">
+                                        <div className="text-sm text-foreground/70">
                                             {formData.attachments && formData.attachments.length > 0 ? (
                                                 <div className="space-y-2">
                                                     {formData.attachments.map((f, i) => (
                                                         <div key={i} className="flex items-center justify-between gap-3">
                                                             <div className="flex items-center gap-3 truncate">
-                                                                <span className="text-sm text-gray-700 font-medium truncate" style={{ maxWidth: 200 }} title={f.name}>{shortName(f.name, 28)}</span>
+                                                                <span className="text-sm text-foreground font-medium truncate" style={{ maxWidth: 200 }} title={f.name}>{shortName(f.name, 28)}</span>
                                                             </div>
-                                                            <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="text-gray-500 hover:text-red-500 p-1 rounded" aria-label={`Remove ${f.name}`}>
+                                                            <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="text-muted-foreground hover:text-red-500 p-1 rounded" aria-label={`Remove ${f.name}`}>
                                                                 <X size={14} />
                                                             </button>
                                                         </div>
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <span className="text-sm text-gray-500">{t('clients.notes.form.AttachFileinput', 'No files selected')}</span>
+                                                <span className="text-sm text-muted-foreground">{t('clients.notes.form.AttachFileinput', 'No files selected')}</span>
                                             )}
                                         </div>
                                     </div>
@@ -404,7 +404,7 @@ export default function ClientNotes({ client }: Props) {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-white">
+                        <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
                             <button
                                 onClick={handleSubmitNote}
                                 disabled={!isFormValid}
@@ -421,12 +421,12 @@ export default function ClientNotes({ client }: Props) {
             {detailsNote && (
                 <div className="fixed inset-0 z-60 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black opacity-30" onClick={() => setDetailsNote(null)} />
-                    <div className="bg-white rounded-md shadow-xl p-6 z-70 w-full max-w-md">
+                    <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
                         <h3 className="text-lg font-semibold mb-2 text-center">{t('clients.notes.Details.detailsTitle', 'Note details')}</h3>
-                        <div className="text-sm text-gray-700 mb-2"><strong>{t('clients.notes.Details.Title', 'Title')}: </strong>{detailsNote.title}</div>
-                        <div className="text-sm text-gray-700 mb-2"><strong>{t('clients.notes.Details.Date', 'Date')}: </strong>{detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0]}</div>
-                        <div className="text-sm text-gray-700 mb-4"><strong>{t('clients.notes.Details.Description', 'Description')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
-                        <div className="text-sm text-gray-700 mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdBy || detailsNote.createdById || '-'}</div>
+                        <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.Details.Title', 'Title')}: </strong>{detailsNote.title}</div>
+                        <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.Details.Date', 'Date')}: </strong>{detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0]}</div>
+                        <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.Details.Description', 'Description')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
+                        <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdBy || detailsNote.createdById || '-'}</div>
                         <div className="flex justify-end gap-3">
                             <button onClick={() => { setFormData({ title: detailsNote.title, description: detailsNote.description, date: detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0], attachments: [] }); setIsEditing(true); setEditingNoteId(detailsNote.id); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('actions.edit') || 'Edit'}</button>
                         </div>
@@ -438,10 +438,10 @@ export default function ClientNotes({ client }: Props) {
             {confirmDeleteIds.length > 0 && (
                 <div className="fixed inset-0 z-60 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black opacity-30" onClick={() => setConfirmDeleteIds([])} />
-                    <div className="bg-white rounded-md shadow-xl p-6 z-70 w-full max-w-md">
+                    <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
                         <h3 className="w-full text-center text-lg font-semibold mb-2">{t('clients.notes.confirmDeleteTitle', 'Delete note(s)?')}</h3>
-                        <p className="text-sm text-gray-600 mb-2 text-center">{confirmNames.join(', ')}</p>
-                        <p className="text-sm text-gray-600 mb-4">{t('clients.notes.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected note(s)? This action cannot be undone.')}</p>
+                        <p className="text-sm text-foreground/70 mb-2 text-center">{confirmNames.join(', ')}</p>
+                        <p className="text-sm text-foreground/70 mb-4">{t('clients.notes.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected note(s)? This action cannot be undone.')}</p>
                         <div className="flex justify-end gap-3">
                             <button onClick={async () => {
                                 // bulk delete selected notes (confirmDeleteIds may contain 1 or many)

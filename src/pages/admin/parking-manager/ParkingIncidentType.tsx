@@ -73,7 +73,7 @@ export default function ParkingIncidentType() {
 
                     <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
                         <div className="relative w-full md:w-80">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                             <Input
                                 placeholder="Buscar tipo de incidente"
                                 className="pl-9"
@@ -100,8 +100,8 @@ export default function ParkingIncidentType() {
                                 <TableHead className="w-[50px]">
                                     <Checkbox />
                                 </TableHead>
-                                <TableHead className="font-bold text-slate-700">Tipo de Incidente</TableHead>
-                                <TableHead className="font-bold text-slate-700">Estado</TableHead>
+                                <TableHead className="font-bold text-foreground">Tipo de Incidente</TableHead>
+                                <TableHead className="font-bold text-foreground">Estado</TableHead>
                                 <TableHead className="w-[50px]"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -113,7 +113,7 @@ export default function ParkingIncidentType() {
                                     </TableCell>
                                     <TableCell>{type.name}</TableCell>
                                     <TableCell>
-                                        <span className="text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs font-medium">
+                                        <span className="text-green-600 bg-green-500/10 px-2 py-1 rounded-full text-xs font-medium">
                                             {type.status}
                                         </span>
                                     </TableCell>
@@ -121,7 +121,7 @@ export default function ParkingIncidentType() {
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="icon">
-                                                    <EllipsisVertical className="h-4 w-4 text-slate-400" />
+                                                    <EllipsisVertical className="h-4 w-4 text-muted-foreground" />
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">

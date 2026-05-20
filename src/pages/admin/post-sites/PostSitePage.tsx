@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import AppLayout from "@/layouts/app-layout";
 import { usePageTitle } from '@/hooks/usePageTitle';
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -40,6 +40,9 @@ import {
   Trash,
   RotateCcw,
   Pencil,
+  ChevronRight,
+  ChevronDown,
+  Loader2,
 } from "lucide-react";
 import PostSiteImportDialog from "@/components/post-sites/PostSiteImportDialog";
 import { Link, useNavigate } from "react-router-dom";
@@ -98,6 +101,10 @@ export default function PostSitePage() {
   // Sorting state (client-side for post sites list)
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
+  // Expandable rows: stations sub-items
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [stationsMap, setStationsMap] = useState<Record<string, any[]>>({});
+  const [loadingStations, setLoadingStations] = useState<Set<string>>(new Set());
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
@@ -105,6 +112,29 @@ export default function PostSitePage() {
 
   // Temporary filter state for the sheet
   const [tempFilters, setTempFilters] = useState<PostSiteFilters>({});
+
+  const toggleExpand = async (siteId: string) => {
+    const next = new Set(expandedIds);
+    if (next.has(siteId)) {
+      next.delete(siteId);
+      setExpandedIds(next);
+      return;
+    }
+    next.add(siteId);
+    setExpandedIds(next);
+    // Fetch stations if not already cached
+    if (!stationsMap[siteId]) {
+      setLoadingStations((prev) => new Set(prev).add(siteId));
+      try {
+        const res = await stationService.list({ postSite: siteId } as any, { limit: 50, offset: 0 });
+        setStationsMap((prev) => ({ ...prev, [siteId]: res.rows }));
+      } catch {
+        setStationsMap((prev) => ({ ...prev, [siteId]: [] }));
+      } finally {
+        setLoadingStations((prev) => { const s = new Set(prev); s.delete(siteId); return s; });
+      }
+    }
+  };
 
   const formatClientName = (client: Partial<Client>) => {
     const fullName = [client.name, client.lastName].filter(Boolean).join(" ").trim();
@@ -669,7 +699,7 @@ export default function PostSitePage() {
         {/* Tabla */}
         <div className="mt-4 md:block hidden border rounded-lg overflow-hidden">
           <table className="min-w-full text-sm text-left border-collapse">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted/30">
               <tr className="border-b">
                 <th className="px-4 py-3">
                   <Checkbox onCheckedChange={handleSelectAll} checked={selectedIds.length === postSites.length && postSites.length > 0} />
@@ -734,7 +764,7 @@ export default function PostSitePage() {
                         alt="Sin datos"
                         className="h-36 mb-4"
                       />
-                      <p className="text-gray-500">
+                      <p className="text-muted-foreground">
                         {t('postSites.notsearch')}
                       </p>
                     </div>
@@ -742,12 +772,22 @@ export default function PostSitePage() {
                 </tr>
               )}
               {(postSites ?? []).map((site) => (
-                <tr key={site.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => { navigate(`/post-sites/${site.id}`); }}>
+                <React.Fragment key={site.id}>
+                <tr className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => { navigate(`/post-sites/${site.id}`); }}>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                    <Checkbox
-                      checked={selectedIds.includes(site.id)}
-                      onCheckedChange={(checked) => handleSelectOne(site.id, checked as boolean)}
-                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="p-0.5 rounded hover:bg-muted"
+                        onClick={(e) => { e.stopPropagation(); toggleExpand(site.id); }}
+                      >
+                        {expandedIds.has(site.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </button>
+                      <Checkbox
+                        checked={selectedIds.includes(site.id)}
+                        onCheckedChange={(checked) => handleSelectOne(site.id, checked as boolean)}
+                      />
+                    </div>
                   </td>
                   <td className="px-4 py-3 font-medium">{site.name}</td>
                   <td className="px-4 py-3">{site.client ? formatClientName(site.client) : "-"}</td>
@@ -757,7 +797,7 @@ export default function PostSitePage() {
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 text-xs rounded-full ${site.status === "active"
                       ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
+                      : "bg-red-500/15 text-red-700"
                       }`}>
                       {site.status === "active" ? t('postSites.filters.active', 'Activo') : t('postSites.filters.archived', 'Archivado')}
                     </span>
@@ -766,12 +806,80 @@ export default function PostSitePage() {
                     <RowActionsMenu actions={rowActions(site)} />
                   </td>
                 </tr>
+                {expandedIds.has(site.id) && (
+                  <>
+                    {loadingStations.has(site.id) && (
+                      <tr className="bg-muted/10">
+                        <td colSpan={6} className="px-4 py-2 pl-14">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Loader2 className="h-3 w-3 animate-spin" /> Cargando estaciones...
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    {!loadingStations.has(site.id) && (stationsMap[site.id] || []).length === 0 && (
+                      <tr className="bg-muted/10">
+                        <td colSpan={6} className="px-4 py-2 pl-14 text-xs text-muted-foreground italic">
+                          Sin estaciones registradas
+                        </td>
+                      </tr>
+                    )}
+                    {(stationsMap[site.id] || []).map((station: any) => {
+                      // Parse stationSchedule JSON into readable shifts
+                      let shifts: { nombre: string; startTime: string; endTime: string; guardsCount: string }[] = [];
+                      try {
+                        const raw = station.stationSchedule;
+                        if (raw && typeof raw === 'string') shifts = JSON.parse(raw);
+                        else if (Array.isArray(raw)) shifts = raw;
+                      } catch { /* ignore */ }
+                      const assignedCount = Array.isArray(station.assignedGuards) ? station.assignedGuards.length : (station.guardsCount || 0);
+
+                      return (
+                      <tr
+                        key={station.id}
+                        className="bg-muted/5 hover:bg-muted/15 cursor-pointer border-b border-border/30 transition-colors"
+                        onClick={() => navigate(`/post-sites/${site.id}/stations/${station.id}`)}
+                      >
+                        <td className="px-4 py-2.5"></td>
+                        <td className="px-4 py-2.5 pl-12">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#C8860A]"></span>
+                            <span className="text-sm font-medium text-foreground/80">
+                              {station.name || station.stationName || 'Estación'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span className="text-xs text-muted-foreground">
+                            {assignedCount > 0 ? `${assignedCount} guardia${assignedCount > 1 ? 's' : ''}` : 'Sin guardias'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          {shifts.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {shifts.map((s, i) => (
+                                <span key={i} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] bg-[#C8860A]/10 text-[#C8860A]">
+                                  {s.nombre} {s.startTime}–{s.endTime}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </td>
+                        <td colSpan={2}></td>
+                      </tr>
+                      );
+                    })}
+                  </>
+                )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
 
           {/* Footer de tabla - Única sección de paginación */}
-          <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50 border-x border-b rounded-b-lg">
+          <div className="flex items-center justify-between px-4 py-3 text-sm text-foreground/70 bg-muted/30 border-x border-b rounded-b-lg">
             <div className="flex items-center gap-2">
               <span>{t('clients.pagination.itemsPerPage')}</span>
               <Select
@@ -832,7 +940,7 @@ export default function PostSitePage() {
                   </div>
                   <div className="text-right">
                     <div className="text-xs">
-                      <span className={`px-2 py-1 text-xs rounded-full ${site.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                      <span className={`px-2 py-1 text-xs rounded-full ${site.status === "active" ? "bg-green-100 text-green-800" : "bg-red-500/15 text-red-700"}`}>
                         {site.status === "active" ? t('postSites.filters.active', 'Activo') : t('postSites.filters.archived', 'Archivado')}
                       </span>
                     </div>

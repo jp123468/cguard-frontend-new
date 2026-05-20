@@ -118,7 +118,7 @@ export default function GeoFenceLog() {
                       <Label>Desde la Fecha</Label>
                       <div className="relative">
                         <Input value="Nov 17, 2025" readOnly className="pr-8" />
-                        <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -132,7 +132,7 @@ export default function GeoFenceLog() {
                       <Label>Hasta la Fecha</Label>
                       <div className="relative">
                         <Input value="Nov 23, 2025" readOnly className="pr-8" />
-                        <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -143,7 +143,7 @@ export default function GeoFenceLog() {
 
                   <div className="flex items-center gap-2 pt-2">
                     <Checkbox id="archived" />
-                    <Label htmlFor="archived" className="text-sm font-normal text-slate-600">Mostrar datos archivados</Label>
+                    <Label htmlFor="archived" className="text-sm font-normal text-foreground/70">Mostrar datos archivados</Label>
                   </div>
 
                   <div className="space-y-2 pt-2">
@@ -160,22 +160,22 @@ export default function GeoFenceLog() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground/70">
                   <MoreVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem className="gap-2">
-                  <FileText className="h-4 w-4 text-slate-500" /> Exportar como PDF
+                  <FileText className="h-4 w-4 text-muted-foreground" /> Exportar como PDF
                 </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2">
-                  <FileSpreadsheet className="h-4 w-4 text-slate-500" /> Exportar como Excel
+                  <FileSpreadsheet className="h-4 w-4 text-muted-foreground" /> Exportar como Excel
                 </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2">
-                  <Printer className="h-4 w-4 text-slate-500" /> Imprimir
+                  <Printer className="h-4 w-4 text-muted-foreground" /> Imprimir
                 </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2">
-                  <Mail className="h-4 w-4 text-slate-500" /> Enviar Informe por Correo
+                  <Mail className="h-4 w-4 text-muted-foreground" /> Enviar Informe por Correo
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -183,7 +183,7 @@ export default function GeoFenceLog() {
         </div>
 
         {/* Table Header */}
-        <div className="mt-6 flex items-center justify-between bg-white px-4 py-3 text-sm font-medium text-slate-700 border-b">
+        <div className="mt-6 flex items-center justify-between bg-card px-4 py-3 text-sm font-medium text-foreground border-b">
           <div className="flex items-center gap-2">
             <span>Seleccionar Todo</span>
           </div>
@@ -191,21 +191,21 @@ export default function GeoFenceLog() {
         </div>
 
         {/* Table / Empty State */}
-        <div className="overflow-hidden bg-white">
+        <div className="overflow-hidden bg-card">
           <div className="flex flex-col items-center justify-center text-center py-20">
             <img
               src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
               alt="Sin datos"
               className="mb-4 h-36"
             />
-            <h3 className="text-lg font-semibold text-slate-700">No se encontraron resultados</h3>
+            <h3 className="text-lg font-semibold text-foreground">No se encontraron resultados</h3>
             <p className="mt-1 max-w-xs text-sm text-muted-foreground">
               No pudimos encontrar ningún elemento que coincida con su búsqueda
             </p>
           </div>
 
           {/* Pagination Footer */}
-          <div className="flex items-center justify-between border-t bg-white px-4 py-3 text-sm text-gray-600">
+          <div className="flex items-center justify-between border-t bg-card px-4 py-3 text-sm text-foreground/70">
             <div className="flex items-center gap-2">
               <span>Items per page:</span>
               <Select defaultValue="25">

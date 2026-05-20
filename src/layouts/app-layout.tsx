@@ -198,14 +198,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 
   return (
-    <div className="h-screen w-full bg-gray-50">
-      <div className={["sticky top-0 z-50 bg-white border-b border-gray-200 h-14 transition-[margin] duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-0"].join(" ")}>
+    <div className="h-screen w-full bg-background">
+      <div className={["sticky top-0 z-50 bg-background border-b border-border h-14 transition-[margin] duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-0"].join(" ")}>
         <Header toggleSidebar={toggleSidebar} />
       </div>
 
       <aside
         className={[
-          "hidden lg:block fixed left-0 top-0 h-screen bg-white border-r border-gray-200 overflow-y-auto transition-[width] duration-300",
+          "hidden lg:block fixed left-0 top-0 h-screen bg-background border-r border-border overflow-y-auto transition-[width] duration-300",
           sidebarOpen ? "w-64" : "w-0",
         ].join(" ")}
       >
@@ -214,7 +214,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       <div
         className={[
-          "fixed left-0 top-0 z-[60] w-64 h-screen bg-white border-r border-gray-200 lg:hidden transform transition-transform duration-300",
+          "fixed left-0 top-0 z-[60] w-64 h-screen bg-background border-r border-border lg:hidden transform transition-transform duration-300",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >

@@ -637,7 +637,7 @@ export default function NewRoutePage() {
                 </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full border-collapse text-left text-sm">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-muted/30">
                       <tr className="border-b">
                         <th className="px-4 py-3 font-semibold">#</th>
                         <th className="px-4 py-3 font-semibold">Puesto de seguridad</th>

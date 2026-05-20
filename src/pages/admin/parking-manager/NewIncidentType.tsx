@@ -155,14 +155,14 @@ export default function NewIncidentType() {
                 return <Input disabled type="number" placeholder="0" className={commonClasses} />;
             case "date":
                 return (
-                    <div className={cn("border rounded-md p-2 text-slate-400 flex justify-between items-center bg-white", commonClasses)}>
+                    <div className={cn("border rounded-md p-2 text-muted-foreground flex justify-between items-center bg-card", commonClasses)}>
                         <span>dd/mm/aaaa</span>
                         <Calendar className="h-4 w-4" />
                     </div>
                 );
             case "time":
                 return (
-                    <div className={cn("border rounded-md p-2 text-slate-400 flex justify-between items-center bg-white", commonClasses)}>
+                    <div className={cn("border rounded-md p-2 text-muted-foreground flex justify-between items-center bg-card", commonClasses)}>
                         <span>--:--</span>
                         <Clock className="h-4 w-4" />
                     </div>
@@ -170,7 +170,7 @@ export default function NewIncidentType() {
             case "dropdown":
                 return (
                     <Select disabled>
-                        <SelectTrigger className={cn("bg-white", commonClasses)}>
+                        <SelectTrigger className={cn("bg-card", commonClasses)}>
                             <SelectValue placeholder="Seleccionar opción" />
                         </SelectTrigger>
                         <SelectContent>
@@ -185,8 +185,8 @@ export default function NewIncidentType() {
                     <div className="space-y-2">
                         {field.options?.map((opt, i) => (
                             <div key={i} className="flex items-center gap-2">
-                                <div className="h-4 w-4 rounded-full border border-slate-300 bg-white" />
-                                <span className={cn("text-slate-700", commonClasses)}>{opt}</span>
+                                <div className="h-4 w-4 rounded-full border border-slate-300 bg-card" />
+                                <span className={cn("text-foreground", commonClasses)}>{opt}</span>
                             </div>
                         ))}
                     </div>
@@ -196,22 +196,22 @@ export default function NewIncidentType() {
                     <div className="space-y-2">
                         {field.options?.map((opt, i) => (
                             <div key={i} className="flex items-center gap-2">
-                                <div className="h-4 w-4 rounded border border-slate-300 bg-white" />
-                                <span className={cn("text-slate-700", commonClasses)}>{opt}</span>
+                                <div className="h-4 w-4 rounded border border-slate-300 bg-card" />
+                                <span className={cn("text-foreground", commonClasses)}>{opt}</span>
                             </div>
                         ))}
                     </div>
                 );
             case "instruction":
-                return <p className={cn("text-slate-500 italic", commonClasses)}>{field.instructionText || field.label}</p>;
+                return <p className={cn("text-muted-foreground italic", commonClasses)}>{field.instructionText || field.label}</p>;
             case "header":
-                return <h3 className={cn("font-bold text-slate-800 border-b pb-1", isPhone ? "text-base" : "text-lg")}>{field.label}</h3>;
+                return <h3 className={cn("font-bold text-foreground border-b pb-1", isPhone ? "text-base" : "text-lg")}>{field.label}</h3>;
             case "image":
             case "audio":
             case "video":
             case "signature":
                 return (
-                    <div className={cn("border-2 border-dashed rounded-md flex flex-col items-center justify-center text-slate-400 bg-slate-50", isPhone ? "p-2 h-20" : "p-6 h-32")}>
+                    <div className={cn("border-2 border-dashed rounded-md flex flex-col items-center justify-center text-muted-foreground bg-slate-50", isPhone ? "p-2 h-20" : "p-6 h-32")}>
                         {field.type === "image" && <ImageIcon className={isPhone ? "h-6 w-6" : "h-8 w-8"} />}
                         {field.type === "audio" && <Mic className={isPhone ? "h-6 w-6" : "h-8 w-8"} />}
                         {field.type === "video" && <Video className={isPhone ? "h-6 w-6" : "h-8 w-8"} />}
@@ -247,20 +247,20 @@ export default function NewIncidentType() {
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-slate-600 max-w-4xl">
+                <p className="text-sm text-foreground/70 max-w-4xl">
                     Personalice su formulario arrastrando y soltando los campos a continuación en el área del formulario.
                 </p>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Sidebar: Field Types */}
                     <div className="lg:col-span-1">
-                        <ScrollArea className="h-[600px] border rounded-lg bg-white p-4">
+                        <ScrollArea className="h-[600px] border rounded-lg bg-card p-4">
                             <div className="space-y-2">
                                 {FIELD_TYPES.map((item) => (
                                     <Button
                                         key={item.type}
                                         variant="outline"
-                                        className="w-full justify-start gap-3 h-auto py-3 font-normal text-slate-700 hover:bg-slate-50"
+                                        className="w-full justify-start gap-3 h-auto py-3 font-normal text-foreground hover:bg-slate-50"
                                         onClick={() => handleAddField(item.type)}
                                     >
                                         <item.icon className="h-4 w-4 shrink-0" />
@@ -274,9 +274,9 @@ export default function NewIncidentType() {
 
                     {/* Center: Canvas */}
                     <div className="lg:col-span-1">
-                        <div className="border rounded-lg bg-white p-6 min-h-[600px]">
+                        <div className="border rounded-lg bg-card p-6 min-h-[600px]">
                             {fields.length === 0 ? (
-                                <div className="h-full flex items-center justify-center text-slate-400">
+                                <div className="h-full flex items-center justify-center text-muted-foreground">
                                     <p className="text-sm">No hay campos para mostrar</p>
                                 </div>
                             ) : (
@@ -292,14 +292,14 @@ export default function NewIncidentType() {
                                         >
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex items-center gap-2">
-                                                    <GripVertical className="h-4 w-4 text-slate-300 cursor-move" />
-                                                    <Label className="font-medium text-slate-700">{field.label}</Label>
+                                                    <GripVertical className="h-4 w-4 text-muted-foreground/60 cursor-move" />
+                                                    <Label className="font-medium text-foreground">{field.label}</Label>
                                                     {field.required && <span className="text-red-500">*</span>}
                                                 </div>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-6 w-6 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    className="h-6 w-6 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleRemoveField(field.id);
@@ -361,7 +361,7 @@ export default function NewIncidentType() {
                                                                         <Button
                                                                             variant="ghost"
                                                                             size="icon"
-                                                                            className="h-8 w-8 text-slate-400 hover:text-red-500"
+                                                                            className="h-8 w-8 text-muted-foreground hover:text-red-500"
                                                                             onClick={() => removeOption(field.id, index)}
                                                                         >
                                                                             <Trash2 className="h-4 w-4" />
@@ -372,7 +372,7 @@ export default function NewIncidentType() {
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="w-full border-dashed text-slate-500"
+                                                                className="w-full border-dashed text-muted-foreground"
                                                                 onClick={() => addOption(field.id)}
                                                             >
                                                                 <Plus className="h-4 w-4 mr-2" /> Agregar Opción
@@ -390,23 +390,23 @@ export default function NewIncidentType() {
 
                     {/* Right: Phone Preview */}
                     <div className="lg:col-span-1">
-                        <div className="border rounded-lg bg-white p-6 min-h-[600px] flex flex-col items-center justify-center">
+                        <div className="border rounded-lg bg-card p-6 min-h-[600px] flex flex-col items-center justify-center">
                             {/* Simple Phone Frame */}
-                            <div className="w-[280px] h-[560px] border-[14px] border-black rounded-[3rem] bg-white shadow-xl overflow-hidden flex flex-col relative">
+                            <div className="w-[280px] h-[560px] border-[14px] border-black rounded-[3rem] bg-card shadow-xl overflow-hidden flex flex-col relative">
                                 {/* Notch */}
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-10"></div>
 
                                 {/* Screen Content */}
-                                <div className="flex-1 overflow-y-auto bg-white pt-8">
+                                <div className="flex-1 overflow-y-auto bg-card pt-8">
                                     {incidentName || fields.length > 0 ? (
                                         <div className="p-4 space-y-4">
                                             {incidentName && (
-                                                <div className="font-semibold text-slate-800">{incidentName}</div>
+                                                <div className="font-semibold text-foreground">{incidentName}</div>
                                             )}
                                             {fields.map((field) => (
                                                 <div key={field.id} className="space-y-1">
                                                     {field.type !== "header" && field.type !== "instruction" && (
-                                                        <label className="text-xs font-medium text-slate-600">
+                                                        <label className="text-xs font-medium text-foreground/70">
                                                             {field.label} {field.required && "*"}
                                                         </label>
                                                     )}
@@ -415,7 +415,7 @@ export default function NewIncidentType() {
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="h-full flex items-center justify-center text-slate-300 text-sm">
+                                        <div className="h-full flex items-center justify-center text-muted-foreground/60 text-sm">
                                             Vista previa vacía
                                         </div>
                                     )}

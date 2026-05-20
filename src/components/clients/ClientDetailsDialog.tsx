@@ -90,32 +90,32 @@ export function ClientDetailsDialog({
                         {/* Información básica en dos columnas */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <p className="text-xs text-gray-600 font-semibold">Nombre</p>
+                                <p className="text-xs text-foreground/70 font-semibold">Nombre</p>
                                 <p className="text-sm">{client.name}</p>
                             </div>
                             {client.lastName && (
                                 <div>
-                                    <p className="text-xs text-gray-600 font-semibold">Apellidos</p>
+                                    <p className="text-xs text-foreground/70 font-semibold">Apellidos</p>
                                     <p className="text-sm">{client.lastName}</p>
                                 </div>
                             )}
                             <div>
-                                <p className="text-xs text-gray-600 font-semibold">Correo</p>
+                                <p className="text-xs text-foreground/70 font-semibold">Correo</p>
                                 <p className="text-sm truncate">{client.email || "-"}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-600 font-semibold">Teléfono</p>
+                                <p className="text-xs text-foreground/70 font-semibold">Teléfono</p>
                                 <p className="text-sm">{client.phoneNumber || "-"}</p>
                             </div>
                             {client.faxNumber && (
                                 <div>
-                                    <p className="text-xs text-gray-600 font-semibold">Teléfono fijo</p>
+                                    <p className="text-xs text-foreground/70 font-semibold">Teléfono fijo</p>
                                     <p className="text-sm">{client.faxNumber}</p>
                                 </div>
                             )}
                             {categories.length > 0 && (
                                 <div className="md:col-span-2">
-                                    <p className="text-xs text-gray-600 font-semibold">Sectores</p>
+                                    <p className="text-xs text-foreground/70 font-semibold">Sectores</p>
                                     <p className="text-sm">{categories.map(c => c.name).join(", ")}</p>
                                 </div>
                             )}
@@ -123,26 +123,26 @@ export function ClientDetailsDialog({
 
                         {/* Dirección completa */}
                         <div className="border-t pt-3">
-                            <h4 className="text-sm font-semibold mb-2 text-gray-700">Dirección</h4>
+                            <h4 className="text-sm font-semibold mb-2 text-foreground">Dirección</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-xs text-gray-600 font-semibold">Dirección</p>
+                                    <p className="text-xs text-foreground/70 font-semibold">Dirección</p>
                                     <p className="text-sm">{client.address || "-"}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-600 font-semibold">Dirección Complementaria</p>
+                                    <p className="text-xs text-foreground/70 font-semibold">Dirección Complementaria</p>
                                     <p className="text-sm">{client.addressLine2 || "-"}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-600 font-semibold">Código Postal</p>
+                                    <p className="text-xs text-foreground/70 font-semibold">Código Postal</p>
                                     <p className="text-sm">{client.postalCode || "-"}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-600 font-semibold">Ciudad</p>
+                                    <p className="text-xs text-foreground/70 font-semibold">Ciudad</p>
                                     <p className="text-sm">{client.city || "-"}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-600 font-semibold">País</p>
+                                    <p className="text-xs text-foreground/70 font-semibold">País</p>
                                     <p className="text-sm">{client.country || "-"}</p>
                                 </div>
                             </div>
@@ -151,7 +151,7 @@ export function ClientDetailsDialog({
                         {/* Sitio web */}
                         {client.website && (
                             <div className="border-t pt-3">
-                                <p className="text-xs text-gray-600 font-semibold">Sitio Web</p>
+                                <p className="text-xs text-foreground/70 font-semibold">Sitio Web</p>
                                 <p className="text-sm">
                                     <a
                                         href={client.website}

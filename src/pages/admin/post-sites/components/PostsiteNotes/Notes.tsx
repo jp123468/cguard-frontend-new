@@ -169,23 +169,23 @@ export default function PostSiteNotes({ site }: Props) {
 
   return (
     <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-white border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
+      <div className="bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative" ref={actionRef}>
-            <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]">
+            <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]">
               {t('actions.action', 'Action')}
               <ChevronDown size={16} />
             </button>
             {actionOpen && (
-              <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
-                <button onClick={() => { setActionOpen(false); setConfirmDeleteIds(selectedIds); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">{t('clients.notes.delete', 'Delete')}</button>
+              <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
+                <button onClick={() => { setActionOpen(false); setConfirmDeleteIds(selectedIds); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-muted">{t('clients.notes.delete', 'Delete')}</button>
               </div>
             )}
           </div>
 
           <div className="flex-1 max-w-xs">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+              <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
               <input type="text" placeholder={t('clients.notes.notesearchPlaceholder', 'Search note')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
             </div>
           </div>
@@ -200,7 +200,7 @@ export default function PostSiteNotes({ site }: Props) {
           <div className="md:block hidden overflow-x-auto">
             <table className="w-full">
             <thead>
-              <tr className="border-b bg-gray-50">
+              <tr className="border-b bg-muted/30">
                 <th className="px-4 py-3 text-left">
                   <input
                     type="checkbox"
@@ -214,10 +214,10 @@ export default function PostSiteNotes({ site }: Props) {
                     aria-label="Select all notes"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.notes.Title')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.notes.Date')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('clients.notes.Added By')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700"></th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.notes.Title')}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.notes.Date')}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.notes.Added By')}</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground"></th>
               </tr>
             </thead>
             <tbody>
@@ -235,48 +235,48 @@ export default function PostSiteNotes({ site }: Props) {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">{t('clients.empty.title')}</h3>
-                        <p className="text-sm text-gray-500 mt-1">{t('clients.empty.description')}</p>
+                        <h3 className="text-lg font-semibold text-foreground">{t('clients.empty.title')}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{t('clients.empty.description')}</p>
                       </div>
                     </div>
                   </td>
                 </tr>
               ) : (
                 notesData.map((note, idx) => (
-                  <tr key={note.id || idx} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-700"><input type="checkbox" checked={selectedIds.includes(String(note.id))} onChange={() => toggleSelect(String(note.id))} /></td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{note.title}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{note.date}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{note.addedBy || '-'}</td>
+                  <tr key={note.id || idx} className="border-b hover:bg-muted/30">
+                    <td className="px-4 py-3 text-sm text-foreground"><input type="checkbox" checked={selectedIds.includes(String(note.id))} onChange={() => toggleSelect(String(note.id))} /></td>
+                    <td className="px-4 py-3 text-sm text-foreground">{note.title}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{note.date}</td>
+                    <td className="px-4 py-3 text-sm text-foreground">{note.addedBy || '-'}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="relative inline-block">
                         <button
                           onClick={() => setOpenMenuId(prev => (prev === note.id ? null : String(note.id)))}
-                          className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+                          className="p-2 rounded-full hover:bg-muted focus:outline-none"
                           title={t('actions.action') || 'Actions'}
                         >
                           <EllipsisVertical size={18} />
                         </button>
 
                         {openMenuId === String(note.id) && (
-                          <div className="absolute right-0 mt-2 w-44 bg-white border rounded-md shadow-lg z-50">
+                          <div className="absolute right-0 mt-2 w-44 bg-card border rounded-md shadow-lg z-50">
                             <button
                               onClick={() => { setDetailsNote(note.raw || note); setOpenMenuId(null); }}
-                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 focus:outline-none"
+                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/30 focus:outline-none"
                             >
                               <Eye size={16} />
                               <span className="text-sm">{t('actions.viewDetails') || 'View Details'}</span>
                             </button>
                             <button
                               onClick={() => { setFormData({ title: note.title, description: note.description, date: note.date, attachments: [], id: note.id }); setViewOnly(false); setShowModal(true); setOpenMenuId(null); }}
-                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 focus:outline-none"
+                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/30 focus:outline-none"
                             >
                               <Pencil size={16} />
                               <span className="text-sm">{t('actions.edit') || 'Edit'}</span>
                             </button>
                             <button
                               onClick={() => { setOpenMenuId(null); setConfirmDeleteIds([String(note.id)]); }}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-gray-50 focus:outline-none"
+                              className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-muted/30 focus:outline-none"
                             >
                               <Trash size={16} />
                               <span className="text-sm">{t('actions.delete') || 'Delete'}</span>
@@ -296,8 +296,8 @@ export default function PostSiteNotes({ site }: Props) {
             <MobileCardList items={notesData} renderCard={(note: any) => (
               <div>
                 <div className="text-sm font-semibold">{note.title}</div>
-                <div className="text-xs text-gray-500">{note.date}</div>
-                <div className="text-sm text-gray-700 mt-2">{note.description}</div>
+                <div className="text-xs text-muted-foreground">{note.date}</div>
+                <div className="text-sm text-foreground mt-2">{note.description}</div>
               </div>
             )} loading={false} />
           </div>
@@ -308,48 +308,48 @@ export default function PostSiteNotes({ site }: Props) {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center" onClick={handleCloseModal}>
           <div className="absolute inset-0 bg-black/40" onClick={handleCloseModal} />
 
-          <div className="w-full sm:ml-auto sm:w-96 bg-white shadow-2xl overflow-y-auto rounded-t-lg sm:rounded-md" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-              <h2 className="text-lg font-semibold text-gray-800">{t('clients.notes.form.Title', 'Add New Note')}</h2>
+          <div className="w-full sm:ml-auto sm:w-96 bg-card shadow-2xl overflow-y-auto rounded-t-lg sm:rounded-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-card">
+              <h2 className="text-lg font-semibold text-foreground">{t('clients.notes.form.Title', 'Add New Note')}</h2>
             </div>
 
             <div className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('clients.notes.form.Titlenote', 'Title *')} </label>
-                <input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder={t('clients.notes.form.Titlenote', 'Title *')} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
+                <label className="block text-sm font-medium text-foreground mb-2">{t('clients.notes.form.Titlenote', 'Title *')} </label>
+                <input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder={t('clients.notes.form.Titlenote', 'Title *')} className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('clients.notes.form.Description', 'Description *')} </label>
-                <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder={t('clients.notes.form.Descriptioninput', 'Description *')} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none" rows={6} />
+                <label className="block text-sm font-medium text-foreground mb-2">{t('clients.notes.form.Description', 'Description *')} </label>
+                <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder={t('clients.notes.form.Descriptioninput', 'Description *')} className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none" rows={6} />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('clients.notes.form.Date', 'Date *')} </label>
-                <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A] cursor-pointer" />
+                <label className="block text-sm font-medium text-foreground mb-2">{t('clients.notes.form.Date', 'Date *')} </label>
+                <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] cursor-pointer" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('clients.notes.form.AttachFile', 'Attachments')}</label>
+                <label className="block text-sm font-medium text-foreground mb-2">{t('clients.notes.form.AttachFile', 'Attachments')}</label>
 
-                <label className="w-full border border-gray-300 rounded-md p-3 flex items-center justify-between gap-3 cursor-pointer hover:border-gray-400">
+                <label className="w-full border border-border rounded-md p-3 flex items-center justify-between gap-3 cursor-pointer hover:border-gray-400">
                   <div className="flex-1">
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-foreground/70">
                       {formData.attachments && formData.attachments.length > 0 ? (
                         <div className="space-y-2">
                           {formData.attachments.map((f, i) => (
                             <div key={i} className="flex items-center justify-between gap-3">
                               <div className="flex items-center gap-3 truncate">
-                                <span className="text-sm text-gray-700 font-medium truncate" style={{ maxWidth: 200 }} title={f.name}>{shortName(f.name, 28)}</span>
+                                <span className="text-sm text-foreground font-medium truncate" style={{ maxWidth: 200 }} title={f.name}>{shortName(f.name, 28)}</span>
                               </div>
-                              <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="text-gray-500 hover:text-red-500 p-1 rounded" aria-label={`Remove ${f.name}`}>
+                              <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="text-muted-foreground hover:text-red-500 p-1 rounded" aria-label={`Remove ${f.name}`}>
                                 <X size={14} />
                               </button>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-500">{t('clients.notes.form.NoFilesSelected', 'No files selected')}</span>
+                        <span className="text-sm text-muted-foreground">{t('clients.notes.form.NoFilesSelected', 'No files selected')}</span>
                       )}
                     </div>
                   </div>
@@ -359,7 +359,7 @@ export default function PostSiteNotes({ site }: Props) {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-white">
+            <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
               <button
                 onClick={handleSubmitNote}
                 disabled={!isFormValid}
@@ -376,9 +376,9 @@ export default function PostSiteNotes({ site }: Props) {
       {confirmDeleteIds.length > 0 && (
         <div className="fixed inset-0 z-60 flex items-center justify-center">
           <div className="absolute inset-0 bg-black opacity-30" onClick={() => setConfirmDeleteIds([])} />
-          <div className="bg-white rounded-md shadow-xl p-6 z-70 w-full max-w-md">
+          <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-2 text-center">{t('clients.notes.confirmDeleteTitle', 'Delete contact(s)?')}</h3>
-            <p className="text-sm text-gray-600 mb-4">{t('clients.notes.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected note(s)? This action cannot be undone.')}</p>
+            <p className="text-sm text-foreground/70 mb-4">{t('clients.notes.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected note(s)? This action cannot be undone.')}</p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setConfirmDeleteIds([])} className="px-4 py-2 rounded-md border">{t('actions.cancel') || 'Cancel'}</button>
               <button
@@ -423,12 +423,12 @@ export default function PostSiteNotes({ site }: Props) {
       {detailsNote && (
         <div className="fixed inset-0 z-60 flex items-center justify-center">
           <div className="absolute inset-0 bg-black opacity-30" onClick={() => setDetailsNote(null)} />
-          <div className="bg-white rounded-md shadow-xl p-6 z-70 w-full max-w-md">
+          <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-2 text-center">{t('clients.notes.detailsTitle', 'Note details')}</h3>
-            <div className="text-sm text-gray-700 mb-2"><strong>{t('clients.notes.form.Title', 'Title')}: </strong>{detailsNote.title}</div>
-            <div className="text-sm text-gray-700 mb-2"><strong>{t('clients.notes.form.Date', 'Date')}: </strong>{detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0]}</div>
-            <div className="text-sm text-gray-700 mb-4"><strong>{t('clients.notes.form.Description', 'Description')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
-            <div className="text-sm text-gray-700 mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdBy || detailsNote.createdById || '-'}</div>
+            <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.form.Title', 'Title')}: </strong>{detailsNote.title}</div>
+            <div className="text-sm text-foreground mb-2"><strong>{t('clients.notes.form.Date', 'Date')}: </strong>{detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0]}</div>
+            <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.form.Description', 'Description')}: </strong><div className="mt-1 whitespace-pre-wrap">{detailsNote.description}</div></div>
+            <div className="text-sm text-foreground mb-4"><strong>{t('clients.notes.addedBy', 'Added by')}: </strong>{(detailsNote.createdBy && (detailsNote.createdBy.fullName || detailsNote.createdBy.name)) || detailsNote.createdBy || detailsNote.createdById || '-'}</div>
             <div className="flex justify-end gap-3">
               <button onClick={() => { setFormData({ title: detailsNote.title, description: detailsNote.description, date: detailsNote.noteDate || detailsNote.createdAt?.split('T')?.[0], attachments: [], id: detailsNote.id || detailsNote._id }); setViewOnly(false); setShowModal(true); setDetailsNote(null); }} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('actions.edit', 'Edit')}</button>
             </div>

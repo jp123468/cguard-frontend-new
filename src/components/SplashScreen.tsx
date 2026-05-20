@@ -11,7 +11,7 @@ export default function SplashScreen() {
 
   return (
     <div
-      className={`fixed inset-0 flex flex-col items-center justify-center bg-white transition-opacity duration-700 ${
+      className={`fixed inset-0 flex flex-col items-center justify-center bg-card transition-opacity duration-700 ${
         fadeOut ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >

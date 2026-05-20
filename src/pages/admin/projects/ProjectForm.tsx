@@ -139,7 +139,7 @@ export default function ProjectForm({
 
           {/* ── Tipo de proyecto ─────────────────────────── */}
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Tipo de proyecto
             </h2>
             <Controller
@@ -157,7 +157,7 @@ export default function ProjectForm({
 
           {/* ── Información básica ───────────────────────── */}
           <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Información básica
             </h2>
 
@@ -222,7 +222,7 @@ export default function ProjectForm({
 
           {/* ── Fechas y lugar ────────────────────────────── */}
           <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Fechas y lugar
             </h2>
 
@@ -286,7 +286,7 @@ export default function ProjectForm({
 
           {/* ── Estado y notas ───────────────────────────── */}
           <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Estado y notas
             </h2>
 

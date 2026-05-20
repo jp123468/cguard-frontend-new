@@ -62,7 +62,7 @@ export default function LiveTrackingPage() {
             <div className="flex flex-wrap items-center gap-4">
               {/* Tipo de mapa */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">Tipo de Mapa</p>
+                <p className="text-xs text-muted-foreground mb-1">Tipo de Mapa</p>
                 <Select value={mapType} onValueChange={setMapType}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Hoja de Ruta" />
@@ -82,7 +82,7 @@ export default function LiveTrackingPage() {
                   checked={showGeofence}
                   onCheckedChange={(v) => setShowGeofence(Boolean(v))}
                 />
-                <span className="text-sm text-gray-700">Mostrar Geovalla</span>
+                <span className="text-sm text-foreground">Mostrar Geovalla</span>
               </label>
             </div>
 
@@ -142,7 +142,7 @@ export default function LiveTrackingPage() {
 
                   <label className="flex items-center gap-2 cursor-pointer">
                     <Checkbox />
-                    <span className="text-sm text-gray-700">
+                    <span className="text-sm text-foreground">
                       Mostrar datos archivados
                     </span>
                   </label>
@@ -164,13 +164,13 @@ export default function LiveTrackingPage() {
           {/* Contenedor del mapa + tabla */}
           <div className="mt-4 border rounded-lg overflow-hidden">
             {/* Mapa */}
-            <div className="w-full h-[380px] bg-gray-100">
+            <div className="w-full h-[380px] bg-muted">
               {/* Aquí va tu componente de Google Maps */}
             </div>
 
             {/* Tabla debajo del mapa */}
             <table className="min-w-full text-sm text-left border-collapse">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted/30">
                 <tr className="border-b">
                   <th className="px-4 py-3 font-semibold">Guardia</th>
                   <th className="px-4 py-3 font-semibold">
@@ -190,7 +190,7 @@ export default function LiveTrackingPage() {
               <tbody>
                 {rows.length > 0 ? (
                   rows.map((row) => (
-                    <tr key={row.id} className="border-b hover:bg-gray-50">
+                    <tr key={row.id} className="border-b hover:bg-muted/30">
                       <td className="px-4 py-3">{row.guardName}</td>
                       <td className="px-4 py-3">{row.site}</td>
                       <td className="px-4 py-3">{row.lastUpdate}</td>

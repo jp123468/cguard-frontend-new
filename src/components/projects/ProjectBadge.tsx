@@ -18,7 +18,7 @@ export function ProjectTypeBadge({ value, className, size = 'sm' }: ProjectTypeB
   if (!def) {
     return (
       <span className={cn(
-        'inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 text-gray-500 font-medium',
+        'inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 text-muted-foreground font-medium',
         size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm',
         className,
       )}>
@@ -47,7 +47,7 @@ interface ProjectStatusBadgeProps {
 
 export function ProjectStatusBadge({ value, className }: ProjectStatusBadgeProps) {
   const label = value ? PROJECT_STATUS_LABELS[value as ProjectStatus] ?? value : 'Sin estado';
-  const colors = value ? PROJECT_STATUS_COLORS[value as ProjectStatus] ?? 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
+  const colors = value ? PROJECT_STATUS_COLORS[value as ProjectStatus] ?? 'bg-muted text-foreground/70' : 'bg-muted text-foreground/70';
   return (
     <span className={cn(
       'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold',
@@ -81,23 +81,23 @@ export function ProjectTypePicker({ value, onChange, error }: ProjectTypePickerP
                 'flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-left transition-all duration-150 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]',
                 isSelected
                   ? [pt.color, pt.borderColor, 'shadow-sm']
-                  : 'border-gray-200 bg-white hover:border-gray-300',
+                  : 'border-border bg-card hover:border-border',
               )}
             >
               <span className={cn(
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-                isSelected ? [pt.color, pt.textColor] : 'bg-gray-100 text-gray-500',
+                isSelected ? [pt.color, pt.textColor] : 'bg-muted text-muted-foreground',
               )}>
                 <Icon className="h-4 w-4" />
               </span>
               <span className="min-w-0">
                 <span className={cn(
                   'block text-sm font-semibold leading-tight',
-                  isSelected ? pt.textColor : 'text-gray-900',
+                  isSelected ? pt.textColor : 'text-foreground',
                 )}>
                   {pt.label}
                 </span>
-                <span className="block text-xs text-gray-400 leading-snug truncate">
+                <span className="block text-xs text-muted-foreground leading-snug truncate">
                   {pt.description}
                 </span>
               </span>

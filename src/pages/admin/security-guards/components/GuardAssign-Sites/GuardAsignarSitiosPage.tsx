@@ -123,7 +123,7 @@ export default function GuardAsignarSitiosPage() {
               }
             }
 
-            return { ...item, postSite: siteName ?? '-', client: clientName ?? '-', station: stationName ?? null };
+            return { ...item, postSite: siteName ?? '-', client: clientName ?? '-', station: stationName ?? item.station ?? null };
           } catch (e) {
             return { ...item, postSite: item.postSite ?? (item.raw.postSiteName ?? '-'), client: item.client ?? (item.raw.clientName ?? '-') };
           }
@@ -140,12 +140,17 @@ export default function GuardAsignarSitiosPage() {
               if (it.raw && (it.raw.stationName || it.raw.station || it.raw.stationId)) {
                 if (it.raw.stationName) {
                   stationVal = it.raw.stationName;
+                } else if (it.raw.station && (it.raw.station.stationName || it.raw.station.name)) {
+                  // station object is already embedded in the shift response — use it directly
+                  stationVal = it.raw.station.stationName || it.raw.station.name;
                 } else {
                   const stationId = it.raw.stationId || (it.raw.station && it.raw.station.id) || null;
                   if (stationId) {
                     try {
-                      const single = await stationService.get(stationId);
-                      stationVal = single.stationName || single.name || single.label || null;
+                      const tenantId = localStorage.getItem('tenantId') || '';
+                      const stResp = await api.get(`/tenant/${tenantId}/station/${stationId}`);
+                      const stData = (stResp as any)?.data ?? stResp;
+                      stationVal = stData?.stationName || stData?.name || stData?.label || null;
                     } catch (err) {
                       // ignore single station fetch errors
                     }
@@ -402,22 +407,22 @@ export default function GuardAsignarSitiosPage() {
       <GuardsLayout navKey="keep-safe" title="guards.nav.asignarSitios">
         {loading ? (
           <div className="flex items-center justify-center h-32">
-              <div className="text-gray-500">{t('guards.assignSites.loading', { defaultValue: 'Loading...' })}</div>
+              <div className="text-muted-foreground">{t('guards.assignSites.loading', { defaultValue: 'Loading...' })}</div>
           </div>
         ) : guard ? (
           <div className="space-y-4">
-            <div className="bg-white border rounded-lg p-6 shadow-sm">
+            <div className="bg-card border rounded-lg p-6 shadow-sm">
               <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="relative" ref={actionRef}>
                   <button
                     onClick={() => setActionOpen(!actionOpen)}
-                    className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]"
+                    className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
                   >
                     {actionSelection}
                     <ChevronDown size={16} />
                   </button>
                   {actionOpen && (
-                    <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
+                    <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
                       <button
                         onClick={() => {
                           setActionOpen(false);
@@ -431,7 +436,7 @@ export default function GuardAsignarSitiosPage() {
                           setActionSelection(t('guards.assignSites.actions.delete', { defaultValue: 'Delete' }));
                           setShowDeleteConfirm(true);
                         }}
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
                       >
                         {t('guards.assignSites.actions.delete', { defaultValue: 'Delete' })}
                       </button>
@@ -441,7 +446,7 @@ export default function GuardAsignarSitiosPage() {
 
                 <div className="flex-1 max-w-md">
                   <div className="relative">
-                    <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+                    <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
                     <input
                       type="text"
                       placeholder={t('guards.assignSites.searchPlaceholder', { defaultValue: 'Search Post Sites' })}
@@ -463,8 +468,8 @@ export default function GuardAsignarSitiosPage() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    <tr className="border-b bg-muted/30">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
                         <input
                           type="checkbox"
                           aria-label="select all"
@@ -473,22 +478,22 @@ export default function GuardAsignarSitiosPage() {
                           className="h-4 w-4"
                         />
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.assignSites.table.client', { defaultValue: 'Client' })}</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.assignSites.table.postSites', { defaultValue: 'Post Sites' })}</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.assignSites.table.station', { defaultValue: 'Station' })}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.assignSites.table.client', { defaultValue: 'Client' })}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.assignSites.table.postSites', { defaultValue: 'Post Sites' })}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.assignSites.table.station', { defaultValue: 'Station' })}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {mappings.map((m) => (
-                      <tr key={m.id} className="border-b hover:bg-gray-50">
+                      <tr key={m.id} className="border-b hover:bg-muted/30">
                         <td className="px-4 py-3">
                           <input type="checkbox" checked={selectedIds.includes(m.id)} onChange={(e) => {
                             if (e.target.checked) setSelectedIds((prev) => [...prev, m.id]); else setSelectedIds((prev) => prev.filter(id => id !== m.id));
                           }} className="h-4 w-4" />
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{m.client}</td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{m.postSite}</td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{m.station}</td>
+                        <td className="px-4 py-3 text-sm text-foreground">{m.client}</td>
+                        <td className="px-4 py-3 text-sm text-foreground">{m.postSite}</td>
+                        <td className="px-4 py-3 text-sm text-foreground">{m.station}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -498,23 +503,23 @@ export default function GuardAsignarSitiosPage() {
           </div>
         ) : (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">{t('guards.assignSites.loadError', { defaultValue: 'Could not load guard' })}</div>
+            <div className="text-muted-foreground">{t('guards.assignSites.loadError', { defaultValue: 'Could not load guard' })}</div>
           </div>
         )}
 
         {/* Assign Modal/Drawer */}
         {assignModalOpen && (
           <div className="fixed inset-0 z-50" onClick={() => setAssignModalOpen(false)}>
-            <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+            <div className="fixed right-0 top-0 bottom-0 w-96 bg-card shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-10">
                 <h3 className="text-lg font-semibold">{t('guards.assignSites.modal.title', { defaultValue: 'Assign Sites' })}</h3>
-                <button onClick={() => setAssignModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
+                <button onClick={() => setAssignModalOpen(false)} className="text-muted-foreground hover:text-foreground/70"><X /></button>
               </div>
 
               <div className="p-6 overflow-y-auto flex-1">
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm text-gray-600 block mb-2">{t('guards.assignSites.form.client', { defaultValue: 'Client' })}<span className="text-red-500">*</span></label>
+                    <label className="text-sm text-foreground/70 block mb-2">{t('guards.assignSites.form.client', { defaultValue: 'Client' })}<span className="text-red-500">*</span></label>
                     <select value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm">
                       <option value="">{t('guards.assignSites.form.selectClient', { defaultValue: 'Select client' })}</option>
                       {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -522,7 +527,7 @@ export default function GuardAsignarSitiosPage() {
                   </div>
 
                   <div>
-                    <label className="text-sm text-gray-600 block mb-2">{t('guards.assignSites.form.postSite', { defaultValue: 'Post Site' })}<span className="text-red-500">*</span></label>
+                    <label className="text-sm text-foreground/70 block mb-2">{t('guards.assignSites.form.postSite', { defaultValue: 'Post Site' })}<span className="text-red-500">*</span></label>
                     <select value={selectedPostSite} onChange={(e) => setSelectedPostSite(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm mb-2">
                       <option value="">{t('guards.assignSites.form.selectPostSite', { defaultValue: 'Select post site' })}</option>
                       {postSites.length === 0 && selectedClient && (
@@ -532,7 +537,7 @@ export default function GuardAsignarSitiosPage() {
                     </select>
                     {/* Mostrar info y mapa del puesto seleccionado */}
                     {selectedPostSite && (
-                      <React.Suspense fallback={<div className="text-xs text-gray-400">Cargando información del puesto...</div>}>
+                      <React.Suspense fallback={<div className="text-xs text-muted-foreground">Cargando información del puesto...</div>}>
                         <PostSiteMiniInfo postSiteId={selectedPostSite} />
                       </React.Suspense>
                     )}
@@ -540,7 +545,7 @@ export default function GuardAsignarSitiosPage() {
 
                   {selectedPostSite && (
                     <div>
-                      <label className="text-sm text-gray-600 block mb-2">{t('guards.assignSites.form.station', { defaultValue: 'Station' })}</label>
+                      <label className="text-sm text-foreground/70 block mb-2">{t('guards.assignSites.form.station', { defaultValue: 'Station' })}</label>
                       <select value={selectedStationAssign} onChange={(e) => setSelectedStationAssign(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm">
                         <option value="">{t('guards.assignSites.form.selectStation', { defaultValue: 'Select station' })}</option>
                         {stationsForPostSite.length === 0 && selectedPostSite && (
@@ -553,8 +558,8 @@ export default function GuardAsignarSitiosPage() {
                 </div>
               </div>
 
-                <div className="flex items-center justify-end gap-3 p-4 border-t bg-white">
-                <button onClick={() => setAssignModalOpen(false)} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancel' })}</button>
+                <div className="flex items-center justify-end gap-3 p-4 border-t bg-card">
+                <button onClick={() => setAssignModalOpen(false)} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancel' })}</button>
                 <button onClick={assignSite} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('guards.assignSites.modal.assign', { defaultValue: 'Assign' })}</button>
               </div>
             </div>
@@ -564,15 +569,15 @@ export default function GuardAsignarSitiosPage() {
         {showDeleteConfirm && (
           <div className="fixed inset-0 z-50" onClick={() => setShowDeleteConfirm(false)}>
             <div className="fixed inset-0 bg-black opacity-30" />
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-96 bg-white shadow-2xl rounded-md" onClick={(e) => e.stopPropagation()}>
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-96 bg-card shadow-2xl rounded-md" onClick={(e) => e.stopPropagation()}>
               <div className="p-4 border-b">
                 <h3 className="text-lg font-semibold">{t('guards.assignSites.actions.confirmDeleteTitle', { defaultValue: 'Confirmar eliminación' })}</h3>
               </div>
               <div className="p-4">
-                <p className="text-sm text-gray-700">{t('guards.assignSites.actions.confirmDeleteMessage', { defaultValue: '¿Estás seguro? Se eliminarán las asignaciones seleccionadas.' })}</p>
+                <p className="text-sm text-foreground">{t('guards.assignSites.actions.confirmDeleteMessage', { defaultValue: '¿Estás seguro? Se eliminarán las asignaciones seleccionadas.' })}</p>
               </div>
               <div className="flex items-center justify-end gap-3 p-4 border-t">
-                <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancel' })}</button>
+                <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancel' })}</button>
                 <button onClick={async () => {
                   try { 
                     const tenantId = localStorage.getItem('tenantId');

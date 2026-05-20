@@ -83,34 +83,34 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
           <div className="space-y-2">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <p className="text-xs text-gray-600 font-semibold">Nombre</p>
+                <p className="text-xs text-foreground/70 font-semibold">Nombre</p>
                 <p className="text-sm">{(site as any).companyName || site.name}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-600 font-semibold">Horario</p>
+                <p className="text-xs text-foreground/70 font-semibold">Horario</p>
                 <p className="text-sm">{(site as any).stationSchedule ?? ((site as any).scheduleLabel) ?? '-'}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-600 font-semibold">Descripción</p>
+                <p className="text-xs text-foreground/70 font-semibold">Descripción</p>
                 <p className="text-sm">{(site as any).description || "-"}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-600 font-semibold">Correo</p>
+                <p className="text-xs text-foreground/70 font-semibold">Correo</p>
                 <p className="text-sm truncate">{(site as any).contactEmail ?? site.email ?? "-"}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-600 font-semibold">Teléfono</p>
+                <p className="text-xs text-foreground/70 font-semibold">Teléfono</p>
                 <p className="text-sm">{(site as any).contactPhone ?? site.phone ?? "-"}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-600 font-semibold">Teléfono fijo</p>
+                <p className="text-xs text-foreground/70 font-semibold">Teléfono fijo</p>
                 <p className="text-sm">{(site as any).fax ?? "-"}</p>
               </div>
               {/* Client account summary if present */}
               {(site as any).clientAccount && (
                 <div className="sm:col-span-3 border-t pt-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold mb-2 text-gray-700">Cliente Asociado</h4>
+                    <h4 className="text-sm font-semibold mb-2 text-foreground">Cliente Asociado</h4>
                     <button type="button" className="text-xs text-muted-foreground" onClick={() => setClientCollapsed(!clientCollapsed)}>
                       {clientCollapsed ? 'Mostrar' : 'Ocultar'}
                     </button>
@@ -120,19 +120,19 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">Nombre</p>
+                        <p className="text-xs text-foreground/70 font-semibold">Nombre</p>
                         <p className="text-sm">{(site as any).clientAccount.name || '-'} {(site as any).clientAccount.lastName || ''}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">Correo</p>
+                        <p className="text-xs text-foreground/70 font-semibold">Correo</p>
                         <p className="text-sm">{(site as any).clientAccount.email || '-'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">Teléfono</p>
+                        <p className="text-xs text-foreground/70 font-semibold">Teléfono</p>
                         <p className="text-sm">{(site as any).clientAccount.phoneNumber || '-'}</p>
                       </div>
                       <div className="sm:col-span-3">
-                        <p className="text-xs text-gray-600 font-semibold">Dirección</p>
+                        <p className="text-xs text-foreground/70 font-semibold">Dirección</p>
                         <p className="text-sm">{(site as any).clientAccount.address || '-'}</p>
                       </div>
                     </div>
@@ -140,7 +140,7 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
                 </div>
               )}
               <div className="sm:col-span-2">
-                <p className="text-xs text-gray-600 font-semibold">Sectores</p>
+                <p className="text-xs text-foreground/70 font-semibold">Sectores</p>
                 <p className="text-sm">
                   {categories.length > 0
                     ? categories.map((c) => c.name).join(", ")
@@ -153,7 +153,7 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
 
             <div className="border-t pt-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold mb-2 text-gray-700">Dirección</h4>
+                <h4 className="text-sm font-semibold mb-2 text-foreground">Dirección</h4>
                 <button type="button" className="text-xs text-muted-foreground" onClick={() => setAddressCollapsed(!addressCollapsed)}>
                   {addressCollapsed ? 'Mostrar' : 'Ocultar'}
                 </button>
@@ -163,35 +163,35 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <p className="text-xs text-gray-600 font-semibold">Dirección</p>
+                    <p className="text-xs text-foreground/70 font-semibold">Dirección</p>
                     <p className="text-sm">{(site as any).address || "-"}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-semibold">Dirección Complementaria</p>
+                    <p className="text-xs text-foreground/70 font-semibold">Dirección Complementaria</p>
                     <p className="text-sm">{(site as any).secondAddress || "-"}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-semibold">Código Postal</p>
+                    <p className="text-xs text-foreground/70 font-semibold">Código Postal</p>
                     <p className="text-sm">{(site as any).postalCode || "-"}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-semibold">Ciudad</p>
+                    <p className="text-xs text-foreground/70 font-semibold">Ciudad</p>
                     <p className="text-sm">{(site as any).city || "-"}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-semibold">País</p>
+                    <p className="text-xs text-foreground/70 font-semibold">País</p>
                     <p className="text-sm">{(site as any).country || "-"}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-semibold">Latitud</p>
+                    <p className="text-xs text-foreground/70 font-semibold">Latitud</p>
                     <p className="text-sm">{(site as any).latitud ?? "-"}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-semibold">Longitud</p>
+                    <p className="text-xs text-foreground/70 font-semibold">Longitud</p>
                     <p className="text-sm">{(site as any).longitud ?? "-"}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-semibold">Guardias asignados</p>
+                    <p className="text-xs text-foreground/70 font-semibold">Guardias asignados</p>
                     <p className="text-sm">{(site as any).guardsCount ?? ((site as any).assignedGuards ? (site as any).assignedGuards.length : '-')}</p>
                   </div>
                 </div>

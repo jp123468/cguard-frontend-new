@@ -109,25 +109,25 @@ export default function GuardSkillsPage() {
       <GuardsLayout navKey="keep-safe" title="guards.nav.conjuntoHabilidades">
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">Cargando...</div>
+            <div className="text-muted-foreground">Cargando...</div>
           </div>
         ) : guard ? (
           <div className="space-y-4">
-            <div className="bg-white border rounded-lg p-6 shadow-sm">
+            <div className="bg-card border rounded-lg p-6 shadow-sm">
               <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="relative" ref={actionRef}>
                   <button
                     onClick={() => setActionOpen(!actionOpen)}
-                    className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]"
+                    className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
                   >
                     {actionSelection}
                     <ChevronDown size={16} />
                   </button>
                   {actionOpen && (
-                    <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
+                    <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
                       <button
                         onClick={() => { setActionSelection(t('guards.skills.actions.delete', { defaultValue: 'Delete' })); setActionOpen(false); }}
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
                       >
                         {t('guards.skills.actions.delete', { defaultValue: 'Delete' })}
                       </button>
@@ -137,7 +137,7 @@ export default function GuardSkillsPage() {
 
                 <div className="flex-1 max-w-md">
                   <div className="relative">
-                    <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+                    <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
                     <input
                       type="text"
                       placeholder={t('guards.skills.searchPlaceholder', { defaultValue: 'Search skill sets' })}
@@ -161,8 +161,8 @@ export default function GuardSkillsPage() {
                   <div className="md:block hidden">
                     <table className="w-full">
                   <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    <tr className="border-b bg-muted/30">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
                         <input
                           type="checkbox"
                           aria-label="select all"
@@ -171,8 +171,8 @@ export default function GuardSkillsPage() {
                           className="h-4 w-4"
                         />
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Description</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Name</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -189,22 +189,22 @@ export default function GuardSkillsPage() {
                               </svg>
                             </div>
                             <div className="text-center">
-                              <h3 className="text-lg font-semibold text-gray-700">{t('guards.skills.empty.title', { defaultValue: 'No Result Found' })}</h3>
-                              <p className="text-sm text-gray-500 mt-1">{t('guards.skills.empty.description', { defaultValue: "We can't find any item matching your search" })}</p>
+                              <h3 className="text-lg font-semibold text-foreground">{t('guards.skills.empty.title', { defaultValue: 'No Result Found' })}</h3>
+                              <p className="text-sm text-muted-foreground mt-1">{t('guards.skills.empty.description', { defaultValue: "We can't find any item matching your search" })}</p>
                             </div>
                           </div>
                         </td>
                       </tr>
                     ) : (
                       mappings.map((m) => (
-                        <tr key={m.id} className="border-b hover:bg-gray-50">
+                        <tr key={m.id} className="border-b hover:bg-muted/30">
                           <td className="px-4 py-3">
                             <input type="checkbox" checked={selectedIds.includes(m.id)} onChange={(e) => {
                               if (e.target.checked) setSelectedIds((prev) => [...prev, m.id]); else setSelectedIds((prev) => prev.filter(id => id !== m.id));
                             }} className="h-4 w-4" />
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{m.name}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{m.description}</td>
+                          <td className="px-4 py-3 text-sm text-foreground">{m.name}</td>
+                          <td className="px-4 py-3 text-sm text-foreground">{m.description}</td>
                         </tr>
                       ))
                     )}
@@ -218,9 +218,9 @@ export default function GuardSkillsPage() {
                         loading={false}
                         emptyMessage={t('guards.skills.empty.title', { defaultValue: 'No Result Found' }) as string}
                         renderCard={(m: any) => (
-                          <div className="p-4 bg-white border rounded-lg">
+                          <div className="p-4 bg-card border rounded-lg">
                             <div className="text-sm font-semibold">{m.name}</div>
-                            <div className="text-xs text-gray-500">{m.description}</div>
+                            <div className="text-xs text-muted-foreground">{m.description}</div>
                           </div>
                         )}
                       />
@@ -231,29 +231,29 @@ export default function GuardSkillsPage() {
           </div>
         ) : (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">{t('guards.skills.toasts.loadError', { defaultValue: 'Could not load guard' })}</div>
+            <div className="text-muted-foreground">{t('guards.skills.toasts.loadError', { defaultValue: 'Could not load guard' })}</div>
           </div>
         )}
 
         {assignModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4" onClick={() => setAssignModalOpen(false)}>
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between p-4 border-b bg-white">
+            <div className="bg-card rounded-lg shadow-lg w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-4 border-b bg-card">
                 <h3 className="text-lg font-semibold">{t('guards.skills.modal.title', { defaultValue: 'Assign Skill Set' })}</h3>
-                <button onClick={() => setAssignModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
+                <button onClick={() => setAssignModalOpen(false)} className="text-muted-foreground hover:text-foreground/70"><X /></button>
               </div>
 
               <div className="p-6">
                 <div className="space-y-4">
                   <div>
-                    <label className={`text-sm block mb-2 ${selectedIds.length === 0 ? 'text-red-600' : 'text-gray-600'}`}>{t('guards.skills.form.skillSet', { defaultValue: 'Skill Set*' })}</label>
+                    <label className={`text-sm block mb-2 ${selectedIds.length === 0 ? 'text-red-600' : 'text-foreground/70'}`}>{t('guards.skills.form.skillSet', { defaultValue: 'Skill Set*' })}</label>
 
                     {/* custom dropdown box */}
-                    <div className={`border rounded-md ${selectedIds.length === 0 ? 'border-red-500' : 'border-gray-200'} bg-white`}>
+                    <div className={`border rounded-md ${selectedIds.length === 0 ? 'border-red-500' : 'border-border'} bg-card`}>
                       <div className="px-3 py-2 flex items-center justify-between cursor-pointer" onClick={() => setShowDropdown((s) => !s)}>
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="min-w-0">
-                            <span className="block text-sm text-gray-700 truncate">
+                            <span className="block text-sm text-foreground truncate">
                               {selectedIds.length === 0 ? t('guards.skills.form.selectPlaceholder', { defaultValue: 'Select skill sets...' }) : `${selectedIds.length} selected`}
                             </span>
                           </div>
@@ -261,7 +261,7 @@ export default function GuardSkillsPage() {
                         <ChevronDown size={16} />
                       </div>
                       {showDropdown && (
-                        <div className="border-t border-gray-100 bg-white p-3">
+                        <div className="border-t border-border bg-card p-3">
                           <div className="mb-2">
                             <input
                               type="text"
@@ -278,8 +278,8 @@ export default function GuardSkillsPage() {
                                   if (e.target.checked) setSelectedIds((prev) => [...prev, s.id]); else setSelectedIds((prev) => prev.filter(id => id !== s.id));
                                 }} className="h-4 w-4" />
                                 <div className="min-w-0">
-                                  <div className="text-sm text-gray-700 truncate">{s.name}</div>
-                                  {s.description && <div className="text-xs text-gray-400 truncate">{s.description}</div>}
+                                  <div className="text-sm text-foreground truncate">{s.name}</div>
+                                  {s.description && <div className="text-xs text-muted-foreground truncate">{s.description}</div>}
                                 </div>
                               </label>
                             ))}
@@ -291,8 +291,8 @@ export default function GuardSkillsPage() {
                 </div>
               </div>
 
-                <div className="flex items-center justify-end gap-3 p-4 border-t bg-white">
-                <button onClick={() => setAssignModalOpen(false)} className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50">{t('guards.skills.modal.cancel', { defaultValue: 'Cancel' })}</button>
+                <div className="flex items-center justify-end gap-3 p-4 border-t bg-card">
+                <button onClick={() => setAssignModalOpen(false)} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">{t('guards.skills.modal.cancel', { defaultValue: 'Cancel' })}</button>
                 <button onClick={handleAssignFromDropdown} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('guards.skills.modal.assign', { defaultValue: 'Assign' })}</button>
               </div>
             </div>

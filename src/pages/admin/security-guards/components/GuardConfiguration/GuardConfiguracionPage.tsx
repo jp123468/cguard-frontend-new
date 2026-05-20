@@ -74,19 +74,19 @@ export default function GuardConfiguracionPage() {
       <GuardsLayout navKey="keep-safe" title="guards.nav.configuracion">
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">Cargando...</div>
+            <div className="text-muted-foreground">Cargando...</div>
           </div>
         ) : guard ? (
-          <div className="bg-white rounded-lg shadow p-6 min-h-[480px] relative">
+          <div className="bg-card rounded-lg shadow p-6 min-h-[480px] relative">
             <h2 className="text-xl font-semibold mb-4">Configuración de {guard.fullName}</h2>
 
             {/* Tabs */}
             <div className="border-b">
               <nav className="grid grid-cols-4 text-sm">
-                <button onClick={() => setActiveTab('general')} className={`py-3 text-center ${activeTab === 'general' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-gray-600'}`}>General</button>
-                <button onClick={() => setActiveTab('time')} className={`py-3 text-center ${activeTab === 'time' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-gray-600'}`}>Time Clock</button>
-                <button onClick={() => setActiveTab('scheduler')} className={`py-3 text-center ${activeTab === 'scheduler' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-gray-600'}`}>Scheduler</button>
-                <button onClick={() => setActiveTab('notifications')} className={`py-3 text-center ${activeTab === 'notifications' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-gray-600'}`}>Notifications</button>
+                <button onClick={() => setActiveTab('general')} className={`py-3 text-center ${activeTab === 'general' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-foreground/70'}`}>General</button>
+                <button onClick={() => setActiveTab('time')} className={`py-3 text-center ${activeTab === 'time' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-foreground/70'}`}>Time Clock</button>
+                <button onClick={() => setActiveTab('scheduler')} className={`py-3 text-center ${activeTab === 'scheduler' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-foreground/70'}`}>Scheduler</button>
+                <button onClick={() => setActiveTab('notifications')} className={`py-3 text-center ${activeTab === 'notifications' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-foreground/70'}`}>Notifications</button>
               </nav>
             </div>
 
@@ -129,7 +129,7 @@ export default function GuardConfiguracionPage() {
 
                       <div className="flex items-center gap-4">
                         <div className="max-w-xs">
-                          <label className="block text-sm text-gray-600 mb-2">Update location every</label>
+                          <label className="block text-sm text-foreground/70 mb-2">Update location every</label>
                           <select className="w-full border rounded px-3 py-2" value={settings.locationUpdateInterval ?? '00:05:00'} onChange={e => setSettings({...settings, locationUpdateInterval: e.target.value})}>
                             <option>00:05:00</option>
                             <option>00:10:00</option>
@@ -138,7 +138,7 @@ export default function GuardConfiguracionPage() {
                         </div>
 
                         <div className="max-w-xs">
-                          <label className="block text-sm text-gray-600 mb-2">Select Accuracy</label>
+                          <label className="block text-sm text-foreground/70 mb-2">Select Accuracy</label>
                           <select className="w-full border rounded px-3 py-2" value={settings.locationAccuracy ?? 'Medium'} onChange={e => setSettings({...settings, locationAccuracy: e.target.value})}>
                             <option>Low</option>
                             <option>Medium</option>
@@ -248,9 +248,9 @@ export default function GuardConfiguracionPage() {
 
                   {settings.enableWeeklyLimitFlag && (
                     <div className="max-w-xs">
-                      <label className="block text-sm text-gray-600 mb-2">Weekly Limit</label>
+                      <label className="block text-sm text-foreground/70 mb-2">Weekly Limit</label>
                       <input type="number" min={1} className="w-full border rounded px-3 py-2" value={settings.weeklyLimit ?? 40} onChange={e => setSettings({...settings, weeklyLimit: Number(e.target.value)})} />
-                      <div className="text-sm text-gray-500 mt-1">hrs/week</div>
+                      <div className="text-sm text-muted-foreground mt-1">hrs/week</div>
                     </div>
                   )}
 
@@ -367,7 +367,7 @@ export default function GuardConfiguracionPage() {
                         <span>Send vehicle patrol route delay notification</span>
                       </div>
                       <div className="ml-10">
-                        <div className="text-sm text-gray-500 mb-2">Delay Time</div>
+                        <div className="text-sm text-muted-foreground mb-2">Delay Time</div>
                         <div className="max-w-xs">
                           <select className="w-full border rounded px-3 py-2" value={settings.vehiclePatrolDelayTime ?? '00:15'} onChange={e => setSettings({...settings, vehiclePatrolDelayTime: e.target.value})}>
                             <option>00:05</option>
@@ -425,7 +425,7 @@ export default function GuardConfiguracionPage() {
                         <span>Send shift delay notification</span>
                       </div>
                       <div className="ml-10">
-                        <div className="text-sm text-gray-500 mb-2">Delay Time</div>
+                        <div className="text-sm text-muted-foreground mb-2">Delay Time</div>
                         <div className="max-w-xs">
                           <select className="w-full border rounded px-3 py-2" value={settings.shiftDelayTime ?? '00:15'} onChange={e => setSettings({...settings, shiftDelayTime: e.target.value})}>
                             <option>00:05</option>
@@ -463,7 +463,7 @@ export default function GuardConfiguracionPage() {
           </div>
         ) : (
           <div className="flex items-center justify-center h-32">
-            <div className="text-gray-500">No se pudo cargar el guardia</div>
+            <div className="text-muted-foreground">No se pudo cargar el guardia</div>
           </div>
         )}
       </GuardsLayout>

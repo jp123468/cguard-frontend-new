@@ -111,7 +111,7 @@ export default function ClientsDetails() {
         <div className="flex-1 flex flex-col">
           {loading ? (
             <div className="flex items-center justify-center h-32">
-              <div className="text-gray-500">Cargando...</div>
+              <div className="text-muted-foreground">Cargando...</div>
             </div>
           ) : client ? (
             <>
@@ -128,7 +128,7 @@ export default function ClientsDetails() {
             </>
           ) : (
             <div className="flex items-center justify-center h-32">
-              <div className="text-gray-500">No se pudo cargar el cliente</div>
+              <div className="text-muted-foreground">No se pudo cargar el cliente</div>
             </div>
           )}
         </div>

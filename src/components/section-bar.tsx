@@ -10,14 +10,14 @@ type Props = {
 
 export default function SectionBar({ title, right, onHamburger, className }: Props) {
   return (
-    <div className={["sticky top-0 z-10 bg-white", className ?? ""].join(" ")}>
-      <div className="h-12 flex items-center justify-between border-b border-gray-200 px-4">
-        <div className="text-[15px] text-gray-400 truncate">{title}</div>
+    <div className={["sticky top-0 z-10 bg-card", className ?? ""].join(" ")}>
+      <div className="h-12 flex items-center justify-between border-b border-border px-4">
+        <div className="text-[15px] text-muted-foreground truncate">{title}</div>
         <div className="flex items-center gap-2">
           {right}
           <button
             onClick={onHamburger}
-            className="p-2 rounded hover:bg-gray-100 text-gray-600"
+            className="p-2 rounded hover:bg-muted text-foreground/70"
             aria-label="Mostrar/Ocultar menú"
           >
             <Menu className="w-4 h-4" />

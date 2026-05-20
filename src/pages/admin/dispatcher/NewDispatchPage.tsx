@@ -1654,7 +1654,7 @@ export default function NewDispatchPage() {
                                       return next;
                                     });
                                   }}
-                                  className="text-slate-500 hover:text-red-500"
+                                  className="text-muted-foreground hover:text-red-500"
                                   aria-label={`Eliminar ${f.name}`}
                                 >
                                   <X className="h-4 w-4" />
@@ -1686,7 +1686,7 @@ export default function NewDispatchPage() {
           </form>
         </Form>
         {debugGuards ? (
-          <div className="mt-4 rounded border p-3 bg-white text-xs">
+          <div className="mt-4 rounded border p-3 bg-card text-xs">
             <div className="font-medium mb-2">DEBUG: assignedGuardias (truncated)</div>
             <pre style={{ maxHeight: 300, overflow: 'auto' }}>{JSON.stringify((assignedGuardias || []).slice(0,50), null, 2)}</pre>
           </div>

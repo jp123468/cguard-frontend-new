@@ -109,7 +109,7 @@ export default function OvertimeMultiplier() {
                 <section className="p-6 pb-10">
                     <div className="space-y-5 max-w-4xl">
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-medium text-slate-700">
+                            <Label className="text-xs font-medium text-foreground">
                                 Nombre*
                             </Label>
                             <Input
@@ -121,7 +121,7 @@ export default function OvertimeMultiplier() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-medium text-slate-700">
+                            <Label className="text-xs font-medium text-foreground">
                                 Guardia*
                             </Label>
                             <Select value={guard} onValueChange={setGuard}>
@@ -137,7 +137,7 @@ export default function OvertimeMultiplier() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-medium text-slate-700">
+                            <Label className="text-xs font-medium text-foreground">
                                 Tipo*
                             </Label>
                             <Select
@@ -156,10 +156,10 @@ export default function OvertimeMultiplier() {
                         </div>
 
                         <div className="space-y-3 pt-2">
-                            <Label className="text-xs font-medium text-slate-700">
+                            <Label className="text-xs font-medium text-foreground">
                                 Seleccionar Día(s)
                             </Label>
-                            <div className="inline-flex rounded-md border border-slate-200 bg-white">
+                            <div className="inline-flex rounded-md border border-slate-200 bg-card">
                                 {dayLabels.map((day) => {
                                     const active = selectedDays.includes(day.key);
                                     return (
@@ -171,7 +171,7 @@ export default function OvertimeMultiplier() {
                                                 "border-r border-slate-200 last:border-r-0",
                                                 active
                                                     ? "bg-[#C8860A] text-white"
-                                                    : "bg-white text-slate-700 hover:bg-[#C8860A]/10",
+                                                    : "bg-card text-foreground hover:bg-[#C8860A]/10",
                                             ].join(" ")}
                                             onClick={() => toggleDay(day.key)}
                                         >
@@ -191,7 +191,7 @@ export default function OvertimeMultiplier() {
                                 >
                                     <div className="grid gap-4 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
                                         <div className="space-y-1.5">
-                                            <Label className="text-xs font-medium text-slate-700">
+                                            <Label className="text-xs font-medium text-foreground">
                                                 Comienza después de*
                                             </Label>
                                             <div className="flex items-center gap-3">
@@ -209,14 +209,14 @@ export default function OvertimeMultiplier() {
                                                         )
                                                     }
                                                 />
-                                                <span className="text-xs text-slate-500">
+                                                <span className="text-xs text-muted-foreground">
                                                     Horas / Día
                                                 </span>
                                             </div>
                                         </div>
 
                                         <div className="space-y-1.5">
-                                            <Label className="text-xs font-medium text-slate-700">
+                                            <Label className="text-xs font-medium text-foreground">
                                                 Multiplicador de Tasa*
                                             </Label>
                                             <div className="flex items-center gap-3">
@@ -232,7 +232,7 @@ export default function OvertimeMultiplier() {
                                                     }
                                                     placeholder="1.5x, 2x, etc."
                                                 />
-                                                <span className="text-xs text-slate-500">
+                                                <span className="text-xs text-muted-foreground">
                                                     X Pago Base
                                                 </span>
                                             </div>
@@ -242,7 +242,7 @@ export default function OvertimeMultiplier() {
                                     {rules.length > 1 && (
                                         <button
                                             type="button"
-                                            className="absolute right-0 top-2 text-slate-400 hover:text-red-500"
+                                            className="absolute right-0 top-2 text-muted-foreground hover:text-red-500"
                                             onClick={() => handleRemoveRule(rule.id)}
                                         >
                                             <X className="h-4 w-4" />
@@ -255,7 +255,7 @@ export default function OvertimeMultiplier() {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="rounded-lg border-[#C8860A]/30 bg-white px-6 text-sm font-semibold text-[#C8860A] hover:bg-[#C8860A]/10"
+                                    className="rounded-lg border-[#C8860A]/30 bg-card px-6 text-sm font-semibold text-[#C8860A] hover:bg-[#C8860A]/10"
                                     onClick={handleAddRule}
                                 >
                                     Agregar
@@ -307,22 +307,22 @@ export default function OvertimeMultiplier() {
                     </Button>
                 </div>
 
-                <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-card">
                     <table className="min-w-full border-collapse text-left text-sm">
                         <thead className="bg-slate-50">
                             <tr className="border-b border-slate-200">
-                                <th className="px-6 py-3 font-semibold text-slate-700">
+                                <th className="px-6 py-3 font-semibold text-foreground">
                                     Nombre
                                 </th>
-                                <th className="px-6 py-3 font-semibold text-slate-700">Tipo</th>
-                                <th className="px-6 py-3 font-semibold text-slate-700">Tasa</th>
+                                <th className="px-6 py-3 font-semibold text-foreground">Tipo</th>
+                                <th className="px-6 py-3 font-semibold text-foreground">Tasa</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td
                                     colSpan={3}
-                                    className="py-20 text-center text-sm text-slate-400"
+                                    className="py-20 text-center text-sm text-muted-foreground"
                                 >
                                     No hay multiplicadores registrados
                                 </td>
@@ -330,11 +330,11 @@ export default function OvertimeMultiplier() {
                         </tbody>
                     </table>
 
-                    <div className="flex items-center justify-between bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    <div className="flex items-center justify-between bg-slate-50 px-4 py-3 text-sm text-foreground/70">
                         <div className="flex items-center gap-2">
                             <span>Elementos por página</span>
                             <Select value={perPage} onValueChange={setPerPage}>
-                                <SelectTrigger className="h-8 w-20 rounded-md border-slate-300 bg-white text-xs">
+                                <SelectTrigger className="h-8 w-20 rounded-md border-slate-300 bg-card text-xs">
                                     <SelectValue placeholder={perPageText} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -349,13 +349,13 @@ export default function OvertimeMultiplier() {
                             <div className="flex items-center gap-1">
                                 <button
                                     type="button"
-                                    className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-100"
+                                    className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-card text-muted-foreground hover:bg-slate-100"
                                 >
                                     <ChevronLeft className="h-4 w-4" />
                                 </button>
                                 <button
                                     type="button"
-                                    className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-100"
+                                    className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-card text-muted-foreground hover:bg-slate-100"
                                 >
                                     <ChevronRight className="h-4 w-4" />
                                 </button>

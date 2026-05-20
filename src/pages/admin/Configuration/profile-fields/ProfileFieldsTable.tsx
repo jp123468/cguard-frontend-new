@@ -109,11 +109,11 @@ export default function ProfileFieldsTable({
                   <TableCell>{r.type}</TableCell>
                   <TableCell>
                     {r.status === "active" ? (
-                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                      <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/15">
                         Activo
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="bg-slate-100 text-slate-700 hover:bg-slate-100">
+                      <Badge variant="secondary" className="bg-slate-100 text-foreground hover:bg-slate-100">
                         Inactivo
                       </Badge>
                     )}

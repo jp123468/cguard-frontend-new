@@ -26,17 +26,17 @@ import {
 
 const SectionTitle: React.FC<{ icon: React.ReactNode; title: string }> = ({ icon, title }) => (
   <div className="flex items-center gap-2 mb-4">
-    <span className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-100 text-amber-700">
+    <span className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-500/15 text-amber-700">
       {icon}
     </span>
-    <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-600">{title}</h3>
+    <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/70">{title}</h3>
   </div>
 );
 
 const FieldLabel: React.FC<{ children: React.ReactNode; hint?: string }> = ({ children, hint }) => (
-  <label className="block text-sm font-medium text-gray-700 mb-1">
+  <label className="block text-sm font-medium text-foreground mb-1">
     {children}
-    {hint && <span className="ml-1 text-xs text-gray-400 font-normal">({hint})</span>}
+    {hint && <span className="ml-1 text-xs text-muted-foreground font-normal">({hint})</span>}
   </label>
 );
 
@@ -60,8 +60,8 @@ const CheckboxGroup: React.FC<CheckboxGroupProps> = ({ options, value, onChange 
           className={cn(
             'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
             checked
-              ? 'border-amber-400 bg-amber-100 text-amber-800'
-              : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400',
+              ? 'border-amber-400 bg-amber-500/15 text-amber-700'
+              : 'border-border bg-card text-foreground/70 hover:border-gray-400',
           )}
         >
           {checked && <span className="h-1.5 w-1.5 rounded-full bg-amber-600 shrink-0" />}
@@ -107,21 +107,21 @@ const Toggle: React.FC<ToggleProps> = ({ checked, onChange, label, description }
     onClick={() => onChange(!checked)}
     className={cn(
       'flex w-full items-start gap-3 rounded-lg border-2 p-3 text-left transition-colors',
-      checked ? 'border-amber-400 bg-amber-50' : 'border-gray-200 bg-white hover:border-gray-300',
+      checked ? 'border-amber-400 bg-amber-500/10' : 'border-border bg-card hover:border-border',
     )}
   >
     <span className={cn(
       'mt-0.5 h-5 w-9 shrink-0 rounded-full border-2 transition-colors relative',
-      checked ? 'border-amber-500 bg-amber-500' : 'border-gray-300 bg-gray-100',
+      checked ? 'border-amber-500 bg-amber-500' : 'border-border bg-muted',
     )}>
       <span className={cn(
-        'absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform',
+        'absolute top-0.5 h-3 w-3 rounded-full bg-card shadow transition-transform',
         checked ? 'translate-x-[14px]' : 'translate-x-0.5',
       )} />
     </span>
     <span>
-      <span className="block text-sm font-medium text-gray-800">{label}</span>
-      {description && <span className="block text-xs text-gray-500 mt-0.5">{description}</span>}
+      <span className="block text-sm font-medium text-foreground">{label}</span>
+      {description && <span className="block text-xs text-muted-foreground mt-0.5">{description}</span>}
     </span>
   </button>
 );
@@ -728,12 +728,12 @@ export default function ServiceTypeConfigFields({ serviceType, form }: Props) {
   if (!inner) return null;
 
   return (
-    <section className="rounded-xl border border-amber-200 bg-amber-50/40 p-5 space-y-1">
+    <section className="rounded-xl border border-amber-200 bg-amber-500/10/40 p-5 space-y-1">
       <div className="flex items-center gap-2 mb-5">
-        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-200 text-amber-800">
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-200 text-amber-700">
           {meta.icon}
         </span>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-800">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-700">
           {meta.label}
         </h2>
       </div>

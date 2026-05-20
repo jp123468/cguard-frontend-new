@@ -4,7 +4,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   Shield, ChevronRight, Gauge, Activity, Users, BarChart3, MapPin,
   MessageSquare, Clock, FileText, Calendar, DollarSign, Receipt, Car,
-  UserPlus, SquareParking, UserCog, Building2, Briefcase, type LucideIcon,
+  UserPlus, SquareParking, UserCog, Building2, Briefcase, Package, type LucideIcon,
 } from "lucide-react";
 import sidebarMenuData from "../data/sidebar-menu.json";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,7 +22,7 @@ type MenuItem = {
 const iconMap: Record<string, LucideIcon> = {
   Shield, Gauge, Activity, Users, BarChart3, MapPin,
   MessageSquare, Clock, FileText, Calendar, DollarSign, Receipt, Car,
-  UserPlus, SquareParking, UserCog, Building2, Briefcase
+  UserPlus, SquareParking, UserCog, Building2, Briefcase, Package
 };
 
 export default function Sidebar() {
@@ -135,7 +135,7 @@ export default function Sidebar() {
           <p className="text-sm font-semibold text-white leading-tight truncate max-w-[140px]" title={tenantName || 'CGuard'}>
             {tenantName || 'CGuard'}
           </p>
-          <p className="text-[10px] text-slate-500 leading-tight mt-0.5">Panel de control</p>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Panel de control</p>
         </div>
       </div>
 
@@ -166,14 +166,14 @@ export default function Sidebar() {
                     className={({ isActive }) =>
                       `block mb-0.5 rounded-lg transition-all ${isActive
                         ? "text-white"
-                        : "text-slate-400 hover:text-white"
+                        : "text-muted-foreground hover:text-white"
                       }`
                     }
                   >
                     {children}
                   </NavLink>
                 ) : (
-                  <div className="mb-0.5 rounded-lg text-slate-400">{children}</div>
+                  <div className="mb-0.5 rounded-lg text-muted-foreground">{children}</div>
                 );
               };
 
@@ -223,7 +223,7 @@ export default function Sidebar() {
                             to={sub.path}
                             className={`block rounded px-2 py-2 mb-0.5 text-[12px] font-medium transition-all ${isActive
                               ? "text-[#F5C300]"
-                              : "text-slate-400 hover:text-white hover:bg-white/5"
+                              : "text-muted-foreground hover:text-white hover:bg-white/5"
                             }`}
                             style={isActive ? { background: "rgba(200,134,10,0.12)" } : {}}
                           >
@@ -244,7 +244,7 @@ export default function Sidebar() {
             })}
         </nav>
         <div className="px-4 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-[10px] text-slate-600 text-center">© {new Date().getFullYear()} CGUARD</p>
+          <p className="text-[10px] text-foreground/70 text-center">© {new Date().getFullYear()} CGUARD</p>
         </div>
       </div>
     </aside>

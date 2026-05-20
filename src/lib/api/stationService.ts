@@ -297,6 +297,47 @@ const stationService = {
     const { data } = await api.post(`/tenant/${tenantId}/post-site/import`, formData, { headers: { 'Content-Type': 'multipart/form-data' } } as any);
     return data;
   },
+
+  async activeStatus(postSiteId: string): Promise<{
+    stations: Array<{
+      id: string;
+      stationName: string;
+      latitud?: string;
+      longitud?: string;
+      isActive: boolean;
+      activeGuards: Array<{ id: string; securityGuardId: string; fullName: string; isOnDuty: boolean; photoUrl: string | null }>;
+      nextShift: { startTime: string; endTime: string; guard: { fullName: string; photoUrl: string | null } | null } | null;
+    }>;
+  }> {
+    const tenantId = getTenantId();
+    const { data } = await api.get(`/tenant/${tenantId}/post-site/${postSiteId}/active-status`, { toast: { silentError: true } } as any);
+    return data;
+  },
+
+  async coverageGaps(postSiteId: string, from: string, to: string): Promise<{
+    from: string;
+    to: string;
+    stations: Array<{
+      id: string;
+      stationName: string;
+      numberOfGuardsInStation: string | null;
+      startingTimeInDay: string | null;
+      finishTimeInDay: string | null;
+      is24h: boolean;
+      requiredHoursPerDay: number;
+      coverageScore: number;
+      gaps: Array<{ day: string; startTime: string; endTime: string; hoursUncovered: number }>;
+      coveredPeriods: Array<{ day: string; startTime: string; endTime: string }>;
+    }>;
+  }> {
+    const tenantId = getTenantId();
+    const params = new URLSearchParams({ from, to });
+    const { data } = await api.get(
+      `/tenant/${tenantId}/post-site/${postSiteId}/coverage-gaps?${params}`,
+      { toast: { silentError: true } } as any
+    );
+    return data;
+  },
 };
 
 export { stationService };

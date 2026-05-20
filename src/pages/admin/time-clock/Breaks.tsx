@@ -188,7 +188,7 @@ export default function Breaks() {
           {/* Buscar + Nuevo descanso */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative w-64">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar descanso"
                 className="pl-9"
@@ -309,7 +309,7 @@ export default function Breaks() {
                           setAutoStart(Boolean(v))
                         }
                       />
-                      <span className="text-sm text-gray-700">
+                      <span className="text-sm text-foreground">
                         Inicio automático
                       </span>
                     </label>
@@ -321,7 +321,7 @@ export default function Breaks() {
                           setManualAllowed(Boolean(v))
                         }
                       />
-                      <span className="text-sm text-gray-700">
+                      <span className="text-sm text-foreground">
                         Permitir que el guardia inicie y termine el descanso
                         manualmente
                       </span>
@@ -346,7 +346,7 @@ export default function Breaks() {
         {/* Tabla */}
         <div className="border rounded-lg overflow-hidden">
           <table className="min-w-full text-sm text-left border-collapse">
-            <thead className="bg-slate-50 text-gray-700">
+            <thead className="bg-slate-50 text-foreground">
               <tr className="border-b">
                 <th className="px-4 py-3">
                   <Checkbox
@@ -422,7 +422,7 @@ export default function Breaks() {
                       <h3 className="text-lg font-semibold">
                         No se encontraron resultados
                       </h3>
-                      <p className="text-sm text-gray-500 max-w-xs mt-1">
+                      <p className="text-sm text-muted-foreground max-w-xs mt-1">
                         No pudimos encontrar ningún elemento que coincida con su
                         búsqueda
                       </p>
@@ -434,7 +434,7 @@ export default function Breaks() {
           </table>
 
           {/* Paginación */}
-          <div className="flex flex-wrap items-center justify-end gap-4 px-4 py-3 text-sm text-gray-600">
+          <div className="flex flex-wrap items-center justify-end gap-4 px-4 py-3 text-sm text-foreground/70">
             <div className="flex items-center gap-2">
               <span>Elementos por página</span>
               <Select

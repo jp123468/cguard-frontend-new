@@ -378,12 +378,12 @@ export default function ClientForm({
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
 
                     {/* ── Section 1: Personal Info ─────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden">
-                        <div className="flex items-center gap-2 px-5 py-3.5 bg-white border-b border-slate-200">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
+                        <div className="flex items-center gap-2 px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C8860A]/10">
                                 <User className="h-4 w-4 text-[#C8860A]" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-800">{t('clients.form.personalInfo', 'Información personal')}</span>
+                            <span className="text-sm font-semibold text-foreground">{t('clients.form.personalInfo', 'Información personal')}</span>
                         </div>
                         <div className="p-5 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -392,12 +392,12 @@ export default function ClientForm({
                                     name="name"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                 {t('clients.form.name', 'Nombre')} <span className="text-[#C8860A]">*</span>
                                             </FormLabel>
                                             <FormControl>
                                                 <input
-                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                     {...field}
                                                     value={typeof field.value === "string" ? field.value : ""}
                                                     onChange={(e) => {
@@ -419,12 +419,12 @@ export default function ClientForm({
                                     name="lastName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                 {t('clients.form.lastName', 'Apellidos')} <span className="text-[#C8860A]">*</span>
                                             </FormLabel>
                                             <FormControl>
                                                 <input
-                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                     {...field}
                                                     value={typeof field.value === "string" ? field.value : ""}
                                                     onChange={(e) => {
@@ -449,12 +449,12 @@ export default function ClientForm({
                                     name={"personType" as any}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                 {t('clients.form.personType', 'Tipo de persona')}
                                             </FormLabel>
                                             <FormControl>
                                                 <Select value={String(field.value || 'PN')} onValueChange={(v) => field.onChange(v)}>
-                                                    <SelectTrigger className="h-10 rounded-lg border-slate-200 focus:border-[#C8860A] focus:ring-[#C8860A]/20">
+                                                    <SelectTrigger className="h-10 rounded-lg border-slate-200 dark:border-slate-600 focus:border-[#C8860A] focus:ring-[#C8860A]/20">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -472,12 +472,12 @@ export default function ClientForm({
                                     name={"documentNumber" as any}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                 {personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}
                                             </FormLabel>
                                             <FormControl>
                                                 <input
-                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                     {...field}
                                                     value={typeof field.value === 'string' ? field.value : ''}
                                                     maxLength={personType === 'PJ' ? 13 : 10}
@@ -513,12 +513,12 @@ export default function ClientForm({
                     </div>
 
                     {/* ── Section 2: Business Info ──────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden">
-                        <div className="flex items-center gap-2 px-5 py-3.5 bg-white border-b border-slate-200">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
+                        <div className="flex items-center gap-2 px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C8860A]/10">
                                 <Building2 className="h-4 w-4 text-[#C8860A]" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-800">{t('clients.form.businessInfo', 'Información de empresa')}</span>
+                            <span className="text-sm font-semibold text-foreground">{t('clients.form.businessInfo', 'Información de empresa')}</span>
                         </div>
                         <div className="p-5 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -527,13 +527,13 @@ export default function ClientForm({
                                     name={"commercialName" as any}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                 {t('clients.form.commercialName', 'Nombre comercial')}
-                                                <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
+                                                <span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
                                             </FormLabel>
                                             <FormControl>
                                                 <input
-                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                     placeholder={t('clients.form.commercialNamePlaceholder', 'Ej. Empresa Segura S.A.')}
                                                     {...field}
                                                     value={typeof field.value === "string" ? field.value : ""}
@@ -549,14 +549,14 @@ export default function ClientForm({
                                     name={"contractDate" as any}
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                 {t('clients.form.contractDate', 'Fecha de contrato')}
-                                                <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
+                                                <span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
                                             </FormLabel>
                                             <FormControl>
                                                 <input
                                                     type="date"
-                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                     {...field}
                                                     value={typeof field.value === "string" ? field.value : ""}
                                                 />
@@ -571,12 +571,12 @@ export default function ClientForm({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                                 {/* Logo upload */}
                                 <div className="space-y-2">
-                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                    <p className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                         {t('clients.form.logo', 'Logo de la empresa')}
-                                        <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
+                                        <span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
                                     </p>
                                     <div
-                                        className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-white hover:border-[#C8860A]/40 transition-colors cursor-pointer min-h-[140px] p-4"
+                                        className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-600 bg-card hover:border-[#C8860A]/40 transition-colors cursor-pointer min-h-[140px] p-4"
                                         onClick={() => document.getElementById('logo-upload-input')?.click()}
                                     >
                                         <input
@@ -597,18 +597,18 @@ export default function ClientForm({
                                                 <img src={logoPreview} alt="logo" className="max-h-24 max-w-full object-contain rounded" />
                                                 <button
                                                     type="button"
-                                                    className="absolute top-2 right-2 rounded-full bg-white border border-slate-200 p-0.5 shadow-sm text-slate-500 hover:text-red-500 hover:border-red-300"
+                                                    className="absolute top-2 right-2 rounded-full bg-card border border-slate-200 dark:border-slate-600 p-0.5 shadow-sm text-muted-foreground hover:text-red-500 hover:border-red-300"
                                                     onClick={(e) => { e.stopPropagation(); setLogoFile(null); setLogoPreview(null); setLogoExisting(null); }}
                                                 >
                                                     <X className="h-3.5 w-3.5" />
                                                 </button>
-                                                <p className="mt-2 text-xs text-slate-400 truncate max-w-full">{logoFile?.name ?? logoExisting?.name}</p>
+                                                <p className="mt-2 text-xs text-muted-foreground truncate max-w-full">{logoFile?.name ?? logoExisting?.name}</p>
                                             </>
                                         ) : (
                                             <>
-                                                <Upload className="h-8 w-8 text-slate-300 mb-2" />
-                                                <p className="text-xs text-slate-500 text-center">{t('clients.form.clickToUpload', 'Clic para subir')}</p>
-                                                <p className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WEBP</p>
+                                                <Upload className="h-8 w-8 text-muted-foreground/60 mb-2" />
+                                                <p className="text-xs text-muted-foreground text-center">{t('clients.form.clickToUpload', 'Clic para subir')}</p>
+                                                <p className="text-[10px] text-muted-foreground mt-0.5">PNG, JPG, WEBP</p>
                                             </>
                                         )}
                                     </div>
@@ -616,12 +616,12 @@ export default function ClientForm({
 
                                 {/* Place picture upload */}
                                 <div className="space-y-2">
-                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                    <p className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                         {t('clients.form.placePicture', 'Foto del lugar')}
-                                        <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
+                                        <span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
                                     </p>
                                     <div
-                                        className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-white hover:border-[#C8860A]/40 transition-colors cursor-pointer min-h-[140px] p-4"
+                                        className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-600 bg-card hover:border-[#C8860A]/40 transition-colors cursor-pointer min-h-[140px] p-4"
                                         onClick={() => document.getElementById('place-upload-input')?.click()}
                                     >
                                         <input
@@ -642,18 +642,18 @@ export default function ClientForm({
                                                 <img src={placePicPreview} alt="place" className="max-h-24 max-w-full object-contain rounded" />
                                                 <button
                                                     type="button"
-                                                    className="absolute top-2 right-2 rounded-full bg-white border border-slate-200 p-0.5 shadow-sm text-slate-500 hover:text-red-500 hover:border-red-300"
+                                                    className="absolute top-2 right-2 rounded-full bg-card border border-slate-200 dark:border-slate-600 p-0.5 shadow-sm text-muted-foreground hover:text-red-500 hover:border-red-300"
                                                     onClick={(e) => { e.stopPropagation(); setPlacePicFile(null); setPlacePicPreview(null); setPlacePicExisting(null); }}
                                                 >
                                                     <X className="h-3.5 w-3.5" />
                                                 </button>
-                                                <p className="mt-2 text-xs text-slate-400 truncate max-w-full">{placePicFile?.name ?? placePicExisting?.name}</p>
+                                                <p className="mt-2 text-xs text-muted-foreground truncate max-w-full">{placePicFile?.name ?? placePicExisting?.name}</p>
                                             </>
                                         ) : (
                                             <>
-                                                <Image className="h-8 w-8 text-slate-300 mb-2" />
-                                                <p className="text-xs text-slate-500 text-center">{t('clients.form.clickToUpload', 'Clic para subir')}</p>
-                                                <p className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WEBP</p>
+                                                <Image className="h-8 w-8 text-muted-foreground/60 mb-2" />
+                                                <p className="text-xs text-muted-foreground text-center">{t('clients.form.clickToUpload', 'Clic para subir')}</p>
+                                                <p className="text-[10px] text-muted-foreground mt-0.5">PNG, JPG, WEBP</p>
                                             </>
                                         )}
                                     </div>
@@ -663,12 +663,12 @@ export default function ClientForm({
                     </div>
 
                     {/* ── Section 3: Contact ────────────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden">
-                        <div className="flex items-center gap-2 px-5 py-3.5 bg-white border-b border-slate-200">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
+                        <div className="flex items-center gap-2 px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C8860A]/10">
                                 <Mail className="h-4 w-4 text-[#C8860A]" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-800">{t('clients.form.contactInfo', 'Contacto')}</span>
+                            <span className="text-sm font-semibold text-foreground">{t('clients.form.contactInfo', 'Contacto')}</span>
                         </div>
                         <div className="p-5 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -677,13 +677,13 @@ export default function ClientForm({
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                 {t('clients.form.email', 'Correo electrónico')} <span className="text-[#C8860A]">*</span>
                                             </FormLabel>
                                             <FormControl>
                                                 <input
                                                     type="email"
-                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                     {...field}
                                                     value={typeof field.value === "string" ? field.value : ""}
                                                     maxLength={50}
@@ -698,7 +698,7 @@ export default function ClientForm({
                                     name="phoneNumber"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                 {t('clients.form.phone', 'Teléfono')} <span className="text-[#C8860A]">*</span>
                                             </FormLabel>
                                             <FormControl>
@@ -728,12 +728,12 @@ export default function ClientForm({
                     </div>
 
                     {/* ── Section 3: Sector ─────────────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden">
-                        <div className="flex items-center gap-2 px-5 py-3.5 bg-white border-b border-slate-200">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
+                        <div className="flex items-center gap-2 px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C8860A]/10">
                                 <Tag className="h-4 w-4 text-[#C8860A]" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-800">{t('clients.form.categoryLabel', 'Sector de seguridad')}</span>
+                            <span className="text-sm font-semibold text-foreground">{t('clients.form.categoryLabel', 'Sector de seguridad')}</span>
                         </div>
                         <div className="p-5">
                             <FormField<ClientInput>
@@ -746,7 +746,7 @@ export default function ClientForm({
                                     return (
                                         <FormItem>
                                             <div className="flex items-center gap-2 mb-2">
-                                                <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                     {t('clients.form.categoryLabel', 'Sector de seguridad')}
                                                 </FormLabel>
                                                 <TooltipProvider>
@@ -782,9 +782,9 @@ export default function ClientForm({
                     </div>
 
                     {/* ── Section 4: Address ────────────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
                         {/* Section header */}
-                        <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-slate-200">
+                        <div className="flex items-center justify-between px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
                             <div className="flex items-center gap-2">
                                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C8860A]/10">
                                     <svg className="h-4 w-4 text-[#C8860A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -792,21 +792,21 @@ export default function ClientForm({
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
                                 </div>
-                                <span className="text-sm font-semibold text-slate-800">{t('clients.form.addressSearch', 'Dirección')}</span>
+                                <span className="text-sm font-semibold text-foreground">{t('clients.form.addressSearch', 'Dirección')}</span>
                             </div>
                             {/* Mode toggle pills */}
-                            <div className="flex items-center rounded-lg bg-slate-100 p-0.5 gap-0.5">
+                            <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-700 p-0.5 gap-0.5">
                                 <button
                                     type="button"
                                     onClick={() => setShowAddressAutocomplete(true)}
-                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${showAddressAutocomplete ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${showAddressAutocomplete ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     {t('clients.form.switchToAutocomplete', 'Búsqueda')}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setShowAddressAutocomplete(false)}
-                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!showAddressAutocomplete ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!showAddressAutocomplete ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     {t('clients.form.switchToManual', 'Manual')}
                                 </button>
@@ -862,12 +862,12 @@ export default function ClientForm({
                                     name="address"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                 {t('clients.form.address', 'Dirección')} <span className="text-[#C8860A]">*</span>
                                             </FormLabel>
                                             <FormControl>
                                                 <input
-                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                     {...field}
                                                     value={typeof field.value === "string" ? field.value : ""}
                                                     maxLength={100}
@@ -884,13 +884,13 @@ export default function ClientForm({
                                     name="addressLine2"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                 {t('clients.form.addressLine2', 'Dirección (línea 2)')}
-                                                <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
+                                                <span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
                                             </FormLabel>
                                             <FormControl>
                                                 <input
-                                                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20"
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20"
                                                     placeholder={t('clients.form.addressLine2Placeholder', 'Piso, oficina, departamento…')}
                                                     {...field}
                                                     value={typeof field.value === "string" ? field.value : ""}
@@ -909,13 +909,13 @@ export default function ClientForm({
                                         name="postalCode"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                     {t('clients.form.postalCode', 'Código postal')} <span className="text-[#C8860A]">*</span>
                                                 </FormLabel>
                                                 <FormControl>
                                                     <input
                                                         type="text"
-                                                        className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                        className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                         {...field}
                                                         value={String(field.value || "")}
                                                         maxLength={20}
@@ -930,12 +930,12 @@ export default function ClientForm({
                                         name="city"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                     {t('clients.form.city', 'Ciudad')} <span className="text-[#C8860A]">*</span>
                                                 </FormLabel>
                                                 <FormControl>
                                                     <input
-                                                        className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                        className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                         {...field}
                                                         value={typeof field.value === "string" ? field.value : ""}
                                                         maxLength={100}
@@ -950,12 +950,12 @@ export default function ClientForm({
                                         name="country"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                     {t('clients.form.country', 'País')} <span className="text-[#C8860A]">*</span>
                                                 </FormLabel>
                                                 <FormControl>
                                                     <input
-                                                        className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                        className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                         {...field}
                                                         value={typeof field.value === "string" ? field.value : ""}
                                                         maxLength={100}
@@ -969,7 +969,7 @@ export default function ClientForm({
 
                                 {/* Coordinates — collapsible */}
                                 <details className="group">
-                                    <summary className="flex items-center gap-1.5 cursor-pointer text-xs font-medium text-slate-400 hover:text-slate-600 list-none select-none w-fit">
+                                    <summary className="flex items-center gap-1.5 cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground/70 list-none select-none w-fit">
                                         <svg className="h-3.5 w-3.5 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                         </svg>
@@ -981,13 +981,13 @@ export default function ClientForm({
                                             name="latitude"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                         {t('clients.form.latitude', 'Latitud')}
                                                     </FormLabel>
                                                     <FormControl>
                                                         <input
                                                             type="text"
-                                                            className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-mono placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                            className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm font-mono placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                             placeholder="-90 a 90"
                                                             {...field}
                                                             value={String(field.value ?? "")}
@@ -1003,13 +1003,13 @@ export default function ClientForm({
                                             name="longitude"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                         {t('clients.form.longitude', 'Longitud')}
                                                     </FormLabel>
                                                     <FormControl>
                                                         <input
                                                             type="text"
-                                                            className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-mono placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                            className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm font-mono placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                             placeholder="-180 a 180"
                                                             {...field}
                                                             value={String(field.value ?? "")}
@@ -1027,15 +1027,15 @@ export default function ClientForm({
                     </div>{/* end address card */}
 
                     {/* ── Section 5: More Info ──────────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
                         <Accordion type="single" collapsible defaultValue="more">
                             <AccordionItem value="more" className="border-0">
-                                <AccordionTrigger className="px-5 py-3.5 bg-white border-b border-slate-200 hover:no-underline hover:bg-slate-50 [&[data-state=open]]:border-b [&[data-state=closed]]:border-b-0 rounded-none">
+                                <AccordionTrigger className="px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700 hover:no-underline hover:bg-slate-50 [&[data-state=open]]:border-b [&[data-state=closed]]:border-b-0 rounded-none">
                                     <div className="flex items-center gap-2">
                                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C8860A]/10">
                                             <Globe className="h-4 w-4 text-[#C8860A]" />
                                         </div>
-                                        <span className="text-sm font-semibold text-slate-800">{t('clients.form.moreInfo', 'Más información')}</span>
+                                        <span className="text-sm font-semibold text-foreground">{t('clients.form.moreInfo', 'Más información')}</span>
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="p-5">
@@ -1045,7 +1045,7 @@ export default function ClientForm({
                                             name="faxNumber"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                         {t('clients.form.fax', 'Teléfono fijo')}
                                                     </FormLabel>
                                                     <FormControl>
@@ -1075,12 +1075,12 @@ export default function ClientForm({
                                             name="website"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
                                                         {t('clients.form.website', 'Sitio web')}
                                                     </FormLabel>
                                                     <FormControl>
                                                         <input
-                                                            className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
+                                                            className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-50"
                                                             placeholder="https://"
                                                             {...field}
                                                             value={typeof field.value === "string" ? field.value : ""}
@@ -1101,7 +1101,7 @@ export default function ClientForm({
                         <Button
                             type="button"
                             onClick={() => onCancel ? onCancel() : navigate('/clients')}
-                            className="min-w-28 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
+                            className="min-w-28 bg-card text-foreground border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-foreground cursor-pointer"
                         >
                             {t('profile.cancel', 'Cancelar')}
                         </Button>

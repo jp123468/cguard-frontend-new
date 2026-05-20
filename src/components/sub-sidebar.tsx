@@ -26,7 +26,7 @@ export default function SubSidebar({
   return (
     <aside
       className={[
-        "w-64 shrink-0 border-r border-gray-200 bg-white",
+        "w-64 shrink-0 border-r border-border bg-card",
         // use flex column so nav can fill remaining height and avoid bottom gaps
         "flex flex-col",
         useSticky
@@ -36,7 +36,7 @@ export default function SubSidebar({
       ].join(" ")}
     >
       {/* Título principal */}
-      <div className="px-4 py-3 text-sm font-semibold text-gray-400">
+      <div className="px-4 py-3 text-sm font-semibold text-muted-foreground">
         {t(`settings.${navKey}.title`, { defaultValue: nav.title ?? "Menú" })}
       </div>
 
@@ -45,7 +45,7 @@ export default function SubSidebar({
           <div key={idx} className="px-2">
             {/* Si la sección tiene label, se muestra */}
             {sec.label ? (
-              <div className="px-2 py-2 text-[12px] font-bold text-blue-700 uppercase tracking-wide">
+              <div className="px-2 py-2 text-[12px] font-bold text-blue-600 uppercase tracking-wide">
                 {(() => {
                   // create a slug from the section label to use as translation key
                   const slug = String(sec.label)
@@ -72,7 +72,7 @@ export default function SubSidebar({
                         "block rounded-md px-3 py-2 text-[12px] font-semibold transition-colors",
                         isActive
                           ? "bg-gradient-to-r from-[#FFF8E6] to-[#FFF0C4] text-[#C8860A] border-l-4 border-[#C8860A]"
-                          : "text-[#1A1A1A] hover:bg-gray-50",
+                          : "text-foreground hover:bg-muted/30",
                       ].join(" ")
                     }
                   >

@@ -184,22 +184,22 @@ export default function GuardNotes({ guard }: Props) {
         <AppLayout>
             <GuardsLayout navKey="keep-safe" title="guards.nav.notas">
                 <div className="space-y-4">
-                    <div className="bg-white border rounded-lg p-6 shadow-sm">
+                    <div className="bg-card border rounded-lg p-6 shadow-sm">
                         <div className="flex items-center justify-between gap-4 mb-6">
                             {/* Left: Action Dropdown */}
                             <div className="relative" ref={actionRef}>
                                 <button
                                     onClick={() => setActionOpen(!actionOpen)}
-                                    className="px-3 py-2 border rounded-md bg-white text-gray-700 text-sm font-medium flex items-center gap-2 hover:bg-gray-50 min-w-[100px]"
+                                    className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
                                 >
                                     {t(`guards.notes.actions.${actionSelection}`, { defaultValue: actionSelection === 'default' ? 'Action' : actionSelection })}
                                     <ChevronDown size={16} />
                                 </button>
                                 {actionOpen && (
-                                    <div className="absolute left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-full">
+                                    <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
                                         <button
                                             onClick={() => { setActionSelection('delete'); setActionOpen(false); }}
-                                            className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                            className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
                                         >
                                             {t('guards.notes.actions.delete', { defaultValue: 'Delete' })}
                                         </button>
@@ -210,7 +210,7 @@ export default function GuardNotes({ guard }: Props) {
                             {/* Center: Search */}
                             <div className="flex-1 max-w-xs">
                                 <div className="relative">
-                                    <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+                                    <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
                                         <input
                                         type="text"
                                         placeholder={t('guards.notes.searchPlaceholder', { defaultValue: 'Search note' })}
@@ -236,13 +236,13 @@ export default function GuardNotes({ guard }: Props) {
                             <div className="md:block hidden overflow-x-auto">
                                 <table className="w-full">
                                 <thead>
-                                    <tr className="border-b bg-gray-50">
+                                    <tr className="border-b bg-muted/30">
                                         <th className="px-4 py-3 text-left">
                                             <input type="checkbox" className="rounded" />
                                         </th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.notes.table.title', { defaultValue: 'Title' })}</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.notes.table.date', { defaultValue: 'Date' })}</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('guards.notes.table.addedBy', { defaultValue: 'Added By' })}</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.notes.table.title', { defaultValue: 'Title' })}</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.notes.table.date', { defaultValue: 'Date' })}</th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.notes.table.addedBy', { defaultValue: 'Added By' })}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -260,18 +260,18 @@ export default function GuardNotes({ guard }: Props) {
                                                         </svg>
                                                     </div>
                                                     <div className="text-center">
-                                                        <h3 className="text-lg font-semibold text-gray-700">{t('guards.notes.empty.title', { defaultValue: 'No results found' })}</h3>
-                                                        <p className="text-sm text-gray-500 mt-1" dangerouslySetInnerHTML={{ __html: t('guards.notes.empty.message', { defaultValue: "We couldn't find<br />any items matching<br />your search" }) }} />
+                                                        <h3 className="text-lg font-semibold text-foreground">{t('guards.notes.empty.title', { defaultValue: 'No results found' })}</h3>
+                                                        <p className="text-sm text-muted-foreground mt-1" dangerouslySetInnerHTML={{ __html: t('guards.notes.empty.message', { defaultValue: "We couldn't find<br />any items matching<br />your search" }) }} />
                                                     </div>
                                                 </div>
                                             </td>
                                         </tr>
                                     ) : (
                                         notesData.map((note, idx) => (
-                                            <tr key={idx} className="border-b hover:bg-gray-50">
-                                                <td className="px-4 py-3 text-sm text-gray-700">{note.title}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-700">{note.date}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-700">{note.addedBy}</td>
+                                            <tr key={idx} className="border-b hover:bg-muted/30">
+                                                <td className="px-4 py-3 text-sm text-foreground">{note.title}</td>
+                                                <td className="px-4 py-3 text-sm text-foreground">{note.date}</td>
+                                                <td className="px-4 py-3 text-sm text-foreground">{note.addedBy}</td>
                                             </tr>
                                         ))
                                     )}
@@ -285,9 +285,9 @@ export default function GuardNotes({ guard }: Props) {
                                     loading={false}
                                     emptyMessage={t('guards.notes.empty.title', { defaultValue: 'No results found' }) as string}
                                     renderCard={(note: any) => (
-                                        <div className="p-4 bg-white border rounded-lg">
+                                        <div className="p-4 bg-card border rounded-lg">
                                             <div className="text-sm font-semibold">{note.title}</div>
-                                            <div className="text-xs text-gray-500">{note.date} • {note.addedBy}</div>
+                                            <div className="text-xs text-muted-foreground">{note.date} • {note.addedBy}</div>
                                         </div>
                                     )}
                                 />
@@ -302,19 +302,19 @@ export default function GuardNotes({ guard }: Props) {
                             onClick={handleCloseModal}
                         >
                             <div
-                                className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl overflow-y-auto"
+                                className="fixed right-0 top-0 bottom-0 w-96 bg-card shadow-2xl overflow-y-auto"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 {/* Header */}
-                                <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-                                    <h2 className="text-lg font-semibold text-gray-800">{t('guards.notes.modal.title', { defaultValue: 'Add New Note' })}</h2>
+                                <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-card">
+                                    <h2 className="text-lg font-semibold text-foreground">{t('guards.notes.modal.title', { defaultValue: 'Add New Note' })}</h2>
                                 </div>
 
                                 {/* Body */}
                                 <div className="p-6 space-y-6">
                                     {/* Título */}
                                     <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <label className="block text-sm font-medium text-foreground mb-2">
                                             {t('guards.notes.form.title.label', { defaultValue: 'Title' })} <span className="text-red-500">*</span>
                                         </label>
                                         <input
@@ -322,59 +322,59 @@ export default function GuardNotes({ guard }: Props) {
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                             placeholder={t('guards.notes.form.title.placeholder', { defaultValue: 'Enter note title' })}
-                                            className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
+                                            className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
                                         />
                                     </div>
 
                                     {/* Descripción */}
                                     <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <label className="block text-sm font-medium text-foreground mb-2">
                                             {t('guards.notes.form.description.label', { defaultValue: 'Description' })} <span className="text-red-500">*</span>
                                         </label>
                                         <textarea
                                             value={formData.description}
                                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                             placeholder={t('guards.notes.form.description.placeholder', { defaultValue: 'Enter note description' })}
-                                            className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none"
+                                            className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none"
                                             rows={6}
                                         />
                                     </div>
 
                                     {/* Fecha */}
                                     <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <label className="block text-sm font-medium text-foreground mb-2">
                                             {t('guards.notes.form.date.label', { defaultValue: 'Date' })} <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="date"
                                             value={formData.date}
                                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                            className="w-full px-3 py-2 border rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#C8860A] cursor-pointer"
+                                            className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] cursor-pointer"
                                         />
                                     </div>
 
                                     {/* Attachments */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('guards.notes.form.attachments.label', { defaultValue: 'Attachments' })}</label>
+                                        <label className="block text-sm font-medium text-foreground mb-2">{t('guards.notes.form.attachments.label', { defaultValue: 'Attachments' })}</label>
 
-                                        <label className="w-full border border-gray-300 rounded-md p-3 flex items-center justify-between gap-3 cursor-pointer hover:border-gray-400">
+                                        <label className="w-full border border-border rounded-md p-3 flex items-center justify-between gap-3 cursor-pointer hover:border-gray-400">
                                             <div className="flex-1">
-                                                <div className="text-sm text-gray-600">
+                                                <div className="text-sm text-foreground/70">
                                                     {formData.attachments && formData.attachments.length > 0 ? (
                                                         <div className="space-y-2">
                                                             {formData.attachments.map((f, i) => (
                                                                 <div key={i} className="flex flex-col gap-2 w-full">
                                                                     <div className="flex items-center justify-between gap-3">
                                                                         <div className="flex items-center gap-3 truncate">
-                                                                            <span className="text-sm text-gray-700 font-medium truncate" style={{maxWidth: 200}} title={f.name}>{shortName(f.name, 28)}</span>
+                                                                            <span className="text-sm text-foreground font-medium truncate" style={{maxWidth: 200}} title={f.name}>{shortName(f.name, 28)}</span>
                                                                         </div>
-                                                                        <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="text-gray-500 hover:text-red-500 p-1 rounded" aria-label={`Remove ${f.name}`}>
+                                                                        <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="text-muted-foreground hover:text-red-500 p-1 rounded" aria-label={`Remove ${f.name}`}>
                                                                             <X size={14} />
                                                                         </button>
                                                                     </div>
                                                                     {/* Progress Bar */}
                                                                     {typeof uploadProgress[i] !== 'undefined' && (
-                                                                        <div className="w-full bg-gray-100 rounded h-2 overflow-hidden">
+                                                                        <div className="w-full bg-muted rounded h-2 overflow-hidden">
                                                                             <div className="bg-[#C8860A] h-2" style={{ width: `${uploadProgress[i]}%` }} />
                                                                         </div>
                                                                     )}
@@ -382,7 +382,7 @@ export default function GuardNotes({ guard }: Props) {
                                                             ))}
                                                         </div>
                                                     ) : (
-                                                        <span className="text-sm text-gray-500">{t('guards.notes.form.attachments.noFiles', { defaultValue: 'No files selected' })}</span>
+                                                        <span className="text-sm text-muted-foreground">{t('guards.notes.form.attachments.noFiles', { defaultValue: 'No files selected' })}</span>
                                                     )}
                                                 </div>
                                             </div>
@@ -402,10 +402,10 @@ export default function GuardNotes({ guard }: Props) {
                                 </div>
 
                                 {/* Footer */}
-                                <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-white">
+                                <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
                                     <button
                                         onClick={handleCloseModal}
-                                        className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50"
+                                        className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30"
                                     >
                                         {t('guards.notes.modal.cancel', { defaultValue: 'Cancel' })}
                                     </button>

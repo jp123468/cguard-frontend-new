@@ -44,19 +44,19 @@ export default function ClientPortal({ client }: Props) {
     <div className="p-6 flex flex-col gap-6 max-w-2xl">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Globe className="w-5 h-5 text-[#C8860A]" />
           Acceso al Portal del Cliente
         </h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Permite que el cliente acceda al portal para ver sus facturas, guardias asignados y más.
         </p>
       </div>
 
       {/* Info card */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+      <div className="bg-amber-500/10 border border-amber-200 rounded-lg p-4 flex gap-3">
         <ShieldCheck className="w-5 h-5 text-[#C8860A] flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-amber-800 space-y-1">
+        <div className="text-sm text-amber-700 space-y-1">
           <p className="font-medium">¿Cómo funciona?</p>
           <ul className="list-disc list-inside space-y-0.5 text-amber-700">
             <li>Se envía un correo de invitación a <strong>{email || 'la dirección del cliente'}</strong></li>
@@ -67,22 +67,22 @@ export default function ClientPortal({ client }: Props) {
       </div>
 
       {/* Client summary */}
-      <div className="bg-white border rounded-lg p-4 flex items-center gap-4">
+      <div className="bg-card border rounded-lg p-4 flex items-center gap-4">
         <div className="w-10 h-10 rounded-full bg-[#C8860A]/10 flex items-center justify-center">
           <span className="text-[#C8860A] font-semibold text-sm">
             {(name || '?').charAt(0).toUpperCase()}
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
-          <p className="text-xs text-gray-500 truncate">{email || 'Sin correo electrónico'}</p>
+          <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+          <p className="text-xs text-muted-foreground truncate">{email || 'Sin correo electrónico'}</p>
         </div>
         {userId ? (
           <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
             Usuario vinculado
           </span>
         ) : (
-          <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
+          <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">
             Sin usuario
           </span>
         )}
@@ -102,7 +102,7 @@ export default function ClientPortal({ client }: Props) {
 
       {/* Sent state */}
       {dialog === 'sent' && (
-        <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="flex items-start gap-3 bg-green-500/10 border border-green-200 rounded-lg p-4">
           <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-green-800">¡Invitación enviada!</p>
@@ -121,10 +121,10 @@ export default function ClientPortal({ client }: Props) {
 
       {/* Error state */}
       {dialog === 'error' && (
-        <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="flex items-start gap-3 bg-red-500/10 border border-red-200 rounded-lg p-4">
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-red-800">Error al enviar la invitación</p>
+            <p className="text-sm font-semibold text-red-700">Error al enviar la invitación</p>
             <p className="text-sm text-red-700 mt-0.5">{errorMsg}</p>
             <button
               onClick={() => { setDialog('idle'); setErrorMsg(''); }}
@@ -139,30 +139,30 @@ export default function ClientPortal({ client }: Props) {
       {/* Confirm dialog */}
       {dialog === 'confirm' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-4">
+          <div className="bg-card rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0">
                 <Mail className="w-5 h-5 text-[#C8860A]" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 text-sm">Enviar invitación al portal</h3>
-                <p className="text-xs text-gray-500">Esta acción enviará un correo a:</p>
+                <h3 className="font-semibold text-foreground text-sm">Enviar invitación al portal</h3>
+                <p className="text-xs text-muted-foreground">Esta acción enviará un correo a:</p>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg px-4 py-3 text-center">
-              <p className="text-sm font-semibold text-gray-900">{name}</p>
+            <div className="bg-muted/30 rounded-lg px-4 py-3 text-center">
+              <p className="text-sm font-semibold text-foreground">{name}</p>
               <p className="text-sm text-[#C8860A]">{email || '(sin correo registrado)'}</p>
             </div>
 
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-muted-foreground text-center">
               El cliente recibirá un enlace para crear su contraseña y acceder al portal.
             </p>
 
             <div className="flex gap-3 mt-1">
               <button
                 onClick={() => setDialog('idle')}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="flex-1 px-4 py-2 text-sm font-medium text-foreground bg-muted rounded-lg hover:bg-muted transition-colors"
               >
                 Cancelar
               </button>
@@ -180,9 +180,9 @@ export default function ClientPortal({ client }: Props) {
       {/* Sending state */}
       {dialog === 'sending' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-8 flex flex-col items-center gap-4">
+          <div className="bg-card rounded-2xl shadow-xl w-full max-w-xs p-8 flex flex-col items-center gap-4">
             <Loader2 className="w-8 h-8 text-[#C8860A] animate-spin" />
-            <p className="text-sm font-medium text-gray-700">Enviando invitación…</p>
+            <p className="text-sm font-medium text-foreground">Enviando invitación…</p>
           </div>
         </div>
       )}

@@ -66,7 +66,7 @@ export default function Step2Subscription({ data, updateData, onNext, onPrevious
                             type="button"
                             variant={data.billingCycle === "monthly" ? "default" : "outline"}
                             onClick={() => updateData({ billingCycle: "monthly" })}
-                            className={data.billingCycle === "monthly" ? "bg-gray-200 text-gray-800" : ""}
+                            className={data.billingCycle === "monthly" ? "bg-muted text-foreground" : ""}
                         >
                             Mensual
                         </Button>
@@ -74,7 +74,7 @@ export default function Step2Subscription({ data, updateData, onNext, onPrevious
                             type="button"
                             variant={data.billingCycle === "annual" ? "default" : "outline"}
                             onClick={() => updateData({ billingCycle: "annual" })}
-                            className={data.billingCycle === "annual" ? "bg-gray-200 text-gray-800" : ""}
+                            className={data.billingCycle === "annual" ? "bg-muted text-foreground" : ""}
                         >
                             Anual
                         </Button>
@@ -85,7 +85,7 @@ export default function Step2Subscription({ data, updateData, onNext, onPrevious
                         {plans.map((plan) => (
                             <div
                                 key={plan.id}
-                                className={`border rounded-lg p-6 relative ${data.selectedPlan === plan.id ? "border-blue-500 bg-blue-50" : "border-gray-200"
+                                className={`border rounded-lg p-6 relative ${data.selectedPlan === plan.id ? "border-blue-500 bg-blue-500/10" : "border-border"
                                     }`}
                             >
                                 {plan.popular && (
@@ -96,7 +96,7 @@ export default function Step2Subscription({ data, updateData, onNext, onPrevious
                                 <h3 className="text-lg font-semibold mb-2">{plan.name}</h3>
                                 <div className="mb-4">
                                     <span className="text-3xl font-bold">${plan.price}</span>
-                                    <span className="text-gray-600"> / mes / usuario</span>
+                                    <span className="text-foreground/70"> / mes / usuario</span>
                                 </div>
                                 <RadioGroup
                                     value={data.selectedPlan}
@@ -129,7 +129,7 @@ export default function Step2Subscription({ data, updateData, onNext, onPrevious
                                         <TableCell>
                                             <div>
                                                 <div className="font-medium">{module.name}</div>
-                                                <div className="text-sm text-gray-500">{module.description}</div>
+                                                <div className="text-sm text-muted-foreground">{module.description}</div>
                                             </div>
                                         </TableCell>
                                         <TableCell>${module.price} / {module.unit}</TableCell>

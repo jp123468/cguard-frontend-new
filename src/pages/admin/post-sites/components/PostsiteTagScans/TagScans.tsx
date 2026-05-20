@@ -312,16 +312,16 @@ export default function TagScans({
   };
 
   return (
-    <div className="bg-white border rounded-lg p-4 flex-1 flex flex-col">
+    <div className="bg-card border rounded-lg p-4 flex-1 flex flex-col">
       <div className="mb-4 grid gap-3 lg:grid-cols-[minmax(0,12rem)_minmax(24rem,1fr)_auto] lg:items-center">
         <div className="flex flex-wrap items-center gap-2">
           <Select value="" onValueChange={(value) => {
             handleActionChange(value);
           }}>
-            <SelectTrigger className="h-9 min-w-[10rem] max-w-[12rem] rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-slate-400 focus:ring-1 focus:ring-slate-200">
+            <SelectTrigger className="h-9 min-w-[10rem] max-w-[12rem] rounded-2xl border border-slate-200 bg-card px-3 text-sm text-foreground focus:border-slate-400 focus:ring-1 focus:ring-slate-200">
               <SelectValue placeholder="Acción" />
             </SelectTrigger>
-            <SelectContent className="rounded-2xl border border-slate-200 bg-white shadow-lg">
+            <SelectContent className="rounded-2xl border border-slate-200 bg-card shadow-lg">
               <SelectItem value="clearSelection">Borrar selección</SelectItem>
               <SelectItem value="exportSelectedPdf">Exportar selección PDF</SelectItem>
               <SelectItem value="exportSelectedExcel">Exportar selección Excel</SelectItem>
@@ -329,7 +329,7 @@ export default function TagScans({
           </Select>
 
           {selectedCount > 0 && (
-            <span className="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+            <span className="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-foreground">
               {selectedCount} seleccionado{selectedCount > 1 ? 's' : ''}
             </span>
           )}
@@ -359,12 +359,12 @@ export default function TagScans({
 
               <div className="mt-6 space-y-6">
                 <div className="space-y-2">
-                  <label className="text-base font-medium text-slate-700">Guardia</label>
+                  <label className="text-base font-medium text-foreground">Guardia</label>
                   <Select value={filterGuard || "__all_guards__"} onValueChange={(value) => setFilterGuard(value === "__all_guards__" ? "" : value)}>
-                    <SelectTrigger className="rounded-2xl border border-slate-200 bg-white px-3 text-base text-slate-900 focus:border-slate-400 focus:ring-1 focus:ring-slate-200 w-full">
+                    <SelectTrigger className="rounded-2xl border border-slate-200 bg-card px-3 text-base text-foreground focus:border-slate-400 focus:ring-1 focus:ring-slate-200 w-full">
                       <SelectValue placeholder="Todos los guardias" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border border-slate-200 bg-white shadow-lg w-full">
+                    <SelectContent className="rounded-2xl border border-slate-200 bg-card shadow-lg w-full">
                       <SelectItem value="__all_guards__">Todos los guardias</SelectItem>
                       {guardOptions.map((guard) => (
                         <SelectItem key={guard} value={guard}>{guard}</SelectItem>
@@ -373,12 +373,12 @@ export default function TagScans({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-base font-medium text-slate-700">Estación</label>
+                  <label className="text-base font-medium text-foreground">Estación</label>
                   <Select value={filterStation || "__all_stations__"} onValueChange={(value) => setFilterStation(value === "__all_stations__" ? "" : value)}>
-                    <SelectTrigger className="rounded-2xl border border-slate-200 bg-white px-3 text-base text-slate-900 focus:border-slate-400 focus:ring-1 focus:ring-slate-200 w-full">
+                    <SelectTrigger className="rounded-2xl border border-slate-200 bg-card px-3 text-base text-foreground focus:border-slate-400 focus:ring-1 focus:ring-slate-200 w-full">
                       <SelectValue placeholder="Todas las estaciones" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border border-slate-200 bg-white shadow-lg w-full">
+                    <SelectContent className="rounded-2xl border border-slate-200 bg-card shadow-lg w-full">
                       <SelectItem value="__all_stations__">Todas las estaciones</SelectItem>
                       {stationOptions.map((station) => (
                         <SelectItem key={station} value={station}>{station}</SelectItem>
@@ -451,7 +451,7 @@ export default function TagScans({
       ) : (
         <div className="overflow-auto flex-1">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 sticky top-0">
+            <thead className="bg-muted/30 sticky top-0">
               <tr>
                 <th className="px-4 py-2 text-left"><input type="checkbox" checked={isAllSelected} onChange={(e) => toggleSelectAll(e.target.checked)} /></th>
                 <th className="px-4 py-2 text-left">Fecha y hora</th>
@@ -480,7 +480,7 @@ export default function TagScans({
                       <td className="px-4 py-2 align-top">{getGuardDisplay(r)}</td>
                       <td className="px-4 py-2 align-top">
                         <button
-                          className="px-2 py-1 bg-gray-100 rounded"
+                          className="px-2 py-1 bg-muted rounded"
                           onClick={async () => {
                             setDetailRow(r);
                             setDetailNames({});
@@ -530,7 +530,7 @@ export default function TagScans({
       {detailModalOpen && detailRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black opacity-40" onClick={() => setDetailModalOpen(false)} />
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-lg max-w-2xl w-full mx-4 z-10 overflow-auto max-h-[80vh] text-base">
+          <div className="bg-card rounded-3xl border border-slate-200 shadow-lg max-w-2xl w-full mx-4 z-10 overflow-auto max-h-[80vh] text-base">
             <div className="flex items-center justify-between px-4 py-2 border-b">
               <h4 className="font-semibold text-center flex-1 text-xl">Detalles de etiqueta</h4>
               <button className="px-2 py-1 text-xl font-semibold" aria-label="Cerrar" onClick={() => setDetailModalOpen(false)}>×</button>
@@ -556,8 +556,8 @@ export default function TagScans({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {fields.map((f) => (
                       <div key={f.label} className="rounded p-3">
-                        <div className="text-sm text-gray-500">{f.label}</div>
-                        <div className="mt-2 text-base font-medium text-gray-800">{f.value === null || typeof f.value === 'undefined' || f.value === '' ? '-' : String(f.value)}</div>
+                        <div className="text-sm text-muted-foreground">{f.label}</div>
+                        <div className="mt-2 text-base font-medium text-foreground">{f.value === null || typeof f.value === 'undefined' || f.value === '' ? '-' : String(f.value)}</div>
                       </div>
                     ))}
                   </div>

@@ -195,7 +195,7 @@ export default function GuardLicenses({ guard }: Props) {
       render: (v, row) => (
         <div>
           <div className="text-sm font-medium">{row.licenseType?.name || row.customName || '-'}</div>
-          <div className="text-xs text-gray-500">{row.number || '-'}</div>
+          <div className="text-xs text-muted-foreground">{row.number || '-'}</div>
         </div>
       ),
     },
@@ -208,7 +208,7 @@ export default function GuardLicenses({ guard }: Props) {
         const now = new Date();
         const isValid = exp >= now;
         return (
-          <span className={`px-2 py-1 text-xs rounded-full ${isValid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          <span className={`px-2 py-1 text-xs rounded-full ${isValid ? 'bg-green-100 text-green-800' : 'bg-red-500/15 text-red-700'}`}>
             {exp.toLocaleDateString()}
           </span>
         );
@@ -217,7 +217,7 @@ export default function GuardLicenses({ guard }: Props) {
     {
       key: 'addedBy',
       header: t('guards.licenses.table.addedBy', { defaultValue: 'Added By' }),
-      render: (v, row) => <div className="text-sm text-gray-600">{row.createdBy?.fullName || row.createdBy?.email || '-'}</div>,
+      render: (v, row) => <div className="text-sm text-foreground/70">{row.createdBy?.fullName || row.createdBy?.email || '-'}</div>,
     },
   ];
 
@@ -343,7 +343,7 @@ export default function GuardLicenses({ guard }: Props) {
             {/* Table */}
             <div>
               <div className="md:block hidden">
-                <div className="rounded-md border overflow-hidden bg-white">
+                <div className="rounded-md border overflow-hidden bg-card">
                   <DataTable
                     containerless
                     columns={columns}
@@ -386,7 +386,7 @@ export default function GuardLicenses({ guard }: Props) {
                   />
 
                   {/* Pagination footer matching ClientsPage style */}
-                  <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50 border-x border-b rounded-b-lg">
+                  <div className="flex items-center justify-between px-4 py-3 text-sm text-foreground/70 bg-muted/30 border-x border-b rounded-b-lg">
                     <div className="flex items-center gap-2">
                       <span>{t('clients.pagination.itemsPerPage')}</span>
                       <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
@@ -417,13 +417,13 @@ export default function GuardLicenses({ guard }: Props) {
                   loading={loading}
                   emptyMessage={t('guards.licenses.empty.title', { defaultValue: 'No results found' }) as string}
                   renderCard={(lic: any) => (
-                    <div className="p-4 bg-white border rounded-lg">
+                    <div className="p-4 bg-card border rounded-lg">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-sm font-semibold">{lic.licenseType?.name || lic.customName}</div>
-                          <div className="text-xs text-gray-500">{lic.number}</div>
+                          <div className="text-xs text-muted-foreground">{lic.number}</div>
                         </div>
-                        <div className="text-xs text-gray-500">{lic.expiryDate ? new Date(lic.expiryDate).toLocaleDateString() : '-'}</div>
+                        <div className="text-xs text-muted-foreground">{lic.expiryDate ? new Date(lic.expiryDate).toLocaleDateString() : '-'}</div>
                       </div>
                     </div>
                   )}
@@ -441,12 +441,12 @@ export default function GuardLicenses({ guard }: Props) {
               onClick={handleCloseModal}
             >
               <div
-                className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl overflow-y-auto"
+                className="fixed right-0 top-0 bottom-0 w-96 bg-card shadow-2xl overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-                  <h2 className="text-lg font-semibold text-gray-800">{t('guards.licenses.modal.title', { defaultValue: 'Add New License' })}</h2>
+                <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-card">
+                  <h2 className="text-lg font-semibold text-foreground">{t('guards.licenses.modal.title', { defaultValue: 'Add New License' })}</h2>
                 </div>
 
                 {/* Body */}
@@ -454,7 +454,7 @@ export default function GuardLicenses({ guard }: Props) {
                   <form className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-foreground mb-2">
                           {t('guards.licenses.form.licenseType', { defaultValue: 'Tipo de licencia' })} <span className="text-red-500">*</span>
                         </label>
                         <Select
@@ -493,7 +493,7 @@ export default function GuardLicenses({ guard }: Props) {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('guards.licenses.form.licenseNumber', { defaultValue: 'Número de licencia' })} <span className="text-red-500">*</span></label>
+                        <label className="block text-sm font-medium text-foreground mb-2">{t('guards.licenses.form.licenseNumber', { defaultValue: 'Número de licencia' })} <span className="text-red-500">*</span></label>
                         <input
                           type="text"
                           value={formData.licenseNumber}
@@ -506,7 +506,7 @@ export default function GuardLicenses({ guard }: Props) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('guards.licenses.form.expiryDate', { defaultValue: 'Vence el' })}</label>
+                        <label className="block text-sm font-medium text-foreground mb-2">{t('guards.licenses.form.expiryDate', { defaultValue: 'Vence el' })}</label>
                         <input
                           type="date"
                           value={formData.expiryDate}
@@ -517,7 +517,7 @@ export default function GuardLicenses({ guard }: Props) {
 
                       {(formData.licenseType === 'other' || !formData.licenseType) && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">{t('guards.licenses.form.customLicenseName', { defaultValue: 'Nombre personalizado' })}</label>
+                          <label className="block text-sm font-medium text-foreground mb-2">{t('guards.licenses.form.customLicenseName', { defaultValue: 'Nombre personalizado' })}</label>
                           <input
                             type="text"
                             value={formData.customLicenseName}
@@ -531,23 +531,23 @@ export default function GuardLicenses({ guard }: Props) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('guards.licenses.form.frontImageLabel', { defaultValue: 'Imagen frontal' })}</label>
+                        <label className="block text-sm font-medium text-foreground mb-2">{t('guards.licenses.form.frontImageLabel', { defaultValue: 'Imagen frontal' })}</label>
                         <div>
                           <input type="file" accept="image/*" id="frontImage" className="hidden" onChange={(e) => setFormData({ ...formData, frontImage: e.target.files?.[0] || null })} />
                           <label htmlFor="frontImage" className="flex items-center gap-2 px-3 h-10 rounded-md border border-input bg-background text-sm cursor-pointer">
-                            <Paperclip className="text-gray-400" />
-                            <span className="text-sm text-gray-600">{formData.frontImage ? formData.frontImage.name : t('guards.licenses.form.chooseFile', { defaultValue: 'Seleccionar archivo' })}</span>
+                            <Paperclip className="text-muted-foreground" />
+                            <span className="text-sm text-foreground/70">{formData.frontImage ? formData.frontImage.name : t('guards.licenses.form.chooseFile', { defaultValue: 'Seleccionar archivo' })}</span>
                           </label>
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('guards.licenses.form.backImageLabel', { defaultValue: 'Imagen trasera' })}</label>
+                        <label className="block text-sm font-medium text-foreground mb-2">{t('guards.licenses.form.backImageLabel', { defaultValue: 'Imagen trasera' })}</label>
                         <div>
                           <input type="file" accept="image/*" id="backImage" className="hidden" onChange={(e) => setFormData({ ...formData, backImage: e.target.files?.[0] || null })} />
                           <label htmlFor="backImage" className="flex items-center gap-2 px-3 h-10 rounded-md border border-input bg-background text-sm cursor-pointer">
-                            <Paperclip className="text-gray-400" />
-                            <span className="text-sm text-gray-600">{formData.backImage ? formData.backImage.name : t('guards.licenses.form.chooseFile', { defaultValue: 'Seleccionar archivo' })}</span>
+                            <Paperclip className="text-muted-foreground" />
+                            <span className="text-sm text-foreground/70">{formData.backImage ? formData.backImage.name : t('guards.licenses.form.chooseFile', { defaultValue: 'Seleccionar archivo' })}</span>
                           </label>
                         </div>
                       </div>
@@ -556,7 +556,7 @@ export default function GuardLicenses({ guard }: Props) {
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-white">
+                <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
                   <Button variant="ghost" onClick={handleCloseModal}>{t('guards.licenses.modal.cancel', { defaultValue: 'Cancelar' })}</Button>
                   <Button className="bg-[#C8860A] text-white hover:bg-[#C8860A]" onClick={handleSubmitLicense}>{t('guards.licenses.modal.save', { defaultValue: 'Guardar' })}</Button>
                 </div>
@@ -588,9 +588,9 @@ export default function GuardLicenses({ guard }: Props) {
         {/* Details modal */}
         {detailsOpen && (
           <div className="fixed inset-0 z-50" onClick={closeDetails}>
-            <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-                <h2 className="text-lg font-semibold text-gray-800">{t('guards.licenses.details.title', { defaultValue: 'License details' })}</h2>
+            <div className="fixed right-0 top-0 bottom-0 w-96 bg-card shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-card">
+                <h2 className="text-lg font-semibold text-foreground">{t('guards.licenses.details.title', { defaultValue: 'License details' })}</h2>
                 <div className="flex items-center gap-2">
                   <button onClick={() => {
                     // Prefill form and open edit modal
@@ -606,68 +606,68 @@ export default function GuardLicenses({ guard }: Props) {
                     });
                     setDetailsOpen(false);
                     setShowModal(true);
-                  }} className="text-gray-500 hover:text-gray-700">{t('guards.licenses.details.edit', { defaultValue: 'Editar' })}</button>
-                  <button onClick={closeDetails} className="text-gray-500 hover:text-gray-700"><X /></button>
+                  }} className="text-muted-foreground hover:text-foreground">{t('guards.licenses.details.edit', { defaultValue: 'Editar' })}</button>
+                  <button onClick={closeDetails} className="text-muted-foreground hover:text-foreground"><X /></button>
                 </div>
               </div>
 
               <div className="p-6">
-                {detailsLoading && <div className="text-sm text-gray-500">{t('loading', { defaultValue: 'Loading...' })}</div>}
+                {detailsLoading && <div className="text-sm text-muted-foreground">{t('loading', { defaultValue: 'Loading...' })}</div>}
                 {!detailsLoading && !detailsData && (
-                  <div className="text-sm text-gray-500">{t('guards.licenses.details.notFound', { defaultValue: 'Details not available' })}</div>
+                  <div className="text-sm text-muted-foreground">{t('guards.licenses.details.notFound', { defaultValue: 'Details not available' })}</div>
                 )}
 
                 {!detailsLoading && detailsData && (
                   <div className="space-y-4">
                     <div>
-                      <div className="text-xs text-gray-500">{t('guards.licenses.table.type', { defaultValue: 'License Type' })}</div>
+                      <div className="text-xs text-muted-foreground">{t('guards.licenses.table.type', { defaultValue: 'License Type' })}</div>
                       <div className="text-sm font-medium">{detailsData.licenseType?.name || detailsData.customName || '-'}</div>
                     </div>
 
                     <div>
-                      <div className="text-xs text-gray-500">{t('guards.licenses.form.licenseNumber', { defaultValue: 'Número de licencia' })}</div>
+                      <div className="text-xs text-muted-foreground">{t('guards.licenses.form.licenseNumber', { defaultValue: 'Número de licencia' })}</div>
                       <div className="text-sm">{detailsData.number || '-'}</div>
                     </div>
 
                     <div>
-                      <div className="text-xs text-gray-500">{t('guards.licenses.form.issueDate', { defaultValue: 'Issued' })}</div>
+                      <div className="text-xs text-muted-foreground">{t('guards.licenses.form.issueDate', { defaultValue: 'Issued' })}</div>
                       <div className="text-sm">{detailsData.issueDate ? new Date(detailsData.issueDate).toLocaleDateString() : '-'}</div>
                     </div>
 
                     <div>
-                      <div className="text-xs text-gray-500">{t('guards.licenses.form.expiryDate', { defaultValue: 'Vence el' })}</div>
+                      <div className="text-xs text-muted-foreground">{t('guards.licenses.form.expiryDate', { defaultValue: 'Vence el' })}</div>
                       <div className="text-sm">{detailsData.expiryDate ? new Date(detailsData.expiryDate).toLocaleDateString() : '-'}</div>
                     </div>
 
                     <div>
-                      <div className="text-xs text-gray-500">{t('guards.licenses.table.addedBy', { defaultValue: 'Added By' })}</div>
+                      <div className="text-xs text-muted-foreground">{t('guards.licenses.table.addedBy', { defaultValue: 'Added By' })}</div>
                       <div className="text-sm">{detailsData.createdBy?.fullName || detailsData.createdBy?.email || '-'}</div>
                     </div>
 
                     <div>
-                      <div className="text-xs text-gray-500">{t('guards.licenses.form.frontImageLabel', { defaultValue: 'Imagen frontal' })}</div>
+                      <div className="text-xs text-muted-foreground">{t('guards.licenses.form.frontImageLabel', { defaultValue: 'Imagen frontal' })}</div>
                       <div className="flex gap-2 mt-2">
                         {detailsData.frontImage?.map((f: any, idx: number) => (
                           <a key={idx} href={f.privateUrl ?? f.publicUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600 underline">{f.name || (f.publicUrl ? 'Ver' : 'Descargar')}</a>
                         ))}
-                        {!detailsData.frontImage?.length && <div className="text-sm text-gray-500">-</div>}
+                        {!detailsData.frontImage?.length && <div className="text-sm text-muted-foreground">-</div>}
                       </div>
                     </div>
 
                     <div>
-                      <div className="text-xs text-gray-500">{t('guards.licenses.form.backImageLabel', { defaultValue: 'Imagen trasera' })}</div>
+                      <div className="text-xs text-muted-foreground">{t('guards.licenses.form.backImageLabel', { defaultValue: 'Imagen trasera' })}</div>
                       <div className="flex gap-2 mt-2">
                         {detailsData.backImage?.map((f: any, idx: number) => (
                           <a key={idx} href={f.privateUrl ?? f.publicUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600 underline">{f.name || (f.publicUrl ? 'Ver' : 'Descargar')}</a>
                         ))}
-                        {!detailsData.backImage?.length && <div className="text-sm text-gray-500">-</div>}
+                        {!detailsData.backImage?.length && <div className="text-sm text-muted-foreground">-</div>}
                       </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-white">
+              <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
                 <Button variant="outline" onClick={async () => {
                   if (!detailsData) return;
                   try {

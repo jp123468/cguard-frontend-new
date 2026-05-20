@@ -56,7 +56,7 @@ export default function ClientProfile({ client }: { client: any }) {
   useScrollToTopOnMount(containerRef);
 
   return (
-    <div ref={containerRef} className="p-4 bg-white border rounded-md">
+    <div ref={containerRef} className="p-4 bg-card border rounded-md">
       <div className="mb-4">
         <h3 className="text-2xl font-semibold">{t('clients.nav.profile') || 'Perfil'}</h3>
       </div>
@@ -81,162 +81,175 @@ export default function ClientProfile({ client }: { client: any }) {
         <>
           {/* Mobile: show full client details (same fields as desktop) */}
           <div className="md:hidden">
-            <div className="bg-white border rounded-md p-4 space-y-4">
+            <div className="bg-card border rounded-md p-4 space-y-4">
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.name', 'Nombre')}</p>
-                <p className="text-lg text-gray-800">{client.name || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.name', 'Nombre')}</p>
+                <p className="text-lg text-foreground">{client.name || '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.lastName', 'Apellidos')}</p>
-                <p className="text-lg text-gray-800">{client.lastName || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.lastName', 'Apellidos')}</p>
+                <p className="text-lg text-foreground">{client.lastName || '-'}</p>
+              </div>
+
+              {client.commercialName && (
+              <div>
+                <p className="text-sm text-foreground/70">{t('clients.form.commercialName', 'Nombre comercial')}</p>
+                <p className="text-lg text-foreground">{client.commercialName}</p>
+              </div>
+              )}
+
+              <div>
+                <p className="text-sm text-foreground/70">{t('clients.form.email', 'Email')}</p>
+                <p className="text-lg text-foreground">{client.email || '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.email', 'Email')}</p>
-                <p className="text-lg text-gray-800">{client.email || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.personType', 'Tipo de persona')}</p>
+                <p className="text-lg text-foreground">{client.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.personType', 'Tipo de persona')}</p>
-                <p className="text-lg text-gray-800">{client.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}</p>
+                <p className="text-sm text-foreground/70">{client.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</p>
+                <p className="text-lg text-foreground">{client.documentNumber || '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{client.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</p>
-                <p className="text-lg text-gray-800">{client.documentNumber || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.phone', 'Teléfono')}</p>
+                <p className="text-lg text-foreground">{client.phoneNumber || '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.phone', 'Teléfono')}</p>
-                <p className="text-lg text-gray-800">{client.phoneNumber || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.address', 'Dirección')}</p>
+                <p className="text-lg text-foreground">{client.address || '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.address', 'Dirección')}</p>
-                <p className="text-lg text-gray-800">{client.address || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.addressLine2', 'Dirección Complementaria')}</p>
+                <p className="text-lg text-foreground">{client.addressLine2 || '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.addressLine2', 'Dirección Complementaria')}</p>
-                <p className="text-lg text-gray-800">{client.addressLine2 || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.postalCode', 'Código postal')}</p>
+                <p className="text-lg text-foreground">{client.postalCode || '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.postalCode', 'Código postal')}</p>
-                <p className="text-lg text-gray-800">{client.postalCode || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.city', 'Ciudad')}</p>
+                <p className="text-lg text-foreground">{client.city || '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.city', 'Ciudad')}</p>
-                <p className="text-lg text-gray-800">{client.city || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.country', 'País')}</p>
+                <p className="text-lg text-foreground">{client.country || '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.country', 'País')}</p>
-                <p className="text-lg text-gray-800">{client.country || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.fax', 'Landline')}</p>
+                <p className="text-lg text-foreground">{client.landline || client.faxNumber || '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.fax', 'Landline')}</p>
-                <p className="text-lg text-gray-800">{client.landline || client.faxNumber || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.website', 'Website')}</p>
+                <p className="text-lg text-foreground">{client.website || '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.website', 'Website')}</p>
-                <p className="text-lg text-gray-800">{client.website || '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.latitude', 'Latitud')}</p>
+                <p className="text-lg text-foreground">{client.latitude ?? client.lat ?? '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.latitude', 'Latitud')}</p>
-                <p className="text-lg text-gray-800">{client.latitude ?? client.lat ?? '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.longitude', 'Longitud')}</p>
+                <p className="text-lg text-foreground">{client.longitude ?? client.lng ?? '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.longitude', 'Longitud')}</p>
-                <p className="text-lg text-gray-800">{client.longitude ?? client.lng ?? '-'}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.active', 'Activo')}</p>
+                <p className="text-lg text-foreground">{client.active === false ? 'No' : client.active === true ? 'Sí' : '-'}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t('clients.form.active', 'Activo')}</p>
-                <p className="text-lg text-gray-800">{client.active === false ? 'No' : client.active === true ? 'Sí' : '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-600">{t('clients.form.categories', 'Sectores')}</p>
-                <p className="text-lg text-gray-800">{(categoryNames && categoryNames.length) ? categoryNames.join(', ') : ((client.categoryNames && client.categoryNames.length) ? client.categoryNames.join(', ') : ((client.categoryIds && client.categoryIds.length) ? client.categoryIds.join(', ') : '-'))}</p>
+                <p className="text-sm text-foreground/70">{t('clients.form.categories', 'Sectores')}</p>
+                <p className="text-lg text-foreground">{(categoryNames && categoryNames.length) ? categoryNames.join(', ') : ((client.categoryNames && client.categoryNames.length) ? client.categoryNames.join(', ') : ((client.categoryIds && client.categoryIds.length) ? client.categoryIds.join(', ') : '-'))}</p>
               </div>
             </div>
           </div>
 
           <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.name', 'Nombre')}</p>
-              <p className="text-lg text-gray-800">{client.name || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.name', 'Nombre')}</p>
+              <p className="text-lg text-foreground">{client.name || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.lastName', 'Apellidos')}</p>
-              <p className="text-lg text-gray-800">{client.lastName || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.lastName', 'Apellidos')}</p>
+              <p className="text-lg text-foreground">{client.lastName || '-'}</p>
+            </div>
+            {client.commercialName && (
+            <div>
+              <p className="text-sm text-foreground/70">{t('clients.form.commercialName', 'Nombre comercial')}</p>
+              <p className="text-lg text-foreground">{client.commercialName}</p>
+            </div>
+            )}
+            <div>
+              <p className="text-sm text-foreground/70">{t('clients.form.email', 'Email')}</p>
+              <p className="text-lg text-foreground">{client.email || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.email', 'Email')}</p>
-              <p className="text-lg text-gray-800">{client.email || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.personType', 'Tipo de persona')}</p>
+              <p className="text-lg text-foreground">{client.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.personType', 'Tipo de persona')}</p>
-              <p className="text-lg text-gray-800">{client.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}</p>
+              <p className="text-sm text-foreground/70">{client.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</p>
+              <p className="text-lg text-foreground">{client.documentNumber || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{client.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</p>
-              <p className="text-lg text-gray-800">{client.documentNumber || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.phone', 'Teléfono')}</p>
+              <p className="text-lg text-foreground">{client.phoneNumber || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.phone', 'Teléfono')}</p>
-              <p className="text-lg text-gray-800">{client.phoneNumber || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.address', 'Dirección')}</p>
+              <p className="text-lg text-foreground">{client.address || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.address', 'Dirección')}</p>
-              <p className="text-lg text-gray-800">{client.address || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.addressLine2', 'Dirección Complementaria')}</p>
+              <p className="text-lg text-foreground">{client.addressLine2 || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.addressLine2', 'Dirección Complementaria')}</p>
-              <p className="text-lg text-gray-800">{client.addressLine2 || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.postalCode', 'Código postal')}</p>
+              <p className="text-lg text-foreground">{client.postalCode || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.postalCode', 'Código postal')}</p>
-              <p className="text-lg text-gray-800">{client.postalCode || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.city', 'Ciudad')}</p>
+              <p className="text-lg text-foreground">{client.city || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.city', 'Ciudad')}</p>
-              <p className="text-lg text-gray-800">{client.city || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.country', 'País')}</p>
+              <p className="text-lg text-foreground">{client.country || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.country', 'País')}</p>
-              <p className="text-lg text-gray-800">{client.country || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.fax', 'Landline')}</p>
+              <p className="text-lg text-foreground">{client.landline || client.faxNumber || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.fax', 'Landline')}</p>
-              <p className="text-lg text-gray-800">{client.landline || client.faxNumber || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.website', 'Website')}</p>
+              <p className="text-lg text-foreground">{client.website || '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.website', 'Website')}</p>
-              <p className="text-lg text-gray-800">{client.website || '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.latitude', 'Latitud')}</p>
+              <p className="text-lg text-foreground">{client.latitude ?? client.lat ?? '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.latitude', 'Latitud')}</p>
-              <p className="text-lg text-gray-800">{client.latitude ?? client.lat ?? '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.longitude', 'Longitud')}</p>
+              <p className="text-lg text-foreground">{client.longitude ?? client.lng ?? '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.longitude', 'Longitud')}</p>
-              <p className="text-lg text-gray-800">{client.longitude ?? client.lng ?? '-'}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.active', 'Activo')}</p>
+              <p className="text-lg text-foreground">{client.active === false ? 'No' : client.active === true ? 'Sí' : '-'}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{t('clients.form.active', 'Activo')}</p>
-              <p className="text-lg text-gray-800">{client.active === false ? 'No' : client.active === true ? 'Sí' : '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">{t('clients.form.categories', 'Sectores')}</p>
-              <p className="text-lg text-gray-800">{(categoryNames && categoryNames.length) ? categoryNames.join(', ') : ((client.categoryNames && client.categoryNames.length) ? client.categoryNames.join(', ') : ((client.categoryIds && client.categoryIds.length) ? client.categoryIds.join(', ') : '-'))}</p>
+              <p className="text-sm text-foreground/70">{t('clients.form.categories', 'Sectores')}</p>
+              <p className="text-lg text-foreground">{(categoryNames && categoryNames.length) ? categoryNames.join(', ') : ((client.categoryNames && client.categoryNames.length) ? client.categoryNames.join(', ') : ((client.categoryIds && client.categoryIds.length) ? client.categoryIds.join(', ') : '-'))}</p>
             </div>
           </div>
         </>
@@ -281,7 +294,7 @@ export default function ClientProfile({ client }: { client: any }) {
         )}
       </div>
       <div>
-        <div className="mt-4 text-sm text-gray-500">
+        <div className="mt-4 text-sm text-muted-foreground">
           <div>{t('profile.createdAt', 'Fecha de creación')}: {client.createdAt ? new Date(client.createdAt).toLocaleDateString() : '-'}</div>
           <div>{t('profile.updatedAt', 'Última actualización')}: {client.updatedAt ? new Date(client.updatedAt).toLocaleDateString() : '-'}</div>
         </div>

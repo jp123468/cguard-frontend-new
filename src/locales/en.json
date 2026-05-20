@@ -143,11 +143,114 @@
     },
     "despachador": "Dispatcher",
     "visitantes": {
-      "label": "Visitor Management",
-      "visitantes": "Visitors",
-      "vehiculos": "Vehicles",
+      "dashboard": "dashboard",
+      "title": "Visitors",
       "bitacoras": "Logs",
-      "visitas": "Visits"
+      "loading": "Loading...",
+      "search": "Search",
+      "searchVisitor": "Search visitor",
+      "addVisitor": "Add visitor",
+      "newVisitor": "New Visitor",
+      "action": {
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "delete": "Delete"
+      },
+      "filters": "Filters",
+      "client": "Client",
+      "selectClient": "Select a client",
+      "site": "Post Site",
+      "selectSite": "Select a site",
+      "station": "Station",
+      "selectStation": "Select a station",
+      "guard": "Guard",
+      "selectGuard": "Select a guard",
+      "tagLabel": "Tag",
+      "selectTag": "Select a tag",
+      "tag": {
+        "vip": "VIP",
+        "provider": "Provider"
+      },
+      "showArchived": "Show archived data",
+      "filterButton": "Filter",
+      "importVisitors": "Import visitors",
+      "print": "Print",
+      "email": "Email",
+      "table": {
+        "name": "Name",
+        "company": "Company",
+        "email": "Email",
+        "lastRecord": "Last record",
+        "status": "Status"
+      },
+      "noResultsTitle": "No results found",
+      "noResultsBody": "We couldn't find any items matching your search",
+      "perPage": "Items per page",
+      "paginationPlaceholder": "0 of 0",
+      "noLogs": "No logs found",
+      "deleteSelected": "Delete selected",
+      "exportCSV": "Export CSV",
+      "exportExcel": "Export as Excel",
+      "exportPDF": "Export as PDF",
+      "searchLogs": "Search logs",
+      "logDetails": "Log Details",
+      "logTable": {
+        "id": "ID",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "idNumber": "ID",
+        "date": "Date",
+        "postSite": "Site",
+        "station": "Station",
+        "client": "Client",
+        "guard": "Guard",
+        "numPeople": "Number of people",
+        "reason": "Reason of visit",
+        "exitTime": "Exit Time",
+        "placeType": "Place Type and Number"
+      },
+      "form": {
+        "name": "Name",
+        "lastName": "Last Name",
+        "idNumber": "ID Number",
+        "idImage": "ID Image",
+        "mobile": "Mobile Number",
+        "phone": "Phone Number",
+        "email": "Email",
+        "company": "Company",
+        "numPeople": "Number of people",
+        "reason": "Reason of visit"
+      },
+      "placeholder": {
+        "name": "e.g. John",
+        "lastName": "e.g. Doe",
+        "idNumber": "e.g. 12015550123",
+        "mobile": "e.g. +12015550123",
+        "phone": "e.g. +12015550123",
+        "email": "email@example.com",
+        "company": "Company name",
+        "reason": "Reason of visit"
+      },
+      "save": "Save",
+      "markExit": "Mark Exit",
+      "confirmDeleteTitle": "Confirm Delete",
+      "confirmDeleteMessage": "Are you sure you want to delete these items?",
+      "noSelectionExport": "No items selected for export",
+      "noSelectionDelete": "No items selected for deletion",
+      "exportSuccess": "Export successful",
+      "exportError": "Error exporting data",
+      "deleteSuccess": "Items deleted successfully",
+      "notprint": "This item cannot be printed",
+      "created": "Visitor created",
+      "updated": "Visitor updated",
+      "deleted": "Visitor deleted",
+      "placeTypeSelect": "Select a place and number",
+      "placeType": {
+        "house": "House",
+        "apartment": "Apartment",
+        "office": "Office"
+      },
+      "placeTypeValue": "Place Number"
     },
     "patrulla": {
       "label": "Vehicle Patrol",
@@ -703,6 +806,7 @@
           "contactPhSms": "e.g. +12015550123",
           "selectClient": "Select Client",
           "assignPostSite": "Assign Post Site",
+          "assignStation": "Assign Station",
           "create_and_send": "Create & Send",
           "send": "Send"
         },
@@ -1028,10 +1132,9 @@
         "hShort": "h",
         "mShort": "m",
         "company": "Company",
-        "tenantId": "Tenant ID"
-      ,
-      "confirmRemovalTitle": "Confirm removal",
-      "confirmRemovalDesc": "Are you sure you want to remove this station? This action cannot be undone."
+        "tenantId": "Tenant ID",
+        "confirmRemovalTitle": "Confirm removal",
+        "confirmRemovalDesc": "Are you sure you want to remove this station? This action cannot be undone."
       },
       "assignGuards": {
         "assignButton": "Assign Guard",
@@ -1091,8 +1194,7 @@
         "actionDefault": "Action",
         "headerSearchPlaceholder": "Search Guards",
         "startShort": "Start (hh:mm)",
-        "endShort": "End (hh:mm)"
-        ,
+        "endShort": "End (hh:mm)",
         "startRequired": "Start time is required",
         "endRequired": "End time is required",
         "hoursRequiredToast": "Please enter both start and end times before assigning"
@@ -1638,8 +1740,7 @@
           "assignGuard": "Assign Guard*",
           "selectStationFirst": "Select a station first",
           "enableNotes": "Enable site tour notes",
-          "forceMedia": "Force guard to attach multiple media files"
-          ,
+          "forceMedia": "Force guard to attach multiple media files",
           "loadingGuards": "Loading guards...",
           "noGuardsFound": "No guards found",
           "noGuardsForStation": "No guards found for this station"
@@ -2343,318 +2444,6 @@
         "title": "No activity",
         "description": "No recent activity to show"
       }
-    },
-    "visitantes": {
-      "dashboard": "dashboard",
-      "title": "Visitors",
-      "bitacoras": "Logs",
-      "loading": "Loading...",
-      "search": "Search",
-      "searchVisitor": "Search visitor",
-      "addVisitor": "Add visitor",
-      "newVisitor": "New Visitor",
-      "action": {
-        "activate": "Activate",
-        "deactivate": "Deactivate",
-        "delete": "Delete"
-      },
-      "filters": "Filters",
-      "client": "Client",
-      "selectClient": "Select a client",
-      "site": "Post Site",
-      "selectSite": "Select a site",
-      "station": "Station",
-      "selectStation": "Select a station",
-      "guard": "Guard",
-      "selectGuard": "Select a guard",
-      "tagLabel": "Tag",
-      "selectTag": "Select a tag",
-      "tag": {
-        "vip": "VIP",
-        "provider": "Provider"
-      },
-      "showArchived": "Show archived data",
-      "filterButton": "Filter",
-      "importVisitors": "Import visitors",
-      "print": "Print",
-      "email": "Email",
-      "table": {
-        "name": "Name",
-        "company": "Company",
-        "email": "Email",
-        "lastRecord": "Last record",
-        "status": "Status"
-      },
-      "noResultsTitle": "No results found",
-      "noResultsBody": "We couldn't find any items matching your search",
-      "perPage": "Items per page",
-      "paginationPlaceholder": "0 of 0",
-      "noLogs": "No logs found",
-      "deleteSelected": "Delete selected",
-      "exportCSV": "Export CSV",
-      "exportExcel": "Export as Excel",
-      "exportPDF": "Export as PDF",
-      "searchLogs": "Search logs",
-      "logDetails": "Log Details",
-      "logTable": {
-        "id": "ID",
-        "firstName": "First name",
-        "lastName": "Last name",
-        "idNumber": "ID",
-        "date": "Date",
-        "postSite": "Site",
-        "station": "Station",
-        "client": "Client",
-        "guard": "Guard",
-        "numPeople": "Number of people",
-        "reason": "Reason of visit",
-        "exitTime": "Exit Time",
-        "placeType": "Place Type and Number"
-      },
-      "form": {
-        "name": "Name",
-        "lastName": "Last Name",
-        "idNumber": "ID Number",
-        "idImage": "ID Image",
-        "mobile": "Mobile Number",
-        "phone": "Phone Number",
-        "email": "Email",
-        "company": "Company",
-        "numPeople": "Number of people",
-        "reason": "Reason of visit"
-      },
-      "placeholder": {
-        "name": "e.g. John",
-        "lastName": "e.g. Doe",
-        "idNumber": "e.g. 12015550123",
-        "mobile": "e.g. +12015550123",
-        "phone": "e.g. +12015550123",
-        "email": "email@example.com",
-        "company": "Company name",
-        "reason": "Reason of visit"
-      },
-      "save": "Save",
-      "markExit": "Mark Exit",
-      "confirmDeleteTitle": "Confirm Delete",
-      "confirmDeleteMessage": "Are you sure you want to delete these items?",
-      "noSelectionExport": "No items selected for export",
-      "noSelectionDelete": "No items selected for deletion",
-      "exportSuccess": "Export successful",
-      "exportError": "Error exporting data",
-      "deleteSuccess": "Items deleted successfully",
-      "notprint": "This item cannot be printed",
-      "created": "Visitor created",
-      "updated": "Visitor updated",
-      "deleted": "Visitor deleted",
-      "placeTypeSelect": "Select a place and number",
-      "placeType": {
-        "house": "House",
-        "apartment": "Apartment",
-        "office": "Office"
-      },
-      "placeTypeValue": "Place Number"
-    },
-    "billing": {
-      "common": {
-        "dashboard": "Dashboard",
-        "search_placeholder": "Search...",
-        "no_results": "No results found",
-        "items_per_page": "Items per page",
-        "confirm_delete": "Are you sure you want to delete these items?",
-        "no_selection": "No items selected",
-        "cancel": "Cancel",
-        "save": "Save",
-        "create": "Create",
-        "loading": "Loading...",
-        "sending": "Sending...",
-        "download": "Download",
-        "export": "Export",
-        "print": "Print"
-      },
-      "estimates": {
-        "title": "Estimates",
-        "list_title": "Estimates",
-        "search_placeholder": "Search by number or client",
-        "top_actions": {
-          "create": "New Estimate",
-          "export": "Export",
-          "delete": "Delete selected"
-        },
-        "columns": {
-          "select": "Select",
-          "date": "Date",
-          "estimateNumber": "Number",
-          "client": "Client",
-          "total": "Total",
-          "expiryDate": "Expiry Date",
-          "status": "Status",
-          "actions": "Actions"
-        },
-        "statuses": {
-          "draft": "Draft",
-          "sent": "Sent",
-          "accepted": "Accepted",
-          "rejected": "Rejected",
-          "expired": "Expired"
-        },
-        "filters": {
-          "open": "Filters",
-          "client": "Client",
-          "status": "Status",
-          "date_from": "Date from",
-          "date_to": "Date to",
-          "apply": "Apply",
-          "clear": "Clear"
-        },
-        "actions": {
-          "view": "View",
-          "preview": "Preview",
-          "send": "Send",
-          "convert": "Convert to invoice",
-          "download": "Download",
-          "delete": "Delete"
-        },
-        "messages": {
-          "no_results": "No estimates found",
-          "sent_success": "Estimate sent",
-          "convert_success": "Estimate converted to invoice",
-          "delete_success": "Estimate deleted"
-        },
-        "preview": {
-          "title": "Preview Estimate",
-          "client_details": "Client details",
-          "site_details": "Site details",
-          "items": "Items",
-          "notes": "Notes",
-          "terms": "Terms",
-          "subtotal": "Subtotal",
-          "tax": "Tax",
-          "total": "Total",
-          "as_invoice": "Preview as invoice"
-        }
-      },
-      "invoices": {
-        "title": "Invoices",
-        "search_placeholder": "Search by number or client",
-        "top_actions": {
-          "create": "New Invoice",
-          "export": "Export",
-          "delete": "Delete selected"
-        },
-        "columns": {
-          "select": "Select",
-          "date": "Date",
-          "invoiceNumber": "Number",
-          "client": "Client",
-          "total": "Total",
-          "amountDue": "Amount Due",
-          "dueDate": "Due Date",
-          "status": "Status",
-          "actions": "Actions"
-        },
-        "statuses": {
-          "draft": "Draft",
-          "sent": "Sent",
-          "paid": "Paid",
-          "overdue": "Overdue",
-          "partial": "Partial"
-        },
-        "actions": {
-          "view": "View",
-          "preview": "Preview",
-          "send": "Send",
-          "download": "Download",
-          "register_payment": "Register payment",
-          "delete": "Delete"
-        },
-        "messages": {
-          "no_results": "No invoices found",
-          "send_success": "Invoice sent",
-          "delete_success": "Invoice deleted",
-          "payment_registered": "Payment registered"
-        },
-        "preview": {
-          "title": "Preview Invoice",
-          "client_details": "Client details",
-          "site_details": "Site details",
-          "items": "Items",
-          "notes": "Notes",
-          "terms": "Terms",
-          "subtotal": "Subtotal",
-          "tax": "Tax",
-          "total": "Total",
-          "amount_due": "Amount Due"
-        },
-        "payment_modal": {
-          "title": "Register payment",
-          "date": "Date",
-          "amount": "Amount",
-          "method": "Method",
-          "note": "Note",
-          "save": "Save payment",
-          "saving": "Saving...",
-          "success": "Payment registered successfully",
-          "error": "Error registering payment"
-        }
-      },
-      "items": {
-        "title": "Items",
-        "search_placeholder": "Search items",
-        "columns": {
-          "name": "Name",
-          "description": "Description",
-          "price": "Price",
-          "tax": "Tax",
-          "actions": "Actions"
-        },
-        "actions": {
-          "add": "Add item",
-          "edit": "Edit",
-          "delete": "Delete"
-        },
-        "form": {
-          "title_create": "Create item",
-          "title_edit": "Edit item",
-          "name": "Name",
-          "description": "Description",
-          "price": "Price",
-          "tax": "Tax",
-          "save": "Save",
-          "creating": "Creating...",
-          "updating": "Updating..."
-        },
-        "messages": {
-          "no_results": "No items found",
-          "created": "Item created",
-          "updated": "Item updated",
-          "deleted": "Item deleted"
-        }
-      },
-      "forms": {
-        "validation": {
-          "required": "This field is required",
-          "invalid_number": "Invalid number",
-          "select_client": "Select a client",
-          "select_site": "Select a site"
-        },
-        "labels": {
-          "title": "Title",
-          "summary": "Summary",
-          "client": "Client",
-          "site": "Site",
-          "number": "Number",
-          "po_so": "PO / SO",
-          "date": "Date",
-          "expiry_due": "Expiry / Due",
-          "notes": "Notes",
-          "item_name": "Item name",
-          "quantity": "Quantity",
-          "rate": "Unit price",
-          "tax_rate": "Tax rate",
-          "subtotal": "Subtotal",
-          "total": "Total"
-        }
-      }
     }
   },
   "incidents": {
@@ -2662,13 +2451,12 @@
     "searchPlaceholder": "Buscar incidentes...",
     "filters": "Filtros",
     "export": "Exportar",
-    "email":"Email",
+    "email": "Email",
     "filtersPlaceholder": "Opciones de filtro no implementadas — UI de marcador de posición.",
     "subject": "Asunto",
     "description": "Descripción",
     "apply": "Aplicar",
     "newIncident": "Nuevo incidente",
-    "actions": "Acciones",
     "actions": {
       "view": "Ver",
       "open": "Abrir",
@@ -2717,8 +2505,7 @@
     "creating": "Creando...",
     "create": "Crear",
     "created": "Incidente creado"
-  }
-,
+  },
   "dispatcher": {
     "tenant_unavailable": "Tenant not available",
     "basic_details": "Basic Details",
@@ -2763,30 +2550,6 @@
     "inactive": "Inactive",
     "cancel": "Cancel"
   },
-  "clientPostSites": {
-    "searchPlaceholder": "Search post sites...",
-    "newPostSite": "New Post Site",
-    "headers": {
-      "postSite": "Post Site",
-      "client": "Client",
-      "email": "Email",
-      "phoneNumber": "Phone Number",
-      "status": "Status"
-    },
-    "noResult": {
-      "title": "No Result Found",
-      "description": "We couldn't find any item matching your search"
-    },
-    "viewDetails": "View Details",
-    "archive": "Archive",
-    "confirmArchiveTitle": "Archive {{count}} post site(s)?",
-    "confirmArchiveDescription": "Are you sure you want to archive {{count}} post site(s)?",
-    "archivedAll": "All selected post sites archived",
-    "archivedPartial": "{{count}} post site(s) archived",
-    "archivePartialError": "Some items could not be archived",
-    "archiveError": "Error archiving post sites"
-  }
-  ,
   "clientPostSites": {
     "archiving": "Archiving...",
     "action": "Action",

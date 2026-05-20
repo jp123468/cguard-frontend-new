@@ -41,6 +41,7 @@ export const visitorLogService = {
     if ((filters as any).postSiteId) params.append('filter[postSiteId]', (filters as any).postSiteId);
     if ((filters as any).guardId) params.append('filter[guardId]', (filters as any).guardId);
     if ((filters as any).placeType) params.append('filter[placeType]', (filters as any).placeType);
+    if ((filters as any).stationId) params.append('filter[stationId]', (filters as any).stationId);
     if ((filters as any).tag) params.append('filter[tag]', (filters as any).tag);
     if (typeof (filters as any).archived === 'boolean') params.append('filter[archived]', (filters as any).archived ? 'true' : 'false');
 
@@ -109,6 +110,35 @@ export const visitorLogService = {
     if (importHash) body.importHash = importHash;
     const { data: resp } = await api.post(`/tenant/${tenantId}/visitor-log/import`, body);
     return resp;
+  },
+
+  /**
+   * Upload a visitor photo and return the file metadata object
+   * that can be passed as `idPhoto: [result]` to create/update.
+   */
+  async uploadPhoto(file: File): Promise<{ name: string; privateUrl: string; mimeType: string; sizeInBytes: number; fileToken?: string }> {
+    const tenantId = getTenantId();
+    const filename = `visitor-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    // 1. Get upload credentials
+    const { data: credData } = await api.get(
+      `/tenant/${tenantId}/file/credentials?filename=${encodeURIComponent(filename)}&storageId=visitorLogIdPhoto`
+    );
+    const uploadUrl = credData?.uploadCredentials?.url;
+    if (!uploadUrl) throw new Error('Upload URL not available');
+    // 2. Upload file
+    const form = new FormData();
+    const fields = credData?.uploadCredentials?.fields || {};
+    Object.entries(fields).forEach(([k, v]) => form.append(k, v as string));
+    form.append('file', file);
+    const uploadResp = await fetch(uploadUrl, { method: 'POST', body: form });
+    if (!uploadResp.ok) throw new Error(`Upload failed: ${uploadResp.status}`);
+    return {
+      name: file.name,
+      privateUrl: credData.privateUrl,
+      mimeType: file.type || 'image/jpeg',
+      sizeInBytes: file.size,
+      fileToken: credData.fileToken,
+    };
   },
 };
 

@@ -292,6 +292,8 @@ const postSiteService = {
         stationSchedule: (payload as any).stationSchedule ?? existing.stationSchedule,
         startingTimeInDay: (payload as any).startingTimeInDay ?? existing.startingTimeInDay,
         finishTimeInDay: (payload as any).finishTimeInDay ?? existing.finishTimeInDay,
+        chargeRate: (payload as any).chargeRate !== undefined ? (payload as any).chargeRate : (existing.chargeRate ?? undefined),
+        payRate: (payload as any).payRate !== undefined ? (payload as any).payRate : (existing.payRate ?? undefined),
       } as any;
 
       const { data } = await api.patch(`/tenant/${tenantId}/business-info/${id}`, body);

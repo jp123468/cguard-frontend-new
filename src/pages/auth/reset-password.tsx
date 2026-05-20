@@ -57,7 +57,7 @@ export default function ResetPassword() {
     <AuthLayout title={t('auth.reset_title_short', { defaultValue: 'Reset password' })}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="new-password" className="mb-2 block text-sm font-medium text-slate-700">
+          <label htmlFor="new-password" className="mb-2 block text-sm font-medium text-foreground">
             {t('auth.new_password_label', { defaultValue: 'New password' })}<span>*</span>
           </label>
           <div className="relative">
@@ -75,7 +75,7 @@ export default function ResetPassword() {
               type="button"
               aria-label={showPassword ? t('auth.hide_password', { defaultValue: 'Hide password' }) : t('auth.show_password', { defaultValue: 'Show password' })}
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-3 inset-y-0 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
+              className="absolute right-3 inset-y-0 flex items-center justify-center px-2 text-muted-foreground hover:text-foreground"
               disabled={loading}
             >
               {showPassword ? (
@@ -88,7 +88,7 @@ export default function ResetPassword() {
         </div>
 
         <div>
-          <label htmlFor="confirm-password" className="mb-2 block text-sm font-medium text-slate-700">
+          <label htmlFor="confirm-password" className="mb-2 block text-sm font-medium text-foreground">
             {t('auth.confirm_password_label', { defaultValue: 'Confirm password' })}<span>*</span>
           </label>
           <div className="relative">
@@ -106,7 +106,7 @@ export default function ResetPassword() {
               type="button"
               aria-label={showConfirm ? t('auth.hide_password', { defaultValue: 'Ocultar contraseña' }) : t('auth.show_password', { defaultValue: 'Mostrar contraseña' })}
               onClick={() => setShowConfirm((s) => !s)}
-              className="absolute right-3 inset-y-0 flex items-center justify-center px-2 text-slate-500 hover:text-slate-700"
+              className="absolute right-3 inset-y-0 flex items-center justify-center px-2 text-muted-foreground hover:text-foreground"
               disabled={loading}
             >
               {showConfirm ? (

@@ -56,7 +56,7 @@ export default function TrackingHistoryPage() {
           <div className="flex items-center gap-6 flex-wrap">
             {/* Tipo de mapa */}
             <div>
-              <p className="text-xs text-gray-500 mb-1">Tipo de Mapa</p>
+              <p className="text-xs text-muted-foreground mb-1">Tipo de Mapa</p>
               <Select defaultValue="satellite">
                 <SelectTrigger className="w-44">
                   <SelectValue placeholder="Satélite" />
@@ -73,7 +73,7 @@ export default function TrackingHistoryPage() {
             {/* Mostrar geovalla */}
             <label className="flex items-center gap-2 cursor-pointer mt-2 sm:mt-6">
               <Checkbox defaultChecked />
-              <span className="text-sm text-gray-700">Mostrar Geovalla</span>
+              <span className="text-sm text-foreground">Mostrar Geovalla</span>
             </label>
           </div>
 
@@ -155,7 +155,7 @@ export default function TrackingHistoryPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="relative">
                         <Input defaultValue="Nov 17, 2025" />
-                        <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-gray-500" />
+                        <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       </div>
 
                       <Input defaultValue="00:00" />
@@ -170,7 +170,7 @@ export default function TrackingHistoryPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="relative">
                         <Input defaultValue="Nov 17, 2025" />
-                        <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-gray-500" />
+                        <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       </div>
 
                       <Input defaultValue="23:59" />
@@ -180,7 +180,7 @@ export default function TrackingHistoryPage() {
                   {/* Checkbox archivados */}
                   <label className="flex items-center gap-2 cursor-pointer">
                     <Checkbox />
-                    <span className="text-sm text-gray-700">
+                    <span className="text-sm text-foreground">
                       Mostrar datos archivados
                     </span>
                   </label>
@@ -197,7 +197,7 @@ export default function TrackingHistoryPage() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-5 w-5 text-gray-700" />
+                  <MoreVertical className="h-5 w-5 text-foreground" />
                 </Button>
               </DropdownMenuTrigger>
 
@@ -214,14 +214,14 @@ export default function TrackingHistoryPage() {
         {/* Mapa + panel derecho en un solo contenedor */}
         <div className="mt-4 flex border rounded-lg overflow-hidden h-[400px]">
           {/* Mapa izquierda */}
-          <div className="flex-[2] bg-gray-200">
+          <div className="flex-[2] bg-muted">
             {/* Aquí va tu Google Maps */}
           </div>
 
           {/* Panel derecho: Acción / Fecha/Hora */}
-          <div className="flex-[1] bg-white border-l flex flex-col">
+          <div className="flex-[1] bg-card border-l flex flex-col">
             {/* Header tipo tabla */}
-            <div className="bg-gray-50 border-b px-4 py-3 text-sm font-semibold text-gray-700 flex">
+            <div className="bg-muted/30 border-b px-4 py-3 text-sm font-semibold text-foreground flex">
               <span className="flex-1">Acción</span>
               <span className="flex-1">Fecha/Hora</span>
             </div>
@@ -237,7 +237,7 @@ export default function TrackingHistoryPage() {
                 <h3 className="text-lg font-semibold">
                   No se encontraron resultados
                 </h3>
-                <p className="text-sm text-gray-500 max-w-xs mt-1">
+                <p className="text-sm text-muted-foreground max-w-xs mt-1">
                   No pudimos encontrar ningún elemento que coincida con su
                   búsqueda
                 </p>

@@ -19,7 +19,7 @@ export default function ProtectedRoute({
       <div className="flex h-screen items-center justify-center bg-slate-950">
         <div className="flex flex-col items-center space-y-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-500" />
-          <p className="text-slate-400">Cargando...</p>
+          <p className="text-muted-foreground">Cargando...</p>
         </div>
       </div>
     )
@@ -49,7 +49,7 @@ export function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen items-center justify-center bg-slate-950">
         <div className="flex flex-col items-center space-y-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-500" />
-          <p className="text-slate-400">Cargando...</p>
+          <p className="text-muted-foreground">Cargando...</p>
         </div>
       </div>
     )

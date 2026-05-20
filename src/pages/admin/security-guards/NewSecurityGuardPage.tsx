@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { RefreshCcw, Eye, EyeOff } from "lucide-react";
+import { RefreshCcw, Eye, EyeOff, User, Phone, MapPin, FileCheck, ShieldCheck, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import AppLayout from "@/layouts/app-layout";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Separator } from "@/components/ui/separator";
 
 import {
   inviteByOptions,
@@ -30,7 +31,8 @@ import {
   inviteByLinkSchema, type InviteByLinkEntry, type InviteByLinkFormValues,
 } from "@/lib/validators/invite-by-link.schema";
 import {
-  createProfileSchema, type CreateProfileValues,
+  createProfileSchema, type CreateProfileValues, BLOOD_TYPES,
+  GENDER_OPTIONS, MARITAL_STATUS_OPTIONS, ACADEMIC_INSTRUCTION_OPTIONS,
 } from "@/lib/validators/create-profile.schema";
 
 import { GuardTabsHeader } from "@/components/app/guard-tabs";
@@ -42,20 +44,48 @@ import { AddBlockButton, RemoveBlockButton } from "@/components/app/add-remove";
 import { SubmitBar } from "@/components/app/submit-bar";
 import { clientService } from "@/lib/api/clientService";
 import { securityGuardService } from "@/lib/api/securityGuardService";
-import { postSiteService } from "@/lib/api/postSiteService";
+import { stationService } from "@/lib/api/stationService";
 import { usePermissions } from '@/hooks/usePermissions';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next';
+import AddressAutocomplete from "@/components/maps/AddressAutocomplete";
+import ProfilePhotoCapture from "./components/ProfilePhotoCapture";
+import DocumentUpload, { type DocumentFile } from "./components/DocumentUpload";
 
 // Helpers
 const blankInviteEntry = (inviteBy: GuardEntryValues["inviteBy"] = "Correo Electrónico"): any => ({
-  firstName: "", lastName: "", inviteBy, contact: "", clientId: [] as string[], postSiteId: [] as string[],
+  firstName: "", lastName: "", inviteBy, contact: "", clientId: [] as string[], stationId: [] as string[],
 });
 const blankJoinEntry = (): JoinByCodeEntry => ({ phone: "" });
 const blankLinkEntry = (): InviteByLinkEntry => ({ phone: "" });
 const genCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
 type TabKey = "invite" | "join_code" | "invite_link" | "create_profile";
+
+/** Document fields required on the create-profile form */
+interface GuardDocuments {
+  profilePhoto: File | null;
+  identificationImage: DocumentFile | null;
+  afisCertificate: DocumentFile | null;
+  medicalCertificate: DocumentFile | null;
+  psychologicalCertificate: DocumentFile | null;
+  credentialDocument: DocumentFile | null;
+  certificationLevel1: DocumentFile | null;
+  certificationLevel2: DocumentFile | null;
+  familyViolenceCertificate: DocumentFile | null;
+}
+
+const emptyDocs = (): GuardDocuments => ({
+  profilePhoto: null,
+  identificationImage: null,
+  afisCertificate: null,
+  medicalCertificate: null,
+  psychologicalCertificate: null,
+  credentialDocument: null,
+  certificationLevel1: null,
+  certificationLevel2: null,
+  familyViolenceCertificate: null,
+});
 
 export default function NewSecurityGuardPage() {
   const { hasPermission } = usePermissions();
@@ -70,19 +100,19 @@ export default function NewSecurityGuardPage() {
   }, [hasPermission, navigate]);
   const [activeTab, setActiveTab] = useState<TabKey>("invite");
   const [clients, setClients] = useState<Array<{ id: string; name: string; lastName?: string }>>([]);
-  const [sites, setSites] = useState<Array<any>>([]);
+  const [stations, setStations] = useState<Array<any>>([]);
   // Password fields removed from create profile form - guard will set password via invitation link
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [clientsResp, sitesResp] = await Promise.all([
+        const [clientsResp, stationsResp] = await Promise.all([
           clientService.getClients({}),
-          postSiteService.list({}, { limit: 1000, offset: 0 }),
+          stationService.list({}, { limit: 1000, offset: 0 }),
         ]);
 
         setClients(clientsResp.rows || []);
-        setSites(sitesResp.rows || []);
+        setStations(stationsResp.rows || []);
       } catch (error) {
         console.error(error);
         toast.error(t('guards.new.toasts.clients_sites_load_error'));
@@ -111,9 +141,8 @@ export default function NewSecurityGuardPage() {
         lastName: e.lastName,
         // send arrays and keep single-value compatibility
         clientIds: Array.isArray(e.clientId) ? e.clientId : (e.clientId ? [e.clientId] : []),
-        postSiteIds: Array.isArray(e.postSiteId) ? e.postSiteId : (e.postSiteId ? [e.postSiteId] : []),
+        stationIds: Array.isArray((e as any).stationId) ? (e as any).stationId : ((e as any).stationId ? [(e as any).stationId] : []),
         clientId: Array.isArray(e.clientId) ? e.clientId[0] : e.clientId,
-        postSiteId: Array.isArray(e.postSiteId) ? e.postSiteId[0] : e.postSiteId,
         // backend expects a generic `contact` field for invite flows
         // keep explicit `phoneNumber`/`email` as well for compatibility
         contact: e.contact,
@@ -211,34 +240,107 @@ export default function NewSecurityGuardPage() {
   const createIntentRef = useRef<"create" | "create_send">("create");
   const createForm = useForm<CreateProfileValues>({
     resolver: zodResolver(createProfileSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", phone: "", clientId: [] as string[], postSiteId: [] as string[] },
+    defaultValues: {
+      firstName: "", middleName: "", lastName: "",
+      gender: undefined,
+      birthDate: "", birthPlace: "",
+      maritalStatus: undefined,
+      academicInstruction: undefined,
+      hiringContractDate: "", guardCredentials: "",
+      email: "", phone: "",
+      homeAddress: "", homeAddressLat: undefined, homeAddressLng: undefined,
+      identificationNumber: "", bloodType: undefined,
+      clientId: [] as string[], stationId: [] as string[],
+      // clientId kept in state for payload compat but not required on create_profile
+    },
     mode: "onTouched",
   });
-  const { control: createCtrl, handleSubmit: submitCreate, formState: createState, setError: setCreateError } = createForm;
+  const { control: createCtrl, handleSubmit: submitCreate, formState: createState, setError: setCreateError, setValue: setCreateValue } = createForm;
+
+  // Document files state (outside zod — File objects)
+  const [guardDocs, setGuardDocs] = useState<GuardDocuments>(emptyDocs());
+  const [uploading, setUploading] = useState(false);
+
+  const setDoc = (key: keyof GuardDocuments) => (val: any) =>
+    setGuardDocs((prev) => ({ ...prev, [key]: val }));
+
+  /** Upload a single document file and return the file object with token */
+  const uploadDoc = async (file: File, storageId: string) => {
+    try {
+      return await securityGuardService.uploadFileToStorage(file, storageId);
+    } catch (e) {
+      console.warn(`[GuardCreate] failed to upload ${storageId}:`, e);
+      return null;
+    }
+  };
 
   const onSubmitCreate = async (v: CreateProfileValues) => {
     try {
-      // Don't send password fields - guard will set password via invitation link
-      const { password, confirmPassword, ...payload } = v;
-      console.log('[NewSecurityGuardPage] createProfile payload ->', payload, 'intent:', createIntentRef.current)
+      setUploading(true);
+
+      // 1. Upload profile photo
+      let profileImageObj: any = null;
+      if (guardDocs.profilePhoto) {
+        profileImageObj = await uploadDoc(guardDocs.profilePhoto, "securityGuardProfileImage");
+      }
+
+      // 2. Upload all documents in parallel
+      const [
+        idImageObj,
+        afisObj,
+        medObj,
+        psychObj,
+        credObj,
+        cert1Obj,
+        cert2Obj,
+        famObj,
+      ] = await Promise.all([
+        guardDocs.identificationImage ? uploadDoc(guardDocs.identificationImage.file, "securityGuardIdentificationImage") : null,
+        guardDocs.afisCertificate ? uploadDoc(guardDocs.afisCertificate.file, "securityGuardAfisCertificate") : null,
+        guardDocs.medicalCertificate ? uploadDoc(guardDocs.medicalCertificate.file, "securityGuardMedicalCertificate") : null,
+        guardDocs.psychologicalCertificate ? uploadDoc(guardDocs.psychologicalCertificate.file, "securityGuardPsychologicalCertificate") : null,
+        guardDocs.credentialDocument ? uploadDoc(guardDocs.credentialDocument.file, "securityGuardCredentialDocument") : null,
+        guardDocs.certificationLevel1 ? uploadDoc(guardDocs.certificationLevel1.file, "securityGuardCertificationLevel1") : null,
+        guardDocs.certificationLevel2 ? uploadDoc(guardDocs.certificationLevel2.file, "securityGuardCertificationLevel2") : null,
+        guardDocs.familyViolenceCertificate ? uploadDoc(guardDocs.familyViolenceCertificate.file, "securityGuardFamilyViolenceCertificate") : null,
+      ]);
+
+      // 3. Build payload
+      const { password, confirmPassword, ...rest } = v as any;
+      const stationIds = Array.isArray(rest.stationId) ? rest.stationId : (rest.stationId ? [rest.stationId] : []);
+      delete rest.stationId;
+      const payload = {
+        ...rest,
+        ...(stationIds.length ? { stationIds } : {}),
+        ...(profileImageObj ? { profileImage: [profileImageObj] } : {}),
+        ...(idImageObj?.fileToken ? { identificationImageToken: idImageObj.fileToken } : {}),
+        ...(afisObj?.fileToken ? { afisCertificateToken: afisObj.fileToken } : {}),
+        ...(medObj?.fileToken ? { medicalCertificateToken: medObj.fileToken } : {}),
+        ...(psychObj?.fileToken ? { psychologicalCertificateToken: psychObj.fileToken } : {}),
+        ...(credObj?.fileToken ? { credentialDocumentToken: credObj.fileToken } : {}),
+        ...(cert1Obj?.fileToken ? { certificationLevel1Token: cert1Obj.fileToken } : {}),
+        ...(cert2Obj?.fileToken ? { certificationLevel2Token: cert2Obj.fileToken } : {}),
+        ...(famObj?.fileToken ? { familyViolenceCertificateToken: famObj.fileToken } : {}),
+      };
+
       await securityGuardService.create(payload);
-      console.log('[NewSecurityGuardPage] createProfile response: created')
       toast.success(t('guards.new.toasts.profile_created_sent'));
-      // Reset the create form after successful creation so fields are cleared
-      try { createForm.reset(); } catch (_) {}
-      // Navigate back to guards list after successful creation
+      createForm.reset();
+      setGuardDocs(emptyDocs());
       navigate('/security-guards');
     } catch (e: any) {
-      console.error('[NewSecurityGuardPage] createProfile error <-', e)
+      console.error('[NewSecurityGuardPage] createProfile error <-', e);
       try {
         const { applyValidationErrorsToForm } = await import('@/lib/utils/formErrorMapper');
         const result = applyValidationErrorsToForm(e, setCreateError as any);
         const msgs = Array.isArray(result) ? result : result.messages;
-        if (msgs && msgs.length > 0) msgs.forEach((m) => toast.error(m));
+        if (msgs && msgs.length > 0) msgs.forEach((m: string) => toast.error(m));
         else toast.error(e?.message ?? t('guards.new.errors.error_create_profile'));
       } catch (ex) {
         toast.error(e?.message ?? t('guards.new.errors.error_create_profile'));
       }
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -247,18 +349,16 @@ export default function NewSecurityGuardPage() {
     value: c.id,
     label: [c.name, c.lastName].filter(Boolean).join(" ").trim() || c.name,
   }));
-  const siteOptions = sites.map((s: any) => ({ value: s.id, label: s.name }));
+  const siteOptions = stations.map((s: any) => ({ value: s.id, label: s.name }));
 
-  // watch create form clientId to filter site options for create form
+  // watch create form clientId to filter station options
   const createClientId = useWatch({ control: createCtrl, name: 'clientId' });
-  const matchesClient = (s: any, clientId?: string) => {
+  const matchesStationClient = (s: any, clientId?: string) => {
     if (!clientId) return false;
-    // check multiple possible shapes returned by the API
     if (s.clientId && String(s.clientId) === String(clientId)) return true;
     if (s.clientAccountId && String(s.clientAccountId) === String(clientId)) return true;
     if (s.client && (s.client.id && String(s.client.id) === String(clientId))) return true;
     if (s.clientAccount && (s.clientAccount.id && String(s.clientAccount.id) === String(clientId))) return true;
-    // some backends may return nested clientAccount object under `clientAccount` or `client`
     return false;
   };
 
@@ -268,9 +368,9 @@ export default function NewSecurityGuardPage() {
     : createClientId
       ? [createClientId as string]
       : [];
-  const createSiteOptions = createClientIds.length
-    ? sites.filter((s: any) => createClientIds.some((cid) => matchesClient(s, cid))).map((s: any) => ({ value: s.id, label: s.name }))
-    : [];
+  const createStationOptions = createClientIds.length
+    ? stations.filter((s: any) => createClientIds.some((cid) => matchesStationClient(s, cid))).map((s: any) => ({ value: s.id, label: s.name }))
+    : stations.map((s: any) => ({ value: s.id, label: s.name }));
 
   const translateInviteByLabel = (val: string) => val === "SMS" ? t('guards.new.form.contactSms') : t('guards.new.form.contactEmail')
 
@@ -330,7 +430,7 @@ export default function NewSecurityGuardPage() {
                               <FormMessage />
                             </FormItem>
                           )} />
-                          <FormField control={inviteCtrl} name={`entries.${idx}.postSiteId`} render={({ field }) => {
+                          <FormField control={inviteCtrl} name={`entries.${idx}.stationId` as any} render={({ field }) => {
                             const entryClientIdsRaw = inviteEntries?.[idx]?.clientId || [];
                             const entryClientIds = Array.isArray(entryClientIdsRaw)
                               ? entryClientIdsRaw
@@ -338,12 +438,12 @@ export default function NewSecurityGuardPage() {
                                 ? [entryClientIdsRaw]
                                 : [];
                             const optionsForEntry = entryClientIds.length
-                              ? sites.filter((s: any) => entryClientIds.some((cid: any) => matchesClient(s, cid))).map((s: any) => ({ value: s.id, label: s.name }))
-                              : [];
+                              ? stations.filter((s: any) => entryClientIds.some((cid: any) => matchesStationClient(s, cid))).map((s: any) => ({ value: s.id, label: s.name }))
+                              : stations.map((s: any) => ({ value: s.id, label: s.name }));
                             return (
                               <FormItem>
-                                  <FormLabel>{t('guards.new.form.assignPostSite')}</FormLabel>
-                                  <MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={optionsForEntry} placeholder={t('guards.new.form.assignPostSite')} aria-label={t('guards.new.form.assignPostSite')} />
+                                  <FormLabel>{t('guards.new.form.assignStation')}</FormLabel>
+                                  <MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={optionsForEntry} placeholder={t('guards.new.form.assignStation')} aria-label={t('guards.new.form.assignStation')} />
                                 <FormMessage />
                               </FormItem>
                             );
@@ -451,53 +551,303 @@ export default function NewSecurityGuardPage() {
               </p>
 
               <Form {...createForm}>
+                <form className="mt-6 space-y-6" onSubmit={submitCreate(onSubmitCreate)}>
 
-                <form className="mt-8 grid gap-6" onSubmit={submitCreate(onSubmitCreate)}>
+                  {/* ── Section 1: Personal Information ─────────────────────── */}
+                  <div className="rounded-xl border bg-card p-6 shadow-sm">
+                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      Información Personal
+                    </h3>
 
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormField control={createCtrl} name="firstName" render={({ field }) => (
-                      <FormItem><FormLabel>{t('guards.new.form.firstName')}</FormLabel><FormControl><Input placeholder={t('guards.new.form.firstNamePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={createCtrl} name="lastName" render={({ field }) => (
-                      <FormItem><FormLabel>{t('guards.new.form.lastName')}</FormLabel><FormControl><Input placeholder={t('guards.new.form.lastNamePlaceholder')} {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+                    {/* Profile photo centred at top */}
+                    <div className="mb-6 flex justify-center">
+                      <ProfilePhotoCapture
+                        value={guardDocs.profilePhoto ?? null}
+                        onChange={setDoc("profilePhoto") as (f: File | null) => void}
+                        previewUrl={guardDocs.profilePhoto ? URL.createObjectURL(guardDocs.profilePhoto) : null}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <FormField control={createCtrl} name="firstName" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre(s) <span className="text-destructive">*</span></FormLabel>
+                          <FormControl><Input placeholder="Ej. Carlos" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={createCtrl} name="middleName" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Segundo Nombre</FormLabel>
+                          <FormControl><Input placeholder="Opcional" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={createCtrl} name="lastName" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Apellidos <span className="text-destructive">*</span></FormLabel>
+                          <FormControl><Input placeholder="Ej. García López" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <FormField control={createCtrl} name="gender" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Género <span className="text-destructive">*</span></FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar género" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {GENDER_OPTIONS.map((g) => (
+                                <SelectItem key={g} value={g}>{g}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={createCtrl} name="bloodType" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tipo de Sangre <span className="text-destructive">*</span></FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar tipo de sangre" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {BLOOD_TYPES.map((bt) => (
+                                <SelectItem key={bt} value={bt}>{bt}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={createCtrl} name="maritalStatus" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Estado Civil <span className="text-destructive">*</span></FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar estado civil" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {MARITAL_STATUS_OPTIONS.map((m) => (
+                                <SelectItem key={m} value={m}>{m}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <FormField control={createCtrl} name="birthDate" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fecha de Nacimiento <span className="text-destructive">*</span></FormLabel>
+                          <FormControl><Input type="date" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={createCtrl} name="birthPlace" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Lugar de Nacimiento</FormLabel>
+                          <FormControl><Input placeholder="Ej. Quito, Ecuador" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={createCtrl} name="academicInstruction" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Instrucción Académica <span className="text-destructive">*</span></FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar nivel académico" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {ACADEMIC_INSTRUCTION_OPTIONS.map((a) => (
+                                <SelectItem key={a} value={a}>{a}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormField control={createCtrl} name="email" render={({ field }) => (
-                      <FormItem><FormLabel>{t('guards.new.form.contactEmail')}</FormLabel><FormControl><Input placeholder={t('guards.new.form.contactPhEmail')} {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={createCtrl} name="phone" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('guards.new.form.contactSms')}</FormLabel>
-                        <FormControl>
-                          <PhoneInput
-                            value={field.value || ""}
-                            onChange={(val: string) => field.onChange(val)}
-                            placeholder={t('guards.new.form.contactPhSms')}
-                          />
-                        </FormControl>
-                        <FormDescription>{t('guards.new.form.contactPhSms')}</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
+                  {/* ── Section 2: Contact & Address ─────────────────────────── */}
+                  <div className="rounded-xl border bg-card p-6 shadow-sm">
+                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      Contacto y Domicilio
+                    </h3>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <FormField control={createCtrl} name="email" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Correo Electrónico <span className="text-destructive">*</span></FormLabel>
+                          <FormControl><Input type="email" placeholder="guardia@ejemplo.com" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={createCtrl} name="phone" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Teléfono / Celular</FormLabel>
+                          <FormControl>
+                            <PhoneInput
+                              value={field.value || ""}
+                              onChange={(val: string) => field.onChange(val)}
+                              placeholder="+1 (555) 000-0000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+
+                    <div className="mt-4">
+                      <FormField control={createCtrl} name="homeAddress" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Domicilio</FormLabel>
+                          <FormControl>
+                            <AddressAutocomplete
+                              defaultValue={field.value || ""}
+                              onAddressSelect={(result) => {
+                                field.onChange(result.address);
+                                setCreateValue("homeAddressLat", result.latitude ?? undefined);
+                                setCreateValue("homeAddressLng", result.longitude ?? undefined);
+                              }}
+                              showMap={true}
+                              placeholder="Buscar dirección del guardia..."
+                            />
+                          </FormControl>
+                          <FormDescription>Indique la ubicación exacta moviendo el pin en el mapa.</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormField control={createCtrl} name="clientId" render={({ field }) => (
-                      <FormItem><FormLabel>{t('guards.new.form.selectClient')}</FormLabel><MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={clientOptions} placeholder={t('guards.new.form.selectClient')} aria-label={t('guards.new.form.selectClient')} /><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={createCtrl} name="postSiteId" render={({ field }) => (
-                      <FormItem><FormLabel>{t('guards.new.form.assignPostSite')}</FormLabel><MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={createSiteOptions} placeholder={t('guards.new.form.assignPostSite')} aria-label={t('guards.new.form.assignPostSite')} /><FormMessage /></FormItem>
-                    )} />
+                  {/* ── Section 3: Identification ─────────────────────────────── */}
+                  <div className="rounded-xl border bg-card p-6 shadow-sm">
+                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      Identificación y Contrato
+                    </h3>
+
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <FormField control={createCtrl} name="identificationNumber" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Número de Identificación <span className="text-destructive">*</span></FormLabel>
+                          <FormControl><Input placeholder="DUI, Cédula, Pasaporte…" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+
+                      <div>
+                        <DocumentUpload
+                          label="Imagen de Identificación"
+                          description="Foto o escaneo del documento de identidad"
+                          value={guardDocs.identificationImage ?? null}
+                          onChange={setDoc("identificationImage") as (f: any) => void}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <FormField control={createCtrl} name="hiringContractDate" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fecha de Contratación</FormLabel>
+                          <FormControl><Input type="date" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={createCtrl} name="guardCredentials" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Credenciales / Licencias</FormLabel>
+                          <FormControl><Input placeholder="Ej. Licencia Armas, Certificación AFIS…" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
                   </div>
 
-                  <SubmitBar
-                    primaryLabel={t('guards.new.form.create_and_send')}
-                    loading={createState.isSubmitting}
-                    onPrimary={() => { createIntentRef.current = "create_send"; submitCreate(onSubmitCreate)(); }}
-                    primaryClassName="bg-[#C8860A] text-white px-6 py-3 rounded-full shadow-lg hover:bg-[#B37809] transition-colors font-medium disabled:opacity-50"
-                  />
+                  {/* ── Section 4: Certifications ─────────────────────────────── */}
+                  <div className="rounded-xl border bg-card p-6 shadow-sm">
+                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      Certificaciones y Documentos Profesionales
+                    </h3>
+
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      <DocumentUpload
+                        label="Certificado AFIS"
+                        description="Sistema automatizado de identificación de huellas"
+                        value={guardDocs.afisCertificate ?? null}
+                        onChange={setDoc("afisCertificate") as (f: any) => void}
+                      />
+                      <DocumentUpload
+                        label="Certificado Médico"
+                        description="Certificado médico vigente"
+                        value={guardDocs.medicalCertificate ?? null}
+                        onChange={setDoc("medicalCertificate") as (f: any) => void}
+                      />
+                      <DocumentUpload
+                        label="Certificado Psicológico"
+                        description="Evaluación psicológica actualizada"
+                        value={guardDocs.psychologicalCertificate ?? null}
+                        onChange={setDoc("psychologicalCertificate") as (f: any) => void}
+                      />
+                      <DocumentUpload
+                        label="Credencial"
+                        description="Documento de credencial profesional"
+                        value={guardDocs.credentialDocument ?? null}
+                        onChange={setDoc("credentialDocument") as (f: any) => void}
+                      />
+                      <DocumentUpload
+                        label="Certificación Nivel 1"
+                        description="Certificación de guardia nivel 1"
+                        value={guardDocs.certificationLevel1 ?? null}
+                        onChange={setDoc("certificationLevel1") as (f: any) => void}
+                      />
+                      <DocumentUpload
+                        label="Certificación Nivel 2"
+                        description="Certificación de guardia nivel 2"
+                        value={guardDocs.certificationLevel2 ?? null}
+                        onChange={setDoc("certificationLevel2") as (f: any) => void}
+                      />
+                      <DocumentUpload
+                        label="Certificado Violencia Intrafamiliar"
+                        description="Certificado de no antecedentes de violencia familiar"
+                        value={guardDocs.familyViolenceCertificate ?? null}
+                        onChange={setDoc("familyViolenceCertificate") as (f: any) => void}
+                      />
+                    </div>
+                  </div>
+
+                  {/* ── Submit Bar ───────────────────────────────────────────── */}
+                  <div className="flex items-center justify-end gap-3 rounded-xl border bg-card px-6 py-4 shadow-sm">
+                    {uploading && (
+                      <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Subiendo documentos…
+                      </span>
+                    )}
+                    <SubmitBar
+                      primaryLabel={t('guards.new.form.create_and_send')}
+                      loading={createState.isSubmitting || uploading}
+                      onPrimary={() => { createIntentRef.current = "create_send"; submitCreate(onSubmitCreate)(); }}
+                      primaryClassName="bg-[#C8860A] text-white px-6 py-3 rounded-full shadow-lg hover:bg-[#B37809] transition-colors font-medium disabled:opacity-50"
+                    />
+                  </div>
+
                 </form>
               </Form>
             </>

@@ -337,9 +337,9 @@ export default function ProfileCompanyForm() {
     if (isAdmin) {
       return (
         <div className="p-6">
-          <div className="max-w-2xl mx-auto bg-white border rounded-md p-6 text-center">
+          <div className="max-w-2xl mx-auto bg-card border rounded-md p-6 text-center">
             <h3 className="text-lg font-medium mb-2">Debe crear una Empresa</h3>
-            <p className="text-sm text-gray-600 mb-4">Aún no tiene una empresa asignada. Cree una para continuar configurando la información.</p>
+            <p className="text-sm text-foreground/70 mb-4">Aún no tiene una empresa asignada. Cree una para continuar configurando la información.</p>
             <div className="flex justify-center">
               <Button onClick={() => navigate('/tenant/create')} className="bg-[#f36a6d] hover:bg-[#e85b5f] text-white">
                 Crear Empresa
@@ -516,7 +516,7 @@ export default function ProfileCompanyForm() {
             {/* Manual Address Fields */}
             <div style={{ position: 'relative', zIndex: 2000 }}>
               {showAddressAutocomplete && canEdit && (
-                <p className="text-xs text-gray-500 mb-2">Los campos manuales están bloqueados. Haz clic en "Ingresar dirección manualmente" para modificarlos.</p>
+                <p className="text-xs text-muted-foreground mb-2">Los campos manuales están bloqueados. Haz clic en "Ingresar dirección manualmente" para modificarlos.</p>
               )}
             
             <div className={showAddressAutocomplete && canEdit ? 'opacity-60 pointer-events-none' : ''}>
@@ -688,7 +688,7 @@ export default function ProfileCompanyForm() {
                 <SelectItem value="UTC">UTC</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-gray-500">La zona horaria determina cómo se muestran y calculan los horarios y marcas de tiempo en la aplicación (turnos, registros y reportes).</p>
+            <p className="text-xs text-muted-foreground">La zona horaria determina cómo se muestran y calculan los horarios y marcas de tiempo en la aplicación (turnos, registros y reportes).</p>
           </div>
 
           <div className="flex justify-end">

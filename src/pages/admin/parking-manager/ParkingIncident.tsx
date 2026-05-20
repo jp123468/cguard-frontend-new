@@ -108,7 +108,7 @@ export default function ParkingIncident() {
 
                     <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
                         <div className="relative w-full md:w-80">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                             <Input
                                 placeholder="Buscar incidente"
                                 className="pl-9"
@@ -202,7 +202,7 @@ export default function ParkingIncident() {
                                                     placeholder="Seleccionar archivo"
                                                     readOnly
                                                 />
-                                                <Paperclip className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                                <Paperclip className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                                             </div>
                                         </div>
                                     </div>
@@ -281,7 +281,7 @@ export default function ParkingIncident() {
                                                 <Label>Desde la Fecha</Label>
                                                 <div className="relative">
                                                     <Input placeholder="Nov 15, 2025" />
-                                                    <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                                    <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                                                 </div>
                                             </div>
                                             <div className="grid gap-2">
@@ -295,7 +295,7 @@ export default function ParkingIncident() {
                                                 <Label>Hasta la Fecha</Label>
                                                 <div className="relative">
                                                     <Input placeholder="Nov 21, 2025" />
-                                                    <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                                    <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                                                 </div>
                                             </div>
                                             <div className="grid gap-2">
@@ -346,12 +346,12 @@ export default function ParkingIncident() {
                                 <TableHead className="w-[50px]">
                                     <Checkbox />
                                 </TableHead>
-                                <TableHead className="font-bold text-slate-700">Creado en</TableHead>
-                                <TableHead className="font-bold text-slate-700">Tipo de Incidente</TableHead>
-                                <TableHead className="font-bold text-slate-700">Cliente</TableHead>
-                                <TableHead className="font-bold text-slate-700">Puesto de seguridad</TableHead>
-                                <TableHead className="font-bold text-slate-700">Licencia del vehículo</TableHead>
-                                <TableHead className="font-bold text-slate-700">Estacionamiento</TableHead>
+                                <TableHead className="font-bold text-foreground">Creado en</TableHead>
+                                <TableHead className="font-bold text-foreground">Tipo de Incidente</TableHead>
+                                <TableHead className="font-bold text-foreground">Cliente</TableHead>
+                                <TableHead className="font-bold text-foreground">Puesto de seguridad</TableHead>
+                                <TableHead className="font-bold text-foreground">Licencia del vehículo</TableHead>
+                                <TableHead className="font-bold text-foreground">Estacionamiento</TableHead>
                                 <TableHead className="w-[50px]"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -359,11 +359,11 @@ export default function ParkingIncident() {
                             {incidents.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={8} className="h-[400px] text-center">
-                                        <div className="flex flex-col items-center justify-center text-slate-500">
-                                            <div className="bg-blue-50 p-6 rounded-full mb-4">
+                                        <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                            <div className="bg-blue-500/10 p-6 rounded-full mb-4">
                                                 <SquareParking className="w-12 h-12 text-blue-200" />
                                             </div>
-                                            <h3 className="text-lg font-medium text-slate-700 mb-1">No se encontraron resultados</h3>
+                                            <h3 className="text-lg font-medium text-foreground mb-1">No se encontraron resultados</h3>
                                             <p className="text-sm max-w-xs">
                                                 No pudimos encontrar ningún elemento que coincida con su búsqueda
                                             </p>
@@ -384,7 +384,7 @@ export default function ParkingIncident() {
                                         <TableCell>{incident.parking}</TableCell>
                                         <TableCell>
                                             <Button variant="ghost" size="icon">
-                                                <ChevronsUpDown className="h-4 w-4 text-slate-400" />
+                                                <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
                                             </Button>
                                         </TableCell>
                                     </TableRow>

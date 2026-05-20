@@ -24,6 +24,13 @@ const DEFAULT_SYSTEM_ROLE_SLUGS = [
   'customer',
 ];
 
+// Office roles are seeded per-tenant and are EDITABLE by the tenant admin
+const EDITABLE_SEEDED_ROLE_SLUGS = [
+  'administrativesupervisor',
+  'administrativeassistant',
+  'secretary',
+];
+
 const isDefaultSystemRole = (role: { slug?: string; name?: string; id?: string }) => {
   const slug = String(role.slug ?? role.name ?? role.id ?? '').toLowerCase();
   return DEFAULT_SYSTEM_ROLE_SLUGS.includes(slug);

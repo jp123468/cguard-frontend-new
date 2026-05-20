@@ -355,7 +355,7 @@ export function CategoryManagerDialog({ open, onOpenChange, module, onChanged }:
             {(t('categories.cannotDeleteMessage', 'The category "{{name}}" cannot be deleted because it is in use by {{count}} clients.', { name: inUseInfo?.name, count: inUseInfo?.count }))}
           </div>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setInUseInfo(null)} className="bg-white text-black hover:bg-gray-100 border">
+            <AlertDialogAction onClick={() => setInUseInfo(null)} className="bg-card text-black hover:bg-muted border">
               {t('categories.Understood', 'Understood')}
             </AlertDialogAction>
 

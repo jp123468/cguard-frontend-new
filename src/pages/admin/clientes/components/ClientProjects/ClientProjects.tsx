@@ -98,15 +98,15 @@ export default function ClientProjects({ client }: Props) {
 
       {/* List */}
       {loading ? (
-        <div className="py-12 text-center text-gray-500 text-sm">Cargando...</div>
+        <div className="py-12 text-center text-muted-foreground text-sm">Cargando...</div>
       ) : projects.length === 0 ? (
-        <div className="py-12 text-center text-gray-500 text-sm">
+        <div className="py-12 text-center text-muted-foreground text-sm">
           No hay proyectos para este cliente
         </div>
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <table className="min-w-full text-sm text-left">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted/30">
               <tr className="border-b">
                 <th className="px-4 py-3 font-semibold">Proyecto</th>
                 <th className="px-4 py-3 font-semibold">Tipo</th>
@@ -118,26 +118,26 @@ export default function ClientProjects({ client }: Props) {
             </thead>
             <tbody>
               {projects.map((p) => (
-                <tr key={p.id} className="border-b hover:bg-gray-50">
+                <tr key={p.id} className="border-b hover:bg-muted/30">
                   <td className="px-4 py-3 font-medium">
                     <div>{p.name}</div>
                     {p.location && (
-                      <div className="text-xs text-gray-500 mt-0.5">{p.location}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{p.location}</div>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     <ProjectTypeBadge value={p.type} />
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{p.startDate ?? '-'}</td>
-                  <td className="px-4 py-3 text-gray-600">{p.endDate ?? '-'}</td>
+                  <td className="px-4 py-3 text-foreground/70">{p.startDate ?? '-'}</td>
+                  <td className="px-4 py-3 text-foreground/70">{p.endDate ?? '-'}</td>
                   <td className="px-4 py-3">
                     <ProjectStatusBadge value={p.status} />
                   </td>
                   <td className="px-4 py-3 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="p-1.5 rounded hover:bg-gray-100">
-                          <EllipsisVertical className="h-4 w-4 text-gray-500" />
+                        <button className="p-1.5 rounded hover:bg-muted">
+                          <EllipsisVertical className="h-4 w-4 text-muted-foreground" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">

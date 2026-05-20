@@ -41,9 +41,9 @@ export default function MonthView({ currentDate }: MonthViewProps) {
 
     return (
         <div className="flex-1 relative">
-            <div className="grid grid-cols-7 border-b bg-gray-50">
+            <div className="grid grid-cols-7 border-b bg-muted/30">
                 {weekDays.map((day) => (
-                    <div key={day} className="p-3 text-center text-sm font-medium text-gray-700 border-r">
+                    <div key={day} className="p-3 text-center text-sm font-medium text-foreground border-r">
                         {day}
                     </div>
                 ))}
@@ -57,7 +57,7 @@ export default function MonthView({ currentDate }: MonthViewProps) {
                     return (
                         <div
                             key={idx}
-                            className={`min-h-[100px] border-r border-b p-2 ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
+                            className={`min-h-[100px] border-r border-b p-2 ${!isCurrentMonth ? 'bg-muted/30 text-muted-foreground' : ''
                                 }`}
                         >
                             <div className={`text-sm ${isToday ? 'bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center' : ''}`}>

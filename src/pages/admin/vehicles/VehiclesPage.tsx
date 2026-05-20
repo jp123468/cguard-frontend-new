@@ -312,10 +312,10 @@ export default function VehiclesPage() {
                 </div>
 
                 <div className="mt-4 overflow-hidden rounded-lg">
-                    <div className="bg-white border rounded p-4 md:block hidden">
+                    <div className="bg-card border rounded p-4 md:block hidden">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50 text-left text-sm text-gray-600">
+                            <table className="min-w-full divide-y divide-border">
+                                <thead className="bg-muted/30 text-left text-sm text-foreground/70">
                                     <tr>
                                         <th className="px-4 py-2">
                                             <input
@@ -333,7 +333,7 @@ export default function VehiclesPage() {
                                     </tr>
                                 </thead>
 
-                                <tbody className="bg-white divide-y divide-gray-100 text-sm">
+                                <tbody className="bg-card divide-y divide-border text-sm">
                                     {loading ? (
                                         <tr>
                                             <td colSpan={7} className="p-6 text-center">Cargando...</td>
@@ -360,7 +360,7 @@ export default function VehiclesPage() {
                                                 <td className="px-2 py-3">
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full border-slate-200 text-slate-600" type="button">
+                                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full border-slate-200 text-foreground/70" type="button">
                                                                 <MoreVertical className="h-4 w-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
@@ -523,7 +523,7 @@ export default function VehiclesPage() {
                         </DialogContent>
                     </Dialog>
 
-                    <div className="flex items-center justify-between bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                    <div className="flex items-center justify-between bg-muted/30 px-4 py-3 text-sm text-foreground/70">
                         <div className="flex items-center gap-2">
                             <span>Elementos por página</span>
                             <Select

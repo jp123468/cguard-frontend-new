@@ -228,7 +228,7 @@ export default function GeneratePayroll() {
                         <DropdownMenuTrigger asChild>
                             <button
                                 type="button"
-                                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-slate-50"
+                                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-card text-muted-foreground shadow-sm hover:bg-slate-50"
                             >
                                 <MoreVertical className="h-4 w-4" />
                             </button>
@@ -260,15 +260,15 @@ export default function GeneratePayroll() {
                         alt="Sin datos"
                         className="mb-4 h-40"
                     />
-                    <h2 className="text-lg font-semibold text-slate-800">
+                    <h2 className="text-lg font-semibold text-foreground">
                         No se encontraron resultados
                     </h2>
-                    <p className="mt-1 max-w-md text-center text-sm text-slate-500">
+                    <p className="mt-1 max-w-md text-center text-sm text-muted-foreground">
                         No pudimos encontrar ningún elemento que coincida con su búsqueda
                     </p>
                 </div>
 
-                <div className="mt-4 flex items-center justify-end gap-6 rounded-b-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                <div className="mt-4 flex items-center justify-end gap-6 rounded-b-lg bg-slate-50 px-4 py-3 text-sm text-foreground/70">
                     <div className="flex items-center gap-2">
                         <span>Elementos por página</span>
                         <Select
@@ -294,14 +294,14 @@ export default function GeneratePayroll() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100"
+                                className="h-8 w-8 rounded-full text-muted-foreground hover:bg-slate-100"
                             >
                                 <ChevronLeft className="h-4 w-4" />
                             </Button>
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100"
+                                className="h-8 w-8 rounded-full text-muted-foreground hover:bg-slate-100"
                             >
                                 <ChevronRight className="h-4 w-4" />
                             </Button>

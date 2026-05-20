@@ -25,7 +25,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ items, className }) => {
     }));
 
   return (
-    <nav className={`bg-white border-b border-gray-200 px-6 py-6 ${className || ""}`}>
+    <nav className={`bg-background border-b border-border px-6 py-6 ${className || ""}`}>
       <ol className="flex items-center text-sm">
         {generatedItems.map((item, index) => {
           const isLast = index === generatedItems.length - 1;
@@ -39,13 +39,13 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ items, className }) => {
                   {item.label}
                 </Link>
               ) : (
-                <span className="font-semibold text-[#1A1A1A]">
+                <span className="font-semibold text-foreground">
                   {item.label}
                 </span>
               )}
 
               {!isLast && (
-                <ChevronRight className="w-4 h-4 mx-1 text-gray-400" />
+                <ChevronRight className="w-4 h-4 mx-1 text-muted-foreground" />
               )}
             </li>
           );

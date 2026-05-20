@@ -134,12 +134,26 @@ export default function EditAdminUserPage() {
 
   const getRoleDisplayName = useCallback((role: { id?: string; name?: string; slug?: string }) => {
     const id = (role.id || '').toString().toLowerCase();
-    const name = (role.name || '').toString().toLowerCase();
+    const name = (role.name || '').toString();
     const slug = (role.slug || '').toString().toLowerCase();
-    if (id.includes('supervisor') || slug.includes('supervisor') || name.includes('supervisor')) {
-      return t('adminOfficeUsers.roleNames.supervisor', { defaultValue: 'Supervisor' });
+    if (id === 'administrativesupervisor' || slug === 'administrativesupervisor') {
+      return t('adminOfficeUsers.roleNames.administrativeSupervisor', { defaultValue: 'Supervisor Administrativo' });
     }
-    return role.name || '';
+    if (id === 'administrativeassistant' || slug === 'administrativeassistant') {
+      return t('adminOfficeUsers.roleNames.administrativeAssistant', { defaultValue: 'Asistente Administrativo' });
+    }
+    if (id === 'secretary' || slug === 'secretary') {
+      return t('adminOfficeUsers.roleNames.secretary', { defaultValue: 'Secretaria / Recepcionista' });
+    }
+    if (id.includes('supervisor') || slug.includes('supervisor') || name.toLowerCase().includes('supervisor')) {
+      return t('adminOfficeUsers.roleNames.supervisor', { defaultValue: 'Supervisor de Seguridad' });
+    }
+    if (id === 'admin' || slug === 'admin') return t('adminOfficeUsers.roleNames.admin', { defaultValue: 'Administrador' });
+    if (id === 'hrmanager' || slug === 'hrmanager') return t('adminOfficeUsers.roleNames.hrManager', { defaultValue: 'Gerente de RRHH' });
+    if (id === 'operationsmanager' || slug === 'operationsmanager') return t('adminOfficeUsers.roleNames.operationsManager', { defaultValue: 'Gerente de Operaciones' });
+    if (id === 'dispatcher' || slug === 'dispatcher') return t('adminOfficeUsers.roleNames.dispatcher', { defaultValue: 'Despachador' });
+    if (id === 'clientaccountmanager' || slug === 'clientaccountmanager') return t('adminOfficeUsers.roleNames.clientAccountManager', { defaultValue: 'Gestor de Cuentas' });
+    return name || id || '';
   }, [t]);
   const prevClientIdsRef = useRef<string[] | undefined>(undefined);
 

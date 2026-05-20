@@ -37,42 +37,42 @@ const WIDGETS: WidgetDef[] = [
     title: "Clientes",
     subtitle: "Clientes Activos",
     Icon: Users,
-    color: { text: "text-emerald-600", iconBg: "bg-emerald-50", accent: "#10b981" },
+    color: { text: "text-emerald-500", iconBg: "bg-emerald-500/10", accent: "#10b981" },
   },
   {
     id: "sitios",
     title: "Puestos de Vigilancia",
     subtitle: "Puestos de Vigilancia Activos",
     Icon: MapPin,
-    color: { text: "text-blue-600", iconBg: "bg-blue-50", accent: "#3b82f6" },
+    color: { text: "text-blue-500", iconBg: "bg-blue-500/10", accent: "#3b82f6" },
   },
   {
     id: "guardias",
     title: "security-guards",
     subtitle: "Guardias Activos",
     Icon: Shield,
-    color: { text: "text-violet-600", iconBg: "bg-violet-50", accent: "#8b5cf6" },
+    color: { text: "text-violet-500", iconBg: "bg-violet-500/10", accent: "#8b5cf6" },
   },
   {
     id: "equipo",
     title: "Equipo administrativo",
     subtitle: "Usuarios Activos",
     Icon: UserSquare2,
-    color: { text: "text-cyan-600", iconBg: "bg-cyan-50", accent: "#06b6d4" },
+    color: { text: "text-cyan-500", iconBg: "bg-cyan-500/10", accent: "#06b6d4" },
   },
   {
     id: "registros",
     title: "Registros",
     subtitle: "Hoy",
     Icon: MapPinned,
-    color: { text: "text-amber-600", iconBg: "bg-amber-50", accent: "#C8860A" },
+    color: { text: "text-amber-500", iconBg: "bg-amber-500/10", accent: "#C8860A" },
   },
   {
     id: "fichados",
     title: "Fichados",
     subtitle: "Hoy",
     Icon: ActivitySquare,
-    color: { text: "text-rose-600", iconBg: "bg-rose-50", accent: "#f43f5e" },
+    color: { text: "text-rose-500", iconBg: "bg-rose-500/10", accent: "#f43f5e" },
   },
 ];
 
@@ -166,8 +166,8 @@ function StatCard({
 }) {
   return (
     <div
-      className="relative rounded-2xl bg-white overflow-hidden"
-      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04)" }}
+      className="relative rounded-2xl bg-card border border-border overflow-hidden"
+      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)" }}
     >
       {/* Accent bar on top */}
       <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: accentColor }} />
@@ -187,8 +187,8 @@ function StatCard({
         </div>
 
         <div className="mt-1.5">
-          <div className="text-[12px] font-semibold text-slate-700 truncate leading-tight">{title}</div>
-          <div className="text-[11px] text-slate-400 truncate">{subtitle}</div>
+          <div className="text-[12px] font-semibold text-card-foreground truncate leading-tight">{title}</div>
+          <div className="text-[11px] text-muted-foreground truncate">{subtitle}</div>
         </div>
       </div>
     </div>

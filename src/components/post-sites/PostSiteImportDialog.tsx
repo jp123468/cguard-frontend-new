@@ -588,7 +588,7 @@ export default function PostSiteImportDialog({ open, onOpenChange, onSuccess }: 
                 id="postsite-file-upload"
               />
               <label htmlFor="postsite-file-upload" className="cursor-pointer block">
-                <Upload className="mx-auto h-10 w-10 text-gray-400 mb-1" />
+                <Upload className="mx-auto h-10 w-10 text-muted-foreground mb-1" />
                 <p className="text-sm text-muted-foreground font-medium">{file ? file.name : "Explorar tu archivo Excel aquí...."}</p>
                 <p className="text-xs text-muted-foreground mt-1">Click para seleccionar</p>
               </label>

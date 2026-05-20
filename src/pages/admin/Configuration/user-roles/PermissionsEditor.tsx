@@ -56,7 +56,7 @@ export default function PermissionsEditor({ value, onChange, query = "", readOnl
           const items = filteredGrouped[group];
           const allSelected = items.every((p) => value.includes(p));
           return (
-            <div key={group} className="rounded-lg border bg-white dark:bg-slate-800 p-4 shadow-sm">
+            <div key={group} className="rounded-lg border bg-card dark:bg-slate-800 p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div
                   role="button"

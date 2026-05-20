@@ -31,7 +31,12 @@ export default function GuardOverview() {
                 if (!mounted) return;
                 const g = data.guard ?? data;
                 const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
-                setGuard({ ...g, fullName });
+                // Extract profile image URL from the file-object array returned by the API
+                const pi = data.profileImage;
+                const photoUrl = Array.isArray(pi)
+                  ? (pi[0]?.downloadUrl || pi[0]?.publicUrl || null)
+                  : (pi?.downloadUrl || pi?.publicUrl || (typeof pi === 'string' && pi ? pi : null));
+                setGuard({ ...g, fullName, profileImage: pi, photoUrl: photoUrl || g.photoUrl || null });
             } catch (err) {
                 console.error('Error cargando guardia (security-guard):', err);
                 const status = (err as any) && ((err as any).status || (err as any).response?.status || (err as any).code);
@@ -67,7 +72,9 @@ export default function GuardOverview() {
                                 if (row) {
                                     const g = row.guard ?? row;
                                     const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
-                                    if (mounted) setGuard({ ...g, fullName });
+                                    const pi2 = row.profileImage;
+                                    const photoUrl2 = Array.isArray(pi2) ? (pi2[0]?.downloadUrl || pi2[0]?.publicUrl || null) : (pi2?.downloadUrl || pi2?.publicUrl || null);
+                                    if (mounted) setGuard({ ...g, fullName, profileImage: pi2, photoUrl: photoUrl2 || g.photoUrl || null });
                                     return;
                                 }
                             }
@@ -97,7 +104,9 @@ export default function GuardOverview() {
                             if (match) {
                                 const g = match.guard ?? match;
                                 const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
-                                if (mounted) setGuard({ ...g, fullName });
+                                const pi3 = match.profileImage;
+                                const photoUrl3 = Array.isArray(pi3) ? (pi3[0]?.downloadUrl || pi3[0]?.publicUrl || null) : (pi3?.downloadUrl || pi3?.publicUrl || null);
+                                if (mounted) setGuard({ ...g, fullName, profileImage: pi3, photoUrl: photoUrl3 || g.photoUrl || null });
                                 return;
                             }
                         }
@@ -122,7 +131,7 @@ export default function GuardOverview() {
                 <div className="flex-1 flex flex-col">
                     {loading ? (
                         <div className="flex items-center justify-center h-32">
-                            <div className="text-gray-500">{t('guards.overview.loading')}</div>
+                            <div className="text-muted-foreground">{t('guards.overview.loading')}</div>
                         </div>
                     ) : guard ? (
                         <>
@@ -133,7 +142,7 @@ export default function GuardOverview() {
                         </>
                     ) : (
                         <div className="flex items-center justify-center h-32">
-                            <div className="text-gray-500">No se pudo cargar el guardia</div>
+                            <div className="text-muted-foreground">No se pudo cargar el guardia</div>
                         </div>
                     )}
                 </div>

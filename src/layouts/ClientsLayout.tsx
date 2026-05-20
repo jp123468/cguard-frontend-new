@@ -71,7 +71,7 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
 
       <div className={sidebarClass}>
         <div className="h-full flex flex-col">
-          <div className="bg-white border rounded-md p-3 m-3 flex-1 overflow-hidden">
+          <div className="bg-card border border-border rounded-md p-3 m-3 flex-1 overflow-hidden">
             <div className="text-base font-semibold mb-3">{
               client?.companyName
                 ? client.companyName
@@ -83,7 +83,7 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
               <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-3">
                 {cfg?.sections?.map((section: any, idx: number) => (
                   <div key={idx} className="mb-0 pb-0">
-                    {section.label ? <div className="text-xs text-gray-500 uppercase mb-3">{section.label}</div> : null}
+                    {section.label ? <div className="text-xs text-muted-foreground uppercase mb-3">{section.label}</div> : null}
                     <ul className="divide-y">
                       {section.items?.map((it: any) => {
                         const resolvedPath = resolvePathWithId(it.path);
@@ -96,15 +96,15 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
                         if (hiddenIds.includes(it.id)) {
                           const comment = `<!-- hidden:${it.id} ${t(it.label)} -->`;
                           return (
-                            <li key={it.id} className="bg-white" dangerouslySetInnerHTML={{ __html: comment }} />
+                            <li key={it.id} className="bg-card" dangerouslySetInnerHTML={{ __html: comment }} />
                           );
                         }
 
                         return (
-                          <li key={it.id} className="bg-white">
+                          <li key={it.id} className="bg-card">
                             <Link
                               to={resolvedPath}
-                              className={`flex items-center justify-between px-4 py-3 text-sm ${isActive ? 'bg-[#C8860A]/10 text-[#C8860A] font-medium' : 'text-gray-700 hover:bg-gray-50'} `}
+                              className={`flex items-center justify-between px-4 py-3 text-sm ${isActive ? 'bg-[#C8860A]/10 text-[#C8860A] font-medium' : 'text-foreground hover:bg-accent'} `}
                             >
                               <span className="text-sm">{t(it.label)}</span>
                               {typeof badgeCount === 'number' && (
@@ -129,11 +129,11 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="bg-white rounded-md p-4 mb-4 flex items-center justify-between sticky top-0 z-10">
+        <div className="bg-card border-b border-border rounded-md p-4 mb-4 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-gray-600 hover:text-gray-800 p-1"
+              className="text-muted-foreground hover:text-foreground p-1"
               title={sidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
             >
               <Menu
@@ -141,9 +141,9 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
                 className={`transition-transform duration-300 ${sidebarOpen ? 'rotate-0' : '-rotate-90'}`}
               />
             </button>
-            <div className="text-sm font-medium text-gray-700">{getActiveLabel() || (title ? t(title) : '')}</div>
+            <div className="text-sm font-medium text-foreground">{getActiveLabel() || (title ? t(title) : '')}</div>
           </div>
-          <div className="text-sm text-gray-600"></div>
+          <div className="text-sm text-muted-foreground"></div>
         </div>
 
         <div className="flex-1 overflow-auto pb-6">{children}</div>

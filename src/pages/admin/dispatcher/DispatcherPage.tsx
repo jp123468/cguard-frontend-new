@@ -1279,7 +1279,7 @@ export default function DispatcherPage() {
                     {t('dispatcher.apply_filters')}
                   </Button>
                   <Button
-                    className="w-full bg-white text-black border hover:bg-gray-100"
+                    className="w-full bg-card text-black border hover:bg-muted"
                     onClick={clearFilters}
                   >
                     {t('dispatcher.clear_filters')}
@@ -1378,13 +1378,13 @@ export default function DispatcherPage() {
 
         {/* Tabla */}
         {forbiddenRead && (
-          <div className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-red-700">
+          <div className="mb-4 rounded border border-red-200 bg-red-500/10 p-3 text-red-700">
             {forbiddenMessage ? resolveServerMessage(forbiddenMessage) : t('dispatcher.noPermissionViewBanner')}
           </div>
         )}
         <div className="mt-4 overflow-hidden rounded-lg border">
           <table className="min-w-full border-collapse text-left text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted/30">
               <tr className="border-b">
                 <th className="px-4 py-3">
                   <Checkbox
@@ -1477,7 +1477,7 @@ export default function DispatcherPage() {
 
                           if (s === 'abierto' || s === 'open') {
                             return (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-red-500/15 text-red-700">
                                 Abierto
                               </span>
                             );
@@ -1485,7 +1485,7 @@ export default function DispatcherPage() {
 
                           // fallback: neutral badge with raw value or dash
                           return (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-muted text-foreground">
                               {r.status || '-'}
                             </span>
                           );
@@ -1581,7 +1581,7 @@ export default function DispatcherPage() {
           </table>
 
           {/* Footer de tabla */}
-          <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50 border-x border-b rounded-b-lg">
+          <div className="flex items-center justify-between px-4 py-3 text-sm text-foreground/70 bg-muted/30 border-x border-b rounded-b-lg">
             <div className="flex items-center gap-2">
               <span>{t('dispatcher.items_per_page')}</span>
               <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>

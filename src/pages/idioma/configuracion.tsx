@@ -158,7 +158,7 @@ export default function LanguageGooglePage() {
           <Globe2 className="h-7 w-7 text-emerald-400" />
           <div>
             <h1 className="text-3xl font-bold text-white">Idioma de la interfaz</h1>
-            <p className="text-slate-400">
+            <p className="text-muted-foreground">
               Traducción instantánea con Google Translate, integrada a tu panel.
             </p>
           </div>
@@ -166,10 +166,10 @@ export default function LanguageGooglePage() {
 
         {/* Selección de idioma */}
         <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-300">Selecciona un idioma</h2>
+          <h2 className="mb-4 text-sm font-semibold text-muted-foreground/60">Selecciona un idioma</h2>
 
           {!ready ? (
-            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-800/50 p-4 text-slate-300">
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-800/50 p-4 text-muted-foreground/60">
               <Loader2 className="h-5 w-5 animate-spin" />
               Cargando motor de traducción…
             </div>
@@ -190,7 +190,7 @@ export default function LanguageGooglePage() {
                     <span className="text-2xl">{lang.flag}</span>
                     <div>
                       <p className="text-base font-medium text-white">{lang.name}</p>
-                      <p className="text-xs text-slate-400">{lang.code.toUpperCase()}</p>
+                      <p className="text-xs text-muted-foreground">{lang.code.toUpperCase()}</p>
                     </div>
                   </div>
                   {selected === lang.code && <Check className="h-5 w-5 text-emerald-400" />}
@@ -199,14 +199,14 @@ export default function LanguageGooglePage() {
             </div>
           )}
 
-          <p className="mt-4 text-xs text-slate-500 text-center">
+          <p className="mt-4 text-xs text-muted-foreground text-center">
             Traducido automáticamente por Google Translate.
           </p>
         </div>
 
         {/* Vista previa */}
         <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
-          <h2 className="mb-3 text-sm font-semibold text-slate-300">Vista previa</h2>
+          <h2 className="mb-3 text-sm font-semibold text-muted-foreground/60">Vista previa</h2>
           <div className="rounded-lg border border-white/10 bg-slate-800/60 p-4 text-slate-200 text-center">
             {selected === "es" && <p>Tu idioma actual es <strong>Español</strong>.</p>}
             {selected === "en" && <p>Your current language is <strong>English</strong>.</p>}
@@ -235,7 +235,7 @@ export default function LanguageGooglePage() {
               setShowToast(true)
               setTimeout(() => changeLanguage(selected), 500)
             }}
-            className="rounded-lg hover:cursor-pointer bg-emerald-500 px-5 py-2 font-semibold text-slate-900 hover:bg-emerald-400"
+            className="rounded-lg hover:cursor-pointer bg-emerald-500 px-5 py-2 font-semibold text-foreground hover:bg-emerald-400"
           >
             Guardar cambios
           </button>
@@ -247,7 +247,7 @@ export default function LanguageGooglePage() {
 
       {/* Toast simple */}
       {showToast && (
-        <div className="fixed bottom-4 right-4 rounded-lg bg-emerald-500 px-6 py-3 text-slate-900 font-semibold shadow-lg">
+        <div className="fixed bottom-4 right-4 rounded-lg bg-emerald-500 px-6 py-3 text-foreground font-semibold shadow-lg">
           {toastMessage}
         </div>
       )}

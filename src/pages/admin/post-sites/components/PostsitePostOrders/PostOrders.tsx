@@ -19,27 +19,27 @@ export default function PostSiteOrders({ site }: { site?: any }) {
     <div ref={containerRef} className="space-y-4">
       
 
-      <div className="bg-white border rounded-lg p-4 shadow-sm">
+      <div className="bg-card border rounded-lg p-4 shadow-sm">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="relative">
             <button
               onClick={() => setActionOpen(v => !v)}
-              className="px-3 py-2 border rounded-full bg-white text-sm inline-flex items-center gap-2"
+              className="px-3 py-2 border rounded-full bg-card text-sm inline-flex items-center gap-2"
             >
               {actionSelection}
               <ChevronDown size={14} />
             </button>
             {actionOpen && (
-              <div className="absolute mt-2 bg-white border rounded-md shadow-lg z-10 w-48">
-                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Archive</button>
-                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Delete</button>
+              <div className="absolute mt-2 bg-card border rounded-md shadow-lg z-10 w-48">
+                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-muted/30">Archive</button>
+                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-muted/30">Delete</button>
               </div>
             )}
           </div>
 
           <div className="flex-1 flex justify-center">
             <div className="relative w-full max-w-xl">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none">
                 <Search size={16} />
               </span>
               <input
@@ -64,13 +64,13 @@ export default function PostSiteOrders({ site }: { site?: any }) {
         <div>
           <div className="md:block hidden overflow-x-auto">
             <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted/30">
               <tr>
                 <th className="px-4 py-3"><input type="checkbox" /></th>
                 <th className="px-4 py-3 text-left">Title</th>
                 <th className="px-4 py-3 text-left">Date</th>
                 <th className="px-4 py-3 text-left">Added By</th>
-                <th className="px-4 py-3 text-right"> <button className="text-gray-400">↕</button></th>
+                <th className="px-4 py-3 text-right"> <button className="text-muted-foreground">↕</button></th>
               </tr>
             </thead>
             <tbody>
@@ -86,8 +86,8 @@ export default function PostSiteOrders({ site }: { site?: any }) {
                       </svg>
                     </div>
                     <div className="text-center">
-                      <h3 className="text-lg font-semibold text-gray-700">No Result Found</h3>
-                      <p className="text-sm text-gray-500 mt-1">We can't find any item matching your search</p>
+                      <h3 className="text-lg font-semibold text-foreground">No Result Found</h3>
+                      <p className="text-sm text-muted-foreground mt-1">We can't find any item matching your search</p>
                     </div>
                   </div>
                 </td>
@@ -100,7 +100,7 @@ export default function PostSiteOrders({ site }: { site?: any }) {
             <MobileCardList items={[]} renderCard={(po: any) => (
               <div>
                 <div className="text-sm font-semibold">{po.title || 'Post Order'}</div>
-                <div className="text-xs text-gray-500">{po.date || '-'}</div>
+                <div className="text-xs text-muted-foreground">{po.date || '-'}</div>
               </div>
             )} />
           </div>
@@ -109,15 +109,15 @@ export default function PostSiteOrders({ site }: { site?: any }) {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center">
           <div className="absolute inset-0 bg-black opacity-30 z-40" onClick={() => setShowModal(false)} />
-          <div className="w-full sm:ml-auto sm:w-[680px] bg-white h-full sm:h-auto shadow-2xl p-6 overflow-auto relative z-50 rounded-t-lg sm:rounded-md" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4 border-b pb-3 sticky top-0 bg-white z-10">
+          <div className="w-full sm:ml-auto sm:w-[680px] bg-card h-full sm:h-auto shadow-2xl p-6 overflow-auto relative z-50 rounded-t-lg sm:rounded-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4 border-b pb-3 sticky top-0 bg-card z-10">
               <h3 className="text-lg font-semibold">New Post Order</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+              <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground">✕</button>
             </div>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm text-gray-600 mb-2">Copy From</label>
+                <label className="block text-sm text-foreground/70 mb-2">Copy From</label>
                 <select value={copyFrom} onChange={e => setCopyFrom(e.target.value)} className="w-full border rounded-md h-12 px-3">
                   <option value="">Select</option>
                   <option value="template-1">Template 1</option>
@@ -125,19 +125,19 @@ export default function PostSiteOrders({ site }: { site?: any }) {
                 </select>
               </div>
 
-              <div className="text-center text-sm text-gray-500">Or Create New Post Order</div>
+              <div className="text-center text-sm text-muted-foreground">Or Create New Post Order</div>
 
               <div>
-                <label className="block text-sm text-gray-600 mb-2">Title*</label>
+                <label className="block text-sm text-foreground/70 mb-2">Title*</label>
                 <input value={title} onChange={e => setTitle(e.target.value)} className="w-full border rounded-md h-12 px-3" placeholder="Title*" />
               </div>
 
               <div>
                 <div className="border rounded-md">
-                  <div className="flex items-center gap-2 p-2 border-b bg-gray-50">
-                    <button className="p-2 rounded hover:bg-gray-100 text-sm">B</button>
-                    <button className="p-2 rounded hover:bg-gray-100 text-sm">I</button>
-                    <button className="p-2 rounded hover:bg-gray-100 text-sm">U</button>
+                  <div className="flex items-center gap-2 p-2 border-b bg-muted/30">
+                    <button className="p-2 rounded hover:bg-muted text-sm">B</button>
+                    <button className="p-2 rounded hover:bg-muted text-sm">I</button>
+                    <button className="p-2 rounded hover:bg-muted text-sm">U</button>
                     <div className="border-l h-6 mx-2" />
                     <select className="ml-auto text-sm bg-transparent">
                       <option>Normal</option>
@@ -149,7 +149,7 @@ export default function PostSiteOrders({ site }: { site?: any }) {
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-white border-t p-4 flex items-center justify-end gap-3">
+            <div className="sticky bottom-0 bg-card border-t p-4 flex items-center justify-end gap-3">
                 <button onClick={() => { /* submit logic */ setShowModal(false);} } className="w-12 h-12 bg-[#C8860A] text-white rounded-full flex items-center justify-center shadow-lg">Add</button>
               </div>
           </div>

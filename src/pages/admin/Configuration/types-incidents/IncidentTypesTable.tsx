@@ -123,7 +123,7 @@ export default function IncidentTypesTable({
                   </TableCell>
                   <TableCell className="font-medium">{row.name}</TableCell>
                   <TableCell>
-                      <Badge variant="outline" className={row.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      <Badge variant="outline" className={row.status === "active" ? "bg-green-100 text-green-800" : "bg-red-500/15 text-red-700"}>
                       {row.status === "active" ? "Activo" : "Inactivo"}
                     </Badge>
                   </TableCell>

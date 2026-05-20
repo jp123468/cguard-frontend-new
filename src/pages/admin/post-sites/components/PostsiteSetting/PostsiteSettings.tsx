@@ -36,7 +36,7 @@ export default function PostSiteSettings({ site }: { site?: any }) {
   useScrollToTopOnMount(containerRef);
 
   return (
-    <div ref={containerRef} className="relative bg-white border rounded-md shadow-sm">
+    <div ref={containerRef} className="relative bg-card border rounded-md shadow-sm">
       <div className="p-6 space-y-4 overflow-auto">
         <div className="space-y-4 mt-4">
           <SettingRow checked={values.enforceClockInBeforeCheckIn} onChange={() => toggle('enforceClockInBeforeCheckIn')}>Enforce clock-in before check-in</SettingRow>
@@ -62,7 +62,7 @@ export default function PostSiteSettings({ site }: { site?: any }) {
           <div className="flex items-center gap-3">
             <label className="flex items-center gap-3">
               <input type="checkbox" checked={true} readOnly className="w-4 h-4" />
-              <span className="text-sm text-gray-700">Enforce pass-down acknowledgement for past</span>
+              <span className="text-sm text-foreground">Enforce pass-down acknowledgement for past</span>
             </label>
 
             <select value={values.enforcePassdownAckForPastHours} onChange={e => setHours(Number(e.target.value))} className="ml-4 border rounded px-3 h-10">
@@ -72,13 +72,13 @@ export default function PostSiteSettings({ site }: { site?: any }) {
               <option value={48}>48 Hours</option>
             </select>
 
-            <Info className="ml-2 text-gray-400" size={16} aria-label="Información sobre el enforzamiento" role="img" />
+            <Info className="ml-2 text-muted-foreground" size={16} aria-label="Información sobre el enforzamiento" role="img" />
           </div>
         </div>
       </div>
 
       {/* Fixed footer */}
-      <div className="border-t p-4 bg-white sticky bottom-0 z-10 flex justify-end">
+      <div className="border-t p-4 bg-card sticky bottom-0 z-10 flex justify-end">
         <button onClick={save} className="px-4 py-2 rounded-full bg-blue-600 text-white">Save</button>
       </div>
     </div>
@@ -90,9 +90,9 @@ function SettingRow({ checked, onChange, children }: { checked: boolean; onChang
     <div className="flex items-start gap-3">
       <label className="flex items-center gap-3">
         <input type="checkbox" checked={checked} onChange={onChange} className="w-4 h-4 mt-1" />
-        <span className="text-sm text-gray-700">{children}</span>
+        <span className="text-sm text-foreground">{children}</span>
       </label>
-      <Info className="ml-2 text-gray-400 mt-1" size={14} aria-label="More info" role="img" />
+      <Info className="ml-2 text-muted-foreground mt-1" size={14} aria-label="More info" role="img" />
     </div>
   );
 }

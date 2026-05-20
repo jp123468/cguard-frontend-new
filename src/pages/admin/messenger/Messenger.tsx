@@ -60,14 +60,14 @@ function EmptyList({ label = "Sin chats" }: { label?: string }) {
     <div className="grid h-full place-items-center px-6 text-center">
       <div className="grid place-items-center gap-3">
         <div className="relative">
-          <MessageSquareText className="h-16 w-16 text-slate-400 stroke-[1.5]" />
+          <MessageSquareText className="h-16 w-16 text-muted-foreground stroke-[1.5]" />
           <div className="absolute -top-1 -right-1 flex gap-0.5">
             <div className="h-1.5 w-1.5 rounded-full bg-slate-400"></div>
             <div className="h-1.5 w-1.5 rounded-full bg-slate-400"></div>
             <div className="h-1.5 w-1.5 rounded-full bg-slate-400"></div>
           </div>
         </div>
-        <p className="text-base font-medium text-slate-500">{label}</p>
+        <p className="text-base font-medium text-muted-foreground">{label}</p>
       </div>
     </div>
   );
@@ -77,7 +77,7 @@ function EmptyChat() {
   return (
     <div className="grid h-full place-items-center bg-slate-50/50">
       <div className="relative">
-        <MessageSquareText className="h-24 w-24 text-slate-400 stroke-[1.5]" />
+        <MessageSquareText className="h-24 w-24 text-muted-foreground stroke-[1.5]" />
         <div className="absolute top-6 left-1/2 -translate-x-1/2 flex gap-1">
           <div className="h-2 w-2 rounded-full bg-slate-400"></div>
           <div className="h-2 w-2 rounded-full bg-slate-400"></div>
@@ -92,22 +92,22 @@ function Composer({
   value, onChange, onSend, disabled,
 }: { value: string; onChange: (v: string) => void; onSend: () => void; disabled?: boolean }) {
   return (
-    <div className="flex items-center gap-3 border-t bg-white p-4">
-      <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-slate-600" title="Adjuntar">
+    <div className="flex items-center gap-3 border-t bg-card p-4">
+      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground/70" title="Adjuntar">
         <Paperclip className="h-5 w-5" />
       </Button>
       <Input
         placeholder=""
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 bg-white border-slate-300 h-10 rounded-md focus-visible:ring-0 focus-visible:border-slate-400"
+        className="flex-1 bg-card border-slate-300 h-10 rounded-md focus-visible:ring-0 focus-visible:border-slate-400"
       />
       <Button
         onClick={onSend}
         disabled={disabled || !value.trim()}
         variant="ghost"
         size="icon"
-        className="h-10 w-10 text-slate-400 hover:text-slate-600 hover:bg-transparent"
+        className="h-10 w-10 text-muted-foreground hover:text-foreground/70 hover:bg-transparent"
       >
         <Send className="h-6 w-6" />
       </Button>
@@ -137,7 +137,7 @@ function NewMessageDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b">
-          <DialogTitle className="text-base font-normal text-slate-700">Nuevo Mensaje</DialogTitle>
+          <DialogTitle className="text-base font-normal text-foreground">Nuevo Mensaje</DialogTitle>
           <DialogDescription>
             Busca un guardia o un sitio para enviar un nuevo mensaje.
           </DialogDescription>
@@ -145,17 +145,17 @@ function NewMessageDialog({
 
         <div className="p-6 space-y-6">
           <div className="space-y-2">
-            <Label className="text-slate-600 font-medium">Seleccione el usuario o el Puesto de seguridad para enviar un nuevo mensaje</Label>
+            <Label className="text-foreground/70 font-medium">Seleccione el usuario o el Puesto de seguridad para enviar un nuevo mensaje</Label>
             <Input
               placeholder="Buscar usuario o Puesto de seguridad..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className="bg-white border-slate-200"
+              className="bg-card border-slate-200"
             />
           </div>
 
           <div className="space-y-2">
-            <div className="text-sm font-medium text-slate-500">Guardias</div>
+            <div className="text-sm font-medium text-muted-foreground">Guardias</div>
             <div className=" border-t border-x border-b-0">
               <ScrollArea className="max-h-48">
                 {guardsF.length === 0 && <div className="p-4 text-sm text-muted-foreground border-b">Sin resultados</div>}
@@ -168,7 +168,7 @@ function NewMessageDialog({
                     <div className="grid h-8 w-8 place-items-center rounded-full bg-[#1e293b] text-white text-xs">
                       {g.name.charAt(0).toUpperCase()}
                     </div>
-                    <div className="font-normal text-slate-600">{g.name}</div>
+                    <div className="font-normal text-foreground/70">{g.name}</div>
                   </button>
                 ))}
               </ScrollArea>
@@ -176,7 +176,7 @@ function NewMessageDialog({
           </div>
 
           <div className="space-y-2">
-            <div className="text-sm font-medium text-slate-500">Puestos de Vigilancia</div>
+            <div className="text-sm font-medium text-muted-foreground">Puestos de Vigilancia</div>
             <div className=" border-t border-x border-b-0">
               <ScrollArea className="max-h-48">
                 {sitesF.length === 0 && <div className="p-4 text-sm text-muted-foreground border-b">Sin resultados</div>}
@@ -189,7 +189,7 @@ function NewMessageDialog({
                     <div className="grid h-8 w-8 place-items-center rounded-full bg-[#1e293b] text-white text-xs">
                       {s.name.charAt(0).toUpperCase()}
                     </div>
-                    <div className="font-normal text-slate-600">{s.name}</div>
+                    <div className="font-normal text-foreground/70">{s.name}</div>
                   </button>
                 ))}
               </ScrollArea>
@@ -225,7 +225,7 @@ function NewGroupDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b">
-          <DialogTitle className="text-base font-normal text-slate-700">Nuevo grupo</DialogTitle>
+          <DialogTitle className="text-base font-normal text-foreground">Nuevo grupo</DialogTitle>
           <DialogDescription>
             Crea un grupo seleccionando un sitio (opcional) y agregando guardias.
           </DialogDescription>
@@ -236,13 +236,13 @@ function NewGroupDialog({
             placeholder="Nombre del Grupo*"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="bg-white border-slate-200"
+            className="bg-card border-slate-200"
           />
 
           <div className="space-y-2 relative">
-            <Label className="text-xs text-slate-500 absolute -top-2 left-2 bg-white px-1 z-10">Seleccionar Puesto de seguridad</Label>
+            <Label className="text-xs text-muted-foreground absolute -top-2 left-2 bg-card px-1 z-10">Seleccionar Puesto de seguridad</Label>
             <Select value={siteId ?? ""} onValueChange={(v) => setSiteId(v || undefined)}>
-              <SelectTrigger className="w-full border-slate-200 text-slate-500 font-normal">
+              <SelectTrigger className="w-full border-slate-200 text-muted-foreground font-normal">
                 <SelectValue placeholder="Seleccionar Puesto de seguridad" />
               </SelectTrigger>
               <SelectContent>
@@ -256,11 +256,11 @@ function NewGroupDialog({
             placeholder="Buscar usuario"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="bg-white border-slate-200 text-slate-500"
+            className="bg-card border-slate-200 text-muted-foreground"
           />
 
           <div className="space-y-2">
-            <div className="text-sm font-medium text-slate-500">Guardias</div>
+            <div className="text-sm font-medium text-muted-foreground">Guardias</div>
             <div className=" border-t border-x border-b-0">
               <ScrollArea className="max-h-60">
                 {guardsF.length === 0 && <div className="p-4 text-sm text-muted-foreground border-b">Sin resultados</div>}
@@ -279,7 +279,7 @@ function NewGroupDialog({
                       <div className="grid h-8 w-8 place-items-center rounded-full bg-[#1e293b] text-white text-xs">
                         {g.name.charAt(0).toUpperCase()}
                       </div>
-                      <div className="font-normal text-slate-600">{g.name}</div>
+                      <div className="font-normal text-foreground/70">{g.name}</div>
                     </div>
                   );
                 })}
@@ -330,9 +330,9 @@ export function Messenger({
   };
 
   return (
-    <div className="grid h-[calc(100vh-180px)] grid-cols-1 overflow-hidden rounded-lg border bg-white md:grid-cols-[360px_1fr]">
+    <div className="grid h-[calc(100vh-180px)] grid-cols-1 overflow-hidden rounded-lg border bg-card md:grid-cols-[360px_1fr]">
       {/* Sidebar */}
-      <div className="flex h-full flex-col border-r bg-white">
+      <div className="flex h-full flex-col border-r bg-card">
         <div className="flex items-center justify-between border-b p-4 h-[60px]">
           {/* Header Sidebar */}
           {view === "inbox" ? (
@@ -340,7 +340,7 @@ export function Messenger({
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 text-slate-500 hover:bg-slate-100 rounded bg-slate-100"
+                className="h-8 w-8 text-muted-foreground hover:bg-slate-100 rounded bg-slate-100"
                 onClick={() => {
                   setView("archived");
                   setCurrentId(null);
@@ -359,10 +359,10 @@ export function Messenger({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem onClick={() => setOpenNewMsg(true)} className="gap-2 cursor-pointer">
-                    <MessageSquareText className="h-4 w-4 text-slate-500" /> Nuevo Mensaje
+                    <MessageSquareText className="h-4 w-4 text-muted-foreground" /> Nuevo Mensaje
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setOpenNewGroup(true)} className="gap-2 cursor-pointer">
-                    <Users className="h-4 w-4 text-slate-500" /> Nuevo Grupo
+                    <Users className="h-4 w-4 text-muted-foreground" /> Nuevo Grupo
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -378,21 +378,21 @@ export function Messenger({
                   setCurrentId(null);
                 }}
               >
-                <ArrowLeft className="h-5 w-5 text-slate-600" />
+                <ArrowLeft className="h-5 w-5 text-foreground/70" />
               </Button>
-              <span className="font-medium text-slate-700">conversaciones archivadas</span>
+              <span className="font-medium text-foreground">conversaciones archivadas</span>
             </div>
           )}
         </div>
 
         <div className="p-4 border-b border-slate-100">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar Chat.."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-9 bg-white border-slate-200 text-slate-600 placeholder:text-slate-400"
+              className="pl-9 bg-card border-slate-200 text-foreground/70 placeholder:text-muted-foreground"
             />
           </div>
         </div>
@@ -409,14 +409,14 @@ export function Messenger({
                   className={`flex w-full items-start gap-3 border-b border-slate-50 p-4 text-left hover:bg-slate-50 transition-colors ${currentId === c.id ? "bg-slate-50" : ""
                     }`}
                 >
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-200 text-slate-600 font-medium">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-200 text-foreground/70 font-medium">
                     {c.title.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium text-[#C8860A] text-[15px]">{c.title}</div>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {c.isSite && (
-                        <Badge className="bg-emerald-50 text-emerald-700 border-0 font-normal px-2 py-0.5 h-auto" variant="secondary">
+                        <Badge className="bg-emerald-500/10 text-emerald-600 border-0 font-normal px-2 py-0.5 h-auto" variant="secondary">
                           Puesto de seguridad
                         </Badge>
                       )}
@@ -439,11 +439,11 @@ export function Messenger({
         {current ? (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between border-b bg-white px-4 py-3 h-[60px]">
-              <div className="font-semibold text-slate-700">{current.title}</div>
+            <div className="flex items-center justify-between border-b bg-card px-4 py-3 h-[60px]">
+              <div className="font-semibold text-foreground">{current.title}</div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
                     <MoreHorizontal className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>

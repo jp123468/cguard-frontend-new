@@ -139,7 +139,7 @@ export default function CheckInOut() {
                       <Label>Desde la Fecha</Label>
                       <div className="relative">
                         <Input value="Nov 17, 2025" readOnly className="pr-8" />
-                        <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -153,7 +153,7 @@ export default function CheckInOut() {
                       <Label>Hasta la Fecha</Label>
                       <div className="relative">
                         <Input value="Nov 23, 2025" readOnly className="pr-8" />
-                        <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <CalendarIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -164,7 +164,7 @@ export default function CheckInOut() {
 
                   <div className="flex items-center gap-2 pt-2">
                     <Checkbox id="archived" />
-                    <Label htmlFor="archived" className="text-sm font-normal text-slate-600">Mostrar datos archivados</Label>
+                    <Label htmlFor="archived" className="text-sm font-normal text-foreground/70">Mostrar datos archivados</Label>
                   </div>
 
                   <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white">
@@ -176,22 +176,22 @@ export default function CheckInOut() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground/70">
                   <MoreVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem className="gap-2">
-                  <FileText className="h-4 w-4 text-slate-500" /> Exportar como PDF
+                  <FileText className="h-4 w-4 text-muted-foreground" /> Exportar como PDF
                 </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2">
-                  <FileSpreadsheet className="h-4 w-4 text-slate-500" /> Exportar como Excel
+                  <FileSpreadsheet className="h-4 w-4 text-muted-foreground" /> Exportar como Excel
                 </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2">
-                  <Printer className="h-4 w-4 text-slate-500" /> Imprimir
+                  <Printer className="h-4 w-4 text-muted-foreground" /> Imprimir
                 </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2">
-                  <Mail className="h-4 w-4 text-slate-500" /> Enviar Informe por Correo
+                  <Mail className="h-4 w-4 text-muted-foreground" /> Enviar Informe por Correo
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -201,22 +201,22 @@ export default function CheckInOut() {
         {/* Table */}
         <div className="mt-4 overflow-hidden rounded-lg border">
           <table className="min-w-full border-collapse text-left text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted/30">
               <tr className="border-b">
                 <th className="px-4 py-3">
                   <Checkbox />
                 </th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Cliente</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">
+                <th className="px-4 py-3 font-semibold text-foreground">Cliente</th>
+                <th className="px-4 py-3 font-semibold text-foreground">
                   <div className="flex items-center gap-1 cursor-pointer">
                     Puesto de seguridad <span className="text-xs">↑</span>
                   </div>
                 </th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Guardia</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Registrado</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Dado de salida</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Duración</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Tipo</th>
+                <th className="px-4 py-3 font-semibold text-foreground">Guardia</th>
+                <th className="px-4 py-3 font-semibold text-foreground">Registrado</th>
+                <th className="px-4 py-3 font-semibold text-foreground">Dado de salida</th>
+                <th className="px-4 py-3 font-semibold text-foreground">Duración</th>
+                <th className="px-4 py-3 font-semibold text-foreground">Tipo</th>
               </tr>
             </thead>
             <tbody>
@@ -229,7 +229,7 @@ export default function CheckInOut() {
                       alt="Sin datos"
                       className="mb-4 h-36"
                     />
-                    <h3 className="text-lg font-semibold text-slate-700">No se encontraron resultados</h3>
+                    <h3 className="text-lg font-semibold text-foreground">No se encontraron resultados</h3>
                     <p className="mt-1 max-w-xs text-sm text-muted-foreground">
                       No pudimos encontrar ningún elemento que coincida con su búsqueda
                     </p>
@@ -240,7 +240,7 @@ export default function CheckInOut() {
           </table>
 
           {/* Pagination Footer */}
-          <div className="flex items-center justify-between bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          <div className="flex items-center justify-between bg-muted/30 px-4 py-3 text-sm text-foreground/70">
             <div className="flex items-center gap-2">
               <span>Elementos por página</span>
               <Select defaultValue="25">
@@ -268,7 +268,7 @@ export default function CheckInOut() {
         <Dialog open={isNewEntryOpen} onOpenChange={setIsNewEntryOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 gap-0">
             <DialogHeader className="px-6 py-4 border-b flex flex-row items-center justify-between">
-              <DialogTitle className="text-base font-normal text-slate-700">Añadir informe</DialogTitle>
+              <DialogTitle className="text-base font-normal text-foreground">Añadir informe</DialogTitle>
               <DialogDescription>
                 Rellena los campos para crear un nuevo informe de registro.
               </DialogDescription>
@@ -278,14 +278,14 @@ export default function CheckInOut() {
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-slate-500">Cliente*</Label>
+                  <Label className="text-muted-foreground">Cliente*</Label>
                   <Select>
                     <SelectTrigger className="w-full"><SelectValue placeholder="" /></SelectTrigger>
                     <SelectContent><SelectItem value="1">Cliente 1</SelectItem></SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-500">Puesto de seguridad*</Label>
+                  <Label className="text-muted-foreground">Puesto de seguridad*</Label>
                   <Select>
                     <SelectTrigger className="w-full"><SelectValue placeholder="" /></SelectTrigger>
                     <SelectContent><SelectItem value="1">Sitio 1</SelectItem></SelectContent>
@@ -294,7 +294,7 @@ export default function CheckInOut() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-slate-500">Guardia*</Label>
+                <Label className="text-muted-foreground">Guardia*</Label>
                 <Select>
                   <SelectTrigger className="w-full"><SelectValue placeholder="" /></SelectTrigger>
                   <SelectContent><SelectItem value="1">Guardia 1</SelectItem></SelectContent>
@@ -304,33 +304,33 @@ export default function CheckInOut() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex gap-4">
                   <div className="flex-1 space-y-2">
-                    <Label className="text-slate-500">Registrarse*</Label>
+                    <Label className="text-muted-foreground">Registrarse*</Label>
                     <div className="relative">
                       <Input className="pr-10" />
-                      <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
                   <div className="w-1/3 space-y-2">
-                    <Label className="text-slate-500">En*</Label>
+                    <Label className="text-muted-foreground">En*</Label>
                     <div className="relative">
                       <Input className="pr-10" />
-                      <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <div className="flex-1 space-y-2">
-                    <Label className="text-slate-500">Salir</Label>
+                    <Label className="text-muted-foreground">Salir</Label>
                     <div className="relative">
                       <Input className="pr-10" />
-                      <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
                   <div className="w-1/3 space-y-2">
-                    <Label className="text-slate-500">En</Label>
+                    <Label className="text-muted-foreground">En</Label>
                     <div className="relative">
                       <Input className="pr-10" />
-                      <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
                 </div>
@@ -338,28 +338,28 @@ export default function CheckInOut() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-xs text-slate-400">Latitud de registro</Label>
+                  <Label className="text-xs text-muted-foreground">Latitud de registro</Label>
                   <Input defaultValue="0.0" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-slate-400">Longitud de registro</Label>
+                  <Label className="text-xs text-muted-foreground">Longitud de registro</Label>
                   <Input defaultValue="0.0" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-xs text-slate-400">Latitud de salida</Label>
+                  <Label className="text-xs text-muted-foreground">Latitud de salida</Label>
                   <Input defaultValue="0.0" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-slate-400">Longitud de salida</Label>
+                  <Label className="text-xs text-muted-foreground">Longitud de salida</Label>
                   <Input defaultValue="0.0" />
                 </div>
               </div>
 
               <div className="space-y-4">
-                <Label className="text-slate-600 font-medium">Haga clic en el mapa para obtener Latitud y Longitud</Label>
+                <Label className="text-foreground/70 font-medium">Haga clic en el mapa para obtener Latitud y Longitud</Label>
                 <div className="flex gap-4">
                   <Input placeholder="Dirección" className="flex-1" />
                   <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30">Ubicación en el Mapa</Button>
@@ -367,24 +367,24 @@ export default function CheckInOut() {
 
                 {/* Map Placeholder */}
                 <div className="w-full h-64 bg-slate-100 rounded border border-slate-200 relative overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                     <MapPin className="h-8 w-8 mb-2" />
                     <span className="sr-only">Mapa</span>
                   </div>
                   {/* Mocking the map controls seen in image */}
-                  <div className="absolute top-4 left-4 bg-white rounded shadow p-1 flex">
-                    <button className="px-3 py-1 text-sm font-medium bg-white shadow-sm rounded">Mapa</button>
-                    <button className="px-3 py-1 text-sm font-medium text-slate-500">Satélite</button>
+                  <div className="absolute top-4 left-4 bg-card rounded shadow p-1 flex">
+                    <button className="px-3 py-1 text-sm font-medium bg-card shadow-sm rounded">Mapa</button>
+                    <button className="px-3 py-1 text-sm font-medium text-muted-foreground">Satélite</button>
                   </div>
                   <div className="absolute top-4 right-4 flex flex-col gap-2">
-                    <button className="bg-white p-2 rounded shadow text-slate-600"><div className="w-4 h-4 border-2 border-slate-400" /></button>
-                    <button className="bg-white p-2 rounded shadow text-slate-600"><div className="w-4 h-4 rounded-full border-2 border-slate-400" /></button>
+                    <button className="bg-card p-2 rounded shadow text-foreground/70"><div className="w-4 h-4 border-2 border-slate-400" /></button>
+                    <button className="bg-card p-2 rounded shadow text-foreground/70"><div className="w-4 h-4 rounded-full border-2 border-slate-400" /></button>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="w-48">
-                    <Label className="text-xs text-slate-400 mb-1 block">Ubicación</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Ubicación</Label>
                     <Select defaultValue="register">
                       <SelectTrigger><SelectValue placeholder="Registrarse" /></SelectTrigger>
                       <SelectContent><SelectItem value="register">Registrarse</SelectItem></SelectContent>
@@ -392,7 +392,7 @@ export default function CheckInOut() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch id="geofence" checked />
-                    <Label htmlFor="geofence" className="text-slate-600">Mostrar Geovalla</Label>
+                    <Label htmlFor="geofence" className="text-foreground/70">Mostrar Geovalla</Label>
                   </div>
                 </div>
               </div>

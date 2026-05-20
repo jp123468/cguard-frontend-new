@@ -60,7 +60,7 @@ export default function ModulesTable({
                 </TableCell>
                 <TableCell className="align-top">{m.price}</TableCell>
                 <TableCell className="align-top">
-                  <Badge variant="secondary" className={m.status === "Activo" ? "bg-emerald-100 text-emerald-700" : "bg-slate-200"}>
+                  <Badge variant="secondary" className={m.status === "Activo" ? "bg-emerald-500/15 text-emerald-600" : "bg-slate-200"}>
                     {m.status}
                   </Badge>
                 </TableCell>

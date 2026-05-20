@@ -433,7 +433,7 @@ export default function ProfileUserForm() {
                       <SelectItem value="pt">🇧🇷 Português</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-500">{t('profile.languageSaved')}</p>
+                  <p className="text-xs text-muted-foreground">{t('profile.languageSaved')}</p>
                 </div>
 
                 <div className="flex justify-end">
@@ -527,7 +527,7 @@ export default function ProfileUserForm() {
           <div className="flex justify-end">
             <Button
               onClick={handleVerifyPhone}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-muted-foreground hover:text-foreground/70"
               variant="ghost"
             >
               {t('profile.send')}

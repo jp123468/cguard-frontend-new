@@ -7,6 +7,7 @@ import ResetPassword from "./pages/auth/reset-password"
 import DashboardPage from "./pages/admin/dashboard/dasboard"
 import LanguagePage from "./pages/idioma/configuracion"
 import { AuthProvider } from "./contexts/AuthContext"
+import { ThemeProvider } from "./contexts/ThemeContext"
 import { LanguageProvider } from "./contexts/LanguageContext"
 import "./i18n"
 import Register from "./pages/auth/register"
@@ -24,7 +25,6 @@ import IncidentTypesPage from "./pages/admin/Configuration/types-incidents/Incid
 import LicenseTypePage from "./pages/admin/Configuration/types-licenses/LicensesTypePage"
 import DepartmentPage from "./pages/admin/Configuration/department/DepartmentPage"
 import SkillSetsPage from "./pages/admin/Configuration/skill-sets/SkillSetsPage"
-import TaxesPage from "./pages/admin/Configuration/taxes/TaxesPage"
 import UserRolesPage from "./pages/admin/Configuration/user-roles/UserRolesPage"
 import IntegrationsList from "./pages/admin/Configuration/integrations/IntegrationsList"
 import ProfileFieldsPage from "./pages/admin/Configuration/profile-fields/ProfileFieldsPage"
@@ -37,10 +37,6 @@ import ReportSettingsPage from "./pages/admin/Configuration/report-settings/Repo
 import OtherSettingsPage from "./pages/admin/Configuration/other-settings/OtherSettingsPage"
 import GuardsGlobalSettingsPage from "./pages/admin/Configuration/guards-settings/GuardsGlobalSettingsPage"
 import DeveloperTokensPage from "./pages/admin/Configuration/developer-tokens/DeveloperTokensPage"
-import SubscriptionDetailsPage from "./pages/admin/Subscription/subscription/SubscriptionDetailsPage"
-import ModulesPage from "./pages/admin/Subscription/modules/ModulesPage"
-import PaymentMethodsPage from "./pages/admin/Subscription/payment-methods/PaymentMethodsPage"
-import InvoicesPage from "./pages/admin/Subscription/invoices/InvoicesPage"
 import ActivitiesPage from "./pages/admin/actividades/ActivitiesPage"
 import ClientesPage from "./pages/admin/clientes/ClientsPage"
 import NewOrEditClientPage from "./pages/admin/clientes/NewOrEditClientPage"
@@ -48,6 +44,8 @@ import ClientsDetails from "./pages/admin/clientes/ClientsDetails"
 import PostSitePage from "./pages/admin/post-sites/PostSitePage"
 import NewOrEditPostSitePage from "./pages/admin/post-sites/NewOrEditPostSitePage"
 import PostSiteDetailsPage from "./pages/admin/post-sites/PostSiteDetailsPage"
+import StationDetailPage from "./pages/admin/post-sites/station-detail/StationDetailPage"
+import GlobalInventoryPage from "./pages/admin/inventory/GlobalInventoryPage"
 import ProjectsPage from "./pages/admin/projects/ProjectsPage"
 import NewOrEditProjectPage from "./pages/admin/projects/NewOrEditProjectPage"
 import SecurityGuardsPage from "./pages/admin/security-guards/SecurityGuardsPage"
@@ -80,7 +78,6 @@ import Breaks from "./pages/admin/time-clock/Breaks"
 import Reports from "./pages/admin/Reports/Reports"
 import Reporting from "./pages/admin/analytics/Reporting"
 import Scheduling from "./pages/admin/analytics/Scheduling"
-import Invoicing from "./pages/admin/analytics/Invoicing"
 import GeneratePayroll from "./pages/admin/payroll/GeneratePayroll"
 import PastPayroll from "./pages/admin/payroll/PastPayroll"
 import OvertimeMultiplier from "./pages/admin/payroll/OvertimeMultiplier"
@@ -89,13 +86,6 @@ import Vehicles from "./pages/admin/visitor-management/Vehicles"
 import Visits from "./pages/admin/visitor-management/Visits"
 import PostSite from "./pages/admin/analytics/PostSite"
 import Guard from "./pages/admin/analytics/Guard"
-import Estimates from "./pages/admin/billing/Estimates"
-import NewEstimate from "./pages/admin/billing/NewEstimate"
-import EditEstimate from "./pages/admin/billing/EditEstimate"
-import Invoices from "./pages/admin/billing/Invoices"
-import NewInvoice from "./pages/admin/billing/NewInvoice"
-import EditInvoice from "./pages/admin/billing/EditInvoice"
-import Items from "./pages/admin/billing/Items"
 import ParkingContact from "./pages/admin/parking-manager/ParkingContact"
 import ParkingVehicles from "./pages/admin/parking-manager/ParkingVehicles"
 import ParkingArea from "./pages/admin/parking-manager/ParkingArea"
@@ -184,6 +174,7 @@ function LoginRouteResolver() {
 
 export default function App() {
   return (
+    <ThemeProvider>
     <LanguageProvider>
       <AuthProvider>
         <ClientSelectionProvider>
@@ -413,6 +404,14 @@ export default function App() {
                 }
               />
               <Route
+                path="/inventory"
+                element={
+                  <ProtectedRoute>
+                    <GlobalInventoryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/post-sites"
                 element={
                   <ProtectedRoute>
@@ -604,6 +603,16 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* STATION DETAIL ROUTES */}
+              <Route path="/post-sites/:postSiteId/stations/:stationId" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
+              <Route path="/post-sites/:postSiteId/stations/:stationId/overview" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
+              <Route path="/post-sites/:postSiteId/stations/:stationId/visitors" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
+              <Route path="/post-sites/:postSiteId/stations/:stationId/guards" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
+              <Route path="/post-sites/:postSiteId/stations/:stationId/shifts" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
+              <Route path="/post-sites/:postSiteId/stations/:stationId/site-tours" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
+              <Route path="/post-sites/:postSiteId/stations/:stationId/tag-scans" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
+              <Route path="/post-sites/:postSiteId/stations/:stationId/inventory" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
+              <Route path="/post-sites/:postSiteId/stations/:stationId/incidents" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
               {/* FIN CLIENTES */}
 
               {/* SUCURSALES */}
@@ -802,14 +811,6 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <Scheduling />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/analytics/invoicer"
-                element={
-                  <ProtectedRoute>
-                    <Invoicing />
                   </ProtectedRoute>
                 }
               />
@@ -1088,62 +1089,6 @@ export default function App() {
 
 
               {/* INTEGRACIONES */}
-              <Route
-                path="/estimates"
-                element={
-                  <ProtectedRoute>
-                    <Estimates />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/estimates/add-new"
-                element={
-                  <ProtectedRoute>
-                    <NewEstimate />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/estimates/:id"
-                element={
-                  <ProtectedRoute>
-                    <EditEstimate />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/invoices"
-                element={
-                  <ProtectedRoute>
-                    <Invoices />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/billing/invoices/new"
-                element={
-                  <ProtectedRoute>
-                    <NewInvoice />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/billing/invoices/:id"
-                element={
-                  <ProtectedRoute>
-                    <EditInvoice />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/invoicer/items"
-                element={
-                  <ProtectedRoute>
-                    <Items />
-                  </ProtectedRoute>
-                }
-              />
               <Route
                 path="/parking-manager/parking-contact"
                 element={
@@ -1482,14 +1427,6 @@ export default function App() {
                 }
               />
               <Route
-                path="/setting/impuestos"
-                element={
-                  <ProtectedRoute>
-                    <TaxesPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/setting/campos-perfil"
                 element={
                   <ProtectedRoute>
@@ -1594,40 +1531,6 @@ export default function App() {
                 }
               />
 
-              {/* SUSCIPCIONES */}
-              <Route
-                path="/billing"
-                element={
-                  <ProtectedRoute>
-                    <SubscriptionDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/billing-modulos"
-                element={
-                  <ProtectedRoute>
-                    <ModulesPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/billing-metodos"
-                element={
-                  <ProtectedRoute>
-                    <PaymentMethodsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/billing-facturas"
-                element={
-                  <ProtectedRoute>
-                    <InvoicesPage />
-                  </ProtectedRoute>
-                }
-              />
-
               <Route
                 path="/idioma"
                 element={
@@ -1651,16 +1554,17 @@ export default function App() {
         </ClientSelectionProvider>
       </AuthProvider>
     </LanguageProvider>
+    </ThemeProvider>
   )
 }
 
 function NotFound() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
+    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-6">
       <div className="text-center">
         <ArrowLeftCircle className="mx-auto h-16 w-16 text-emerald-500 mb-4" />
         <h1 className="text-6xl font-extrabold text-emerald-600">404</h1>
-        <p className="mt-4 text-lg text-gray-600">Página no encontrada</p>
+        <p className="mt-4 text-lg text-foreground/70">Página no encontrada</p>
         <a
           href="/dashboard"
           className="mt-6 inline-block rounded-lg bg-emerald-600 px-6 py-2 text-white font-semibold shadow hover:bg-emerald-700 transition-all"

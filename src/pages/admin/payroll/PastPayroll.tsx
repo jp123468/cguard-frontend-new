@@ -44,7 +44,7 @@ export default function PastPayroll() {
 
                 <div className="overflow-hidden rounded-lg border">
                     <table className="min-w-full border-collapse text-left text-sm">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-muted/30">
                             <tr className="border-b">
                                 <th className="px-4 py-3">
                                     <Checkbox />
@@ -78,7 +78,7 @@ export default function PastPayroll() {
                         </tbody>
                     </table>
 
-                    <div className="flex items-center justify-between bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                    <div className="flex items-center justify-between bg-muted/30 px-4 py-3 text-sm text-foreground/70">
                         <div className="flex items-center gap-2">
                             <span>Elementos por página</span>
                             <Select value={perPage} onValueChange={setPerPage}>

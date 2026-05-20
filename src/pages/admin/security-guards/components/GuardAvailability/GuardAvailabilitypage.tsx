@@ -87,13 +87,13 @@ type Props = {
     <AppLayout>
       <GuardsLayout navKey="keep-safe" title="guards.nav.disponibilidad">
         <div>
-          <div className="bg-white border rounded-xl p-6">
+          <div className="bg-card border rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">{t('guards.availability.title', { defaultValue: 'Availability' })}</h3>
             <div>
               <div className="md:block hidden overflow-x-auto">
                 <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs text-gray-500">
+                  <tr className="text-left text-xs text-muted-foreground">
                     <th className="p-2">{t('guards.availability.table.day', { defaultValue: 'Day' })}</th>
                     <th className="p-2">{t('guards.availability.table.available', { defaultValue: 'Available' })}</th>
                     <th className="p-2">{t('guards.availability.table.from', { defaultValue: 'From' })}</th>
@@ -129,10 +129,10 @@ type Props = {
                   loading={false}
                   emptyMessage={t('guards.availability.empty', { defaultValue: 'No availability' }) as string}
                   renderCard={(a: any) => (
-                    <div className="p-4 bg-white border rounded-lg">
+                    <div className="p-4 bg-card border rounded-lg">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-semibold">{t(`guards.availability.days.${a.day}`, { defaultValue: a.day })}</div>
-                        <div className="text-xs text-gray-500">{a.available ? `${a.start} — ${a.end}` : t('guards.availability.notAvailable', { defaultValue: 'Not available' })}</div>
+                        <div className="text-xs text-muted-foreground">{a.available ? `${a.start} — ${a.end}` : t('guards.availability.notAvailable', { defaultValue: 'Not available' })}</div>
                       </div>
                     </div>
                   )}

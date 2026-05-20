@@ -49,17 +49,15 @@ export function PhoneInput({ value, onChange, placeholder, onCountryChange, maxL
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const displayValue = useMemo(() => value ?? "", [value]);
+    const fullValue = useMemo(() => value ?? "", [value]);
 
-    // Si el valor comienza con un prefijo +<código>, detectar el país correspondiente
+    // Detect country from full value when it starts with a dial code
     useEffect(() => {
-        if (!displayValue || !displayValue.startsWith("+")) return;
+        if (!fullValue || !fullValue.startsWith("+")) return;
 
-        // Normalizar: tomar solo los dígitos inmediatamente después del + hasta el primer espacio
-        const normalized = displayValue.replace(/^\+/, "");
+        const normalized = fullValue.replace(/^\+/, "");
         const local = normalized.split(" ")[0];
 
-        // Buscar la mejor coincidencia (código más largo primero)
         const sorted = COUNTRIES.slice().sort((a, b) => b.dialCode.length - a.dialCode.length);
         const match = sorted.find((c) => local.startsWith(c.dialCode));
         if (match && match.code !== country.code) {
@@ -67,40 +65,39 @@ export function PhoneInput({ value, onChange, placeholder, onCountryChange, maxL
             if (onCountryChange) onCountryChange(match);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [displayValue]);
+    }, [fullValue]);
 
-    // Calcular el máximo total: código de país + espacios + dígitos
-    const maxPhoneLength = useMemo(() => {
-        const codeLength = country.dialCode.length + 1; // +1 para el "+"
-        const maxDigits = maxLocalDigits ?? country.maxLength ?? 15;
-        return codeLength + maxDigits;
+    // Local part shown in the input: strip the leading +dialCode prefix
+    const localValue = useMemo(() => {
+        const prefix = `+${country.dialCode}`;
+        if (fullValue.startsWith(prefix)) {
+            return fullValue.slice(prefix.length).replace(/^\s+/, "");
+        }
+        // Strip any other leading +digits prefix
+        return fullValue.replace(/^\+\d+\s*/, "");
+    }, [fullValue, country]);
+
+    const maxLocalLength = useMemo(() => {
+        return maxLocalDigits ?? country.maxLength ?? 15;
     }, [country, maxLocalDigits]);
 
     const handleCountrySelect = (c: Country) => {
         setCountry(c);
         if (onCountryChange) onCountryChange(c);
-
-        if (!displayValue || !displayValue.startsWith("+")) {
-            onChange(`+${c.dialCode}`);
-            return;
-        }
-
-        const rest = displayValue.replace(/^\+\d+\s*/, "");
-        onChange(`+${c.dialCode}${rest ? " " + rest : ""}`);
+        // Keep the local digits, just swap the country prefix
+        onChange(`+${c.dialCode}${localValue ? localValue : ""}`);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = e.target.value;
+        const local = e.target.value;
 
-        // Solo permitir números, +, y espacios
-        if (!/^[\d+\s]*$/.test(newValue)) {
-            return;
-        }
+        // Only allow digits and spaces in the local part
+        if (!/^[\d\s]*$/.test(local)) return;
 
-        // Limitar la longitud total
-        if (newValue.length <= maxPhoneLength) {
-            onChange(newValue);
-        }
+        // Limit local digit count
+        if (local.replace(/\s/g, "").length > maxLocalLength) return;
+
+        onChange(`+${country.dialCode}${local}`);
     };
 
     return (
@@ -128,7 +125,7 @@ export function PhoneInput({ value, onChange, placeholder, onCountryChange, maxL
                         side="bottom"
                     >
                         <Command>
-                            <CommandInput className="sticky top-4 md:top-0 z-10 bg-white px-2 py-1 text-sm" placeholder="Search..." />
+                            <CommandInput className="sticky top-4 md:top-0 z-10 bg-card px-2 py-1 text-sm" placeholder="Search..." />
                                             <CommandList
                                                 className="text-sm max-h-[36vh] overflow-auto overscroll-contain touch-auto"
                                         onWheel={(e: any) => {
@@ -218,10 +215,10 @@ export function PhoneInput({ value, onChange, placeholder, onCountryChange, maxL
 
                 <Input
                     className="flex-1 min-w-0 rounded-l-none"
-                    value={displayValue}
+                    value={localValue}
                     onChange={handleInputChange}
-                    placeholder={placeholder ?? "e.g. +12015550123"}
-                                maxLength={maxPhoneLength}
+                    placeholder={placeholder ?? "999 123 4567"}
+                    maxLength={maxLocalLength + 4}
                 />
             </div>
         </div>

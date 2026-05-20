@@ -28,7 +28,7 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
 
   return (
   <div ref={containerRef} className="space-y-4">
-      <div className="bg-white border rounded-lg p-4">
+      <div className="bg-card border rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Geo-Fence</h3>
 
@@ -40,9 +40,9 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
             </button>
 
             {addOpen && (
-              <div className="absolute right-0 mt-2 w-44 bg-white border rounded-md shadow-lg z-20">
-                <button onClick={() => handleAdd('Allowed')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Allowed</button>
-                <button onClick={() => handleAdd('Restricted')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Restricted</button>
+              <div className="absolute right-0 mt-2 w-44 bg-card border rounded-md shadow-lg z-20">
+                <button onClick={() => handleAdd('Allowed')} className="block w-full text-left px-4 py-2 text-sm hover:bg-muted/30">Allowed</button>
+                <button onClick={() => handleAdd('Restricted')} className="block w-full text-left px-4 py-2 text-sm hover:bg-muted/30">Restricted</button>
               </div>
             )}
           </div>
@@ -59,7 +59,7 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
         <div>
           <div className="md:block hidden overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted/30">
                 <tr>
                   <th className="px-4 py-3 text-left">Shape</th>
                   <th className="px-4 py-3 text-left">Type</th>
@@ -68,7 +68,7 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
               </thead>
               <tbody>
                 <tr>
-                  <td colSpan={3} className="px-4 py-12 text-center text-gray-500">No geofences defined yet</td>
+                  <td colSpan={3} className="px-4 py-12 text-center text-muted-foreground">No geofences defined yet</td>
                 </tr>
               </tbody>
             </table>
@@ -78,7 +78,7 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
             <MobileCardList items={[]} renderCard={(g: any) => (
               <div>
                 <div className="text-sm font-semibold">{g.type || 'Geofence'}</div>
-                <div className="text-xs text-gray-500">{g.shape || '-'}</div>
+                <div className="text-xs text-muted-foreground">{g.shape || '-'}</div>
               </div>
             )} loading={false} />
           </div>

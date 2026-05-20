@@ -344,11 +344,11 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
               <IncidentMap lat={coords.lat} lng={coords.lng} label={ticketShort || undefined} />
             </div>
           )}
-          <div className="bg-white border rounded-md overflow-hidden">
-            <div className="bg-gray-100 px-4 py-2 text-sm font-semibold flex items-center justify-between">
+          <div className="bg-card border rounded-md overflow-hidden">
+            <div className="bg-muted px-4 py-2 text-sm font-semibold flex items-center justify-between">
                 <div>{t('dispatcher.basic_details')}</div>
                 <div className="flex items-center gap-2">
-                  <Button className="bg-white border text-black text-sm" asChild>
+                  <Button className="bg-card border text-black text-sm" asChild>
                     <Link to={`/dispatch-tickets/${requestId}/edit`}>{t('dispatcher.edit')}</Link>
                   </Button>
 
@@ -358,38 +358,38 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
               <table className="w-full text-sm border-collapse">
                 <tbody>
                   <tr className="border-b">
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.ticket_id')}</td>
-                    <td className="py-3 px-4 text-sm text-gray-800">{ticketShort} <span className={`inline-block text-xs ml-2 px-2 py-0.5 rounded-full ${statusIsOpen ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{statusDisplay || ''}</span></td>
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.date_time')}</td>
-                    <td className="py-3 px-4 text-sm text-gray-800">{requestPayload.createdAt ? new Date(requestPayload.createdAt).toLocaleString() : '-'}</td>
+                    <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.ticket_id')}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{ticketShort} <span className={`inline-block text-xs ml-2 px-2 py-0.5 rounded-full ${statusIsOpen ? 'bg-red-500/15 text-red-700' : 'bg-green-100 text-green-700'}`}>{statusDisplay || ''}</span></td>
+                    <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.date_time')}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{requestPayload.createdAt ? new Date(requestPayload.createdAt).toLocaleString() : '-'}</td>
                   </tr>
 
                   <tr className="border-b">
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.client_name')}</td>
-                    <td className="py-3 px-4 text-sm text-gray-800">{((requestPayload.client && (requestPayload.client.name || requestPayload.client.fullName)) || clients.find((c) => c.id === requestPayload.clientId)?.name || clients.find((c) => c.id === requestPayload.clientId)?.fullName || '-')}</td>
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.post_site')}</td>
-                    <td className="py-3 px-4 text-sm text-gray-800">{((requestPayload.site && (requestPayload.site.name || requestPayload.site.companyName)) || postSites.find((s) => s.id === requestPayload.siteId)?.name || '-')}</td>
+                    <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.client_name')}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{((requestPayload.client && (requestPayload.client.name || requestPayload.client.fullName)) || clients.find((c) => c.id === requestPayload.clientId)?.name || clients.find((c) => c.id === requestPayload.clientId)?.fullName || '-')}</td>
+                    <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.post_site')}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{((requestPayload.site && (requestPayload.site.name || requestPayload.site.companyName)) || postSites.find((s) => s.id === requestPayload.siteId)?.name || '-')}</td>
                   </tr>
 
                   <tr className="border-b">
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.caller_type')}</td>
-                    <td className="py-3 px-4 text-sm text-gray-800">{requestPayload.callerType || '-'}</td>
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.caller_name')}</td>
-                    <td className="py-3 px-4 text-sm text-gray-800">{requestPayload.callerName || '-'}</td>
+                    <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.caller_type')}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{requestPayload.callerType || '-'}</td>
+                    <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.caller_name')}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{requestPayload.callerName || '-'}</td>
                   </tr>
 
                   <tr className="border-b">
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.incident_type')}</td>
-                    <td className="py-3 px-4 text-sm text-gray-800">{incidentTypeDisplay}</td>
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.incident_datetime')}</td>
-                    <td className="py-3 px-4 text-sm text-gray-800">{(requestPayload.incidentAt || requestPayload.dateTime) ? new Date(requestPayload.incidentAt || requestPayload.dateTime).toLocaleString() : '-'}</td>
+                    <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.incident_type')}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{incidentTypeDisplay}</td>
+                    <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.incident_datetime')}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{(requestPayload.incidentAt || requestPayload.dateTime) ? new Date(requestPayload.incidentAt || requestPayload.dateTime).toLocaleString() : '-'}</td>
                   </tr>
 
                   <tr className="border-b">
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.incident_location')}</td>
-                    <td className="py-3 px-4 text-sm text-gray-800">{requestPayload.location || requestPayload.incidentLocation || '-'}</td>
-                    <td className="py-3 px-4 text-xs font-medium text-gray-500">{t('dispatcher.dispatcher')}</td>
-                    <td className="py-3 px-4 text-sm text-gray-800">{(requestPayload.guardName && (requestPayload.guardName.fullName || requestPayload.guardName.name)) || requestPayload.guardName || '-'}</td>
+                    <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.incident_location')}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{requestPayload.location || requestPayload.incidentLocation || '-'}</td>
+                    <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.dispatcher')}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{(requestPayload.guardName && (requestPayload.guardName.fullName || requestPayload.guardName.name)) || requestPayload.guardName || '-'}</td>
                   </tr>
                 </tbody>
               </table>
@@ -403,17 +403,17 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
       {showCommentModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black opacity-40" onClick={() => { setShowCommentModal(false); setNewComment(''); }} />
-          <div className="bg-white rounded-md shadow-lg w-full max-w-lg mx-4 z-10">
+          <div className="bg-card rounded-md shadow-lg w-full max-w-lg mx-4 z-10">
             <div className="flex items-center justify-between px-4 py-2 border-b">
                 <div className="text-sm font-medium">{t('dispatcher.comment.new_comment_title')}</div>
-                <button className="p-1 rounded-full hover:bg-gray-100" onClick={() => { setShowCommentModal(false); setNewComment(''); }}>&times;</button>
+                <button className="p-1 rounded-full hover:bg-muted" onClick={() => { setShowCommentModal(false); setNewComment(''); }}>&times;</button>
               </div>
             <div className="p-4">
               <label className="text-sm font-medium">{t('dispatcher.comment.note')}</label>
               <textarea className="w-full border rounded p-2 text-sm mt-2" rows={6} value={newComment} onChange={(e) => setNewComment(e.target.value)} />
               <div className="mt-3">
-                <div className="border rounded px-3 py-2 bg-gray-50">
-                  <div className="text-xs text-gray-500 mb-2">{t('dispatcher.comment.attach_file_optional')}</div>
+                <div className="border rounded px-3 py-2 bg-muted/30">
+                  <div className="text-xs text-muted-foreground mb-2">{t('dispatcher.comment.attach_file_optional')}</div>
                   <div className="flex items-center gap-3">
                     <input
                       type="file"
@@ -423,7 +423,7 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
                     {selectedFile ? (
                       <button
                         type="button"
-                        className="text-xs text-gray-500 hover:text-gray-700"
+                        className="text-xs text-muted-foreground hover:text-foreground"
                         onClick={() => setSelectedFile(null)}
                         aria-label={t('dispatcher.comment.remove_file')}
                       >
@@ -431,7 +431,7 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
                       </button>
                     ) : null}
                   </div>
-                  <div className="text-xs text-gray-700 mt-2 truncate">{selectedFile ? selectedFile.name : t('dispatcher.comment.no_files_selected', { defaultValue: 'Sin archivos seleccionados' })}</div>
+                  <div className="text-xs text-foreground mt-2 truncate">{selectedFile ? selectedFile.name : t('dispatcher.comment.no_files_selected', { defaultValue: 'Sin archivos seleccionados' })}</div>
                 </div>
               </div>
               <div className="mt-4 flex justify-end gap-2">
@@ -444,23 +444,23 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
       )}
       {/* Additional detail sections */}
       <div className="mt-4 space-y-4">
-        <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.incident_details')}</div>
+        <div className="bg-card border rounded-md overflow-hidden">
+          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.incident_details')}</div>
           <div className="p-4 text-sm">{requestPayload?.content || requestPayload?.incidentDetails || requestPayload?.details || '-'}</div>
         </div>
 
-        <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.action_taken')}</div>
+        <div className="bg-card border rounded-md overflow-hidden">
+          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.action_taken')}</div>
           <div className="p-4 text-sm">{requestPayload?.actionsTaken || requestPayload?.actionTaken || requestPayload?.action || '-'}</div>
         </div>
 
-        <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.internal_notes')}</div>
+        <div className="bg-card border rounded-md overflow-hidden">
+          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.internal_notes')}</div>
           <div className="p-4 text-sm whitespace-pre-wrap">{requestPayload?.internalNotes || requestPayload?.notes || '-'}</div>
         </div>
 
-        <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.files')}</div>
+        <div className="bg-card border rounded-md overflow-hidden">
+          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.files')}</div>
           <div className="p-4 text-sm">
             {requestPayload?.requestDocumentPDF && requestPayload.requestDocumentPDF.length > 0 ? (
               <ul className="list-disc pl-5">
@@ -469,26 +469,26 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
                 ))}
               </ul>
             ) : (
-              <div className="text-sm text-gray-500">-</div>
+              <div className="text-sm text-muted-foreground">-</div>
             )}
             {/* Debug: show raw payload when ?debugPayload=1 is present */}
             {typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debugPayload') && requestPayload && (
-              <div className="bg-gray-50 border rounded-md p-4 text-xs whitespace-pre-wrap overflow-auto mt-3">
+              <div className="bg-muted/30 border rounded-md p-4 text-xs whitespace-pre-wrap overflow-auto mt-3">
                 <pre className="text-xs">{JSON.stringify(requestPayload, null, 2)}</pre>
               </div>
             )}
           </div>
         </div>
 
-        <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.guard_assigned')}</div>
+        <div className="bg-card border rounded-md overflow-hidden">
+          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.guard_assigned')}</div>
           <div className="p-4 text-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-sm table-fixed border-collapse">
                 <thead>
-                  <tr className="bg-gray-50 text-left">
-                    <th className="py-2 px-3 text-xs font-medium text-gray-500">{t('dispatcher.guard')}</th>
-                    <th className="py-2 px-3 text-xs font-medium text-gray-500">{t('dispatcher.date_time')}</th>
+                  <tr className="bg-muted/30 text-left">
+                    <th className="py-2 px-3 text-xs font-medium text-muted-foreground">{t('dispatcher.guard')}</th>
+                    <th className="py-2 px-3 text-xs font-medium text-muted-foreground">{t('dispatcher.date_time')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -508,19 +508,19 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
 
       {/* Comments list (bottom) */}
       <div className="mt-6 max-w-4xl mx-auto">
-        <div className="bg-white border rounded-md overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 text-sm font-semibold">{t('dispatcher.ticket_summary')}</div>
+        <div className="bg-card border rounded-md overflow-hidden">
+          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.ticket_summary')}</div>
           <div className="p-4">
             {comments.length === 0 ? (
-              <div className="text-sm text-gray-500">No hay comentarios aún</div>
+              <div className="text-sm text-muted-foreground">No hay comentarios aún</div>
             ) : (
               <div className="space-y-4">
                 {comments.map((c) => (
                   <div key={c.id || c.createdAt} className="flex items-start gap-3">
-                    <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700">{(c.author && (c.author.name || c.author.fullName || c.author.username) ? String((c.author.name || c.author.fullName || c.author.username)).charAt(0).toUpperCase() : 'U')}</div>
+                    <div className="flex-shrink-0 h-8 w-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-foreground">{(c.author && (c.author.name || c.author.fullName || c.author.username) ? String((c.author.name || c.author.fullName || c.author.username)).charAt(0).toUpperCase() : 'U')}</div>
                     <div className="flex-1">
-                      <div className="text-xs text-gray-600">{(c.author && (c.author.name || c.author.fullName || c.author.username)) || 'Usuario'} · {c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</div>
-                      <div className="mt-1 text-sm text-gray-800 whitespace-pre-wrap">{c.text || c.body || c.message}</div>
+                      <div className="text-xs text-foreground/70">{(c.author && (c.author.name || c.author.fullName || c.author.username)) || 'Usuario'} · {c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</div>
+                      <div className="mt-1 text-sm text-foreground whitespace-pre-wrap">{c.text || c.body || c.message}</div>
                       {c.attachment && c.attachment.url && (
                         <div className="mt-2">
                           <a className="text-xs text-blue-600 underline" href={c.attachment.url} target="_blank" rel="noreferrer">Adjunto: {c.attachment.name || c.attachment.url}</a>

@@ -662,17 +662,17 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
 
   return (
     <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-white border rounded-lg p-4 flex-1 flex flex-col">
-        <div className="flex items-center justify-between gap-4 mb-4 sticky top-0 bg-white z-10">
+      <div className="bg-card border rounded-lg p-4 flex-1 flex flex-col">
+        <div className="flex items-center justify-between gap-4 mb-4 sticky top-0 bg-card z-10">
             <div className="relative">
-            <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-full bg-white text-sm inline-flex items-center gap-2">
+            <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-full bg-card text-sm inline-flex items-center gap-2">
               {t('siteTour.menu.action', 'Action')}
               <ChevronDown size={14} />
             </button>
             {actionOpen && (
-              <div className="absolute mt-2 bg-white border rounded-md shadow-lg z-10 w-48">
+              <div className="absolute mt-2 bg-card border rounded-md shadow-lg z-10 w-48">
                 <button
-                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-muted/30"
                   onClick={() => {
                     setActionOpen(false);
                     if (!selectedTourIds || selectedTourIds.length === 0) {
@@ -686,7 +686,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                 </button>
 
                 <button
-                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-muted/30"
                   onClick={() => {
                     setActionOpen(false);
                     if (!selectedTourIds || selectedTourIds.length === 0) {
@@ -704,7 +704,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
 
           <div className="flex-1 flex justify-center">
             <div className="relative w-full max-w-xl">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none">
                 <Search size={16} />
               </span>
               <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('siteTour.searchPlaceholder')} className="w-full h-10 rounded-full border pl-10 pr-4" />
@@ -725,7 +725,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="md:block hidden overflow-auto flex-1">
             <table className="w-full text-sm md:text-base">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted/30">
                 <tr>
                   <th className="px-6 py-4 align-middle">
                     <div className="flex items-center h-full">
@@ -755,7 +755,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
               <tbody>
                 {loadingTours ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-16 text-center text-sm text-gray-500">{t('siteTour.loading', 'Loading...')}</td>
+                    <td colSpan={4} className="px-6 py-16 text-center text-sm text-muted-foreground">{t('siteTour.loading', 'Loading...')}</td>
                   </tr>
                 ) : filteredTours.length === 0 ? (
                   <tr>
@@ -770,8 +770,8 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                           </svg>
                         </div>
                         <div className="text-center">
-                          <h3 className="text-lg font-semibold text-gray-700">{t('siteTour.empty.title')}</h3>
-                          <p className="text-sm text-gray-500 mt-1">{t('siteTour.empty.message')}</p>
+                          <h3 className="text-lg font-semibold text-foreground">{t('siteTour.empty.title')}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">{t('siteTour.empty.message')}</p>
                         </div>
                       </div>
                     </td>
@@ -805,12 +805,12 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                         <td className="px-6 py-4 text-left">{translateTimeMode(tour.timeMode)}</td>
                         <td className="px-6 py-4 text-right">
                           <div className="relative inline-block">
-                            <button onClick={() => setRowActionOpenId(rowActionOpenId === tid ? null : tid)} className="p-2 rounded-full hover:bg-gray-100">
+                            <button onClick={() => setRowActionOpenId(rowActionOpenId === tid ? null : tid)} className="p-2 rounded-full hover:bg-muted">
                               <EllipsisVertical size={16} />
                             </button>
                             {rowActionOpenId === tid && (
-                              <div className="absolute right-0 mt-2 bg-white border rounded-md shadow-lg z-20 w-40">
-                                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50" onClick={async () => {
+                              <div className="absolute right-0 mt-2 bg-card border rounded-md shadow-lg z-20 w-40">
+                                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-muted/30" onClick={async () => {
                                   setRowActionOpenId(null);
                                   // view details
                                   try {
@@ -852,7 +852,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                                   <div className="flex items-center gap-2"><Eye size={14} /> <span>{t('siteTour.actions.view', 'Ver detalles')}</span></div>
                                 </button>
 
-                                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50" onClick={() => {
+                                <button className="block w-full text-left px-4 py-2 text-sm hover:bg-muted/30" onClick={() => {
                                   setRowActionOpenId(null);
                                   // open edit modal prefilled
                                   setEditingTourId(tid);
@@ -871,7 +871,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                                   <div className="flex items-center gap-2"><Edit size={14} /> <span>{t('siteTour.actions.edit', 'Editar')}</span></div>
                                 </button>
 
-                                <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50" onClick={() => {
+                                <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-muted/30" onClick={() => {
                                   setRowActionOpenId(null);
                                   setSelectedTourIds([tid]);
                                   setShowConfirmDelete(true);
@@ -894,11 +894,11 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
           {showConfirmArchive && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
               <div className="absolute inset-0 bg-black/40" onClick={() => setShowConfirmArchive(false)} />
-              <div className="bg-white rounded-lg shadow-lg z-50 max-w-lg w-full p-6">
+              <div className="bg-card rounded-lg shadow-lg z-50 max-w-lg w-full p-6">
                 <h3 className="text-lg font-semibold mb-4">{t('siteTour.actions.confirmArchiveTitle', 'Confirm archive')}</h3>
-                <p className="text-sm text-gray-600 mb-4">{t('siteTour.actions.confirmArchiveMessage', 'Are you sure you want to archive the selected tours? This action can be undone by editing the tour.')}</p>
+                <p className="text-sm text-foreground/70 mb-4">{t('siteTour.actions.confirmArchiveMessage', 'Are you sure you want to archive the selected tours? This action can be undone by editing the tour.')}</p>
                 <div className="flex justify-end gap-3">
-                  <button onClick={() => setShowConfirmArchive(false)} className="px-4 py-2 rounded-full bg-gray-100 text-gray-700">{t('siteTour.buttons.cancel', 'Cancel')}</button>
+                  <button onClick={() => setShowConfirmArchive(false)} className="px-4 py-2 rounded-full bg-muted text-foreground">{t('siteTour.buttons.cancel', 'Cancel')}</button>
                   <button
                     onClick={async () => {
                       try {
@@ -933,11 +933,11 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
           {showConfirmDelete && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
               <div className="absolute inset-0 bg-black/40" onClick={() => setShowConfirmDelete(false)} />
-              <div className="bg-white rounded-lg shadow-lg z-50 max-w-lg w-full p-6">
+              <div className="bg-card rounded-lg shadow-lg z-50 max-w-lg w-full p-6">
                 <h3 className="text-lg font-semibold mb-4">{t('siteTour.actions.confirmDeleteTitle', 'Confirm delete')}</h3>
-                <p className="text-sm text-gray-600 mb-4">{t('siteTour.actions.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected tours? This action cannot be undone and will remove all associated data.')}</p>
+                <p className="text-sm text-foreground/70 mb-4">{t('siteTour.actions.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected tours? This action cannot be undone and will remove all associated data.')}</p>
                 <div className="flex justify-end gap-3">
-                  <button onClick={() => setShowConfirmDelete(false)} className="px-4 py-2 rounded-full bg-gray-100 text-gray-700">{t('siteTour.buttons.cancel', 'Cancel')}</button>
+                  <button onClick={() => setShowConfirmDelete(false)} className="px-4 py-2 rounded-full bg-muted text-foreground">{t('siteTour.buttons.cancel', 'Cancel')}</button>
                   <button
                     onClick={async () => {
                       try {
@@ -973,48 +973,48 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
           {showDetailModal && detailTour && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
               <div className="absolute inset-0 bg-black/40" onClick={() => setShowDetailModal(false)} />
-              <div className="bg-white rounded-lg shadow-lg z-50 max-w-2xl w-full p-8">
+              <div className="bg-card rounded-lg shadow-lg z-50 max-w-2xl w-full p-8">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-semibold">{detailTour.name || detailTour.title || t('siteTour.detail.title', 'Tour details')}</h3>
-                  <button onClick={() => setShowDetailModal(false)} className="p-2 text-gray-500 hover:text-gray-700">
+                  <button onClick={() => setShowDetailModal(false)} className="p-2 text-muted-foreground hover:text-foreground">
                     <X size={18} />
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm text-gray-500">{t('siteTour.field.description', 'Description')}</div>
+                    <div className="text-sm text-muted-foreground">{t('siteTour.field.description', 'Description')}</div>
                     <div className="mt-1 text-sm">{detailTour.description || detailTour.desc || '-'}</div>
                   </div>
 
                   <div>
-                    <div className="text-sm text-gray-500">{t('siteTour.field.scheduledDays', 'Scheduled Days')}</div>
+                    <div className="text-sm text-muted-foreground">{t('siteTour.field.scheduledDays', 'Scheduled Days')}</div>
                     <div className="mt-1 text-sm">{detailTour.scheduledDays || detailTour.scheduled_days || detailTour.schedule || '-'}</div>
                   </div>
 
                   <div>
-                    <div className="text-sm text-gray-500">{t('siteTour.field.timeMode', 'Time Mode')}</div>
+                    <div className="text-sm text-muted-foreground">{t('siteTour.field.timeMode', 'Time Mode')}</div>
                     <div className="mt-1 text-sm">{translateTimeMode(detailTour.timeMode || detailTour.time_mode)}</div>
                   </div>
 
                   <div>
-                    <div className="text-sm text-gray-500">{t('siteTour.field.selectTime', 'Select Time')}</div>
+                    <div className="text-sm text-muted-foreground">{t('siteTour.field.selectTime', 'Select Time')}</div>
                     <div className="mt-1 text-sm">{detailTour.selectTime || detailTour.select_time || '-'}</div>
                   </div>
 
                   <div>
-                    <div className="text-sm text-gray-500">{t('siteTour.field.continuous', 'Continuous')}</div>
+                    <div className="text-sm text-muted-foreground">{t('siteTour.field.continuous', 'Continuous')}</div>
                     <div className="mt-1 text-sm">{detailTour.continuous ? t('common.yes', 'Yes') : t('common.no', 'No')}</div>
                   </div>
 
                   <div>
-                    <div className="text-sm text-gray-500">{t('siteTour.field.maxDuration', 'Max Duration')}</div>
+                    <div className="text-sm text-muted-foreground">{t('siteTour.field.maxDuration', 'Max Duration')}</div>
                     <div className="mt-1 text-sm">{detailTour.maxDuration || detailTour.max_duration || '-'}</div>
                   </div>
 
 
                   <div>
-                    <div className="text-sm text-gray-500">{t('siteTour.field.assignedGuard', 'Assigned Guard')}</div>
+                    <div className="text-sm text-muted-foreground">{t('siteTour.field.assignedGuard', 'Assigned Guard')}</div>
                     <div className="mt-1 text-sm">
                       {(() => {
                         const candidateId = detailTour.assignedGuard || detailTour.securityGuardId || detailTour.security_guard_id || detailTour.guard || detailTour.assigned_guard || detailTour.guardId || detailTour.guard_id || null;
@@ -1031,12 +1031,12 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                   </div>
 
                   <div>
-                    <div className="text-sm text-gray-500">{t('siteTour.field.station', 'Station')}</div>
+                    <div className="text-sm text-muted-foreground">{t('siteTour.field.station', 'Station')}</div>
                     <div className="mt-1 text-sm">{resolveStationName(detailTour.station || detailTour.stationId || detailTour.station_id || detailTour.stationName || detailTour)}</div>
                   </div>
 
                   <div>
-                    <div className="text-sm text-gray-500">{t('siteTour.field.active', 'Active')}</div>
+                    <div className="text-sm text-muted-foreground">{t('siteTour.field.active', 'Active')}</div>
                     <div className="mt-1 text-sm">{typeof detailTour.active === 'boolean' ? (detailTour.active ? t('common.yes', 'Yes') : t('common.no', 'No')) : (detailTour.active ? String(detailTour.active) : '-')}</div>
                   </div>
 
@@ -1056,13 +1056,13 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
             <MobileCardList
               items={filteredTours}
               renderCard={(tour: any) => (
-                <div className="p-4 bg-white border rounded-lg">
+                <div className="p-4 bg-card border rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-semibold">{tour.name || t('siteTour.placeholders.tourNameFallback')}</div>
-                      <div className="text-xs text-gray-500">{translateTimeMode(tour.timeMode)}</div>
+                      <div className="text-xs text-muted-foreground">{translateTimeMode(tour.timeMode)}</div>
                     </div>
-                    <div className="text-sm text-gray-600">{tour.maxDuration || '-'}</div>
+                    <div className="text-sm text-foreground/70">{tour.maxDuration || '-'}</div>
                   </div>
                 </div>
               )}
@@ -1075,10 +1075,10 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
         <div className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-end p-4 sm:p-0">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowNewTourModal(false)} />
 
-          <aside className="relative w-full sm:ml-auto sm:max-w-md lg:max-w-xl bg-white shadow-xl overflow-hidden rounded-lg flex flex-col h-screen">
+          <aside className="relative w-full sm:ml-auto sm:max-w-md lg:max-w-xl bg-card shadow-xl overflow-hidden rounded-lg flex flex-col h-screen">
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="text-lg font-semibold">{t('siteTour.modal.title')}</h3>
-              <button onClick={() => { setShowNewTourModal(false); setEditingTourId(null); }} className="p-2 text-gray-500 hover:text-gray-700">
+              <button onClick={() => { setShowNewTourModal(false); setEditingTourId(null); }} className="p-2 text-muted-foreground hover:text-foreground">
                 <X size={18} />
               </button>
             </div>
@@ -1128,7 +1128,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
 
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <label className="text-sm text-gray-600">{t('siteTour.form.continuous')}</label>
+                  <label className="text-sm text-foreground/70">{t('siteTour.form.continuous')}</label>
                   <input type="checkbox" checked={continuous} onChange={e => setContinuous(e.target.checked)} className="h-5 w-8" />
                 </div>
 
@@ -1186,7 +1186,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                         }
                       }
                     }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-500"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground"
                     aria-label={t('siteTour.form.openTimePicker', 'Open time picker')}
                   >
                     <Clock size={18} />
@@ -1225,7 +1225,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
             <div className="p-4 border-t mt-auto">
               <div className="flex justify-between items-center">
                 <div>
-                  <button onClick={() => { /* save as draft */ setShowNewTourModal(false); setEditingTourId(null); }} className="px-4 py-2 rounded-full bg-gray-100 text-gray-700">{t('siteTour.buttons.saveDraft')}</button>
+                  <button onClick={() => { /* save as draft */ setShowNewTourModal(false); setEditingTourId(null); }} className="px-4 py-2 rounded-full bg-muted text-foreground">{t('siteTour.buttons.saveDraft')}</button>
                 </div>
                 <div>
                   <button
@@ -1290,7 +1290,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                         toast.error(msg);
                       }
                     }}
-                    className={"ml-2 inline-flex items-center justify-center px-4 py-2 rounded-full shadow-lg " + (isFormValid ? "bg-[#C8860A] text-white hover:bg-[#B37809]" : "bg-gray-200 text-gray-500 cursor-not-allowed")}
+                    className={"ml-2 inline-flex items-center justify-center px-4 py-2 rounded-full shadow-lg " + (isFormValid ? "bg-[#C8860A] text-white hover:bg-[#B37809]" : "bg-muted text-muted-foreground cursor-not-allowed")}
                   >
                     <span className="text-sm font-semibold">{t('siteTour.buttons.submit')}</span>
                   </button>

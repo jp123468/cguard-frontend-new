@@ -187,7 +187,7 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
 
                     {/* ── Cliente ──────────────────────────────────── */}
                     <section className="space-y-3">
-                        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                             Cliente
                         </h2>
                         <FormField<PostSiteInput>
@@ -216,7 +216,7 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
 
                     {/* ── Tipo de servicio ─────────────────────────── */}
                     <section>
-                        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Tipo de servicio</h2>
+                        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Tipo de servicio</h2>
                         <Controller
                             control={form.control}
                             name="serviceType"
@@ -240,7 +240,7 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
 
                     {/* ── Información básica ───────────────────────── */}
                     <section className="space-y-4">
-                        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                             Información básica
                         </h2>
 
@@ -295,13 +295,13 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
 
                     {/* ── Ubicación del servicio ────────────────────── */}
                     <section className="space-y-4">
-                        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                             Ubicación del servicio
                         </h2>
 
                         {/* Google Maps autocomplete — populates all address fields */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Buscar dirección
                             </label>
                             <AddressAutocomplete
@@ -418,7 +418,7 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
 
                     {/* ── Horario de servicio ───────────────────────── */}
                     <section className="space-y-4">
-                        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                             Horario de servicio
                         </h2>
 

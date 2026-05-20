@@ -576,7 +576,7 @@ export default function Incidents({ site }: { site?: any }) {
 
   return (
     <div ref={containerRef} className="space-y-4">
-      <div className="bg-white border rounded-lg p-4">
+      <div className="bg-card border rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Select value={actionSelectValue} onValueChange={(v) => {
@@ -600,7 +600,7 @@ export default function Incidents({ site }: { site?: any }) {
             </Select>
 
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
               <Input
                 placeholder={t('incidents.searchPlaceholder') || 'Search incidents...'}
                 // local client-side filter
@@ -627,7 +627,7 @@ export default function Incidents({ site }: { site?: any }) {
                     {/* Cliente and Post-site filters removed per request */}
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('incidents.filterFields.stations', { defaultValue: 'Estaciones' })}</label>
+                      <label className="block text-sm font-medium text-foreground mb-2">{t('incidents.filterFields.stations', { defaultValue: 'Estaciones' })}</label>
                       <Select value={filterStationId ?? '__none'} onValueChange={(v) => setFilterStationId(v === '__none' ? undefined : v)}>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder={t('incidents.selectStation', { defaultValue: 'Seleccionar estación' })} />
@@ -642,7 +642,7 @@ export default function Incidents({ site }: { site?: any }) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('incidents.filterFields.status', { defaultValue: 'Estado' })}</label>
+                      <label className="block text-sm font-medium text-foreground mb-2">{t('incidents.filterFields.status', { defaultValue: 'Estado' })}</label>
                       <Select value={filterStatus ?? '__none'} onValueChange={(v) => setFilterStatus(v === '__none' ? undefined : v)}>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder={t('incidents.selectStatus') || 'Select status'} />
@@ -657,7 +657,7 @@ export default function Incidents({ site }: { site?: any }) {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Informador</label>
+                        <label className="block text-sm font-medium text-foreground mb-2">Informador</label>
                         <Select value={filterInformer ?? '__none'} onValueChange={(v) => setFilterInformer(v === '__none' ? undefined : v)}>
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Todos los informadores" />
@@ -687,7 +687,7 @@ export default function Incidents({ site }: { site?: any }) {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de incidente</label>
+                        <label className="block text-sm font-medium text-foreground mb-2">Tipo de incidente</label>
                         <Select value={filterIncidentTypeId ?? '__none'} onValueChange={(v) => setFilterIncidentTypeId(v === '__none' ? undefined : v)}>
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Todos los tipos" />
@@ -707,26 +707,26 @@ export default function Incidents({ site }: { site?: any }) {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('incidents.filterFields.createdFrom') || 'Created from'}</label>
+                      <label className="block text-sm font-medium text-foreground mb-2">{t('incidents.filterFields.createdFrom') || 'Created from'}</label>
                       <input type="date" className="mt-1 block w-full border rounded px-2 py-2" value={filterCreatedFrom || ''} onChange={(e) => setFilterCreatedFrom(e.target.value || undefined)} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('incidents.filterFields.createdTo') || 'Created to'}</label>
+                      <label className="block text-sm font-medium text-foreground mb-2">{t('incidents.filterFields.createdTo') || 'Created to'}</label>
                       <input type="date" className="mt-1 block w-full border rounded px-2 py-2" value={filterCreatedTo || ''} onChange={(e) => setFilterCreatedTo(e.target.value || undefined)} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('incidents.filterFields.incidentFrom') || 'Incident from'}</label>
+                      <label className="block text-sm font-medium text-foreground mb-2">{t('incidents.filterFields.incidentFrom') || 'Incident from'}</label>
                       <input type="date" className="mt-1 block w-full border rounded px-2 py-2" value={filterIncidentFrom || ''} onChange={(e) => setFilterIncidentFrom(e.target.value || undefined)} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('incidents.filterFields.incidentTo') || 'Incident to'}</label>
+                      <label className="block text-sm font-medium text-foreground mb-2">{t('incidents.filterFields.incidentTo') || 'Incident to'}</label>
                       <input type="date" className="mt-1 block w-full border rounded px-2 py-2" value={filterIncidentTo || ''} onChange={(e) => setFilterIncidentTo(e.target.value || undefined)} />
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <input id="archived" type="checkbox" className="h-4 w-4" checked={filterShowArchived} onChange={(e) => setFilterShowArchived(Boolean(e.target.checked))} />
-                    <label htmlFor="archived" className="text-sm text-gray-700">{t('incidents.filterFields.showArchived') || 'Show archived'}</label>
+                    <label htmlFor="archived" className="text-sm text-foreground">{t('incidents.filterFields.showArchived') || 'Show archived'}</label>
                   </div>
                 </div>
 
@@ -767,7 +767,7 @@ export default function Incidents({ site }: { site?: any }) {
           <>
           <div className="mt-4 overflow-hidden rounded-lg border">
               <table className="min-w-full border-collapse text-left text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted/30">
                 <tr className="border-b">
                     <th className="px-4 py-3">
                       <Checkbox
@@ -841,10 +841,10 @@ export default function Incidents({ site }: { site?: any }) {
                           />
                         </td>
                         <td className="px-4 py-3" title={it.id}>{it.id ? String(it.id).substring(0, 8) : '-'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{it.incidentAt || it.date || it.createdAt || it.created_at ? new Date(it.incidentAt || it.date || it.createdAt || it.created_at).toLocaleString() : '-'}</td>
+                        <td className="px-4 py-3 text-sm text-foreground">{it.incidentAt || it.date || it.createdAt || it.created_at ? new Date(it.incidentAt || it.date || it.createdAt || it.created_at).toLocaleString() : '-'}</td>
                         
-                        <td className="px-4 py-3 text-sm text-gray-700">{it.callerName || it.callerType || it.guardName?.fullName || it.guardName?.name || '-'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{(it.incidentType && (it.incidentType.name || it.incidentType.id)) ? (it.incidentType.name || it.incidentType.id) : (it.incidentTypeId || '-')}</td>
+                        <td className="px-4 py-3 text-sm text-foreground">{it.callerName || it.callerType || it.guardName?.fullName || it.guardName?.name || '-'}</td>
+                        <td className="px-4 py-3 text-sm text-foreground">{(it.incidentType && (it.incidentType.name || it.incidentType.id)) ? (it.incidentType.name || it.incidentType.id) : (it.incidentTypeId || '-')}</td>
                         <td className="px-4 py-3">
                           {
                             (() => {
@@ -859,14 +859,14 @@ export default function Incidents({ site }: { site?: any }) {
 
                               if (s === 'abierto' || s === 'open') {
                                 return (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-red-500/15 text-red-700">
                                     Abierto
                                   </span>
                                 );
                               }
 
                               return (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-muted text-foreground">
                                   {it.status || '-'}
                                 </span>
                               );
@@ -990,7 +990,7 @@ export default function Incidents({ site }: { site?: any }) {
           </DialogHeader>
                 <div className="space-y-3 mt-2 max-w-sm mx-auto">
             <div>
-              <label className="block text-sm font-medium text-gray-700">{t('incidents.labels.station') || 'Station'}</label>
+              <label className="block text-sm font-medium text-foreground">{t('incidents.labels.station') || 'Station'}</label>
               <Select value={selectedStationId || ''} onValueChange={(v) => setSelectedStationId(v || undefined)}>
                 <SelectTrigger>
                   <SelectValue placeholder={stationOptions && stationOptions.length > 0 ? (t('incidents.selectStation') || 'Select station') : (t('incidents.noStations') || 'No stations')} />
@@ -1004,11 +1004,11 @@ export default function Incidents({ site }: { site?: any }) {
             </div>
             {/* exact-station field removed (was causing undefined state errors) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">{t('incidents.labels.subject') || 'Subject'}</label>
+              <label className="block text-sm font-medium text-foreground">{t('incidents.labels.subject') || 'Subject'}</label>
               <Input value={newSubject} onChange={(e) => setNewSubject((e.target as HTMLInputElement).value)} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">{t('incidents.labels.description') || 'Description'}</label>
+              <label className="block text-sm font-medium text-foreground">{t('incidents.labels.description') || 'Description'}</label>
               <Textarea value={newContent} onChange={(e) => setNewContent((e.target as HTMLTextAreaElement).value)} />
             </div>
           </div>

@@ -53,8 +53,8 @@ export default function GuardRegistration() {
 
   const errorClass = (field: string) => (errors[field] ? "border-red-600 ring-1 ring-red-600" : "");
 
-  const formControl = "h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm text-slate-900 placeholder-slate-400";
-  const labelClass = "mb-2 block text-sm font-medium text-slate-700 min-h-[2rem] md:min-h-[3rem] leading-5";
+  const formControl = "h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-sm text-foreground placeholder-slate-400";
+  const labelClass = "mb-2 block text-sm font-medium text-foreground min-h-[2rem] md:min-h-[3rem] leading-5";
 
   const validateEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -580,10 +580,10 @@ export default function GuardRegistration() {
         )}
 
         <div className="mb-2 flex items-center gap-4 md:gap-6">
-          <div className="flex-1 text-sm text-slate-600">Paso {step} de {totalSteps}</div>
+          <div className="flex-1 text-sm text-foreground/70">Paso {step} de {totalSteps}</div>
           <div className="flex gap-2">
             {[1, 2, 3].map((s) => (
-              <div key={s} className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${s <= step ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}`}>{s}</div>
+              <div key={s} className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${s <= step ? 'bg-blue-600 text-white' : 'bg-slate-200 text-foreground/70'}`}>{s}</div>
             ))}
           </div>
         </div>

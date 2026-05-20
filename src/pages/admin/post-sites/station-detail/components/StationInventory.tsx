@@ -1,0 +1,100 @@
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Loader2 } from 'lucide-react';
+import inventoryAssignmentService from '@/lib/api/inventoryAssignmentService';
+
+type Props = { station: any; stationId: string; postSiteId: string };
+
+export default function StationInventory({ stationId }: Props) {
+  const { t } = useTranslation();
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!stationId) return;
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res: any = await inventoryAssignmentService.list(
+          { filter: { stationId }, limit: 200, offset: 0 } as any
+        );
+        const list = (res?.rows ?? []).filter((a: any) => !a.returnedAt);
+        if (mounted) setRows(list);
+      } catch (e: any) {
+        if (mounted) setError(e?.message || t('station.inventory.loadError', 'Error al cargar inventario'));
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [stationId]);
+
+  return (
+    <div className="bg-card border rounded-lg overflow-hidden">
+      <div className="px-6 py-4 border-b">
+        <h3 className="text-base font-semibold text-foreground">
+          {t('station.inventory.title', 'Inventario / Dotación')}
+          {rows.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-muted-foreground">({rows.length})</span>
+          )}
+        </h3>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-10">
+          <Loader2 className="animate-spin text-[#C8860A]" />
+        </div>
+      ) : error ? (
+        <div className="p-6 text-sm text-red-600">{error}</div>
+      ) : rows.length === 0 ? (
+        <div className="p-6 text-sm text-muted-foreground">
+          {t('station.inventory.empty', 'No hay inventario para este puesto.')}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-muted/30 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left font-semibold text-foreground/70">
+                  {t('station.inventory.col.item', 'Artículo')}
+                </th>
+                <th className="px-6 py-3 text-left font-semibold text-foreground/70">
+                  {t('station.inventory.col.serial', 'Serie / Código')}
+                </th>
+                <th className="px-6 py-3 text-left font-semibold text-foreground/70">
+                  {t('station.inventory.col.condition', 'Estado')}
+                </th>
+                <th className="px-6 py-3 text-left font-semibold text-foreground/70">
+                  {t('station.inventory.col.assignedTo', 'Asignado a')}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {rows.map((r: any, i: number) => {
+                const item = r.inventoryItem || r.item || {};
+                const name = item.name || r.itemName || r.name || '-';
+                const serial = item.serialNumber || item.code || r.serialNumber || '-';
+                const condition = item.condition || r.condition || '-';
+                const guard = r.assignedTo || r.guard || r.securityGuard;
+                const guardName = guard
+                  ? [guard.firstName || guard.first_name, guard.lastName || guard.last_name].filter(Boolean).join(' ') || guard.name || guard.fullName || String(guard)
+                  : '-';
+                return (
+                  <tr key={r.id || i} className="hover:bg-muted/30">
+                    <td className="px-6 py-3 text-foreground font-medium">{name}</td>
+                    <td className="px-6 py-3 text-foreground">{serial}</td>
+                    <td className="px-6 py-3 text-muted-foreground capitalize">{condition}</td>
+                    <td className="px-6 py-3 text-foreground">{guardName}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

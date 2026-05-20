@@ -504,6 +504,7 @@ export default function ClientesPage() {
         header: t('clients.columns.name'),
         className: "font-medium",
         render: (value, row) => {
+          if ((row as any).commercialName) return (row as any).commercialName;
           const lastName = row.lastName && row.lastName !== 'undefined' ? row.lastName : '';
           return lastName ? `${row.name} ${lastName}` : row.name;
         }
@@ -527,7 +528,7 @@ export default function ClientesPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-3 py-2 text-sm">
-                  <div className="font-medium truncate">{row.name}{row.lastName ? ` ${row.lastName}` : ''}</div>
+                  <div className="font-medium truncate">{(row as any).commercialName || (row.lastName ? `${row.name} ${row.lastName}` : row.name)}</div>
                   <div className="text-xs text-muted-foreground truncate">{row.email || '-'}</div>
                   <div className="text-xs text-muted-foreground truncate">{row.phoneNumber || '-'}</div>
                   <div className="mt-2">
@@ -546,7 +547,7 @@ export default function ClientesPage() {
           // El backend puede enviar booleano o entero (0/1)
           const isActive = row.active === true;
           return (
-            <span className={`px-2 py-1 text-xs rounded-full ${isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            <span className={`px-2 py-1 text-xs rounded-full ${isActive ? "bg-green-100 text-green-800" : "bg-red-500/15 text-red-700"
               }`}>
               {isActive ? t('clients.status.active') : t('clients.status.archived')}
             </span>
@@ -559,10 +560,10 @@ export default function ClientesPage() {
         render: (_value: any, row: Client) => {
           const status = (row as any).onboardingStatus || 'not_invited';
           const map: Record<string, { label: string; cls: string }> = {
-            not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), cls: 'bg-gray-100 text-gray-500' },
-            invited:     { label: t('clients.onboarding.invited',     'Invitado'),   cls: 'bg-amber-100 text-amber-800' },
+            not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), cls: 'bg-muted text-muted-foreground' },
+            invited:     { label: t('clients.onboarding.invited',     'Invitado'),   cls: 'bg-amber-500/15 text-amber-700' },
             active:      { label: t('clients.onboarding.active',      'En app'),     cls: 'bg-green-100 text-green-800' },
-            suspended:   { label: t('clients.onboarding.suspended',   'Suspendido'), cls: 'bg-red-100 text-red-700' },
+            suspended:   { label: t('clients.onboarding.suspended',   'Suspendido'), cls: 'bg-red-500/15 text-red-700' },
           };
           const badge = map[status] || map.not_invited;
           return (
@@ -848,7 +849,7 @@ export default function ClientesPage() {
             }
           />
 
-          <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600 bg-gray-50 border-x border-b rounded-b-lg">
+          <div className="flex items-center justify-between px-4 py-3 text-sm text-foreground/70 bg-muted/30 border-x border-b rounded-b-lg">
             <div className="flex items-center gap-2">
               <span>{t('clients.pagination.itemsPerPage')}</span>
                 <Select
@@ -901,7 +902,7 @@ export default function ClientesPage() {
             loading={loading}
             emptyMessage={t('clients.empty.title') as string}
             renderCard={(client: any) => (
-              <div className="p-4 bg-white border rounded-lg">
+              <div className="p-4 bg-card border rounded-lg">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-sm truncate">{client.name}{client.lastName ? ` ${client.lastName}` : ''}</div>
@@ -909,16 +910,16 @@ export default function ClientesPage() {
                   </div>
 
                   <div className="flex-shrink-0 flex flex-col items-end ml-2">
-                    <span className={`px-2 py-1 text-xs rounded-full ${client.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${client.active ? 'bg-green-100 text-green-800' : 'bg-red-500/15 text-red-700'}`}>
                       {client.active ? t('clients.status.active') : t('clients.status.archived')}
                     </span>
                     {(() => {
                       const s = (client as any).onboardingStatus || 'not_invited';
                       const mobileMap: Record<string, { label: string; cls: string }> = {
-                        not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), cls: 'bg-gray-100 text-gray-500' },
-                        invited:     { label: t('clients.onboarding.invited', 'Invitado'),      cls: 'bg-amber-100 text-amber-800' },
+                        not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), cls: 'bg-muted text-muted-foreground' },
+                        invited:     { label: t('clients.onboarding.invited', 'Invitado'),      cls: 'bg-amber-500/15 text-amber-700' },
                         active:      { label: t('clients.onboarding.active', 'En app'),         cls: 'bg-green-100 text-green-800' },
-                        suspended:   { label: t('clients.onboarding.suspended', 'Suspendido'),  cls: 'bg-red-100 text-red-700' },
+                        suspended:   { label: t('clients.onboarding.suspended', 'Suspendido'),  cls: 'bg-red-500/15 text-red-700' },
                       };
                       const b = mobileMap[s] || mobileMap.not_invited;
                       return (
@@ -1184,15 +1185,15 @@ export default function ClientesPage() {
               </AlertDialogTitle>
             </div>
             <AlertDialogDescription asChild>
-              <div className="space-y-3 text-sm text-slate-600">
+              <div className="space-y-3 text-sm text-foreground/70">
                 {sendAccessClient?.email ? (
                   <>
                     <p>
                       Se enviará un correo de invitación a{' '}
-                      <span className="font-semibold text-slate-800">{sendAccessClient?.email}</span>{' '}
-                      para que <span className="font-semibold text-slate-800">{sendAccessClient?.name}</span> pueda acceder a la app móvil.
+                      <span className="font-semibold text-foreground">{sendAccessClient?.email}</span>{' '}
+                      para que <span className="font-semibold text-foreground">{sendAccessClient?.name}</span> pueda acceder a la app móvil.
                     </p>
-                    <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-amber-800 text-xs space-y-1">
+                    <div className="rounded-lg bg-amber-500/10 border border-amber-200 p-3 text-amber-700 text-xs space-y-1">
                       <p className="font-medium">¿Cómo funciona?</p>
                       <ul className="list-disc list-inside space-y-0.5">
                         <li>El cliente recibe un correo con un enlace de acceso</li>
@@ -1202,7 +1203,7 @@ export default function ClientesPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-xs">
+                  <div className="rounded-lg bg-red-500/10 border border-red-200 p-3 text-red-700 text-xs">
                     <p className="font-medium">Este cliente no tiene correo electrónico configurado.</p>
                     <p className="mt-1">Edita el cliente, agrega un correo electrónico y vuelve a intentarlo.</p>
                   </div>
