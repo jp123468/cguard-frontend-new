@@ -105,6 +105,7 @@ export default function Schedule() {
   const [overrides, setOverrides] = useState<ScheduleOverride[]>([]);
   const [rotationStyles, setRotationStyles] = useState<RotationStyle[]>([]);
   const [guardsPool, setGuardsPool] = useState<GuardOption[]>([]);
+  const [staffing, setStaffing] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   // View state
@@ -152,10 +153,11 @@ export default function Schedule() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [overviewRes, rotRes, guardsRes] = await Promise.all([
+      const [overviewRes, rotRes, guardsRes, staffingRes] = await Promise.all([
         ApiService.get(`/tenant/${tenantId}/scheduler/overview?startDate=${startDateStr}&endDate=${endDateStr}`),
         ApiService.get(`/tenant/${tenantId}/rotation-styles`),
         ApiService.get(`/tenant/${tenantId}/security-guard/autocomplete?limit=200`),
+        ApiService.get(`/tenant/${tenantId}/scheduler/staffing`).catch(() => null),
       ]);
 
       const ov = overviewRes?.data || overviewRes || {};
@@ -173,6 +175,11 @@ export default function Schedule() {
         id: g.guardId || g.id || g.value,
         label: g.fullName || g.name || g.label || g.email || '',
       })).filter((g: any) => g.id));
+
+      if (staffingRes) {
+        const sd = staffingRes?.data || staffingRes;
+        setStaffing(sd);
+      }
     } catch (e: any) {
       console.error('[Scheduler] fetch error', e);
       toast.error('Error al cargar horario');
@@ -186,7 +193,7 @@ export default function Schedule() {
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
   const getPositionsForStation = (stationId: string) =>
-    positions.filter(p => p.stationId === stationId);
+    positions.filter(p => p.stationId === stationId && p.type !== 'sacafranco');
 
   const getAssignmentsForPosition = (positionId: string) =>
     assignments.filter(a => a.positionId === positionId);
@@ -635,25 +642,54 @@ export default function Schedule() {
 
               {/* Stats summary */}
               <div className="bg-card border border-border/40 rounded-xl p-4 space-y-2">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Resumen</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-muted/20 rounded-lg p-2 text-center">
-                    <div className="text-lg font-bold text-foreground">{stations.length}</div>
-                    <div className="text-[9px] text-muted-foreground">Estaciones</div>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Personal Necesario</h3>
+                {staffing ? (
+                  <>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="bg-amber-500/10 rounded-lg p-2 text-center">
+                        <div className="text-lg font-bold text-amber-600">{staffing.fijosNeeded || 0}</div>
+                        <div className="text-[9px] text-muted-foreground">Fijos</div>
+                      </div>
+                      <div className="bg-emerald-500/10 rounded-lg p-2 text-center">
+                        <div className="text-lg font-bold text-emerald-500">{staffing.sacafrancosNeeded || 0}</div>
+                        <div className="text-[9px] text-muted-foreground">Sacafrancos</div>
+                      </div>
+                      <div className="bg-sky-500/10 rounded-lg p-2 text-center">
+                        <div className="text-lg font-bold text-sky-500">{staffing.totalGuardsNeeded || 0}</div>
+                        <div className="text-[9px] text-muted-foreground">Total</div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div className="bg-muted/20 rounded-lg p-2 text-center">
+                        <div className="text-sm font-bold text-foreground">{staffing.currentFijoGuards || 0}<span className="text-muted-foreground font-normal">/{staffing.fijosNeeded || 0}</span></div>
+                        <div className="text-[9px] text-muted-foreground">Fijos asignados</div>
+                      </div>
+                      <div className="bg-muted/20 rounded-lg p-2 text-center">
+                        <div className="text-sm font-bold text-foreground">{staffing.currentSfGuards || 0}<span className="text-muted-foreground font-normal">/{staffing.sacafrancosNeeded || 0}</span></div>
+                        <div className="text-[9px] text-muted-foreground">SF asignados</div>
+                      </div>
+                    </div>
+                    {staffing.sfRotation && (
+                      <div className="text-[10px] text-muted-foreground pt-1 border-t border-border/20">
+                        Rotación SF: <span className="font-semibold text-foreground">{staffing.sfRotation.name}</span> ({staffing.sfRotation.dayShifts}D-{staffing.sfRotation.nightShifts}N-{staffing.sfRotation.restDays}L)
+                      </div>
+                    )}
+                    <div className="text-[10px] text-muted-foreground">
+                      Demanda pico: <span className="font-semibold text-foreground">{staffing.peakDemand}</span> estaciones simultáneas
+                    </div>
+                  </>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-muted/20 rounded-lg p-2 text-center">
+                      <div className="text-lg font-bold text-foreground">{stations.length}</div>
+                      <div className="text-[9px] text-muted-foreground">Estaciones</div>
+                    </div>
+                    <div className="bg-muted/20 rounded-lg p-2 text-center">
+                      <div className="text-lg font-bold text-foreground">{assignments.length}</div>
+                      <div className="text-[9px] text-muted-foreground">Asignados</div>
+                    </div>
                   </div>
-                  <div className="bg-muted/20 rounded-lg p-2 text-center">
-                    <div className="text-lg font-bold text-foreground">{positions.length}</div>
-                    <div className="text-[9px] text-muted-foreground">Posiciones</div>
-                  </div>
-                  <div className="bg-muted/20 rounded-lg p-2 text-center">
-                    <div className="text-lg font-bold text-[#C8860A]">{assignments.length}</div>
-                    <div className="text-[9px] text-muted-foreground">Asignados</div>
-                  </div>
-                  <div className="bg-muted/20 rounded-lg p-2 text-center">
-                    <div className="text-lg font-bold text-emerald-500">{unassignedGuards.length}</div>
-                    <div className="text-[9px] text-muted-foreground">Disponibles</div>
-                  </div>
-                </div>
+                )}
                 {/* Coverage */}
                 {(() => {
                   const fijoPositions = positions.filter(p => p.type !== 'sacafranco');
@@ -662,7 +698,7 @@ export default function Schedule() {
                   return (
                     <div className="pt-2 border-t border-border/20">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] text-muted-foreground">Cobertura</span>
+                        <span className="text-[10px] text-muted-foreground">Cobertura Fijos</span>
                         <span className="text-[10px] font-semibold text-foreground">{pct}%</span>
                       </div>
                       <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
@@ -973,6 +1009,125 @@ export default function Schedule() {
                   </div>
                 );
               })}
+
+              {/* ─── Sacafrancos Section ─── */}
+              {(() => {
+                const sfPositions = positions.filter(p => p.type === 'sacafranco');
+                if (sfPositions.length === 0) return null;
+                return (
+                  <div className="border-t-2 border-emerald-500/30">
+                    {/* SF Header */}
+                    <div className="grid bg-emerald-500/5" style={{ gridTemplateColumns: `240px repeat(${monthDays.length}, 44px)` }}>
+                      <div className="px-4 py-2.5 flex items-center gap-2 border-r border-border/20 sticky left-0 z-10 bg-emerald-500/5 backdrop-blur-sm">
+                        <Shield size={14} className="text-emerald-500" />
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-emerald-600">Sacafrancos</div>
+                          <div className="text-[10px] text-muted-foreground">{sfPositions.length} posiciones — cubren todas las estaciones</div>
+                        </div>
+                      </div>
+                      {monthDays.map((_, i) => <div key={i} className="border-r border-border/10 last:border-r-0" />)}
+                    </div>
+
+                    {/* SF Position rows */}
+                    {sfPositions.map(pos => {
+                      const posAssignments = getAssignmentsForPosition(pos.id);
+                      return (
+                        <div key={pos.id} className="grid border-t border-border/10" style={{ gridTemplateColumns: `240px repeat(${monthDays.length}, 44px)` }}>
+                          {/* SF label */}
+                          <div className="px-4 py-2 flex items-center gap-2 border-r border-border/20 sticky left-0 z-10 bg-card backdrop-blur-sm">
+                            <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-500/10">
+                              <Shield size={12} className="text-emerald-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-medium text-foreground truncate">{pos.name}</div>
+                              <div className="text-[10px] text-muted-foreground">{pos.startTime} – {pos.endTime}</div>
+                            </div>
+                            {posAssignments.length > 0 && posAssignments[0]?.guard && (
+                              <button
+                                onClick={() => removeAssignment(posAssignments[0].id)}
+                                className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600"
+                                title="Click para remover"
+                              >
+                                {posAssignments[0].guard.firstName?.split(' ')[0]} ×
+                              </button>
+                            )}
+                            {posAssignments.length === 0 && (
+                              <button
+                                onClick={() => openAssignForm(pos.stationId, pos.id)}
+                                className="p-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors"
+                                title="Asignar guardia sacafranco"
+                              >
+                                <Plus size={12} />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Day cells */}
+                          {monthDays.map((day, dayIdx) => {
+                            const dateStr = day.toISOString().slice(0, 10);
+                            const isToday = dateStr === todayStr;
+                            const isSunday = day.getDay() === 0;
+
+                            // Find the shift for this day to determine which station
+                            const dayShift = shifts.find(s => s.positionId === pos.id && s.startTime.slice(0, 10) === dateStr);
+                            const coveringStationName = dayShift ? stations.find(st => st.id === dayShift.stationId)?.stationName?.slice(0, 3) : '';
+
+                            if (posAssignments.length > 0) {
+                              const assignment = posAssignments[0];
+                              const workStatus = isWorkDay(assignment, day);
+
+                              if (workStatus === 'rest') {
+                                return (
+                                  <div key={dayIdx} className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}>
+                                    <div className="h-[20px] rounded bg-muted/30 flex items-center justify-center">
+                                      <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
+                                    </div>
+                                  </div>
+                                );
+                              }
+
+                              const code = workStatus === 'night' ? 'N' : 'D';
+                              const bg = workStatus === 'night' ? 'bg-indigo-500/15' : 'bg-emerald-500/15';
+                              const textColor = workStatus === 'night' ? 'text-indigo-400' : 'text-emerald-500';
+
+                              return (
+                                <div key={dayIdx} className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}>
+                                  <div className={`h-[20px] rounded flex flex-col items-center justify-center ${bg}`} title={coveringStationName ? `Cubre: ${stations.find(st => st.id === dayShift?.stationId)?.stationName}` : code}>
+                                    <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
+                                    {coveringStationName && <span className="text-[7px] text-muted-foreground leading-none">{coveringStationName}</span>}
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            // Unassigned: show D/N/L pattern
+                            const slotStatus = getSlotStatus(pos.stationId, pos, day);
+                            if (slotStatus === 'rest') {
+                              return (
+                                <div key={dayIdx} className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}>
+                                  <div className="h-[20px] rounded bg-muted/20 border border-dashed border-border/30 flex items-center justify-center cursor-pointer" onClick={() => openAssignForm(pos.stationId, pos.id)}>
+                                    <span className="text-[10px] font-bold text-muted-foreground/40">L</span>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            const sfCode = slotStatus === 'night' ? 'N' : 'D';
+                            const sfBg = slotStatus === 'night' ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-emerald-500/10 border-emerald-500/30';
+                            const sfText = slotStatus === 'night' ? 'text-indigo-400/60' : 'text-emerald-500/60';
+                            return (
+                              <div key={dayIdx} className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}>
+                                <div className={`h-[20px] rounded border border-dashed flex items-center justify-center cursor-pointer ${sfBg}`} onClick={() => openAssignForm(pos.stationId, pos.id)}>
+                                  <span className={`text-[10px] font-bold ${sfText}`}>{sfCode}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Unassigned Guards Pool */}
