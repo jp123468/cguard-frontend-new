@@ -31,7 +31,7 @@ export default function StationGuards({ station, stationId }: Props) {
           return;
         }
 
-        // Try dedicated station-guards endpoint, fall back to security-guard filter
+        // Fetch guards assigned to this station via shifts
         let fetched: any[] = [];
         try {
           const res: any = await ApiService.get(
@@ -39,14 +39,7 @@ export default function StationGuards({ station, stationId }: Props) {
           );
           fetched = Array.isArray(res) ? res : (res?.rows ?? []);
         } catch {
-          // fallback
-        }
-
-        if (!fetched.length) {
-          const res2: any = await ApiService.get(
-            `/tenant/${tenantId}/security-guard?filter[station]=${encodeURIComponent(stationId)}&limit=999`
-          );
-          fetched = Array.isArray(res2) ? res2 : (res2?.rows ?? []);
+          // endpoint not available — leave empty
         }
 
         if (mounted) setRows(fetched);
