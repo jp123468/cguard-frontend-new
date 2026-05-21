@@ -238,7 +238,7 @@ export default function Schedule() {
       return 'rest';
     }
 
-    // ─── FIJO LOGIC ─── Guard rotates D→N→L following the station rotation
+    // ─── FIJO LOGIC ─── Guard rotates work/rest following the station rotation
     const cycleLength = rot.dayShifts + rot.nightShifts + rot.restDays;
     const start = new Date(assignment.startDate + 'T00:00:00');
     const target = new Date(date);
@@ -247,13 +247,17 @@ export default function Schedule() {
     const daysSinceStart = Math.floor(diffMs / (24 * 60 * 60 * 1000));
     if (daysSinceStart < 0) return 'rest';
     const adjustedDay = ((daysSinceStart - assignment.platoonOffset) % cycleLength + cycleLength) % cycleLength;
+
+    // For 24H positions: distinguish day/night phases
+    // For 12H positions: both day and night rotation phases are just "work" days
+    const is24h = pos ? (pos.startTime === pos.endTime || (pos.startTime === '07:00' && pos.endTime === '07:00')) : false;
     if (adjustedDay < rot.dayShifts) return 'day';
-    if (adjustedDay < rot.dayShifts + rot.nightShifts) return 'night';
+    if (adjustedDay < rot.dayShifts + rot.nightShifts) return is24h ? 'night' : 'day';
     return 'rest';
   };
 
   // Compute the rotation slot status for a position (no guard needed)
-  // Uses the station's rotation style and position sortOrder as default offset
+  // Uses the station's rotation style and position offset
   const getSlotStatus = (stationId: string, position: StationPosition, date: Date): 'day' | 'night' | 'rest' => {
     const station = stations.find(s => s.id === stationId);
     if (!station?.rotationStyleId) return 'rest';
@@ -272,8 +276,12 @@ export default function Schedule() {
     // Use position's platoonOffset (station-defined) to stagger positions
     const offset = position.platoonOffset ?? position.sortOrder ?? 0;
     const adjustedDay = ((daysSinceEpoch - offset) % cycleLength + cycleLength) % cycleLength;
+
+    // For 24H positions: distinguish day vs night phase
+    // For 12H positions: both phases are "work" (day)
+    const is24h = position.startTime === position.endTime || (position.startTime === '07:00' && position.endTime === '07:00');
     if (adjustedDay < rot.dayShifts) return 'day';
-    if (adjustedDay < rot.dayShifts + rot.nightShifts) return 'night';
+    if (adjustedDay < rot.dayShifts + rot.nightShifts) return is24h ? 'night' : 'day';
     return 'rest';
   };
 
@@ -906,9 +914,14 @@ export default function Schedule() {
                                         </div>
                                       );
                                     }
-                                    const code = slotStatus === 'night' ? 'N' : 'D';
-                                    const bg = slotStatus === 'night' ? 'bg-indigo-500/8 border-indigo-500/20' : 'bg-sky-500/8 border-sky-500/20';
-                                    const textColor = slotStatus === 'night' ? 'text-indigo-400/50' : 'text-sky-500/50';
+                                    // Use position times to determine D vs N label
+                                    const isNightSlot = pos.startTime > pos.endTime; // e.g. 19:00 > 07:00
+                                    const is24hSlot = pos.startTime === pos.endTime || (pos.startTime === '07:00' && pos.endTime === '07:00');
+                                    const code = is24hSlot
+                                      ? (slotStatus === 'night' ? 'N' : 'D')
+                                      : isNightSlot ? 'N' : 'D';
+                                    const bg = code === 'N' ? 'bg-indigo-500/8 border-indigo-500/20' : 'bg-sky-500/8 border-sky-500/20';
+                                    const textColor = code === 'N' ? 'text-indigo-400/50' : 'text-sky-500/50';
                                     return (
                                       <div className={`h-[20px] rounded border border-dashed flex items-center justify-center cursor-pointer ${bg}`} title={`Slot ${code} (sin guardia asignado — click para asignar)`} onClick={() => openAssignForm(station.id, pos.id)}>
                                         <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
@@ -952,6 +965,8 @@ export default function Schedule() {
 
                                       const workStatus = isWorkDay(assignment, day);
                                       const is24h = pos.startTime === pos.endTime || (pos.startTime === '07:00' && pos.endTime === '07:00');
+                                      // Determine display label based on POSITION schedule, not rotation phase
+                                      const isNightPos = pos.startTime > pos.endTime; // e.g. 19:00 > 07:00
 
                                       if (workStatus === 'rest') {
                                         return (
@@ -966,11 +981,16 @@ export default function Schedule() {
                                         );
                                       }
 
-                                      const code = is24h ? '24' : workStatus === 'night' ? 'N' : 'D';
-                                      const bg = workStatus === 'night'
+                                      // For 24H: show D/N based on rotation phase
+                                      // For 12H DAY: always D
+                                      // For 12H NIGHT: always N
+                                      const code = is24h
+                                        ? (workStatus === 'night' ? 'N' : 'D')
+                                        : isNightPos ? 'N' : 'D';
+                                      const bg = code === 'N'
                                         ? 'bg-indigo-500/15'
                                         : is24h ? 'bg-amber-500/15' : 'bg-sky-500/15';
-                                      const textColor = workStatus === 'night'
+                                      const textColor = code === 'N'
                                         ? 'text-indigo-400'
                                         : is24h ? 'text-amber-500' : 'text-sky-500';
 
