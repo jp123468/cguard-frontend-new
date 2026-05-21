@@ -364,20 +364,20 @@ export default function Schedule() {
     return Array.from(byGuard.values());
   }, [assignments, positions, stations, monthDays]);
 
-  // Map: dateStr → working sacafranco guard names for that day
+  // Map: dateStr → working sacafranco guard names for that day (max 2 shown)
   const sfCoverageByDate = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const sf of sacafrancoData) {
-      const name = sf.guard
-        ? `${sf.guard.firstName?.[0] || ''}${sf.guard.lastName?.[0] || ''}`.toUpperCase()
-        : '?';
+      if (!sf.guard) continue;
+      const name = `${sf.guard.firstName?.[0] || ''}${sf.guard.lastName?.[0] || ''}`.toUpperCase();
       for (const entry of sf.availability) {
         if (entry.status === 'covering') {
           const dateStr = entry.date instanceof Date
             ? entry.date.toISOString().slice(0, 10)
             : String(entry.date).slice(0, 10);
           if (!map.has(dateStr)) map.set(dateStr, []);
-          map.get(dateStr)!.push(name);
+          const arr = map.get(dateStr)!;
+          if (arr.length < 3) arr.push(name); // cap at 3 to keep it readable
         }
       }
     }
@@ -991,7 +991,9 @@ export default function Schedule() {
 
                                       if (workStatus === 'rest') {
                                         const coveringSfs = sfCoverageByDate.get(dateStr) || [];
-                                        const sfLabel = coveringSfs.length > 0 ? coveringSfs.join(',') : '';
+                                        const sfLabel = coveringSfs.length > 0
+                                          ? (coveringSfs.length <= 2 ? coveringSfs.join(',') : `${coveringSfs[0]}+${coveringSfs.length - 1}`)
+                                          : '';
                                         return (
                                           <div
                                             key={assignment.id}
