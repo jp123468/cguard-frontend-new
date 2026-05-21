@@ -87,10 +87,29 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
     }
   };
 
+  // Load positions from scheduler API
+  const [positions, setPositions] = useState<any[]>([]);
+  useEffect(() => {
+    if (!stationId || !tenantId) return;
+    ApiService.get(`/tenant/${tenantId}/station/${stationId}/positions`)
+      .then((res: any) => { setPositions(Array.isArray(res) ? res : (res?.rows ?? [])); })
+      .catch(() => {});
+  }, [stationId, tenantId]);
+
   useEffect(() => { loadShifts(); }, [stationId]);
 
-  // Parse station schedule (jornadas)
+  // Build jornadas from positions (scheduler data)
   const jornadas: Jornada[] = useMemo(() => {
+    if (positions.length > 0) {
+      return positions.map(p => ({
+        tipo: p.name || p.type,
+        startTime: p.startTime || '07:00',
+        endTime: p.endTime || '19:00',
+        guardsCount: p.guardsNeeded || 1,
+        days: ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'],
+      }));
+    }
+    // Fallback to old stationSchedule if no positions
     let parsed: any[] = [];
     try {
       const raw = station?.stationSchedule;
