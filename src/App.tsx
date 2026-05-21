@@ -6,7 +6,7 @@ import ForgotPassword from "./pages/auth/forgot-password"
 import ResetPassword from "./pages/auth/reset-password"
 import DashboardPage from "./pages/admin/dashboard/dasboard"
 import LanguagePage from "./pages/idioma/configuracion"
-import { AuthProvider } from "./contexts/AuthContext"
+import { AuthProvider, useAuth } from "./contexts/AuthContext"
 import { ThemeProvider } from "./contexts/ThemeContext"
 import { LanguageProvider } from "./contexts/LanguageContext"
 import "./i18n"
@@ -133,6 +133,10 @@ import GuardAsignarSitiosPage from "./pages/admin/security-guards/components/Gua
 import GuardSkillsPage from "./pages/admin/security-guards/components/GuardSkills/GuardSkillsPage";
 import GuardDepartamentoPage from "./pages/admin/security-guards/components/GuardDepartment/GuardDepartamentoPage";
 import GuardConfiguracionPage from "./pages/admin/security-guards/components/GuardConfiguration/GuardConfiguracionPage";
+import GuardAppLayout from "./layouts/GuardAppLayout";
+import GuardDashboard from "./pages/guard/dashboard/GuardDashboard";
+import GuardSchedulePage from "./pages/guard/dashboard/GuardSchedule";
+import GuardTimeOffPage from "./pages/guard/dashboard/GuardTimeOff";
 import MemosPage from "./pages/admin/memos/MemosPage";
 import TenantsPage from "./pages/admin/superadmin/TenantsPage";
 import RequireGlobalAdmin from "./components/RequireGlobalAdmin";
@@ -170,6 +174,30 @@ function LoginRouteResolver() {
       <Login />
     </PublicOnlyRoute>
   );
+}
+
+/** Role-based redirect: guards go to /guard, others go to /dashboard */
+function RoleBasedRedirect() {
+  const { user, isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  // Check if user is ONLY a security guard (not also admin/supervisor)
+  const roles: string[] = (() => {
+    const r = user?.roles ?? user?.role ?? [];
+    const arr = Array.isArray(r) ? r : [r];
+    // also include tenant-scoped roles
+    const tenantRoles: string[] = Array.isArray(user?.tenants)
+      ? user.tenants.flatMap((t: any) => {
+          const tr = t.roles ?? t.role ?? [];
+          return Array.isArray(tr) ? tr : [tr];
+        })
+      : [];
+    return [...arr, ...tenantRoles].map((x: any) => String(x || '').toLowerCase()).filter(Boolean);
+  })();
+  const adminRoles = ['admin', 'superadmin', 'operationsmanager', 'securitysupervisor', 'hrmanager', 'dispatcher', 'clientaccountmanager', 'administrativesupervisor', 'administrativeassistant', 'secretary'];
+  const hasAdminRole = roles.some(r => adminRoles.includes(r));
+  const isGuardOnly = roles.includes('securityguard') && !hasAdminRole;
+  if (isGuardOnly) return <Navigate to="/guard" replace />;
+  return <Navigate to="/dashboard" replace />;
 }
 
 export default function App() {
@@ -1543,8 +1571,15 @@ export default function App() {
 
 
 
+              {/* GUARD APP (role-based) */}
+              <Route path="/guard" element={<ProtectedRoute><GuardAppLayout /></ProtectedRoute>}>
+                <Route index element={<GuardDashboard />} />
+                <Route path="schedule" element={<GuardSchedulePage />} />
+                <Route path="time-off" element={<GuardTimeOffPage />} />
+              </Route>
+
               {/* Ruta raíz - redirige según estado de autenticación */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<RoleBasedRedirect />} />
 
               {/* 404 - Página no encontrada */}
               <Route path="*" element={<NotFound />} />

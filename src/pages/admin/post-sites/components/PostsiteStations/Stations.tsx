@@ -43,6 +43,7 @@ export default function Stations({ site }: { site?: any }) {
   const [startingTimeInDay, setStartingTimeInDay] = useState('');
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [finishTimeInDay, setFinishTimeInDay] = useState('');
+  const [geofenceRadius, setGeofenceRadius] = useState('100');
 
   useEffect(() => {
     let mounted = true;
@@ -351,12 +352,13 @@ export default function Stations({ site }: { site?: any }) {
         numberOfGuardsInStation,
         startingTimeInDay,
         finishTimeInDay,
+        geofenceRadius: Number(geofenceRadius) || 100,
         description: newDescription,
       } as any;
       const res = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
       const created = (res && (res.data || res)) || res;
       setStations(s => [created, ...s]);
-      setNewName(''); setNewDescription(''); setStationSchedule(''); setNumberOfGuardsInStation('1'); setStartingTimeInDay(''); setFinishTimeInDay('');
+      setNewName(''); setNewDescription(''); setStationSchedule(''); setNumberOfGuardsInStation('1'); setStartingTimeInDay(''); setFinishTimeInDay(''); setGeofenceRadius('100');
       setShowNew(false);
       toast.success(t('postSites.stations.created', 'Station created'));
     } catch (err: any) {
@@ -816,6 +818,17 @@ export default function Stations({ site }: { site?: any }) {
                   <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.startTime', 'Start')}</label>
                   <input type="time" value={startingTimeInDay} onChange={e => setStartingTimeInDay(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-foreground" />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.endTime', 'End')}</label>
+                <input type="time" value={finishTimeInDay} onChange={e => setFinishTimeInDay(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-foreground" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.geofenceRadius', 'Radio geovalla (metros)')}</label>
+                <input type="number" min="10" max="5000" value={geofenceRadius} onChange={e => setGeofenceRadius(e.target.value)} placeholder="100" className="w-full px-3 py-2 border rounded-md text-sm text-foreground" />
+                <p className="text-xs text-muted-foreground mt-1">{t('postSites.stations.form.geofenceHint', 'Distancia máxima para marcar entrada')}</p>
               </div>
 
               <div>
