@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +51,9 @@ interface StationCoverage {
 }
 
 export default function Schedule() {
+  const [searchParams] = useSearchParams();
+  const urlStationId = searchParams.get('stationId') || '';
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"day" | "week" | "month" | "list">("week");
   const [selectedGuard, setSelectedGuard] = useState("Guardia");
@@ -60,6 +64,11 @@ export default function Schedule() {
   // Real shift data
   const [shifts, setShifts] = useState<ShiftRecord[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // AI Schedule generation
+  const [aiSchedule, setAiSchedule] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   // Coverage gap data
   const [stationCoverages, setStationCoverages] = useState<StationCoverage[]>([]);
@@ -141,6 +150,54 @@ export default function Schedule() {
     if (filters.postSite) fetchCoverageGaps(filters.postSite);
     else setStationCoverages([]);
   }, [dateWindow, filters.postSite]);
+
+  // Auto-generate AI schedule when redirected from quick-assign with stationId
+  useEffect(() => {
+    if (!urlStationId) return;
+    const tenantId = localStorage.getItem('tenantId') || '';
+    if (!tenantId) return;
+
+    setAiLoading(true);
+    setAiError(null);
+
+    const startDate = new Date().toISOString().split('T')[0];
+    const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // 30 days
+
+    import('@/lib/api').then(({ default: api }) => {
+      api.post(`/tenant/${tenantId}/scheduler/generate`, {
+        stationId: urlStationId,
+        startDate,
+        endDate,
+      })
+        .then((resp: any) => {
+          setAiSchedule(resp?.data || resp);
+        })
+        .catch((err: any) => {
+          console.error('[AI Scheduler]', err);
+          setAiError(err?.response?.data?.message || 'Error al generar horario');
+        })
+        .finally(() => setAiLoading(false));
+    });
+  }, [urlStationId]);
+
+  const handleApplyAiSchedule = async () => {
+    if (!aiSchedule?.proposedShifts) return;
+    const tenantId = localStorage.getItem('tenantId') || '';
+    setAiLoading(true);
+    try {
+      const { default: api } = await import('@/lib/api');
+      await api.post(`/tenant/${tenantId}/scheduler/apply`, {
+        stationId: urlStationId,
+        proposedShifts: aiSchedule.proposedShifts,
+      });
+      setAiSchedule(null);
+      fetchShifts(); // Refresh shifts list
+    } catch (err: any) {
+      setAiError(err?.response?.data?.message || 'Error al aplicar horario');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   // Flat list of all gaps across all stations (for view overlays)
   const allGaps = useMemo<CoverageGap[]>(
@@ -250,6 +307,96 @@ export default function Schedule() {
         {showIncomeCards && (
           <div className="bg-amber-500/10 border border-amber-200 rounded-lg p-4 text-sm text-amber-700">
             Las tarjetas de ingresos estarán disponibles cuando se configure la tarifa por hora por guardia y puesto.
+          </div>
+        )}
+
+        {/* AI Schedule Generation Panel */}
+        {(aiLoading || aiSchedule || aiError) && (
+          <div className="bg-card border-2 border-purple-200 rounded-lg p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-purple-600" />
+              <h3 className="font-semibold text-lg">Horario Generado por IA</h3>
+            </div>
+
+            {aiLoading && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Generando horario óptimo...</span>
+              </div>
+            )}
+
+            {aiError && (
+              <div className="flex items-center gap-2 text-red-600">
+                <AlertTriangle className="h-4 w-4" />
+                <span>{aiError}</span>
+              </div>
+            )}
+
+            {aiSchedule && !aiLoading && (
+              <>
+                <div className="text-sm text-muted-foreground">
+                  Estación: <strong>{aiSchedule.station?.name}</strong> | 
+                  Período: {aiSchedule.dateRange?.startDate} → {aiSchedule.dateRange?.endDate}
+                </div>
+
+                {aiSchedule.summary && (
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <div className="bg-purple-50 dark:bg-purple-900/20 rounded p-2 text-center">
+                      <div className="text-xl font-bold text-purple-600">{aiSchedule.summary.totalShifts}</div>
+                      <div className="text-xs">Turnos Totales</div>
+                    </div>
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded p-2 text-center">
+                      <div className="text-xl font-bold text-green-600">{aiSchedule.summary.titularShifts}</div>
+                      <div className="text-xs">Titular</div>
+                    </div>
+                    <div className="bg-orange-50 dark:bg-orange-900/20 rounded p-2 text-center">
+                      <div className="text-xl font-bold text-orange-600">{aiSchedule.summary.sacafrancoShifts}</div>
+                      <div className="text-xs">Sacafranco</div>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded p-2 text-center">
+                      <div className="text-xl font-bold text-blue-600">{aiSchedule.summary.totalHours}</div>
+                      <div className="text-xs">Horas</div>
+                    </div>
+                    <div className="bg-red-50 dark:bg-red-900/20 rounded p-2 text-center">
+                      <div className="text-xl font-bold text-red-600">{aiSchedule.summary.overtimeHours}</div>
+                      <div className="text-xs">Horas Extra</div>
+                    </div>
+                  </div>
+                )}
+
+                {aiSchedule.sacafrancoAssignments?.length > 0 && (
+                  <div className="text-sm">
+                    <p className="font-medium mb-1">Cobertura Sacafranco:</p>
+                    <ul className="list-disc list-inside text-muted-foreground max-h-32 overflow-y-auto">
+                      {aiSchedule.sacafrancoAssignments.slice(0, 10).map((sa: any, i: number) => (
+                        <li key={i}>{sa.date}: <strong>{sa.sacafrancoName}</strong> cubre a {sa.coversFor} ({sa.reason})</li>
+                      ))}
+                      {aiSchedule.sacafrancoAssignments.length > 10 && (
+                        <li>...y {aiSchedule.sacafrancoAssignments.length - 10} más</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+
+                {aiSchedule.warnings?.length > 0 && (
+                  <div className="text-sm text-amber-600">
+                    <p className="font-medium">⚠️ Advertencias:</p>
+                    <ul className="list-disc list-inside">
+                      {aiSchedule.warnings.map((w: string, i: number) => <li key={i}>{w}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <Button onClick={handleApplyAiSchedule} className="bg-purple-600 hover:bg-purple-700 text-white">
+                    Aplicar Horario
+                  </Button>
+                  <Button variant="outline" onClick={() => setAiSchedule(null)}>
+                    Descartar
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         )}
 

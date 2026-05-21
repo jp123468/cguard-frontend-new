@@ -269,18 +269,8 @@ export default function SecurityGuardsPage() {
       setAssignDialogOpen(false);
       setAssignGuard(null);
       setAssignStationId("");
-      // Refresh station lookup
-      api.get(`/tenant/${tenantId}/shift?limit=1000&offset=0`)
-        .then((resp: any) => {
-          const rows: any[] = resp?.data?.rows ?? resp?.rows ?? [];
-          const map: Record<string, string> = {};
-          for (const shift of rows) {
-            const uid = shift.guardId ?? shift.guard?.id ?? null;
-            const stationName = shift.station?.stationName ?? shift.station?.name ?? shift.stationName ?? null;
-            if (uid && stationName && !map[uid]) map[uid] = stationName;
-          }
-          setStationByUserId(map);
-        }).catch(() => {});
+      // Navigate to scheduler with station pre-selected
+      navigate(`/programmer/schedule?stationId=${assignStationId}`);
     } catch (err: any) {
       console.error(err);
       toast.error(t('guards.list.toasts.assignError', 'Error al asignar guardia'));
