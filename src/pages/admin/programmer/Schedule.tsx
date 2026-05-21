@@ -250,7 +250,8 @@ export default function Schedule() {
 
     // For 24H positions: distinguish day/night phases
     // For 12H positions: both day and night rotation phases are just "work" days
-    const is24h = pos ? (pos.startTime === pos.endTime || (pos.startTime === '07:00' && pos.endTime === '07:00')) : false;
+    const assignStation = stations.find(s => s.id === assignment.stationId);
+    const is24h = assignStation?.scheduleType === '24h';
     if (adjustedDay < rot.dayShifts) return 'day';
     if (adjustedDay < rot.dayShifts + rot.nightShifts) return is24h ? 'night' : 'day';
     return 'rest';
@@ -279,9 +280,9 @@ export default function Schedule() {
 
     // For 24H positions: distinguish day vs night phase
     // For 12H positions: both phases are "work" (day)
-    const is24h = position.startTime === position.endTime || (position.startTime === '07:00' && position.endTime === '07:00');
+    const is24hSlot = station?.scheduleType === '24h';
     if (adjustedDay < rot.dayShifts) return 'day';
-    if (adjustedDay < rot.dayShifts + rot.nightShifts) return is24h ? 'night' : 'day';
+    if (adjustedDay < rot.dayShifts + rot.nightShifts) return is24hSlot ? 'night' : 'day';
     return 'rest';
   };
 
@@ -934,9 +935,9 @@ export default function Schedule() {
                                         </div>
                                       );
                                     }
-                                    // Use position times to determine D vs N label
-                                    const isNightSlot = pos.startTime > pos.endTime; // e.g. 19:00 > 07:00
-                                    const is24hSlot = pos.startTime === pos.endTime || (pos.startTime === '07:00' && pos.endTime === '07:00');
+                                    // Use STATION scheduleType to determine D vs N label
+                                    const is24hSlot = station.scheduleType === '24h';
+                                    const isNightSlot = station.scheduleType === '12h-night';
                                     const code = is24hSlot
                                       ? (slotStatus === 'night' ? 'N' : 'D')
                                       : isNightSlot ? 'N' : 'D';
@@ -984,9 +985,9 @@ export default function Schedule() {
                                       }
 
                                       const workStatus = isWorkDay(assignment, day);
-                                      const is24h = pos.startTime === pos.endTime || (pos.startTime === '07:00' && pos.endTime === '07:00');
-                                      // Determine display label based on POSITION schedule, not rotation phase
-                                      const isNightPos = pos.startTime > pos.endTime; // e.g. 19:00 > 07:00
+                                      // Determine display label based on STATION scheduleType
+                                      const is24h = station.scheduleType === '24h';
+                                      const isNightPos = station.scheduleType === '12h-night';
 
                                       if (workStatus === 'rest') {
                                         const coveringSfs = sfCoverageByDate.get(dateStr) || [];
