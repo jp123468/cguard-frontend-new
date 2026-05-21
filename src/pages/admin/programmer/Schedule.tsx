@@ -363,6 +363,26 @@ export default function Schedule() {
     return Array.from(byGuard.values());
   }, [assignments, positions, stations, monthDays]);
 
+  // Map: dateStr → working sacafranco guard names for that day
+  const sfCoverageByDate = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const sf of sacafrancoData) {
+      const name = sf.guard
+        ? `${sf.guard.firstName?.[0] || ''}${sf.guard.lastName?.[0] || ''}`.toUpperCase()
+        : '?';
+      for (const entry of sf.availability) {
+        if (entry.status === 'covering') {
+          const dateStr = entry.date instanceof Date
+            ? entry.date.toISOString().slice(0, 10)
+            : String(entry.date).slice(0, 10);
+          if (!map.has(dateStr)) map.set(dateStr, []);
+          map.get(dateStr)!.push(name);
+        }
+      }
+    }
+    return map;
+  }, [sacafrancoData]);
+
   // ─── Actions ──────────────────────────────────────────────────────────────
 
   const openAssignForm = (stationId: string, positionId: string) => {
@@ -969,14 +989,17 @@ export default function Schedule() {
                                       const isNightPos = pos.startTime > pos.endTime; // e.g. 19:00 > 07:00
 
                                       if (workStatus === 'rest') {
+                                        const coveringSfs = sfCoverageByDate.get(dateStr) || [];
+                                        const sfLabel = coveringSfs.length > 0 ? coveringSfs.join(',') : '';
                                         return (
                                           <div
                                             key={assignment.id}
-                                            className="h-[20px] rounded bg-muted/30 flex items-center justify-center cursor-pointer hover:bg-muted/50"
-                                            title={`${guardName} — Libre (click para novedad)`}
+                                            className="h-[20px] rounded bg-muted/30 flex items-center justify-center cursor-pointer hover:bg-muted/50 relative"
+                                            title={`${guardName} — Libre${coveringSfs.length > 0 ? ` · Cubre: ${coveringSfs.join(', ')}` : ''}`}
                                             onClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
                                           >
                                             <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
+                                            {sfLabel && <span className="absolute bottom-[-1px] right-[1px] text-[7px] font-medium text-emerald-500/70 leading-none">{sfLabel}</span>}
                                           </div>
                                         );
                                       }
@@ -999,7 +1022,7 @@ export default function Schedule() {
                                           key={assignment.id}
                                           className={`h-[20px] rounded flex items-center justify-center cursor-pointer hover:opacity-80 ${bg}`}
                                           style={{ borderLeft: `2px solid ${color}` }}
-                                          title={`${guardName} — ${code === 'N' ? 'Nocturno' : code === '24' ? '24 Horas' : 'Diurno'} (click para novedad)`}
+                                          title={`${guardName} — ${code === 'N' ? 'Nocturno' : (code as string) === '24' ? '24 Horas' : 'Diurno'} (click para novedad)`}
                                           onClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
                                         >
                                           <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
