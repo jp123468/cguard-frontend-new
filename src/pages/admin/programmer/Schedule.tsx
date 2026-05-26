@@ -364,25 +364,71 @@ export default function Schedule() {
     return Array.from(byGuard.values());
   }, [assignments, positions, stations, monthDays]);
 
-  // Map: dateStr → working sacafranco guard names for that day (max 2 shown)
-  const sfCoverageByDate = useMemo(() => {
-    const map = new Map<string, string[]>();
-    for (const sf of sacafrancoData) {
-      if (!sf.guard) continue;
-      const name = `${sf.guard.firstName?.[0] || ''}${sf.guard.lastName?.[0] || ''}`.toUpperCase();
-      for (const entry of sf.availability) {
-        if (entry.status === 'covering') {
-          const dateStr = entry.date instanceof Date
-            ? entry.date.toISOString().slice(0, 10)
-            : String(entry.date).slice(0, 10);
-          if (!map.has(dateStr)) map.set(dateStr, []);
-          const arr = map.get(dateStr)!;
-          if (arr.length < 3) arr.push(name); // cap at 3 to keep it readable
+  // Map: `${stationId}-${dateStr}` → covering SF guard name(s)
+  // Algorithm: on each day, match working SFs to stations that have fijos resting
+  const sfStationCoverage = useMemo(() => {
+    const map = new Map<string, { name: string; fullName: string }[]>();
+
+    // Pre-compute: which stations have fijos resting on each day
+    const stationRestDays = new Map<string, string[]>(); // dateStr → [stationId, ...]
+    const fijoAssigns = assignments.filter(a => {
+      const pos = positions.find(p => p.id === a.positionId);
+      return pos?.type === 'fijo' && !a.isRelief;
+    });
+
+    for (const day of monthDays) {
+      const dateStr = day.toISOString().slice(0, 10);
+      const stationsNeeding: string[] = [];
+      // Group fijo assignments by station
+      const byStation = new Map<string, GuardAssignment[]>();
+      for (const a of fijoAssigns) {
+        if (!byStation.has(a.stationId)) byStation.set(a.stationId, []);
+        byStation.get(a.stationId)!.push(a);
+      }
+      // Check each station: does any fijo rest today?
+      for (const [stId, stAssigns] of byStation) {
+        const anyResting = stAssigns.some(a => isWorkDay(a, day) === 'rest');
+        if (anyResting) stationsNeeding.push(stId);
+      }
+      stationRestDays.set(dateStr, stationsNeeding);
+    }
+
+    // Pre-compute: which SFs are working on each day
+    for (const day of monthDays) {
+      const dateStr = day.toISOString().slice(0, 10);
+      const stationsNeeding = stationRestDays.get(dateStr) || [];
+      if (stationsNeeding.length === 0) continue;
+
+      // Get working SFs for this day
+      const workingSfs: { name: string; fullName: string }[] = [];
+      for (const sf of sacafrancoData) {
+        if (!sf.guard) continue;
+        const entry = sf.availability.find(a => {
+          const d = a.date instanceof Date ? a.date.toISOString().slice(0, 10) : String(a.date).slice(0, 10);
+          return d === dateStr;
+        });
+        if (entry?.status === 'covering') {
+          workingSfs.push({
+            name: `${sf.guard.firstName?.[0] || ''}${sf.guard.lastName?.[0] || ''}`.toUpperCase(),
+            fullName: `${sf.guard.firstName || ''} ${sf.guard.lastName || ''}`.trim(),
+          });
+        }
+      }
+
+      // Assign SFs to stations round-robin
+      for (let i = 0; i < stationsNeeding.length; i++) {
+        const stId = stationsNeeding[i];
+        const key = `${stId}-${dateStr}`;
+        if (workingSfs.length > 0) {
+          const sfIdx = i % workingSfs.length;
+          if (!map.has(key)) map.set(key, []);
+          map.get(key)!.push(workingSfs[sfIdx]);
         }
       }
     }
+
     return map;
-  }, [sacafrancoData]);
+  }, [sacafrancoData, assignments, positions, monthDays, isWorkDay]);
 
   // ─── Actions ──────────────────────────────────────────────────────────────
 
@@ -550,6 +596,7 @@ export default function Schedule() {
 
   // Schedule overrides
   const [overrideTarget, setOverrideTarget] = useState<{ guardId: string; guardName: string; date: string; assignmentId?: string } | null>(null);
+  const [sfSectionOpen, setSfSectionOpen] = useState(false); // SF section collapsed by default
 
   const getOverride = (guardId: string, dateStr: string): ScheduleOverride | undefined =>
     overrides.find(o => o.guardId === guardId && o.date === dateStr);
@@ -698,6 +745,18 @@ export default function Schedule() {
                         <div className="text-[9px] text-muted-foreground">SF asignados</div>
                       </div>
                     </div>
+                    {/* Hiring recommendation */}
+                    {((staffing.fijosNeeded - (staffing.currentFijoGuards || 0)) > 0 || (staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)) > 0) && (
+                      <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-2 space-y-1">
+                        <div className="text-[10px] font-semibold text-red-600">⚠ Contratar:</div>
+                        {(staffing.fijosNeeded - (staffing.currentFijoGuards || 0)) > 0 && (
+                          <div className="text-[10px] text-red-500">{staffing.fijosNeeded - (staffing.currentFijoGuards || 0)} fijos más</div>
+                        )}
+                        {(staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)) > 0 && (
+                          <div className="text-[10px] text-red-500">{staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)} sacafrancos más</div>
+                        )}
+                      </div>
+                    )}
                     {staffing.sfRotation && (
                       <div className="text-[10px] text-muted-foreground pt-1 border-t border-border/20">
                         Rotación SF: <span className="font-semibold text-foreground">{staffing.sfRotation.name}</span> ({staffing.sfRotation.dayShifts}D-{staffing.sfRotation.nightShifts}N-{staffing.sfRotation.restDays}L)
@@ -850,7 +909,9 @@ export default function Schedule() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="text-xs font-medium text-foreground truncate">{pos.name}</div>
-                              <div className="text-[10px] text-muted-foreground">{pos.startTime} – {pos.endTime}</div>
+                              <div className="text-[10px] text-muted-foreground">
+                                {station.scheduleType === '12h-night' ? '19:00 – 07:00' : station.scheduleType === '24h' ? '24 Horas' : '07:00 – 19:00'}
+                              </div>
                             </div>
                             {/* Assigned guard names */}
                             {posAssignments.length > 0 && (
@@ -990,19 +1051,22 @@ export default function Schedule() {
                                       const isNightPos = station.scheduleType === '12h-night';
 
                                       if (workStatus === 'rest') {
-                                        const coveringSfs = sfCoverageByDate.get(dateStr) || [];
-                                        const sfLabel = coveringSfs.length > 0
-                                          ? (coveringSfs.length <= 2 ? coveringSfs.join(',') : `${coveringSfs[0]}+${coveringSfs.length - 1}`)
-                                          : '';
+                                        const coverKey = `${station.id}-${dateStr}`;
+                                        const coveringSfs = sfStationCoverage.get(coverKey) || [];
+                                        const sfLabel = coveringSfs.length > 0 ? coveringSfs[0].name : '';
+                                        const sfTooltip = coveringSfs.length > 0 ? coveringSfs.map(s => s.fullName).join(', ') : '';
                                         return (
                                           <div
                                             key={assignment.id}
-                                            className="h-[20px] rounded bg-muted/30 flex items-center justify-center cursor-pointer hover:bg-muted/50 relative"
-                                            title={`${guardName} — Libre${coveringSfs.length > 0 ? ` · Cubre: ${coveringSfs.join(', ')}` : ''}`}
+                                            className={`h-[20px] rounded flex items-center justify-center cursor-pointer relative ${sfLabel ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-muted/30 hover:bg-muted/50'}`}
+                                            title={`${guardName} — Libre${sfTooltip ? ` · Cubre: ${sfTooltip}` : ' (sin cobertura)'}`}
                                             onClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
                                           >
-                                            <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
-                                            {sfLabel && <span className="absolute bottom-[-1px] right-[1px] text-[7px] font-medium text-emerald-500/70 leading-none">{sfLabel}</span>}
+                                            {sfLabel ? (
+                                              <span className="text-[8px] font-bold text-emerald-600">{sfLabel}</span>
+                                            ) : (
+                                              <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
+                                            )}
                                           </div>
                                         );
                                       }
@@ -1062,20 +1126,20 @@ export default function Schedule() {
                 if (sfPositions.length === 0) return null;
                 return (
                   <div className="border-t-2 border-emerald-500/30">
-                    {/* SF Header */}
-                    <div className="grid bg-emerald-500/5" style={{ gridTemplateColumns: `240px repeat(${monthDays.length}, 44px)` }}>
+                    {/* SF Header - clickable to expand/collapse */}
+                    <div className="grid bg-emerald-500/5 cursor-pointer" style={{ gridTemplateColumns: `240px repeat(${monthDays.length}, 44px)` }} onClick={() => setSfSectionOpen(!sfSectionOpen)}>
                       <div className="px-4 py-2.5 flex items-center gap-2 border-r border-border/20 sticky left-0 z-10 bg-emerald-500/5 backdrop-blur-sm">
                         <Shield size={14} className="text-emerald-500" />
                         <div className="flex-1">
                           <div className="text-sm font-semibold text-emerald-600">Sacafrancos</div>
-                          <div className="text-[10px] text-muted-foreground">{sfPositions.length} posiciones — cubren todas las estaciones</div>
+                          <div className="text-[10px] text-muted-foreground">{sfPositions.length} posiciones {sfSectionOpen ? '▾' : '▸ (click para expandir)'}</div>
                         </div>
                       </div>
                       {monthDays.map((_, i) => <div key={i} className="border-r border-border/10 last:border-r-0" />)}
                     </div>
 
-                    {/* SF Position rows */}
-                    {sfPositions.map(pos => {
+                    {/* SF Position rows — only if expanded */}
+                    {sfSectionOpen && sfPositions.map(pos => {
                       const posAssignments = getAssignmentsForPosition(pos.id);
                       return (
                         <div key={pos.id} className="grid border-t border-border/10" style={{ gridTemplateColumns: `240px repeat(${monthDays.length}, 44px)` }}>
