@@ -224,14 +224,13 @@ export default function Schedule() {
     // For sacafranco positions, check if any fijo guard at the same station is resting
     const pos = positions.find(p => p.id === assignment.positionId);
     if (pos?.type === 'sacafranco' || assignment.isRelief) {
-      // Sacafranco follows its OWN rotation: D/N/L — independent of fijo coverage
+      // Sacafranco follows its OWN rotation using global epoch (Jan 1)
       const sfCycle = rot.dayShifts + rot.nightShifts + rot.restDays;
       if (sfCycle === 0) return 'rest';
-      const sfStart = new Date(assignment.startDate + 'T00:00:00');
+      const epoch = new Date(date.getFullYear(), 0, 1);
       const target = new Date(date);
       target.setHours(0, 0, 0, 0);
-      const sfDiff = Math.floor((target.getTime() - sfStart.getTime()) / (24 * 60 * 60 * 1000));
-      if (sfDiff < 0) return 'rest';
+      const sfDiff = Math.floor((target.getTime() - epoch.getTime()) / (24 * 60 * 60 * 1000));
       const sfAdj = ((sfDiff - (assignment.platoonOffset || 0)) % sfCycle + sfCycle) % sfCycle;
       if (sfAdj < rot.dayShifts) return 'day';
       if (sfAdj < rot.dayShifts + rot.nightShifts) return 'night';
@@ -239,14 +238,14 @@ export default function Schedule() {
     }
 
     // ─── FIJO LOGIC ─── Guard rotates work/rest following the station rotation
+    // Uses GLOBAL EPOCH (Jan 1) for consistent sequential pattern across all stations
     const cycleLength = rot.dayShifts + rot.nightShifts + rot.restDays;
-    const start = new Date(assignment.startDate + 'T00:00:00');
+    const epoch = new Date(date.getFullYear(), 0, 1);
     const target = new Date(date);
     target.setHours(0, 0, 0, 0);
-    const diffMs = target.getTime() - start.getTime();
-    const daysSinceStart = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-    if (daysSinceStart < 0) return 'rest';
-    const adjustedDay = ((daysSinceStart - assignment.platoonOffset) % cycleLength + cycleLength) % cycleLength;
+    const diffMs = target.getTime() - epoch.getTime();
+    const daysSinceEpoch = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    const adjustedDay = ((daysSinceEpoch - assignment.platoonOffset) % cycleLength + cycleLength) % cycleLength;
 
     // For 24H positions: distinguish day/night phases
     // For 12H positions: both day and night rotation phases are just "work" days
@@ -318,16 +317,13 @@ export default function Schedule() {
       const sfCycle = rot.dayShifts + rot.nightShifts + rot.restDays;
       if (sfCycle === 0) return;
 
-      const sfStart = new Date(primaryAssignment.startDate + 'T00:00:00');
+      // Use global epoch (Jan 1) — consistent with backend offset calculation
+      const epoch = new Date(monthDays[0].getFullYear(), 0, 1);
 
       monthDays.forEach(day => {
         const target = new Date(day);
         target.setHours(0, 0, 0, 0);
-        const sfDiff = Math.floor((target.getTime() - sfStart.getTime()) / (24 * 60 * 60 * 1000));
-        if (sfDiff < 0) {
-          data.availability.push({ date: day, status: 'available' });
-          return;
-        }
+        const sfDiff = Math.floor((target.getTime() - epoch.getTime()) / (24 * 60 * 60 * 1000));
         const sfAdj = ((sfDiff - (primaryAssignment.platoonOffset || 0)) % sfCycle + sfCycle) % sfCycle;
         if (sfAdj >= rot.dayShifts + rot.nightShifts) {
           // Rest day
@@ -345,9 +341,7 @@ export default function Schedule() {
               const mainRot = mainA.rotationStyle;
               if (!mainRot) continue;
               const mainCycle = mainRot.dayShifts + mainRot.nightShifts + mainRot.restDays;
-              const mainStart = new Date(mainA.startDate + 'T00:00:00');
-              const daysSince = Math.floor((target.getTime() - mainStart.getTime()) / (24 * 60 * 60 * 1000));
-              if (daysSince < 0) continue;
+              const daysSince = Math.floor((target.getTime() - epoch.getTime()) / (24 * 60 * 60 * 1000));
               const adj = ((daysSince - (mainA.platoonOffset || 0)) % mainCycle + mainCycle) % mainCycle;
               if (adj >= mainRot.dayShifts + mainRot.nightShifts) {
                 coveringStation = station?.stationName || 'Estación';
