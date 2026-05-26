@@ -500,12 +500,25 @@ export default function Schedule() {
     setCustomDays(5);
     setCustomNights(0);
     setCustomRest(2);
+    // Auto-select recommended rotation if no rotation set
+    if (!station.rotationStyleId) {
+      const recommended = station.scheduleType === '24h'
+        ? rotationStyles.find(r => r.name === '4-4-2')
+        : rotationStyles.find(r => r.name === '5-2');
+      if (recommended) setConfigRotation(recommended.id);
+    }
   };
 
   const filteredRotationStyles = useMemo(() => {
     if (configType === '24h') return rotationStyles.filter(r => r.nightShifts > 0);
     if (configType === '12h-day' || configType === '12h-night') return rotationStyles.filter(r => r.nightShifts === 0);
     return [];
+  }, [configType, rotationStyles]);
+
+  // Recommended rotation for current config type
+  const recommendedRotationId = useMemo(() => {
+    const name = configType === '24h' ? '4-4-2' : '5-2';
+    return rotationStyles.find(r => r.name === name)?.id || '';
   }, [configType, rotationStyles]);
 
   const saveStationConfig = async () => {
@@ -563,6 +576,23 @@ export default function Schedule() {
   // AI Auto-assign
   const [autoAssigning, setAutoAssigning] = useState(false);
   const [autoResult, setAutoResult] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
+
+  const runAiRecommend = async () => {
+    setAiLoading(true);
+    setAiRecommendation(null);
+    try {
+      const [result] = await ApiService.post(`/tenant/${tenantId}/scheduler/ai-recommend`, { type: 'optimize' });
+      const rec = result?.recommendation || result?.data?.recommendation || 'Sin respuesta';
+      setAiRecommendation(rec);
+    } catch (e: any) {
+      toast.error('Error al consultar IA');
+      console.error(e);
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const runAutoAssign = async () => {
     if (!confirm('¿Asignar automáticamente guardias a todas las estaciones sin cubrir? Esto asigna guardias por cercanía, configura rotaciones y asigna sacafrancos.')) return;
@@ -714,6 +744,20 @@ export default function Schedule() {
                   <Shield size={12} />
                   Optimizar Sacafrancos
                 </button>
+                <button
+                  onClick={runAiRecommend}
+                  disabled={aiLoading}
+                  className="w-full mt-2 px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
+                >
+                  {aiLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                  {aiLoading ? 'Analizando...' : 'Recomendación IA'}
+                </button>
+                {aiRecommendation && (
+                  <div className="mt-3 p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg max-h-[300px] overflow-y-auto">
+                    <div className="text-[10px] font-semibold text-purple-600 mb-1">🤖 Recomendación IA:</div>
+                    <div className="text-[10px] text-foreground/80 whitespace-pre-wrap leading-relaxed">{aiRecommendation}</div>
+                  </div>
+                )}
               </div>
 
               {/* Stats summary */}
@@ -1448,9 +1492,10 @@ export default function Schedule() {
                       <button
                         key={r.id}
                         onClick={() => setConfigRotation(r.id)}
-                        className={`px-2 py-2 rounded-lg text-xs font-medium border transition-all ${configRotation === r.id ? 'bg-[#C8860A]/10 border-[#C8860A] text-[#C8860A]' : 'border-border/40 text-muted-foreground hover:border-border'}`}
+                        className={`px-2 py-2 rounded-lg text-xs font-medium border transition-all relative ${configRotation === r.id ? 'bg-[#C8860A]/10 border-[#C8860A] text-[#C8860A]' : r.id === recommendedRotationId ? 'border-emerald-500/50 text-emerald-600 bg-emerald-500/5' : 'border-border/40 text-muted-foreground hover:border-border'}`}
                       >
                         {r.name}
+                        {r.id === recommendedRotationId && <span className="absolute -top-1.5 -right-1 text-[7px] bg-emerald-500 text-white px-1 rounded">REC</span>}
                       </button>
                     ))}
                   </div>
