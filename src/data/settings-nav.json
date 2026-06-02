@@ -43,6 +43,16 @@
         ]
       },
       {
+        "label": "RONDAS DE SEGURIDAD",
+        "items": [
+          {
+            "id": "rondas-config",
+            "label": "Configuraciones de Rondas",
+            "path": "/setting/rondas"
+          }
+        ]
+      },
+      {
         "label": "",
         "items": [
           {

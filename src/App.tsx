@@ -36,6 +36,7 @@ import DeveloperRequestsPage from "./pages/admin/Configuration/application-recor
 import ReportSettingsPage from "./pages/admin/Configuration/report-settings/ReportSettingsPage"
 import OtherSettingsPage from "./pages/admin/Configuration/other-settings/OtherSettingsPage"
 import GuardsGlobalSettingsPage from "./pages/admin/Configuration/guards-settings/GuardsGlobalSettingsPage"
+import RondasSettingsPage from "./pages/admin/Configuration/rondas-settings/RondasSettingsPage"
 import DeveloperTokensPage from "./pages/admin/Configuration/developer-tokens/DeveloperTokensPage"
 import ActivitiesPage from "./pages/admin/actividades/ActivitiesPage"
 import ClientesPage from "./pages/admin/clientes/ClientsPage"
@@ -1520,6 +1521,14 @@ export default function App() {
                   <ProtectedRoute>
                     <GuardsGlobalSettingsPage />
                     {/* FALTA */}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/rondas"
+                element={
+                  <ProtectedRoute>
+                    <RondasSettingsPage />
                   </ProtectedRoute>
                 }
               />
