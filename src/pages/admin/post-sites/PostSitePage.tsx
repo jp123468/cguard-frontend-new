@@ -832,7 +832,11 @@ export default function PostSitePage() {
                         if (raw && typeof raw === 'string') shifts = JSON.parse(raw);
                         else if (Array.isArray(raw)) shifts = raw;
                       } catch { /* ignore */ }
-                      const assignedCount = Array.isArray(station.assignedGuards) ? station.assignedGuards.length : (station.guardsCount || 0);
+                      // Prefer backend `guardsCount` (assigned ∪ scheduled-via-shifts); the
+                      // assignedGuards junction alone is usually empty even when guards work here.
+                      const assignedCount = typeof station.guardsCount === 'number'
+                        ? station.guardsCount
+                        : (Array.isArray(station.assignedGuards) ? station.assignedGuards.length : 0);
 
                       return (
                       <tr
