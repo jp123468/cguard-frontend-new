@@ -146,7 +146,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
 
     const [searchQuery, setSearchQuery] = useState<Record<string, string>>({});
     const actionOptionsMap: Record<string, string[]> = {
-        qr: ['delete', 'print'],
+        qr: ['delete', 'print', 'download'],
         nfc: ['delete'],
         virtual: ['delete'],
         ble: ['delete'],
@@ -160,7 +160,65 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
             return;
         }
         if (opt === 'print') return bulkPrintSelectedTags();
+        if (opt === 'download') return bulkDownloadSelectedTags();
         toast(opt);
+    }
+
+    // Build a print-ready labeled QR PNG (checkpoint name + code) and download it.
+    async function downloadLabeledQr(name: string, identifier: string) {
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=12&data=${encodeURIComponent(identifier)}`;
+        const resp = await fetch(qrUrl, { cache: 'no-store' });
+        const blob = await resp.blob();
+        const img: HTMLImageElement = await new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(blob);
+            const i = new Image();
+            i.onload = () => { URL.revokeObjectURL(url); resolve(i); };
+            i.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+            i.src = url;
+        });
+        const W = 700, H = 830, QR = 600;
+        const canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#111111'; ctx.font = 'bold 38px Arial, sans-serif';
+        const title = (name || 'Punto de control').slice(0, 26);
+        ctx.fillText(title, W / 2, 64);
+        ctx.drawImage(img, (W - QR) / 2, 92, QR, QR);
+        ctx.fillStyle = '#555555'; ctx.font = '24px monospace';
+        ctx.fillText(identifier.slice(0, 40), W / 2, 740);
+        ctx.fillStyle = '#999999'; ctx.font = '18px Arial, sans-serif';
+        ctx.fillText('Escanear con la app de guardia · CGuardPro', W / 2, 786);
+
+        const safe = (s: string) => s.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 40);
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = `QR-${safe(title)}-${safe(identifier)}.png`;
+        document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    async function bulkDownloadSelectedTags() {
+        const ids = (selectedTagIds && selectedTagIds.length)
+            ? selectedTagIds
+            : (tags || []).map((t: any, i: number) => getTagId(t, i)); // none selected → all
+        const items: { name: string; identifier: string }[] = [];
+        for (const sid of ids) {
+            const found = (tags || []).map((t: any, i: number) => ({ t, i })).find(({ t, i }) => getTagId(t, i) === sid);
+            if (!found) continue;
+            const tag = found.t;
+            const identifier = String(tag.tagIdentifier || tag.id || tag._id || getTagId(tag, found.i));
+            if (identifier) items.push({ name: tag.name || 'Punto de control', identifier });
+        }
+        if (!items.length) { toast.error('No hay puntos para descargar'); return; }
+        toast(`Generando ${items.length} código(s) QR…`);
+        for (const it of items) {
+            try { await downloadLabeledQr(it.name, it.identifier); }
+            catch (e) { console.error('QR download failed', it, e); }
+            await new Promise((r) => setTimeout(r, 250)); // stagger browser downloads
+        }
+        toast.success(`${items.length} código(s) QR descargado(s)`);
     }
 
     async function bulkDeleteSelectedTags() {

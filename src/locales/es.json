@@ -2586,7 +2586,8 @@
     "action": "Acción",
     "actions": {
       "delete": "Eliminar",
-      "print": "Imprimir"
+      "print": "Imprimir",
+      "download": "Descargar QR"
     },
     "searchPlaceholder": "Buscar...",
     "table": {

@@ -1799,7 +1799,8 @@
         "action": "Action",
         "actions": {
           "delete": "Delete",
-          "print": "Print"
+          "print": "Print",
+          "download": "Download QR"
         },
         "searchPlaceholder": "Search...",
         "table": {
