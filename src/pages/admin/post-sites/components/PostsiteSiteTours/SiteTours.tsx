@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Select, { MultiValue, OptionsOrGroups } from 'react-select';
-import { Search, ChevronDown, Plus, X, Clock, EllipsisVertical, Eye, Edit, Trash } from 'lucide-react';
+import { Search, ChevronDown, Plus, X, Clock, EllipsisVertical, Eye, Edit, Trash, Settings } from 'lucide-react';
+import RondaSettingsForm from '@/pages/admin/Configuration/rondas-settings/RondaSettingsForm';
 import { useTranslation } from 'react-i18next';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { ApiService } from '@/services/api/apiService';
@@ -116,6 +117,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
   const [actionOpen, setActionOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [showNewTourModal, setShowNewTourModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const [tourName, setTourName] = useState('');
   const [tourDesc, setTourDesc] = useState('');
@@ -713,6 +715,10 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
 
           <div className="flex-shrink-0 flex items-center gap-3">
             {/* TagScans ahora es un componente independiente; abre la vista de Etiquetas desde el menú lateral o la ruta dedicada. */}
+            <button onClick={() => setShowSettingsModal(true)} className="inline-flex items-center gap-2 border border-border bg-card text-foreground px-4 py-2 rounded-full hover:bg-muted/30">
+              <Settings size={16} />
+              <span className="text-sm font-medium">Configuraciones</span>
+            </button>
             <button onClick={() => { setEditingTourId(null); setTourName(''); setTourDesc(''); setScheduledDays([]); setContinuous(false); setTimeMode('specific'); setSelectTime(''); setMaxDuration(''); setStationId(''); setShowNewTourModal(true); }} className="inline-flex items-center gap-3 bg-[#C8860A] text-white px-4 py-2 rounded-full hover:bg-[#B37809]">
               <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
                 <Plus size={14} />
@@ -1298,6 +1304,25 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
               </div>
             </div>
           </aside>
+        </div>
+      )}
+
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowSettingsModal(false)}>
+          <div className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-background" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <div>
+                <h2 className="text-base font-semibold text-foreground">Configuraciones de Rondas</h2>
+                <p className="text-xs text-muted-foreground">{site?.companyName || site?.name || 'Este sitio'}</p>
+              </div>
+              <button onClick={() => setShowSettingsModal(false)} className="text-muted-foreground hover:text-foreground">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-5">
+              <RondaSettingsForm postSiteId={site?.id} onSaved={() => setShowSettingsModal(false)} />
+            </div>
+          </div>
         </div>
       )}
     </div>
