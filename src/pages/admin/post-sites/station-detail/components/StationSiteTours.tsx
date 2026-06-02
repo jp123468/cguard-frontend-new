@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Settings, X } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
+import RondaSettingsForm from '@/pages/admin/Configuration/rondas-settings/RondaSettingsForm';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
-export default function StationSiteTours({ stationId }: Props) {
+export default function StationSiteTours({ stationId, postSiteId }: Props) {
+  const [showSettings, setShowSettings] = useState(false);
   const { t } = useTranslation();
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,14 +45,22 @@ export default function StationSiteTours({ stationId }: Props) {
   };
 
   return (
+    <>
     <div className="bg-card border rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b">
+      <div className="px-6 py-4 border-b flex items-center justify-between gap-3">
         <h3 className="text-base font-semibold text-foreground">
           {t('station.siteTours.title', 'Rondas de Seguridad')}
           {rows.length > 0 && (
             <span className="ml-2 text-sm font-normal text-muted-foreground">({rows.length})</span>
           )}
         </h3>
+        <button
+          onClick={() => setShowSettings(true)}
+          className="inline-flex items-center gap-2 border border-border bg-background text-foreground px-3 py-1.5 rounded-full text-sm hover:bg-muted/30"
+        >
+          <Settings size={15} />
+          Configuraciones
+        </button>
       </div>
 
       {loading ? (
@@ -116,5 +126,22 @@ export default function StationSiteTours({ stationId }: Props) {
         </div>
       )}
     </div>
+
+    {showSettings && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowSettings(false)}>
+        <div className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-background" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <h2 className="text-base font-semibold text-foreground">Configuraciones de Rondas</h2>
+            <button onClick={() => setShowSettings(false)} className="text-muted-foreground hover:text-foreground">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="overflow-y-auto p-5">
+            <RondaSettingsForm postSiteId={postSiteId} onSaved={() => setShowSettings(false)} />
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
