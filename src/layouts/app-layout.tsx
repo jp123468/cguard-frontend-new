@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/header";
 import Sidebar from "@/components/sidebar";
-import { Toaster } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { setTenantId } from "@/lib/api/clientService";
 import { setTenantId as setCategoryTenantId } from "@/lib/api/categoryService";
@@ -237,8 +236,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {children}
       </main>
 
-      {/* Global toaster for notifications */}
-      <Toaster position="top-right" />
+      {/* Toaster lives once globally in main.tsx — a second one here made every
+          toast (notifications included) render twice. */}
 
       <TenantJoinModal open={showTenantModal} onOpenChange={() => { /* noop - modal controlled by presence */ }} />
 
