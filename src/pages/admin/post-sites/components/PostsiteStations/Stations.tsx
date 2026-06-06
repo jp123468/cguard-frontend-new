@@ -8,6 +8,30 @@ import { useTranslation } from 'react-i18next';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
 
+// ── Staffing model ───────────────────────────────────────────────────────────
+// A station covers ONE jornada (turno). That jornada needs 1 *fijo* guard on
+// post. A "sacafranco" floats across stations to cover everyone's rest days, so
+// it does NOT belong to a single station and is NOT counted in a station's
+// required guards. Hence a 12h diurno/nocturno station requires 1 guard (the
+// fijo) — the sacafranco is shared.
+function jornadaType(start?: string, end?: string): 'diurno' | 'nocturno' | null {
+  const hour = (s?: string) => {
+    if (!s) return null;
+    const m = String(s).match(/(\d{1,2}):(\d{2})/);
+    return m ? parseInt(m[1], 10) : null;
+  };
+  const sh = hour(start);
+  const eh = hour(end);
+  if (sh == null) return null;
+  if (eh != null && eh <= sh) return 'nocturno'; // crosses midnight
+  if (sh >= 18 || sh < 5) return 'nocturno';
+  return 'diurno';
+}
+// Fijo positions required for a single jornada — always 1 (a 24h post would be 2).
+function requiredFijos(_schedule?: string): number {
+  return 1;
+}
+
 export default function Stations({ site }: { site?: any }) {
   const { t } = useTranslation();
   const [stations, setStations] = useState<any[]>([]);
@@ -46,6 +70,12 @@ export default function Stations({ site }: { site?: any }) {
   const [finishTimeInDay, setFinishTimeInDay] = useState('');
   const [geofenceRadius, setGeofenceRadius] = useState('100');
   const [geofencePolygon, setGeofencePolygon] = useState<PolyPoint[]>([]);
+
+  // Required guards is derived from the turno: 1 fijo per jornada. The sacafranco
+  // covers rest days, is shared across stations, and is NOT counted here.
+  useEffect(() => {
+    setNumberOfGuardsInStation(String(requiredFijos(stationSchedule)));
+  }, [stationSchedule]);
 
   useEffect(() => {
     let mounted = true;
@@ -809,13 +839,13 @@ export default function Stations({ site }: { site?: any }) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.guards', 'Guards')}</label>
-                  <select value={numberOfGuardsInStation} onChange={e => setNumberOfGuardsInStation(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-foreground">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                  </select>
+                  <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.guards', 'Guardias requeridas')}</label>
+                  <div className="w-full px-3 py-2 border rounded-md text-sm bg-muted/40 text-foreground flex items-center justify-between">
+                    <span className="font-semibold">{requiredFijos(stationSchedule)} fijo</span>
+                    {jornadaType(startingTimeInDay, finishTimeInDay) && (
+                      <span className="text-[11px] text-muted-foreground capitalize">{jornadaType(startingTimeInDay, finishTimeInDay)}</span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.startTime', 'Start')}</label>
@@ -827,6 +857,16 @@ export default function Stations({ site }: { site?: any }) {
                 <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.endTime', 'End')}</label>
                 <input type="time" value={finishTimeInDay} onChange={e => setFinishTimeInDay(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-foreground" />
               </div>
+
+              {stationSchedule && (
+                <p className="text-xs text-muted-foreground rounded-md bg-muted/30 p-3">
+                  {stationSchedule}
+                  {jornadaType(startingTimeInDay, finishTimeInDay) ? ` · ${jornadaType(startingTimeInDay, finishTimeInDay)}` : ''}:{' '}
+                  <strong className="text-foreground/80">1 guardia fijo</strong> en el puesto +{' '}
+                  <strong className="text-foreground/80">1 sacafranco</strong> que cubre los días de descanso. El sacafranco salta entre puestos —
+                  no pertenece a un solo puesto, por eso no se cuenta en las guardias requeridas.
+                </p>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.geofenceRadius', 'Radio geovalla (metros)')}</label>

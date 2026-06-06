@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { fileUrlFromPrivate } from '@/lib/fileUrl';
 import type { PlatformNotification } from '@/hooks/useNotificationStream';
 
 interface NotificationsPanelProps {
@@ -123,6 +124,7 @@ function NotificationItem({
   notification: PlatformNotification;
   onMarkRead: (id: string) => void;
 }) {
+  const photoUrl = fileUrlFromPrivate(n.payload?.photoUrl);
   return (
     <div
       className={cn(
@@ -132,6 +134,15 @@ function NotificationItem({
       onClick={() => !n.read && onMarkRead(n.id)}
     >
       <div className="flex items-start justify-between gap-2">
+        {photoUrl && (
+          <img
+            src={photoUrl}
+            alt=""
+            loading="lazy"
+            className="h-11 w-11 shrink-0 rounded-md border border-border object-cover"
+            onError={(e) => ((e.currentTarget.style.display = 'none'))}
+          />
+        )}
         <div className="flex-1 min-w-0">
           <p
             className={cn(

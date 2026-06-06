@@ -10,6 +10,7 @@ import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
+import { fileUrlFromPrivate } from "@/lib/fileUrl";
 import { useNotificationStream } from "@/hooks/useNotificationStream";
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ interface ActivityEvent {
   body?: string;
   createdAt: string;
   read: boolean;
+  payload?: any;
 }
 
 /** Map a backend eventType (e.g. "guard.checkin") to an icon + accent + filter category. */
@@ -73,9 +75,8 @@ export default function ActivitiesPage() {
     try {
       const res = await api.get(`/${tenantId}/events`, {
         params: { limit: 50 },
-        // @ts-expect-error — project's axios config supports a custom `toast` field
         toast: { silentError: true },
-      });
+      } as any);
       const rows = (res.data?.rows ?? []) as any[];
       setHistory(rows.map((e) => ({
         id: e.id,
@@ -84,6 +85,7 @@ export default function ActivitiesPage() {
         body: e.body,
         createdAt: e.createdAt,
         read: e.deliveryStatus === "read",
+        payload: e.payload,
       })));
     } catch {
       setError(true);
@@ -105,6 +107,7 @@ export default function ActivitiesPage() {
       body: n.body,
       createdAt: n.createdAt,
       read: !!n.read,
+      payload: (n as any).payload,
     }));
     return Array.from(map.values()).sort(
       (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
@@ -295,6 +298,7 @@ export default function ActivitiesPage() {
                   {g.items.map((e) => {
                     const { Icon, color } = visualFor(e.eventType);
                     const read = isRead(e);
+                    const photoUrl = fileUrlFromPrivate(e.payload?.photoUrl);
                     return (
                       <button
                         key={e.id}
@@ -320,6 +324,15 @@ export default function ActivitiesPage() {
                             {e.title}
                           </p>
                           {e.body && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{e.body}</p>}
+                          {photoUrl && (
+                            <img
+                              src={photoUrl}
+                              alt=""
+                              loading="lazy"
+                              className="mt-2 h-24 w-24 rounded-lg border border-border object-cover"
+                              onError={(ev) => ((ev.currentTarget.style.display = "none"))}
+                            />
+                          )}
                         </div>
                         <span className="shrink-0 text-[11px] text-muted-foreground" title={absoluteTime(e.createdAt)}>
                           {timeAgo(e.createdAt)}

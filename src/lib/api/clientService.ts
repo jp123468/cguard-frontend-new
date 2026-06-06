@@ -253,7 +253,7 @@ export const clientService = {
      * Returns a file object ready to include in create/update payload.
      * storageId must be one of: 'clientAccountLogoUrl' | 'clientAccountPlacePictureUrl'
      */
-    async uploadFile(file: File, storageId: 'clientAccountLogoUrl' | 'clientAccountPlacePictureUrl') {
+    async uploadFile(file: File, storageId: string) {
         const tenantId = getTenantId();
         const filename = file.name;
         const creds: any = await api.get(

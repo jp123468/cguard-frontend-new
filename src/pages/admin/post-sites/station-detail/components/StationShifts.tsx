@@ -5,6 +5,23 @@ import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { getTenantTimezone } from '@/utils/tenantLocation';
 
+// Minutes-of-day of a UTC instant rendered in the tenant timezone. Shift times
+// are stored as UTC; the jornada window is the station's local wall-clock. We
+// must compare them in the tenant tz, or coverage is mis-counted for any viewer
+// whose device isn't in the tenant's timezone.
+function minutesInTenantTz(d: Date): number {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: getTenantTimezone(), hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+    }).formatToParts(d);
+    const h = Number(parts.find(p => p.type === 'hour')?.value || 0);
+    const m = Number(parts.find(p => p.type === 'minute')?.value || 0);
+    return h * 60 + m;
+  } catch {
+    return d.getHours() * 60 + d.getMinutes();
+  }
+}
+
 type Props = { station: any; stationId: string; postSiteId: string };
 
 const GUARD_COLORS = [
@@ -111,8 +128,25 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
 
   useEffect(() => { loadShifts(); }, [stationId]);
 
-  // Build jornadas from positions (scheduler data)
+  // Jornadas = the TURNO the user defined on the station (its schedule). That is
+  // the source of truth for what coverage is required; positions are just the
+  // staffing used to cover it. So we read the station schedule FIRST and only
+  // fall back to positions when no explicit schedule exists.
   const jornadas: Jornada[] = useMemo(() => {
+    let parsed: any[] = [];
+    try {
+      const raw = station?.stationSchedule;
+      if (Array.isArray(raw)) parsed = raw;
+      else if (raw && typeof raw === 'string' && raw.trim().startsWith('[')) parsed = JSON.parse(raw);
+    } catch {}
+    if (parsed.length > 0) {
+      return parsed.map(j => ({
+        ...j,
+        days: j.days || ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'],
+        guardsCount: j.guardsCount || '1',
+      }));
+    }
+    // Fallback: derive jornadas from positions when no station schedule is set.
     if (positions.length > 0) {
       return positions.map(p => ({
         tipo: p.name || p.type,
@@ -122,20 +156,8 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
         days: ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'],
       }));
     }
-    // Fallback to old stationSchedule if no positions
-    let parsed: any[] = [];
-    try {
-      const raw = station?.stationSchedule;
-      if (Array.isArray(raw)) parsed = raw;
-      else if (raw && typeof raw === 'string' && raw.trim().startsWith('[')) parsed = JSON.parse(raw);
-    } catch {}
-    // Ensure days field
-    return parsed.map(j => ({
-      ...j,
-      days: j.days || ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'],
-      guardsCount: j.guardsCount || '1',
-    }));
-  }, [station]);
+    return [];
+  }, [station, positions]);
 
   // Guard color assignment
   const guardColorMap = useMemo(() => {
@@ -213,8 +235,9 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
         const jEnd = jEndH * 60 + (jEndM || 0);
 
         const guardsAssigned = dayEvents.filter(ev => {
-          const evStartH = ev.start.getHours() * 60 + ev.start.getMinutes();
-          const evEndH = ev.end.getHours() * 60 + ev.end.getMinutes();
+          // Compare in the tenant timezone (shift times are UTC; jornada is local).
+          const evStartH = minutesInTenantTz(ev.start);
+          const evEndH = minutesInTenantTz(ev.end);
           // Overlap check: shift overlaps with jornada time window
           const overlap = evStartH < (jEnd || 1440) && evEndH > jStart;
           return overlap;
