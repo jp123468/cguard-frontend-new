@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import tenantService from '@/services/tenant.service';
+import { invalidateTenantBranding } from '@/lib/tenantBranding';
 import AddressAutocomplete, { AddressComponents } from "@/components/maps/AddressAutocomplete";
 import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
 import CompanyDocumentsSection, { CompanyDocument } from "./profile/documents/CompanyDocumentsSection";
@@ -194,6 +195,8 @@ export default function ProfileCompanyForm() {
       try {
         await tenantService.uploadLogo(logoFile, String(resolvedTenantId));
         if (cancelled) return;
+        // Logo changed -> bust the sidebar branding cache so it re-resolves.
+        invalidateTenantBranding();
         toast.success('Logo subido correctamente');
         // Refresh tenant to get new logoUrl for preview
         try {

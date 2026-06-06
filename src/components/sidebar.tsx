@@ -9,6 +9,11 @@ import {
 import sidebarMenuData from "../data/sidebar-menu.json";
 import { useAuth } from "@/contexts/AuthContext";
 import tenantService from "@/services/tenant.service";
+import {
+  getStoredTenantBranding,
+  getCachedTenantBranding,
+  setTenantBranding,
+} from "@/lib/tenantBranding";
 
 type SubMenuItem = { id: string; name: string; path: string };
 type MenuItem = {
@@ -33,36 +38,43 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const toggleMenu = (menu: string) => setExpandedMenus(prev => ({ ...prev, [menu]: !prev[menu] }));
 
-  // Tenant branding
-  const [tenantName, setTenantName] = useState<string>('');
-  const [tenantLogo, setTenantLogo] = useState<string | null>(null);
+  // Tenant branding — seeded synchronously from the stored cache so it renders
+  // instantly (no "CG / CGuard" placeholder flash) when AppLayout re-mounts on
+  // navigation. We only hit the API once per tenant per session.
+  const [tenantName, setTenantName] = useState<string>(() => getStoredTenantBranding().name);
+  const [tenantLogo, setTenantLogo] = useState<string | null>(() => getStoredTenantBranding().logo);
 
   useEffect(() => {
     const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenantId') : null;
     if (!tenantId) return;
+
+    // Already resolved this tenant this session -> use the cache, do NOT refetch.
+    const cached = getCachedTenantBranding(tenantId);
+    if (cached) {
+      setTenantName(cached.name);
+      setTenantLogo(cached.logo);
+      return;
+    }
+
     let cancelled = false;
     (async () => {
       try {
         const res: any = await tenantService.findById(tenantId);
         if (cancelled) return;
         const t = (res && (res.data || res.tenant)) ? (res.data || res.tenant) : res;
-        if (t?.name) setTenantName(t.name);
+        const name = t?.name || '';
         const logoUrl =
           t?.logoUrl ||
           (Array.isArray(t?.settings) ? t.settings[0]?.logoUrl : t?.settings?.logoUrl || t?.settings?.logos?.[0]?.publicUrl) ||
           t?.logo?.downloadUrl ||
           null;
-        if (logoUrl) {
-          setTenantLogo(logoUrl);
-          // Cache for the boot/auth LoadingScreen (shown before the API responds
-          // on reload) so it can render the tenant's logo synchronously.
-          try { localStorage.setItem('tenantLogoUrl', logoUrl); } catch {}
-        } else {
-          // Tenant has no logo — drop any stale cached logo from a prior tenant.
-          try { localStorage.removeItem('tenantLogoUrl'); } catch {}
-        }
+        if (name) setTenantName(name);
+        setTenantLogo(logoUrl);
+        // Persist to the memory + localStorage cache so subsequent re-mounts
+        // render synchronously and skip the fetch.
+        setTenantBranding({ tenantId, name, logo: logoUrl });
       } catch {
-        // silently ignore — fall back to initials
+        // silently ignore — fall back to cached/initials
       }
     })();
     return () => { cancelled = true; };

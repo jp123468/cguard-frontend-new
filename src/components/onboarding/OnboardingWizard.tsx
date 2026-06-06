@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import tenantService from "@/services/tenant.service";
 import onboardingService from "@/lib/api/onboardingService";
+import { invalidateTenantBranding } from "@/lib/tenantBranding";
 import { validateCedulaOrRuc, validatePhoneForCountry, digitsOnly } from "@/lib/validators/id";
 import StepIndicator from "./StepIndicator";
 import {
@@ -266,6 +267,9 @@ export default function OnboardingWizard({
         // non-fatal: the business is set up; backend may auto-complete too.
       }
 
+      // Company name/logo just changed -> bust the sidebar branding cache so it
+      // re-resolves the new values instead of showing the stale/placeholder one.
+      invalidateTenantBranding();
       await onRefresh();
       toast.success("¡Configuración completada! Bienvenido a CGuardPro.");
       onOpenChange(false);
