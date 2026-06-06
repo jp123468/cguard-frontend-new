@@ -5,6 +5,7 @@ import Login from "./pages/auth/login"
 import ForgotPassword from "./pages/auth/forgot-password"
 import ResetPassword from "./pages/auth/reset-password"
 import DashboardPage from "./pages/admin/dashboard/control-center/ControlCenter"
+import OperationsMapFull from "./pages/admin/dashboard/control-center/OperationsMapFull"
 import LanguagePage from "./pages/idioma/configuracion"
 import { AuthProvider, useAuth } from "./contexts/AuthContext"
 import { ThemeProvider } from "./contexts/ThemeContext"
@@ -293,6 +294,15 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Full-screen operations map — opened in a new tab (no app chrome). */}
+              <Route
+                path="/dashboard/operations-map"
+                element={
+                  <ProtectedRoute>
+                    <OperationsMapFull />
                   </ProtectedRoute>
                 }
               />

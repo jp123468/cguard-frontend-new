@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   User, Shield, UserCog, AlertTriangle, Building2, Timer, Route, CheckCircle2,
-  Activity, Cpu, Radio, Map as MapIcon, type LucideIcon,
+  Activity, Cpu, Radio, Map as MapIcon, Maximize2, type LucideIcon,
 } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -43,6 +43,9 @@ export default function ControlCenter() {
   const demoData = useMemo(() => buildDemoData(), [demo]);
   // In demo mode, show the populated sample so a new tenant can preview the UI.
   const data = demo ? { ...demoData, refresh: live.refresh } : live;
+
+  const openFullMap = () =>
+    window.open(`${window.location.origin}/dashboard/operations-map`, "_blank", "noopener,noreferrer");
 
   const accentStyle = useMemo(() => ({ ["--cc-accent" as any]: prefs.accent }), [prefs.accent]);
   const legend = [
@@ -92,9 +95,29 @@ export default function ControlCenter() {
                             {l.label}
                           </span>
                         ))}
+                        <button
+                          onClick={openFullMap}
+                          title="Abrir en pantalla completa (nueva pestaña)"
+                          className="grid h-7 w-7 place-items-center rounded-lg border border-border/60 bg-white/[0.03] text-muted-foreground hover:text-foreground active:scale-95 transition"
+                        >
+                          <Maximize2 size={14} />
+                        </button>
                       </div>
                     } />
-                  <OperationsMap entities={data.entities} prefs={prefs} height={480} />
+                  <div className="relative">
+                    <OperationsMap entities={data.entities} prefs={prefs} height={480} />
+                    {/* Click anywhere on the preview → open the interactive map full screen. */}
+                    <button
+                      onClick={openFullMap}
+                      title="Abrir en pantalla completa (nueva pestaña)"
+                      aria-label="Pantalla completa"
+                      className="group absolute inset-0 flex items-end justify-end p-3"
+                    >
+                      <span className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-black/55 px-2.5 py-1.5 text-xs font-medium text-white/90 opacity-0 transition group-hover:opacity-100">
+                        <Maximize2 size={13} /> Pantalla completa
+                      </span>
+                    </button>
+                  </div>
                 </GlassCard>
 
                 <div className="flex flex-col gap-5">
