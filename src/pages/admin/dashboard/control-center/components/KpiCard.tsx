@@ -1,15 +1,25 @@
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, type LucideIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { Kpi } from "../types";
+import { KPI_ROUTES } from "../navigation";
 import { GlassCard, StatusDot, statusColor } from "./primitives";
 
 export function KpiCard({ kpi, icon: Icon, index = 0 }: { kpi: Kpi; icon?: LucideIcon; index?: number }) {
+  const navigate = useNavigate();
   const accent = kpi.status && kpi.status !== "neutral" ? statusColor(kpi.status as any) : "var(--cc-accent)";
   const TrendIcon = kpi.trend == null ? Minus : kpi.trend > 0.02 ? TrendingUp : kpi.trend < -0.02 ? TrendingDown : Minus;
   const trendColor = kpi.trend == null ? "text-muted-foreground" : kpi.trend > 0.02 ? "text-emerald-400" : kpi.trend < -0.02 ? "text-rose-400" : "text-muted-foreground";
+  // Explicit per-kpi route wins; otherwise resolve from the central map by key.
+  const to = kpi.to ?? KPI_ROUTES[kpi.key];
 
   return (
-    <GlassCard delay={index * 0.04} className="p-4 group" >
+    <GlassCard
+      delay={index * 0.04}
+      className="p-4 group"
+      onClick={to ? () => navigate(to) : undefined}
+      ariaLabel={to ? `Ver ${kpi.label}` : undefined}
+    >
       <div className="flex items-start justify-between">
         <div className="grid h-10 w-10 place-items-center rounded-xl"
           style={{ background: `color-mix(in oklab, ${accent} 16%, transparent)`, color: accent }}>

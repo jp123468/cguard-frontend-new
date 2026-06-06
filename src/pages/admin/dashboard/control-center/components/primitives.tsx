@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, type KeyboardEvent } from "react";
 import { motion } from "framer-motion";
 import type { LiveStatus } from "../types";
 
@@ -8,14 +8,33 @@ export const STATUS_LABEL: Record<LiveStatus, string> = {
 };
 
 export function GlassCard({
-  children, className = "", hover = true, scan = false, delay = 0,
-}: { children: ReactNode; className?: string; hover?: boolean; scan?: boolean; delay?: number }) {
+  children, className = "", hover = true, scan = false, delay = 0, onClick, ariaLabel,
+}: {
+  children: ReactNode; className?: string; hover?: boolean; scan?: boolean; delay?: number;
+  /** When provided the card becomes an accessible button (click + Enter/Space). */
+  onClick?: () => void; ariaLabel?: string;
+}) {
+  const clickable = !!onClick;
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: [0.2, 0.8, 0.2, 1] }}
-      className={`cc-glass ${hover ? "cc-glass-hover" : ""} ${scan ? "cc-scan" : ""} ${className}`}
+      className={`cc-glass ${hover ? "cc-glass-hover" : ""} ${scan ? "cc-scan" : ""} ${clickable ? "cursor-pointer" : ""} ${className}`}
+      {...(clickable
+        ? {
+            role: "button",
+            tabIndex: 0,
+            "aria-label": ariaLabel,
+            onClick,
+            onKeyDown: (e: KeyboardEvent) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick!();
+              }
+            },
+          }
+        : {})}
     >
       {children}
     </motion.div>

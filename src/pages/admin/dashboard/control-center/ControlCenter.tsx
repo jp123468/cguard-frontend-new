@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   User, Shield, UserCog, AlertTriangle, Building2, Timer, Route, CheckCircle2,
   Activity, Cpu, Radio, Map as MapIcon, Maximize2, type LucideIcon,
@@ -19,6 +20,7 @@ import { AreaChart } from "./components/AreaChart";
 import { Toolbar, type RangeKey } from "./components/Toolbar";
 import { CustomizePanel } from "./components/CustomizePanel";
 import { DashboardErrorBoundary } from "./components/ErrorBoundary";
+import { HEALTH_ROUTES } from "./navigation";
 
 const KPI_ICON: Record<string, LucideIcon> = {
   onDuty: User, stations: Shield, supervisors: UserCog, openIncidents: AlertTriangle,
@@ -27,6 +29,7 @@ const KPI_ICON: Record<string, LucideIcon> = {
 
 export default function ControlCenter() {
   usePageTitle("Panel de control");
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [prefs, setPrefs] = useState<DashboardPrefs>(() => loadPrefs());
   const [customizeOpen, setCustomizeOpen] = useState(false);
@@ -129,7 +132,7 @@ export default function ControlCenter() {
               {/* Revenue + trends */}
               <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <div className="lg:col-span-2"><RevenuePanel revenue={data.revenue} /></div>
-                <GlassCard className="overflow-hidden">
+                <GlassCard className="overflow-hidden" onClick={() => navigate("/activities")} ariaLabel="Ver incidentes">
                   <SectionHeader title="Incidentes (tendencia)" icon={<AlertTriangle size={16} />} />
                   <div className="px-2 pb-3">
                     <AreaChart data={data.incidentsTrend} color="#ef4444" height={150} />
@@ -138,11 +141,11 @@ export default function ControlCenter() {
               </div>
 
               <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
-                <GlassCard className="overflow-hidden">
+                <GlassCard className="overflow-hidden" onClick={() => navigate("/analytics/reporting")} ariaLabel="Ver analítica de tiempo de respuesta">
                   <SectionHeader title="Tiempo de respuesta (min)" icon={<Timer size={16} />} />
                   <div className="px-2 pb-3"><AreaChart data={data.responseTrend} color="#38bdf8" height={150} valueSuffix=" min" /></div>
                 </GlassCard>
-                <GlassCard className="overflow-hidden">
+                <GlassCard className="overflow-hidden" onClick={() => navigate("/clients")} ariaLabel="Ver clientes">
                   <SectionHeader title="Adquisición de clientes" icon={<Building2 size={16} />} />
                   <div className="px-2 pb-3"><AreaChart data={data.acquisitionTrend} color={prefs.accent} height={150} /></div>
                 </GlassCard>
@@ -171,6 +174,7 @@ export default function ControlCenter() {
 }
 
 function SystemHealth({ data }: { data: ReturnType<typeof useControlCenter> }) {
+  const navigate = useNavigate();
   const items = [
     { icon: Radio, label: "Tiempo real (SSE)", value: data.health.sseConnected ? "Conectado" : "Sondeo", ok: data.health.sseConnected },
     { icon: Cpu, label: "Dispositivos en línea", value: String(data.health.onlineDevices), ok: data.health.onlineDevices > 0 },
@@ -181,17 +185,34 @@ function SystemHealth({ data }: { data: ReturnType<typeof useControlCenter> }) {
     <GlassCard>
       <SectionHeader title="Estado del sistema" icon={<Cpu size={16} />} />
       <div className="grid grid-cols-2 gap-2 px-3 pb-3">
-        {items.map((it) => (
-          <div key={it.label} className="rounded-lg bg-white/[0.03] p-3">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <it.icon size={14} /><span className="text-[11px]">{it.label}</span>
+        {items.map((it) => {
+          const to = HEALTH_ROUTES[it.label];
+          return (
+            <div
+              key={it.label}
+              {...(to
+                ? {
+                    role: "button" as const,
+                    tabIndex: 0,
+                    "aria-label": it.label,
+                    onClick: () => navigate(to),
+                    onKeyDown: (e: KeyboardEvent) => {
+                      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(to); }
+                    },
+                  }
+                : {})}
+              className={`rounded-lg bg-white/[0.03] p-3 ${to ? "cursor-pointer transition-colors hover:bg-white/[0.06]" : ""}`}
+            >
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <it.icon size={14} /><span className="text-[11px]">{it.label}</span>
+              </div>
+              <div className="mt-1 flex items-center gap-1.5">
+                <StatusDot status={it.ok ? "online" : "delayed"} />
+                <span className="text-sm font-semibold text-foreground">{it.value}</span>
+              </div>
             </div>
-            <div className="mt-1 flex items-center gap-1.5">
-              <StatusDot status={it.ok ? "online" : "delayed"} />
-              <span className="text-sm font-semibold text-foreground">{it.value}</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </GlassCard>
   );

@@ -1,5 +1,7 @@
 import { AlertTriangle, LogIn, Route, Siren, Activity as ActivityIcon, Radio } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { ActivityItem } from "../types";
+import { activityRoute } from "../navigation";
 import { GlassCard, SectionHeader, statusColor } from "./primitives";
 
 const ICON = {
@@ -15,6 +17,7 @@ function timeAgo(iso: string) {
 }
 
 export function ActivityFeed({ items, live }: { items: ActivityItem[]; live?: boolean }) {
+  const navigate = useNavigate();
   return (
     <GlassCard scan className="flex flex-col" >
       <SectionHeader title="Actividad reciente" icon={<ActivityIcon size={16} />} live={live} />
@@ -24,8 +27,19 @@ export function ActivityFeed({ items, live }: { items: ActivityItem[]; live?: bo
         ) : items.map((it) => {
           const Icon = ICON[it.kind] || ActivityIcon;
           const c = statusColor(it.status);
+          const to = activityRoute(it);
           return (
-            <div key={it.id} className="cc-rise flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-white/[0.03] transition-colors">
+            <div
+              key={it.id}
+              role="button"
+              tabIndex={0}
+              aria-label={it.title}
+              onClick={() => navigate(to)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(to); }
+              }}
+              className="cc-rise flex cursor-pointer items-start gap-3 rounded-lg px-2 py-2 hover:bg-white/[0.03] transition-colors"
+            >
               <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg"
                 style={{ background: `color-mix(in oklab, ${c} 16%, transparent)`, color: c }}>
                 <Icon size={14} />

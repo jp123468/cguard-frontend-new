@@ -129,6 +129,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
         sub: i.location || i.stationName || "",
         at: i.incidentAt || i.createdAt || new Date().toISOString(),
         status: (i.status || "").toLowerCase() === "abierto" ? "incident" : "online",
+        to: i.id ? `/reports/incident/${i.id}` : undefined,
       }));
 
       setState((s) => ({

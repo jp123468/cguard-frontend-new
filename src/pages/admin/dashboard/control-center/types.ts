@@ -29,6 +29,8 @@ export interface Kpi {
   /** true when value is a documented fallback (no backend source yet) */
   fallback?: boolean;
   hint?: string;
+  /** Destination route when the card is clicked (see ./navigation). */
+  to?: string;
 }
 
 export interface RevenueSeries {
@@ -47,6 +49,9 @@ export interface ActivityItem {
   sub?: string;
   at: string; // ISO
   status?: LiveStatus;
+  /** Explicit destination (e.g. a specific incident); falls back to the
+   *  kind's default list route when absent (see ./navigation). */
+  to?: string;
 }
 
 /** Raw shape of GET /tenant/:id/dashboard/stats */
