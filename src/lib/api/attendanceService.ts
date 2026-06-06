@@ -44,6 +44,8 @@ export interface AttendanceRecord {
   punchInOutsideGeofence: boolean;
   punchInLatitude: number | null;
   punchInLongitude: number | null;
+  /** Every clock in/out pair within this shift's record (dedup model). */
+  sessions?: Array<{ in: string; out?: string | null }> | null;
   guardName?: { id: string; fullName?: string } | null;
   stationName?: { id: string; stationName?: string; latitud?: string; longitud?: string; geofenceRadius?: number; geofencePolygon?: { lat: number; lng: number }[] | null } | null;
 }
@@ -82,6 +84,22 @@ const attendanceService = {
   async approveCorrection(id: string, data: { decision: "approved" | "rejected"; notes?: string }) {
     const t = getTenantId();
     return unwrap(await api.patch(`/tenant/${t}/attendance/corrections/${id}/approve`, { data }));
+  },
+
+  // ── Early clock-out approval requests ──────────────────────────────────────
+  async clockOutRequests(params?: Record<string, any>) {
+    const t = getTenantId();
+    return unwrap(
+      await api.get(`/tenant/${t}/attendance/clock-out-requests${buildQuery(params)}`),
+    );
+  },
+
+  async decideClockOutRequest(
+    id: string,
+    data: { status: "approved" | "rejected"; notes?: string },
+  ) {
+    const t = getTenantId();
+    return unwrap(await api.patch(`/tenant/${t}/attendance/clock-out-requests/${id}`, { data }));
   },
 
   async approve(id: string, notes?: string) {
