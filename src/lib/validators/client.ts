@@ -67,7 +67,7 @@ export const clientSchema = z
         .optional()
         .or(z.literal("")),
     latitude: z
-        .string()
+        .coerce.string()
         .trim()
         .optional()
         .or(z.literal(""))
@@ -78,7 +78,7 @@ export const clientSchema = z
             message: "Latitud entre -90 y 90",
         }),
     longitude: z
-        .string()
+        .coerce.string()
         .trim()
         .optional()
         .or(z.literal(""))

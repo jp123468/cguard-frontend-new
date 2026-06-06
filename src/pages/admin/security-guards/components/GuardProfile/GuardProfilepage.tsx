@@ -322,7 +322,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                   {(editedGuard?.guard?.middleName) && (
                     <InfoField label="guards.profile.fields.middleName" value={editedGuard?.guard?.middleName} field="middleName" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                   )}
-                  <InfoField label="guards.profile.fields.id1" value={editedGuard?.governmentId && editedGuard.governmentId !== 'PENDING' ? editedGuard.governmentId : (editedGuard?.guard?.identificationNumber || editedGuard?.governmentId)} field="governmentId" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.id1" value={editedGuard?.governmentId} field="governmentId" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                   <InfoField label="guards.profile.fields.id2" value={editedGuard?.secondaryId} field="secondaryId" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                   <InfoField label="guards.profile.fields.birthDate" value={editedGuard?.birthDate ? new Date(editedGuard.birthDate).toLocaleDateString('en-US') : null} field="birthDate" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                   <InfoField label="guards.profile.fields.address" value={editedGuard?.address || editedGuard?.guard?.homeAddress} field="address" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
@@ -350,7 +350,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                 <div className="grid grid-cols-2 gap-4">
                   <InfoField label="guards.profile.fields.birthPlace" value={editedGuard?.birthPlace} field="birthPlace" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                   <InfoField label="guards.profile.fields.maritalStatus" value={editedGuard?.maritalStatus} field="maritalStatus" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.bloodType" value={editedGuard?.bloodType || editedGuard?.guard?.bloodType} field="bloodType" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                  <InfoField label="guards.profile.fields.bloodType" value={editedGuard?.bloodType} field="bloodType" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                   <InfoField label="guards.profile.fields.education" value={editedGuard?.academicInstruction} field="academicInstruction" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                   <InfoField label="guards.profile.fields.gender" value={editedGuard?.gender} field="gender" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                   <InfoField label="guards.profile.fields.guardCredentials" value={editedGuard?.guardCredentials} field="guardCredentials" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />

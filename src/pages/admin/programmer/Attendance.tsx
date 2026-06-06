@@ -128,20 +128,20 @@ function shiftStatus(rec: GuardShiftRecord) {
 function StatusBadge({ status }: { status: string }) {
   if (status === "completed")
     return (
-      <Badge className="bg-green-100 text-green-700 border-green-200 font-medium">
+      <Badge className="bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30 font-medium">
         <CheckCircle2 className="h-3 w-3 mr-1" />
         Completado
       </Badge>
     );
   if (status === "onDuty")
     return (
-      <Badge className="bg-blue-500/15 text-blue-600 border-blue-200 font-medium">
+      <Badge className="bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30 font-medium">
         <Clock className="h-3 w-3 mr-1" />
         En Turno
       </Badge>
     );
   return (
-    <Badge className="bg-red-500/15 text-red-700 border-red-200 font-medium">
+    <Badge className="bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30 font-medium">
       <AlertCircle className="h-3 w-3 mr-1" />
       Incompleto
     </Badge>
@@ -181,7 +181,7 @@ function DetailPanel({
               <img
                 src={selfieUrl}
                 alt="Selfie de entrada"
-                className="w-full max-h-72 rounded-lg border object-contain bg-slate-50"
+                className="w-full max-h-72 rounded-lg border object-contain bg-muted/50"
                 onError={(e) => (e.currentTarget.parentElement!.style.display = "none")}
               />
             </a>
@@ -204,11 +204,11 @@ function DetailPanel({
 
           {/* Schedule + Station */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-50 rounded-md p-3">
+            <div className="bg-muted/50 rounded-md p-3">
               <p className="text-xs text-muted-foreground mb-0.5">Turno</p>
               <p className="font-medium">{record.shiftSchedule}</p>
             </div>
-            <div className="bg-slate-50 rounded-md p-3">
+            <div className="bg-muted/50 rounded-md p-3">
               <p className="text-xs text-muted-foreground mb-0.5">Estación</p>
               <p className="font-medium">
                 {record.stationName?.stationName ?? "—"}
@@ -218,12 +218,12 @@ function DetailPanel({
 
           {/* Punch In */}
           <div className="bg-green-500/10 rounded-md p-3 space-y-1">
-            <p className="text-xs text-green-700 font-semibold uppercase tracking-wide">
+            <p className="text-xs text-green-700 dark:text-green-400 font-semibold uppercase tracking-wide">
               Entrada
             </p>
             <p className="font-medium">
               {formatDate(record.punchInTime)}{" "}
-              <span className="text-green-700">
+              <span className="text-green-700 dark:text-green-400">
                 {formatTime(record.punchInTime)}
               </span>
             </p>
@@ -232,7 +232,7 @@ function DetailPanel({
                 href={`https://maps.google.com/?q=${record.punchInLatitude},${record.punchInLongitude}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-green-600 hover:underline"
+                className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 hover:underline"
               >
                 <MapPin className="h-3 w-3" />
                 Ver ubicación
@@ -243,12 +243,12 @@ function DetailPanel({
           {/* Punch Out */}
           {record.punchOutTime ? (
             <div className="bg-blue-500/10 rounded-md p-3 space-y-1">
-              <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">
+              <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold uppercase tracking-wide">
                 Salida
               </p>
               <p className="font-medium">
                 {formatDate(record.punchOutTime)}{" "}
-                <span className="text-blue-600">
+                <span className="text-blue-600 dark:text-blue-400">
                   {formatTime(record.punchOutTime)}
                 </span>
               </p>
@@ -260,7 +260,7 @@ function DetailPanel({
                   href={`https://maps.google.com/?q=${record.punchOutLatitude},${record.punchOutLongitude}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                  className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
                 >
                   <MapPin className="h-3 w-3" />
                   Ver ubicación
@@ -268,22 +268,22 @@ function DetailPanel({
               )}
             </div>
           ) : (
-            <div className="bg-slate-50 rounded-md p-3 text-muted-foreground text-xs italic">
+            <div className="bg-muted/50 rounded-md p-3 text-muted-foreground text-xs italic">
               Sin registro de salida
             </div>
           )}
 
           {/* Counters */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-50 rounded-md p-3">
+            <div className="bg-muted/50 rounded-md p-3">
               <p className="text-xs text-muted-foreground mb-0.5">Rondas realizadas</p>
               <p className="text-xl font-bold text-[#C8860A]">
                 {record.numberOfPatrolsDuringShift ?? 0}
               </p>
             </div>
-            <div className="bg-slate-50 rounded-md p-3">
+            <div className="bg-muted/50 rounded-md p-3">
               <p className="text-xs text-muted-foreground mb-0.5">Incidentes</p>
-              <p className="text-xl font-bold text-red-600">
+              <p className="text-xl font-bold text-red-600 dark:text-red-400">
                 {record.numberOfIncidentsDurindShift ?? 0}
               </p>
             </div>
@@ -295,7 +295,7 @@ function DetailPanel({
               <p className="text-xs text-muted-foreground mb-1 font-medium">
                 Observaciones
               </p>
-              <p className="bg-slate-50 rounded-md p-3 text-foreground whitespace-pre-wrap">
+              <p className="bg-muted/50 rounded-md p-3 text-foreground whitespace-pre-wrap">
                 {record.observations}
               </p>
             </div>
@@ -436,7 +436,7 @@ export default function Attendance() {
             <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm text-muted-foreground">Completados</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {loading ? "…" : completedCount}
               </p>
             </div>
@@ -445,7 +445,7 @@ export default function Attendance() {
             <Clock className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm text-muted-foreground">En Turno</p>
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {loading ? "…" : onDutyCount}
               </p>
             </div>
@@ -454,7 +454,7 @@ export default function Attendance() {
             <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm text-muted-foreground">Incidentes</p>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                 {loading ? "…" : totalIncidents}
               </p>
             </div>
@@ -463,7 +463,7 @@ export default function Attendance() {
 
         {/* Incomplete alert */}
         {!loading && incompleteCount > 0 && (
-          <div className="flex items-center gap-3 bg-red-500/10 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
+          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-sm text-red-700 dark:text-red-400">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <span>
               <strong>{incompleteCount}</strong>{" "}
@@ -602,7 +602,7 @@ export default function Attendance() {
         {/* Table */}
         <div className="border rounded-md">
           <Table>
-            <TableHeader className="bg-slate-50">
+            <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead className="w-[50px]"><Checkbox /></TableHead>
                 <TableHead className="w-[60px] font-bold text-foreground">Selfie</TableHead>
@@ -633,7 +633,7 @@ export default function Attendance() {
                   <TableCell colSpan={12} className="h-[400px] text-center">
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
                       <div className="bg-blue-500/10 p-6 rounded-full mb-4">
-                        <ClipboardCheck className="w-12 h-12 text-blue-200" />
+                        <ClipboardCheck className="w-12 h-12 text-blue-500/70" />
                       </div>
                       <h3 className="text-lg font-medium text-foreground mb-1">
                         No se encontraron registros
@@ -650,7 +650,7 @@ export default function Attendance() {
                   return (
                     <TableRow
                       key={rec.id}
-                      className="cursor-pointer hover:bg-slate-50/60"
+                      className="cursor-pointer hover:bg-muted/40"
                       onClick={() => setDetailRecord(rec)}
                     >
                       <TableCell onClick={(e) => e.stopPropagation()}>
@@ -668,7 +668,7 @@ export default function Attendance() {
                               onError={(e) => (e.currentTarget.style.display = "none")}
                             />
                           ) : (
-                            <div className="h-9 w-9 rounded-md border bg-slate-100" />
+                            <div className="h-9 w-9 rounded-md border bg-muted" />
                           );
                         })()}
                       </TableCell>
@@ -696,19 +696,19 @@ export default function Attendance() {
                         <Badge
                           className={
                             rec.shiftSchedule === "Diurno"
-                              ? "bg-amber-500/15 text-amber-700 border-amber-200"
-                              : "bg-indigo-500/15 text-indigo-700 border-indigo-200"
+                              ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                              : "bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 border-indigo-500/30"
                           }
                         >
                           {rec.shiftSchedule}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-green-700 font-medium whitespace-nowrap">
+                      <TableCell className="text-green-700 dark:text-green-400 font-medium whitespace-nowrap">
                         {formatTime(rec.punchInTime)}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {rec.punchOutTime ? (
-                          <span className="text-blue-600 font-medium">
+                          <span className="text-blue-600 dark:text-blue-400 font-medium">
                             {formatTime(rec.punchOutTime)}
                           </span>
                         ) : (
@@ -723,7 +723,7 @@ export default function Attendance() {
                       </TableCell>
                       <TableCell className="text-center">
                         {(rec.numberOfIncidentsDurindShift ?? 0) > 0 ? (
-                          <span className="font-bold text-red-600">
+                          <span className="font-bold text-red-600 dark:text-red-400">
                             {rec.numberOfIncidentsDurindShift}
                           </span>
                         ) : (

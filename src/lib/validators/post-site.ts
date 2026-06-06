@@ -16,12 +16,12 @@ export const postSiteSchema = z.object({
     email: z.string().trim().max(200, "Máximo 200 caracteres").optional().or(z.literal("")),
     phone: z.string().trim().max(20, "El teléfono puede tener como máximo 20 caracteres").optional().or(z.literal("")),
     latitud: z
-        .string().trim().max(100, "Máximo 100 caracteres").optional().or(z.literal(""))
+        .coerce.string().trim().max(100, "Máximo 100 caracteres").optional().or(z.literal(""))
         .refine((val) => val === undefined || val === "" || /^-?\d+(?:\.\d+)?$/.test(val), {
             message: "Latitud inválida (sólo números y punto decimal)",
         }),
     longitud: z
-        .string().trim().max(100, "Máximo 100 caracteres").optional().or(z.literal(""))
+        .coerce.string().trim().max(100, "Máximo 100 caracteres").optional().or(z.literal(""))
         .refine((val) => val === undefined || val === "" || /^-?\d+(?:\.\d+)?$/.test(val), {
             message: "Longitud inválida (sólo números y punto decimal)",
         }),

@@ -38,6 +38,15 @@ export function targetForNotification(n: PlatformNotification): string {
     return id ? `/nomina/approvals?focus=${id}` : '/nomina/approvals';
   }
 
+  // Early-clock-out requests + approvals → the Nómina approvals queue.
+  if (
+    type === 'attendance.clockout_requested' ||
+    type === 'attendance.approval_required' ||
+    type === 'attendance.correction_submitted'
+  ) {
+    return '/nomina/approvals';
+  }
+
   // Clock-in/out + attendance exceptions → that day's attendance, focused.
   if (
     type === 'guard.checkin' ||
