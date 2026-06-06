@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
-import { Plus, Trash, Eye, MoreVertical } from 'lucide-react';
+import { Plus, Trash, Eye, MoreVertical, X } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useTranslation } from 'react-i18next';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
@@ -784,7 +784,7 @@ export default function Stations({ site }: { site?: any }) {
           <div className="relative z-70 w-full sm:w-96 bg-card shadow-2xl overflow-y-auto rounded-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 border-b bg-card rounded-t-md">
               <h2 className="text-lg font-semibold text-foreground">{t('postSites.stations.createTitle', 'Create Station')}</h2>
-              <button onClick={() => setShowNew(false)} className="p-2 rounded-full hover:bg-muted">✕</button>
+              <button onClick={() => setShowNew(false)} className="p-2 rounded-full hover:bg-muted"><X className="h-4 w-4" /></button>
             </div>
 
             <div className="p-6 space-y-6">
@@ -855,7 +855,7 @@ export default function Stations({ site }: { site?: any }) {
           <div className="relative z-70 w-full sm:w-96 bg-card shadow-2xl overflow-y-auto rounded-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 border-b bg-card rounded-t-md">
               <h2 className="text-lg font-semibold text-foreground">{t('postSites.stations.detailsTitle', 'Station details')}</h2>
-              <button onClick={() => setShowDetailModal(false)} className="p-2 rounded-full hover:bg-muted">✕</button>
+              <button onClick={() => setShowDetailModal(false)} className="p-2 rounded-full hover:bg-muted"><X className="h-4 w-4" /></button>
             </div>
 
             <div className="p-6">
@@ -1018,7 +1018,7 @@ export default function Stations({ site }: { site?: any }) {
           <div className="relative z-70 w-full sm:w-96 bg-card shadow-2xl overflow-y-auto rounded-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 border-b bg-card rounded-t-md">
               <h2 className="text-lg font-semibold text-foreground">{editingShiftId ? t('postSites.stations.editShift', 'Edit shift') : t('postSites.stations.createShift', 'Create shift')}</h2>
-              <button onClick={() => setShowShiftModal(false)} className="p-2 rounded-full hover:bg-muted">✕</button>
+              <button onClick={() => setShowShiftModal(false)} className="p-2 rounded-full hover:bg-muted"><X className="h-4 w-4" /></button>
             </div>
 
             <div className="p-6 space-y-4">

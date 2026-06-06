@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Search, ChevronDown, Plus } from 'lucide-react';
+import { Search, ChevronDown, Plus, X, ArrowUpDown } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
@@ -70,7 +70,7 @@ export default function PostSiteOrders({ site }: { site?: any }) {
                 <th className="px-4 py-3 text-left">Title</th>
                 <th className="px-4 py-3 text-left">Date</th>
                 <th className="px-4 py-3 text-left">Added By</th>
-                <th className="px-4 py-3 text-right"> <button className="text-muted-foreground">↕</button></th>
+                <th className="px-4 py-3 text-right"> <button className="text-muted-foreground"><ArrowUpDown className="h-3.5 w-3.5" /></button></th>
               </tr>
             </thead>
             <tbody>
@@ -112,7 +112,7 @@ export default function PostSiteOrders({ site }: { site?: any }) {
           <div className="w-full sm:ml-auto sm:w-[680px] bg-card h-full sm:h-auto shadow-2xl p-6 overflow-auto relative z-50 rounded-t-lg sm:rounded-md" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4 border-b pb-3 sticky top-0 bg-card z-10">
               <h3 className="text-lg font-semibold">New Post Order</h3>
-              <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground">✕</button>
+              <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
             </div>
 
             <div className="space-y-6">

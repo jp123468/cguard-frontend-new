@@ -34,9 +34,28 @@ export interface ShiftRecord {
   guardId: string | null;
   stationId: string | null;
   postSiteId: string | null;
-  guard: { id: string; fullName?: string; email?: string; avatarUrl?: string } | null;
+  guard: {
+    id: string;
+    fullName?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    avatarUrl?: string;
+  } | null;
   station: { id: string; stationName: string } | null;
   createdAt?: string;
+}
+
+/** Display name for a shift's assigned guard, with fallbacks. */
+export function guardDisplayName(
+  guard: ShiftRecord["guard"],
+): string | null {
+  if (!guard) return null;
+  const name =
+    guard.fullName ||
+    [guard.firstName, guard.lastName].filter(Boolean).join(" ") ||
+    guard.email;
+  return name || null;
 }
 
 const shiftService = {

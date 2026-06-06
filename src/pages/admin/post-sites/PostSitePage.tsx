@@ -43,6 +43,7 @@ import {
   ChevronRight,
   ChevronDown,
   Loader2,
+  ChevronUp,
 } from "lucide-react";
 import PostSiteImportDialog from "@/components/post-sites/PostSiteImportDialog";
 import { Link, useNavigate } from "react-router-dom";
@@ -722,7 +723,7 @@ export default function PostSitePage() {
                     }}
                   >
                     <span>{t('postSites.postsite', 'Puesto de seguridad')}</span>
-                    <span className="text-xs text-muted-foreground">{sortKey === "name" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
+                    <span className="text-xs text-muted-foreground">{sortKey === "name" ? (sortDir === "asc" ? <ChevronUp className="h-3.5 w-3.5" /> : sortDir === "desc" ? <ChevronDown className="h-3.5 w-3.5" /> : null) : null}</span>
                   </button>
                 </th>
                 <th className="px-4 py-3 font-semibold">
@@ -743,7 +744,7 @@ export default function PostSitePage() {
                     }}
                   >
                     <span>{t('postSites.client', 'Cliente')}</span>
-                    <span className="text-xs text-muted-foreground">{sortKey === "client" ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}</span>
+                    <span className="text-xs text-muted-foreground">{sortKey === "client" ? (sortDir === "asc" ? <ChevronUp className="h-3.5 w-3.5" /> : sortDir === "desc" ? <ChevronDown className="h-3.5 w-3.5" /> : null) : null}</span>
                   </button>
                 </th>
                 {/* Guards and Schedule columns hidden as requested */}

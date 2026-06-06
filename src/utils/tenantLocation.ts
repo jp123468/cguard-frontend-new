@@ -7,6 +7,19 @@
 const LAT_KEY = 'tenantLat';
 const LNG_KEY = 'tenantLng';
 const COUNTRY_KEY = 'tenantCountry';
+const TZ_KEY = 'tenantTimeZone';
+
+/** Cache the tenant IANA timezone (single source of truth for time display). */
+export function cacheTenantTimezone(tz: string | null | undefined): void {
+    if (!tz || typeof tz !== 'string') return;
+    try { localStorage.setItem(TZ_KEY, tz.trim()); } catch {}
+}
+
+/** The cached tenant timezone, or undefined (callers then use device tz). */
+export function getTenantTimezone(): string | undefined {
+    try { return localStorage.getItem(TZ_KEY) || undefined; } catch {}
+    return undefined;
+}
 
 export function cacheTenantLocation(lat: number | string | null | undefined, lng: number | string | null | undefined): void {
     const latNum = typeof lat === 'string' ? parseFloat(lat) : (lat ?? NaN);

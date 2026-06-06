@@ -7,6 +7,23 @@ const getTenantId = (): string => {
 };
 
 const routeService = {
+  /** Daily run records for a given date (which routes were completed). */
+  async runs(date: string) {
+    const tenantId = getTenantId();
+    const { data: resp } = await api.get<any>(`/tenant/${tenantId}/route-runs?date=${encodeURIComponent(date)}`);
+    return Array.isArray(resp) ? resp : (resp?.rows ?? []);
+  },
+  /** Mark a route completed for a date (upsert). */
+  async markRun(routeId: string, date: string, note?: string) {
+    const tenantId = getTenantId();
+    const { data } = await api.post<any>(`/tenant/${tenantId}/route/${routeId}/run`, { data: { date, note } });
+    return data;
+  },
+  /** Undo a completion for a date. */
+  async unmarkRun(routeId: string, date: string) {
+    const tenantId = getTenantId();
+    await api.delete(`/tenant/${tenantId}/route/${routeId}/run?date=${encodeURIComponent(date)}`);
+  },
   async list(params?: Record<string, any>) {
     const tenantId = getTenantId();
     const qs = params ? `?${new URLSearchParams(params as any).toString()}` : '';

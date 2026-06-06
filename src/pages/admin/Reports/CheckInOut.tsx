@@ -15,6 +15,7 @@ import {
   MapPin,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -209,7 +210,7 @@ export default function CheckInOut() {
                 <th className="px-4 py-3 font-semibold text-foreground">Cliente</th>
                 <th className="px-4 py-3 font-semibold text-foreground">
                   <div className="flex items-center gap-1 cursor-pointer">
-                    Puesto de seguridad <span className="text-xs">↑</span>
+                    Puesto de seguridad <ChevronUp className="inline h-3 w-3" />
                   </div>
                 </th>
                 <th className="px-4 py-3 font-semibold text-foreground">Guardia</th>

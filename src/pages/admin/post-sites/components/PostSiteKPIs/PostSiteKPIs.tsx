@@ -1,5 +1,22 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Search, ChevronDown, ChevronUp, Plus, X, Mail, MessageCircle, ChevronLeft, ChevronRight, Edit, Trash, FileText, File, Upload, MoreVertical } from 'lucide-react';
+import {
+  Search,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  X,
+  Mail,
+  MessageCircle,
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  Trash,
+  FileText,
+  File,
+  Upload,
+  MoreVertical,
+  ArrowUpDown,
+} from "lucide-react";
 import { toast } from 'sonner';
 import KpiService from '@/services/kpi.service';
 import { ApiService } from '@/services/api/apiService';
@@ -414,7 +431,7 @@ export default function PostSiteKPIs({ site }: Props) {
                 <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('postSites.KPI.kpitable.kpidate', 'Fecha/Hora')}</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('postSites.KPI.kpitable.kpicreatedfor', 'Agregado por')}</th>
                 <th className="px-4 py-3 text-right text-sm font-semibold text-foreground">
-                  <button className="hover:text-foreground">↕</button>
+                  <button className="hover:text-foreground"><ArrowUpDown className="h-3.5 w-3.5" /></button>
                 </th>
               </tr>
             </thead>

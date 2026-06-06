@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Plus, X, ChevronDown } from 'lucide-react';
+import { getTenantTimezone } from '@/utils/tenantLocation';
 import { loadGoogleMaps } from '@/utils/loadGoogleMaps';
 
 import { ApiService, ApiError } from '@/services/api/apiService';
@@ -1052,7 +1053,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                         const shift = shiftId ? (shifts || []).find((s: any) => String(s.id) === String(shiftId)) : null;
                                         const guardName = shift ? getGuardNameFromShift(shift) : null;
                                         const stationName = shift && (shift.station?.stationName || shift.station?.name) ? (shift.station.stationName || shift.station.name) : (shift && shift.stationName) ? shift.stationName : null;
-                                        const start = shift && shift.startTime ? new Date(shift.startTime).toLocaleString() : null;
+                                        const start = shift && shift.startTime ? new Date(shift.startTime).toLocaleString('es', { timeZone: getTenantTimezone() }) : null;
                                         const shiftLabel = shift ? `${guardName ?? 'Guard'}${stationName ? ' — ' + stationName : ''}${start ? ' (' + start + ')' : ''}` : null;
 
                                         return (

@@ -4,7 +4,7 @@ import ProtectedRoute, { PublicOnlyRoute } from "@/components/ProtectedRoute"
 import Login from "./pages/auth/login"
 import ForgotPassword from "./pages/auth/forgot-password"
 import ResetPassword from "./pages/auth/reset-password"
-import DashboardPage from "./pages/admin/dashboard/dasboard"
+import DashboardPage from "./pages/admin/dashboard/control-center/ControlCenter"
 import LanguagePage from "./pages/idioma/configuracion"
 import { AuthProvider, useAuth } from "./contexts/AuthContext"
 import { ThemeProvider } from "./contexts/ThemeContext"
@@ -37,6 +37,9 @@ import ReportSettingsPage from "./pages/admin/Configuration/report-settings/Repo
 import OtherSettingsPage from "./pages/admin/Configuration/other-settings/OtherSettingsPage"
 import GuardsGlobalSettingsPage from "./pages/admin/Configuration/guards-settings/GuardsGlobalSettingsPage"
 import RondasSettingsPage from "./pages/admin/Configuration/rondas-settings/RondasSettingsPage"
+import EmailPreferencesPage from "./pages/admin/Configuration/email-preferences/EmailPreferencesPage"
+import SmsBalancePage from "./pages/admin/Configuration/sms/SmsBalancePage"
+import BillingPage from "./pages/admin/Configuration/billing/BillingPage"
 import DeveloperTokensPage from "./pages/admin/Configuration/developer-tokens/DeveloperTokensPage"
 import ActivitiesPage from "./pages/admin/actividades/ActivitiesPage"
 import ClientesPage from "./pages/admin/clientes/ClientsPage"
@@ -68,6 +71,7 @@ import DispatchPrintablePage from '@/pages/admin/dispatcher/DispatchPrintablePag
 import DispatchPublicView from '@/pages/public/DispatchPublicView';
 import NewVehiclePage from "./pages/admin/vehicles/NewVehiclePage"
 import RoutesPage from "./pages/admin/routes/RoutesPage"
+import PatrullaBoardPage from "./pages/admin/vehicle-patrol/PatrullaBoardPage"
 import NewRoutePage from "./pages/admin/routes/NewRoutePage"
 import EditRoutePage from "./pages/admin/routes/EditRoutePage"
 import PatrolExecutionPage from "./pages/guard/PatrolExecutionPage"
@@ -128,6 +132,7 @@ import GuardAvailabilityPage from "./pages/admin/security-guards/components/Guar
 import GuardIndicadoresPage from "./pages/admin/security-guards/components/GuardKPIs/GuardKPIspage";
 import GuardLicenciasPage from "./pages/admin/security-guards/components/GuardLicenses/GuardLicensespage";
 import GuardNotasPage from "./pages/admin/security-guards/components/GuardNotes/GuardNotespage";
+import GuardMemosPage from "./pages/admin/security-guards/components/GuardMemos/GuardMemosPage";
 import GuardRemindersPage from "./pages/admin/security-guards/components/GuardReminders/GuardRemindersPage";
 import GuardFilesPage from "./pages/admin/security-guards/components/GuardFiles/GuardFilesPage";
 import GuardAsignarSitiosPage from "./pages/admin/security-guards/components/GuardAssign-Sites/GuardAsignarSitiosPage";
@@ -638,6 +643,7 @@ export default function App() {
               <Route path="/post-sites/:postSiteId/stations/:stationId/visitors" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
               <Route path="/post-sites/:postSiteId/stations/:stationId/guards" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
               <Route path="/post-sites/:postSiteId/stations/:stationId/shifts" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
+              <Route path="/post-sites/:postSiteId/stations/:stationId/orders" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
               <Route path="/post-sites/:postSiteId/stations/:stationId/site-tours" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
               <Route path="/post-sites/:postSiteId/stations/:stationId/tag-scans" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
               <Route path="/post-sites/:postSiteId/stations/:stationId/inventory" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
@@ -741,6 +747,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <GuardNotasPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/memos"
+                element={
+                  <ProtectedRoute>
+                    <GuardMemosPage />
                   </ProtectedRoute>
                 }
               />
@@ -1331,6 +1345,14 @@ export default function App() {
 
               {/* RUTAS */}
               <Route
+                path="/vehicle-patrol"
+                element={
+                  <ProtectedRoute>
+                    <PatrullaBoardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/vehicle-patrol/routes"
                 element={
                   <ProtectedRoute>
@@ -1529,6 +1551,30 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <RondasSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/email-preferences"
+                element={
+                  <ProtectedRoute>
+                    <EmailPreferencesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/sms"
+                element={
+                  <ProtectedRoute>
+                    <SmsBalancePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/billing"
+                element={
+                  <ProtectedRoute>
+                    <BillingPage />
                   </ProtectedRoute>
                 }
               />

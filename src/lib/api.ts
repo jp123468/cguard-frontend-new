@@ -148,6 +148,24 @@ api.interceptors.response.use(
         ; (cfg as MutableConfig).__toastId = undefined
     }
     const apiError = normalizeError(error as AxiosError)
+
+    // Subscription paywall: a blocked tenant gets a 402. Nudge them to billing.
+    if (apiError.status === 402 && apiError.code === 'subscription_required') {
+      const now = Date.now();
+      const msg = apiError.message || 'Activa tu suscripción para continuar'
+      if (!cfg.toast?.silentError && !(__lastErrorMsg === msg && now - __lastErrorAt < ERROR_DEDUPE_WINDOW)) {
+        toast.error(msg)
+        __lastErrorMsg = msg
+        __lastErrorAt = now
+      }
+      try {
+        if (typeof window !== 'undefined' && !String(window.location.pathname).includes('/setting/billing')) {
+          window.location.assign('/setting/billing')
+        }
+      } catch {}
+      return Promise.reject(apiError)
+    }
+
     if (!cfg.toast?.silentError) {
       const custom = cfg.toast?.error
       const msg = String(typeof custom === "function" ? custom(apiError) : custom || apiError.message || "Error")

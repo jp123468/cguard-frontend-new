@@ -32,7 +32,10 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import userService from "@/lib/api/userService";
 import { postSiteService } from "@/lib/api/postSiteService";
 import vehicleService from "@/lib/api/vehicleService";
@@ -803,8 +806,8 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
-                            <button type="button" onClick={() => movePoint(idx, -1)} className="rounded border px-2 py-1">↑</button>
-                            <button type="button" onClick={() => movePoint(idx, 1)} className="rounded border px-2 py-1">↓</button>
+                            <button type="button" onClick={() => movePoint(idx, -1)} className="rounded border px-2 py-1"><ChevronUp className="h-3.5 w-3.5" /></button>
+                            <button type="button" onClick={() => movePoint(idx, 1)} className="rounded border px-2 py-1"><ChevronDown className="h-3.5 w-3.5" /></button>
                             <button type="button" onClick={() => removePoint(p.siteId)} className="rounded border px-2 py-1 text-red-600">Eliminar</button>
                           </div>
                         </td>

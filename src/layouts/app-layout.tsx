@@ -7,8 +7,9 @@ import { setTenantId } from "@/lib/api/clientService";
 import { setTenantId as setCategoryTenantId } from "@/lib/api/categoryService";
 import { useLocation, useNavigate } from "react-router-dom";
 import TenantJoinModal from "@/components/TenantJoinModal";
+import TrialBanner from "@/components/TrialBanner";
 import tenantService from "@/services/tenant.service";
-import { cacheTenantLocation, cacheTenantCountry } from "@/utils/tenantLocation";
+import { cacheTenantLocation, cacheTenantCountry, cacheTenantTimezone } from "@/utils/tenantLocation";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -167,6 +168,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           const t = (res && (res.data || res.tenant)) ? (res.data || res.tenant) : res;
           cacheTenantLocation((t as any)?.latitude, (t as any)?.longitude);
           cacheTenantCountry((t as any)?.countryCode ?? (t as any)?.country_code ?? null);
+          cacheTenantTimezone((t as any)?.timezone ?? null);
         } catch {}
       })();
     }
@@ -198,14 +200,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 
   return (
-    <div className="h-screen w-full bg-background">
-      <div className={["sticky top-0 z-50 bg-background border-b border-border h-14 transition-[margin] duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-0"].join(" ")}>
+    <div className="app-shell h-screen w-full bg-background">
+      <div className={["app-header sticky top-0 z-50 h-14 transition-[margin] duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-0"].join(" ")}>
         <Header toggleSidebar={toggleSidebar} />
       </div>
 
       <aside
         className={[
-          "hidden lg:block fixed left-0 top-0 h-screen bg-background border-r border-border overflow-y-auto transition-[width] duration-300",
+          "hidden lg:block fixed left-0 top-0 h-screen overflow-y-auto transition-[width] duration-300",
           sidebarOpen ? "w-64" : "w-0",
         ].join(" ")}
       >
@@ -214,7 +216,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       <div
         className={[
-          "fixed left-0 top-0 z-[60] w-64 h-screen bg-background border-r border-border lg:hidden transform transition-transform duration-300",
+          "fixed left-0 top-0 z-[60] w-64 h-screen lg:hidden transform transition-transform duration-300",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >
@@ -231,6 +233,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           sidebarOpen ? "lg:ml-64" : "lg:ml-0",
         ].join(" ")}
       >
+        <TrialBanner />
         {children}
       </main>
 

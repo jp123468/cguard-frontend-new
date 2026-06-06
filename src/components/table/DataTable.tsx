@@ -1,3 +1,4 @@
+import { ChevronUp, ChevronDown } from "lucide-react";
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RowActionsMenu, type RowAction } from "./RowActionsMenu";
@@ -84,7 +85,7 @@ export function DataTable<T extends { id: string }>({
                                     >
                                         <span>{col.header}</span>
                                         <span className="text-xs text-muted-foreground">
-                                            {isSorted ? (sortDir === "asc" ? "↑" : sortDir === "desc" ? "↓" : "") : ""}
+                                            {isSorted ? (sortDir === "asc" ? <ChevronUp className="h-3.5 w-3.5" /> : sortDir === "desc" ? <ChevronDown className="h-3.5 w-3.5" /> : null) : null}
                                         </span>
                                     </button>
                                 ) : (

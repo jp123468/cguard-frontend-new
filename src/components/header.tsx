@@ -15,6 +15,7 @@ import {
   Moon,
   Star,
   StoreIcon,
+  ArrowRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useThemeContext } from "@/contexts/ThemeContext";
@@ -237,8 +238,8 @@ export default function Header({
                       }
                       {theme === 'dark' ? 'Modo oscuro' : 'Modo claro'}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {theme === 'dark' ? '→ claro' : '→ oscuro'}
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <ArrowRight className="h-3 w-3" />{theme === 'dark' ? 'claro' : 'oscuro'}
                     </span>
                   </button>
                 </div>

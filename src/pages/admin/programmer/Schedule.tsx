@@ -1,7 +1,23 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Plus, Users, X, Loader2, Clock, Shield, Sparkles, Zap, Sun, Moon } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Users,
+  X,
+  Loader2,
+  Clock,
+  Shield,
+  Sparkles,
+  Zap,
+  Sun,
+  Moon,
+  AlertTriangle,
+  Bot,
+  ArrowRight,
+} from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { ApiService } from "@/services/api/apiService";
 import { toast } from "sonner";
@@ -424,6 +440,62 @@ export default function Schedule() {
     return map;
   }, [sacafrancoData, assignments, positions, monthDays, isWorkDay]);
 
+  // Per-station alerts for uncovered fijo slots and SF rest-day coverage gaps.
+  const localStationAlerts = useMemo(() => {
+    const posById = new Map(positions.map(p => [p.id, p]));
+    const rows: { stationId: string; stationName: string; missingFijoCount: number; sfUncoveredDays: number }[] = [];
+
+    for (const st of stations) {
+      const stationFijoPositions = positions.filter(p => p.stationId === st.id && p.type === 'fijo');
+      const stationFijoAssignments = assignments.filter(a => {
+        const pos = posById.get(a.positionId);
+        return a.stationId === st.id && !a.isRelief && pos?.type === 'fijo';
+      });
+
+      const assignedPosIds = new Set(stationFijoAssignments.map(a => a.positionId));
+      const missingFijoCount = stationFijoPositions.filter(p => !assignedPosIds.has(p.id)).length;
+
+      let sfUncoveredDays = 0;
+      if (stationFijoAssignments.length > 0) {
+        for (const day of monthDays) {
+          const dateStr = day.toISOString().slice(0, 10);
+          const anyResting = stationFijoAssignments.some(a => isWorkDay(a, day) === 'rest');
+          if (!anyResting) continue;
+
+          const key = `${st.id}-${dateStr}`;
+          const coveredBySf = (sfStationCoverage.get(key) || []).length > 0;
+          if (!coveredBySf) sfUncoveredDays++;
+        }
+      }
+
+      if (missingFijoCount > 0 || sfUncoveredDays > 0) {
+        rows.push({
+          stationId: st.id,
+          stationName: st.stationName,
+          missingFijoCount,
+          sfUncoveredDays,
+        });
+      }
+    }
+
+    rows.sort((a, b) => (b.missingFijoCount + b.sfUncoveredDays) - (a.missingFijoCount + a.sfUncoveredDays));
+    return rows;
+  }, [stations, positions, assignments, monthDays, sfStationCoverage, isWorkDay]);
+
+  const stationAlerts = useMemo(() => {
+    const apiAlerts = staffing?.stationAlerts;
+    if (Array.isArray(apiAlerts)) return apiAlerts;
+    return localStationAlerts;
+  }, [staffing, localStationAlerts]);
+
+  const stationAlertByStationId = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const alert of stationAlerts || []) {
+      if (alert?.stationId) map.set(alert.stationId, alert);
+    }
+    return map;
+  }, [stationAlerts]);
+
   // ─── Actions ──────────────────────────────────────────────────────────────
 
   const openAssignForm = (stationId: string, positionId: string) => {
@@ -589,7 +661,7 @@ export default function Schedule() {
   };
 
   const runAutoAssign = async () => {
-    if (!confirm('¿Asignar automáticamente guardias a todas las estaciones sin cubrir? Esto asigna guardias por cercanía, configura rotaciones y asigna sacafrancos.')) return;
+    if (!confirm('¿Asignar automáticamente guardias a todas las estaciones sin cubrir?\n\nSolo se cubren los puestos VACÍOS con guardias sin asignar (por cercanía, configurando rotaciones y sacafrancos). NO se moverá ni reasignará ningún guardia que ya esté asignado a un puesto.')) return;
     setAutoAssigning(true);
     setAutoResult(null);
     try {
@@ -605,7 +677,7 @@ export default function Schedule() {
   };
 
   const runOptimizeSacafrancos = async () => {
-    if (!confirm('¿Optimizar la rotación de sacafrancos? Esto regenerará los turnos de todos los sacafrancos para maximizar cobertura.')) return;
+    if (!confirm('¿Optimizar la rotación de sacafrancos?\n\nATENCIÓN: esto MOVERÁ guardias sacafranco ya asignados a otros puestos/estaciones y regenerará sus turnos para maximizar cobertura. Los guardias fijos NO se tocan.')) return;
     setAutoAssigning(true);
     try {
       const res = await ApiService.post(`/tenant/${tenantId}/scheduler/optimize-sacafrancos`, { data: { rotationStyleId: assignRotation || undefined } });
@@ -748,7 +820,7 @@ export default function Schedule() {
                 </button>
                 {aiRecommendation && (
                   <div className="mt-3 p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg max-h-[300px] overflow-y-auto">
-                    <div className="text-[10px] font-semibold text-purple-600 mb-1">🤖 Recomendación IA:</div>
+                    <div className="text-[10px] font-semibold text-purple-600 mb-1"><Bot className="inline h-3 w-3 mr-1" />Recomendación IA:</div>
                     <div className="text-[10px] text-foreground/80 whitespace-pre-wrap leading-relaxed">{aiRecommendation}</div>
                   </div>
                 )}
@@ -786,7 +858,7 @@ export default function Schedule() {
                     {/* Hiring recommendation */}
                     {((staffing.fijosNeeded - (staffing.currentFijoGuards || 0)) > 0 || (staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)) > 0) && (
                       <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-2 space-y-1">
-                        <div className="text-[10px] font-semibold text-red-600">⚠ Contratar:</div>
+                        <div className="text-[10px] font-semibold text-red-600"><AlertTriangle className="inline h-3 w-3 mr-1" />Contratar:</div>
                         {(staffing.fijosNeeded - (staffing.currentFijoGuards || 0)) > 0 && (
                           <div className="text-[10px] text-red-500">{staffing.fijosNeeded - (staffing.currentFijoGuards || 0)} fijos más</div>
                         )}
@@ -803,6 +875,28 @@ export default function Schedule() {
                     <div className="text-[10px] text-muted-foreground">
                       Demanda pico: <span className="font-semibold text-foreground">{staffing.peakDemand}</span> estaciones simultáneas
                     </div>
+
+                    {stationAlerts.length > 0 && (
+                      <div className="pt-2 border-t border-border/20 space-y-1.5">
+                        <div className="flex items-center gap-1 text-[10px] font-semibold text-red-600">
+                          <AlertTriangle size={11} />
+                          Alertas por estación ({stationAlerts.length})
+                        </div>
+                        <div className="max-h-[160px] overflow-y-auto space-y-1 pr-1">
+                          {stationAlerts.map(alert => (
+                            <div key={alert.stationId} className="text-[10px] bg-red-500/5 border border-red-500/20 rounded px-2 py-1">
+                              <div className="font-medium text-foreground truncate">{alert.stationName}</div>
+                              {alert.missingFijoCount > 0 && (
+                                <div className="text-red-500">• {alert.missingFijoCount} fijo(s) sin guardia</div>
+                              )}
+                              {alert.sfUncoveredDays > 0 && (
+                                <div className="text-red-500">• {alert.sfUncoveredDays} día(s) L sin SF cubriendo</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
@@ -891,6 +985,7 @@ export default function Schedule() {
               {stations.map(station => {
                 const stationPositions = getPositionsForStation(station.id);
                 const hasPositions = stationPositions.length > 0;
+                const stationAlert = stationAlertByStationId.get(station.id);
 
                 return (
                   <div key={station.id} className="border-b border-border/20 last:border-b-0">
@@ -902,6 +997,22 @@ export default function Schedule() {
                           <div className="text-[11px] text-muted-foreground">
                             {station.scheduleType ? station.scheduleType.replace('-', ' ').toUpperCase() : 'Sin configurar'}
                           </div>
+                          {stationAlert && (
+                            <div className="mt-1 flex items-center gap-1 flex-wrap">
+                              {stationAlert.missingFijoCount > 0 && (
+                                <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/30 text-red-600 font-medium">
+                                  <AlertTriangle size={9} />
+                                  {stationAlert.missingFijoCount} fijo(s) faltan
+                                </span>
+                              )}
+                              {stationAlert.sfUncoveredDays > 0 && (
+                                <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-700 font-medium">
+                                  <AlertTriangle size={9} />
+                                  {stationAlert.sfUncoveredDays} L sin SF
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                         {!hasPositions && (
                           <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => configureStation(station)}>
@@ -1369,7 +1480,7 @@ export default function Schedule() {
                 const colors = POSITION_COLORS[pos.type] || POSITION_COLORS.fijo;
                 return (
                   <div className={`px-3 py-2 rounded-xl border ${colors.border} ${colors.bg}`}>
-                    <div className={`text-xs font-semibold ${colors.text}`}>{st.stationName} → {pos.name}</div>
+                    <div className={`text-xs font-semibold ${colors.text}`}>{st.stationName} <ArrowRight className="inline h-3 w-3" /> {pos.name}</div>
                     <div className="text-[10px] text-muted-foreground">{pos.startTime} – {pos.endTime}</div>
                   </div>
                 );
@@ -1400,7 +1511,7 @@ export default function Schedule() {
                         <option disabled>── Ya asignados como Fijo ──</option>
                       )}
                       {!isSacafranco && guardsPool.filter(g => fijoAssignedIds.has(g.id)).map(g => (
-                        <option key={g.id} value="" disabled>⛔ {g.label}</option>
+                        <option key={g.id} value="" disabled>{g.label}</option>
                       ))}
                     </select>
                   );
@@ -1577,7 +1688,7 @@ export default function Schedule() {
                     onClick={() => removeOverride(existing.id)}
                     className="col-span-2 px-3 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-semibold hover:bg-red-500/20 transition-all"
                   >
-                    ✕ Quitar novedad actual ({existing.type})
+                    <X className="inline h-3.5 w-3.5 mr-1" />Quitar novedad actual ({existing.type})
                   </button>
                 );
               })()}

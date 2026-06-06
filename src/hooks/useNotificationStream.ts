@@ -1,15 +1,30 @@
 /**
  * useNotificationStream
  *
- * Connects to the backend SSE endpoint and stores incoming notifications.
- * Auto-reconnects with exponential back-off on disconnect.
+ * Connects to the backend over **websockets** (socket.io) and stores incoming
+ * notifications. On connect it seeds the recent backlog from the REST
+ * `/:tenantId/events` endpoint (the websocket only pushes events emitted after
+ * connection). socket.io handles auto-reconnect.
  * Returns the list of recent notifications and the live unread count.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { getAuthToken } from '@/lib/api';
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) || '';
+
+// The socket is served under /api/socket.io (see backend lib/realtime.ts) so it
+// rides the same routing that already proxies /api to the backend.
+const SOCKET_PATH = '/api/socket.io';
+
+function socketOrigin(): string {
+  try {
+    return new URL(API_URL || window.location.origin, window.location.origin).origin;
+  } catch {
+    return window.location.origin;
+  }
+}
 
 export interface PlatformNotification {
   id: string;
@@ -32,21 +47,21 @@ interface UseNotificationStreamResult {
 }
 
 const MAX_STORED = 50;
-const BASE_RECONNECT_MS = 3_000;
-const MAX_RECONNECT_MS = 60_000;
 
 export function useNotificationStream(tenantId: string | null | undefined): UseNotificationStreamResult {
   const [notifications, setNotifications] = useState<PlatformNotification[]>([]);
   const [connected, setConnected] = useState(false);
-  const esRef = useRef<EventSource | null>(null);
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reconnectDelayRef = useRef(BASE_RECONNECT_MS);
+  const socketRef = useRef<Socket | null>(null);
+
+  const addNotification = useCallback((n: PlatformNotification, read = false) => {
+    setNotifications((prev) => {
+      if (prev.some((x) => x.id === n.id)) return prev;
+      return [{ ...n, read }, ...prev].slice(0, MAX_STORED);
+    });
+  }, []);
 
   const markRead = useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    );
-    // Best-effort server mark
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     if (!tenantId) return;
     const token = getAuthToken();
     fetch(`${API_URL}/${tenantId}/events/${id}/read`, {
@@ -61,64 +76,67 @@ export function useNotificationStream(tenantId: string | null | undefined): UseN
 
   useEffect(() => {
     if (!tenantId) return;
+    const token = getAuthToken();
+    if (!token) return;
 
     let destroyed = false;
 
-    const connect = () => {
-      if (destroyed) return;
-      const token = getAuthToken();
-      if (!token) return;
-
-      const url = `${API_URL}/${tenantId}/events/stream?token=${encodeURIComponent(token)}`;
-      const es = new EventSource(url);
-      esRef.current = es;
-
-      es.addEventListener('connected', () => {
+    // Seed the recent backlog (websocket only delivers new events post-connect).
+    fetch(`${API_URL}/${tenantId}/events?limit=30`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((r) => (r.ok ? r.json() : { rows: [] }))
+      .then((data) => {
         if (destroyed) return;
-        setConnected(true);
-        reconnectDelayRef.current = BASE_RECONNECT_MS; // reset back-off on successful connect
-      });
-
-      es.addEventListener('notification', (e: MessageEvent) => {
-        if (destroyed) return;
-        try {
-          const notification: PlatformNotification = JSON.parse(e.data);
-          setNotifications((prev) => {
-            // Deduplicate by id
-            if (prev.some((n) => n.id === notification.id)) return prev;
-            const next = [{ ...notification, read: false }, ...prev];
-            return next.slice(0, MAX_STORED);
-          });
-        } catch {
-          // ignore malformed events
+        const rows: any[] = data?.rows || [];
+        for (const ev of rows) {
+          addNotification(
+            {
+              id: ev.id,
+              eventType: ev.eventType,
+              title: ev.title,
+              body: ev.body,
+              payload: ev.payload,
+              sourceEntityType: ev.sourceEntityType,
+              sourceEntityId: ev.sourceEntityId,
+              createdAt: ev.createdAt,
+            },
+            ev.deliveryStatus === 'read',
+          );
         }
-      });
+      })
+      .catch(() => {});
 
-      es.onerror = () => {
-        if (destroyed) return;
-        setConnected(false);
-        es.close();
-        esRef.current = null;
+    const socket = io(socketOrigin(), {
+      path: SOCKET_PATH,
+      transports: ['websocket'],
+      withCredentials: true,
+      auth: { token, tenantId },
+    });
+    socketRef.current = socket;
 
-        // Exponential back-off reconnect
-        const delay = reconnectDelayRef.current;
-        reconnectDelayRef.current = Math.min(delay * 2, MAX_RECONNECT_MS);
-        reconnectTimerRef.current = setTimeout(connect, delay);
-      };
-    };
-
-    connect();
+    socket.on('connect', () => {
+      if (!destroyed) setConnected(true);
+    });
+    socket.on('disconnect', () => {
+      if (!destroyed) setConnected(false);
+    });
+    socket.on('connect_error', () => {
+      if (!destroyed) setConnected(false);
+    });
+    socket.on('notification', (n: PlatformNotification) => {
+      if (destroyed || !n || !n.id) return;
+      addNotification(n, false);
+    });
 
     return () => {
       destroyed = true;
       setConnected(false);
-      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-      if (esRef.current) {
-        esRef.current.close();
-        esRef.current = null;
-      }
+      socket.removeAllListeners();
+      socket.disconnect();
+      socketRef.current = null;
     };
-  }, [tenantId]);
+  }, [tenantId, addNotification]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, RefObject } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { getTenantTimezone } from '@/utils/tenantLocation';
 import { useTranslation } from "react-i18next";
 import IncidentMap from "@/components/IncidentMap/IncidentMap";
 import { categoryService } from '@/lib/api/categoryService';
@@ -424,13 +425,13 @@ export default function PostSiteProfile({ site }: { site?: any }) {
                                             <div className="text-sm text-foreground/70">
                                                 <span className="block text-xs text-muted-foreground mb-0.5">Próximo turno</span>
                                                 <span className="font-semibold text-foreground">
-                                                    {new Date(station.nextShift.startTime).toLocaleString('es', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    {new Date(station.nextShift.startTime).toLocaleString('es', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: getTenantTimezone() })}
                                                 </span>
                                                 {station.nextShift.guard && (
                                                     <span className="text-muted-foreground"> · {station.nextShift.guard.fullName}</span>
                                                 )}
                                                 <span className="text-muted-foreground text-xs ml-1">
-                                                    hasta {new Date(station.nextShift.endTime).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}
+                                                    hasta {new Date(station.nextShift.endTime).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', timeZone: getTenantTimezone() })}
                                                 </span>
                                             </div>
                                         ) : (

@@ -11,6 +11,7 @@
           { "id": "indicadores-kpi", "label": "guards.nav.indicadores", "path": "/guards/:id/indicadores" },
           { "id": "licencias", "label": "guards.nav.licencias", "path": "/guards/:id/licencias" },
           { "id": "notas", "label": "guards.nav.notas", "path": "/guards/:id/notas" },
+          { "id": "memos", "label": "guards.nav.memos", "path": "/guards/:id/memos" },
           { "id": "recordatorios", "label": "guards.nav.recordatorios", "path": "/guards/:id/recordatorios" },
           { "id": "archivos", "label": "guards.nav.archivos", "path": "/guards/:id/archivos" },
           { "id": "asignar-sitios", "label": "guards.nav.asignarSitios", "path": "/guards/:id/asignar-sitios" },

@@ -14,12 +14,35 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
-  CheckCircle2, ChevronRight, ChevronLeft, Plus, X, Trash2,
-  Shield, BellElectric, Camera, Car, Lock, Tag,
-  Users, Clock, MapPin, Building2,
-  Loader2, Check, Star, Zap, AlertTriangle,
-  Navigation2, Globe, Hash, ChevronDown, ChevronUp, Edit3,
-} from 'lucide-react';
+  CheckCircle2,
+  ChevronRight,
+  ChevronLeft,
+  Plus,
+  X,
+  Trash2,
+  Shield,
+  BellElectric,
+  Camera,
+  Car,
+  Lock,
+  Tag,
+  Users,
+  Clock,
+  MapPin,
+  Building2,
+  Loader2,
+  Check,
+  Star,
+  Zap,
+  AlertTriangle,
+  Navigation2,
+  Globe,
+  Hash,
+  ChevronDown,
+  ChevronUp,
+  Edit3,
+  ArrowRight,
+} from "lucide-react";
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -260,7 +283,7 @@ function JornadaRow({
           placeholder="HH:MM"
           className="h-7 w-16 text-[11px] font-mono text-center px-1"
         />
-        <span className="text-muted-foreground text-xs">→</span>
+        <ArrowRight className="h-3 w-3 text-muted-foreground" />
         <Input
           value={jornada.endTime}
           onChange={(e) => onChange({ endTime: e.target.value })}

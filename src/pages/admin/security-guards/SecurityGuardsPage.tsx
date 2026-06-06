@@ -151,7 +151,7 @@ export default function SecurityGuardsPage() {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importLoading, setImportLoading] = useState(false);
 
-  // Quick-assign to station
+  // Assign-to-station dialog
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [assignGuard, setAssignGuard] = useState<SecurityGuard | null>(null);
   const [assignStationId, setAssignStationId] = useState<string>("");
@@ -235,7 +235,7 @@ export default function SecurityGuardsPage() {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  // Load stations for quick-assign (actual stations, not post sites)
+  // Load stations for the assign dialog (actual stations, not post sites)
   useEffect(() => {
     const tenantId = localStorage.getItem('tenantId') || '';
     if (!tenantId) return;
@@ -249,31 +249,30 @@ export default function SecurityGuardsPage() {
     });
   }, []);
 
-  const handleQuickAssign = async () => {
+  const handleAssignStation = async () => {
     if (!assignGuard || !assignStationId) return;
     setAssignLoading(true);
     try {
       const tenantId = localStorage.getItem('tenantId') || '';
-      // raw.guard is the nested user object; raw.guardId is the user id on the securityGuard record
+      // raw.guard is the nested user object; raw.id is the securityGuard record id.
       const guardUserId = assignGuard.raw?.guard?.id || assignGuard.raw?.guardId || assignGuard.raw?.userId || assignGuard.id;
-      const selectedStation = assignStations.find(s => s.id === assignStationId);
-      const postSiteId = selectedStation?.postSiteId || assignStationId;
-      console.debug('[QuickAssign] guardUserId:', guardUserId, 'stationId:', assignStationId, 'postSiteId:', postSiteId);
+      const securityGuardId = assignGuard.raw?.id || assignGuard.id;
       const { default: api } = await import('@/lib/api');
-      // Shift requires: postSite (businessInfoId), station (stationId), guard (userId), startTime, endTime
-      const now = new Date();
-      const startTime = now.toISOString();
-      const endTime = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 year
-      await api.post(`/tenant/${tenantId}/shift`, { data: { postSite: postSiteId, station: assignStationId, guard: guardUserId, startTime, endTime } });
+      // Goes through the assignment service, which binds an OPEN puesto at the
+      // station → the guard shows up in the Horario scheduler (vs the old raw
+      // /shift call that created an orphaned shift with no assignment).
+      await api.post(`/tenant/${tenantId}/stations/${assignStationId}/assign-guard`, {
+        data: { guardId: guardUserId, securityGuardId, stationId: assignStationId },
+      });
       toast.success(t('guards.list.toasts.assigned', 'Guardia asignado exitosamente'));
       setAssignDialogOpen(false);
       setAssignGuard(null);
       setAssignStationId("");
-      // Navigate to scheduler with station pre-selected
-      navigate(`/programmer/schedule?stationId=${assignStationId}`);
+      // Show the result in the scheduler with the station pre-selected.
+      navigate(`/schedule?stationId=${assignStationId}`);
     } catch (err: any) {
       console.error(err);
-      toast.error(t('guards.list.toasts.assignError', 'Error al asignar guardia'));
+      toast.error(err?.data?.message || err?.message || t('guards.list.toasts.assignError', 'Error al asignar guardia'));
     } finally {
       setAssignLoading(false);
     }
@@ -1918,7 +1917,7 @@ export default function SecurityGuardsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Quick-Assign to Station Dialog */}
+      {/* Assign-to-Station Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -1939,6 +1938,9 @@ export default function SecurityGuardsPage() {
                 ))}
               </SelectContent>
             </Select>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Se asignará al primer puesto disponible de la estación y aparecerá en el Horario.
+            </p>
           </div>
           <DialogFooter>
             <DialogClose asChild>
@@ -1946,7 +1948,7 @@ export default function SecurityGuardsPage() {
             </DialogClose>
             <Button
               className="bg-[#C8860A] hover:bg-[#B37809] text-white"
-              onClick={handleQuickAssign}
+              onClick={handleAssignStation}
               disabled={!assignStationId || assignLoading}
             >
               {assignLoading ? 'Asignando...' : 'Asignar'}

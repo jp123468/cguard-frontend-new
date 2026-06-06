@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import AppLayout from '@/layouts/app-layout';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { Menu } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 type Props = { title?: string; children: ReactNode; site?: any };
@@ -16,29 +16,18 @@ export default function PostSiteLayout({ title, children, site }: Props) {
   const location = useLocation();
   const { id } = useParams();
 
+  // A "sitio de servicio" is a broad view over its stations. Only these sections
+  // belong to its scope; per-station detail lives inside each station.
   const sections = [
     {
       items: [
-        { id: 'overview', label: t('postSites.Details.Overview', 'Overview'), path: `/post-sites/${id || ':id'}/overview` },
-        { id: 'profile', label: t('postSites.Details.Profile', 'Profile'), path: `/post-sites/${id || ':id'}/profile` },
-        { id: 'contacts', label: t('postSites.Details.Contacts', 'Contacts'), path: `/post-sites/${id || ':id'}/contacts` },
-        { id: 'kpis', label: t('postSites.Details.KPIs', 'KPIs'), path: `/post-sites/${id || ':id'}/kpis` },
-        { id: 'postOrders', label: t('postSites.Details.PostOrders', 'Post Orders'), path: `/post-sites/${id || ':id'}/post-orders` },
-        { id: 'notes', label: t('postSites.Details.Notes', 'Notes'), path: `/post-sites/${id || ':id'}/notes` },
-        { id: 'files', label: t('postSites.Details.Files', 'Files'), path: `/post-sites/${id || ':id'}/files` },
-        { id: 'assignGuards', label: t('postSites.Details.AssignGuards', 'Assign Guards'), path: `/post-sites/${id || ':id'}/assign-guards` },
-        { id: 'stations', label: t('postSites.Details.Stations', 'Stations'), path: `/post-sites/${id || ':id'}/stations` },
-        { id: 'inventory', label: t('postSites.Details.Inventories', 'Dotación'), path: `/post-sites/${id || ':id'}/inventory` },
-        { id: 'tasks', label: t('postSites.Details.Tasks', 'Tasks'), path: `/post-sites/${id || ':id'}/tasks` },
-        { id: 'siteTours', label: t('postSites.Details.SiteTours', 'Site Tours'), path: `/post-sites/${id || ':id'}/site-tours` },
-        { id: 'siteTourTags', label: t('postSites.Details.SiteTourTags', 'Site Tour Tags'), path: `/post-sites/${id || ':id'}/site-tour-tags` },
-        { id: 'tagScans', label: t('postSites.Details.TagScans', 'Tag Scans'), path: `/post-sites/${id || ':id'}/tag-scans` },
-        { id: 'geoFence', label: t('postSites.Details.GeoFence', 'Geo-Fence'), path: `/post-sites/${id || ':id'}/geo-fence` },
-        { id: 'assignReports', label: t('postSites.Details.AssignReports', 'Assign Reports'), path: `/post-sites/${id || ':id'}/assign-reports` },
-        { id: 'incidents', label: t('postSites.Details.Incidents', 'Incidents'), path: `/post-sites/${id || ':id'}/incidents` },
-        { id: 'checklists', label: t('postSites.Details.Checklists', 'Checklists'), path: `/post-sites/${id || ':id'}/checklists` },
-        { id: 'emailReports', label: t('postSites.Details.EmailReports', 'Email Reports'), path: `/post-sites/${id || ':id'}/email-reports` },
-        { id: 'settings', label: t('postSites.Details.Settings', 'Settings'), path: `/post-sites/${id || ':id'}/settings` },
+        { id: 'overview', label: t('postSites.Details.Stats', 'Estadísticas'), path: `/post-sites/${id || ':id'}/overview` },
+        { id: 'profile', label: t('postSites.Details.Profile', 'Perfil'), path: `/post-sites/${id || ':id'}/profile` },
+        { id: 'contacts', label: t('postSites.Details.Contacts', 'Contactos'), path: `/post-sites/${id || ':id'}/contacts` },
+        { id: 'assignGuards', label: t('postSites.Details.GuardsList', 'Lista de guardias'), path: `/post-sites/${id || ':id'}/assign-guards` },
+        { id: 'postOrders', label: t('postSites.Details.OperationalRequirements', 'Requisitos operativos'), path: `/post-sites/${id || ':id'}/post-orders` },
+        { id: 'tasks', label: t('postSites.Details.TasksAssigned', 'Tareas asignadas'), path: `/post-sites/${id || ':id'}/tasks` },
+        { id: 'stations', label: t('postSites.Details.Stations', 'Estaciones'), path: `/post-sites/${id || ':id'}/stations` },
       ],
     },
   ];
@@ -133,30 +122,6 @@ export default function PostSiteLayout({ title, children, site }: Props) {
                                 {section.items.map((it) => {
                                   const path = resolve(it.path);
                                   const isActive = location.pathname === path;
-                                  // Temporarily hide these menu IDs by rendering an HTML comment
-                                  const hiddenIds = [
-                                    'kpis',
-                                    'postOrders',
-                                    'notes',
-                                    'files',
-                                    'tasks',
-                                    'geoFence',
-                                    'assignReports',
-                                    'checklists',
-                                    'emailReports',
-                                    'settings',
-                                    'informes'
-                                  ];
-
-                                  if (hiddenIds.includes(it.id)) {
-                                    const comment = `<!-- hidden-menu: id=${it.id} label=${it.label} path=${path} -->`;
-                                    return (
-                                      <li key={it.id} className="bg-card" dangerouslySetInnerHTML={{ __html: comment }} />
-                                    );
-                                  }
-
-                                  // Render menu item normally (inventory is included in sections)
-
                                   return (
                                     <li key={it.id} className="bg-card">
                                       <Link
@@ -222,7 +187,7 @@ const InventoryModal: React.FC<any> = ({ open, onClose, stations, selectedStatio
       <div className="relative z-70 w-full sm:w-96 bg-card shadow-2xl overflow-y-auto rounded-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-6 border-b border-border bg-card rounded-t-md">
           <h2 className="text-lg font-semibold text-foreground">{t('postSites.inventories.createTitle', 'Crear Inventario')}</h2>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-accent">✕</button>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-accent"><X className="h-4 w-4" /></button>
         </div>
 
         <div className="p-6 space-y-4">

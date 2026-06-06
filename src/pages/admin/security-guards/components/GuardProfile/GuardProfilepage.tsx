@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { getTenantTimezone } from '@/utils/tenantLocation';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
@@ -542,8 +543,8 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                         {guardShifts.map((s) => (
                           <li key={s.id} className="border rounded p-2 bg-card">
                             <div className="text-sm font-medium">{s.shiftSchedule || s.schedule || '-'}</div>
-                            <div className="text-xs text-foreground/70">In: {s.punchInTime ? new Date(s.punchInTime).toLocaleString() : '-'}</div>
-                            <div className="text-xs text-foreground/70">Out: {s.punchOutTime ? new Date(s.punchOutTime).toLocaleString() : '-'}</div>
+                            <div className="text-xs text-foreground/70">In: {s.punchInTime ? new Date(s.punchInTime).toLocaleString('es', { timeZone: getTenantTimezone() }) : '-'}</div>
+                            <div className="text-xs text-foreground/70">Out: {s.punchOutTime ? new Date(s.punchOutTime).toLocaleString('es', { timeZone: getTenantTimezone() }) : '-'}</div>
                             <div className="text-xs text-muted-foreground">Station: {s.stationName || (s.station && s.station.name) || '-'}</div>
                           </li>
                         ))}

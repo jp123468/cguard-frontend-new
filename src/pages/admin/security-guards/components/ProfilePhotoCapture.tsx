@@ -1,7 +1,16 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
-import { Camera, Upload, X, RotateCcw, Check, AlertCircle, Shield } from "lucide-react";
+import {
+  Camera,
+  Upload,
+  X,
+  RotateCcw,
+  Check,
+  AlertCircle,
+  Shield,
+  ClipboardList,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -213,7 +222,7 @@ export default function ProfilePhotoCapture({ value, onChange, previewUrl }: Pro
 
           {/* Instructions banner */}
           <div className="rounded-lg bg-blue-500/10 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-4 py-3 text-sm text-blue-600 dark:text-blue-300">
-            <p className="font-semibold mb-1">📋 Instrucciones para la foto:</p>
+            <p className="font-semibold mb-1 flex items-center gap-1.5"><ClipboardList className="h-4 w-4" /> Instrucciones para la foto:</p>
             <ul className="list-disc list-inside space-y-0.5 text-xs">
               <li>El guardia debe vestir <strong>uniforme completo</strong> y presentable</li>
               <li>Use un fondo <strong>neutro</strong> (pared blanca o gris)</li>

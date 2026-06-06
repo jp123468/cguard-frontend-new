@@ -1,12 +1,18 @@
 import { Button } from "@/components/ui/button";
+import { getTenantTimezone } from "@/utils/tenantLocation";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, UserCircle2, MapPin } from "lucide-react";
-import { ShiftRecord } from "@/lib/api/shiftService";
+import {
+  Plus,
+  UserCircle2,
+  MapPin,
+  AlertTriangle,
+} from "lucide-react";
+import { ShiftRecord, guardDisplayName } from "@/lib/api/shiftService";
 
 const HOUR_HEIGHT = 64; // px per hour
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -124,7 +130,7 @@ export default function DayView({ currentDate, shifts = [], gaps = [], onCreateS
                                 >
                                     {height >= 20 && (
                                         <span className="text-[10px] text-red-600 font-medium px-1.5 leading-none flex items-center h-full gap-1">
-                                            ⚠ Sin cobertura{gap.stationName ? ` · ${gap.stationName}` : ''} ({gap.hoursUncovered}h)
+                                            <AlertTriangle className="h-3 w-3 shrink-0" />Sin cobertura{gap.stationName ? ` · ${gap.stationName}` : ''} ({gap.hoursUncovered}h)
                                         </span>
                                     )}
                                 </div>
@@ -138,8 +144,8 @@ export default function DayView({ currentDate, shifts = [], gaps = [], onCreateS
                             const top = getShiftTop(shift);
                             const height = getShiftHeight(shift);
                             const color = colorForGuard(shift.guardId);
-                            const startLabel = new Date(shift.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                            const endLabel = new Date(shift.endTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                            const startLabel = new Date(shift.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: getTenantTimezone() });
+                            const endLabel = new Date(shift.endTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: getTenantTimezone() });
                             return (
                                 <button
                                     key={shift.id}
@@ -150,7 +156,7 @@ export default function DayView({ currentDate, shifts = [], gaps = [], onCreateS
                                     <div className="flex items-center gap-1 overflow-hidden">
                                         <UserCircle2 className="h-3.5 w-3.5 flex-shrink-0" />
                                         <span className="text-xs font-semibold truncate">
-                                            {shift.guard?.fullName ?? 'Turno abierto'}
+                                            {guardDisplayName(shift.guard) ?? 'Turno abierto'}
                                         </span>
                                     </div>
                                     {height >= 40 && (

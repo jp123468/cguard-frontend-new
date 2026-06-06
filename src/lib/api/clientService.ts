@@ -625,4 +625,15 @@ export const clientService = {
         const { data } = await api.post<any>(`/tenant/${tenantId}/client-account/${clientAccountId}/send-portal-invitation`, body);
         return data?.data || data;
     },
+
+    /**
+     * Send the "Invitar a la app" Mi Seguridad app-download invitation to a
+     * client. Separate from the welcome/portal invitation.
+     */
+    async sendClientAppInvitation(clientAccountId: string, email?: string): Promise<{ sent: boolean; recipient: string }> {
+        const tenantId = getTenantId();
+        const body = email ? { email } : {};
+        const { data } = await api.post<any>(`/tenant/${tenantId}/client-account/${clientAccountId}/send-app-invitation`, body);
+        return data?.data || data;
+    },
 };

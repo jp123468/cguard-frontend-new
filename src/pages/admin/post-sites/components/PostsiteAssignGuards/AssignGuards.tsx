@@ -314,13 +314,12 @@ export default function AssignGuards({ site }: { site?: any }) {
             if (!postSiteId) return;
 
             const tryPaths = [
-                // prefer shifts endpoint so we surface created shifts
-                `/tenant/${tenantId}/shift?postSiteId=${encodeURIComponent(postSiteId)}`,
+                // Deduped guards assigned to this post-site (via its stations' shifts).
+                // NOTE: do NOT use /shift?postSiteId= here — that filter is ignored server-side
+                // and pulls the entire tenant shift table (100k+ rows), which times out.
                 `/tenant/${tenantId}/post-site/${postSiteId}/guards`,
                 `/tenant/${tenantId}/post-site/${postSiteId}/assigned-guards`,
                 `/tenant/${tenantId}/post-site/${postSiteId}/security-guards`,
-                `/tenant/${tenantId}/security-guard?postSiteId=${encodeURIComponent(postSiteId)}`,
-                `/tenant/${tenantId}/security-guards?postSiteId=${encodeURIComponent(postSiteId)}`,
             ];
 
             let rows: any[] | undefined;
@@ -1067,15 +1066,24 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                 return;
                                             }
 
-                                            // Always create a Shift when assigning from this modal
+                                            // Single source of truth: create an ad-hoc guardAssignment
+                                            // (it auto-generates the shift). This makes the guard show up
+                                            // everywhere — Horario, the guard app, coverage, post-site views.
+                                            const pad = (n: number) => String(n).padStart(2, '0');
+                                            const sd = new Date(shiftStart);
+                                            const ed = new Date(shiftEnd);
+                                            const startDate = `${sd.getFullYear()}-${pad(sd.getMonth() + 1)}-${pad(sd.getDate())}`;
+                                            const startTime = `${pad(sd.getHours())}:${pad(sd.getMinutes())}`;
+                                            const endTime = `${pad(ed.getHours())}:${pad(ed.getMinutes())}`;
                                             const payload: any = {
-                                                startTime: shiftStart ? new Date(shiftStart).toISOString() : undefined,
-                                                endTime: shiftEnd ? new Date(shiftEnd).toISOString() : undefined,
-                                                station: selectedStation,
-                                                guard: selectedGuard,
+                                                guardId: selectedGuard,
+                                                stationId: selectedStation,
+                                                startDate,
+                                                startTime,
+                                                endTime,
                                             };
-                                            console.log('[AssignGuards] creating shift payload:', payload);
-                                            const resp = await ApiService.post(`/tenant/${tenantId}/shift`, { data: payload });
+                                            console.log('[AssignGuards] creating ad-hoc assignment payload:', payload);
+                                            const resp = await ApiService.post(`/tenant/${tenantId}/guard-assignment`, { data: payload });
                                             console.log('[AssignGuards] shift create response:', resp);
                                             toast.success(t('clients.assignGuards.shiftCreated', 'Shift created and guard assigned'));
                                             try { await loadAssigned(); } catch (e) { console.error('Failed to reload assigned after shift create', e); }

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Info } from "lucide-react";
+import { Info, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { notificationSettingsService } from "@/lib/api/notificationSettingsService";
 
 type ChannelKey = "dashboard" | "email" | "sms";
 
@@ -28,7 +29,7 @@ type MatrixState = Record<
 
 // ================== Datos (puedes moverlos a un JSON externo) ==================
 const NOTIFICATIONS: NotificationItem[] = [
-  { id: "check-in-out", label: "Guardia registrado/salida", hint: "Check-in/out del guardia", default: { dashboard: true } },
+  { id: "check-in-out", label: "Guardia registrado/salida", hint: "Check-in/out del guardia", default: { dashboard: true, email: true } },
   { id: "report-sent", label: "Informe enviado", default: { dashboard: true } },
   { id: "task-completed", label: "Tarea completada", default: { dashboard: true } },
   { id: "task-missed", label: "Tarea perdida o retrasada", default: { dashboard: true } },
@@ -63,7 +64,7 @@ const columns: { key: ChannelKey; label: string }[] = [
 // =============================================================================
 
 export default function NotificationMatrix() {
-  const [state, setState] = React.useState<MatrixState>(() => {
+  const buildDefaults = (): MatrixState => {
     const initial: MatrixState = {};
     NOTIFICATIONS.forEach((n) => {
       initial[n.id] = {
@@ -73,7 +74,44 @@ export default function NotificationMatrix() {
       };
     });
     return initial;
-  });
+  };
+
+  const [state, setState] = React.useState<MatrixState>(buildDefaults);
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    let mounted = true;
+    notificationSettingsService
+      .get()
+      .then((res) => {
+        if (!mounted) return;
+        const saved = res?.preferences || {};
+        setState((prev) => {
+          const merged: MatrixState = { ...prev };
+          NOTIFICATIONS.forEach((n) => {
+            const s = saved[n.id];
+            if (s) {
+              merged[n.id] = {
+                dashboard: !!s.dashboard,
+                email: !!s.email,
+                sms: !!s.sms,
+              };
+            }
+          });
+          return merged;
+        });
+      })
+      .catch(() => {
+        /* keep defaults if load fails */
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const allCheckedByColumn = (col: ChannelKey) =>
     NOTIFICATIONS.every((n) => state[n.id]?.[col]);
@@ -105,12 +143,20 @@ export default function NotificationMatrix() {
     }));
   };
 
-  const onSave = () => {
-    const payload = NOTIFICATIONS.map((n) => ({
-      id: n.id,
-      channels: state[n.id],
-    }));
-    toast.success("Preferencias guardadas");
+  const onSave = async () => {
+    setSaving(true);
+    try {
+      const preferences: MatrixState = {};
+      NOTIFICATIONS.forEach((n) => {
+        preferences[n.id] = state[n.id];
+      });
+      await notificationSettingsService.update(preferences);
+      toast.success("Preferencias de notificación guardadas");
+    } catch (e: any) {
+      toast.error(e?.message || "No se pudieron guardar las preferencias");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -189,8 +235,11 @@ export default function NotificationMatrix() {
 
         <div className="flex py-2 px-2 justify-end">
           <Button
+              onClick={onSave}
+              disabled={saving || loading}
               className="bg-[#f36a6d] hover:bg-[#e85b5f] text-white"
             >
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Guardar
             </Button>
         </div>

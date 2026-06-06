@@ -1,0 +1,18 @@
+/* Control Center — page-specific backdrop only.
+   The reusable glass utilities (.cc-glass, .cc-dot, .cc-scan, .cc-pop, animations,
+   accent vars) now live globally in src/styles/glass.css. */
+
+.cc-root { --cc-accent: var(--primary); position: relative; }
+
+.cc-backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.cc-backdrop::before {
+  content: ""; position: absolute; inset: -10%;
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--cc-accent) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--cc-accent) 7%, transparent) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+  opacity: .5;
+}
+.cc-blob { position: absolute; border-radius: 9999px; filter: blur(80px); opacity: .16; }

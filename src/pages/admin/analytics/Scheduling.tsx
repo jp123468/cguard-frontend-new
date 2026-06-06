@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import {
-    Filter,
-    MoreVertical,
-    FileDown,
+  Filter,
+  MoreVertical,
+  FileDown,
+  FolderOpen,
 } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
@@ -258,7 +259,7 @@ const Scheduling: React.FC = () => {
                             {/* izquierda - empty */}
                             <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
                                 <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-50">
-                                    <span className="text-3xl">📂</span>
+                                    <FolderOpen className="h-8 w-8 text-muted-foreground" />
                                 </div>
                                 <p className="text-sm font-semibold text-foreground">
                                     No se encontraron resultados

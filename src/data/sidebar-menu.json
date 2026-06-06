@@ -76,12 +76,6 @@
     ]
   },
   {
-    "id": "memos",
-    "name": "Memos",
-    "icon": "FileText",
-    "path": "/memos"
-  },
-  {
     "id": "analiticas",
     "name": "Analíticas",
     "icon": "BarChart3",
@@ -126,6 +120,12 @@
         "path": "/tracking-history"
       }
     ]
+  },
+  {
+    "id": "patrulla",
+    "name": "Patrulla vehicular",
+    "icon": "Car",
+    "path": "/vehicle-patrol"
   },
   {
     "id": "mensajero",
@@ -233,86 +233,5 @@
     "name": "Despachador",
     "icon": "MessageSquare",
     "path": "/dispatch-tickets"
-  },
-  {
-    "id": "visitantes",
-    "name": "Gestión de Visitantes",
-    "icon": "UserPlus",
-    "expandable": true,
-    "subItems": [
-      {
-        "id": "visitantes",
-        "name": "Visitantes",
-        "path": "/visitors"
-      }
-    ],
-    "commentedSubItems": [
-      {
-        "id": "vehiculos",
-        "name": "Vehículos",
-        "path": "/visitor/vehicle-list"
-      },
-      {
-        "id": "visitas",
-        "name": "Visitas",
-        "path": "/visitor/visit-list"
-      }
-    ]
-  },
-  {
-    "id": "patrulla",
-    "name": "Patrulla vehicular",
-    "icon": "Car",
-    "expandable": true,
-    "subItems": [
-      {
-        "id": "vehiculo",
-        "name": "Vehículo",
-        "path": "/vehicle-patrol/vehicles"
-      },
-      {
-        "id": "rutas",
-        "name": "Rutas",
-        "path": "/vehicle-patrol/routes"
-      }
-    ]
-  },
-  {
-    "id": "parking",
-    "name": "Administrador de estacionamiento",
-    "icon": "SquareParking",
-    "expandable": true,
-    "subItems": [
-      {
-        "id": "contacto",
-        "name": "Contacto",
-        "path": "/parking-manager/parking-contact"
-      },
-      {
-        "id": "vehiculos",
-        "name": "Vehículos",
-        "path": "/parking-manager/parking-vehicle"
-      },
-      {
-        "id": "areas",
-        "name": "Área de estacionamiento",
-        "path": "/parking-manager/parking-area"
-      },
-      {
-        "id": "espacios",
-        "name": "Estacionamiento",
-        "path": "/parking-manager/parking-lot"
-      },
-      {
-        "id": "incidentes",
-        "name": "Incidentes",
-        "path": "/parking-manager/parking-incident"
-      },
-      {
-        "id": "tipo-incidente",
-        "name": "Tipo de Incidente",
-        "path": "/parking-manager/incident-type"
-      }
-    ]
   }
 ]

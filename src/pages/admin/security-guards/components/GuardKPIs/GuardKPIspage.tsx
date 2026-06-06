@@ -1,10 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { Search, ChevronDown, ChevronUp, Plus, X, Mail, MessageCircle, ChevronLeft, ChevronRight, Edit, Trash, FileText, File, Upload, MoreVertical } from 'lucide-react';
+import {
+  Search,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  X,
+  Mail,
+  MessageCircle,
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  Trash,
+  FileText,
+  File,
+  Upload,
+  MoreVertical,
+  ArrowUpDown,
+} from "lucide-react";
 import MobileCardList from '@/components/responsive/MobileCardList';
 import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import { toast } from 'sonner';
 import KpiBarChart from '@/components/KpiBarChart';
+import GuardPerformancePanel from './GuardPerformancePanel';
 import KpiService from '@/services/kpi.service';
 import { ApiService } from '@/services/api/apiService';
 import api from '@/lib/api';
@@ -434,6 +452,9 @@ export default function GuardIndicators({ guard }: Props) {
       <GuardsLayout navKey="keep-safe" title="guards.nav.indicadores">
         <div className="space-y-4">
 
+          {/* 8-factor performance score (read-only, additive to KPI tooling) */}
+          <GuardPerformancePanel securityGuardId={guard?.id} />
+
           <div className="bg-card border rounded-lg p-6 shadow-sm min-h-[560px]">
             <div className="flex items-center justify-between gap-4 mb-6">
               {/* Left: Action Dropdown */}
@@ -514,7 +535,7 @@ export default function GuardIndicators({ guard }: Props) {
                         <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.KPI.kpitable.kpidate', 'Fecha/Hora')}</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.KPI.kpitable.kpicreatedfor', 'Agregado por')}</th>
                         <th className="px-4 py-3 text-right text-sm font-semibold text-foreground">
-                          <button className="hover:text-foreground">↕</button>
+                          <button className="hover:text-foreground"><ArrowUpDown className="h-3.5 w-3.5" /></button>
                         </th>
                       </tr>
                     </thead>

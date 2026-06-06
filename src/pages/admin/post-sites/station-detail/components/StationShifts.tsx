@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Loader2, Plus, ChevronLeft, ChevronRight, X, Clock, User, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
+import { getTenantTimezone } from '@/utils/tenantLocation';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -22,6 +23,18 @@ const MONTHS_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio
 
 // Map JS getDay() (0=Sun) to our day keys
 const DAY_INDEX_MAP = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab'];
+
+// Local-date key (YYYY-MM-DD). Do NOT use toISOString() for this: on a Date that
+// carries a time-of-day, toISOString() converts to UTC first, so in negative-UTC
+// zones (e.g. UTC-5) any evening time rolls to the NEXT calendar day. That made
+// calendar columns key one day off from where shifts were filed, so freshly
+// created turnos rendered on the wrong day or vanished from the visible week.
+const dateKey = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
 
 type ViewMode = 'week' | 'month';
 
@@ -154,7 +167,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
     });
   }, [rows]);
 
-  const toDateKey = (d: Date) => d.toISOString().slice(0, 10);
+  const toDateKey = dateKey;
 
   // Events per date
   const eventsByDate = useMemo(() => {
@@ -258,7 +271,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
 
   const goToday = () => {
     setCurrentDate(new Date());
-    setSelectedDate(new Date().toISOString().slice(0, 10));
+    setSelectedDate(dateKey(new Date()));
     setSelectedShift(null);
   };
 
@@ -288,7 +301,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   const selectedDayEvents = selectedDate ? (eventsByDate[selectedDate] || []) : [];
   const selectedDayCoverage = selectedDate ? coverageByDate[selectedDate] : null;
 
-  const fmtTime = (d: Date) => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const fmtTime = (d: Date) => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: getTenantTimezone() });
   const fmtDate = (d: Date) => d.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' });
 
   const fetchGuards = async () => {
@@ -304,13 +317,28 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
     finally { setLoadingGuards(false); }
   };
 
+  // Guard currently assigned to this station (the predominant guard across its
+  // existing shifts) — used to pre-select the dropdown when creating a turno.
+  const stationGuardId = useMemo(() => {
+    const counts: Record<string, number> = {};
+    rows.forEach((r: any) => {
+      const g = r.guard || r.securityGuard || r.user || {};
+      const id = g.id || r.guardId;
+      if (id) counts[id] = (counts[id] || 0) + 1;
+    });
+    let best = '';
+    let bestN = 0;
+    Object.entries(counts).forEach(([id, n]) => { if (n > bestN) { best = id; bestN = n; } });
+    return best;
+  }, [rows]);
+
   const openForm = (dateStr?: string) => {
     const startHour = station?.startingTimeInDay || '07:00';
     const endHour = station?.finishTimeInDay || '19:00';
-    const target = dateStr || new Date().toISOString().slice(0, 10);
+    const target = dateStr || dateKey(new Date());
     setShiftStart(`${target}T${startHour}`);
     setShiftEnd(`${target}T${endHour}`);
-    setShiftGuard('');
+    setShiftGuard(stationGuardId || '');
     setRotationStartDate(target);
     setSelectedJornada(0);
     setAssignMode('rotation');
@@ -348,6 +376,31 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
     return dates;
   };
 
+  // One turno per station per time slot: before creating, delete any existing
+  // shift at THIS station whose time overlaps [start,end) — regardless of guard.
+  // The new turno replaces it, so a slot is never double-booked (and this also
+  // clears a same-guard duplicate that would otherwise hit the unique-slot index
+  // and fail silently). Returns how many were removed.
+  const deleteOverlappingShifts = async (start: Date, end: Date) => {
+    const s = start.getTime();
+    const e = end.getTime();
+    const ids = rows
+      .filter((r: any) => {
+        const rs = new Date(r.startTime || r.start).getTime();
+        const re = new Date(r.endTime || r.end).getTime();
+        return Number.isFinite(rs) && Number.isFinite(re) && rs < e && re > s;
+      })
+      .map((r: any) => r.id)
+      .filter(Boolean);
+    if (ids.length) {
+      // Do NOT swallow this: if the slot isn't actually cleared, the create
+      // below just adds a second turno over the same period — the duplicate the
+      // replace was meant to prevent. Let it throw so the caller reports it.
+      await ApiService.delete(`/tenant/${tenantId}/shift?ids=${ids.join(',')}`);
+    }
+    return ids.length;
+  };
+
   const saveShift = async () => {
     if (!shiftGuard) { toast.error('Seleccione un guardia'); return; }
 
@@ -360,13 +413,19 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
       if ((end.getTime() - start.getTime()) > 24 * 60 * 60 * 1000) { toast.error('Un turno no puede durar más de 24 horas'); return; }
       setSaving(true);
       try {
+        // Replace whatever already occupies this slot at the station.
+        await deleteOverlappingShifts(start, end);
         await ApiService.post(`/tenant/${tenantId}/shift`, {
           data: { startTime: start.toISOString(), endTime: end.toISOString(), station: stationId, guard: shiftGuard, postSiteId },
         });
         toast.success('Turno creado');
         setShowForm(false);
-        loadShifts();
-      } catch (e: any) { toast.error(e?.message || 'Error al crear turno'); }
+        await loadShifts();
+        // Jump the calendar to the new turno so it's immediately visible
+        // (it may be on a different week/month than the one being viewed).
+        setCurrentDate(new Date(start));
+        setSelectedDate(dateKey(start));
+      } catch (e: any) { toast.error(e?.data?.message || e?.message || 'Error al crear turno'); }
       finally { setSaving(false); }
       return;
     }
@@ -382,24 +441,36 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
     setSaving(true);
     let created = 0;
     let failed = 0;
+    let firstError = '';
     try {
       for (const date of dates) {
-        const dateStr = date.toISOString().slice(0, 10);
+        const dateStr = dateKey(date);
         const startTime = new Date(`${dateStr}T${jornada.startTime || '07:00'}:00`);
         const endTime = new Date(`${dateStr}T${jornada.endTime || '19:00'}:00`);
         // Handle overnight shifts
         if (endTime <= startTime) endTime.setDate(endTime.getDate() + 1);
         try {
+          // Replace whatever already occupies this slot at the station.
+          await deleteOverlappingShifts(startTime, endTime);
           await ApiService.post(`/tenant/${tenantId}/shift`, {
             data: { startTime: startTime.toISOString(), endTime: endTime.toISOString(), station: stationId, guard: shiftGuard, postSiteId },
           });
           created++;
-        } catch { failed++; }
+        } catch (e: any) {
+          failed++;
+          // Surface WHY it failed instead of swallowing it — a silent failure here
+          // (e.g. the turno already exists for this guard/time) looked like "nothing
+          // got added" with no explanation.
+          if (!firstError) firstError = e?.data?.message || e?.message || '';
+        }
       }
       if (created > 0) toast.success(`${created} turnos creados (patrón ${rotationPattern})`);
-      if (failed > 0) toast.error(`${failed} turnos fallaron`);
+      if (failed > 0) toast.error(`${failed} turno(s) no se crearon${firstError ? `: ${firstError}` : ''}`);
       setShowForm(false);
-      loadShifts();
+      await loadShifts();
+      // Jump the calendar to the first generated date so the result is visible.
+      const firstDate = dates[0];
+      if (firstDate) { setCurrentDate(new Date(firstDate)); setSelectedDate(dateKey(firstDate)); }
     } catch (e: any) { toast.error(e?.message || 'Error al crear turnos'); }
     finally { setSaving(false); }
   };
@@ -775,7 +846,7 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
   const startHour = parseInt(station?.startingTimeInDay?.split(':')[0]) || 6;
   const endHour = Math.min((parseInt(station?.finishTimeInDay?.split(':')[0]) || 20) + 2, 24);
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
-  const toDateKey = (d: Date) => d.toISOString().slice(0, 10);
+  const toDateKey = dateKey;
   const isToday = (d: Date) => toDateKey(d) === toDateKey(new Date());
   const nowHour = new Date().getHours() + new Date().getMinutes() / 60;
 
@@ -908,7 +979,7 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
                         </span>
                         {height > 30 && (
                           <span className="text-[9px] text-muted-foreground/70 mt-0.5">
-                            {ev.start.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                            {ev.start.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: getTenantTimezone() })}
                           </span>
                         )}
                         {ev.status === 'active' && height > 40 && (
@@ -941,7 +1012,7 @@ function MonthView({ days, eventsByDate, coverageByDate, guardColorMap, selected
   onSelectDate: (d: string) => void;
   currentMonth: number;
 }) {
-  const toDateKey = (d: Date) => d.toISOString().slice(0, 10);
+  const toDateKey = dateKey;
   const isToday = (d: Date) => toDateKey(d) === toDateKey(new Date());
   const weeks: (Date | null)[][] = [];
   for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));

@@ -23,7 +23,20 @@ import {
 } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-import { EllipsisVertical, Eye, Edit, Printer, FileDown, FileSpreadsheet, Mail, Search, Filter, ExternalLink } from 'lucide-react';
+import {
+  EllipsisVertical,
+  Eye,
+  Edit,
+  Printer,
+  FileDown,
+  FileSpreadsheet,
+  Mail,
+  Search,
+  Filter,
+  ExternalLink,
+  X,
+  Trash2,
+} from "lucide-react";
 import IncidentTypesService from '@/services/incident-types.service';
 import {
   DropdownMenu,
@@ -932,7 +945,7 @@ export default function Incidents({ site }: { site?: any }) {
                               {!["cerrado", "closed"].includes(((it.status || it.estado || it.state || '').toString().toLowerCase())) && (
                                 <DropdownMenuItem onClick={() => handleCloseTicket(it)}>
                                   <div className="flex items-center">
-                                    <span className="mr-2 h-4 w-4 inline-block">✖</span>
+                                    <X className="mr-2 h-4 w-4 inline-block" />
                                     {t('dispatcher.close_ticket')}
                                   </div>
                                 </DropdownMenuItem>
@@ -940,7 +953,7 @@ export default function Incidents({ site }: { site?: any }) {
 
                               <DropdownMenuItem onClick={() => handleDeleteIncident(it)}>
                                 <div className="flex items-center text-red-600">
-                                  <span className="mr-2 h-4 w-4 inline-block">🗑️</span>
+                                  <Trash2 className="mr-2 h-4 w-4 inline-block" />
                                   {t('dispatcher.action_delete_label')}
                                 </div>
                               </DropdownMenuItem>

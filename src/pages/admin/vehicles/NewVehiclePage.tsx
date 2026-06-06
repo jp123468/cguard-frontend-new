@@ -1,3 +1,4 @@
+import { Camera } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
@@ -192,7 +193,7 @@ export default function NewVehiclePage() {
                   </div>
                 )}
                 <span className="absolute bottom-1 right-1 rounded bg-white/90 px-1.5 py-0.5 text-xs">
-                  📷
+                  <Camera className="h-6 w-6 text-muted-foreground" />
                 </span>
               </label>
               <input

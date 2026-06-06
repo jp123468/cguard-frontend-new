@@ -8,7 +8,7 @@ import { clientService } from '@/lib/api/clientService';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import { toast } from "sonner";
-import { EllipsisVertical, Pencil, Trash, Plus } from 'lucide-react';
+import { EllipsisVertical, Pencil, Trash, Plus, X } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 
 
@@ -438,7 +438,7 @@ export default function PostSiteContacts({ site }: { site?: any }) {
           <div className="w-full sm:ml-auto sm:w-96 bg-card h-full sm:h-auto shadow-xl p-6 overflow-auto z-50 rounded-t-lg sm:rounded-md" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{t('clients.contacts.form.AddClientContact') || 'Add Contact to Post Site'}</h3>
-              <button onClick={handleCloseAdd} className="text-muted-foreground hover:text-foreground">✕</button>
+              <button onClick={handleCloseAdd} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
             </div>
 
             <div className="space-y-4">

@@ -107,17 +107,14 @@ export default function Sidebar() {
   }, [location.pathname]);
 
   return (
-    <aside
-      className="h-full w-full overflow-y-auto hide-scrollbar flex flex-col"
-      style={{ background: "linear-gradient(180deg, #0F1923 0%, #1C2B3A 100%)" }}
-    >
+    <aside className="app-sidebar h-full w-full overflow-y-auto hide-scrollbar flex flex-col">
       {/* Tenant branding */}
-      <div
-        className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3.5"
-        style={{ background: "#0F1923", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-      >
+      <div className="app-sidebar-head sticky top-0 z-20 flex items-center gap-3 px-4 py-3.5">
         {/* Logo or initials avatar */}
-        <div className="shrink-0 h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center bg-amber-500/20 border border-amber-500/30">
+        <div
+          className="shrink-0 h-9 w-9 rounded-lg overflow-hidden flex items-center justify-center border"
+          style={{ background: "color-mix(in oklab, var(--cc-accent) 18%, transparent)", borderColor: "color-mix(in oklab, var(--cc-accent) 35%, transparent)" }}
+        >
           {tenantLogo ? (
             <img
               src={tenantLogo}
@@ -125,14 +122,14 @@ export default function Sidebar() {
               className="h-full w-full object-contain p-0.5"
             />
           ) : (
-            <span className="text-sm font-bold text-amber-400 select-none leading-none">
+            <span className="text-sm font-bold select-none leading-none cc-accent-text">
               {tenantName ? tenantName.substring(0, 2).toUpperCase() : 'CG'}
             </span>
           )}
         </div>
         {/* Name */}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-white leading-tight truncate max-w-[140px]" title={tenantName || 'CGuard'}>
+          <p className="text-sm font-semibold text-foreground leading-tight truncate max-w-[140px]" title={tenantName || 'CGuard'}>
             {tenantName || 'CGuard'}
           </p>
           <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Panel de control</p>
@@ -161,19 +158,11 @@ export default function Sidebar() {
                   return <div className="mb-0.5 cursor-not-allowed opacity-40">{children}</div>;
                 }
                 return !isExpandable && item.path ? (
-                  <NavLink
-                    to={item.path}
-                    className={({ isActive }) =>
-                      `block mb-0.5 rounded-lg transition-all ${isActive
-                        ? "text-white"
-                        : "text-muted-foreground hover:text-white"
-                      }`
-                    }
-                  >
+                  <NavLink to={item.path} className="block mb-0.5">
                     {children}
                   </NavLink>
                 ) : (
-                  <div className="mb-0.5 rounded-lg text-muted-foreground">{children}</div>
+                  <div className="mb-0.5">{children}</div>
                 );
               };
 
@@ -187,13 +176,8 @@ export default function Sidebar() {
                         if (isExpandable) toggleMenu(item.id);
                         else if (item.path) navigate(item.path);
                       }}
-                      className={`w-full rounded-lg flex items-center justify-between px-3 py-2.5 text-sm font-medium transition-all group ${isDisabled ? '' : 'hover:bg-white/5'}`}
+                      className={`app-nav-item group ${!isExpandable && item.path && location.pathname === item.path ? "is-active" : ""}`}
                       aria-disabled={!!isDisabled}
-                      style={
-                        !isExpandable && item.path && location.pathname === item.path
-                          ? { background: "rgba(200,134,10,0.15)", color: "#F5C300", borderLeft: "3px solid #C8860A" }
-                          : {}
-                      }
                     >
                       <div className="flex items-center gap-3">
                         <item.icon className="w-4 h-4 shrink-0" />
@@ -214,18 +198,14 @@ export default function Sidebar() {
                   </ItemWrapper>
 
                   {isExpandable && isExpanded && item.subItems && hasTenant && (
-                    <div className="ml-7 mb-1 border-l border-white/10 pl-3">
+                    <div className="ml-7 mb-1 pl-3" style={{ borderLeft: "1px solid color-mix(in oklab, var(--cc-accent) 18%, var(--border))" }}>
                       {item.subItems.map((sub) => {
                         const isActive = location.pathname.startsWith(sub.path);
                         return (
                           <NavLink
                             key={sub.id}
                             to={sub.path}
-                            className={`block rounded px-2 py-2 mb-0.5 text-[12px] font-medium transition-all ${isActive
-                              ? "text-[#F5C300]"
-                              : "text-muted-foreground hover:text-white hover:bg-white/5"
-                            }`}
-                            style={isActive ? { background: "rgba(200,134,10,0.12)" } : {}}
+                            className={`app-subnav-item ${isActive ? "is-active" : ""}`}
                           >
                             {(() => {
                               const parentSub = t(`sidebar.${item.id}.${sub.id}`, { defaultValue: '' });

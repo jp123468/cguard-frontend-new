@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { getTenantTimezone } from "@/utils/tenantLocation";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ function formatTime(iso: string | null) {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
+    timeZone: getTenantTimezone(),
   });
 }
 

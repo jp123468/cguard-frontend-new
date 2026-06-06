@@ -22,6 +22,7 @@ export default function StationLayout({ title, children, station }: Props) {
         { id: 'visitors',   label: t('station.details.visitors',   'Gestión de Visitantes'), path: `${base}/visitors` },
         { id: 'guards',     label: t('station.details.guards',     'Guardias Asignados'),    path: `${base}/guards` },
         { id: 'shifts',     label: t('station.details.shifts',     'Turnos'),                path: `${base}/shifts` },
+        { id: 'orders',     label: t('station.details.orders',     'Consignas específicas'), path: `${base}/orders` },
         { id: 'site-tours', label: t('station.details.siteTours',  'Rondas de Seguridad'),   path: `${base}/site-tours` },
         { id: 'etiquetas',  label: t('station.details.etiquetas',  'Etiquetas'),              path: `${base}/etiquetas` },
         { id: 'tag-scans',  label: t('station.details.tagScans',   'Escaneos de Tags'),      path: `${base}/tag-scans` },

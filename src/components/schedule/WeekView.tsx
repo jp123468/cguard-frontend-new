@@ -1,12 +1,17 @@
 import { Button } from "@/components/ui/button";
+import { getTenantTimezone } from "@/utils/tenantLocation";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, UserCircle2 } from "lucide-react";
-import { ShiftRecord } from "@/lib/api/shiftService";
+import {
+  Plus,
+  UserCircle2,
+  AlertTriangle,
+} from "lucide-react";
+import { ShiftRecord, guardDisplayName } from "@/lib/api/shiftService";
 
 function isSameDay(a: Date, b: Date) {
     return a.getFullYear() === b.getFullYear() &&
@@ -70,7 +75,7 @@ export default function WeekView({ currentDate, shifts = [], gaps = [], onCreate
                                 <div className="text-xs text-blue-600 mt-1">{dayShifts.length} turno{dayShifts.length > 1 ? 's' : ''}</div>
                             )}
                             {dayGaps.length > 0 && (
-                                <div className="text-xs text-red-500 mt-0.5">⚠ {dayGaps.length} brecha{dayGaps.length > 1 ? 's' : ''}</div>
+                                <div className="text-xs text-red-500 mt-0.5"><AlertTriangle className="inline h-3 w-3 mr-0.5" />{dayGaps.length} brecha{dayGaps.length > 1 ? 's' : ''}</div>
                             )}
                         </div>
                     );
@@ -91,8 +96,8 @@ export default function WeekView({ currentDate, shifts = [], gaps = [], onCreate
                                 </div>
                             ) : (
                                 dayShifts.map(shift => {
-                                    const startLabel = new Date(shift.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                                    const endLabel = new Date(shift.endTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                                    const startLabel = new Date(shift.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: getTenantTimezone() });
+                                    const endLabel = new Date(shift.endTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: getTenantTimezone() });
                                     const color = colorForGuard(shift.guardId);
                                     return (
                                         <button
@@ -102,7 +107,7 @@ export default function WeekView({ currentDate, shifts = [], gaps = [], onCreate
                                         >
                                             <div className="flex items-center gap-1">
                                                 <UserCircle2 className="h-3 w-3 flex-shrink-0" />
-                                                <span className="font-medium truncate">{shift.guard?.fullName ?? 'Abierto'}</span>
+                                                <span className="font-medium truncate">{guardDisplayName(shift.guard) ?? 'Abierto'}</span>
                                             </div>
                                             <div className="opacity-70 mt-0.5">{startLabel}–{endLabel}</div>
                                             {shift.station && (

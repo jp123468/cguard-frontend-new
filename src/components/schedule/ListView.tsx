@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { getTenantTimezone } from "@/utils/tenantLocation";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -6,7 +7,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Plus, UserCircle2, MapPin, Clock } from "lucide-react";
-import { ShiftRecord } from "@/lib/api/shiftService";
+import { ShiftRecord, guardDisplayName } from "@/lib/api/shiftService";
 
 function isSameDay(a: Date, b: Date) {
     return a.getFullYear() === b.getFullYear() &&
@@ -73,8 +74,8 @@ export default function ListView({ currentDate, shifts = [], onCreateShift, onEd
                             {dayShifts.length > 0 && (
                                 <div className="px-6 py-3 space-y-2">
                                     {dayShifts.map(shift => {
-                                        const startLabel = new Date(shift.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                                        const endLabel = new Date(shift.endTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                                        const startLabel = new Date(shift.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: getTenantTimezone() });
+                                        const endLabel = new Date(shift.endTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: getTenantTimezone() });
                                         const hours = shiftDurationHours(shift);
                                         return (
                                             <button
@@ -91,7 +92,7 @@ export default function ListView({ currentDate, shifts = [], onCreateShift, onEd
                                                     <div className="flex items-center gap-2">
                                                         <UserCircle2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                                         <span className="text-sm font-semibold text-foreground">
-                                                            {shift.guard?.fullName ?? 'Turno abierto'}
+                                                            {guardDisplayName(shift.guard) ?? 'Turno abierto'}
                                                         </span>
                                                     </div>
                                                     {shift.station && (

@@ -266,37 +266,29 @@ export default function GuardAsignarSitiosPage() {
             }
           }
           const securityGuardIdentifier = guardUserId || id;
-                // Build shift payload to persist assignment in `shifts` table (preferred)
-                const payload = {
-                  startTime: new Date(selectedStart).toISOString(),
-                  endTime: new Date(selectedEnd).toISOString(),
-                  // Explicitly include postSiteId so backend stores the post/site reference on the shift
-                  postSiteId: selectedPostSite,
-                  // If a specific station was selected, include its id (backend may populate station relation)
+                // Single source of truth: create an ad-hoc guardAssignment through
+                // the assign-guard adapter (it resolves the guard's user id, picks a
+                // station, and auto-generates the shift). No more raw /shift writes.
+                const pad = (n: number) => String(n).padStart(2, '0');
+                const sd = new Date(selectedStart);
+                const ed = new Date(selectedEnd);
+                const startDate = `${sd.getFullYear()}-${pad(sd.getMonth() + 1)}-${pad(sd.getDate())}`;
+                const startTime = `${pad(sd.getHours())}:${pad(sd.getMinutes())}`;
+                const endTime = `${pad(ed.getHours())}:${pad(ed.getMinutes())}`;
+                const assignPayload = {
+                  securityGuardId: securityGuardIdentifier,
                   ...(selectedStationAssign ? { stationId: selectedStationAssign } : {}),
-                  // Keep `station` for backwards compatibility (some backends accept station name/id here)
-                  station: selectedStationAssign || selectedPostSite,
-                  guard: securityGuardIdentifier,
+                  startDate,
+                  startTime,
+                  endTime,
                 } as any;
-
-                // If a client was selected, keep clientAccountId for pivot creation if backend supports it
-                if (selectedClient) payload.clientAccountId = selectedClient;
-
-                // Create a shift record (preferred persistence)
-                try {
-                  const respShift = await api.post(`/tenant/${tenantId}/shift`, { data: payload }, { toast: { success: 'Assigned' } } as any);
-                  const d = respShift?.data ?? respShift;
-                  mappingId = d?.id ?? mappingId;
-                } catch (e) {
-                  // Fallback to older assign endpoint if shift create fails
-                  const fallbackPayload = {
-                    securityGuardId: securityGuardIdentifier,
-                    clientAccountId: selectedClient,
-                    ...(selectedStationAssign ? { stationId: selectedStationAssign } : {}),
-                  } as any;
-                  const { data } = await api.post(`/tenant/${tenantId}/stations/${selectedPostSite}/assign-guard`, fallbackPayload, { toast: { success: 'Assigned' } } as any);
-                  mappingId = data?.id ?? mappingId;
-                }
+                const routeStationOrSite = selectedStationAssign || selectedPostSite;
+                const { data } = await api.post(
+                  `/tenant/${tenantId}/stations/${routeStationOrSite}/assign-guard`,
+                  assignPayload,
+                  { toast: { success: 'Assigned' } } as any,
+                );
+                mappingId = data?.id ?? mappingId;
         }
         const newMapping = { id: mappingId, client: clientName, postSite: siteName, station: siteName, tenantUserId: id, businessInfoId: selectedPostSite };
         // If a specific station was selected, prefer its display name

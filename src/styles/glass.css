@@ -1,0 +1,137 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   GLOBAL futuristic glass design layer (theme-aware: light + dark).
+   Loaded app-wide via main.tsx after globals.css. All values derive from the
+   app's oklch design tokens (--card, --primary, --border, --sidebar …) so the
+   same classes look correct in BOTH light and dark mode automatically.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --cc-accent: var(--primary);
+  --cc-accent-soft: color-mix(in oklab, var(--cc-accent) 16%, transparent);
+  --cc-glass-bg: color-mix(in oklab, var(--card) 72%, transparent);
+  --cc-glass-brd: color-mix(in oklab, var(--cc-accent) 22%, var(--border));
+}
+
+/* ── glass surfaces ──────────────────────────────────────────────────────── */
+.cc-glass, .glass {
+  background: var(--cc-glass-bg);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--cc-glass-brd);
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 0 0 color-mix(in oklab, #fff 7%, transparent) inset,
+    0 18px 40px -24px color-mix(in oklab, #000 60%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+.cc-glass::after, .glass::after {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--cc-accent) 55%, transparent), transparent);
+  opacity: .55;
+}
+.cc-glass-hover { transition: transform .22s cubic-bezier(.2,.8,.2,1), border-color .22s ease, box-shadow .22s ease; }
+.cc-glass-hover:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in oklab, var(--cc-accent) 50%, var(--border));
+  box-shadow:
+    0 1px 0 0 color-mix(in oklab, #fff 10%, transparent) inset,
+    0 26px 60px -28px color-mix(in oklab, var(--cc-accent) 40%, #000);
+}
+
+/* ── animated status dots ────────────────────────────────────────────────── */
+.cc-dot { position: relative; display: inline-block; width: 9px; height: 9px; border-radius: 9999px; }
+.cc-dot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: cc-ping 1.8s cubic-bezier(0,0,.2,1) infinite; }
+@keyframes cc-ping { 75%, 100% { transform: scale(2.4); opacity: 0; } }
+
+/* ── entrance + scan + rise ──────────────────────────────────────────────── */
+@keyframes cc-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.cc-rise { animation: cc-rise .5s both; }
+@keyframes cc-scan { 0% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+.cc-scan::before {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 40%; pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--cc-accent) 9%, transparent), transparent);
+  animation: cc-scan 3.2s ease-in-out infinite;
+}
+.cc-accent-text { color: var(--cc-accent); }
+
+/* ── map popup (Google overlay) ──────────────────────────────────────────── */
+.cc-pop {
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--cc-glass-brd);
+  border-radius: .75rem; padding: .6rem .75rem; min-width: 180px;
+  color: var(--card-foreground); box-shadow: 0 18px 40px -20px #000; font-size: 12px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   GLOBAL APP SHELL — premium ambient backdrop behind every page.
+   Subtle in light mode, richer in dark mode. Pure decoration, no interaction.
+   ───────────────────────────────────────────────────────────────────────── */
+.app-shell { position: relative; isolation: isolate; }
+.app-shell::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--cc-accent) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--cc-accent) 5%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 55% at 70% -10%, #000 20%, transparent 70%);
+  mask-image: radial-gradient(ellipse 90% 55% at 70% -10%, #000 20%, transparent 70%);
+  opacity: .5;
+}
+.app-shell::after {
+  content: ""; position: fixed; top: -160px; right: -120px; width: 520px; height: 520px;
+  z-index: -1; pointer-events: none; border-radius: 9999px; filter: blur(90px); opacity: .12;
+  background: radial-gradient(circle, var(--cc-accent), transparent 65%);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SIDEBAR — glass, theme-aware. Replaces the old hardcoded dark gradient.
+   ───────────────────────────────────────────────────────────────────────── */
+.app-sidebar {
+  position: relative;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--cc-accent) 6%, var(--sidebar)) 0%, var(--sidebar) 55%);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+.app-sidebar::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 160px; pointer-events: none;
+  background: radial-gradient(120% 80% at 30% 0%, color-mix(in oklab, var(--cc-accent) 16%, transparent), transparent 70%);
+}
+.app-sidebar-head {
+  background: color-mix(in oklab, var(--sidebar) 70%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--cc-accent) 16%, var(--border));
+  backdrop-filter: blur(12px);
+}
+/* nav item */
+.app-nav-item {
+  display: flex; width: 100%; align-items: center; justify-content: space-between;
+  gap: .75rem; padding: .6rem .75rem; border-radius: .6rem;
+  font-size: 13px; font-weight: 500; color: var(--sidebar-foreground);
+  opacity: .72; transition: all .18s ease; border-left: 3px solid transparent;
+}
+.app-nav-item:hover { opacity: 1; background: color-mix(in oklab, var(--cc-accent) 9%, transparent); }
+.app-nav-item.is-active {
+  opacity: 1; color: var(--cc-accent);
+  background: color-mix(in oklab, var(--cc-accent) 14%, transparent);
+  border-left-color: var(--cc-accent);
+}
+.app-subnav-item {
+  display: block; padding: .45rem .55rem; margin-bottom: 2px; border-radius: .4rem;
+  font-size: 12px; font-weight: 500; color: var(--sidebar-foreground); opacity: .65; transition: all .16s ease;
+}
+.app-subnav-item:hover { opacity: 1; background: color-mix(in oklab, var(--cc-accent) 8%, transparent); }
+.app-subnav-item.is-active { opacity: 1; color: var(--cc-accent); background: color-mix(in oklab, var(--cc-accent) 13%, transparent); }
+
+/* ── glassy header ───────────────────────────────────────────────────────── */
+.app-header {
+  background: color-mix(in oklab, var(--background) 65%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid color-mix(in oklab, var(--cc-accent) 12%, var(--border)) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-dot::after, .cc-scan::before, .cc-rise { animation: none; }
+}

@@ -3,7 +3,7 @@ import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { EllipsisVertical, Pencil, Trash, Plus } from 'lucide-react';
+import { EllipsisVertical, Pencil, Trash, Plus, X } from 'lucide-react';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import MobileCardList from '@/components/responsive/MobileCardList';
@@ -542,7 +542,7 @@ export default function ClientContacts({ client }: { client: any }) {
           <div className={`relative w-full sm:ml-auto sm:w-96 bg-card rounded-t-lg sm:rounded-md ${isCompact ? 'h-auto p-4 pb-6 max-h-[90vh]' : 'h-auto p-6 pb-24 max-h-[92vh]'} shadow-xl overflow-auto z-50`} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{form && (form as any).id ? t('clients.contacts.editcontact') : t('clients.contacts.form.AddClientContact')}</h3>
-              <button onClick={handleCloseAdd} className="text-muted-foreground hover:text-foreground">✕</button>
+              <button onClick={handleCloseAdd} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
             </div>
             <div className={`overflow-auto pr-2 pb-20 ${isCompact ? '' : 'max-h-[calc(92vh-220px)]'}`}>
               <div className="space-y-4">

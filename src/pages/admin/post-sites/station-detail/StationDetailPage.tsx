@@ -14,6 +14,7 @@ import StationInventory from './components/StationInventory';
 import StationIncidents from './components/StationIncidents';
 import StationSiteTourTags from './components/StationSiteTourTags';
 import StationParking from './components/StationParking';
+import StationOrders from './components/StationOrders';
 
 export default function StationDetailPage() {
   const { t } = useTranslation();
@@ -62,6 +63,7 @@ export default function StationDetailPage() {
       case 'visitors':   return <StationVisitors {...tabProps} />;
       case 'guards':     return <StationGuards {...tabProps} />;
       case 'shifts':     return <StationShifts {...tabProps} />;
+      case 'orders':     return <StationOrders {...tabProps} />;
       case 'site-tours': return <StationSiteTours {...tabProps} />;
       case 'tag-scans':  return <StationTagScans {...tabProps} />;
       case 'inventory':  return <StationInventory {...tabProps} />;

@@ -46,7 +46,7 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
             toast.dismiss(toastId);
             
             if (result.imported > 0) {
-                toast.success(`✅ ${result.imported} clientes guardados en la base de datos exitosamente`);
+                toast.success(`${result.imported} clientes guardados en la base de datos exitosamente`);
             }
             
             if (result.errors && result.errors.length > 0) {

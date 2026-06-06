@@ -13,7 +13,7 @@ import { Loader2, Search, X } from "lucide-react";
 import { securityGuardService } from "@/lib/api/securityGuardService";
 import { postSiteService } from "@/lib/api/postSiteService";
 import { stationService } from "@/lib/api/stationService";
-import shiftService, { ShiftRecord } from "@/lib/api/shiftService";
+import shiftService, { ShiftRecord, guardDisplayName } from "@/lib/api/shiftService";
 import { toast } from "sonner";
 
 interface Option {
@@ -200,7 +200,7 @@ export default function ShiftFormModal({
       if (editShift.guard) {
         setGuard({
           id: editShift.guard.id,
-          label: editShift.guard.fullName || editShift.guard.email || "Guardia",
+          label: guardDisplayName(editShift.guard) || "Guardia",
         });
       }
       if (editShift.station) {

@@ -1,7 +1,12 @@
 // src/pages/Reporting.tsx
 
 import React, { useState } from "react";
-import { Filter, MoreVertical, FileDown } from "lucide-react";
+import {
+  Filter,
+  MoreVertical,
+  FileDown,
+  FolderOpen,
+} from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
@@ -224,7 +229,7 @@ const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
             {/* EMPTY STATE */}
             <div className="flex min-h-[260px] flex-col items-center justify-center gap-2 px-6 pb-10 pt-6 text-center">
               <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
-                <span className="text-2xl">📂</span>
+                <FolderOpen className="h-7 w-7 text-muted-foreground" />
               </div>
               <p className="text-sm font-semibold text-foreground">
                 No se encontraron resultados

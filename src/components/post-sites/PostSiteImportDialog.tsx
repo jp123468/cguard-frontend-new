@@ -458,7 +458,7 @@ export default function PostSiteImportDialog({ open, onOpenChange, onSuccess }: 
       toast.dismiss(toastId);
 
       if ((result as any).success > 0) {
-        toast.success(`✅ ${(result as any).success} sitios importados correctamente`);
+        toast.success(`${(result as any).success} sitios importados correctamente`);
       }
       if ((result as any).failed && (result as any).failed > 0) {
         toast.error(`${(result as any).failed} filas no se pudieron importar.`);

@@ -115,7 +115,7 @@ function CameraModal({ open, mode, onClose, onCapture }: {
     <Dialog open={open} onOpenChange={v => { if (!v) { stopCamera(); onClose(); } }}>
       <DialogContent className="max-w-lg z-[60]">
         <DialogHeader>
-          <DialogTitle>{mode === 'id-scan' ? '📷 Escanear Cédula / ID' : '📷 Foto del Visitante'}</DialogTitle>
+          <DialogTitle>{mode === 'id-scan' ? 'Escanear Cédula / ID' : 'Foto del Visitante'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           {err ? (

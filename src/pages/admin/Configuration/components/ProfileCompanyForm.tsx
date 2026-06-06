@@ -1,5 +1,27 @@
 "use client";
 
+// Best-effort IANA timezone from a country name/code or free-text address.
+const COUNTRY_TZ: Record<string, string> = {
+  ecuador: "America/Guayaquil", ec: "America/Guayaquil",
+  colombia: "America/Bogota", co: "America/Bogota",
+  peru: "America/Lima", "perú": "America/Lima", pe: "America/Lima",
+  mexico: "America/Mexico_City", "méxico": "America/Mexico_City", mx: "America/Mexico_City",
+  panama: "America/Panama", "panamá": "America/Panama", pa: "America/Panama",
+  chile: "America/Santiago", cl: "America/Santiago",
+  argentina: "America/Buenos_Aires", ar: "America/Buenos_Aires",
+  venezuela: "America/Caracas", ve: "America/Caracas",
+  bolivia: "America/La_Paz", bo: "America/La_Paz",
+  spain: "Europe/Madrid", "españa": "Europe/Madrid", es: "Europe/Madrid",
+};
+function tzFromText(...vals: (string | undefined)[]): string | null {
+  const hay = vals.filter(Boolean).join(" ").toLowerCase();
+  if (!hay) return null;
+  for (const key of Object.keys(COUNTRY_TZ)) {
+    if (hay.includes(key)) return COUNTRY_TZ[key];
+  }
+  return null;
+}
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
@@ -11,7 +33,12 @@ import CompanyPhoneField from "./profile/CompanyPhoneField";
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
-import { Camera, Edit, Search } from "lucide-react";
+import {
+  Camera,
+  Edit,
+  Search,
+  Building2,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import tenantService from '@/services/tenant.service';
 import AddressAutocomplete, { AddressComponents } from "@/components/maps/AddressAutocomplete";
@@ -360,7 +387,7 @@ export default function ProfileCompanyForm() {
               {logo ? (
                 <img src={logo} alt="logo" className="w-full h-full object-cover" />
               ) : (
-                <div className="text-4xl">🏢</div>
+                <Building2 className="h-10 w-10 text-muted-foreground" />
               )}
             </div>
             <label
@@ -688,7 +715,24 @@ export default function ProfileCompanyForm() {
                 <SelectItem value="UTC">UTC</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">La zona horaria determina cómo se muestran y calculan los horarios y marcas de tiempo en la aplicación (turnos, registros y reportes).</p>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  const tz = tzFromText(form.country, form.address);
+                  if (tz) {
+                    setForm((s) => ({ ...s, timezone: tz }));
+                    toast.success(`Zona horaria detectada por la dirección: ${tz}`);
+                  } else {
+                    toast.info("No se pudo detectar la zona horaria; selecciónala manualmente.");
+                  }
+                }}
+                className="text-xs font-medium text-[#C8860A] hover:underline"
+              >
+                Detectar por dirección
+              </button>
+            )}
+            <p className="text-xs text-muted-foreground">La zona horaria es la <strong>única fuente de verdad</strong> para los horarios: determina cómo se muestran y calculan turnos, registros y reportes — para todos (administradores y guardias), sin importar la zona del dispositivo.</p>
           </div>
 
           <div className="flex justify-end">

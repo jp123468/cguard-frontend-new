@@ -42,6 +42,7 @@ import {
   Trash,
   RotateCcw,
   Smartphone,
+  Download,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -143,6 +144,9 @@ export default function ClientesPage() {
   const [openSendAccessDialog, setOpenSendAccessDialog] = useState(false);
   const [sendAccessClient, setSendAccessClient] = useState<Client | null>(null);
   const [sendingAccess, setSendingAccess] = useState(false);
+  const [openAppInviteDialog, setOpenAppInviteDialog] = useState(false);
+  const [appInviteClient, setAppInviteClient] = useState<Client | null>(null);
+  const [sendingAppInvite, setSendingAppInvite] = useState(false);
   const { setSelectedClient } = useClientSelection();
 
   const debouncedSearch = useDebouncedValue(searchQuery, 500);
@@ -658,6 +662,15 @@ export default function ClientesPage() {
         onClick: () => {
           setSendAccessClient(client);
           setOpenSendAccessDialog(true);
+        },
+      });
+
+      actions.push({
+        label: t('clients.inviteToApp', 'Invitar a la app'),
+        icon: <Download className="h-4 w-4" />,
+        onClick: () => {
+          setAppInviteClient(client);
+          setOpenAppInviteDialog(true);
         },
       });
     }
@@ -1240,6 +1253,76 @@ export default function ClientesPage() {
                 }}
               >
                 {sendingAccess ? 'Enviando...' : 'Enviar invitación'}
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Invitar a la app (Mi Seguridad app-download invitation) */}
+      <AlertDialog open={openAppInviteDialog} onOpenChange={(v) => { if (!sendingAppInvite) setOpenAppInviteDialog(v); }}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0ea5e9]/10">
+                <Download className="h-5 w-5 text-[#0ea5e9]" />
+              </div>
+              <AlertDialogTitle className="text-base">
+                {t('clients.inviteToApp', 'Invitar a la app')}
+              </AlertDialogTitle>
+            </div>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-foreground/70">
+                {appInviteClient?.email ? (
+                  <>
+                    <p>
+                      Se enviará una invitación para descargar y usar la app{' '}
+                      <span className="font-semibold text-foreground">Mi Seguridad</span> a{' '}
+                      <span className="font-semibold text-foreground">{appInviteClient?.email}</span>.
+                    </p>
+                    <div className="rounded-lg bg-sky-500/10 border border-sky-200 p-3 text-sky-700 text-xs space-y-1">
+                      <p className="font-medium">¿Qué incluye?</p>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        <li>Presentación de la app Mi Seguridad</li>
+                        <li>Enlaces a Google Play y App Store</li>
+                        <li>Enlace para activar su cuenta y crear contraseña</li>
+                      </ul>
+                    </div>
+                  </>
+                ) : (
+                  <div className="rounded-lg bg-red-500/10 border border-red-200 p-3 text-red-700 text-xs">
+                    <p className="font-medium">Este cliente no tiene correo electrónico configurado.</p>
+                    <p className="mt-1">Edita el cliente, agrega un correo electrónico y vuelve a intentarlo.</p>
+                  </div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={sendingAppInvite}>{t('clients.cancel', 'Cancelar')}</AlertDialogCancel>
+            {appInviteClient?.email && (
+              <AlertDialogAction
+                className="bg-[#0ea5e9] hover:bg-[#0284c7] text-white"
+                disabled={sendingAppInvite}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  if (!appInviteClient?.id) return;
+                  setSendingAppInvite(true);
+                  try {
+                    await clientService.sendClientAppInvitation(
+                      appInviteClient.id,
+                      appInviteClient.email || undefined,
+                    );
+                    toast.success(`Invitación a la app enviada a ${appInviteClient.email || appInviteClient.name}`);
+                    setOpenAppInviteDialog(false);
+                  } catch (err: any) {
+                    toast.error(err?.response?.data?.message || err?.message || 'No se pudo enviar la invitación');
+                  } finally {
+                    setSendingAppInvite(false);
+                  }
+                }}
+              >
+                {sendingAppInvite ? 'Enviando...' : 'Enviar invitación'}
               </AlertDialogAction>
             )}
           </AlertDialogFooter>

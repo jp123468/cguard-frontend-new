@@ -2,7 +2,7 @@ import { FC, useState, useEffect } from "react";
 import { VisuallyHidden } from "@react-aria/visually-hidden";
 import { SwitchProps, useSwitch } from "@heroui/switch";
 import clsx from "clsx";
-import { useTheme } from "@heroui/use-theme";
+import { useThemeContext } from "@/contexts/ThemeContext";
 
 import { SunFilledIcon, MoonFilledIcon } from "@/components/icons";
 
@@ -17,7 +17,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
 }) => {
   const [isMounted, setIsMounted] = useState(false);
 
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme } = useThemeContext();
 
   const {
     Component,
@@ -28,7 +28,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
     getWrapperProps,
   } = useSwitch({
     isSelected: theme === "light",
-    onChange: () => setTheme(theme === "light" ? "dark" : "light"),
+    onChange: () => toggleTheme(),
   });
 
   useEffect(() => {
