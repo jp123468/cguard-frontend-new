@@ -8,6 +8,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/contexts/AuthContext";
 import "./control-center.css";
 import { useControlCenter } from "./useControlCenter";
+import { buildDemoData } from "./demoData";
 import { loadPrefs, savePrefs, type DashboardPrefs } from "./prefs";
 import { GlassCard, SectionHeader, StatusDot } from "./components/primitives";
 import { KpiCard } from "./components/KpiCard";
@@ -30,7 +31,18 @@ export default function ControlCenter() {
   const [prefs, setPrefs] = useState<DashboardPrefs>(() => loadPrefs());
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [range, setRange] = useState<RangeKey>("12m");
-  const data = useControlCenter(prefs.liveTracking ? prefs.locationIntervalSec : 3600);
+  const [demo, setDemo] = useState<boolean>(() => {
+    try { return localStorage.getItem("cc_demo") === "1"; } catch { return false; }
+  });
+  const toggleDemo = (v: boolean) => {
+    setDemo(v);
+    try { localStorage.setItem("cc_demo", v ? "1" : "0"); } catch { /* ignore */ }
+  };
+
+  const live = useControlCenter(prefs.liveTracking ? prefs.locationIntervalSec : 3600);
+  const demoData = useMemo(() => buildDemoData(), [demo]);
+  // In demo mode, show the populated sample so a new tenant can preview the UI.
+  const data = demo ? { ...demoData, refresh: live.refresh } : live;
 
   const accentStyle = useMemo(() => ({ ["--cc-accent" as any]: prefs.accent }), [prefs.accent]);
   const legend = [
@@ -52,6 +64,7 @@ export default function ControlCenter() {
             range={range} onRange={setRange} onRefresh={data.refresh}
             onCustomize={() => setCustomizeOpen(true)}
             sseConnected={data.health.sseConnected} lastSync={data.health.lastSync}
+            demo={demo} onDemo={toggleDemo}
           />
 
           {data.error === "no-tenant" ? (

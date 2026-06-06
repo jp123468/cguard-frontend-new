@@ -73,7 +73,7 @@ function buildActivity(): ActivityItem[] {
   const min = (m: number) => new Date(now - m * 60000).toISOString();
   return [
     { id: "d1", kind: "alert", title: "Botón de pánico activado", sub: "Hospital Metropolitano", at: min(3), status: "emergency" },
-    { id: "d2", kind: "checkin", title: "Carlos Méndez inició turno", sub: "Plaza Foch", at: min: 9 as any ? min(9) : min(9), status: "online" },
+    { id: "d2", kind: "checkin", title: "Carlos Méndez inició turno", sub: "Plaza Foch", at: min(9), status: "online" },
     { id: "d3", kind: "incident", title: "Acceso no autorizado", sub: "Edificio Banco Pichincha", at: min(18), status: "incident" },
     { id: "d4", kind: "patrol", title: "Ronda completada (12/12 puntos)", sub: "Quicentro Shopping", at: min(26), status: "online" },
     { id: "d5", kind: "checkin", title: "Andrea Salazar fichó salida", sub: "Torre Z", at: min(41), status: "online" },
