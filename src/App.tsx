@@ -86,6 +86,13 @@ import Scheduling from "./pages/admin/analytics/Scheduling"
 import GeneratePayroll from "./pages/admin/payroll/GeneratePayroll"
 import PastPayroll from "./pages/admin/payroll/PastPayroll"
 import OvertimeMultiplier from "./pages/admin/payroll/OvertimeMultiplier"
+import NominaDashboard from "./pages/admin/nomina/NominaDashboard"
+import NominaTimeClock from "./pages/admin/nomina/NominaTimeClock"
+import NominaRecords from "./pages/admin/nomina/NominaRecords"
+import NominaExceptions from "./pages/admin/nomina/NominaExceptions"
+import NominaApprovals from "./pages/admin/nomina/NominaApprovals"
+import NominaPayrollSummary from "./pages/admin/nomina/NominaPayrollSummary"
+import NominaSettings from "./pages/admin/nomina/NominaSettings"
 import Visitors from "./pages/admin/visitor-management/Visitors"
 import Vehicles from "./pages/admin/visitor-management/Vehicles"
 import Visits from "./pages/admin/visitor-management/Visits"
@@ -1119,6 +1126,15 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+
+              {/* NÓMINA · Time & Attendance */}
+              <Route path="/nomina/dashboard" element={<ProtectedRoute><NominaDashboard /></ProtectedRoute>} />
+              <Route path="/nomina/time-clock" element={<ProtectedRoute><NominaTimeClock /></ProtectedRoute>} />
+              <Route path="/nomina/records" element={<ProtectedRoute><NominaRecords /></ProtectedRoute>} />
+              <Route path="/nomina/exceptions" element={<ProtectedRoute><NominaExceptions /></ProtectedRoute>} />
+              <Route path="/nomina/approvals" element={<ProtectedRoute><NominaApprovals /></ProtectedRoute>} />
+              <Route path="/nomina/payroll-summary" element={<ProtectedRoute><NominaPayrollSummary /></ProtectedRoute>} />
+              <Route path="/nomina/settings" element={<ProtectedRoute><NominaSettings /></ProtectedRoute>} />
               {/* <Route
             path="/payroll/overtime-multiplier/new-overtime-multiplier"
             element={

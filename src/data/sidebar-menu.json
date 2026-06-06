@@ -225,6 +225,41 @@
         "id": "horas-extras",
         "name": "Multiplicador de Horas Extras",
         "path": "/payroll/overtime-multiplier"
+      },
+      {
+        "id": "nomina-dashboard",
+        "name": "Asistencia · Dashboard",
+        "path": "/nomina/dashboard"
+      },
+      {
+        "id": "nomina-time-clock",
+        "name": "Reloj de Asistencia",
+        "path": "/nomina/time-clock"
+      },
+      {
+        "id": "nomina-records",
+        "name": "Registros de Asistencia",
+        "path": "/nomina/records"
+      },
+      {
+        "id": "nomina-exceptions",
+        "name": "Excepciones",
+        "path": "/nomina/exceptions"
+      },
+      {
+        "id": "nomina-approvals",
+        "name": "Aprobaciones",
+        "path": "/nomina/approvals"
+      },
+      {
+        "id": "nomina-payroll-summary",
+        "name": "Resumen de Nómina",
+        "path": "/nomina/payroll-summary"
+      },
+      {
+        "id": "nomina-settings",
+        "name": "Configuración de Asistencia",
+        "path": "/nomina/settings"
       }
     ]
   },

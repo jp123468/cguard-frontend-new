@@ -124,6 +124,11 @@
             "id": "payroll-setup",
             "label": "Configuración de Nómina",
             "path": "/setting/payroll-setup"
+          },
+          {
+            "id": "attendance-setup",
+            "label": "Asistencia / Time & Attendance",
+            "path": "/nomina/settings"
           }
         ]
       },

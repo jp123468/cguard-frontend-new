@@ -319,7 +319,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try { await AuthService.signOut(); } catch {} finally {
       localStorage.removeItem("authToken");
-      try { localStorage.removeItem('userPermissions'); localStorage.removeItem('userIsAdmin'); localStorage.removeItem('userTenantAdmin'); localStorage.removeItem('tenantId'); } catch {}
+      try { localStorage.removeItem('userPermissions'); localStorage.removeItem('userIsAdmin'); localStorage.removeItem('userTenantAdmin'); localStorage.removeItem('tenantId'); localStorage.removeItem('tenantLogoUrl'); } catch {}
       try { clearAuthToken(); } catch {}
       setUser(null);
       setTenantAdmin(false);

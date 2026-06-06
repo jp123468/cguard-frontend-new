@@ -6,6 +6,41 @@ interface ProtectedRouteProps {
   requireVerified?: boolean
 }
 
+/**
+ * Full-screen boot/auth loader (shown on every reload while the session is
+ * verified). Multitenant-aware: shows the current tenant's logo, cached in
+ * localStorage by the sidebar on load. Falls back to a logo-less gold spinner —
+ * never the platform brand — so a white-labeled tenant never sees the wrong
+ * logo. Warm off-white (light) / slate-950 (dark) to match the new design.
+ */
+function LoadingScreen() {
+  let tenantLogo: string | null = null
+  try {
+    tenantLogo = localStorage.getItem("tenantLogoUrl")
+  } catch {
+    tenantLogo = null
+  }
+
+  return (
+    <div className="flex h-screen flex-col items-center justify-center gap-6 bg-[#F8F7F4] dark:bg-slate-950">
+      {tenantLogo && (
+        <img
+          src={tenantLogo}
+          alt="Logo"
+          className="h-14 max-w-[200px] object-contain"
+          onError={(e) => {
+            e.currentTarget.style.display = "none"
+          }}
+        />
+      )}
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#C8860A]/20 border-t-[#C8860A]" />
+        <p className="text-sm text-muted-foreground">Cargando…</p>
+      </div>
+    </div>
+  )
+}
+
 export default function ProtectedRoute({ 
   children, 
   requireVerified = false 
@@ -15,14 +50,7 @@ export default function ProtectedRoute({
 
   // Mostrar loading mientras verifica autenticación
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-950">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-500" />
-          <p className="text-muted-foreground">Cargando...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   // Si no está autenticado, redirigir a login
@@ -45,14 +73,7 @@ export function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation()
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-950">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-500" />
-          <p className="text-muted-foreground">Cargando...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   // Permitir acceso si hay un token de invitación en la URL (flujo de registro)

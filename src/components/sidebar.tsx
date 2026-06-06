@@ -52,7 +52,15 @@ export default function Sidebar() {
           (Array.isArray(t?.settings) ? t.settings[0]?.logoUrl : t?.settings?.logoUrl || t?.settings?.logos?.[0]?.publicUrl) ||
           t?.logo?.downloadUrl ||
           null;
-        if (logoUrl) setTenantLogo(logoUrl);
+        if (logoUrl) {
+          setTenantLogo(logoUrl);
+          // Cache for the boot/auth LoadingScreen (shown before the API responds
+          // on reload) so it can render the tenant's logo synchronously.
+          try { localStorage.setItem('tenantLogoUrl', logoUrl); } catch {}
+        } else {
+          // Tenant has no logo — drop any stale cached logo from a prior tenant.
+          try { localStorage.removeItem('tenantLogoUrl'); } catch {}
+        }
       } catch {
         // silently ignore — fall back to initials
       }
