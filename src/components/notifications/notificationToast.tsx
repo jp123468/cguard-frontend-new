@@ -7,6 +7,7 @@ function iconFor(eventType: string): { Icon: typeof Bell; color: string } {
   const t = (eventType || '').toLowerCase();
   if (t === 'guard.checkin') return { Icon: LogIn, color: '#22c55e' };
   if (t === 'guard.checkout') return { Icon: LogOut, color: '#64748b' };
+  if (t === 'attendance.clockout_requested') return { Icon: LogOut, color: '#f59e0b' };
   if (t.startsWith('incident')) return { Icon: AlertTriangle, color: '#ef4444' };
   if (t.startsWith('patrol')) return { Icon: Route, color: '#a855f7' };
   if (t.startsWith('shift') || t.startsWith('timeoff')) return { Icon: CalendarClock, color: '#0ea5e9' };
@@ -30,6 +31,12 @@ function localDay(dateStr: string): string {
 export function targetForNotification(n: PlatformNotification): string {
   const type = (n.eventType || '').toLowerCase();
   const id = n.sourceEntityId;
+
+  // Early clock-out approval requests → the approvals queue where the supervisor
+  // approves/rejects (with the reason). Must precede the generic attendance rule.
+  if (type === 'attendance.clockout_requested') {
+    return id ? `/nomina/approvals?focus=${id}` : '/nomina/approvals';
+  }
 
   // Clock-in/out + attendance exceptions → that day's attendance, focused.
   if (
