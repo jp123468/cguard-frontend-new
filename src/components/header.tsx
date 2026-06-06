@@ -24,9 +24,10 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useNotificationStream } from "@/hooks/useNotificationStream";
+import { useNotificationStream, type PlatformNotification } from "@/hooks/useNotificationStream";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { showNotificationToast } from "@/components/notifications/notificationToast";
+import { PanicAlertOverlay } from "@/components/notifications/PanicAlertOverlay";
 
 type HeaderProps = {
   toggleSidebar: () => void;
@@ -76,8 +77,22 @@ export default function Header({
     try { return localStorage.getItem('tenantId'); } catch { return null; }
   }, [user]);
 
+  // Active panic alerts (from the realtime stream). A panic shows a full-screen
+  // red alarm overlay instead of a passing toast.
+  const [panicAlerts, setPanicAlerts] = useState<PlatformNotification[]>([]);
+  const dismissPanic = (id: string) =>
+    setPanicAlerts((prev) => prev.filter((a) => a.id !== id));
+
   const { notifications, unreadCount, connected, markRead, markAllRead } =
-    useNotificationStream(tenantId, (n) => showNotificationToast(n, navigate));
+    useNotificationStream(tenantId, (n) => {
+      if (n.eventType === "panic.alert") {
+        setPanicAlerts((prev) =>
+          prev.some((a) => a.id === n.id) ? prev : [n, ...prev],
+        );
+      } else {
+        showNotificationToast(n, navigate);
+      }
+    });
 
   const [openUser, setOpenUser] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -128,6 +143,8 @@ export default function Header({
   };
 
   return (
+    <>
+    <PanicAlertOverlay alerts={panicAlerts} onDismiss={dismissPanic} />
     <header className="sticky top-0 z-50 bg-background border-b border-border shadow-sm h-14" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
       <div className="h-14 px-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -364,5 +381,6 @@ export default function Header({
       </Dialog>
 
     </header>
+    </>
   );
 }

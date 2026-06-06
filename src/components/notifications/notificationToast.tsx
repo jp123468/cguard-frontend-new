@@ -22,14 +22,35 @@ function localDay(dateStr: string): string {
   return `${d.getFullYear()}-${mo}-${da}`;
 }
 
-/** Where clicking the alert should take you (clock-in/out → that day's attendance). */
-export function targetForNotification(n: PlatformNotification): string | null {
-  if (n.eventType === 'guard.checkin' || n.eventType === 'guard.checkout') {
+/**
+ * Where clicking a notification should take you. Every event resolves to a
+ * destination so the alert (and the panel) is always actionable; the Actividad
+ * feed is the catch-all, focused on the event.
+ */
+export function targetForNotification(n: PlatformNotification): string {
+  const type = (n.eventType || '').toLowerCase();
+  const id = n.sourceEntityId;
+
+  // Clock-in/out + attendance exceptions → that day's attendance, focused.
+  if (
+    type === 'guard.checkin' ||
+    type === 'guard.checkout' ||
+    type.startsWith('attendance')
+  ) {
     const params = new URLSearchParams({ date: localDay(n.createdAt) });
-    if (n.sourceEntityId) params.set('focus', n.sourceEntityId);
+    if (id) params.set('focus', id);
     return `/attendance?${params.toString()}`;
   }
-  return null;
+  if (type.startsWith('incident')) return id ? `/reports/incident/${id}` : '/activities';
+  if (type.startsWith('visitor')) return '/visitors';
+  if (type.startsWith('patrol')) return '/vehicle-patrol';
+  if (type.startsWith('device')) return '/security-guards';
+
+  // Everything else → the Actividad feed, focused on this event.
+  const params = new URLSearchParams();
+  if (id) params.set('focus', id);
+  const qs = params.toString();
+  return qs ? `/activities?${qs}` : '/activities';
 }
 
 /**

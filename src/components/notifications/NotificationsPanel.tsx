@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { fileUrlFromPrivate } from '@/lib/fileUrl';
 import type { PlatformNotification } from '@/hooks/useNotificationStream';
+import { targetForNotification } from './notificationToast';
 
 interface NotificationsPanelProps {
   notifications: PlatformNotification[];
@@ -27,28 +28,6 @@ function timeAgo(dateStr: string): string {
   return `Hace ${Math.floor(h / 24)}d`;
 }
 
-// Local YYYY-MM-DD for the event's day, so the attendance deep-link lands on the
-// same calendar day the clock-in happened.
-function localDay(dateStr: string): string {
-  const d = new Date(dateStr);
-  const y = d.getFullYear();
-  const mo = String(d.getMonth() + 1).padStart(2, '0');
-  const da = String(d.getDate()).padStart(2, '0');
-  return `${y}-${mo}-${da}`;
-}
-
-// Where a notification should take you when clicked. Clock-in/out events open
-// that day's attendance list focused on the specific record; everything else has
-// no destination yet (just marks read).
-function targetFor(n: PlatformNotification): string | null {
-  if (n.eventType === 'guard.checkin' || n.eventType === 'guard.checkout') {
-    const params = new URLSearchParams({ date: localDay(n.createdAt) });
-    if (n.sourceEntityId) params.set('focus', n.sourceEntityId);
-    return `/attendance?${params.toString()}`;
-  }
-  return null;
-}
-
 export function NotificationsPanel({
   notifications,
   unreadCount,
@@ -64,11 +43,8 @@ export function NotificationsPanel({
 
   const handleOpen = (n: PlatformNotification) => {
     if (!n.read) onMarkRead(n.id);
-    const target = targetFor(n);
-    if (target) {
-      setOpen(false);
-      navigate(target);
-    }
+    setOpen(false);
+    navigate(targetForNotification(n));
   };
 
   return (
@@ -77,21 +53,25 @@ export function NotificationsPanel({
         <Button
           variant="ghost"
           size="icon"
-          className="relative"
+          className="relative h-10 w-10"
           aria-label={`Notificaciones${unreadCount > 0 ? ` (${unreadCount} sin leer)` : ''}`}
         >
           {connected ? (
-            <Bell className="h-5 w-5" />
+            <Bell className={cn('h-6 w-6', unreadCount > 0 && 'text-foreground')} />
           ) : (
-            <BellOff className="h-5 w-5 text-muted-foreground" />
+            <BellOff className="h-6 w-6 text-muted-foreground" />
           )}
           {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-5 min-w-5 px-1 text-[10px] flex items-center justify-center rounded-full"
-            >
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </Badge>
+            <>
+              {/* pulsing ring to draw the eye when something is unread */}
+              <span className="absolute -top-0.5 -right-0.5 h-5 w-5 rounded-full bg-destructive/60 animate-ping" />
+              <Badge
+                variant="destructive"
+                className="absolute -top-0.5 -right-0.5 h-5 min-w-5 px-1 text-[11px] font-bold flex items-center justify-center rounded-full ring-2 ring-background"
+              >
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </Badge>
+            </>
           )}
         </Button>
       </PopoverTrigger>

@@ -12,7 +12,16 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     {/* <BrowserRouter> */}
         <App />
-        <Toaster richColors position="top-right" />
+        {/* Notifications must sit at the very top of the stacking context so the
+            live alert is never hidden behind a dialog/overlay. */}
+        <Toaster
+          richColors
+          expand
+          position="top-center"
+          duration={8000}
+          style={{ zIndex: 2147483647 }}
+          toastOptions={{ style: { zIndex: 2147483647 } }}
+        />
     {/* </BrowserRouter> */}
   </React.StrictMode>,
 );
