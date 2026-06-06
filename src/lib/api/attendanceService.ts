@@ -97,6 +97,27 @@ const attendanceService = {
     return unwrap(await api.post(`/tenant/${t}/attendance/${id}/correct`, { data }));
   },
 
+  async payrollSummary(params?: Record<string, any>) {
+    const t = getTenantId();
+    return unwrap(await api.get(`/tenant/${t}/attendance/payroll-summary${buildQuery(params)}`));
+  },
+
+  /** Current guard's clock status + assigned stations (worker-app endpoint). */
+  async myStatus() {
+    const t = getTenantId();
+    return unwrap(await api.get(`/tenant/${t}/guard/me`));
+  },
+
+  async clockIn(data: { stationId: string; latitude?: number; longitude?: number }) {
+    const t = getTenantId();
+    return unwrap(await api.post(`/tenant/${t}/guard/me/clock-in`, { data: { ...data, platform: "web" } }));
+  },
+
+  async clockOut(data: { latitude?: number; longitude?: number }) {
+    const t = getTenantId();
+    return unwrap(await api.post(`/tenant/${t}/guard/me/clock-out`, { data }));
+  },
+
   async getSettings() {
     const t = getTenantId();
     return unwrap(await api.get(`/tenant/${t}/attendance/settings`));
