@@ -31,6 +31,8 @@ export interface AttendanceRecord {
   approvalStatus: string;
   punchInTime: string;
   punchOutTime: string | null;
+  punchInPhoto?: string | null;
+  punchInAddress?: string | null;
   scheduledStart: string | null;
   scheduledEnd: string | null;
   hoursWorked: number | null;

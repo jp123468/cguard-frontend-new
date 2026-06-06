@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useNotificationStream } from "@/hooks/useNotificationStream";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
+import { showNotificationToast } from "@/components/notifications/notificationToast";
 
 type HeaderProps = {
   toggleSidebar: () => void;
@@ -76,7 +77,7 @@ export default function Header({
   }, [user]);
 
   const { notifications, unreadCount, connected, markRead, markAllRead } =
-    useNotificationStream(tenantId);
+    useNotificationStream(tenantId, (n) => showNotificationToast(n, navigate));
 
   const [openUser, setOpenUser] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);

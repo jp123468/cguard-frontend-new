@@ -138,6 +138,7 @@ import GuardResumenPage from "./pages/admin/security-guards/components/GuardOver
 import GuardPerfilPage from "./pages/admin/security-guards/components/GuardProfile/GuardProfilepage";
 import GuardAvailabilityPage from "./pages/admin/security-guards/components/GuardAvailability/GuardAvailabilitypage";
 import GuardIndicadoresPage from "./pages/admin/security-guards/components/GuardKPIs/GuardKPIspage";
+import GuardDispositivoPage from "./pages/admin/security-guards/components/GuardDevice/GuardDevicepage";
 import GuardLicenciasPage from "./pages/admin/security-guards/components/GuardLicenses/GuardLicensespage";
 import GuardNotasPage from "./pages/admin/security-guards/components/GuardNotes/GuardNotespage";
 import GuardMemosPage from "./pages/admin/security-guards/components/GuardMemos/GuardMemosPage";
@@ -732,6 +733,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <GuardPerfilPage {...({} as any)} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/dispositivo"
+                element={
+                  <ProtectedRoute>
+                    <GuardDispositivoPage />
                   </ProtectedRoute>
                 }
               />

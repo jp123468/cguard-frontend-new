@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { getTenantTimezone } from "@/utils/tenantLocation";
+import { fileUrlFromPrivate } from "@/lib/fileUrl";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +70,7 @@ interface GuardShiftRecord {
   id: string;
   punchInTime: string;
   punchOutTime: string | null;
+  punchInPhoto?: string | null;
   punchInLatitude: number | null;
   punchInLongitude: number | null;
   punchOutLatitude: number | null;
@@ -158,6 +161,7 @@ function DetailPanel({
 }) {
   if (!record) return null;
   const status = shiftStatus(record);
+  const selfieUrl = fileUrlFromPrivate(record.punchInPhoto);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -166,6 +170,23 @@ function DetailPanel({
           <DialogTitle>Detalle de Asistencia</DialogTitle>
         </DialogHeader>
         <div className="space-y-5 py-2 text-sm">
+          {/* Clock-in selfie */}
+          {selfieUrl && (
+            <a
+              href={selfieUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <img
+                src={selfieUrl}
+                alt="Selfie de entrada"
+                className="w-full max-h-72 rounded-lg border object-contain bg-slate-50"
+                onError={(e) => (e.currentTarget.parentElement!.style.display = "none")}
+              />
+            </a>
+          )}
+
           {/* Guard & Status */}
           <div className="flex items-center justify-between">
             <div>
@@ -300,17 +321,24 @@ function defaultDateTo() {
 }
 
 export default function Attendance() {
+  // Deep-link from a clock-in notification: ?date=YYYY-MM-DD narrows to that day,
+  // ?focus=<id> auto-opens that record's detail once it loads.
+  const [searchParams] = useSearchParams();
+  const linkedDate = searchParams.get("date");
+  const focusId = searchParams.get("focus");
+
   const [allRecords, setAllRecords] = useState<GuardShiftRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [detailRecord, setDetailRecord] = useState<GuardShiftRecord | null>(null);
+  const [focusHandled, setFocusHandled] = useState(false);
   const [pageSize, setPageSize] = useState(25);
   const [page, setPage] = useState(1);
 
   const [filters, setFilters] = useState({
-    startDate: defaultDateFrom(),
-    endDate: defaultDateTo(),
+    startDate: linkedDate || defaultDateFrom(),
+    endDate: linkedDate || defaultDateTo(),
     schedule: "",
   });
 
@@ -347,6 +375,16 @@ export default function Attendance() {
   useEffect(() => {
     fetchRecords();
   }, [fetchRecords]);
+
+  // Once records are loaded, open the detail for the notification's record (once).
+  useEffect(() => {
+    if (focusHandled || !focusId || loading) return;
+    const match = allRecords.find((r) => r.id === focusId);
+    if (match) {
+      setDetailRecord(match);
+      setFocusHandled(true);
+    }
+  }, [focusId, focusHandled, loading, allRecords]);
 
   // ── client-side search ───────────────────────────────────────────────────
   const filtered = allRecords.filter((r) => {
@@ -567,6 +605,7 @@ export default function Attendance() {
             <TableHeader className="bg-slate-50">
               <TableRow>
                 <TableHead className="w-[50px]"><Checkbox /></TableHead>
+                <TableHead className="w-[60px] font-bold text-foreground">Selfie</TableHead>
                 <TableHead className="font-bold text-foreground">Fecha</TableHead>
                 <TableHead className="font-bold text-foreground">Guardia</TableHead>
                 <TableHead className="font-bold text-foreground">Estación</TableHead>
@@ -582,7 +621,7 @@ export default function Attendance() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="h-[300px] text-center">
+                  <TableCell colSpan={12} className="h-[300px] text-center">
                     <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
                       <Loader2 className="h-8 w-8 animate-spin text-[#C8860A]" />
                       <p className="text-sm">Cargando registros de asistencia...</p>
@@ -591,7 +630,7 @@ export default function Attendance() {
                 </TableRow>
               ) : paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="h-[400px] text-center">
+                  <TableCell colSpan={12} className="h-[400px] text-center">
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
                       <div className="bg-blue-500/10 p-6 rounded-full mb-4">
                         <ClipboardCheck className="w-12 h-12 text-blue-200" />
@@ -616,6 +655,22 @@ export default function Attendance() {
                     >
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <Checkbox />
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const url = fileUrlFromPrivate(rec.punchInPhoto);
+                          return url ? (
+                            <img
+                              src={url}
+                              alt=""
+                              loading="lazy"
+                              className="h-9 w-9 rounded-md border object-cover"
+                              onError={(e) => (e.currentTarget.style.display = "none")}
+                            />
+                          ) : (
+                            <div className="h-9 w-9 rounded-md border bg-slate-100" />
+                          );
+                        })()}
                       </TableCell>
                       <TableCell className="font-medium whitespace-nowrap">
                         {formatDate(rec.punchInTime)}

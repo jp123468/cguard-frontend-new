@@ -1,4 +1,6 @@
-import { Bell, BellOff, CheckCheck, Wifi, WifiOff } from 'lucide-react';
+import { useState } from 'react';
+import { Bell, BellOff, Trash2, Wifi, WifiOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -25,6 +27,28 @@ function timeAgo(dateStr: string): string {
   return `Hace ${Math.floor(h / 24)}d`;
 }
 
+// Local YYYY-MM-DD for the event's day, so the attendance deep-link lands on the
+// same calendar day the clock-in happened.
+function localDay(dateStr: string): string {
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const da = String(d.getDate()).padStart(2, '0');
+  return `${y}-${mo}-${da}`;
+}
+
+// Where a notification should take you when clicked. Clock-in/out events open
+// that day's attendance list focused on the specific record; everything else has
+// no destination yet (just marks read).
+function targetFor(n: PlatformNotification): string | null {
+  if (n.eventType === 'guard.checkin' || n.eventType === 'guard.checkout') {
+    const params = new URLSearchParams({ date: localDay(n.createdAt) });
+    if (n.sourceEntityId) params.set('focus', n.sourceEntityId);
+    return `/attendance?${params.toString()}`;
+  }
+  return null;
+}
+
 export function NotificationsPanel({
   notifications,
   unreadCount,
@@ -32,8 +56,23 @@ export function NotificationsPanel({
   onMarkRead,
   onMarkAllRead,
 }: NotificationsPanelProps) {
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  // The bell is an UNREAD inbox: reading or clearing removes items from here
+  // (they remain in the Actividad history). "Clear all" persists to the DB.
+  const visible = notifications.filter((n) => !n.read);
+
+  const handleOpen = (n: PlatformNotification) => {
+    if (!n.read) onMarkRead(n.id);
+    const target = targetFor(n);
+    if (target) {
+      setOpen(false);
+      navigate(target);
+    }
+  };
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
@@ -80,33 +119,33 @@ export function NotificationsPanel({
               {connected ? 'En vivo' : 'Reconectando…'}
             </span>
           </div>
-          {unreadCount > 0 && (
+          {visible.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
               className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
               onClick={onMarkAllRead}
             >
-              <CheckCheck className="h-3.5 w-3.5" />
-              Marcar todo
+              <Trash2 className="h-3.5 w-3.5" />
+              Limpiar todo
             </Button>
           )}
         </div>
 
         {/* Notification list */}
         <ScrollArea className="h-[420px]">
-          {notifications.length === 0 ? (
+          {visible.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-muted-foreground text-sm gap-2">
               <Bell className="h-8 w-8 opacity-30" />
               <span>Sin notificaciones</span>
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {notifications.map((n) => (
+              {visible.map((n) => (
                 <NotificationItem
                   key={n.id}
                   notification={n}
-                  onMarkRead={onMarkRead}
+                  onOpen={handleOpen}
                 />
               ))}
             </div>
@@ -119,10 +158,10 @@ export function NotificationsPanel({
 
 function NotificationItem({
   notification: n,
-  onMarkRead,
+  onOpen,
 }: {
   notification: PlatformNotification;
-  onMarkRead: (id: string) => void;
+  onOpen: (n: PlatformNotification) => void;
 }) {
   const photoUrl = fileUrlFromPrivate(n.payload?.photoUrl);
   return (
@@ -131,7 +170,7 @@ function NotificationItem({
         'px-4 py-3 cursor-pointer transition-colors hover:bg-muted/50',
         !n.read && 'bg-primary/5',
       )}
-      onClick={() => !n.read && onMarkRead(n.id)}
+      onClick={() => onOpen(n)}
     >
       <div className="flex items-start justify-between gap-2">
         {photoUrl && (

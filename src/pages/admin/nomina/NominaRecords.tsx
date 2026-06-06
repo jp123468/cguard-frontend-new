@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import attendanceService, { type AttendanceRecord } from "@/lib/api/attendanceService";
 import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
+import { fileUrlFromPrivate } from "@/lib/fileUrl";
 import { StatusBadge, fmtDateTime, fmtTime, fmtHours } from "./shared";
-import { MapPin } from "lucide-react";
+import { MapPin, ImageOff } from "lucide-react";
 
 const STATUS_OPTIONS = [
   "", "on_time", "late", "early_departure", "missed_clockout",
@@ -106,6 +107,37 @@ export default function NominaRecords() {
                 <SheetTitle>{selected.guardName?.fullName || "Guardia"}</SheetTitle>
               </SheetHeader>
               <div className="mt-4 space-y-4 text-sm">
+                {/* Clock-in selfie (geo-stamped by the worker app) + timestamp */}
+                {(() => {
+                  const selfieUrl = fileUrlFromPrivate(selected.punchInPhoto);
+                  if (!selfieUrl) {
+                    return (
+                      <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border bg-muted/40 py-8 text-muted-foreground">
+                        <ImageOff size={20} />
+                        <span className="text-xs">Sin selfie de entrada</span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <a
+                      href={selfieUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <img
+                        src={selfieUrl}
+                        alt="Selfie de entrada"
+                        className="w-full rounded-xl border border-border object-contain bg-muted"
+                      />
+                      <p className="mt-1.5 text-center text-xs text-muted-foreground">
+                        Entrada · {fmtDateTime(selected.punchInTime)}
+                        {selected.punchInAddress ? ` · ${selected.punchInAddress}` : ""}
+                      </p>
+                    </a>
+                  );
+                })()}
+
                 <div className="flex items-center justify-between">
                   <StatusBadge status={selected.status} />
                   <span className="text-xs text-muted-foreground">

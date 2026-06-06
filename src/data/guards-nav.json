@@ -7,6 +7,7 @@
         "items": [
           { "id": "resumen", "label": "guards.nav.resumen", "path": "/guards/:id/resumen" },
           { "id": "perfil", "label": "guards.nav.perfil", "path": "/guards/:id/perfil" },
+          { "id": "dispositivo", "label": "guards.nav.dispositivo", "path": "/guards/:id/dispositivo" },
           { "id": "disponibilidad", "label": "guards.nav.disponibilidad", "path": "/guards/:id/availability" },
           { "id": "indicadores-kpi", "label": "guards.nav.indicadores", "path": "/guards/:id/indicadores" },
           { "id": "licencias", "label": "guards.nav.licencias", "path": "/guards/:id/licencias" },

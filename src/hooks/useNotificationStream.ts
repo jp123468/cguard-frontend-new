@@ -11,6 +11,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { getAuthToken } from '@/lib/api';
+import { playNotificationChime } from '@/lib/notificationSound';
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) || '';
 
@@ -48,10 +49,17 @@ interface UseNotificationStreamResult {
 
 const MAX_STORED = 50;
 
-export function useNotificationStream(tenantId: string | null | undefined): UseNotificationStreamResult {
+export function useNotificationStream(
+  tenantId: string | null | undefined,
+  onLive?: (n: PlatformNotification) => void,
+): UseNotificationStreamResult {
   const [notifications, setNotifications] = useState<PlatformNotification[]>([]);
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
+  // Keep the latest callback in a ref so changing it doesn't re-create the
+  // socket connection (the effect depends only on tenantId).
+  const onLiveRef = useRef(onLive);
+  onLiveRef.current = onLive;
 
   const addNotification = useCallback((n: PlatformNotification, read = false) => {
     setNotifications((prev) => {
@@ -72,7 +80,14 @@ export function useNotificationStream(tenantId: string | null | undefined): UseN
 
   const markAllRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
+    if (!tenantId) return;
+    const token = getAuthToken();
+    // Persist to the DB so cleared notifications don't reappear on refresh.
+    fetch(`${API_URL}/${tenantId}/events/read-all`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }).catch(() => {});
+  }, [tenantId]);
 
   useEffect(() => {
     if (!tenantId) return;
@@ -127,6 +142,19 @@ export function useNotificationStream(tenantId: string | null | undefined): UseN
     socket.on('notification', (n: PlatformNotification) => {
       if (destroyed || !n || !n.id) return;
       addNotification(n, false);
+      // Audible cue for live events only — the REST backlog seed above stays
+      // silent so we don't chime on every page load.
+      try {
+        playNotificationChime();
+      } catch {
+        /* best-effort */
+      }
+      // Fire the in-CRM custom alert for the live arrival.
+      try {
+        onLiveRef.current?.(n);
+      } catch {
+        /* best-effort */
+      }
     });
 
     return () => {
