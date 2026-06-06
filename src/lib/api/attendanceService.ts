@@ -43,7 +43,7 @@ export interface AttendanceRecord {
   punchInLatitude: number | null;
   punchInLongitude: number | null;
   guardName?: { id: string; fullName?: string } | null;
-  stationName?: { id: string; stationName?: string; latitud?: string; longitud?: string; geofenceRadius?: number } | null;
+  stationName?: { id: string; stationName?: string; latitud?: string; longitud?: string; geofenceRadius?: number; geofencePolygon?: { lat: number; lng: number }[] | null } | null;
 }
 
 const attendanceService = {

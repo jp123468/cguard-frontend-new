@@ -6,6 +6,7 @@ import { Plus, Trash, Eye, MoreVertical, X } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useTranslation } from 'react-i18next';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
+import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
 
 export default function Stations({ site }: { site?: any }) {
   const { t } = useTranslation();
@@ -44,6 +45,7 @@ export default function Stations({ site }: { site?: any }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [finishTimeInDay, setFinishTimeInDay] = useState('');
   const [geofenceRadius, setGeofenceRadius] = useState('100');
+  const [geofencePolygon, setGeofencePolygon] = useState<PolyPoint[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -353,12 +355,13 @@ export default function Stations({ site }: { site?: any }) {
         startingTimeInDay,
         finishTimeInDay,
         geofenceRadius: Number(geofenceRadius) || 100,
+        geofencePolygon: geofencePolygon.length >= 3 ? geofencePolygon : null,
         description: newDescription,
       } as any;
       const res = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
       const created = (res && (res.data || res)) || res;
       setStations(s => [created, ...s]);
-      setNewName(''); setNewDescription(''); setStationSchedule(''); setNumberOfGuardsInStation('1'); setStartingTimeInDay(''); setFinishTimeInDay(''); setGeofenceRadius('100');
+      setNewName(''); setNewDescription(''); setStationSchedule(''); setNumberOfGuardsInStation('1'); setStartingTimeInDay(''); setFinishTimeInDay(''); setGeofenceRadius('100'); setGeofencePolygon([]);
       setShowNew(false);
       toast.success(t('postSites.stations.created', 'Station created'));
     } catch (err: any) {
@@ -829,6 +832,17 @@ export default function Stations({ site }: { site?: any }) {
                 <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.geofenceRadius', 'Radio geovalla (metros)')}</label>
                 <input type="number" min="10" max="5000" value={geofenceRadius} onChange={e => setGeofenceRadius(e.target.value)} placeholder="100" className="w-full px-3 py-2 border rounded-md text-sm text-foreground" />
                 <p className="text-xs text-muted-foreground mt-1">{t('postSites.stations.form.geofenceHint', 'Distancia máxima para marcar entrada')}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Geocerca poligonal (opcional)</label>
+                <p className="text-xs text-muted-foreground mb-2">Si defines un polígono (3+ puntos), se usa en lugar del radio para validar la marcación.</p>
+                <StationGeofencePolygon
+                  value={geofencePolygon}
+                  onChange={setGeofencePolygon}
+                  centerLat={Number(site?.latitud || site?.latitude) || undefined}
+                  centerLng={Number(site?.longitud || site?.longitude) || undefined}
+                />
               </div>
 
               <div>

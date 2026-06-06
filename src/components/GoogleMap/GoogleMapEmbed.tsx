@@ -37,6 +37,7 @@ export default function GoogleMapEmbed({
   enableClickToSet,
   onMapClick,
   onReady,
+  polygon,
 }: {
   lat?: number;
   lng?: number;
@@ -53,6 +54,8 @@ export default function GoogleMapEmbed({
   mapType?: MapType;
   showGeofence?: boolean;
   geofenceRadius?: number;
+  /** Optional polygon geofence to display (array of {lat,lng}). */
+  polygon?: Array<{ lat: number; lng: number }>;
   draggable?: boolean;
   onMarkerMove?: (
     lat: number,
@@ -71,7 +74,30 @@ export default function GoogleMapEmbed({
   const markerRef = useRef<any>(null);
   const markersRef = useRef<Record<string, any>>({});
   const circleRef = useRef<any>(null);
+  const polygonRef = useRef<any>(null);
   const [ready, setReady] = useState(false);
+
+  // Draw/update the polygon geofence when provided.
+  useEffect(() => {
+    const google = (window as any).google;
+    if (!ready || !google?.maps || !mapInstance.current) return;
+    if (polygonRef.current) {
+      polygonRef.current.setMap(null);
+      polygonRef.current = null;
+    }
+    const pts = (polygon || []).filter((p) => p && !isNaN(p.lat) && !isNaN(p.lng));
+    if (pts.length >= 3) {
+      polygonRef.current = new google.maps.Polygon({
+        paths: pts,
+        strokeColor: "#C8860A",
+        strokeOpacity: 0.9,
+        strokeWeight: 2,
+        fillColor: "#C8860A",
+        fillOpacity: 0.12,
+        map: mapInstance.current,
+      });
+    }
+  }, [ready, JSON.stringify(polygon || [])]);
 
   const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
 

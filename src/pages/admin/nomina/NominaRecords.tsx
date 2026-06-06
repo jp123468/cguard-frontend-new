@@ -129,8 +129,9 @@ export default function NominaRecords() {
                       lat={Number(selected.punchInLatitude)}
                       lng={Number(selected.punchInLongitude)}
                       zoom={16}
-                      showGeofence={!!selected.stationName?.geofenceRadius}
+                      showGeofence={!selected.stationName?.geofencePolygon && !!selected.stationName?.geofenceRadius}
                       geofenceRadius={selected.stationName?.geofenceRadius || 100}
+                      polygon={selected.stationName?.geofencePolygon || undefined}
                       markers={[
                         { id: "punch", lat: Number(selected.punchInLatitude), lng: Number(selected.punchInLongitude), label: "Marcación" },
                       ]}

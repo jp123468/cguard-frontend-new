@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { MapPin, Clock, Users, Shield, Pencil, X, Check, Loader2, Plus, Trash2 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
+import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -93,6 +94,26 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   const lat = station.latitud || station.latitude || '';
   const lng = station.longitud || station.longitude || '';
   const assignedGuards = Array.isArray(station.assignedGuards) ? station.assignedGuards : [];
+
+  // Polygon geofence editing for this (existing) station.
+  const [polygon, setPolygon] = useState<PolyPoint[]>(
+    Array.isArray(station.geofencePolygon) ? station.geofencePolygon : [],
+  );
+  const [savingPoly, setSavingPoly] = useState(false);
+  const savePolygon = async () => {
+    setSavingPoly(true);
+    try {
+      const tenantId = localStorage.getItem('tenantId') || '';
+      await ApiService.put(`/tenant/${tenantId}/station/${stationId}`, {
+        data: { geofencePolygon: polygon.length >= 3 ? polygon : null },
+      });
+      toast.success(polygon.length >= 3 ? 'Geocerca poligonal guardada' : 'Geocerca poligonal eliminada');
+    } catch (e: any) {
+      toast.error(e?.message || 'Error al guardar la geocerca');
+    } finally {
+      setSavingPoly(false);
+    }
+  };
 
   // Save
   const handleSave = async () => {
@@ -298,6 +319,33 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
               Guardar
             </button>
           </div>
+        </div>
+
+        {/* Geocerca poligonal */}
+        <div className="p-6 border-t border-border/30">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Shield size={16} className="text-[#C8860A]" />
+              <h3 className="text-sm font-semibold text-foreground">Geocerca poligonal</h3>
+            </div>
+            <button
+              onClick={savePolygon}
+              disabled={savingPoly}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#C8860A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#B37809] disabled:opacity-50"
+            >
+              {savingPoly ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+              Guardar geocerca
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Define un polígono (3+ puntos) para validar la marcación por área en lugar del radio. Déjalo vacío para usar el radio.
+          </p>
+          <StationGeofencePolygon
+            value={polygon}
+            onChange={setPolygon}
+            centerLat={Number(lat) || undefined}
+            centerLng={Number(lng) || undefined}
+          />
         </div>
 
         {/* Jornadas editor */}
