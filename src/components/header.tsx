@@ -28,6 +28,7 @@ import { useNotificationStream, type PlatformNotification } from "@/hooks/useNot
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { showNotificationToast } from "@/components/notifications/notificationToast";
 import { PanicAlertOverlay } from "@/components/notifications/PanicAlertOverlay";
+import TrialDaysBadge from "@/components/TrialDaysBadge";
 
 type HeaderProps = {
   toggleSidebar: () => void;
@@ -159,6 +160,9 @@ export default function Header({
         </div>
 
         <div className="flex items-center gap-1">
+          <div className="mr-1 hidden xs:block sm:block">
+            <TrialDaysBadge />
+          </div>
           <button
             onClick={() => setFeedbackOpen(true)}
             className="p-2 rounded-lg hover:bg-accent transition-colors"

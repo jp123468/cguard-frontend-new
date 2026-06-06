@@ -1,9 +1,38 @@
 import { useAuth } from "@/contexts/AuthContext"
 import { Navigate, useLocation } from "react-router-dom"
+import NoWorkspaceAccess from "./NoWorkspaceAccess"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
   requireVerified?: boolean
+}
+
+/**
+ * True when the authenticated user has no usable tenant/workspace. Checks both
+ * the persisted tenantId and the in-memory user.tenants array (the latter covers
+ * the brief window after login before the tenantId useEffect runs).
+ */
+function hasNoWorkspace(user: any): boolean {
+  try {
+    const persisted = localStorage.getItem("tenantId")
+    if (persisted) return false
+  } catch {
+    /* ignore */
+  }
+  return !(Array.isArray(user?.tenants) && user.tenants.length > 0)
+}
+
+/** Platform superadmins are intentionally tenantless on the client (their tenant
+ *  associations are stripped in AuthContext); they belong in the superadmin area,
+ *  not blocked by the no-workspace modal. */
+function isPlatformSuperadmin(user: any): boolean {
+  if (!user) return false
+  if (user.isSuperadmin === true) return true
+  const raw = user.roles ?? user.role ?? []
+  const arr = Array.isArray(raw) ? raw : [raw]
+  return arr
+    .map((r: any) => (typeof r === "string" ? r : r?.name || r?.key || r?.slug || ""))
+    .some((n: string) => n.toString().toLowerCase().includes("superadmin"))
 }
 
 /**
@@ -61,6 +90,22 @@ export default function ProtectedRoute({
   // Si requiere email verificado y no lo está
   if (requireVerified && user && !user.emailVerified) {
     return <Navigate to="/verify-email" replace />
+  }
+
+  // Sin espacio de trabajo: el usuario está autenticado pero no pertenece a
+  // ningún tenant. Antes esto provocaba una pantalla en blanco (los servicios
+  // con scope de tenant lanzan "Tenant ID no configurado"). Lo interceptamos
+  // ANTES de montar cualquier página con scope de tenant.
+  if (hasNoWorkspace(user)) {
+    // Los superadmin de plataforma son tenantless a propósito: enviarlos a su
+    // área (gestión de tenants) en vez de mostrar el modal de "sin acceso".
+    if (isPlatformSuperadmin(user)) {
+      if (location.pathname.startsWith("/superadmin")) {
+        return <>{children}</>
+      }
+      return <Navigate to="/superadmin/tenants" replace />
+    }
+    return <NoWorkspaceAccess />
   }
 
   // Si todo está bien, mostrar el contenido protegido

@@ -7,6 +7,7 @@ import { setTenantId as setCategoryTenantId } from "@/lib/api/categoryService";
 import { useLocation, useNavigate } from "react-router-dom";
 import TenantJoinModal from "@/components/TenantJoinModal";
 import TrialBanner from "@/components/TrialBanner";
+import OnboardingProvider from "@/components/onboarding/OnboardingProvider";
 import tenantService from "@/services/tenant.service";
 import { cacheTenantLocation, cacheTenantCountry, cacheTenantTimezone } from "@/utils/tenantLocation";
 
@@ -232,8 +233,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
           sidebarOpen ? "lg:ml-64" : "lg:ml-0",
         ].join(" ")}
       >
-        <TrialBanner />
-        {children}
+        <OnboardingProvider>
+          <TrialBanner />
+          {children}
+        </OnboardingProvider>
       </main>
 
       {/* Toaster lives once globally in main.tsx — a second one here made every

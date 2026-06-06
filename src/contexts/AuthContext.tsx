@@ -14,6 +14,9 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   // permite iniciar sesión usando un token (por ejemplo OAuth callback)
   signInWithToken: (token: string, user?: any) => Promise<AuthResult>;
+  // Re-fetch the profile from /auth/me and re-hydrate auth state.
+  // Returns the fresh user object (or null on failure).
+  refreshProfile: () => Promise<User | null>;
   isAuthenticated: boolean;
   hasPermission: (perm: string) => boolean;
   hasAny: (perms: string[]) => boolean;
@@ -43,6 +46,7 @@ export const useAuth = () => {
       signUp: async () => ({ success: false, error: 'Auth unavailable' }),
       signOut: async () => {},
       signInWithToken: async () => ({ success: false, error: 'Auth unavailable' }),
+      refreshProfile: async () => null,
       isAuthenticated: false,
       hasPermission: () => false,
       hasAny: () => false,
@@ -151,6 +155,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // If the user is a global superadmin, ensure they are not tenant-scoped:
       const isGlobalSuperadmin = (u: any) => {
         if (!u) return false;
+        // The backend marks platform superadmins with the `isSuperadmin` boolean
+        // (there is no global `superadmin` role row). Honor it as the source of truth.
+        if (u.isSuperadmin === true) return true;
         const roles = u.roles ?? u.role ?? [];
         const normalize = (r: any) => {
           if (!r) return [];
@@ -245,6 +252,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // reads localStorage.tenantId to pick tenantEntry).
         // If user is superadmin, do not persist tenantId or tenant associations
         const isGlobalSuperadminLocal = (u: any) => {
+          if (u && u.isSuperadmin === true) return true;
           const roles = u.roles ?? u.role ?? [];
           const normalize = (r: any) => {
             if (!r) return [];
@@ -343,6 +351,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Persist tenantId and configure services before extracting permissions
         try {
           const isGlobalSuper = (u: any) => {
+            if (u && u.isSuperadmin === true) return true;
             const roles = u.roles ?? u.role ?? [];
             const arr = Array.isArray(roles) ? roles : [roles];
             return arr.some((r: any) => (typeof r === 'string' ? r : (r?.name || r?.key || '')).toString().toLowerCase().includes('superadmin'));
@@ -399,6 +408,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Re-fetch the profile from the backend and re-hydrate auth state.
+  // Used by flows that mutate the tenant (e.g. onboarding wizard) so the
+  // freshly-saved fields (logoId, onboardingCompleted, billing...) appear
+  // immediately without a manual reload. Best-effort retry to absorb
+  // backend propagation latency on freshly created tenants.
+  const refreshProfile = async (): Promise<User | null> => {
+    const maxAttempts = 4;
+    const delayMs = 400;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const profile = await AuthService.getProfile();
+        if (profile) {
+          setUser(profile);
+          const { perms, admin, tenantAdmin } = extractPermissionsFromUser(profile);
+          if (Array.isArray(perms) && perms.length > 0) {
+            setPermissions(perms);
+            try { localStorage.setItem('userPermissions', JSON.stringify(perms)); } catch {}
+          }
+          setTenantAdmin(tenantAdmin);
+          if (admin) {
+            setIsAdmin(admin);
+            try { localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
+          }
+          return profile;
+        }
+      } catch (e) {
+        // retry
+      }
+      if (attempt < maxAttempts - 1) await new Promise((r) => setTimeout(r, delayMs));
+    }
+    return null;
+  };
+
   function matchesByAlias(requested: string): boolean {
     if (!requested) return false;
     // direct match
@@ -444,7 +486,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, signIn, signUp, signOut, signInWithToken, isAuthenticated: !!user, hasPermission, hasAny, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, error, signIn, signUp, signOut, signInWithToken, refreshProfile, isAuthenticated: !!user, hasPermission, hasAny, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
@@ -509,6 +551,7 @@ function extractPermissionsFromUser(u: any): { perms: string[]; admin: boolean; 
   // specially: if it appears anywhere (global or tenant-scoped), promote to admin
   // so platform-level superadmins see all tenants and do not get tenant-only UX.
   const admin =
+    u.isSuperadmin === true ||
     roleNamesGlobal.includes('admin') ||
     roleNamesGlobal.includes('superadmin') ||
     roleNamesGlobal.includes('super_admin') ||
