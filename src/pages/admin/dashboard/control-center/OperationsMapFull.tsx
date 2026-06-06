@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Maximize, X, Radio } from "lucide-react";
 import { useControlCenter } from "./useControlCenter";
-import { buildDemoData } from "./demoData";
+import { useDemoData } from "./demoData";
 import { loadPrefs } from "./prefs";
 import { OperationsMap } from "./components/OperationsMap";
 import "./control-center.css";
@@ -18,7 +18,7 @@ export default function OperationsMapFull() {
   }, []);
 
   const live = useControlCenter(prefs.liveTracking ? prefs.locationIntervalSec : 3600);
-  const demoData = useMemo(() => buildDemoData(), []);
+  const demoData = useDemoData(demo);
   const data = demo ? demoData : live;
 
   const [h, setH] = useState(() => (typeof window !== "undefined" ? window.innerHeight : 800));

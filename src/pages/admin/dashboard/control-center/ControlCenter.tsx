@@ -8,7 +8,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/contexts/AuthContext";
 import "./control-center.css";
 import { useControlCenter } from "./useControlCenter";
-import { buildDemoData } from "./demoData";
+import { useDemoData } from "./demoData";
 import { loadPrefs, savePrefs, type DashboardPrefs } from "./prefs";
 import { GlassCard, SectionHeader, StatusDot } from "./components/primitives";
 import { KpiCard } from "./components/KpiCard";
@@ -40,7 +40,7 @@ export default function ControlCenter() {
   };
 
   const live = useControlCenter(prefs.liveTracking ? prefs.locationIntervalSec : 3600);
-  const demoData = useMemo(() => buildDemoData(), [demo]);
+  const demoData = useDemoData(demo);
   // In demo mode, show the populated sample so a new tenant can preview the UI.
   const data = demo ? { ...demoData, refresh: live.refresh } : live;
 

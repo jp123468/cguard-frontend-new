@@ -116,7 +116,7 @@ export function OperationsMap({
 
     entities.forEach((e) => {
       seen.add(e.id);
-      const color = prefs.pinColors[e.kind] || prefs.statusColors[e.status] || "#d4a017";
+      const color = (e.meta && (e.meta as any).color) || prefs.pinColors[e.kind] || prefs.statusColors[e.status] || "#d4a017";
       const pulse = e.kind === "guard" || e.kind === "supervisor" || e.status === "emergency" || e.status === "incident";
       const icon = {
         url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(pinSvg(color, pulse, prefs.pinIcons[e.kind])),

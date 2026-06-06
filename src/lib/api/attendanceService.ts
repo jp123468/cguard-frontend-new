@@ -107,6 +107,11 @@ const attendanceService = {
     return unwrap(await api.post(`/tenant/${t}/attendance/close-period`, { data: { cutoff } }));
   },
 
+  async saveGuardRates(rates: Record<string, number>) {
+    const t = getTenantId();
+    return unwrap(await api.put(`/tenant/${t}/attendance/guard-rates`, { data: { rates } }));
+  },
+
   /** Current guard's clock status + assigned stations (worker-app endpoint). */
   async myStatus() {
     const t = getTenantId();

@@ -3,7 +3,8 @@ import AppLayout from "@/layouts/app-layout";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { FileDown, Printer, Lock } from "lucide-react";
+import { FileDown, Printer, Lock, FileSpreadsheet, Save } from "lucide-react";
+import * as XLSX from "xlsx";
 import attendanceService from "@/lib/api/attendanceService";
 
 interface SummaryRow {
@@ -19,6 +20,7 @@ interface SummaryRow {
   approvedCorrections: number;
   payableHours: number;
   grossPay: number | null;
+  hourlyRate: number | null;
 }
 
 function isoDay(d: Date) {
@@ -34,16 +36,23 @@ export default function NominaPayrollSummary() {
   const [ratesEnabled, setRatesEnabled] = useState(false);
   const [currency, setCurrency] = useState("USD");
   const [closing, setClosing] = useState(false);
+  const [editRates, setEditRates] = useState(false);
+  const [rateEdits, setRateEdits] = useState<Record<string, number>>({});
+  const [savingRates, setSavingRates] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
     attendanceService
       .payrollSummary({ from: `${from}T00:00:00`, to: `${to}T23:59:59` })
       .then((d) => {
-        setRows(d.rows || []);
+        const rws: SummaryRow[] = d.rows || [];
+        setRows(rws);
         setTotals(d.totals || null);
         setRatesEnabled(!!d.ratesEnabled);
         setCurrency(d.currency || "USD");
+        const re: Record<string, number> = {};
+        rws.forEach((r) => { re[r.guardId] = r.hourlyRate || 0; });
+        setRateEdits(re);
       })
       .catch((e) => toast.error(e?.message || "Error al generar el resumen"))
       .finally(() => setLoading(false));
@@ -64,6 +73,39 @@ export default function NominaPayrollSummary() {
     } finally {
       setClosing(false);
     }
+  };
+
+  const saveRates = async () => {
+    setSavingRates(true);
+    try {
+      await attendanceService.saveGuardRates(rateEdits);
+      toast.success("Tarifas guardadas");
+      setEditRates(false);
+      load();
+    } catch (e: any) {
+      toast.error(e?.message || "Error al guardar tarifas");
+    } finally {
+      setSavingRates(false);
+    }
+  };
+
+  const exportXlsx = () => {
+    const data = rows.map((r) => ({
+      Guardia: r.guardName,
+      Turnos: r.shifts,
+      "Horas regulares": r.regularHours,
+      "Horas extra": r.overtimeHours,
+      "Horas totales": r.totalHours,
+      Tardanzas: r.lateCount,
+      "Sin salida": r.missedClockouts,
+      Inasistencias: r.noShows,
+      Correcciones: r.approvedCorrections,
+      ...(ratesEnabled ? { "Tarifa/h": r.hourlyRate ?? 0, "Pago bruto": r.grossPay ?? 0 } : {}),
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Nómina");
+    XLSX.writeFile(wb, `nomina-${from}_${to}.xlsx`);
   };
 
   const exportPdf = () => {
@@ -118,6 +160,23 @@ export default function NominaPayrollSummary() {
     { key: "noShows", header: "Inasistencias" },
     { key: "approvedCorrections", header: "Correcciones" },
     { key: "payableHours", header: "H. pagables", render: (_v, r) => <span className="font-semibold">{r.payableHours.toFixed(2)}</span> },
+    {
+      key: "hourlyRate",
+      header: "Tarifa/h",
+      render: (_v: any, r: SummaryRow) =>
+        editRates ? (
+          <input
+            type="number"
+            step="0.01"
+            value={rateEdits[r.guardId] ?? 0}
+            onChange={(e) => setRateEdits((p) => ({ ...p, [r.guardId]: Number(e.target.value) }))}
+            className="w-20 rounded border border-border bg-background px-2 py-1 text-sm"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span className="text-muted-foreground">{r.hourlyRate ? `${currency} ${r.hourlyRate}` : "—"}</span>
+        ),
+    } as Column<any>,
     ...(ratesEnabled
       ? [{ key: "grossPay", header: "Pago bruto", render: (_v: any, r: SummaryRow) => <span className="font-semibold text-[#C8860A]">{money(r.grossPay)}</span> } as Column<any>]
       : []),
@@ -146,9 +205,21 @@ export default function NominaPayrollSummary() {
             <Button variant="outline" onClick={exportCsv} disabled={!rows.length}>
               <FileDown className="mr-1.5 h-4 w-4" /> CSV
             </Button>
+            <Button variant="outline" onClick={exportXlsx} disabled={!rows.length}>
+              <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Excel
+            </Button>
             <Button variant="outline" onClick={exportPdf} disabled={!rows.length}>
               <Printer className="mr-1.5 h-4 w-4" /> PDF
             </Button>
+            {editRates ? (
+              <Button onClick={saveRates} disabled={savingRates} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Save className="mr-1.5 h-4 w-4" /> {savingRates ? "Guardando…" : "Guardar tarifas"}
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => setEditRates(true)} disabled={!rows.length}>
+                Editar tarifas
+              </Button>
+            )}
             <Button variant="outline" onClick={closePeriod} disabled={closing} className="text-red-600">
               <Lock className="mr-1.5 h-4 w-4" /> {closing ? "Cerrando…" : "Cerrar periodo"}
             </Button>

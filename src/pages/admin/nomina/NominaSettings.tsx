@@ -102,6 +102,10 @@ export default function NominaSettings() {
               <Toggle label="Permitir fuera de geocerca (con aprobación)" path="geofence.allowOutsideWithApproval" />
             </Section>
 
+            <Section title="Notificaciones">
+              <Toggle label="Notificar solo al supervisor asignado al puesto" path="notifications.assignedSupervisorsOnly" />
+            </Section>
+
             <Section title="Aprobaciones">
               <Toggle label="Auto-aprobar marcaciones normales" path="approval.autoApproveNormal" />
               <Toggle label="Requerir aprobación para excepciones" path="approval.requireApprovalForExceptions" />
