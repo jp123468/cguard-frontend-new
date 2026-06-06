@@ -102,6 +102,11 @@ const attendanceService = {
     return unwrap(await api.get(`/tenant/${t}/attendance/payroll-summary${buildQuery(params)}`));
   },
 
+  async closePeriod(cutoff: string) {
+    const t = getTenantId();
+    return unwrap(await api.post(`/tenant/${t}/attendance/close-period`, { data: { cutoff } }));
+  },
+
   /** Current guard's clock status + assigned stations (worker-app endpoint). */
   async myStatus() {
     const t = getTenantId();

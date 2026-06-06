@@ -123,6 +123,16 @@ export default function NominaSettings() {
                 </select>
               </label>
               <Num label="Umbral de horas extra (h/turno)" path="payroll.overtimeThresholdHours" />
+              <label className="block">
+                <span className="text-xs font-medium text-muted-foreground">Moneda</span>
+                <input
+                  value={s.payroll?.currency || "USD"}
+                  onChange={(e) => setS((p: any) => set(p, "payroll.currency", e.target.value))}
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+              </label>
+              <Num label="Tarifa por hora (0 = no calcular pago)" path="payroll.defaultHourlyRate" />
+              <Num label="Multiplicador horas extra" path="payroll.overtimeMultiplier" />
             </Section>
 
             <div className="fixed bottom-6 right-6 z-10">

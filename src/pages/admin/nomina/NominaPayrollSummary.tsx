@@ -3,7 +3,7 @@ import AppLayout from "@/layouts/app-layout";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { FileDown } from "lucide-react";
+import { FileDown, Printer, Lock } from "lucide-react";
 import attendanceService from "@/lib/api/attendanceService";
 
 interface SummaryRow {
@@ -18,6 +18,7 @@ interface SummaryRow {
   noShows: number;
   approvedCorrections: number;
   payableHours: number;
+  grossPay: number | null;
 }
 
 function isoDay(d: Date) {
@@ -30,6 +31,9 @@ export default function NominaPayrollSummary() {
   const [rows, setRows] = useState<SummaryRow[]>([]);
   const [totals, setTotals] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [ratesEnabled, setRatesEnabled] = useState(false);
+  const [currency, setCurrency] = useState("USD");
+  const [closing, setClosing] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -38,19 +42,62 @@ export default function NominaPayrollSummary() {
       .then((d) => {
         setRows(d.rows || []);
         setTotals(d.totals || null);
+        setRatesEnabled(!!d.ratesEnabled);
+        setCurrency(d.currency || "USD");
       })
       .catch((e) => toast.error(e?.message || "Error al generar el resumen"))
       .finally(() => setLoading(false));
   }, [from, to]);
   useEffect(load, []);
 
+  const money = (n: number | null | undefined) =>
+    n == null ? "—" : `${currency} ${Number(n).toFixed(2)}`;
+
+  const closePeriod = async () => {
+    if (!window.confirm(`Cerrar el periodo hasta ${to}? Los registros quedarán bloqueados (solo lectura).`)) return;
+    setClosing(true);
+    try {
+      const r = await attendanceService.closePeriod(`${to}T23:59:59`);
+      toast.success(`Periodo cerrado · ${r.lockedCount} registro(s) bloqueado(s)`);
+    } catch (e: any) {
+      toast.error(e?.message || "Error al cerrar el periodo");
+    } finally {
+      setClosing(false);
+    }
+  };
+
+  const exportPdf = () => {
+    const head = ["Guardia", "Turnos", "H. reg.", "H. extra", "H. tot.", "Tardanzas", "Inasist.", "Correc."]
+      .concat(ratesEnabled ? ["Pago bruto"] : []);
+    const body = rows
+      .map((r) => {
+        const cells = [r.guardName, r.shifts, r.regularHours.toFixed(2), r.overtimeHours.toFixed(2), r.totalHours.toFixed(2), r.lateCount, r.noShows, r.approvedCorrections]
+          .concat(ratesEnabled ? [money(r.grossPay)] : []);
+        return `<tr>${cells.map((c) => `<td>${c}</td>`).join("")}</tr>`;
+      })
+      .join("");
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(`<html><head><title>Nómina ${from} a ${to}</title>
+      <style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:18px}
+      table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
+      th,td{border:1px solid #ddd;padding:6px;text-align:left}th{background:#C8860A;color:#fff}</style></head>
+      <body><h1>Resumen de Nómina · ${from} a ${to}</h1>
+      <table><thead><tr>${head.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>
+      </body></html>`);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 300);
+  };
+
   const exportCsv = () => {
     const headers = [
       "Guardia", "Turnos", "Horas regulares", "Horas extra", "Horas totales",
       "Tardanzas", "Sin salida", "Inasistencias", "Correcciones", "Horas pagables",
-    ];
+    ].concat(ratesEnabled ? ["Pago bruto"] : []);
     const lines = rows.map((r) =>
       [r.guardName, r.shifts, r.regularHours, r.overtimeHours, r.totalHours, r.lateCount, r.missedClockouts, r.noShows, r.approvedCorrections, r.payableHours]
+        .concat(ratesEnabled ? [r.grossPay ?? 0] : [])
         .map((v) => `"${String(v).replace(/"/g, '""')}"`)
         .join(","),
     );
@@ -71,6 +118,9 @@ export default function NominaPayrollSummary() {
     { key: "noShows", header: "Inasistencias" },
     { key: "approvedCorrections", header: "Correcciones" },
     { key: "payableHours", header: "H. pagables", render: (_v, r) => <span className="font-semibold">{r.payableHours.toFixed(2)}</span> },
+    ...(ratesEnabled
+      ? [{ key: "grossPay", header: "Pago bruto", render: (_v: any, r: SummaryRow) => <span className="font-semibold text-[#C8860A]">{money(r.grossPay)}</span> } as Column<any>]
+      : []),
   ];
 
   return (
@@ -96,6 +146,12 @@ export default function NominaPayrollSummary() {
             <Button variant="outline" onClick={exportCsv} disabled={!rows.length}>
               <FileDown className="mr-1.5 h-4 w-4" /> CSV
             </Button>
+            <Button variant="outline" onClick={exportPdf} disabled={!rows.length}>
+              <Printer className="mr-1.5 h-4 w-4" /> PDF
+            </Button>
+            <Button variant="outline" onClick={closePeriod} disabled={closing} className="text-red-600">
+              <Lock className="mr-1.5 h-4 w-4" /> {closing ? "Cerrando…" : "Cerrar periodo"}
+            </Button>
           </div>
         </div>
 
@@ -104,7 +160,7 @@ export default function NominaPayrollSummary() {
             <Tile label="Turnos" value={totals.shifts} />
             <Tile label="Horas totales" value={Number(totals.totalHours).toFixed(2)} />
             <Tile label="Horas extra" value={Number(totals.overtimeHours).toFixed(2)} />
-            <Tile label="Tardanzas / Inasist." value={`${totals.lateCount} / ${totals.noShows}`} />
+            <Tile label={ratesEnabled ? "Pago bruto" : "Tardanzas / Inasist."} value={ratesEnabled ? money(totals.grossPay) : `${totals.lateCount} / ${totals.noShows}`} />
           </div>
         )}
 
