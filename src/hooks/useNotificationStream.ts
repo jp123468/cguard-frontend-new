@@ -60,6 +60,12 @@ export function useNotificationStream(
   // socket connection (the effect depends only on tenantId).
   const onLiveRef = useRef(onLive);
   onLiveRef.current = onLive;
+  // Event ids already alerted in this session. The backend emits one event to
+  // several rooms the socket belongs to (tenant `:all` + each target role room
+  // in separate io.to().emit() calls — see backend lib/realtime.ts), so the same
+  // notification can arrive 2-3× over one connection. We coalesce by id here so
+  // each unique event fires exactly one chime + one toast.
+  const alertedRef = useRef<Set<string>>(new Set());
 
   const addNotification = useCallback((n: PlatformNotification, read = false) => {
     setNotifications((prev) => {
@@ -141,7 +147,17 @@ export function useNotificationStream(
     });
     socket.on('notification', (n: PlatformNotification) => {
       if (destroyed || !n || !n.id) return;
-      addNotification(n, false);
+      addNotification(n, false); // list dedups by id internally
+
+      // Only the first delivery of a given event id raises an alert; duplicate
+      // room copies from the backend are ignored. The chime + toast fire only
+      // for consumers that opted in via onLive (the header) — a data-only mount
+      // (e.g. the Activities page) passes no callback and stays silent.
+      if (alertedRef.current.has(n.id) || !onLiveRef.current) return;
+      alertedRef.current.add(n.id);
+      if (alertedRef.current.size > 1000) {
+        alertedRef.current = new Set(Array.from(alertedRef.current).slice(-500));
+      }
       // Audible cue for live events only — the REST backlog seed above stays
       // silent so we don't chime on every page load.
       try {
@@ -151,7 +167,7 @@ export function useNotificationStream(
       }
       // Fire the in-CRM custom alert for the live arrival.
       try {
-        onLiveRef.current?.(n);
+        onLiveRef.current(n);
       } catch {
         /* best-effort */
       }
