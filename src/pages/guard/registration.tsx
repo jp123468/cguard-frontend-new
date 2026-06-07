@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink, useSearchParams, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2, Smartphone, Clock } from "lucide-react";
 import GuardInviteLayout from "./GuardInviteLayout";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,7 @@ export default function GuardRegistration() {
   const [isLoading, setIsLoading] = useState(false);
   const [fetched, setFetched] = useState<any>(null);
   const [inviteNotFound, setInviteNotFound] = useState(false);
+  const [done, setDone] = useState(false);
   const [step, setStep] = useState(1);
   const totalSteps = 3;
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
@@ -533,8 +534,12 @@ export default function GuardRegistration() {
         await securityGuardService.create(payload);
       }
 
-      toast.success(t('guard.registration_success', { defaultValue: 'Registration completed' }));
-      navigate("/login");
+      // Registration done. A guard is NOT a web-admin user — do NOT send them to
+      // /login (they'd be blocked). Show a finish screen telling them to wait for
+      // the company's instructions.
+      toast.success(t('guard.registration_success', { defaultValue: '¡Registro completado!' }));
+      setDone(true);
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
     } catch (err: any) {
         // Improved error reporting: surface server status and returned payload when available
         try {
@@ -574,9 +579,38 @@ export default function GuardRegistration() {
     <GuardInviteLayout
       tenantName={fetched?.tenantName || fetched?.tenant?.name}
       tenantLogoUrl={fetched?.tenantLogoUrl}
-      title={t('guard.registration_title', { defaultValue: 'Registro de guardia' })}
-      subtitle={t('guard.registration_subtitle', { defaultValue: 'Completa tus datos para activar tu cuenta.' })}
+      title={done ? '¡Registro completado!' : t('guard.registration_title', { defaultValue: 'Registro de guardia' })}
+      subtitle={done ? 'Tu solicitud fue enviada a tu empresa de seguridad.' : t('guard.registration_subtitle', { defaultValue: 'Completa tus datos para activar tu cuenta.' })}
     >
+      {done ? (
+        <div className="text-center">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#C8860A]/12">
+            <CheckCircle2 className="h-9 w-9 text-[#C8860A]" />
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Gracias{firstName ? `, ${firstName}` : ''}. Tu información fue enviada a{' '}
+            <strong className="text-foreground">{fetched?.tenantName || fetched?.tenant?.name || 'tu empresa'}</strong>.
+            El equipo revisará tu registro y se pondrá en contacto contigo con las instrucciones para empezar.
+          </p>
+          <div className="mt-6 space-y-3 text-left">
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 p-3.5">
+              <Clock className="mt-0.5 h-5 w-5 shrink-0 text-[#C8860A]" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">Espera la confirmación</p>
+                <p className="text-xs text-muted-foreground">Tu empresa activará tu cuenta y te asignará a un puesto.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 p-3.5">
+              <Smartphone className="mt-0.5 h-5 w-5 shrink-0 text-[#C8860A]" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">Descarga la app de guardia</p>
+                <p className="text-xs text-muted-foreground">Google Play · App Store. Inicia sesión cuando tu cuenta esté activa.</p>
+              </div>
+            </div>
+          </div>
+          <p className="mt-6 text-xs text-muted-foreground">Ya puedes cerrar esta ventana.</p>
+        </div>
+      ) : (
       <form className="space-y-3" onSubmit={handleSubmit}>
         {inviteNotFound && (
           <div className="rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800">
@@ -788,6 +822,7 @@ export default function GuardRegistration() {
           <NavLink to="/login" className="text-xs font-medium text-muted-foreground transition-colors hover:text-[#C8860A]">{t('auth.back_to_login', { defaultValue: 'Volver a iniciar sesión' })}</NavLink>
         </div>
       </form>
+      )}
     </GuardInviteLayout>
   );
 }
