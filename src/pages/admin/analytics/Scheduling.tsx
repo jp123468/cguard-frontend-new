@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ClipboardCheck, CheckCircle2, AlertCircle, CalendarClock, Building2 } from "lucide-react";
 import {
-  useOpsAnalytics, AnalyticsShell, MetricCard, HBars, Section, GOLD, pctClass, RangeFooter,
+  useOpsAnalytics, AnalyticsShell, MetricCard, HBars, Section, GOLD, pctClass, RangeFooter, SiteLink,
 } from "./_shared";
 
 // Per-day stacked coverage: muted = scheduled, green overlay = covered.
@@ -69,7 +69,7 @@ export default function Scheduling() {
                   {data.perSite.filter((s) => s.shiftsTotal > 0).slice(0, 8).map((s, i) => (
                     <div key={i}>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="truncate font-medium text-foreground" title={s.site}>{s.site}</span>
+                        <span className="truncate" title={s.site}><SiteLink id={s.id} name={s.site} /></span>
                         <span className={pctClass(s.coveragePct)}>{s.coveragePct}% <span className="text-muted-foreground">({s.shiftsCovered}/{s.shiftsTotal})</span></span>
                       </div>
                       <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">

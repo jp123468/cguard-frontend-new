@@ -1,8 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, RefreshCw } from "lucide-react";
 import { analyticsService, OpsAnalytics } from "@/lib/api/analyticsService";
+
+/** Link a site name to its post-site detail page. */
+export function SiteLink({ id, name }: { id?: string; name: string }) {
+  if (!id) return <span className="font-medium text-foreground">{name}</span>;
+  return <Link to={`/post-sites/${id}`} className="font-medium text-foreground hover:text-[#C8860A] hover:underline">{name}</Link>;
+}
+
+/** Link a guard name to their performance/indicators page. */
+export function GuardLink({ id, name }: { id?: string; name: string }) {
+  if (!id) return <span className="font-medium text-foreground">{name}</span>;
+  return <Link to={`/guards/${id}/indicadores`} className="font-medium text-foreground hover:text-[#C8860A] hover:underline">{name}</Link>;
+}
 
 export const GOLD = "#C8860A";
 const fmtDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;

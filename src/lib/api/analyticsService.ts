@@ -16,7 +16,7 @@ export interface OpsAnalytics {
   trend: Array<{ date: string; incidents: number; scans: number; rondas: number }>;
   incidentsByPriority: Array<{ label: string; count: number }>;
   topIncidentSites: Array<{ site: string; count: number }>;
-  perSite: Array<{ site: string; guards: number; shiftsTotal: number; shiftsCovered: number; coveragePct: number; rondasCompleted: number; incidents: number; locationCompliancePct: number }>;
+  perSite: Array<{ id: string; site: string; guards: number; shiftsTotal: number; shiftsCovered: number; coveragePct: number; rondasCompleted: number; incidents: number; locationCompliancePct: number }>;
   perGuard: Array<{ name: string; shifts: number; hoursWorked: number; onTimePct: number; late: number; incidents: number }>;
   coverageTrend: Array<{ date: string; scheduled: number; covered: number }>;
   upcomingUncovered: Array<{ site: string; count: number }>;

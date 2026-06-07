@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { Shield, Clock, Award, Timer, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import {
-  useOpsAnalytics, AnalyticsShell, MetricCard, Section, GOLD, pctClass, RangeFooter,
+  useOpsAnalytics, AnalyticsShell, MetricCard, Section, GOLD, pctClass, RangeFooter, GuardLink,
 } from "./_shared";
 import { analyticsService, PerfLeaderboard, GuardPerformance } from "@/lib/api/analyticsService";
 
@@ -124,7 +124,7 @@ export default function Guard() {
                         <Fragment key={g.id}>
                           <tr className="cursor-pointer hover:bg-muted/20" onClick={() => setExpanded(open ? null : g.id)}>
                             <td className="px-3 py-2 text-muted-foreground">{g.hasData ? i + 1 : "—"}</td>
-                            <td className="px-3 py-2 font-medium text-foreground">{g.name}</td>
+                            <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}><GuardLink id={g.id} name={g.name} /></td>
                             <td className="px-3 py-2"><ScoreBadge score={g.score} tier={g.tier} /></td>
                             <td className="px-3 py-2"><span style={{ color: tierOf(g.tier).color }} className="text-xs font-semibold">{g.hasData ? tierOf(g.tier).label : "—"}</span></td>
                             <td className="px-3 py-2 text-right">{g.attendanceRate != null ? <span className={pctClass(g.attendanceRate)}>{g.attendanceRate}%</span> : <span className="text-muted-foreground">—</span>}</td>

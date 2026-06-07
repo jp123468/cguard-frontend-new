@@ -1,12 +1,21 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
-  Shield, ClipboardCheck, MapPin, AlertTriangle, Clock, TrendingUp, Building2,
+  Shield, ClipboardCheck, MapPin, AlertTriangle, Clock, TrendingUp, Building2, Award, ArrowRight,
 } from "lucide-react";
 import {
-  useOpsAnalytics, AnalyticsShell, MetricCard, DayBars, HBars, Section, GOLD, pctClass, RangeFooter,
+  useOpsAnalytics, AnalyticsShell, MetricCard, DayBars, HBars, Section, GOLD, pctClass, RangeFooter, SiteLink, GuardLink,
 } from "./_shared";
+import { analyticsService, PerfLeaderboard } from "@/lib/api/analyticsService";
 
 export default function Reporting() {
   const { days, setDays, data, loading, error, reload } = useOpsAnalytics(30);
+  const [lb, setLb] = useState<PerfLeaderboard | null>(null);
+  useEffect(() => {
+    let on = true;
+    analyticsService.performanceGuards(days).then((r) => { if (on) setLb(r); }).catch(() => { if (on) setLb(null); });
+    return () => { on = false; };
+  }, [days]);
   const k = data?.kpis;
 
   return (
@@ -25,6 +34,39 @@ export default function Reporting() {
             <MetricCard icon={<AlertTriangle size={16} />} accent="#ef4444" value={k.incidentsTotal} label="Incidentes" sub={`${k.incidentsOpen} abiertos`} />
             <MetricCard icon={<Clock size={16} />} accent="#f59e0b" value={`${k.punctualityPct}%`} label="Puntualidad" sub={`${k.clockinsOnTime}/${k.clockinsTotal} a tiempo`} pct={k.punctualityPct} />
           </div>
+
+          {/* Team performance — official score (links to Guardias) */}
+          {lb && lb.averageScore != null && (
+            <Section title="Desempeño del equipo" icon={<Award size={16} className="text-[#C8860A]" />}>
+              <div className="grid gap-5 md:grid-cols-3">
+                <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-muted/10 p-4 text-center">
+                  <p className="text-5xl font-bold text-[#C8860A]">{lb.averageScore}</p>
+                  <p className="text-xs text-muted-foreground">Puntuación promedio /100</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{lb.counts.scored} guardias evaluados · {lb.counts.excellent} excelentes</p>
+                </div>
+                <div className="md:col-span-2">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-foreground">Guardias con menor desempeño</p>
+                    <Link to="/analytics/guard" className="inline-flex items-center gap-1 text-xs font-medium text-[#C8860A] hover:underline">Ver ranking completo <ArrowRight size={12} /></Link>
+                  </div>
+                  {lb.guards.filter((g) => g.hasData).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sin guardias evaluados en el período.</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {lb.guards.filter((g) => g.hasData).slice(-5).reverse().map((g) => (
+                        <li key={g.id} className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2">
+                          <GuardLink id={g.id} name={g.name} />
+                          <span className="text-sm font-bold" style={{ color: g.score != null && g.score >= 75 ? "#0284c7" : g.score != null && g.score >= 60 ? "#d97706" : "#e11d48" }}>
+                            {g.score}<span className="text-[10px] font-normal text-muted-foreground">/100</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </Section>
+          )}
 
           <div className="grid gap-4 lg:grid-cols-3">
             <DayBars title="Escaneos de ronda por día" color={GOLD} points={data.trend.map((t) => ({ k: t.date, v: t.scans }))} />
@@ -75,7 +117,7 @@ export default function Reporting() {
                   <tbody className="divide-y">
                     {data.perSite.slice(0, 10).map((s, i) => (
                       <tr key={i} className="hover:bg-muted/20">
-                        <td className="px-3 py-2 font-medium text-foreground">{s.site}</td>
+                        <td className="px-3 py-2"><SiteLink id={s.id} name={s.site} /></td>
                         <td className="px-3 py-2 text-right text-muted-foreground">{s.guards}</td>
                         <td className="px-3 py-2 text-right"><span className={pctClass(s.coveragePct)}>{s.coveragePct}%</span></td>
                         <td className="px-3 py-2 text-right text-muted-foreground">{s.rondasCompleted}</td>

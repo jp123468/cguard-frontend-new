@@ -1,6 +1,6 @@
 import { Building2, AlertTriangle, ClipboardCheck, MapPin } from "lucide-react";
 import {
-  useOpsAnalytics, AnalyticsShell, MetricCard, HBars, Section, GOLD, pctClass, RangeFooter,
+  useOpsAnalytics, AnalyticsShell, MetricCard, HBars, Section, GOLD, pctClass, RangeFooter, SiteLink,
 } from "./_shared";
 
 export default function PostSite() {
@@ -46,7 +46,7 @@ export default function PostSite() {
                   <tbody className="divide-y">
                     {data.perSite.map((s, i) => (
                       <tr key={i} className="hover:bg-muted/20">
-                        <td className="px-3 py-2 font-medium text-foreground">{s.site}</td>
+                        <td className="px-3 py-2"><SiteLink id={s.id} name={s.site} /></td>
                         <td className="px-3 py-2 text-right text-muted-foreground">{s.guards}</td>
                         <td className="px-3 py-2 text-right text-muted-foreground">{s.shiftsCovered}/{s.shiftsTotal}</td>
                         <td className="px-3 py-2 text-right"><span className={pctClass(s.coveragePct)}>{s.coveragePct}%</span></td>
