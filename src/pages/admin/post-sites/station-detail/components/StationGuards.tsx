@@ -16,9 +16,43 @@ interface Assignment {
   positionName: string;
   type: PosType;
   rotation: string;
+  workDays: Set<string>;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+// Local YYYY-MM-DD key (don't use toISOString — it shifts by timezone).
+const dk = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const WEEKDAY = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+// The next 14 days, starting today.
+const NEXT_DAYS: Date[] = Array.from({ length: 14 }, (_, i) => {
+  const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i); return d;
+});
+
+/** A 14-day strip: filled on the days this guard works, muted on days off. For a
+ *  fijo, the muted (rest) days are exactly what the sacafranco should fill. */
+function CoverageStrip({ work, type }: { work: Set<string>; type: PosType }) {
+  if (!work || work.size === 0) return null;
+  const onCls = type === 'sacafranco' ? 'bg-indigo-500 text-white' : 'bg-[#C8860A] text-white';
+  return (
+    <div className="mt-1.5 flex gap-0.5">
+      {NEXT_DAYS.map((d, i) => {
+        const on = work.has(dk(d));
+        const isToday = i === 0;
+        return (
+          <div
+            key={i}
+            title={`${dk(d)} — ${on ? (type === 'sacafranco' ? 'cubre' : 'trabaja') : 'descansa'}`}
+            className={`flex h-5 w-5 flex-col items-center justify-center rounded text-[8px] font-semibold leading-none ${on ? onCls : 'bg-muted/40 text-muted-foreground'} ${isToday ? 'ring-1 ring-foreground/40' : ''}`}
+          >
+            <span className="opacity-70">{WEEKDAY[d.getDay()]}</span>
+            <span>{d.getDate()}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function StationGuards({ station, stationId }: Props) {
   const { t } = useTranslation();
@@ -42,25 +76,43 @@ export default function StationGuards({ station, stationId }: Props) {
     setError(null);
     try {
       const ts = Date.now();
-      const [aRes, pRes, gRes]: any[] = await Promise.all([
+      const [aRes, pRes, gRes, sRes]: any[] = await Promise.all([
         ApiService.get(`/tenant/${tenantId}/guard-assignments?stationId=${encodeURIComponent(stationId)}&status=active&_=${ts}`).catch(() => []),
         ApiService.get(`/tenant/${tenantId}/station/${encodeURIComponent(stationId)}/positions?_=${ts}`).catch(() => []),
         ApiService.get(`/tenant/${tenantId}/security-guard?limit=999&_=${ts}`).catch(() => []),
+        ApiService.get(`/tenant/${tenantId}/shift?filter[station]=${encodeURIComponent(stationId)}&limit=999&_=${ts}`).catch(() => []),
       ]);
+
+      // Build per-guard work-day sets from generated shifts (keyed by every id
+      // we can find on the shift's guard, so it matches the assignment's user id).
+      const workByGuard: Record<string, Set<string>> = {};
+      const addWork = (id: any, key: string) => { if (id) (workByGuard[String(id)] ||= new Set()).add(key); };
+      const sRows = Array.isArray(sRes) ? sRes : (sRes?.rows ?? []);
+      for (const s of sRows) {
+        const when = s.startTime || s.start || s.punchInTime;
+        if (!when) continue;
+        const d = new Date(when);
+        if (isNaN(d.getTime())) continue;
+        const key = dk(d);
+        const sg = s.guard || s.securityGuard || s.user || {};
+        addWork(sg.id, key); addWork(sg.guardId, key); addWork(s.guardId, key); addWork(s.securityGuardId, key);
+      }
 
       const aRows = Array.isArray(aRes) ? aRes : (aRes?.rows ?? []);
       setRows(aRows.map((a: any): Assignment => {
         const g = a.guard || a.user || {};
         const pos = a.position || {};
         const type: PosType = (pos.type || (a.isRelief ? 'sacafranco' : 'fijo')) as PosType;
+        const guardUserId = g.id || a.guardId || '';
         return {
           id: String(a.id),
-          guardUserId: g.id || a.guardId || '',
+          guardUserId,
           guardName: g.fullName || `${g.firstName || ''} ${g.lastName || ''}`.trim() || g.email || '—',
           positionId: a.positionId || pos.id || null,
           positionName: pos.name || (type === 'sacafranco' ? 'Sacafranco' : 'Fijo'),
           type,
           rotation: a.rotationStyle?.name || a.rotationStyle?.pattern || '',
+          workDays: workByGuard[String(guardUserId)] || new Set(),
         };
       }));
 
@@ -168,6 +220,14 @@ export default function StationGuards({ station, stationId }: Props) {
             <p className="mt-0.5 text-xs text-muted-foreground">
               {t('station.guards.hint', 'El fijo cubre la rotación; el sacafranco cubre sus días de descanso.')}
             </p>
+            {rows.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+                <span className="font-medium">Próximos 14 días:</span>
+                <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-[#C8860A]" /> Fijo trabaja</span>
+                <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-indigo-500" /> Sacafranco cubre</span>
+                <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-muted/40" /> Descanso</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => openAssign('fijo')} className="inline-flex items-center gap-1.5 rounded-full bg-[#C8860A] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#B37809]">
@@ -204,6 +264,7 @@ export default function StationGuards({ station, stationId }: Props) {
                     {a.rotation ? <span className="text-xs text-muted-foreground">· {a.rotation}</span> : null}
                   </div>
                   <div className="text-xs text-muted-foreground">{a.positionName}</div>
+                  <CoverageStrip work={a.workDays} type={a.type} />
                 </div>
                 <button onClick={() => openChange(a)} className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted/40" title={t('station.guards.change', 'Cambiar')}>
                   <RefreshCw size={13} /> {t('station.guards.change', 'Cambiar')}
