@@ -9,7 +9,8 @@ type Props = { station: any; stationId: string; postSiteId: string };
 type PosType = 'fijo' | 'sacafranco';
 
 interface Assignment {
-  id: string;
+  id: string;                    // row key: `a:<assignmentId>` or `s:<userId>`
+  assignmentId: string | null;   // guardAssignment id, if any
   guardUserId: string;
   guardName: string;
   positionId: string | null;
@@ -17,6 +18,7 @@ interface Assignment {
   type: PosType;
   rotation: string;
   workDays: Set<string>;
+  shiftIds: string[];            // all of this guard's shift ids at the station
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -24,28 +26,30 @@ const today = () => new Date().toISOString().slice(0, 10);
 // Local YYYY-MM-DD key (don't use toISOString — it shifts by timezone).
 const dk = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const WEEKDAY = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-// The next 14 days, starting today.
-const NEXT_DAYS: Date[] = Array.from({ length: 14 }, (_, i) => {
+// The next 4 weeks (28 days), starting today.
+const NEXT_DAYS: Date[] = Array.from({ length: 28 }, (_, i) => {
   const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i); return d;
 });
 
-/** A 14-day strip: filled on the days this guard works, muted on days off. For a
- *  fijo, the muted (rest) days are exactly what the sacafranco should fill. */
+/** A 4-week strip: filled on the days this guard works, muted on days off. For a
+ *  fijo, the muted (rest) days are exactly what the sacafranco should fill. A
+ *  small gap separates each week. */
 function CoverageStrip({ work, type }: { work: Set<string>; type: PosType }) {
   if (!work || work.size === 0) return null;
   const onCls = type === 'sacafranco' ? 'bg-indigo-500 text-white' : 'bg-[#C8860A] text-white';
   return (
-    <div className="mt-1.5 flex gap-0.5">
+    <div className="mt-1.5 flex gap-px overflow-x-auto pb-1">
       {NEXT_DAYS.map((d, i) => {
         const on = work.has(dk(d));
         const isToday = i === 0;
+        const weekGap = i > 0 && i % 7 === 0 ? 'ml-1.5' : '';
         return (
           <div
             key={i}
             title={`${dk(d)} — ${on ? (type === 'sacafranco' ? 'cubre' : 'trabaja') : 'descansa'}`}
-            className={`flex h-5 w-5 flex-col items-center justify-center rounded text-[8px] font-semibold leading-none ${on ? onCls : 'bg-muted/40 text-muted-foreground'} ${isToday ? 'ring-1 ring-foreground/40' : ''}`}
+            className={`flex h-6 w-[18px] shrink-0 flex-col items-center justify-center rounded-sm text-[8px] font-semibold leading-none ${weekGap} ${on ? onCls : 'bg-muted/40 text-muted-foreground'} ${isToday ? 'ring-1 ring-foreground/50' : ''}`}
           >
-            <span className="opacity-70">{WEEKDAY[d.getDay()]}</span>
+            <span className="opacity-60">{WEEKDAY[d.getDay()]}</span>
             <span>{d.getDate()}</span>
           </div>
         );
@@ -83,49 +87,89 @@ export default function StationGuards({ station, stationId }: Props) {
         ApiService.get(`/tenant/${tenantId}/shift?filter[station]=${encodeURIComponent(stationId)}&limit=999&_=${ts}`).catch(() => []),
       ]);
 
-      // Build per-guard work-day sets from generated shifts (keyed by every id
-      // we can find on the shift's guard, so it matches the assignment's user id).
+      // Alias map: any guard id (securityGuard id, user id) -> canonical user id.
+      // Lets us match shifts (which may reference either) to one guard reliably.
+      const gRows = Array.isArray(gRes) ? gRes : (gRes?.rows ?? []);
+      const aliasToUser: Record<string, string> = {};
+      const nameByUser: Record<string, string> = {};
+      const guardOptions: { id: string; label: string }[] = [];
+      for (const r of gRows) {
+        const u = r.guard || r;
+        const userId = String(u.id || r.guardId || r.id || '');
+        if (!userId) continue;
+        const label = u.fullName || r.fullName || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email || '—';
+        aliasToUser[userId] = userId;
+        if (r.id) aliasToUser[String(r.id)] = userId;
+        if (r.guardId) aliasToUser[String(r.guardId)] = userId;
+        if (u.id) aliasToUser[String(u.id)] = userId;
+        nameByUser[userId] = label;
+        guardOptions.push({ id: userId, label });
+      }
+      setGuards(guardOptions.filter((x) => x.id && x.label));
+
+      // Per-guard work-days + shift ids from generated shifts (source of truth —
+      // the Turnos tab writes raw shifts), canonicalized to the user id.
       const workByGuard: Record<string, Set<string>> = {};
-      const addWork = (id: any, key: string) => { if (id) (workByGuard[String(id)] ||= new Set()).add(key); };
+      const shiftIdsByGuard: Record<string, string[]> = {};
       const sRows = Array.isArray(sRes) ? sRes : (sRes?.rows ?? []);
       for (const s of sRows) {
         const when = s.startTime || s.start || s.punchInTime;
         if (!when) continue;
         const d = new Date(when);
         if (isNaN(d.getTime())) continue;
-        const key = dk(d);
         const sg = s.guard || s.securityGuard || s.user || {};
-        addWork(sg.id, key); addWork(sg.guardId, key); addWork(s.guardId, key); addWork(s.securityGuardId, key);
+        const rawId = sg.id || sg.guardId || s.guardId || s.securityGuardId;
+        if (!rawId) continue;
+        const uid = aliasToUser[String(rawId)] || String(rawId);
+        (workByGuard[uid] ||= new Set()).add(dk(d));
+        (shiftIdsByGuard[uid] ||= []).push(String(s.id));
+        if (!nameByUser[uid]) {
+          const nm = sg.fullName || `${sg.firstName || ''} ${sg.lastName || ''}`.trim() || sg.email;
+          if (nm) nameByUser[uid] = nm;
+        }
       }
 
+      // Rows: guard-assignments first (rich: type + position), then shift-only
+      // guards added via the Turnos tab (no guard-assignment record).
       const aRows = Array.isArray(aRes) ? aRes : (aRes?.rows ?? []);
-      setRows(aRows.map((a: any): Assignment => {
+      const seen = new Set<string>();
+      const out: Assignment[] = [];
+      for (const a of aRows) {
         const g = a.guard || a.user || {};
         const pos = a.position || {};
         const type: PosType = (pos.type || (a.isRelief ? 'sacafranco' : 'fijo')) as PosType;
-        const guardUserId = g.id || a.guardId || '';
-        return {
-          id: String(a.id),
-          guardUserId,
-          guardName: g.fullName || `${g.firstName || ''} ${g.lastName || ''}`.trim() || g.email || '—',
+        const uid = aliasToUser[String(g.id || a.guardId || '')] || String(g.id || a.guardId || '');
+        if (uid) seen.add(uid);
+        out.push({
+          id: `a:${a.id}`,
+          assignmentId: String(a.id),
+          guardUserId: uid,
+          guardName: g.fullName || `${g.firstName || ''} ${g.lastName || ''}`.trim() || g.email || nameByUser[uid] || '—',
           positionId: a.positionId || pos.id || null,
           positionName: pos.name || (type === 'sacafranco' ? 'Sacafranco' : 'Fijo'),
           type,
           rotation: a.rotationStyle?.name || a.rotationStyle?.pattern || '',
-          workDays: workByGuard[String(guardUserId)] || new Set(),
-        };
-      }));
-
+          workDays: workByGuard[uid] || new Set(),
+          shiftIds: Array.from(new Set(shiftIdsByGuard[uid] || [])),
+        });
+      }
+      for (const uid of Object.keys(shiftIdsByGuard)) {
+        if (seen.has(uid)) continue;
+        out.push({
+          id: `s:${uid}`,
+          assignmentId: null,
+          guardUserId: uid,
+          guardName: nameByUser[uid] || '—',
+          positionId: null,
+          positionName: t('station.guards.viaTurnos', 'Turno asignado'),
+          type: 'fijo',
+          rotation: '',
+          workDays: workByGuard[uid] || new Set(),
+          shiftIds: Array.from(new Set(shiftIdsByGuard[uid] || [])),
+        });
+      }
+      setRows(out);
       setPositions(Array.isArray(pRes) ? pRes : (pRes?.rows ?? []));
-
-      const gRows = Array.isArray(gRes) ? gRes : (gRes?.rows ?? []);
-      setGuards(gRows.map((r: any) => {
-        const g = r.guard || r;
-        return {
-          id: g.id || r.guardId || r.id, // assignment needs the user id
-          label: g.fullName || r.fullName || `${g.firstName || ''} ${g.lastName || ''}`.trim() || g.email || '—',
-        };
-      }).filter((x: any) => x.id && x.label));
     } catch (e: any) {
       setError(e?.message || t('station.guards.loadError', 'Error al cargar guardias'));
     } finally {
@@ -165,14 +209,32 @@ export default function StationGuards({ station, stationId }: Props) {
     });
   };
 
+  // Delete shifts in batches (keeps the request URL within limits).
+  const deleteShifts = async (ids: string[]) => {
+    for (let i = 0; i < ids.length; i += 40) {
+      const grp = ids.slice(i, i + 40);
+      if (grp.length) await ApiService.delete(`/tenant/${tenantId}/shift?ids=${grp.map(encodeURIComponent).join(',')}`);
+    }
+  };
+
   const submitAssign = async () => {
     if (!pickGuard) { toast.error(t('station.guards.pickGuard', 'Selecciona un guardia')); return; }
     setSaving(true);
     try {
       if (changeTarget) {
-        // Change = remove old + assign new on the same position.
-        await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${encodeURIComponent(changeTarget.id)}`);
-        await doAssign(pickGuard, changeTarget.type, changeTarget.positionId);
+        if (changeTarget.assignmentId) {
+          // Assignment-based: end the old assignment + its shifts, then create a
+          // fresh assignment (with rotation) for the new guard.
+          await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${encodeURIComponent(changeTarget.assignmentId)}`);
+          await deleteShifts(changeTarget.shiftIds);
+          await doAssign(pickGuard, changeTarget.type, changeTarget.positionId);
+        } else {
+          // Turnos-based (raw shifts): reassign each shift to the new guard,
+          // keeping the existing schedule intact.
+          for (const sid of changeTarget.shiftIds) {
+            await ApiService.patch(`/tenant/${tenantId}/shift/${encodeURIComponent(sid)}/assign`, { data: { guard: pickGuard } });
+          }
+        }
         toast.success(t('station.guards.changed', 'Guardia actualizado'));
       } else if (assignType) {
         await doAssign(pickGuard, assignType);
@@ -190,11 +252,15 @@ export default function StationGuards({ station, stationId }: Props) {
   };
 
   const removeGuard = async (a: Assignment) => {
-    if (!window.confirm(t('station.guards.confirmRemove', `¿Quitar a ${a.guardName} de este puesto?`).replace('{name}', a.guardName))) return;
+    if (!window.confirm(`¿Quitar a ${a.guardName} de este puesto? Se eliminarán sus turnos en este sitio.`)) return;
     try {
-      await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${encodeURIComponent(a.id)}`);
+      if (a.assignmentId) {
+        await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${encodeURIComponent(a.assignmentId)}`);
+      }
+      // Remove their shifts so they disappear from the Turnos tab too.
+      await deleteShifts(a.shiftIds);
       setRows((rs) => rs.filter((x) => x.id !== a.id));
-      toast.success(t('station.guards.removed', 'Guardia removido del puesto'));
+      toast.success(t('station.guards.removed', 'Guardia removido del puesto y de los turnos'));
     } catch (e: any) {
       toast.error(e?.message || t('station.guards.removeFailed', 'No se pudo quitar'));
     }
@@ -222,7 +288,7 @@ export default function StationGuards({ station, stationId }: Props) {
             </p>
             {rows.length > 0 && (
               <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
-                <span className="font-medium">Próximos 14 días:</span>
+                <span className="font-medium">Próximas 4 semanas:</span>
                 <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-[#C8860A]" /> Fijo trabaja</span>
                 <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-indigo-500" /> Sacafranco cubre</span>
                 <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-muted/40" /> Descanso</span>
