@@ -653,6 +653,7 @@ export default function Schedule() {
   const [proposalLoading, setProposalLoading] = useState(false);
   const [proposalData, setProposalData] = useState<any>(null); // { proposal, changes }
   const [publishing, setPublishing] = useState(false);
+  const [planData, setPlanData] = useState<any>(null); // implementation plan after publish
 
   const generateDraft = async () => {
     setProposalLoading(true);
@@ -674,9 +675,14 @@ export default function Schedule() {
     if (!id) return;
     setPublishing(true);
     try {
-      await ApiService.post(`/tenant/${tenantId}/scheduler/proposals/${id}/publish`, { data: { confirm: true } });
-      toast.success('Horario publicado y aplicado');
-      setProposalData(null);
+      const res = await ApiService.post(`/tenant/${tenantId}/scheduler/proposals/${id}/publish`, { data: { confirm: true } });
+      const notified = res?.plan?.notifiedGuards ?? res?.data?.plan?.notifiedGuards ?? 0;
+      toast.success(`Horario publicado · ${notified} guardia${notified === 1 ? '' : 's'} notificado${notified === 1 ? '' : 's'}`);
+      // Switch the modal to the implementation plan (who was notified).
+      try {
+        const plan = await ApiService.get(`/tenant/${tenantId}/scheduler/proposals/${id}/plan`);
+        setPlanData(plan?.data ?? plan);
+      } catch { setPlanData({ plan: { notifiedGuards: notified }, items: [] }); }
       fetchAll();
     } catch (e: any) {
       toast.error(e?.data?.message || e?.message || 'Error al publicar');
@@ -692,6 +698,8 @@ export default function Schedule() {
     }
     setProposalData(null);
   };
+
+  const closeProposalModal = () => { setProposalData(null); setPlanData(null); };
   const [aiLoading, setAiLoading] = useState(false);
   const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
 
@@ -1767,14 +1775,46 @@ export default function Schedule() {
           <div className="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl bg-card shadow-2xl border border-border/30 overflow-hidden">
             <div className="px-5 py-4 border-b border-border/20">
               <div className="flex items-center gap-2">
-                <FileText size={18} className="text-[#C8860A]" />
-                <h3 className="text-base font-bold text-foreground">Borrador de horario</h3>
+                {planData ? <CheckCircle2 size={18} className="text-emerald-600" /> : <FileText size={18} className="text-[#C8860A]" />}
+                <h3 className="text-base font-bold text-foreground">{planData ? 'Plan de implementación' : 'Borrador de horario'}</h3>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Revisa los cambios propuestos. Nada se aplica hasta que publiques.
+                {planData ? 'Horario publicado. Estos guardias fueron notificados de sus cambios.' : 'Revisa los cambios propuestos. Nada se aplica hasta que publiques.'}
               </p>
             </div>
 
+            {planData ? (
+              /* Implementation plan (post-publish): who was notified */
+              <div className="flex-1 overflow-auto px-5 py-3">
+                <div className="mb-3 flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-emerald-700">
+                  <Users size={16} />
+                  <span className="text-sm font-semibold">
+                    {(planData?.plan?.notifiedGuards ?? 0)} de {(planData?.plan?.totalGuards ?? planData?.items?.length ?? 0)} guardias notificados
+                  </span>
+                </div>
+                {(planData?.items || []).length ? (
+                  <div className="divide-y divide-border/20">
+                    {(planData.items || []).map((it: any) => {
+                      const ch: string[] = [];
+                      if (it.added) ch.push(`+${it.added}`);
+                      if (it.changed) ch.push(`~${it.changed}`);
+                      if (it.removed) ch.push(`-${it.removed}`);
+                      const ok = it.notifyStatus === 'sent';
+                      return (
+                        <div key={it.id || it.guardId} className="flex items-center gap-3 py-2">
+                          <span className={`shrink-0 ${ok ? 'text-emerald-600' : 'text-muted-foreground'}`}>{ok ? <CheckCircle2 size={15} /> : <Clock size={15} />}</span>
+                          <span className="min-w-0 flex-1 truncate text-sm text-foreground">{it.guardName || 'Guardia'}</span>
+                          <span className="shrink-0 font-mono text-xs text-muted-foreground">{ch.join(' ')}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="py-8 text-center text-sm text-muted-foreground">No hubo guardias afectados.</p>
+                )}
+              </div>
+            ) : (
+            <>
             {/* Summary counters */}
             {(() => {
               const s = proposalData?.proposal?.summary || {};
@@ -1835,15 +1875,23 @@ export default function Schedule() {
                 );
               })()}
             </div>
+            </>
+            )}
 
             <div className="px-5 py-3 border-t border-border/20 flex items-center justify-between gap-3">
-              <button onClick={discardProposal} disabled={publishing} className="px-4 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-500/10 disabled:opacity-50 transition-all flex items-center gap-1.5">
-                <Trash2 size={14} /> Descartar
-              </button>
-              <button onClick={publishProposal} disabled={publishing} className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#C8860A] hover:bg-[#B37809] disabled:opacity-50 transition-all shadow-sm flex items-center gap-2">
-                {publishing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                {publishing ? 'Publicando...' : 'Publicar y aplicar'}
-              </button>
+              {planData ? (
+                <button onClick={closeProposalModal} className="ml-auto px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#C8860A] hover:bg-[#B37809] transition-all shadow-sm">Listo</button>
+              ) : (
+                <>
+                  <button onClick={discardProposal} disabled={publishing} className="px-4 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-500/10 disabled:opacity-50 transition-all flex items-center gap-1.5">
+                    <Trash2 size={14} /> Descartar
+                  </button>
+                  <button onClick={publishProposal} disabled={publishing} className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#C8860A] hover:bg-[#B37809] disabled:opacity-50 transition-all shadow-sm flex items-center gap-2">
+                    {publishing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                    {publishing ? 'Publicando...' : 'Publicar y aplicar'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
