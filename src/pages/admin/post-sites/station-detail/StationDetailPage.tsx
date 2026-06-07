@@ -13,6 +13,7 @@ import StationTagScans from './components/StationTagScans';
 import StationInventory from './components/StationInventory';
 import StationIncidents from './components/StationIncidents';
 import StationSiteTourTags from './components/StationSiteTourTags';
+import StationPatrolQR from './components/StationPatrolQR';
 import StationParking from './components/StationParking';
 import StationOrders from './components/StationOrders';
 
@@ -68,7 +69,7 @@ export default function StationDetailPage() {
       case 'tag-scans':  return <StationTagScans {...tabProps} />;
       case 'inventory':  return <StationInventory {...tabProps} />;
       case 'incidents':  return <StationIncidents {...tabProps} />;
-      case 'etiquetas':  return <StationSiteTourTags {...tabProps} />;
+      case 'etiquetas':  return <StationPatrolQR {...tabProps} />;
       case 'parking':    return <StationParking {...tabProps} />;
       default:           return <StationOverview {...tabProps} />;
     }

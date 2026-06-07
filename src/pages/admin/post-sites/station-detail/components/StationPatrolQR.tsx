@@ -1,0 +1,263 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Loader2, QrCode, Download, Printer, MapPin, ShieldCheck, AlertTriangle, Crosshair } from 'lucide-react';
+import { ApiService, ApiError } from '@/services/api/apiService';
+import { toast } from 'sonner';
+
+type Props = { station: any; stationId: string; postSiteId: string };
+
+interface Checkpoint {
+  id: string;
+  siteTourId: string;
+  name: string;
+  tagIdentifier: string;
+  tagType: string;
+  tourName: string;
+  location: string;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+/** Free, no-dependency QR image for a given payload. */
+function qrUrl(identifier: string, size = 600): string {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=12&data=${encodeURIComponent(identifier)}`;
+}
+
+function num(v: any): number | null {
+  const n = Number(v);
+  return Number.isFinite(n) && (n !== 0 || v === 0) ? n : null;
+}
+
+export default function StationPatrolQR({ station, stationId }: Props) {
+  const { t } = useTranslation();
+  const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [settingLoc, setSettingLoc] = useState<string | null>(null);
+
+  const tenantId = (station?.tenantId || localStorage.getItem('tenantId') || '') as string;
+  const stationRadius = num(station?.geofenceRadius) ?? 75;
+  const stationLat = num(station?.latitud ?? station?.latitude);
+  const stationLng = num(station?.longitud ?? station?.longitude);
+
+  const load = useCallback(async () => {
+    if (!stationId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const ts = Date.now();
+      const toursRes: any = await ApiService.get(
+        `/tenant/${tenantId}/site-tour?stationId=${encodeURIComponent(stationId)}&limit=999&_=${ts}`,
+      );
+      const tourRows: any[] = Array.isArray(toursRes) ? toursRes : (toursRes?.rows ?? []);
+
+      const collected: Checkpoint[] = [];
+      for (const tr of tourRows) {
+        const tid = tr.id || tr._id;
+        if (!tid) continue;
+        const tourName = tr.name || tr.tourName || tr.siteTourName || '';
+        try {
+          const tagsRes: any = await ApiService.get(
+            `/tenant/${tenantId}/site-tour/${encodeURIComponent(tid)}/tags?_=${ts}`,
+          );
+          const rows = Array.isArray(tagsRes) ? tagsRes : (tagsRes?.rows ?? []);
+          rows.forEach((tag: any) => {
+            collected.push({
+              id: String(tag.id || tag._id),
+              siteTourId: tid,
+              name: tag.name || tag.tagName || tag.tagIdentifier || '—',
+              tagIdentifier: tag.tagIdentifier || String(tag.id),
+              tagType: (tag.tagType || tag.type || 'qr').toLowerCase(),
+              tourName,
+              location: tag.location || tag.locationDescription || '',
+              latitude: num(tag.latitude ?? tag.latitud),
+              longitude: num(tag.longitude ?? tag.longitud),
+            });
+          });
+        } catch { /* skip tour on error */ }
+      }
+      // de-dup by id
+      const seen = new Map<string, Checkpoint>();
+      collected.forEach((c) => { if (!seen.has(c.id)) seen.set(c.id, c); });
+      setCheckpoints(Array.from(seen.values()));
+    } catch (e: any) {
+      if (e instanceof ApiError && e.status === 404) setCheckpoints([]);
+      else setError(e?.message || t('station.patrolQr.loadError', 'Error al cargar los puntos de control'));
+    } finally {
+      setLoading(false);
+    }
+  }, [stationId, tenantId, t]);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Download a labeled PNG (QR + checkpoint name + identifier) via canvas.
+  const downloadQr = async (cp: Checkpoint) => {
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = qrUrl(cp.tagIdentifier, 600);
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+      const pad = 40, qr = 560, w = qr + pad * 2, h = qr + pad * 2 + 90;
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, pad, pad, qr, qr);
+      ctx.fillStyle = '#111827';
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 30px sans-serif';
+      ctx.fillText(cp.name.slice(0, 32), w / 2, qr + pad + 48);
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '20px monospace';
+      ctx.fillText(cp.tagIdentifier.slice(0, 40), w / 2, qr + pad + 80);
+      const link = document.createElement('a');
+      link.download = `QR-${cp.name.replace(/[^\w-]+/g, '_')}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch {
+      // CORS/canvas fallback: open the raw QR for manual save.
+      window.open(qrUrl(cp.tagIdentifier, 600), '_blank');
+    }
+  };
+
+  const printQrs = (list: Checkpoint[]) => {
+    const w = window.open('', '_blank', 'width=900,height=1200');
+    if (!w) return;
+    const cards = list.map((cp) => `
+      <div style="display:inline-block;width:300px;margin:14px;padding:16px;border:1px solid #e5e7eb;border-radius:12px;text-align:center;page-break-inside:avoid;vertical-align:top;">
+        <img src="${qrUrl(cp.tagIdentifier, 400)}" style="width:240px;height:240px;" />
+        <div style="font:bold 16px sans-serif;margin-top:10px;color:#111827;">${cp.name}</div>
+        <div style="font:12px monospace;color:#6b7280;margin-top:4px;">${cp.tagIdentifier}</div>
+        ${cp.tourName ? `<div style="font:12px sans-serif;color:#9ca3af;margin-top:2px;">${cp.tourName}</div>` : ''}
+      </div>`).join('');
+    w.document.write(`<html><head><title>QR Rondas</title></head><body style="font-family:sans-serif;text-align:center;">${cards}</body></html>`);
+    w.document.close();
+    setTimeout(() => { w.focus(); w.print(); }, 400);
+  };
+
+  // One-click: set a checkpoint's coordinates to the station's, so location
+  // verification works. (Most checkpoints sit at/near the post.)
+  const useStationLocation = async (cp: Checkpoint) => {
+    if (stationLat == null || stationLng == null) {
+      toast.error(t('station.patrolQr.stationNoCoords', 'El puesto no tiene coordenadas configuradas.'));
+      return;
+    }
+    setSettingLoc(cp.id);
+    try {
+      await ApiService.put(
+        `/tenant/${tenantId}/site-tour/${encodeURIComponent(cp.siteTourId)}/tag/${encodeURIComponent(cp.id)}`,
+        { data: { latitude: stationLat, longitude: stationLng } },
+      );
+      toast.success(t('station.patrolQr.locationSet', 'Ubicación del punto actualizada'));
+      setCheckpoints((cs) => cs.map((c) => c.id === cp.id ? { ...c, latitude: stationLat, longitude: stationLng } : c));
+    } catch (e: any) {
+      toast.error(e?.message || t('station.patrolQr.locationSetFailed', 'No se pudo actualizar la ubicación'));
+    } finally {
+      setSettingLoc(null);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Header + how-it-works banner */}
+      <div className="rounded-lg border border-border bg-card p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
+              <QrCode className="h-5 w-5 text-[#C8860A]" />
+              {t('station.patrolQr.title', 'Generar Códigos QR de Rondas')}
+              {!loading && checkpoints.length > 0 && (
+                <span className="text-sm font-normal text-muted-foreground">({checkpoints.length})</span>
+              )}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('station.patrolQr.subtitle', 'Imprime y coloca estos QR en cada punto de control. El guardia los escanea durante la ronda.')}
+            </p>
+          </div>
+          {checkpoints.length > 0 && (
+            <button
+              onClick={() => printQrs(checkpoints)}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#C8860A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#B37809]"
+            >
+              <Printer className="h-4 w-4" /> {t('station.patrolQr.printAll', 'Imprimir todos')}
+            </button>
+          )}
+        </div>
+
+        <div className="mt-4 flex items-start gap-2 rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-700">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            {t('station.patrolQr.verifyNote', 'Verificación de ubicación: al escanear, el servidor compara el GPS del guardia con la ubicación del punto. Solo cuenta como válido si está dentro de')}{' '}
+            <strong>{stationRadius} m</strong>. {t('station.patrolQr.verifyNote2', 'Los escaneos fuera de rango quedan registrados como "fuera de ubicación".')}
+          </p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12"><Loader2 className="animate-spin text-[#C8860A]" /></div>
+      ) : error ? (
+        <div className="rounded-lg border border-border bg-card p-6 text-sm text-red-600">{error}</div>
+      ) : checkpoints.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
+          <QrCode className="h-8 w-8 opacity-50" />
+          <p className="text-sm">{t('station.patrolQr.empty', 'Aún no hay puntos de control. Créalos en la sección "Rondas de Seguridad" y vuelve aquí para generar sus QR.')}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {checkpoints.map((cp) => {
+            const hasCoords = cp.latitude != null && cp.longitude != null;
+            return (
+              <div key={cp.id} className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
+                <div className="flex items-center justify-center bg-white p-4">
+                  <img src={qrUrl(cp.tagIdentifier, 300)} alt={cp.name} className="h-44 w-44" />
+                </div>
+                <div className="flex flex-1 flex-col gap-2 p-4">
+                  <div>
+                    <div className="font-semibold text-foreground">{cp.name}</div>
+                    <div className="font-mono text-xs text-muted-foreground">{cp.tagIdentifier}</div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 font-medium uppercase text-amber-700">{cp.tagType}</span>
+                    {cp.tourName ? <span className="text-muted-foreground">{cp.tourName}</span> : null}
+                  </div>
+
+                  {hasCoords ? (
+                    <div className="inline-flex items-center gap-1.5 text-xs text-emerald-700">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {cp.latitude!.toFixed(5)}, {cp.longitude!.toFixed(5)}
+                      <span className="text-muted-foreground">· ±{stationRadius}m</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1.5 rounded-md bg-amber-500/10 p-2 text-xs text-amber-700">
+                      <span className="inline-flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" />{t('station.patrolQr.noCoords', 'Sin ubicación — la verificación no funcionará.')}</span>
+                      {stationLat != null && stationLng != null && (
+                        <button
+                          onClick={() => useStationLocation(cp)}
+                          disabled={settingLoc === cp.id}
+                          className="inline-flex w-fit items-center gap-1.5 rounded border border-amber-300 bg-white px-2 py-1 font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-50"
+                        >
+                          {settingLoc === cp.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Crosshair className="h-3 w-3" />}
+                          {t('station.patrolQr.useStationLocation', 'Usar ubicación del puesto')}
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="mt-auto flex gap-2 pt-2">
+                    <button onClick={() => downloadQr(cp)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted/40">
+                      <Download className="h-4 w-4" /> {t('common.download', 'Descargar')}
+                    </button>
+                    <button onClick={() => printQrs([cp])} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted/40">
+                      <Printer className="h-4 w-4" /> {t('common.print', 'Imprimir')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
