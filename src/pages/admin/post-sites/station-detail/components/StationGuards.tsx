@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Loader2, UserPlus, Users, X, Repeat, Shield, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ApiService } from '@/services/api/apiService';
+import ShiftAssignModal from './ShiftAssignModal';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 type PosType = 'fijo' | 'sacafranco';
@@ -58,9 +59,10 @@ function CoverageStrip({ work, type }: { work: Set<string>; type: PosType }) {
   );
 }
 
-export default function StationGuards({ station, stationId }: Props) {
+export default function StationGuards({ station, stationId, postSiteId }: Props) {
   const { t } = useTranslation();
   const tenantId = (station?.tenantId || localStorage.getItem('tenantId') || '') as string;
+  const [showShiftModal, setShowShiftModal] = useState(false);
 
   const [rows, setRows] = useState<Assignment[]>([]);
   const [positions, setPositions] = useState<any[]>([]);
@@ -296,7 +298,7 @@ export default function StationGuards({ station, stationId }: Props) {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => openAssign('fijo')} className="inline-flex items-center gap-1.5 rounded-full bg-[#C8860A] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#B37809]">
+            <button onClick={() => setShowShiftModal(true)} className="inline-flex items-center gap-1.5 rounded-full bg-[#C8860A] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#B37809]">
               <UserPlus size={15} /> {t('station.guards.assign', 'Asignar guardia')}
             </button>
             <button onClick={() => openAssign('sacafranco')} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/30">
@@ -393,6 +395,15 @@ export default function StationGuards({ station, stationId }: Props) {
         </div>,
         document.body,
       )}
+
+      <ShiftAssignModal
+        open={showShiftModal}
+        onClose={() => setShowShiftModal(false)}
+        onSaved={() => { setShowShiftModal(false); load(); }}
+        station={station}
+        stationId={stationId}
+        postSiteId={postSiteId}
+      />
     </>
   );
 }
