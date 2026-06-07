@@ -109,7 +109,7 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
       <div className="flex flex-1 flex-col items-center justify-center p-6 lg:p-12 bg-[#F8F7F4] dark:bg-slate-950 relative">
         {/* Logo solo en móvil */}
         <div className="mb-8 lg:hidden">
-          <img src="/assets/logo/c-guard-logo.png" alt="C-Guard" className="h-12 object-contain" />
+          <img src="/assets/logo/c-guard-logo.png" alt="C-Guard" className="h-12 object-contain dark:brightness-0 dark:invert" />
         </div>
 
         <div className="w-full max-w-md">

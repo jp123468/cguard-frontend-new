@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Building2 } from "lucide-react";
+import { Eye, EyeOff, Building2, CheckCircle2 } from "lucide-react";
+
+// Mi Seguridad (client app) store links — configurable via env so they can be
+// updated without a code change. Fallback to a store search until set.
+const MISEGURIDAD_PLAY_URL = (import.meta as any).env?.VITE_MISEGURIDAD_PLAY_URL || "https://play.google.com/store/search?q=Mi%20Seguridad%20CGuardPro&c=apps";
+const MISEGURIDAD_IOS_URL = (import.meta as any).env?.VITE_MISEGURIDAD_IOS_URL || "https://apps.apple.com/search?term=Mi%20Seguridad%20CGuardPro";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { ApiService } from "@/services/api/apiService";
@@ -23,6 +28,7 @@ export default function ClientRegistration() {
   const [confirm, setConfirm] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [done, setDone] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [fetched, setFetched] = useState<any>(null);
   const [inviteNotFound, setInviteNotFound] = useState(false);
@@ -129,8 +135,11 @@ export default function ClientRegistration() {
         name,
       };
       await AuthService.signUp(payload);
-      toast.success("Registro completado, ya puedes iniciar sesión");
-      navigate("/login");
+      // A client is NOT a tenant web-admin — do NOT send them to /login (it fails
+      // for them). Show a confirmation with the Mi Seguridad app + download links.
+      toast.success("¡Cuenta activada!");
+      setDone(true);
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
     } catch (err: any) {
       toast.error(err?.message || "Error al registrar");
     } finally {
@@ -264,11 +273,44 @@ export default function ClientRegistration() {
           {/* Card header */}
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-foreground mb-1">
-              {getTitle()}
+              {done ? '¡Cuenta activada!' : getTitle()}
             </h2>
+            {done && <p className="text-sm text-muted-foreground">Tu acceso quedó listo.</p>}
           </div>
 
-          {/* Form card */}
+          {/* Finish: Mi Seguridad app + download links (clients don't use the web login) */}
+          {done ? (
+            <div className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5 text-center">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#C8860A]/12">
+                <CheckCircle2 className="h-9 w-9 text-[#C8860A]" />
+              </div>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Tu cuenta con <strong className="text-foreground">{fetched?.tenant?.name || 'tu proveedor de seguridad'}</strong> está lista.
+                Descarga <strong className="text-foreground">Mi Seguridad</strong> para monitorear y gestionar tu servicio de seguridad desde tu teléfono.
+              </p>
+
+              {/* App card */}
+              <div className="mt-6 flex items-center gap-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 p-4 text-left">
+                <img src="/assets/logo/miseguridad.png" alt="Mi Seguridad" className="h-12 w-12 rounded-xl object-contain shrink-0" />
+                <div>
+                  <p className="text-sm font-bold text-foreground">Mi Seguridad</p>
+                  <p className="text-xs text-muted-foreground">Guardias y puestos en tiempo real, rondas con GPS, incidentes y reportes.</p>
+                </div>
+              </div>
+
+              {/* Download buttons */}
+              <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <a href={MISEGURIDAD_PLAY_URL} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-lg bg-[#0A0E16] px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90">
+                  <span style={{ fontSize: 18, lineHeight: 1 }}>▶</span> Google Play
+                </a>
+                <a href={MISEGURIDAD_IOS_URL} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-lg bg-[#0A0E16] px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90">
+                  <span style={{ fontSize: 18, lineHeight: 1 }}></span> App Store
+                </a>
+              </div>
+
+              <p className="mt-5 text-xs text-muted-foreground">Inicia sesión en la app con el correo y la contraseña que acabas de crear.</p>
+            </div>
+          ) : (
           <div className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5">
             <form className="space-y-3" onSubmit={handleSubmit}>
               {inviteNotFound && (
@@ -316,6 +358,7 @@ export default function ClientRegistration() {
               </div>
             </form>
           </div>
+          )}
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
             {fetched?.tenant?.name ? `© ${new Date().getFullYear()} ${fetched.tenant.name}` : ''}

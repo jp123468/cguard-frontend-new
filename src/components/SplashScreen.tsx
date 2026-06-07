@@ -20,7 +20,7 @@ export default function SplashScreen() {
         <img
           src="/assets/logo/c-guard-logo.png"
           alt="C Guard logo"
-          className="w-52 select-none"
+          className="w-52 select-none dark:brightness-0 dark:invert"
         />
 
         {/* <div className="text-center">
