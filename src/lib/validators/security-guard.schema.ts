@@ -19,8 +19,9 @@ const baseEntry = {
     .trim()
     .min(1, "El apellido es requerido")
     .regex(nameRegex, "El apellido no debe contener números ni caracteres inválidos"),
-  // Allow multiple clients/sites to be selected; store as arrays
-  clientId: z.array(z.string().trim()).min(1, "Seleccione al menos un cliente"),
+  // Client + station are OPTIONAL — a guard is invited with just name + contact
+  // and assigned to a client/station later. (Both were removed from the form.)
+  clientId: z.array(z.string().trim()).optional(),
   stationId: z.array(z.string().trim()).optional(),
 };
 
