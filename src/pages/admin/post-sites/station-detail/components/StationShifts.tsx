@@ -134,6 +134,32 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   // staffing used to cover it. So we read the station schedule FIRST and only
   // fall back to positions when no explicit schedule exists.
   const jornadas: Jornada[] = useMemo(() => {
+    const ALL_DAYS = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
+    const fijoCount = positions.filter((p: any) => (p.type || 'fijo') !== 'sacafranco').length;
+    const st = (station as any)?.scheduleType as string | undefined;
+
+    // Phase 3: the station's scheduleType is the AUTHORITATIVE coverage setup, so
+    // it drives the required jornadas. Only fall back to the legacy free-form
+    // stationSchedule JSON for 'custom' / unconfigured stations.
+    if (st === '24h') {
+      const g = Math.max(1, Math.ceil((fijoCount || 2) / 2));
+      return [
+        { tipo: 'Diurno', startTime: '07:00', endTime: '19:00', guardsCount: g, days: ALL_DAYS } as any,
+        { tipo: 'Nocturno', startTime: '19:00', endTime: '07:00', guardsCount: g, days: ALL_DAYS } as any,
+      ];
+    }
+    if (st === '12h-day' || st === '12h-night') {
+      const isNight = st === '12h-night';
+      return [{
+        tipo: isNight ? 'Nocturno' : 'Diurno',
+        startTime: isNight ? '19:00' : '07:00',
+        endTime: isNight ? '07:00' : '19:00',
+        guardsCount: Math.max(1, fijoCount || 1),
+        days: ALL_DAYS,
+      } as any];
+    }
+
+    // Legacy / custom: explicit hand-edited stationSchedule JSON.
     let parsed: any[] = [];
     try {
       const raw = station?.stationSchedule;
@@ -143,18 +169,18 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
     if (parsed.length > 0) {
       return parsed.map(j => ({
         ...j,
-        days: j.days || ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'],
+        days: j.days || ALL_DAYS,
         guardsCount: j.guardsCount || '1',
       }));
     }
-    // Fallback: derive jornadas from positions when no station schedule is set.
+    // Last resort: derive from positions.
     if (positions.length > 0) {
       return positions.map(p => ({
         tipo: p.name || p.type,
         startTime: p.startTime || '07:00',
         endTime: p.endTime || '19:00',
         guardsCount: p.guardsNeeded || 1,
-        days: ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'],
+        days: ALL_DAYS,
       }));
     }
     return [];
