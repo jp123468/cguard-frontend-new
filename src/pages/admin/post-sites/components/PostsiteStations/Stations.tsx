@@ -659,7 +659,7 @@ export default function Stations({ site }: { site?: any }) {
             </div>
 
             <div className="flex-shrink-0">
-              <button onClick={() => setShowNew(true)} className="px-4 py-2 bg-[#C8860A] text-white rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors shadow">
+              <button onClick={() => navigate(`/post-sites/${site?.id || ''}/stations/new`)} className="px-4 py-2 bg-[#C8860A] text-white rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors shadow">
                 <Plus size={16} /> {t('postSites.stations.add', 'Add')}
               </button>
             </div>
@@ -809,97 +809,7 @@ export default function Stations({ site }: { site?: any }) {
         </div>
       </div>
 
-      {/* Create modal */}
-      {showNew && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center" onClick={() => setShowNew(false)}>
-          <div className="absolute inset-0 bg-black/20 z-50" onClick={() => setShowNew(false)} />
-
-          <div className="relative z-70 w-full sm:w-96 bg-card shadow-2xl overflow-y-auto rounded-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b bg-card rounded-t-md">
-              <h2 className="text-lg font-semibold text-foreground">{t('postSites.stations.createTitle', 'Create Station')}</h2>
-              <button onClick={() => setShowNew(false)} className="p-2 rounded-full hover:bg-muted"><X className="h-4 w-4" /></button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.name', 'Name *')}</label>
-                <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('postSites.stations.placeholderName', 'Station name')} className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.schedule', 'Schedule *')}</label>
-                <select value={stationSchedule} onChange={e => setStationSchedule(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A]">
-                  <option value="">{t('postSites.stations.form.selectSchedule', 'Select schedule')}</option>
-                  <option value="1 hora">1 hora</option>
-                  <option value="4 horas">4 horas</option>
-                  <option value="8 horas">8 horas</option>
-                  <option value="12 horas">12 horas</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.guards', 'Guardias requeridas')}</label>
-                  <div className="w-full px-3 py-2 border rounded-md text-sm bg-muted/40 text-foreground flex items-center justify-between">
-                    <span className="font-semibold">{requiredFijos(stationSchedule)} fijo</span>
-                    {jornadaType(startingTimeInDay, finishTimeInDay) && (
-                      <span className="text-[11px] text-muted-foreground capitalize">{jornadaType(startingTimeInDay, finishTimeInDay)}</span>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.startTime', 'Start')}</label>
-                  <input type="time" value={startingTimeInDay} onChange={e => setStartingTimeInDay(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-foreground" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.endTime', 'End')}</label>
-                <input type="time" value={finishTimeInDay} onChange={e => setFinishTimeInDay(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm text-foreground" />
-              </div>
-
-              {stationSchedule && (
-                <p className="text-xs text-muted-foreground rounded-md bg-muted/30 p-3">
-                  {stationSchedule}
-                  {jornadaType(startingTimeInDay, finishTimeInDay) ? ` · ${jornadaType(startingTimeInDay, finishTimeInDay)}` : ''}:{' '}
-                  <strong className="text-foreground/80">1 guardia fijo</strong> en el puesto +{' '}
-                  <strong className="text-foreground/80">1 sacafranco</strong> que cubre los días de descanso. El sacafranco salta entre puestos —
-                  no pertenece a un solo puesto, por eso no se cuenta en las guardias requeridas.
-                </p>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.geofenceRadius', 'Radio geovalla (metros)')}</label>
-                <input type="number" min="10" max="5000" value={geofenceRadius} onChange={e => setGeofenceRadius(e.target.value)} placeholder="100" className="w-full px-3 py-2 border rounded-md text-sm text-foreground" />
-                <p className="text-xs text-muted-foreground mt-1">{t('postSites.stations.form.geofenceHint', 'Distancia máxima para marcar entrada')}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Geocerca poligonal (opcional)</label>
-                <p className="text-xs text-muted-foreground mb-2">Si defines un polígono (3+ puntos), se usa en lugar del radio para validar la marcación.</p>
-                <StationGeofencePolygon
-                  value={geofencePolygon}
-                  onChange={setGeofencePolygon}
-                  centerLat={Number(site?.latitud || site?.latitude) || undefined}
-                  centerLng={Number(site?.longitud || site?.longitude) || undefined}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">{t('postSites.stations.form.description', 'Description')}</label>
-                <textarea value={newDescription} onChange={e => setNewDescription(e.target.value)} placeholder={t('postSites.stations.form.descriptionPlaceholder', 'Optional description')} className="w-full px-3 py-2 border rounded-md text-sm text-foreground resize-none" rows={4} />
-              </div>
-
-              {/* Guard assignment is handled in AssignGuards page/tab */}
-            </div>
-
-            <div className="flex items-center justify-end gap-3 p-6 border-t bg-card rounded-b-md">
-              <button onClick={() => setShowNew(false)} className="px-4 py-2 rounded-md border text-sm">{t('actions.cancel') || 'Cancel'}</button>
-              <button onClick={createStation} disabled={!newName} className={`px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809] text-sm ${!newName ? 'opacity-50 cursor-not-allowed' : ''}`}>{t('actions.save', 'Save')}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Create station is now a full page — see /post-sites/:id/stations/new */}
 
       {/* Details modal */}
       {showDetailModal && (

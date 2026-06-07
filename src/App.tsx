@@ -49,6 +49,7 @@ import ClientsDetails from "./pages/admin/clientes/ClientsDetails"
 import PostSitePage from "./pages/admin/post-sites/PostSitePage"
 import NewOrEditPostSitePage from "./pages/admin/post-sites/NewOrEditPostSitePage"
 import PostSiteDetailsPage from "./pages/admin/post-sites/PostSiteDetailsPage"
+import AddStationPage from "./pages/admin/post-sites/AddStationPage"
 import StationDetailPage from "./pages/admin/post-sites/station-detail/StationDetailPage"
 import GlobalInventoryPage from "./pages/admin/inventory/GlobalInventoryPage"
 import ProjectsPage from "./pages/admin/projects/ProjectsPage"
@@ -484,6 +485,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <NewOrEditPostSitePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/post-sites/:id/stations/new"
+                element={
+                  <ProtectedRoute>
+                    <AddStationPage />
                   </ProtectedRoute>
                 }
               />
