@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { ChevronLeft, Loader2 } from 'lucide-react';
+import { ChevronLeft, Loader2, Sun, Moon, Clock, SlidersHorizontal } from 'lucide-react';
 import PostSiteLayout from '@/layouts/PostSiteLayout';
 import { postSiteService, setTenantId as setGlobalTenantId } from '@/lib/api/postSiteService';
 import { ApiService } from '@/services/api/apiService';
@@ -28,6 +28,35 @@ function requiredFijos(_schedule?: string): number {
   return 1;
 }
 
+// A turno (horario) is one of four types — the same way it's set up in the
+// station's horario. Each type presets the jornada window(s); "custom" lets the
+// user define the hours. A 24h post is two 12h jornadas (diurno + nocturno),
+// hence 2 fijos.
+type TurnoType = 'diurno' | 'nocturno' | '24h' | 'custom';
+const ALL_DAYS = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
+
+const TURNO_OPTIONS: {
+  key: TurnoType; label: string; sub: string; start: string; end: string; guards: number; Icon: any;
+}[] = [
+  { key: 'diurno',   label: '12h Diurno',     sub: '07:00 – 19:00',     start: '07:00', end: '19:00', guards: 1, Icon: Sun },
+  { key: 'nocturno', label: '12h Nocturno',   sub: '19:00 – 07:00',     start: '19:00', end: '07:00', guards: 1, Icon: Moon },
+  { key: '24h',      label: '24 Horas',       sub: 'Diurno + Nocturno', start: '00:00', end: '23:59', guards: 2, Icon: Clock },
+  { key: 'custom',   label: 'Personalizado',  sub: 'Define tus horas',  start: '',      end: '',      guards: 1, Icon: SlidersHorizontal },
+];
+
+// Build the station's stationSchedule jornadas (the turno) from the selected
+// type. This is what the horario/calendar reads as the required coverage.
+function buildJornadas(turnoType: TurnoType, start: string, end: string): any[] {
+  if (turnoType === '24h') {
+    return [
+      { tipo: 'Diurno',   startTime: '07:00', endTime: '19:00', guardsCount: '1', days: ALL_DAYS },
+      { tipo: 'Nocturno', startTime: '19:00', endTime: '07:00', guardsCount: '1', days: ALL_DAYS },
+    ];
+  }
+  const tipo = turnoType === 'diurno' ? 'Diurno' : turnoType === 'nocturno' ? 'Nocturno' : 'Personalizado';
+  return [{ tipo, startTime: start, endTime: end, guardsCount: '1', days: ALL_DAYS }];
+}
+
 /**
  * Full-page "Add station" form (replaces the old cramped modal that overflowed
  * the viewport because of the embedded geofence map). Route:
@@ -46,9 +75,24 @@ export default function AddStationPage() {
   const [newName, setNewName] = useState('');
   const [nickname, setNickname] = useState('');
   const [newDescription, setNewDescription] = useState('');
-  const [stationSchedule, setStationSchedule] = useState('');
+  const [turnoType, setTurnoType] = useState<TurnoType | ''>('');
   const [startingTimeInDay, setStartingTimeInDay] = useState('');
   const [finishTimeInDay, setFinishTimeInDay] = useState('');
+
+  const requiredGuards = turnoType === '24h' ? 2 : 1;
+
+  // Selecting a turno type presets its window; "custom" keeps the manual times.
+  const selectTurno = (key: TurnoType) => {
+    setTurnoType(key);
+    const opt = TURNO_OPTIONS.find((o) => o.key === key);
+    if (opt && key !== 'custom') {
+      setStartingTimeInDay(opt.start);
+      setFinishTimeInDay(opt.end);
+    } else if (key === 'custom') {
+      setStartingTimeInDay('');
+      setFinishTimeInDay('');
+    }
+  };
   const [geofenceRadius, setGeofenceRadius] = useState('100');
   const [geofencePolygon, setGeofencePolygon] = useState<PolyPoint[]>([]);
 
@@ -86,24 +130,35 @@ export default function AddStationPage() {
       toast.error(t('postsite.Details.unexpected', 'Unexpected error occurred'));
       return;
     }
-    if (!stationSchedule) {
-      toast.error(t('postSites.stations.provideSchedule', 'Select a schedule'));
+    if (!turnoType) {
+      toast.error(t('postSites.stations.provideSchedule', 'Selecciona un turno'));
+      return;
+    }
+    if (turnoType === 'custom' && (!startingTimeInDay || !finishTimeInDay)) {
+      toast.error(t('postSites.stations.provideCustomTimes', 'Define la hora de inicio y fin'));
       return;
     }
     setSaving(true);
     try {
       const latitud = site?.latitud || site?.latitude || '';
       const longitud = site?.longitud || site?.longitude || '';
+      // The turno (horario) is stored as jornadas on stationSchedule so the
+      // station's horario/calendar reads it as the required coverage.
+      const jornadas = buildJornadas(turnoType, startingTimeInDay, finishTimeInDay);
+      const stationStart = turnoType === '24h' ? '00:00' : startingTimeInDay;
+      const stationEnd = turnoType === '24h' ? '23:59' : finishTimeInDay;
       const payload = {
         stationName: newName,
         nickname: nickname.trim() || null,
         postSiteId,
         latitud,
         longitud,
-        stationSchedule,
-        numberOfGuardsInStation: String(requiredFijos(stationSchedule)),
-        startingTimeInDay,
-        finishTimeInDay,
+        stationSchedule: JSON.stringify(jornadas),
+        turnoType,
+        is24h: turnoType === '24h',
+        numberOfGuardsInStation: String(requiredGuards),
+        startingTimeInDay: stationStart,
+        finishTimeInDay: stationEnd,
         geofenceRadius: Number(geofenceRadius) || 100,
         geofencePolygon: geofencePolygon.length >= 3 ? geofencePolygon : null,
         description: newDescription,
@@ -184,56 +239,74 @@ export default function AddStationPage() {
                 </p>
               </div>
 
-              {/* Schedule + guards */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-foreground">
-                    {t('postSites.stations.form.schedule', 'Turno *')}
-                  </label>
-                  <select value={stationSchedule} onChange={(e) => setStationSchedule(e.target.value)} className={inputCls}>
-                    <option value="">{t('postSites.stations.form.selectSchedule', 'Seleccionar turno')}</option>
-                    <option value="1 hora">1 hora</option>
-                    <option value="4 horas">4 horas</option>
-                    <option value="8 horas">8 horas</option>
-                    <option value="12 horas">12 horas</option>
-                  </select>
+              {/* Turno (horario) — same setup as the station's horario */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-foreground">
+                  {t('postSites.stations.form.schedule', 'Turno (horario) *')}
+                </label>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {TURNO_OPTIONS.map(({ key, label, sub, Icon }) => {
+                    const selected = turnoType === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => selectTurno(key)}
+                        className={`flex flex-col items-start gap-2 rounded-xl border p-3 text-left transition-all ${
+                          selected
+                            ? 'border-[#C8860A] bg-[#C8860A]/10 ring-1 ring-[#C8860A]/30'
+                            : 'border-input bg-card hover:border-[#C8860A]/40'
+                        }`}
+                      >
+                        <Icon className={`h-5 w-5 ${selected ? 'text-[#C8860A]' : 'text-muted-foreground'}`} />
+                        <div>
+                          <p className={`text-sm font-semibold ${selected ? 'text-[#C8860A]' : 'text-foreground'}`}>{label}</p>
+                          <p className="text-[11px] text-muted-foreground">{sub}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-foreground">
-                    {t('postSites.stations.form.guards', 'Guardias requeridas')}
-                  </label>
-                  <div className="flex items-center justify-between rounded-md border border-input bg-muted/40 px-3 py-2 text-sm text-foreground">
-                    <span className="font-semibold">{requiredFijos(stationSchedule)} fijo</span>
-                    {jornadaType(startingTimeInDay, finishTimeInDay) && (
-                      <span className="text-[11px] capitalize text-muted-foreground">
-                        {jornadaType(startingTimeInDay, finishTimeInDay)}
-                      </span>
-                    )}
+              </div>
+
+              {/* Times: editable for diurno / nocturno / custom */}
+              {turnoType && turnoType !== '24h' && (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-foreground">{t('postSites.stations.form.startTime', 'Inicio')}</label>
+                    <input type="time" value={startingTimeInDay} onChange={(e) => setStartingTimeInDay(e.target.value)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-foreground">{t('postSites.stations.form.endTime', 'Fin')}</label>
+                    <input type="time" value={finishTimeInDay} onChange={(e) => setFinishTimeInDay(e.target.value)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-foreground">{t('postSites.stations.form.guards', 'Guardias')}</label>
+                    <div className="flex h-[42px] items-center rounded-md border border-input bg-muted/40 px-3 text-sm">
+                      <span className="font-semibold text-foreground">{requiredGuards} fijo{requiredGuards > 1 ? 's' : ''}</span>
+                      {jornadaType(startingTimeInDay, finishTimeInDay) && (
+                        <span className="ml-auto text-[11px] capitalize text-muted-foreground">{jornadaType(startingTimeInDay, finishTimeInDay)}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Start / End time */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-foreground">
-                    {t('postSites.stations.form.startTime', 'Inicio')}
-                  </label>
-                  <input type="time" value={startingTimeInDay} onChange={(e) => setStartingTimeInDay(e.target.value)} className={inputCls} />
+              {/* 24h is a fixed split into two jornadas */}
+              {turnoType === '24h' && (
+                <div className="rounded-xl border border-input bg-muted/30 p-4 text-sm">
+                  <p className="mb-2 font-medium text-foreground">Cobertura 24 horas — dos jornadas</p>
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5"><Sun className="h-3.5 w-3.5 text-[#C8860A]" /> Diurno · 07:00 – 19:00</span>
+                    <span className="inline-flex items-center gap-1.5"><Moon className="h-3.5 w-3.5 text-[#C8860A]" /> Nocturno · 19:00 – 07:00</span>
+                    <span className="ml-auto font-semibold text-foreground">2 fijos</span>
+                  </div>
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-foreground">
-                    {t('postSites.stations.form.endTime', 'Fin')}
-                  </label>
-                  <input type="time" value={finishTimeInDay} onChange={(e) => setFinishTimeInDay(e.target.value)} className={inputCls} />
-                </div>
-              </div>
+              )}
 
-              {stationSchedule && (
+              {turnoType && (
                 <p className="rounded-md bg-muted/30 p-3 text-xs text-muted-foreground">
-                  {stationSchedule}
-                  {jornadaType(startingTimeInDay, finishTimeInDay) ? ` · ${jornadaType(startingTimeInDay, finishTimeInDay)}` : ''}:{' '}
-                  <strong className="text-foreground/80">1 guardia fijo</strong> en el puesto +{' '}
+                  <strong className="text-foreground/80">{requiredGuards} guardia{requiredGuards > 1 ? 's' : ''} fijo{requiredGuards > 1 ? 's' : ''}</strong> en el puesto +{' '}
                   <strong className="text-foreground/80">1 sacafranco</strong> que cubre los días de descanso. El sacafranco salta entre
                   puestos — no pertenece a un solo puesto, por eso no se cuenta en las guardias requeridas.
                 </p>
@@ -296,7 +369,7 @@ export default function AddStationPage() {
           </Button>
           <Button
             onClick={createStation}
-            disabled={!newName.trim() || saving}
+            disabled={!newName.trim() || !turnoType || saving}
             className="gap-2 bg-[#C8860A] text-white hover:bg-[#B37809]"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
