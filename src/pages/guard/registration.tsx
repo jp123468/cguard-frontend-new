@@ -51,10 +51,10 @@ export default function GuardRegistration() {
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const shownToastRef = useRef<string | null>(null);
 
-  const errorClass = (field: string) => (errors[field] ? "border-red-600 ring-1 ring-red-600" : "");
+  const errorClass = (field: string) => (errors[field] ? "!border-red-500 ring-2 ring-red-500/30" : "");
 
-  const formControl = "h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-sm text-foreground placeholder-slate-400";
-  const labelClass = "mb-2 block text-sm font-medium text-foreground min-h-[2rem] md:min-h-[3rem] leading-5";
+  const formControl = "h-11 w-full rounded-lg border border-input bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-[#C8860A] focus:ring-2 focus:ring-[#C8860A]/25 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
+  const labelClass = "mb-1.5 flex items-start gap-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground min-h-[30px] leading-[1.3]";
 
   const validateEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -584,12 +584,29 @@ export default function GuardRegistration() {
           </div>
         )}
 
-        <div className="mb-2 flex items-center gap-4 md:gap-6">
-          <div className="flex-1 text-sm text-foreground/70">Paso {step} de {totalSteps}</div>
-          <div className="flex gap-2">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${s <= step ? 'bg-blue-600 text-white' : 'bg-slate-200 text-foreground/70'}`}>{s}</div>
-            ))}
+        <div className="mb-5">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Paso {step} de {totalSteps}</span>
+            <div className="flex items-center gap-2">
+              {[1, 2, 3].map((s) => (
+                <div
+                  key={s}
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
+                    s < step
+                      ? 'bg-[#C8860A] text-white'
+                      : s === step
+                        ? 'bg-[#C8860A] text-white ring-4 ring-[#C8860A]/20'
+                        : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {s < step ? '✓' : s}
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* progress bar */}
+          <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-[#C8860A] transition-all duration-300" style={{ width: `${(step / totalSteps) * 100}%` }} />
           </div>
         </div>
 
@@ -719,7 +736,7 @@ export default function GuardRegistration() {
                     disabled={isLoading}
                     className={`${formControl} ${errorClass('password')}`}
                   />
-                  <button type="button" className="absolute right-3 top-2" onClick={() => setShowPwd((v) => !v)}>{showPwd ? <EyeOff /> : <Eye />}</button>
+                  <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowPwd((v) => !v)}>{showPwd ? <EyeOff /> : <Eye />}</button>
                 </div>
                 {errors.password && <div className="text-red-600 text-sm mt-1">{errors.password}</div>}
               </div>
@@ -740,7 +757,7 @@ export default function GuardRegistration() {
                     disabled={isLoading}
                     className={`${formControl} ${errorClass('confirm')}`}
                   />
-                  <button type="button" className="absolute right-3 top-2" onClick={() => setShowConfirm((v) => !v)}>{showConfirm ? <EyeOff /> : <Eye />}</button>
+                  <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowConfirm((v) => !v)}>{showConfirm ? <EyeOff /> : <Eye />}</button>
                 </div>
                 {errors.confirm && <div className="text-red-600 text-sm mt-1">{errors.confirm}</div>}
               </div>
@@ -748,24 +765,27 @@ export default function GuardRegistration() {
           </>
         )}
 
-        <div className="flex items-center justify-between gap-3 pt-2">
+        <div className="flex items-center justify-between gap-3 pt-4">
           <div>
             {step > 1 && (
-              <button type="button" onClick={handlePrev} className="px-3 py-1 md:px-4 md:py-2 rounded-lg border">Volver</button>
+              <button type="button" onClick={handlePrev} className="rounded-lg border border-input bg-transparent px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40">Volver</button>
             )}
           </div>
           <div className="ml-auto flex gap-2">
             {step < totalSteps && (
-              <button type="button" onClick={handleNext} className="px-3 py-1 md:px-4 md:py-2 rounded-lg bg-blue-600 text-white">Siguiente</button>
+              <button type="button" onClick={handleNext} className="rounded-lg bg-[#C8860A] px-7 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#a96f08]">Siguiente</button>
             )}
             {step === totalSteps && (
-              <button type="submit" disabled={isLoading} className="px-3 py-1 md:px-4 md:py-2 rounded-lg bg-blue-600 text-white">{isLoading ? "Registrando..." : "Registrarse"}</button>
+              <button type="submit" disabled={isLoading} className="inline-flex items-center gap-2 rounded-lg bg-[#C8860A] px-7 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#a96f08] disabled:opacity-60 disabled:cursor-not-allowed">
+                {isLoading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+                {isLoading ? "Registrando…" : "Registrarse"}
+              </button>
             )}
           </div>
         </div>
 
-        <div className="text-center">
-          <NavLink to="/login" className="text-sm font-semibold" style={{ color: "#F75638" }}>{t('auth.back_to_login', { defaultValue: 'Volver a iniciar sesión' })}</NavLink>
+        <div className="pt-2 text-center">
+          <NavLink to="/login" className="text-xs font-medium text-muted-foreground transition-colors hover:text-[#C8860A]">{t('auth.back_to_login', { defaultValue: 'Volver a iniciar sesión' })}</NavLink>
         </div>
       </form>
     </GuardInviteLayout>
