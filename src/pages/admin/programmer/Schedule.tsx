@@ -1892,6 +1892,30 @@ export default function Schedule() {
               );
             })()}
 
+            {/* Rest-rule + sacafranco warnings (reqs 3 & 9) */}
+            {(() => {
+              const w = proposalData?.proposal?.summary?.warnings;
+              if (!w || !w.total) return null;
+              const lines: string[] = [];
+              if (w.doubleBookings?.length) lines.push(`${w.doubleBookings.length} guardia(s) con doble asignación el mismo día`);
+              if (w.restViolations?.length) lines.push(`${w.restViolations.length} guardia(s) sin descanso semanal (más de ${w.maxConsecutiveAllowed || 7} días seguidos)`);
+              if (w.sfStyleInconsistencies?.length) lines.push(`${w.sfStyleInconsistencies.length} sitio(s) con sacafrancos en estilos de turno distintos`);
+              if (!lines.length) return null;
+              return (
+                <div className="px-5 py-2.5 border-b border-border/20">
+                  <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 px-3 py-2 text-amber-700">
+                    <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                    <div className="text-[11px] leading-relaxed">
+                      <p className="font-semibold">Revisa antes de publicar:</p>
+                      <ul className="list-disc pl-4">
+                        {lines.map((l, i) => <li key={i}>{l}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Change list */}
             <div className="flex-1 overflow-auto px-5 py-3">
               {(() => {
