@@ -6,6 +6,7 @@ import {
 import { toast } from 'sonner';
 import { ApiService } from '@/services/api/apiService';
 import RondaSettingsForm from '@/pages/admin/Configuration/rondas-settings/RondaSettingsForm';
+import CheckpointLocationPicker from '@/components/maps/CheckpointLocationPicker';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -15,6 +16,7 @@ interface Checkpoint {
   tagIdentifier: string;
   latitude: number | null;
   longitude: number | null;
+  radius: number | null;
 }
 
 const num = (v: any): number | null => {
@@ -48,8 +50,10 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
   // inline "add checkpoint" form (per tour)
   const [addingFor, setAddingFor] = useState<string | null>(null);
   const [cpName, setCpName] = useState('');
-  const [cpLat, setCpLat] = useState<string>('');
-  const [cpLng, setCpLng] = useState<string>('');
+  const [cpLat, setCpLat] = useState<number | null>(null);
+  const [cpLng, setCpLng] = useState<number | null>(null);
+  const stationRadius = num(station?.geofenceRadius) ?? 75;
+  const [cpRadius, setCpRadius] = useState<number>(stationRadius);
   const [savingCp, setSavingCp] = useState(false);
 
   const loadTours = useCallback(async () => {
@@ -72,7 +76,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
       const rows = Array.isArray(res) ? res : (res?.rows ?? []);
       setCps((m) => ({ ...m, [tourId]: rows.map((r: any) => ({
         id: String(r.id), name: r.name || r.tagIdentifier || '—', tagIdentifier: r.tagIdentifier || String(r.id),
-        latitude: num(r.latitude ?? r.latitud), longitude: num(r.longitude ?? r.longitud),
+        latitude: num(r.latitude ?? r.latitud), longitude: num(r.longitude ?? r.longitud), radius: num(r.geofenceRadius),
       })) }));
     } catch {
       setCps((m) => ({ ...m, [tourId]: [] }));
@@ -116,18 +120,19 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
   const openAddCheckpoint = (tourId: string) => {
     setAddingFor(tourId);
     setCpName('');
-    setCpLat(stationLat != null ? String(stationLat) : '');
-    setCpLng(stationLng != null ? String(stationLng) : '');
+    setCpLat(stationLat);
+    setCpLng(stationLng);
+    setCpRadius(stationRadius);
   };
 
   const createCheckpoint = async (tourId: string) => {
     if (!cpName.trim()) { toast.error(t('station.siteTours.cpNameRequired', 'Escribe un nombre para el punto')); return; }
+    if (cpLat == null || cpLng == null) { toast.error(t('station.siteTours.cpLocRequired', 'Marca la ubicación del punto en el mapa')); return; }
     setSavingCp(true);
     try {
-      const lat = num(cpLat), lng = num(cpLng);
       await ApiService.post(`/tenant/${tenantId}/site-tour/${encodeURIComponent(tourId)}/tag`, {
         name: cpName.trim(), tagType: 'qr', tagIdentifier: genIdentifier(),
-        latitude: lat, longitude: lng, stationId, showGeoFence: true,
+        latitude: cpLat, longitude: cpLng, geofenceRadius: cpRadius, stationId, showGeoFence: true,
       });
       toast.success(t('station.siteTours.cpCreated', 'Punto de control creado'));
       setAddingFor(null); setCpName('');
@@ -228,7 +233,10 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
                                     </div>
                                     <div className="mt-0.5 text-xs">
                                       {c.latitude != null && c.longitude != null ? (
-                                        <span className="inline-flex items-center gap-1 text-emerald-700"><MapPin size={12} />{c.latitude.toFixed(5)}, {c.longitude.toFixed(5)}</span>
+                                        <span className="inline-flex items-center gap-1 text-emerald-700">
+                                          <MapPin size={12} />{c.latitude.toFixed(5)}, {c.longitude.toFixed(5)}
+                                          <span className="ml-1 text-muted-foreground">· ±{c.radius ?? stationRadius} m</span>
+                                        </span>
                                       ) : (
                                         <span className="text-amber-700">{t('station.siteTours.cpNoLoc', 'Sin ubicación — la verificación no funcionará')}</span>
                                       )}
@@ -248,18 +256,14 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
                                 <label className="mb-1 block text-xs font-medium text-foreground">{t('station.siteTours.cpName', 'Nombre del punto')}</label>
                                 <input className={inputCls} value={cpName} onChange={(e) => setCpName(e.target.value)} placeholder={t('station.siteTours.cpPlaceholder', 'Ej. Entrada principal') as string} autoFocus />
                               </div>
-                              <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                  <label className="mb-1 block text-xs font-medium text-foreground">{t('station.siteTours.lat', 'Latitud')}</label>
-                                  <input className={inputCls} value={cpLat} onChange={(e) => setCpLat(e.target.value)} inputMode="decimal" />
-                                </div>
-                                <div>
-                                  <label className="mb-1 block text-xs font-medium text-foreground">{t('station.siteTours.lng', 'Longitud')}</label>
-                                  <input className={inputCls} value={cpLng} onChange={(e) => setCpLng(e.target.value)} inputMode="decimal" />
-                                </div>
-                              </div>
+                              <CheckpointLocationPicker
+                                lat={cpLat}
+                                lng={cpLng}
+                                radius={cpRadius}
+                                onChange={(la, ln, r) => { setCpLat(la); setCpLng(ln); setCpRadius(r); }}
+                              />
                               {stationLat != null && stationLng != null && (
-                                <button onClick={() => { setCpLat(String(stationLat)); setCpLng(String(stationLng)); }} className="inline-flex items-center gap-1.5 text-xs text-[#C8860A] hover:underline">
+                                <button onClick={() => { setCpLat(stationLat); setCpLng(stationLng); }} className="inline-flex items-center gap-1.5 text-xs text-[#C8860A] hover:underline">
                                   <Crosshair size={13} /> {t('station.siteTours.useStationLoc', 'Usar ubicación del puesto')}
                                 </button>
                               )}
