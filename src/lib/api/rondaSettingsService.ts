@@ -21,6 +21,7 @@ export interface RondaSettings {
   notifyTenantOnComplete: boolean;
   notifyTenantOnMissed: boolean;
   notifyClient: boolean;
+  emailOnComplete: boolean;
   active: boolean;
   isDefault?: boolean;
 }

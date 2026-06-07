@@ -22,6 +22,7 @@ const DEFAULTS: RondaSettings = {
   notifyTenantOnComplete: true,
   notifyTenantOnMissed: true,
   notifyClient: false,
+  emailOnComplete: false,
   active: true,
 };
 
@@ -157,6 +158,7 @@ export default function RondaSettingsForm({
         <CardContent className="divide-y">
           <ToggleRow label="Notificar al iniciar" hint="Avisar cuando un guardia inicia una ronda" checked={s.notifyTenantOnStart} onCheckedChange={(b) => set("notifyTenantOnStart", b)} />
           <ToggleRow label="Notificar al completar" hint="Avisar cuando una ronda se completa" checked={s.notifyTenantOnComplete} onCheckedChange={(b) => set("notifyTenantOnComplete", b)} />
+          <ToggleRow label="Enviar correo al completar" hint="Enviar un correo a los administradores/supervisores cuando una ronda se completa (requiere correo configurado)" checked={s.emailOnComplete} onCheckedChange={(b) => set("emailOnComplete", b)} />
           <ToggleRow label="Notificar rondas perdidas/tarde" checked={s.notifyTenantOnMissed} onCheckedChange={(b) => set("notifyTenantOnMissed", b)} />
           <ToggleRow label="Notificar al cliente" hint="Enviar notificaciones de ronda también al cliente del sitio" checked={s.notifyClient} onCheckedChange={(b) => set("notifyClient", b)} />
         </CardContent>
