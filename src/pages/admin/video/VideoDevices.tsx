@@ -14,6 +14,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import VideoGatewayModal from "@/components/video/VideoGatewayModal";
 
 import AppLayout from "@/layouts/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -167,6 +168,7 @@ export default function VideoDevices() {
   const [busy, setBusy] = useState<Record<string, "test" | "sync" | undefined>>({});
   const [deleteTarget, setDeleteTarget] = useState<Device | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [gatewayTarget, setGatewayTarget] = useState<Device | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -447,6 +449,10 @@ export default function VideoDevices() {
                         )}
                         Sincronizar cámaras
                       </Button>
+                      <Button size="sm" variant="outline" onClick={() => setGatewayTarget(d)}>
+                        <Server className="mr-1.5 h-3.5 w-3.5" />
+                        Gateway
+                      </Button>
                       <div className="ml-auto flex items-center gap-1">
                         <Button
                           size="icon"
@@ -709,6 +715,13 @@ export default function VideoDevices() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <VideoGatewayModal
+        device={gatewayTarget}
+        open={!!gatewayTarget}
+        onClose={() => setGatewayTarget(null)}
+        onSaved={load}
+      />
     </AppLayout>
   );
 }

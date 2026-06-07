@@ -25,6 +25,8 @@ export interface Device {
   stationId?: string | null;
   notes?: string | null;
   active?: boolean;
+  streamGatewayBase?: string | null;
+  streamFormat?: "hls" | "webrtc";
   tenantId?: string;
   createdById?: string | null;
   updatedById?: string | null;
@@ -143,6 +145,12 @@ export const videoService = {
   },
   syncCameras(id: string): Promise<Camera[]> {
     return ApiService.post(`/tenant/${tid()}/video/device/${id}/cameras`);
+  },
+  setGateway(id: string, body: { streamGatewayBase: string; streamFormat?: "hls" | "webrtc" }): Promise<any> {
+    return ApiService.put(`/tenant/${tid()}/video/device/${id}/gateway`, body);
+  },
+  gatewayConfig(id: string): Promise<{ deviceName: string; cameraCount: number; gatewayBase: string | null; format: string; yaml: string }> {
+    return ApiService.get(`/tenant/${tid()}/video/device/${id}/gateway-config`);
   },
 
   // --- Cameras ---
