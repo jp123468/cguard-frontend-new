@@ -1862,6 +1862,36 @@ export default function Schedule() {
               );
             })()}
 
+            {/* Projected cost (req 5) */}
+            {(() => {
+              const cost = proposalData?.proposal?.summary?.cost;
+              if (!cost) return null;
+              const cur = cost.currency || 'USD';
+              const money = (n: number) => `${cur} ${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+              if (!cost.hasRate) {
+                return (
+                  <div className="px-5 py-2.5 border-b border-border/20 text-[11px] text-muted-foreground">
+                    Configura la tarifa por hora en Nómina para ver el costo proyectado.
+                  </div>
+                );
+              }
+              const delta = Number(cost.delta || 0);
+              const deltaCls = delta > 0 ? 'text-red-600' : delta < 0 ? 'text-emerald-600' : 'text-muted-foreground';
+              return (
+                <div className="flex items-center justify-between px-5 py-2.5 border-b border-border/20">
+                  <div className="text-[11px] text-muted-foreground">
+                    Costo proyectado <span className="text-muted-foreground/70">(30 días)</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold tabular-nums text-foreground">{money(cost.projected)}</span>
+                    <span className={`text-xs font-semibold tabular-nums ${deltaCls}`}>
+                      {delta > 0 ? '+' : ''}{money(delta)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Change list */}
             <div className="flex-1 overflow-auto px-5 py-3">
               {(() => {
