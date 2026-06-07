@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext"
 import { Navigate, useLocation } from "react-router-dom"
 import NoWorkspaceAccess from "./NoWorkspaceAccess"
+import VerifyEmailGate from "./VerifyEmailGate"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -87,11 +88,6 @@ export default function ProtectedRoute({
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  // Si requiere email verificado y no lo está
-  if (requireVerified && user && !user.emailVerified) {
-    return <Navigate to="/verify-email" replace />
-  }
-
   // Sin espacio de trabajo: el usuario está autenticado pero no pertenece a
   // ningún tenant. Antes esto provocaba una pantalla en blanco (los servicios
   // con scope de tenant lanzan "Tenant ID no configurado"). Lo interceptamos
@@ -106,6 +102,18 @@ export default function ProtectedRoute({
       return <Navigate to="/superadmin/tenants" replace />
     }
     return <NoWorkspaceAccess />
+  }
+
+  // Verificación de correo OBLIGATORIA: el backend rechaza (403) toda escritura
+  // con scope de tenant hasta que el correo esté verificado. En vez de mostrar
+  // errores confusos, bloqueamos con una pantalla clara (reenviar / ya verifiqué).
+  // Tiene prioridad sobre el onboarding. (Superadmins ya se manejaron arriba.)
+  if (
+    user &&
+    (user as any).emailVerified === false &&
+    !isPlatformSuperadmin(user)
+  ) {
+    return <VerifyEmailGate />
   }
 
   // Si todo está bien, mostrar el contenido protegido
