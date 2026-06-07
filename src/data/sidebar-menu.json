@@ -127,6 +127,29 @@
     ]
   },
   {
+    "id": "monitoreo-alarmas",
+    "name": "Central de Monitoreo",
+    "icon": "Siren",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "alarm-queue",
+        "name": "Cola de Alarmas",
+        "path": "/alarm/queue"
+      },
+      {
+        "id": "alarm-panels",
+        "name": "Paneles",
+        "path": "/alarm/panels"
+      },
+      {
+        "id": "alarm-signals",
+        "name": "Señales",
+        "path": "/alarm/signals"
+      }
+    ]
+  },
+  {
     "id": "patrulla",
     "name": "Patrulla vehicular",
     "icon": "Car",

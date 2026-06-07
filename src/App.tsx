@@ -89,6 +89,10 @@ import VideoMonitoring from "./pages/admin/video/VideoMonitoring"
 import VideoDevices from "./pages/admin/video/VideoDevices"
 import VideoEvents from "./pages/admin/video/VideoEvents"
 import VideoSharedClip from "./pages/admin/video/VideoSharedClip"
+import AlarmQueue from "./pages/admin/alarm/AlarmQueue"
+import AlarmPanels from "./pages/admin/alarm/AlarmPanels"
+import AlarmSignals from "./pages/admin/alarm/AlarmSignals"
+import AlarmCaseDetail from "./pages/admin/alarm/AlarmCaseDetail"
 import GeneratePayroll from "./pages/admin/payroll/GeneratePayroll"
 import PastPayroll from "./pages/admin/payroll/PastPayroll"
 import OvertimeMultiplier from "./pages/admin/payroll/OvertimeMultiplier"
@@ -923,6 +927,13 @@ export default function App() {
               <Route path="/video/devices" element={<ProtectedRoute><VideoDevices /></ProtectedRoute>} />
               <Route path="/video/events" element={<ProtectedRoute><VideoEvents /></ProtectedRoute>} />
               {/* FIN VIDEOVIGILANCIA */}
+
+              {/* CENTRAL DE MONITOREO (ALARMAS) */}
+              <Route path="/alarm/queue" element={<ProtectedRoute><AlarmQueue /></ProtectedRoute>} />
+              <Route path="/alarm/panels" element={<ProtectedRoute><AlarmPanels /></ProtectedRoute>} />
+              <Route path="/alarm/signals" element={<ProtectedRoute><AlarmSignals /></ProtectedRoute>} />
+              <Route path="/alarm/case/:id" element={<ProtectedRoute><AlarmCaseDetail /></ProtectedRoute>} />
+              {/* FIN CENTRAL DE MONITOREO */}
               {/* FIN ANALITICAS */}
 
               <Route
