@@ -147,6 +147,7 @@ export default function Schedule() {
   const [assignOffset, setAssignOffset] = useState(0);
   const [assignRotation, setAssignRotation] = useState('');
   const [assignSaving, setAssignSaving] = useState(false);
+  const [coverage, setCoverage] = useState<any>(null); // real coverage of live schedule
 
   // Configure station form
   const [configStation, setConfigStation] = useState<Station | null>(null);
@@ -176,13 +177,15 @@ export default function Schedule() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [overviewRes, rotRes, guardsRes, staffingRes] = await Promise.all([
+      const [overviewRes, rotRes, guardsRes, staffingRes, coverageRes] = await Promise.all([
         ApiService.get(`/tenant/${tenantId}/scheduler/overview?startDate=${startDateStr}&endDate=${endDateStr}`),
         ApiService.get(`/tenant/${tenantId}/rotation-styles`),
         ApiService.get(`/tenant/${tenantId}/security-guard/autocomplete?limit=200`),
         ApiService.get(`/tenant/${tenantId}/scheduler/staffing`).catch(() => null),
+        ApiService.get(`/tenant/${tenantId}/scheduler/coverage?days=14`).catch(() => null),
       ]);
 
+      setCoverage(coverageRes?.data ?? coverageRes ?? null);
       const ov = overviewRes?.data || overviewRes || {};
       setStations(ov.stations || []);
       setPositions(ov.positions || []);
@@ -830,7 +833,24 @@ export default function Schedule() {
       <div className="p-4 lg:p-6 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <h1 className="text-xl font-bold text-foreground">Programador de Horarios</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-foreground">Programador de Horarios</h1>
+            {coverage && typeof coverage.coveredPct === 'number' && (
+              (() => {
+                const ok = (coverage.gapCount || 0) === 0;
+                return (
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${ok ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'}`}
+                    title="Cobertura real de los puestos en los próximos 14 días (lee turnos guardados, no el cálculo del grid)"
+                  >
+                    {ok ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
+                    Cobertura {coverage.coveredPct}%
+                    {(coverage.gapCount || 0) > 0 && <span>· {coverage.gapCount} sin cubrir</span>}
+                  </span>
+                );
+              })()
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => nav(-1)}><ChevronLeft size={16} /></Button>
             <Button variant="outline" size="sm" onClick={goToday}>Hoy</Button>
