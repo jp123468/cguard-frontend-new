@@ -206,6 +206,15 @@ export function CategorySelect({
                             <Input
                                 value={newName}
                                 onChange={(e) => setNewName(e.target.value)}
+                                onKeyDown={(e) => {
+                                    // Create the sector on Enter instead of letting the
+                                    // keypress bubble to (or submit) any surrounding form.
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (!isCreating) handleCreate();
+                                    }
+                                }}
                                 placeholder={t('categories.nameHint', 'Ej: General')}
                                 className="placeholder:text-muted-foreground"
                             />
@@ -226,10 +235,11 @@ export function CategorySelect({
                     </div>
 
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setOpenCreate(false)} disabled={isCreating}>
+                        <Button type="button" variant="outline" onClick={() => setOpenCreate(false)} disabled={isCreating}>
                             {t('categories.cancel', 'Cancel')}
                         </Button>
                         <Button
+                            type="button"
                             onClick={handleCreate}
                             disabled={isCreating}
                             className="bg-[#C8860A] hover:bg-[#B37809] text-white disable:opacity-50 disabled:pointer-event-none">

@@ -43,7 +43,7 @@ import {
     CategoryOption,
 } from "@/components/categories/CategorySelect";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info, User, Mail, Phone, Tag, Globe, Building2, Upload, X, Image } from "lucide-react";
+import { Info, User, Mail, Phone, Tag, Globe, Building2, Upload, X, Image, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export type Category = { id: string; name: string };
@@ -1100,16 +1100,27 @@ export default function ClientForm({
                     <div className="flex justify-end gap-3 pt-1">
                         <Button
                             type="button"
+                            disabled={form.formState.isSubmitting}
                             onClick={() => onCancel ? onCancel() : navigate('/clients')}
-                            className="min-w-28 bg-card text-foreground border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-foreground cursor-pointer"
+                            className="min-w-28 bg-card text-foreground border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {t('profile.cancel', 'Cancelar')}
                         </Button>
                         <Button
                             type="submit"
-                            className="min-w-28 bg-[#C8860A] text-white border border-[#C8860A] hover:bg-[#b07809] cursor-pointer"
+                            disabled={form.formState.isSubmitting}
+                            className="min-w-28 bg-[#C8860A] text-white border border-[#C8860A] hover:bg-[#b07809] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                            {t('profile.save', 'Guardar')}
+                            {form.formState.isSubmitting ? (
+                                <span className="flex items-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    {mode === 'create'
+                                        ? t('clients.creating', 'Creando…')
+                                        : t('clients.saving', 'Guardando…')}
+                                </span>
+                            ) : (
+                                t('profile.save', 'Guardar')
+                            )}
                         </Button>
                     </div>
                 </form>
