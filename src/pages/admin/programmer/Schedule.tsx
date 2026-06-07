@@ -671,12 +671,12 @@ export default function Schedule() {
     }
   };
 
-  const publishProposal = async () => {
+  const publishProposal = async (allowGaps = false) => {
     const id = proposalData?.proposal?.id;
     if (!id) return;
     setPublishing(true);
     try {
-      const res = await ApiService.post(`/tenant/${tenantId}/scheduler/proposals/${id}/publish`, { data: { confirm: true } });
+      const res = await ApiService.post(`/tenant/${tenantId}/scheduler/proposals/${id}/publish`, { data: { confirm: true, allowGaps } });
       const notified = res?.plan?.notifiedGuards ?? res?.data?.plan?.notifiedGuards ?? 0;
       toast.success(`Horario publicado · ${notified} guardia${notified === 1 ? '' : 's'} notificado${notified === 1 ? '' : 's'}`);
       // Switch the modal to the implementation plan (who was notified).
@@ -1892,10 +1892,30 @@ export default function Schedule() {
               );
             })()}
 
+            {/* Coverage (Phase 7): is every puesto covered? */}
+            {(() => {
+              const cov = proposalData?.proposal?.summary?.warnings?.coverage;
+              if (!cov) return null;
+              const ok = (cov.gapCount || 0) === 0;
+              return (
+                <div className="flex items-center justify-between px-5 py-2.5 border-b border-border/20">
+                  <div className="flex items-center gap-2">
+                    {ok ? <CheckCircle2 size={15} className="text-emerald-600" /> : <AlertTriangle size={15} className="text-red-600" />}
+                    <span className="text-[11px] text-muted-foreground">Cobertura de puestos <span className="text-muted-foreground/70">(14 días)</span></span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className={`font-bold tabular-nums ${ok ? 'text-emerald-600' : 'text-red-600'}`}>{cov.coveredPct}%</span>
+                    {(cov.gapCount || 0) > 0 && <span className="font-semibold text-red-600">{cov.gapCount} sin cubrir</span>}
+                    {(cov.overstaffCount || 0) > 0 && <span className="text-amber-600">{cov.overstaffCount} sobre-cubierto</span>}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Rest-rule + sacafranco warnings (reqs 3 & 9) */}
             {(() => {
               const w = proposalData?.proposal?.summary?.warnings;
-              if (!w || !w.total) return null;
+              if (!w || (!w.total && !w.restViolations?.length && !w.doubleBookings?.length && !w.sfStyleInconsistencies?.length)) return null;
               const lines: string[] = [];
               if (w.doubleBookings?.length) lines.push(`${w.doubleBookings.length} guardia(s) con doble asignación el mismo día`);
               if (w.restViolations?.length) lines.push(`${w.restViolations.length} guardia(s) sin descanso semanal (más de ${w.maxConsecutiveAllowed || 7} días seguidos)`);
@@ -1966,10 +1986,20 @@ export default function Schedule() {
                   <button onClick={discardProposal} disabled={publishing} className="px-4 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-500/10 disabled:opacity-50 transition-all flex items-center gap-1.5">
                     <Trash2 size={14} /> Descartar
                   </button>
-                  <button onClick={publishProposal} disabled={publishing} className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#C8860A] hover:bg-[#B37809] disabled:opacity-50 transition-all shadow-sm flex items-center gap-2">
-                    {publishing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                    {publishing ? 'Publicando...' : 'Publicar y aplicar'}
-                  </button>
+                  {(() => {
+                    const gaps = proposalData?.proposal?.summary?.warnings?.coverage?.gapCount || 0;
+                    const hasGaps = gaps > 0;
+                    return (
+                      <button
+                        onClick={() => publishProposal(hasGaps)}
+                        disabled={publishing}
+                        className={`px-6 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all shadow-sm flex items-center gap-2 ${hasGaps ? 'bg-red-600 hover:bg-red-700' : 'bg-[#C8860A] hover:bg-[#B37809]'}`}
+                      >
+                        {publishing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                        {publishing ? 'Publicando...' : hasGaps ? 'Publicar con faltantes' : 'Publicar y aplicar'}
+                      </button>
+                    );
+                  })()}
                 </>
               )}
             </div>
