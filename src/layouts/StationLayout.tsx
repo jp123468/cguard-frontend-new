@@ -25,7 +25,7 @@ export default function StationLayout({ title, children, station }: Props) {
         { id: 'orders',     label: t('station.details.orders',     'Consignas específicas'), path: `${base}/orders` },
         { id: 'site-tours', label: t('station.details.siteTours',  'Rondas de Seguridad'),   path: `${base}/site-tours` },
         { id: 'etiquetas',  label: t('station.details.patrolQr',  'Generar QR de Rondas'),     path: `${base}/etiquetas` },
-        { id: 'tag-scans',  label: t('station.details.tagScans',   'Escaneos de Tags'),      path: `${base}/tag-scans` },
+        { id: 'tag-scans',  label: t('station.details.rondaHistory', 'Historial de Rondas'),   path: `${base}/tag-scans` },
         { id: 'inventory',  label: t('station.details.inventory',  'Inventario'),            path: `${base}/inventory` },
         { id: 'parking',    label: t('station.details.parking',    'Gestión de Parking'),    path: `${base}/parking` },
         { id: 'incidents',  label: t('station.details.incidents',  'Incidencias'),           path: `${base}/incidents` },

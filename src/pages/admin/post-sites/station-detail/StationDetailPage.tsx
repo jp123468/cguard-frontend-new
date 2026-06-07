@@ -9,7 +9,7 @@ import StationVisitors from './components/StationVisitors';
 import StationGuards from './components/StationGuards';
 import StationShifts from './components/StationShifts';
 import StationSiteTours from './components/StationSiteTours';
-import StationTagScans from './components/StationTagScans';
+import StationRondaHistory from './components/StationRondaHistory';
 import StationInventory from './components/StationInventory';
 import StationIncidents from './components/StationIncidents';
 import StationSiteTourTags from './components/StationSiteTourTags';
@@ -66,7 +66,7 @@ export default function StationDetailPage() {
       case 'shifts':     return <StationShifts {...tabProps} />;
       case 'orders':     return <StationOrders {...tabProps} />;
       case 'site-tours': return <StationSiteTours {...tabProps} />;
-      case 'tag-scans':  return <StationTagScans {...tabProps} />;
+      case 'tag-scans':  return <StationRondaHistory {...tabProps} />;
       case 'inventory':  return <StationInventory {...tabProps} />;
       case 'incidents':  return <StationIncidents {...tabProps} />;
       case 'etiquetas':  return <StationPatrolQR {...tabProps} />;
