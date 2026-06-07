@@ -675,6 +675,8 @@ export default function App() {
               <Route path="/post-sites/:postSiteId/stations/:stationId/tag-scans" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
               <Route path="/post-sites/:postSiteId/stations/:stationId/inventory" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
               <Route path="/post-sites/:postSiteId/stations/:stationId/incidents" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
+              <Route path="/post-sites/:postSiteId/stations/:stationId/etiquetas" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
+              <Route path="/post-sites/:postSiteId/stations/:stationId/parking" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
               {/* FIN CLIENTES */}
 
               {/* SUCURSALES */}
