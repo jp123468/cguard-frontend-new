@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink, useSearchParams, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
-import AuthLayout from "@/layouts/auth-layout";
+import GuardInviteLayout from "./GuardInviteLayout";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { ApiService } from "@/services/api/apiService";
@@ -571,7 +571,12 @@ export default function GuardRegistration() {
   };
 
   return (
-    <AuthLayout title={t('guard.registration_title', { defaultValue: 'Guard registration' })}>
+    <GuardInviteLayout
+      tenantName={fetched?.tenantName || fetched?.tenant?.name}
+      tenantLogoUrl={fetched?.tenantLogoUrl}
+      title={t('guard.registration_title', { defaultValue: 'Registro de guardia' })}
+      subtitle={t('guard.registration_subtitle', { defaultValue: 'Completa tus datos para activar tu cuenta.' })}
+    >
       <form className="space-y-3" onSubmit={handleSubmit}>
         {inviteNotFound && (
           <div className="rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800">
@@ -763,6 +768,6 @@ export default function GuardRegistration() {
           <NavLink to="/login" className="text-sm font-semibold" style={{ color: "#F75638" }}>{t('auth.back_to_login', { defaultValue: 'Volver a iniciar sesión' })}</NavLink>
         </div>
       </form>
-    </AuthLayout>
+    </GuardInviteLayout>
   );
 }
