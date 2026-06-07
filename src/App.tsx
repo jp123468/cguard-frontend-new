@@ -85,6 +85,10 @@ import Breaks from "./pages/admin/time-clock/Breaks"
 import Reports from "./pages/admin/Reports/Reports"
 import Reporting from "./pages/admin/analytics/Reporting"
 import Scheduling from "./pages/admin/analytics/Scheduling"
+import VideoMonitoring from "./pages/admin/video/VideoMonitoring"
+import VideoDevices from "./pages/admin/video/VideoDevices"
+import VideoEvents from "./pages/admin/video/VideoEvents"
+import VideoSharedClip from "./pages/admin/video/VideoSharedClip"
 import GeneratePayroll from "./pages/admin/payroll/GeneratePayroll"
 import PastPayroll from "./pages/admin/payroll/PastPayroll"
 import OvertimeMultiplier from "./pages/admin/payroll/OvertimeMultiplier"
@@ -224,6 +228,9 @@ export default function App() {
         <ClientSelectionProvider>
           <BrowserRouter>
             <Routes>
+              {/* Enlace público de video compartido (cliente, sin login) */}
+              <Route path="/video/shared/:token" element={<VideoSharedClip />} />
+
               {/* Rutas públicas (solo accesibles si NO estás logueado) */}
               <Route
                 path="/"
@@ -910,6 +917,12 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+
+              {/* VIDEOVIGILANCIA */}
+              <Route path="/video/monitoring" element={<ProtectedRoute><VideoMonitoring /></ProtectedRoute>} />
+              <Route path="/video/devices" element={<ProtectedRoute><VideoDevices /></ProtectedRoute>} />
+              <Route path="/video/events" element={<ProtectedRoute><VideoEvents /></ProtectedRoute>} />
+              {/* FIN VIDEOVIGILANCIA */}
               {/* FIN ANALITICAS */}
 
               <Route
