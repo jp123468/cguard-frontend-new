@@ -423,31 +423,10 @@ export default function NewSecurityGuardPage() {
                               <FormMessage />
                             </FormItem>
                           )} />
-                          <FormField control={inviteCtrl} name={`entries.${idx}.clientId`} render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t('guards.new.form.selectClient')}</FormLabel>
-                              <MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={clientOptions} placeholder={t('guards.new.form.selectClient')} aria-label={t('guards.new.form.selectClient')} />
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                          <FormField control={inviteCtrl} name={`entries.${idx}.stationId` as any} render={({ field }) => {
-                            const entryClientIdsRaw = inviteEntries?.[idx]?.clientId || [];
-                            const entryClientIds = Array.isArray(entryClientIdsRaw)
-                              ? entryClientIdsRaw
-                              : entryClientIdsRaw
-                                ? [entryClientIdsRaw]
-                                : [];
-                            const optionsForEntry = entryClientIds.length
-                              ? stations.filter((s: any) => entryClientIds.some((cid: any) => matchesStationClient(s, cid))).map((s: any) => ({ value: s.id, label: s.name }))
-                              : stations.map((s: any) => ({ value: s.id, label: s.name }));
-                            return (
-                              <FormItem>
-                                  <FormLabel>{t('guards.new.form.assignStation')}</FormLabel>
-                                  <MultiCombobox value={field.value || []} onChange={(v) => field.onChange(v)} options={optionsForEntry} placeholder={t('guards.new.form.assignStation')} aria-label={t('guards.new.form.assignStation')} />
-                                <FormMessage />
-                              </FormItem>
-                            );
-                          }} />
+                          {/* Client + station selectors removed: guards are created
+                              independently and assigned to a station later (everything
+                              is station-based). Use "Asignar a estación" on the guards
+                              list to assign. */}
                         </div>
 
                         <div className="mt-4 flex items-center gap-3">
