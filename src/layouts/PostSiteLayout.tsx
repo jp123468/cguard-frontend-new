@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import AppLayout from '@/layouts/app-layout';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronLeft, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 type Props = { title?: string; children: ReactNode; site?: any };
@@ -147,14 +147,36 @@ export default function PostSiteLayout({ title, children, site }: Props) {
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="bg-card border-b border-border rounded-md p-4 mb-4 flex items-center justify-between sticky top-0 z-10">
-            <div className="flex items-center gap-3">
-              <button onClick={() => setSidebarOpen((v) => !v)} className="text-muted-foreground hover:text-foreground p-1">
-                <Menu size={20} />
+          <div className="bg-card border-b border-border rounded-md p-3 mb-4 flex items-center justify-between gap-3 sticky top-0 z-10">
+            <div className="flex items-center gap-2 min-w-0">
+              <button onClick={() => setSidebarOpen((v) => !v)} className="text-muted-foreground hover:text-foreground p-1.5 rounded-md hover:bg-accent" title={t('common.toggleMenu', 'Menú')}>
+                <Menu size={18} />
               </button>
-              <div className="text-sm font-medium text-foreground">{headerLabel}</div>
+              <Link to="/post-sites" className="text-muted-foreground hover:text-foreground p-1.5 rounded-md hover:bg-accent" title={t('postSites.backToList', 'Volver a sitios de servicio')}>
+                <ChevronLeft size={18} />
+              </Link>
+              <div className="flex items-center gap-2 min-w-0 text-sm">
+                <span className="font-semibold text-foreground truncate">
+                  {site?.businessName || site?.companyName || site?.name || title || t('postSites.postsite', 'Post Site')}
+                </span>
+                {activeItem ? (
+                  <>
+                    <span className="text-muted-foreground/50">/</span>
+                    <span className="text-muted-foreground truncate">{activeItem.label}</span>
+                  </>
+                ) : null}
+              </div>
             </div>
-            <div className="text-sm text-muted-foreground" />
+            <div className="flex items-center gap-2 shrink-0">
+              {id ? (
+                <Link to={`/post-sites/${id}/edit`}>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Pencil size={14} />
+                    <span className="hidden sm:inline">{t('common.edit', 'Editar')}</span>
+                  </Button>
+                </Link>
+              ) : null}
+            </div>
           </div>
 
           <div className="pb-20">{children}</div>

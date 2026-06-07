@@ -1,11 +1,21 @@
 import React, { useRef, useEffect } from 'react';
 import { useTranslation } from "react-i18next";
+import { Link } from 'react-router-dom';
 import IncidentMap from "@/components/IncidentMap/IncidentMap";
 import { useState } from 'react';
 import { ApiService } from '@/services/api/apiService';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ServiceTypeBadge } from "@/components/post-sites/ServiceTypeBadge";
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
+import {
+  Users, ShieldCheck, Route, ClipboardCheck, AlertTriangle, Clock,
+  Building2, MapPin, Phone, Mail, Briefcase, Pencil, MapIcon,
+  ExternalLink, Activity, SlidersHorizontal,
+} from 'lucide-react';
 
 export default function PostSiteOverview({ site }: { site?: any }) {
   const { t } = useTranslation();
@@ -27,14 +37,6 @@ export default function PostSiteOverview({ site }: { site?: any }) {
       s.includes(key) ? s.filter((x) => x !== key) : [...s, key]
     );
   };
-  const stats = [
-    { id: 'assigned', label: t('postSites.overview.Stats.guardsAssigned'), value: 0, color: 'text-blue-600' },
-    { id: 'onsite', label: t('postSites.overview.Stats.guardOnSite'), value: 0, color: 'text-[#C8860A]' },
-    { id: 'tours', label: t('postSites.overview.Stats.toursCompleted'), value: 0, color: 'text-foreground/70' },
-    { id: 'tasks', label: t('postSites.overview.Stats.tasksCompleted'), value: 0, color: 'text-blue-600' },
-    { id: 'incidents', label: t('postSites.overview.Stats.incidentsReported'), value: 0, color: 'text-[#C8860A]' },
-    { id: 'hrs', label: t('postSites.overview.Stats.hoursLogged'), value: '00:00', color: 'text-red-500' },
-  ];
 
   const [assignedCount, setAssignedCount] = useState<number>(0);
   const [onsiteCount, setOnsiteCount] = useState<number>(0);
@@ -42,6 +44,17 @@ export default function PostSiteOverview({ site }: { site?: any }) {
   const [tasksCount, setTasksCount] = useState<number>(0);
   const [incidentsCount, setIncidentsCount] = useState<number>(0);
   const [hoursLogged, setHoursLogged] = useState<string>('00:00');
+
+  // Each stat: icon + a soft accent colour. Values stay in `foreground` for
+  // readability; only the icon chip carries colour.
+  const stats = [
+    { id: 'assigned',  label: t('postSites.overview.Stats.guardsAssigned'),    value: assignedCount,  icon: Users,          accent: 'text-blue-600 bg-blue-600/10' },
+    { id: 'onsite',    label: t('postSites.overview.Stats.guardOnSite'),       value: onsiteCount,    icon: ShieldCheck,    accent: 'text-[#C8860A] bg-[#C8860A]/10' },
+    { id: 'tours',     label: t('postSites.overview.Stats.toursCompleted'),    value: toursCount,     icon: Route,          accent: 'text-emerald-600 bg-emerald-600/10' },
+    { id: 'tasks',     label: t('postSites.overview.Stats.tasksCompleted'),    value: tasksCount,     icon: ClipboardCheck, accent: 'text-indigo-600 bg-indigo-600/10' },
+    { id: 'incidents', label: t('postSites.overview.Stats.incidentsReported'), value: incidentsCount, icon: AlertTriangle,  accent: 'text-rose-600 bg-rose-600/10' },
+    { id: 'hrs',       label: t('postSites.overview.Stats.hoursLogged'),       value: hoursLogged,    icon: Clock,          accent: 'text-slate-600 bg-slate-500/10' },
+  ];
 
   useEffect(() => {
     let mounted = true;
@@ -86,19 +99,16 @@ export default function PostSiteOverview({ site }: { site?: any }) {
         }
 
         const now = Date.now();
-        // onsite: count shifts where now between start and end if timestamps available
         let onsite = 0;
         let hoursSeconds = 0;
         const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
         for (const sh of (shifts || [])) {
-          // try multiple possible fields
           const startStr = sh.start || sh.shiftStart || sh.startTime || sh.start_time || sh.startAt || sh.startDate;
           const endStr = sh.end || sh.shiftEnd || sh.endTime || sh.end_time || sh.finishTimeInDay || sh.finish_time || sh.finish;
           const s = startStr ? +new Date(startStr) : NaN;
           const e = endStr ? +new Date(endStr) : NaN;
           if (!isNaN(s) && !isNaN(e)) {
             if (s <= now && now <= e) onsite += 1;
-            // sum durations for shifts that started within last 7 days (or ended within)
             if ((s >= sevenDaysAgo) || (e >= sevenDaysAgo)) {
               hoursSeconds += Math.max(0, (e - s) / 1000);
             }
@@ -106,7 +116,6 @@ export default function PostSiteOverview({ site }: { site?: any }) {
         }
         if (mounted) {
           setOnsiteCount(onsite);
-          // convert seconds to HH:MM
           const hrs = Math.floor(hoursSeconds / 3600);
           const mins = Math.floor((hoursSeconds % 3600) / 60);
           setHoursLogged(`${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}`);
@@ -167,87 +176,150 @@ export default function PostSiteOverview({ site }: { site?: any }) {
     return () => { mounted = false; };
   }, [site]);
 
+  // ── Derived site identity fields (tolerant of varied API field names). ──
+  const siteName = site?.businessName || site?.companyName || site?.name || t('postSites.postsite', 'Post Site');
+  const address = site?.address || site?.companyAddress || site?.secondAddress ||
+    [site?.city, site?.country].filter(Boolean).join(', ');
+  const clientName = site?.clientAccountName || site?.client?.name || site?.clientAccount?.name ||
+    (typeof site?.client === 'string' ? site?.client : '');
+  const phone = site?.contactPhone || site?.phone || '';
+  const email = site?.contactEmail || site?.email || '';
+  const isActive = site?.active !== false && site?.status !== 'inactive';
+  const serviceType = site?.serviceType;
+
+  const lat = site?.latitud ?? site?.latitude ?? site?.lat ?? (site?.location && site.location.lat);
+  const lng = site?.longitud ?? site?.longitude ?? site?.lng ?? (site?.location && site.location.lng);
+  const latNum = Number(lat);
+  const lngNum = Number(lng);
+  const hasCoords = lat != null && lng != null && !isNaN(latNum) && !isNaN(lngNum);
+  const mapsUrl = address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : '';
+
   return (
     <div ref={containerRef} className="space-y-6">
-      <div className="bg-card border rounded-md p-6 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4">{t('postSites.overview.Stats.title')}</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {stats.map((s) => (
-            <div key={s.id} className="p-6 bg-card rounded-lg border border-border flex flex-col items-center text-center">
-              <div className={`text-sm mb-3 ${s.color}`}>{s.label}</div>
-              <div className={`text-3xl font-semibold ${s.color}`}>
-                {s.id === 'assigned' ? assignedCount
-                  : s.id === 'onsite' ? onsiteCount
-                  : s.id === 'tours' ? toursCount
-                  : s.id === 'tasks' ? tasksCount
-                  : s.id === 'incidents' ? incidentsCount
-                  : hoursLogged}
+      {/* ── Site identity header ─────────────────────────────────────────── */}
+      <Card className="overflow-hidden">
+        <CardContent className="p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-4 min-w-0">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#C8860A]/10 text-[#C8860A]">
+                <Building2 className="h-7 w-7" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl font-semibold text-foreground truncate">{siteName}</h2>
+                  <Badge variant={isActive ? 'default' : 'secondary'}>
+                    {isActive ? t('common.active', 'Activo') : t('common.inactive', 'Inactivo')}
+                  </Badge>
+                  {serviceType ? <ServiceTypeBadge value={serviceType} /> : null}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
+                  {address ? (
+                    <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 shrink-0" />{address}</span>
+                  ) : null}
+                  {clientName ? (
+                    <span className="inline-flex items-center gap-1.5"><Briefcase className="h-4 w-4 shrink-0" />{clientName}</span>
+                  ) : null}
+                  {phone ? (
+                    <a href={`tel:${phone}`} className="inline-flex items-center gap-1.5 hover:text-foreground"><Phone className="h-4 w-4 shrink-0" />{phone}</a>
+                  ) : null}
+                  {email ? (
+                    <a href={`mailto:${email}`} className="inline-flex items-center gap-1.5 hover:text-foreground"><Mail className="h-4 w-4 shrink-0" />{email}</a>
+                  ) : null}
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-card border rounded-md p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">{t('postSites.overview.Map.title')}</h3>
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-foreground/70">{t('postSites.overview.Map.MapType')}</div>
-            <select className="border rounded px-3 py-1 text-sm">
-              <option>{t('postSites.overview.Map.Roadmap')}</option>
-              <option>{t('postSites.overview.Map.Satellite')}</option>
-              <option>{t('postSites.overview.Map.Hybrid')}</option>
-            </select>
-
-            <label className="flex items-center gap-2 text-sm text-foreground/70">
-              <input type="checkbox" className="form-checkbox h-5 w-8" />
-              <span>{t('postSites.overview.Map.GeoFence')}</span>
-            </label>
+            {site?.id ? (
+              <Link to={`/post-sites/${site.id}/edit`} className="shrink-0">
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <Pencil className="h-4 w-4" />
+                  {t('common.edit', 'Editar')}
+                </Button>
+              </Link>
+            ) : null}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Stats ────────────────────────────────────────────────────────── */}
+      <div>
+        <div className="mb-3 flex items-center gap-2 px-1">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            {t('postSites.overview.Stats.title')}
+          </h3>
+          <span className="text-xs text-muted-foreground/70">· {t('postSites.overview.last7days', 'últimos 7 días')}</span>
         </div>
-
-        {(() => {
-          const lat = site?.latitud ?? site?.latitude ?? site?.lat ?? (site?.location && site.location.lat);
-          const lng = site?.longitud ?? site?.longitude ?? site?.lng ?? (site?.location && site.location.lng);
-          const address = site?.address || site?.secondAddress || site?.companyAddress || '';
-
-          if (lat && lng) {
-            const latNum = Number(lat);
-            const lngNum = Number(lng);
-            if (!isNaN(latNum) && !isNaN(lngNum)) {
-              return (
-                <div className="h-72 rounded-md overflow-hidden mb-2">
-                  <IncidentMap lat={latNum} lng={lngNum} label={site?.companyName || site?.name || 'Client location'} />
-                </div>
-              );
-            }
-          }
-
-          if (address) {
-            const search = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+          {stats.map((s) => {
+            const Icon = s.icon;
             return (
-              <div className="h-72 bg-muted rounded-md overflow-hidden mb-2 flex items-center justify-center text-muted-foreground">
-                <div className="text-center">
-                  <div>No coordinates available for this site.</div>
-                  <a href={search} target="_blank" rel="noreferrer" className="text-blue-600 underline mt-2 inline-block">Open in Google Maps</a>
-                </div>
-              </div>
+              <Card key={s.id} className="transition-shadow hover:shadow-md">
+                <CardContent className="flex items-center gap-3 p-4">
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${s.accent}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-2xl font-semibold leading-tight text-foreground">{s.value}</div>
+                    <div className="truncate text-xs text-muted-foreground">{s.label}</div>
+                  </div>
+                </CardContent>
+              </Card>
             );
-          }
-
-          return (
-            <div className="h-72 bg-muted rounded-md overflow-hidden mb-2 flex items-center justify-center text-muted-foreground">Mapa (no hay datos)</div>
-          );
-        })()}
+          })}
+        </div>
       </div>
 
-      <div className="bg-card border rounded-md p-6 shadow-sm">
-        <div className="border-t pt-4">
+      {/* ── Location map ─────────────────────────────────────────────────── */}
+      <Card>
+        <CardContent className="p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
+              <MapIcon className="h-4.5 w-4.5 text-muted-foreground" style={{ width: 18, height: 18 }} />
+              {t('postSites.overview.Map.title')}
+            </h3>
+            {address ? (
+              <a href={mapsUrl} target="_blank" rel="noreferrer"
+                 className="inline-flex items-center gap-1.5 text-sm text-[#C8860A] hover:underline">
+                {t('postSites.overview.Map.openInMaps', 'Abrir en Google Maps')}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            ) : null}
+          </div>
+
+          {hasCoords ? (
+            <div className="h-80 overflow-hidden rounded-xl border border-border">
+              <IncidentMap lat={latNum} lng={lngNum} label={siteName} />
+            </div>
+          ) : (
+            <div className="flex h-56 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 text-center text-muted-foreground">
+              <MapPin className="h-7 w-7 opacity-50" />
+              <p className="text-sm">{t('postSites.overview.Map.noCoords', 'Este sitio no tiene coordenadas configuradas.')}</p>
+              {address ? (
+                <a href={mapsUrl} target="_blank" rel="noreferrer" className="text-sm text-[#C8860A] hover:underline">
+                  {t('postSites.overview.Map.openInMaps', 'Abrir en Google Maps')}
+                </a>
+              ) : null}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Latest activity ──────────────────────────────────────────────── */}
+      <Card>
+        <CardContent className="p-5">
           <div className="flex items-center justify-between">
-            <h4 className="text-md font-medium">{t('postSites.overview.LatestActivity')}</h4>
+            <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
+              <Activity className="h-4.5 w-4.5 text-muted-foreground" style={{ width: 18, height: 18 }} />
+              {t('postSites.overview.LatestActivity')}
+            </h3>
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
               <SheetTrigger asChild>
-                <button className="text-sm bg-card border rounded px-3 py-1">{t('postSites.overview.Filters', 'Filtros')}</button>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  {t('postSites.overview.Filters', 'Filtros')}
+                  {selectedTypes.length > 0 ? (
+                    <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-[10px]">{selectedTypes.length}</Badge>
+                  ) : null}
+                </Button>
               </SheetTrigger>
 
               <SheetContent side="right" className="w-[400px] sm:w-[460px] z-[9999]">
@@ -256,21 +328,23 @@ export default function PostSiteOverview({ site }: { site?: any }) {
                 </SheetHeader>
 
                 <div className="mt-4 space-y-4">
-                  <div className="text-sm text-foreground/70">{t('postSites.overview.FilterHelp', 'Selecciona filtros para la vista.')}</div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground">{t('postSites.overview.Filter.fromDate', 'From Date')}</label>
-                    <input type="date" className="w-full border rounded px-3 py-2" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground">{t('postSites.overview.Filter.toDate', 'To Date')}</label>
-                    <input type="date" className="w-full border rounded px-3 py-2" />
+                  <div className="text-sm text-muted-foreground">{t('postSites.overview.FilterHelp', 'Selecciona filtros para la vista.')}</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-muted-foreground">{t('postSites.overview.Filter.fromDate', 'From Date')}</label>
+                      <input type="date" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-muted-foreground">{t('postSites.overview.Filter.toDate', 'To Date')}</label>
+                      <input type="date" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    </div>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium">{t('postSites.overview.Filter.type', 'Type')}</label>
-                    <div className="mt-2 max-h-60 overflow-auto border rounded p-2 bg-card">
+                    <div className="mt-2 max-h-60 overflow-auto rounded-md border border-border bg-card p-2">
                       {typeKeys.map((key) => (
-                        <label key={key} className="flex items-center gap-3 py-2 px-2 hover:bg-muted/30 rounded">
+                        <label key={key} className="flex cursor-pointer items-center gap-3 rounded px-2 py-2 hover:bg-muted/40">
                           <Checkbox checked={selectedTypes.includes(key)} onCheckedChange={() => toggleType(key)} />
                           <span className="text-sm text-foreground">{t(`postSites.overview.types.${key}`)}</span>
                         </label>
@@ -278,17 +352,29 @@ export default function PostSiteOverview({ site }: { site?: any }) {
                     </div>
                   </div>
 
-                  <div className="flex gap-2 justify-end pt-4">
-                    <button onClick={() => setOpenFilter(false)} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('common.apply', 'Filtrar')}</button>
+                  <div className="flex justify-end gap-2 pt-2">
+                    {selectedTypes.length > 0 ? (
+                      <Button variant="ghost" size="sm" onClick={() => setSelectedTypes([])}>
+                        {t('common.clear', 'Limpiar')}
+                      </Button>
+                    ) : null}
+                    <Button size="sm" className="bg-[#C8860A] text-white hover:bg-[#b3780a]" onClick={() => setOpenFilter(false)}>
+                      {t('common.apply', 'Filtrar')}
+                    </Button>
                   </div>
                 </div>
               </SheetContent>
             </Sheet>
           </div>
 
-          <div className="mt-4 text-sm text-foreground/70">{t('postSites.overview.noActivity', 'No activity yet.')}</div>
-        </div>
-      </div>
+          <div className="mt-6 flex flex-col items-center justify-center gap-2 py-10 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <Activity className="h-6 w-6" />
+            </div>
+            <p className="text-sm text-muted-foreground">{t('postSites.overview.noActivity', 'Sin actividad por ahora.')}</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
