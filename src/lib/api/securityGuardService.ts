@@ -63,6 +63,14 @@ export const securityGuardService = {
     return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
+  /** Admin-trigger a password reset for a guard → { email, emailed, pushed, link }. */
+  async sendPasswordReset(id: string) {
+    const tenantId = getTenantId();
+    const resp = await api.post(`/tenant/${tenantId}/security-guard/${id}/send-password-reset`, {});
+
+    return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+  },
+
   async destroy(ids: string[]) {
     const tenantId = getTenantId();
     const resp = await api.delete(`/tenant/${tenantId}/security-guard`, { data: { ids }, toast: { silentError: true } } as any);

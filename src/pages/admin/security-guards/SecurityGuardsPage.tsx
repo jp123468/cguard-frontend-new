@@ -51,6 +51,7 @@ import {
   Eye,
   Copy,
   Send,
+  KeyRound,
   Archive,
   RotateCw,
   Trash,
@@ -967,6 +968,22 @@ export default function SecurityGuardsPage() {
                                 <DropdownMenuItem
                                   onClick={async () => {
                                     try {
+                                      const realId = guard.raw?.id || guard.id;
+                                      const r: any = await securityGuardService.sendPasswordReset(realId);
+                                      try { if (r?.link) await navigator.clipboard.writeText(r.link); } catch {}
+                                      const via = [r?.emailed && 'correo', r?.pushed && 'push'].filter(Boolean).join(' + ');
+                                      toast.success(`Enlace de restablecimiento ${via ? `enviado por ${via} y ` : ''}copiado al portapapeles`);
+                                    } catch (err: any) {
+                                      toast.error(err?.message || t('guards.list.toasts.resetError', 'No se pudo restablecer la contraseña'));
+                                    }
+                                  }}
+                                >
+                                  <KeyRound className="mr-2 h-4 w-4" /> {t('guards.list.actions.resetPassword', 'Restablecer contraseña')}
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
                                       const link =
                                         guard.raw?.inviteLink ||
                                         `${window.location.origin}/guard/registration?code=${encodeURIComponent(
@@ -1015,6 +1032,23 @@ export default function SecurityGuardsPage() {
                                     }}
                                   >
                                     <ShieldCheck className="mr-2 h-4 w-4" /> {t('guards.list.actions.assignStation','Asignar a estación')}
+                                  </DropdownMenuItem>
+                                )}
+                                {hasPermission('securityGuardEdit') && (
+                                  <DropdownMenuItem
+                                    onClick={async () => {
+                                      try {
+                                        const realId = guard.raw?.id || guard.id;
+                                        const r: any = await securityGuardService.sendPasswordReset(realId);
+                                        try { if (r?.link) await navigator.clipboard.writeText(r.link); } catch {}
+                                        const via = [r?.emailed && 'correo', r?.pushed && 'push'].filter(Boolean).join(' + ');
+                                        toast.success(`Enlace de restablecimiento ${via ? `enviado por ${via} y ` : ''}copiado al portapapeles`);
+                                      } catch (err: any) {
+                                        toast.error(err?.message || t('guards.list.toasts.resetError', 'No se pudo restablecer la contraseña'));
+                                      }
+                                    }}
+                                  >
+                                    <KeyRound className="mr-2 h-4 w-4" /> {t('guards.list.actions.resetPassword', 'Restablecer contraseña')}
                                   </DropdownMenuItem>
                                 )}
                                 {/* Show "Reenviar Invitación" for any active guard that hasn't set up their account yet */}
