@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Plus, ChevronLeft, ChevronRight, X, Clock, User, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Loader2, Plus, ChevronLeft, ChevronRight, X, Clock, User, Calendar, AlertTriangle, CheckCircle2, UserPlus, Repeat, CalendarRange } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { getTenantTimezone } from '@/utils/tenantLocation';
@@ -729,24 +730,35 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
         )}
 
         {/* Create Form Modal */}
-        {showForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowForm(false)}>
-            <div className="bg-card border border-border/30 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-              <div className="px-5 py-4 border-b border-border/20 flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-foreground">Asignar Guardia</h4>
-                <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg hover:bg-muted/30 text-muted-foreground transition-colors"><X size={15} /></button>
+        {showForm && createPortal(
+          <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => setShowForm(false)}>
+            <div
+              className="flex w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-border/30 bg-card shadow-2xl max-h-[92vh] animate-in fade-in slide-in-from-bottom-4 duration-200 sm:max-h-[88vh] sm:rounded-2xl sm:zoom-in-95"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between gap-3 border-b border-border/20 px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C8860A]/12 text-[#C8860A]">
+                    <UserPlus size={18} />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-semibold text-foreground">Asignar guardia</h4>
+                    <p className="text-xs text-muted-foreground">Programa la cobertura del turno de este puesto</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowForm(false)} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"><X size={16} /></button>
               </div>
-              <div className="p-5 space-y-4">
+              <div className="flex-1 space-y-4 overflow-y-auto p-5">
                 {/* Mode toggle */}
-                <div className="flex bg-muted/20 rounded-lg p-[3px]">
+                <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-muted/20 p-1">
                   <button
                     onClick={() => setAssignMode('rotation')}
-                    className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-all ${assignMode === 'rotation' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
-                  >Rotación</button>
+                    className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${assignMode === 'rotation' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  ><Repeat size={14} /> Rotación</button>
                   <button
                     onClick={() => setAssignMode('single')}
-                    className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-all ${assignMode === 'single' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
-                  >Turno único</button>
+                    className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${assignMode === 'single' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  ><CalendarRange size={14} /> Turno único</button>
                 </div>
 
                 {/* Guard selection */}
@@ -840,14 +852,16 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
                   </div>
                 )}
               </div>
-              <div className="px-5 py-3 border-t border-border/20 flex items-center justify-end gap-2">
-                <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-all">Cancelar</button>
-                <button onClick={saveShift} disabled={saving || !shiftGuard} className="px-5 py-2 bg-[#C8860A] text-white rounded-xl text-sm font-semibold hover:bg-[#B37809] disabled:opacity-40 transition-all shadow-sm active:scale-95">
-                  {saving ? <Loader2 size={14} className="animate-spin" /> : (assignMode === 'rotation' ? 'Asignar rotación' : 'Crear turno')}
+              <div className="flex items-center justify-end gap-2 border-t border-border/20 bg-card px-5 py-3">
+                <button onClick={() => setShowForm(false)} className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted/20 hover:text-foreground">Cancelar</button>
+                <button onClick={saveShift} disabled={saving || !shiftGuard} className="inline-flex items-center gap-1.5 rounded-xl bg-[#C8860A] px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#B37809] active:scale-95 disabled:opacity-40">
+                  {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+                  {assignMode === 'rotation' ? 'Asignar rotación' : 'Crear turno'}
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </div>
