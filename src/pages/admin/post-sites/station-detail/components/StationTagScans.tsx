@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin, MapPinOff, HelpCircle } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 
 type Props = { station: any; stationId: string; postSiteId: string };
@@ -49,6 +49,33 @@ export default function StationTagScans({ stationId }: Props) {
     }
   };
 
+  // Server-side location verdict: validLocation/distanceMeters live on the row
+  // (DB columns) with a fallback to the scannedData JSON for older rows.
+  const locationBadge = (r: any) => {
+    const valid = r.validLocation ?? r.scannedData?.validLocation ?? null;
+    const dist = r.distanceMeters ?? r.scannedData?.distanceMeters ?? null;
+    const distTxt = dist != null ? ` · ${Math.round(Number(dist))} m` : '';
+    if (valid === true) {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700">
+          <MapPin className="h-3.5 w-3.5" /> {t('station.tagScans.inLocation', 'En ubicación')}{distTxt}
+        </span>
+      );
+    }
+    if (valid === false) {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-700">
+          <MapPinOff className="h-3.5 w-3.5" /> {t('station.tagScans.outOfRange', 'Fuera de rango')}{distTxt}
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+        <HelpCircle className="h-3.5 w-3.5" /> {t('station.tagScans.unverified', 'Sin verificar')}
+      </span>
+    );
+  };
+
   return (
     <div className="bg-card border rounded-lg overflow-hidden">
       <div className="px-6 py-4 border-b">
@@ -83,6 +110,9 @@ export default function StationTagScans({ stationId }: Props) {
                     {t('station.tagScans.col.guard', 'Guardia')}
                   </th>
                   <th className="px-6 py-3 text-left font-semibold text-foreground/70">
+                    {t('station.tagScans.col.location', 'Ubicación')}
+                  </th>
+                  <th className="px-6 py-3 text-left font-semibold text-foreground/70">
                     {t('station.tagScans.col.scannedAt', 'Escaneado')}
                   </th>
                 </tr>
@@ -102,6 +132,7 @@ export default function StationTagScans({ stationId }: Props) {
                     <tr key={r.id || i} className="hover:bg-muted/30">
                       <td className="px-6 py-3 text-foreground font-mono">{tag}</td>
                       <td className="px-6 py-3 text-foreground">{guardName}</td>
+                      <td className="px-6 py-3">{locationBadge(r)}</td>
                       <td className="px-6 py-3 text-muted-foreground font-mono text-xs">{fmt(scannedAt)}</td>
                     </tr>
                   );
