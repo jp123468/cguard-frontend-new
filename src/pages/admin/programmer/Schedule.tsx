@@ -250,7 +250,7 @@ export default function Schedule() {
       // Sacafranco follows its OWN rotation using global epoch (Jan 1)
       const sfCycle = rot.dayShifts + rot.nightShifts + rot.restDays;
       if (sfCycle === 0) return 'rest';
-      const epoch = new Date(date.getFullYear(), 0, 1);
+      const epoch = new Date(2024, 0, 1); // fixed rotation anchor (matches backend getGlobalEpoch)
       const target = new Date(date);
       target.setHours(0, 0, 0, 0);
       const sfDiff = Math.floor((target.getTime() - epoch.getTime()) / (24 * 60 * 60 * 1000));
@@ -263,7 +263,7 @@ export default function Schedule() {
     // ─── FIJO LOGIC ─── Guard rotates work/rest following the station rotation
     // Uses GLOBAL EPOCH (Jan 1) for consistent sequential pattern across all stations
     const cycleLength = rot.dayShifts + rot.nightShifts + rot.restDays;
-    const epoch = new Date(date.getFullYear(), 0, 1);
+    const epoch = new Date(2024, 0, 1); // fixed rotation anchor (matches backend getGlobalEpoch)
     const target = new Date(date);
     target.setHours(0, 0, 0, 0);
     const diffMs = target.getTime() - epoch.getTime();
@@ -291,7 +291,7 @@ export default function Schedule() {
     if (cycleLength === 0) return 'rest';
 
     // Use Jan 1 of current year as epoch for consistent pattern display
-    const epoch = new Date(date.getFullYear(), 0, 1);
+    const epoch = new Date(2024, 0, 1); // fixed rotation anchor (matches backend getGlobalEpoch)
     const target = new Date(date);
     target.setHours(0, 0, 0, 0);
     const diffMs = target.getTime() - epoch.getTime();
@@ -340,8 +340,8 @@ export default function Schedule() {
       const sfCycle = rot.dayShifts + rot.nightShifts + rot.restDays;
       if (sfCycle === 0) return;
 
-      // Use global epoch (Jan 1) — consistent with backend offset calculation
-      const epoch = new Date(monthDays[0].getFullYear(), 0, 1);
+      // Fixed rotation anchor — must match backend getGlobalEpoch (2024-01-01)
+      const epoch = new Date(2024, 0, 1);
 
       monthDays.forEach(day => {
         const target = new Date(day);
