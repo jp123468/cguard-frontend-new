@@ -43,7 +43,6 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   const [shiftStart, setShiftStart] = useState('');
   const [shiftEnd, setShiftEnd] = useState('');
   const [positions, setPositions] = useState<any[]>([]);
-  const [existingShifts, setExistingShifts] = useState<any[]>([]);
 
   // Jornadas = the station schedule (source of truth), else derived from positions.
   const jornadas: Jornada[] = useMemo(() => {
@@ -89,9 +88,22 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
       } catch { setGuardsOptions([]); } finally { setLoadingGuards(false); }
     })();
     ApiService.get(`/tenant/${tenantId}/station/${stationId}/positions`).then((r: any) => setPositions(Array.isArray(r) ? r : (r?.rows ?? []))).catch(() => {});
-    ApiService.get(`/tenant/${tenantId}/shift?filter[station]=${encodeURIComponent(stationId)}&limit=999`).then((r: any) => setExistingShifts(Array.isArray(r) ? r : (r?.rows ?? []))).catch(() => setExistingShifts([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // A slot already taken by THIS guard is the desired end state, not an error.
+  const isBenignSlotConflict = (e: any) => {
+    const blob = `${e?.message || ''} ${(() => { try { return JSON.stringify(e?.data ?? e?.response ?? ''); } catch { return ''; } })()}`;
+    return /uniq_shift_slot/i.test(blob);
+  };
+
+  // Fetch the station's current shifts (fresh — avoids stale-overlap conflicts).
+  const fetchCurrentShifts = async (): Promise<any[]> => {
+    try {
+      const r: any = await ApiService.get(`/tenant/${tenantId}/shift?filter[station]=${encodeURIComponent(stationId)}&limit=999&_=${Date.now()}`);
+      return Array.isArray(r) ? r : (r?.rows ?? []);
+    } catch { return []; }
+  };
 
   const generateRotationDates = (startDate: string, pattern: string, weeks: number, jornada: Jornada): Date[] => {
     const [workDays, restDays] = pattern.split('-').map(Number);
@@ -114,19 +126,27 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   };
 
   // Replace whatever already occupies a slot at this station (one turno per slot).
-  const deleteOverlappingShifts = async (start: Date, end: Date) => {
+  // Mutates `list` so the same row isn't re-deleted across overlapping slots.
+  const deleteOverlappingShifts = async (list: any[], start: Date, end: Date) => {
     const s = start.getTime(); const e = end.getTime();
-    const ids = existingShifts.filter((r: any) => {
+    const matched = list.filter((r: any) => {
       const rs = new Date(r.startTime || r.start).getTime();
       const re = new Date(r.endTime || r.end).getTime();
       return Number.isFinite(rs) && Number.isFinite(re) && rs < e && re > s;
-    }).map((r: any) => r.id).filter(Boolean);
-    if (ids.length) await ApiService.delete(`/tenant/${tenantId}/shift?ids=${ids.join(',')}`);
+    });
+    const ids = matched.map((r: any) => r.id).filter(Boolean);
+    if (ids.length) {
+      await ApiService.delete(`/tenant/${tenantId}/shift?ids=${ids.join(',')}`);
+      matched.forEach((m) => { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); });
+    }
     return ids.length;
   };
 
   const saveShift = async () => {
     if (!shiftGuard) { toast.error('Seleccione un guardia'); return; }
+    // Always work from a FRESH snapshot of the station's shifts so overlap
+    // cleanup is accurate (the stale snapshot was causing uniq_shift_slot 400s).
+    const current = await fetchCurrentShifts();
 
     if (assignMode === 'single') {
       if (!shiftStart || !shiftEnd) { toast.error('Complete todos los campos'); return; }
@@ -135,12 +155,14 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
       if ((end.getTime() - start.getTime()) > 24 * 60 * 60 * 1000) { toast.error('Un turno no puede durar más de 24 horas'); return; }
       setSaving(true);
       try {
-        await deleteOverlappingShifts(start, end);
+        await deleteOverlappingShifts(current, start, end);
         await ApiService.post(`/tenant/${tenantId}/shift`, { data: { startTime: start.toISOString(), endTime: end.toISOString(), station: stationId, guard: shiftGuard, postSiteId } });
         toast.success('Turno creado');
         onSaved(start);
-      } catch (e: any) { toast.error(e?.data?.message || e?.message || 'Error al crear turno'); }
-      finally { setSaving(false); }
+      } catch (e: any) {
+        if (isBenignSlotConflict(e)) { toast.success('El guardia ya estaba asignado a ese turno'); onSaved(start); }
+        else toast.error(e?.data?.message || e?.message || 'Error al crear turno');
+      } finally { setSaving(false); }
       return;
     }
 
@@ -151,7 +173,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
     if (dates.length === 0) { toast.error('No se generaron turnos con esta configuración'); return; }
 
     setSaving(true);
-    let created = 0; let failed = 0; let firstError = '';
+    let created = 0; let already = 0; let failed = 0; let firstError = '';
     try {
       for (const date of dates) {
         const ds = dateKey(date);
@@ -159,13 +181,19 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
         const endTime = new Date(`${ds}T${jornada.endTime || '19:00'}:00`);
         if (endTime <= startTime) endTime.setDate(endTime.getDate() + 1);
         try {
-          await deleteOverlappingShifts(startTime, endTime);
+          await deleteOverlappingShifts(current, startTime, endTime);
           await ApiService.post(`/tenant/${tenantId}/shift`, { data: { startTime: startTime.toISOString(), endTime: endTime.toISOString(), station: stationId, guard: shiftGuard, postSiteId } });
           created++;
-        } catch (e: any) { failed++; if (!firstError) firstError = e?.data?.message || e?.message || ''; }
+        } catch (e: any) {
+          if (isBenignSlotConflict(e)) already++;  // this guard already has that slot
+          else { failed++; if (!firstError) firstError = e?.data?.message || e?.message || ''; }
+        }
       }
-      if (created > 0) toast.success(`${created} turnos creados (patrón ${rotationPattern})`);
-      if (failed > 0) toast.error(`${failed} turno(s) no se crearon${firstError ? `: ${firstError}` : ''}`);
+      const ok: string[] = [];
+      if (created) ok.push(`${created} turnos creados`);
+      if (already) ok.push(`${already} ya asignados`);
+      if (ok.length) toast.success(`${ok.join(' · ')} (patrón ${rotationPattern})`);
+      if (failed) toast.error(`${failed} turno(s) no se crearon${firstError ? `: ${firstError}` : ''}`);
       onSaved(dates[0]);
     } catch (e: any) { toast.error(e?.message || 'Error al crear turnos'); }
     finally { setSaving(false); }
