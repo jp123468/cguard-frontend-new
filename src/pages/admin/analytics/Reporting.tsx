@@ -1,473 +1,279 @@
-// src/pages/Reporting.tsx
-
-import React, { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Filter,
-  MoreVertical,
-  FileDown,
-  FolderOpen,
+  Loader2, RefreshCw, Shield, ClipboardCheck, MapPin, AlertTriangle, Clock,
+  Users, TrendingUp, Building2,
 } from "lucide-react";
+import { analyticsService, OpsAnalytics } from "@/lib/api/analyticsService";
 
-import AppLayout from "@/layouts/app-layout";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+const GOLD = "#C8860A";
+const fmtDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-type Tone = "blue" | "red" | "orange" | "slate";
-
-interface SummaryCard {
-  id: string;
-  title: string;
-  value: number;
-  secondaryLabel: string;
-  secondaryValue: number;
-  tone: Tone;
-}
-
-const SUMMARY_CARDS: SummaryCard[] = [
-  {
-    id: "reports",
-    title: "Informes",
-    value: 0,
-    secondaryLabel: "Pendiente",
-    secondaryValue: 0,
-    tone: "blue",
-  },
-  {
-    id: "incident",
-    title: "Incidente",
-    value: 0,
-    secondaryLabel: "Abierto",
-    secondaryValue: 0,
-    tone: "red",
-  },
-  {
-    id: "patrols",
-    title: "Recorridos",
-    value: 0,
-    secondaryLabel: "Completado",
-    secondaryValue: 0,
-    tone: "orange",
-  },
-  {
-    id: "tasks",
-    title: "Tarea",
-    value: 0,
-    secondaryLabel: "Pendiente",
-    secondaryValue: 0,
-    tone: "slate",
-  },
-  {
-    id: "checklist",
-    title: "Lista de Verificación",
-    value: 0,
-    secondaryLabel: "Pendiente",
-    secondaryValue: 0,
-    tone: "blue",
-  },
-  {
-    id: "inactivity",
-    title: "Alertas de Inactividad",
-    value: 0,
-    secondaryLabel: "Alertas de Pánico",
-    secondaryValue: 0,
-    tone: "orange",
-  },
+const PRESETS: { id: string; label: string; days: number }[] = [
+  { id: "1", label: "Hoy", days: 1 },
+  { id: "7", label: "7 días", days: 7 },
+  { id: "30", label: "30 días", days: 30 },
+  { id: "90", label: "90 días", days: 90 },
 ];
 
-const toneStyles: Record<
-  Tone,
-  { value: string; title: string; border: string }
-> = {
-  blue: {
-    value: "text-sky-500",
-    title: "text-sky-600",
-    border: "border-sky-100",
-  },
-  red: {
-    value: "text-red-500",
-    title: "text-red-600",
-    border: "border-red-100",
-  },
-  orange: {
-    value: "text-[#C8860A]",
-    title: "text-[#C8860A]",
-    border: "border-[#C8860A]/10",
-  },
-  slate: {
-    value: "text-foreground/70",
-    title: "text-foreground",
-    border: "border-slate-100",
-  },
-};
-
-interface ReportingProps {
-  onExportPdf?: () => void;
+// ── KPI card ────────────────────────────────────────────────────────────────
+function MetricCard({ icon, value, label, sub, accent, pct }: {
+  icon: React.ReactNode; value: string | number; label: string; sub?: string;
+  accent: string; pct?: number;
+}) {
+  return (
+    <Card className="h-full rounded-2xl border bg-card shadow-sm">
+      <CardContent className="flex h-full flex-col p-4">
+        <div className="flex items-center justify-between">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: `${accent}1A`, color: accent }}>{icon}</span>
+          {typeof pct === "number" && <span className="text-xs font-semibold" style={{ color: accent }}>{pct}%</span>}
+        </div>
+        <p className="mt-3 text-3xl font-semibold leading-none text-foreground">{value}</p>
+        <p className="mt-1 text-sm font-medium text-foreground/80">{label}</p>
+        {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
+        {typeof pct === "number" && (
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, pct)}%`, background: accent }} />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
-const Reporting: React.FC<ReportingProps> = ({ onExportPdf }) => {
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+// ── daily bar chart ───────────────────────────────────────────────────────────
+function DayBars({ data, metric, color, label }: {
+  data: OpsAnalytics["trend"]; metric: "scans" | "incidents" | "rondas"; color: string; label: string;
+}) {
+  const max = Math.max(1, ...data.map((d) => d[metric]));
+  const total = data.reduce((s, d) => s + d[metric], 0);
+  return (
+    <Card className="rounded-2xl border bg-card shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-baseline justify-between">
+          <p className="text-sm font-semibold text-foreground">{label}</p>
+          <p className="text-xs text-muted-foreground"><span className="font-semibold text-foreground">{total}</span> total</p>
+        </div>
+        <div className="mt-3 flex h-24 items-end gap-[2px]">
+          {data.map((d, i) => (
+            <div key={i} title={`${d.date}: ${d[metric]}`} className="flex flex-1 items-end" style={{ height: "100%" }}>
+              <div className="w-full rounded-t" style={{ height: `${(d[metric] / max) * 100}%`, minHeight: d[metric] > 0 ? 2 : 0, background: color }} />
+            </div>
+          ))}
+        </div>
+        <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+          <span>{data[0]?.date.slice(5)}</span>
+          <span>{data[data.length - 1]?.date.slice(5)}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-  const handleExportPdf = () => {
-    if (onExportPdf) {
-      onExportPdf();
-    } else {
+// ── horizontal bars (breakdowns) ──────────────────────────────────────────────
+function HBars({ items, color, empty }: { items: { label: string; count: number }[]; color: string; empty: string }) {
+  if (!items.length) return <p className="py-4 text-sm text-muted-foreground">{empty}</p>;
+  const max = Math.max(1, ...items.map((i) => i.count));
+  return (
+    <div className="space-y-2">
+      {items.map((it, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <span className="w-32 shrink-0 truncate text-xs text-foreground/80" title={it.label}>{it.label}</span>
+          <div className="h-4 flex-1 overflow-hidden rounded bg-muted/40">
+            <div className="h-full rounded" style={{ width: `${(it.count / max) * 100}%`, background: color }} />
+          </div>
+          <span className="w-8 shrink-0 text-right text-xs font-semibold text-foreground">{it.count}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Section({ title, icon, children, right }: { title: string; icon?: React.ReactNode; children: React.ReactNode; right?: React.ReactNode }) {
+  return (
+    <Card className="rounded-2xl border bg-card shadow-sm">
+      <CardContent className="p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">{icon}{title}</h3>
+          {right}
+        </div>
+        {children}
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function Reporting() {
+  const [days, setDays] = useState(30);
+  const [data, setData] = useState<OpsAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const range = useMemo(() => {
+    const end = new Date();
+    const start = new Date(end.getTime() - (days - 1) * 86400000);
+    return { startDate: fmtDate(start), endDate: fmtDate(end) };
+  }, [days]);
+
+  const load = async () => {
+    setLoading(true); setError(null);
+    try {
+      setData(await analyticsService.operations(range));
+    } catch (e: any) {
+      setError(e?.message || "No se pudieron cargar las analíticas");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const dates = [
-    "Nov 12",
-    "Nov 13",
-    "Nov 14",
-    "Nov 15",
-    "Nov 16",
-    "Nov 17",
-    "Nov 18",
-  ];
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [days]);
+
+  const k = data?.kpis;
 
   return (
-    <AppLayout>
-      <div className="space-y-8 p-4 lg:p-8">
-        {/* ACCIONES SUPERIORES (Filtros + menú PDF) */}
-        <div className="flex items-center justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="flex items-center gap-2 rounded-full border-[#C8860A]/30 bg-card px-4 text-sm font-semibold text-[#C8860A] hover:bg-[#C8860A]/10"
-            onClick={() => setIsFilterOpen(true)}
-          >
-            <Filter className="h-4 w-4" />
-            Filtros
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-card text-muted-foreground shadow-sm hover:bg-slate-50"
-              >
-                <MoreVertical className="h-4 w-4" />
+    <div className="mx-auto max-w-7xl space-y-5 p-4 sm:p-6">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Analíticas de Operaciones</h1>
+          <p className="text-sm text-muted-foreground">Indicadores clave del servicio de guardia para tu operación.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-lg border border-border bg-card p-0.5">
+            {PRESETS.map((p) => (
+              <button key={p.id} onClick={() => setDays(p.days)}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all ${days === p.days ? "bg-[#C8860A] text-white" : "text-muted-foreground hover:text-foreground"}`}>
+                {p.label}
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem onClick={handleExportPdf}>
-                <FileDown className="mr-2 h-4 w-4" />
-                <span>Exportar como PDF</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            ))}
+          </div>
+          <button onClick={load} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted/30" title="Actualizar">
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+          </button>
         </div>
-
-        {/* CARDS RESUMEN SUPERIOR */}
-        <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-          {SUMMARY_CARDS.map((card) => {
-            const tone = toneStyles[card.tone];
-            return (
-              <Card
-                key={card.id}
-                className={`h-full rounded-2xl border bg-card shadow-sm ${tone.border}`}
-              >
-                <CardContent className="flex h-full flex-col justify-between p-4">
-                  <div className="space-y-1">
-                    <p
-                      className={`text-3xl font-semibold leading-none ${tone.value}`}
-                    >
-                      {card.value}
-                    </p>
-                    <p
-                      className={`text-sm font-semibold tracking-tight ${tone.title}`}
-                    >
-                      {card.title}
-                    </p>
-                  </div>
-
-                  <p className="mt-4 text-xs text-muted-foreground">
-                    {card.secondaryLabel}{" "}
-                    <span className="font-semibold text-foreground">
-                      {card.secondaryValue}
-                    </span>
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* INCIDENTE PRINCIPAL + RESUMEN INFERIOR (AÑADIDO / CERRADO) */}
-        <Card className="rounded-2xl border border-slate-200 bg-card shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold text-foreground">
-              Incidente principal
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="p-0">
-            {/* EMPTY STATE */}
-            <div className="flex min-h-[260px] flex-col items-center justify-center gap-2 px-6 pb-10 pt-6 text-center">
-              <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
-                <FolderOpen className="h-7 w-7 text-muted-foreground" />
-              </div>
-              <p className="text-sm font-semibold text-foreground">
-                No se encontraron resultados
-              </p>
-              <p className="max-w-xs text-xs text-muted-foreground">
-                No pudimos encontrar ningún elemento que coincida con su
-                búsqueda.
-              </p>
-            </div>
-
-            {/* RESUMEN INFERIOR DENTRO DEL MISMO CARD */}
-            <div className="grid border-t border-slate-100 text-center sm:grid-cols-2">
-              <div className="flex flex-col items-center justify-center py-6">
-                <p className="text-3xl font-semibold text-foreground">0</p>
-                <p className="text-xs text-muted-foreground">Añadido</p>
-              </div>
-              <div className="flex flex-col items-center justify-center border-t border-slate-100 py-6 sm:border-l sm:border-t-0">
-                <p className="text-3xl font-semibold text-foreground">0</p>
-                <p className="text-xs text-muted-foreground">Cerrado</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* RESUMEN DEL INCIDENTE */}
-        <Card className="rounded-2xl border border-slate-200 bg-card shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold text-foreground">
-              Resumen del incidente
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="min-h-[260px] rounded-xl border border-slate-100 bg-slate-50/50" />
-          </CardContent>
-        </Card>
-
-        {/* RESUMEN ESTÁNDAR */}
-        <Card className="rounded-2xl border border-slate-200 bg-card shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold text-foreground">
-              Resumen Estándar
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="min-h-[260px] rounded-xl border border-slate-100 bg-slate-50/50" />
-          </CardContent>
-        </Card>
-
-        {/* RESUMEN DE INFORMES (AJUSTADO COMO LA IMAGEN) */}
-        <Card className="rounded-2xl border border-slate-200 bg-card shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold text-foreground">
-              Resumen de informes
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="grid gap-6 lg:grid-cols-[1fr,2fr]">
-              {/* COLUMNA IZQUIERDA: FECHAS + LÍNEA + 0 ABAJO */}
-              <div className="flex flex-col justify-between">
-                <div className="flex flex-1">
-                  {/* Fechas */}
-                  <div className="flex flex-col justify-between text-xs text-foreground">
-                    {dates.map((date) => (
-                      <span key={date}>{date}</span>
-                    ))}
-                  </div>
-
-                  {/* Línea vertical */}
-                  <div className="ml-10 mr-4 flex flex-1 items-stretch">
-                    <div className="w-px bg-slate-200" />
-                  </div>
-                </div>
-
-                {/* 0 al final, pegado a la línea */}
-                <div className="mt-4 flex items-center justify-end pr-6 text-xs text-foreground">
-                  <span className="mr-1">0</span>
-                </div>
-              </div>
-
-              {/* COLUMNA DERECHA: BLOQUES DE RESUMEN */}
-              <div className="grid gap-4 lg:grid-cols-4">
-                {/* fila superior: 2 bloques grandes */}
-                <div className="col-span-4 lg:col-span-2 flex flex-col items-center justify-center rounded-2xl bg-indigo-50 py-6 text-center">
-                  <p className="text-3xl font-semibold text-indigo-700">0</p>
-                  <p className="mt-1 text-xs font-semibold text-indigo-700">
-                    Recorridos del Sitio
-                  </p>
-                </div>
-
-                <div className="col-span-4 lg:col-span-2 flex flex-col items-center justify-center rounded-2xl bg-emerald-500/10 py-6 text-center">
-                  <p className="text-3xl font-semibold text-emerald-600">0</p>
-                  <p className="mt-1 text-xs font-semibold text-emerald-600">
-                    Tarea
-                  </p>
-                </div>
-
-                {/* fila inferior: 4 bloques pequeños */}
-                <div className="col-span-2 lg:col-span-1 flex flex-col items-center justify-center rounded-2xl bg-slate-50 py-5 text-center">
-                  <p className="text-2xl font-semibold text-foreground">0</p>
-                  <p className="mt-1 text-xs text-foreground/70">
-                    Lista de Verificación
-                  </p>
-                </div>
-
-                <div className="col-span-2 lg:col-span-1 flex flex-col items-center justify-center rounded-2xl bg-slate-50 py-5 text-center">
-                  <p className="text-2xl font-semibold text-foreground">0</p>
-                  <p className="mt-1 text-xs text-foreground/70">
-                    Registros de entrada
-                  </p>
-                </div>
-
-                <div className="col-span-2 lg:col-span-1 flex flex-col items-center justify-center rounded-2xl bg-slate-50 py-5 text-center">
-                  <p className="text-2xl font-semibold text-foreground">0</p>
-                  <p className="mt-1 text-xs text-foreground/70">Entrega</p>
-                </div>
-
-                <div className="col-span-2 lg:col-span-1 flex flex-col items-center justify-center rounded-2xl bg-slate-50 py-5 text-center">
-                  <p className="text-2xl font-semibold text-foreground">0</p>
-                  <p className="mt-1 text-xs text-foreground/70">
-                    Alerta de inactividad
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* RESUMEN DE RECORRIDOS DEL SITIO */}
-        <Card className="rounded-2xl border border-slate-200 bg-card shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold text-foreground">
-              Resumen de recorridos del sitio
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="min-h-[260px] rounded-xl border border-slate-100 bg-slate-50/50" />
-          </CardContent>
-        </Card>
       </div>
 
-      {/* SHEET DE FILTROS (SOLO botón Filtro, sin “Guardar filtro”) */}
-      <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-        <SheetContent side="right" className="w-full max-w-md">
-          <SheetHeader className="mb-4">
-            <SheetTitle className="text-base font-semibold text-foreground">
-              Filtros
-            </SheetTitle>
-          </SheetHeader>
+      {loading ? (
+        <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-[#C8860A]" /></div>
+      ) : error ? (
+        <Card className="rounded-2xl border bg-card"><CardContent className="p-6 text-sm text-red-600">{error}</CardContent></Card>
+      ) : !k ? null : (
+        <>
+          {/* KPI cards */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <MetricCard icon={<Shield size={16} />} accent={GOLD} value={k.guardsOnDuty} label="Guardias en servicio" sub="ahora mismo" />
+            <MetricCard icon={<ClipboardCheck size={16} />} accent="#0ea5e9" value={`${k.coveragePct}%`} label="Cobertura de turnos" sub={`${k.shiftsCovered}/${k.shiftsTotal} cubiertos`} pct={k.coveragePct} />
+            <MetricCard icon={<TrendingUp size={16} />} accent="#22c55e" value={`${k.rondaCompletionPct}%`} label="Rondas completadas" sub={`${k.rondasCompleted}/${k.rondasTotal}`} pct={k.rondaCompletionPct} />
+            <MetricCard icon={<MapPin size={16} />} accent="#8b5cf6" value={`${k.locationCompliancePct}%`} label="Cumplimiento de ubicación" sub={`${k.scansValid}/${k.scansTotal} escaneos`} pct={k.locationCompliancePct} />
+            <MetricCard icon={<AlertTriangle size={16} />} accent="#ef4444" value={k.incidentsTotal} label="Incidentes" sub={`${k.incidentsOpen} abiertos`} />
+            <MetricCard icon={<Clock size={16} />} accent="#f59e0b" value={`${k.punctualityPct}%`} label="Puntualidad" sub={`${k.clockinsOnTime}/${k.clockinsTotal} a tiempo`} pct={k.punctualityPct} />
+          </div>
 
-          <form className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">
-                Cliente
-              </label>
-              <Select>
-                <SelectTrigger className="h-10 rounded-lg border-slate-200 text-xs">
-                  <SelectValue placeholder="Selecciona un cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="central">central (+1 otro)</SelectItem>
-                  <SelectItem value="cliente-2">Cliente 2</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Trend */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <DayBars data={data!.trend} metric="scans" color={GOLD} label="Escaneos de ronda por día" />
+            <DayBars data={data!.trend} metric="rondas" color="#22c55e" label="Rondas completadas por día" />
+            <DayBars data={data!.trend} metric="incidents" color="#ef4444" label="Incidentes por día" />
+          </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">
-                Puesto de seguridad
-              </label>
-              <Select>
-                <SelectTrigger className="h-10 rounded-lg border-slate-200 text-xs">
-                  <SelectValue placeholder="Selecciona un sitio" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="catolica">Catolica (+2 otros)</SelectItem>
-                  <SelectItem value="site-2">Sitio 2</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">
-                  Desde la Fecha
-                </label>
-                <Input
-                  type="date"
-                  className="h-10 rounded-lg border-slate-200 text-xs"
-                />
+          {/* Incidents + Attendance */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Section title="Incidentes por prioridad" icon={<AlertTriangle size={16} className="text-red-500" />}>
+              <HBars items={data!.incidentsByPriority} color="#ef4444" empty="Sin incidentes en el período." />
+            </Section>
+            <Section title="Sitios con más incidentes" icon={<Building2 size={16} className="text-[#C8860A]" />}>
+              <HBars items={data!.topIncidentSites.map((s) => ({ label: s.site, count: s.count }))} color={GOLD} empty="Sin incidentes en el período." />
+            </Section>
+            <Section title="Asistencia" icon={<Clock size={16} className="text-amber-500" />}>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Horas trabajadas", value: data!.attendance.hoursWorked, accent: "#0ea5e9" },
+                  { label: "Tardanzas", value: data!.attendance.late, accent: "#f59e0b" },
+                  { label: "Salidas tempranas", value: data!.attendance.earlyDeparture, accent: "#8b5cf6" },
+                  { label: "Fuera de geocerca", value: data!.attendance.geofenceViolations, accent: "#ef4444" },
+                ].map((c) => (
+                  <div key={c.label} className="rounded-xl border border-border bg-muted/10 p-3">
+                    <p className="text-2xl font-semibold" style={{ color: c.accent }}>{c.value}</p>
+                    <p className="text-xs text-muted-foreground">{c.label}</p>
+                  </div>
+                ))}
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">
-                  Hora
-                </label>
-                <Input
-                  type="time"
-                  defaultValue="00:00"
-                  className="h-10 rounded-lg border-slate-200 text-xs"
-                />
-              </div>
-            </div>
+            </Section>
+          </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">
-                  Hasta la Fecha
-                </label>
-                <Input
-                  type="date"
-                  className="h-10 rounded-lg border-slate-200 text-xs"
-                />
+          {/* Per-site performance */}
+          <Section title="Rendimiento por sitio de servicio" icon={<Building2 size={16} className="text-[#C8860A]" />}>
+            {data!.perSite.length === 0 ? (
+              <p className="py-4 text-sm text-muted-foreground">Sin actividad registrada en el período.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="border-b text-xs uppercase tracking-wide text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold">Sitio</th>
+                      <th className="px-3 py-2 text-right font-semibold">Guardias</th>
+                      <th className="px-3 py-2 text-right font-semibold">Cobertura</th>
+                      <th className="px-3 py-2 text-right font-semibold">Rondas</th>
+                      <th className="px-3 py-2 text-right font-semibold">Ubicación</th>
+                      <th className="px-3 py-2 text-right font-semibold">Incidentes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {data!.perSite.map((s, i) => (
+                      <tr key={i} className="hover:bg-muted/20">
+                        <td className="px-3 py-2 font-medium text-foreground">{s.site}</td>
+                        <td className="px-3 py-2 text-right text-muted-foreground">{s.guards}</td>
+                        <td className="px-3 py-2 text-right"><span className={s.coveragePct >= 90 ? "text-emerald-600" : s.coveragePct >= 70 ? "text-amber-600" : "text-rose-600"}>{s.coveragePct}%</span> <span className="text-muted-foreground">({s.shiftsCovered}/{s.shiftsTotal})</span></td>
+                        <td className="px-3 py-2 text-right text-muted-foreground">{s.rondasCompleted}</td>
+                        <td className="px-3 py-2 text-right"><span className={s.locationCompliancePct >= 90 ? "text-emerald-600" : s.locationCompliancePct >= 70 ? "text-amber-600" : "text-rose-600"}>{s.locationCompliancePct}%</span></td>
+                        <td className="px-3 py-2 text-right font-semibold text-foreground">{s.incidents}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">
-                  Hora
-                </label>
-                <Input
-                  type="time"
-                  defaultValue="23:59"
-                  className="h-10 rounded-lg border-slate-200 text-xs"
-                />
-              </div>
-            </div>
+            )}
+          </Section>
 
-            <div className="pt-4">
-              <Button
-                type="submit"
-                className="w-full rounded-lg bg-[#C8860A] text-sm font-semibold text-white hover:bg-[#B37809]"
-              >
-                Filtro
-              </Button>
-            </div>
-          </form>
-        </SheetContent>
-      </Sheet>
-    </AppLayout>
+          {/* Per-guard performance */}
+          <Section title="Rendimiento por guardia" icon={<Users size={16} className="text-[#C8860A]" />}>
+            {data!.perGuard.length === 0 ? (
+              <p className="py-4 text-sm text-muted-foreground">Sin asistencia registrada en el período.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="border-b text-xs uppercase tracking-wide text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold">Guardia</th>
+                      <th className="px-3 py-2 text-right font-semibold">Turnos</th>
+                      <th className="px-3 py-2 text-right font-semibold">Horas</th>
+                      <th className="px-3 py-2 text-right font-semibold">Puntualidad</th>
+                      <th className="px-3 py-2 text-right font-semibold">Tardanzas</th>
+                      <th className="px-3 py-2 text-right font-semibold">Incidentes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {data!.perGuard.map((g, i) => (
+                      <tr key={i} className="hover:bg-muted/20">
+                        <td className="px-3 py-2 font-medium text-foreground">{g.name}</td>
+                        <td className="px-3 py-2 text-right text-muted-foreground">{g.shifts}</td>
+                        <td className="px-3 py-2 text-right text-muted-foreground">{g.hoursWorked}</td>
+                        <td className="px-3 py-2 text-right"><span className={g.onTimePct >= 90 ? "text-emerald-600" : g.onTimePct >= 70 ? "text-amber-600" : "text-rose-600"}>{g.onTimePct}%</span></td>
+                        <td className="px-3 py-2 text-right text-muted-foreground">{g.late}</td>
+                        <td className="px-3 py-2 text-right font-semibold text-foreground">{g.incidents}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Section>
+
+          <p className="text-center text-xs text-muted-foreground">
+            Período: {data!.range.start.slice(0, 10)} → {data!.range.end.slice(0, 10)} · {data!.range.days} días
+          </p>
+        </>
+      )}
+    </div>
   );
-};
-
-export default Reporting;
+}
