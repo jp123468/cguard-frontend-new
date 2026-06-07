@@ -17,6 +17,13 @@ import {
   AlertTriangle,
   Bot,
   ArrowRight,
+  FileText,
+  CheckCircle2,
+  Trash2,
+  Plus as PlusIcon,
+  MinusCircle,
+  RefreshCw,
+  MapPin,
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { ApiService } from "@/services/api/apiService";
@@ -140,6 +147,7 @@ export default function Schedule() {
   const [assignOffset, setAssignOffset] = useState(0);
   const [assignRotation, setAssignRotation] = useState('');
   const [assignSaving, setAssignSaving] = useState(false);
+  const [coverage, setCoverage] = useState<any>(null); // real coverage of live schedule
 
   // Configure station form
   const [configStation, setConfigStation] = useState<Station | null>(null);
@@ -169,13 +177,15 @@ export default function Schedule() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [overviewRes, rotRes, guardsRes, staffingRes] = await Promise.all([
+      const [overviewRes, rotRes, guardsRes, staffingRes, coverageRes] = await Promise.all([
         ApiService.get(`/tenant/${tenantId}/scheduler/overview?startDate=${startDateStr}&endDate=${endDateStr}`),
         ApiService.get(`/tenant/${tenantId}/rotation-styles`),
         ApiService.get(`/tenant/${tenantId}/security-guard/autocomplete?limit=200`),
         ApiService.get(`/tenant/${tenantId}/scheduler/staffing`).catch(() => null),
+        ApiService.get(`/tenant/${tenantId}/scheduler/coverage?days=14`).catch(() => null),
       ]);
 
+      setCoverage(coverageRes?.data ?? coverageRes ?? null);
       const ov = overviewRes?.data || overviewRes || {};
       setStations(ov.stations || []);
       setPositions(ov.positions || []);
@@ -243,7 +253,7 @@ export default function Schedule() {
       // Sacafranco follows its OWN rotation using global epoch (Jan 1)
       const sfCycle = rot.dayShifts + rot.nightShifts + rot.restDays;
       if (sfCycle === 0) return 'rest';
-      const epoch = new Date(date.getFullYear(), 0, 1);
+      const epoch = new Date(2024, 0, 1); // fixed rotation anchor (matches backend getGlobalEpoch)
       const target = new Date(date);
       target.setHours(0, 0, 0, 0);
       const sfDiff = Math.floor((target.getTime() - epoch.getTime()) / (24 * 60 * 60 * 1000));
@@ -256,7 +266,7 @@ export default function Schedule() {
     // ─── FIJO LOGIC ─── Guard rotates work/rest following the station rotation
     // Uses GLOBAL EPOCH (Jan 1) for consistent sequential pattern across all stations
     const cycleLength = rot.dayShifts + rot.nightShifts + rot.restDays;
-    const epoch = new Date(date.getFullYear(), 0, 1);
+    const epoch = new Date(2024, 0, 1); // fixed rotation anchor (matches backend getGlobalEpoch)
     const target = new Date(date);
     target.setHours(0, 0, 0, 0);
     const diffMs = target.getTime() - epoch.getTime();
@@ -284,7 +294,7 @@ export default function Schedule() {
     if (cycleLength === 0) return 'rest';
 
     // Use Jan 1 of current year as epoch for consistent pattern display
-    const epoch = new Date(date.getFullYear(), 0, 1);
+    const epoch = new Date(2024, 0, 1); // fixed rotation anchor (matches backend getGlobalEpoch)
     const target = new Date(date);
     target.setHours(0, 0, 0, 0);
     const diffMs = target.getTime() - epoch.getTime();
@@ -333,8 +343,8 @@ export default function Schedule() {
       const sfCycle = rot.dayShifts + rot.nightShifts + rot.restDays;
       if (sfCycle === 0) return;
 
-      // Use global epoch (Jan 1) — consistent with backend offset calculation
-      const epoch = new Date(monthDays[0].getFullYear(), 0, 1);
+      // Fixed rotation anchor — must match backend getGlobalEpoch (2024-01-01)
+      const epoch = new Date(2024, 0, 1);
 
       monthDays.forEach(day => {
         const target = new Date(day);
@@ -642,6 +652,74 @@ export default function Schedule() {
   // AI Auto-assign
   const [autoAssigning, setAutoAssigning] = useState(false);
   const [autoResult, setAutoResult] = useState<any>(null);
+
+  // Draft horario proposal (generate → review/diff → publish/discard).
+  const [proposalLoading, setProposalLoading] = useState(false);
+  const [proposalData, setProposalData] = useState<any>(null); // { proposal, changes }
+  const [publishing, setPublishing] = useState(false);
+  const [planData, setPlanData] = useState<any>(null); // implementation plan after publish
+
+  const generateDraft = async () => {
+    setProposalLoading(true);
+    try {
+      const gen = await ApiService.post(`/tenant/${tenantId}/scheduler/proposals`, { data: { scope: 'tenant' } });
+      const id = gen?.proposalId || gen?.data?.proposalId;
+      if (!id) throw new Error('No se pudo generar el borrador');
+      const detail = await ApiService.get(`/tenant/${tenantId}/scheduler/proposals/${id}`);
+      setProposalData(detail?.data ?? detail);
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || 'Error generando el borrador');
+    } finally {
+      setProposalLoading(false);
+    }
+  };
+
+  const publishProposal = async (allowGaps = false) => {
+    const id = proposalData?.proposal?.id;
+    if (!id) return;
+    setPublishing(true);
+    try {
+      const res = await ApiService.post(`/tenant/${tenantId}/scheduler/proposals/${id}/publish`, { data: { confirm: true, allowGaps } });
+      const notified = res?.plan?.notifiedGuards ?? res?.data?.plan?.notifiedGuards ?? 0;
+      toast.success(`Horario publicado · ${notified} guardia${notified === 1 ? '' : 's'} notificado${notified === 1 ? '' : 's'}`);
+      // Switch the modal to the implementation plan (who was notified).
+      try {
+        const plan = await ApiService.get(`/tenant/${tenantId}/scheduler/proposals/${id}/plan`);
+        setPlanData(plan?.data ?? plan);
+      } catch { setPlanData({ plan: { notifiedGuards: notified }, items: [] }); }
+      fetchAll();
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || 'Error al publicar');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const discardProposal = async () => {
+    const id = proposalData?.proposal?.id;
+    if (id) {
+      try { await ApiService.post(`/tenant/${tenantId}/scheduler/proposals/${id}/discard`, { data: {} }); } catch { /* best effort */ }
+    }
+    setProposalData(null);
+  };
+
+  const closeProposalModal = () => { setProposalData(null); setPlanData(null); };
+
+  // Geocode guards missing home coordinates (enables real proximity ranking).
+  const [geocoding, setGeocoding] = useState(false);
+  const runGeocode = async () => {
+    setGeocoding(true);
+    try {
+      const res = await ApiService.post(`/tenant/${tenantId}/security-guard/geocode-missing`, {});
+      const g = res?.geocoded ?? res?.data?.geocoded ?? 0;
+      const rem = res?.remaining ?? res?.data?.remaining ?? 0;
+      toast.success(`${g} guardia(s) geolocalizados${rem > 0 ? ` · ${rem} pendientes (ejecuta de nuevo)` : ''}`);
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || 'Error al geolocalizar guardias');
+    } finally {
+      setGeocoding(false);
+    }
+  };
   const [aiLoading, setAiLoading] = useState(false);
   const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
 
@@ -755,7 +833,24 @@ export default function Schedule() {
       <div className="p-4 lg:p-6 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <h1 className="text-xl font-bold text-foreground">Programador de Horarios</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-foreground">Programador de Horarios</h1>
+            {coverage && typeof coverage.coveredPct === 'number' && (
+              (() => {
+                const ok = (coverage.gapCount || 0) === 0;
+                return (
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${ok ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'}`}
+                    title="Cobertura real de los puestos en los próximos 14 días (lee turnos guardados, no el cálculo del grid)"
+                  >
+                    {ok ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
+                    Cobertura {coverage.coveredPct}%
+                    {(coverage.gapCount || 0) > 0 && <span>· {coverage.gapCount} sin cubrir</span>}
+                  </span>
+                );
+              })()
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => nav(-1)}><ChevronLeft size={16} /></Button>
             <Button variant="outline" size="sm" onClick={goToday}>Hoy</Button>
@@ -787,12 +882,23 @@ export default function Schedule() {
                   Asigna guardias automáticamente por cercanía, configura rotaciones óptimas y programa sacafrancos.
                 </p>
                 <button
-                  onClick={runAutoAssign}
-                  disabled={autoAssigning}
+                  onClick={generateDraft}
+                  disabled={proposalLoading}
                   className="w-full px-4 py-2.5 bg-[#C8860A] text-white rounded-xl text-sm font-semibold hover:bg-[#B37809] disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
                 >
+                  {proposalLoading ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+                  {proposalLoading ? 'Generando borrador...' : 'Generar borrador de horario'}
+                </button>
+                <p className="mt-1 mb-3 text-[10px] text-muted-foreground">
+                  Calcula el horario propuesto y muestra los cambios antes de aplicar. No modifica nada hasta que publiques.
+                </p>
+                <button
+                  onClick={runAutoAssign}
+                  disabled={autoAssigning}
+                  className="w-full px-4 py-2 bg-background border border-input text-foreground rounded-xl text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                >
                   {autoAssigning ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
-                  {autoAssigning ? 'Asignando...' : 'Auto-asignar todo'}
+                  {autoAssigning ? 'Asignando...' : 'Auto-asignar puestos vacíos'}
                 </button>
                 {autoResult && (
                   <div className="mt-3 p-2 bg-background/60 rounded-lg space-y-1">
@@ -809,6 +915,15 @@ export default function Schedule() {
                 >
                   <Shield size={12} />
                   Optimizar Sacafrancos
+                </button>
+                <button
+                  onClick={runGeocode}
+                  disabled={geocoding}
+                  className="w-full mt-2 px-4 py-2 bg-background border border-input text-foreground rounded-xl text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                  title="Geolocaliza las direcciones de los guardias para asignar por cercanía real"
+                >
+                  {geocoding ? <Loader2 size={12} className="animate-spin" /> : <MapPin size={12} />}
+                  {geocoding ? 'Geolocalizando...' : 'Geolocalizar guardias'}
                 </button>
                 <button
                   onClick={runAiRecommend}
@@ -1695,6 +1810,218 @@ export default function Schedule() {
             </div>
             <div className="px-5 py-3 border-t border-border/20 flex justify-end">
               <button onClick={() => setOverrideTarget(null)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-all">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Draft horario review/diff Modal ──────────────────────────────── */}
+      {proposalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl bg-card shadow-2xl border border-border/30 overflow-hidden">
+            <div className="px-5 py-4 border-b border-border/20">
+              <div className="flex items-center gap-2">
+                {planData ? <CheckCircle2 size={18} className="text-emerald-600" /> : <FileText size={18} className="text-[#C8860A]" />}
+                <h3 className="text-base font-bold text-foreground">{planData ? 'Plan de implementación' : 'Borrador de horario'}</h3>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {planData ? 'Horario publicado. Estos guardias fueron notificados de sus cambios.' : 'Revisa los cambios propuestos. Nada se aplica hasta que publiques.'}
+              </p>
+            </div>
+
+            {planData ? (
+              /* Implementation plan (post-publish): who was notified */
+              <div className="flex-1 overflow-auto px-5 py-3">
+                <div className="mb-3 flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-emerald-700">
+                  <Users size={16} />
+                  <span className="text-sm font-semibold">
+                    {(planData?.plan?.notifiedGuards ?? 0)} de {(planData?.plan?.totalGuards ?? planData?.items?.length ?? 0)} guardias notificados
+                  </span>
+                </div>
+                {(planData?.items || []).length ? (
+                  <div className="divide-y divide-border/20">
+                    {(planData.items || []).map((it: any) => {
+                      const ch: string[] = [];
+                      if (it.added) ch.push(`+${it.added}`);
+                      if (it.changed) ch.push(`~${it.changed}`);
+                      if (it.removed) ch.push(`-${it.removed}`);
+                      const ok = it.notifyStatus === 'sent';
+                      return (
+                        <div key={it.id || it.guardId} className="flex items-center gap-3 py-2">
+                          <span className={`shrink-0 ${ok ? 'text-emerald-600' : 'text-muted-foreground'}`}>{ok ? <CheckCircle2 size={15} /> : <Clock size={15} />}</span>
+                          <span className="min-w-0 flex-1 truncate text-sm text-foreground">{it.guardName || 'Guardia'}</span>
+                          <span className="shrink-0 font-mono text-xs text-muted-foreground">{ch.join(' ')}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="py-8 text-center text-sm text-muted-foreground">No hubo guardias afectados.</p>
+                )}
+              </div>
+            ) : (
+            <>
+            {/* Summary counters */}
+            {(() => {
+              const s = proposalData?.proposal?.summary || {};
+              const cards = [
+                { label: 'Nuevos', value: s.added || 0, icon: <PlusIcon size={14} />, cls: 'text-emerald-600' },
+                { label: 'Eliminados', value: s.removed || 0, icon: <MinusCircle size={14} />, cls: 'text-red-600' },
+                { label: 'Modificados', value: s.changed || 0, icon: <RefreshCw size={14} />, cls: 'text-amber-600' },
+                { label: 'Guardias afectados', value: s.guardsAffected || 0, icon: <Users size={14} />, cls: 'text-foreground' },
+              ];
+              return (
+                <div className="grid grid-cols-4 gap-2 px-5 py-3 border-b border-border/20">
+                  {cards.map((c) => (
+                    <div key={c.label} className="rounded-xl border border-border/30 p-2 text-center">
+                      <div className={`flex items-center justify-center gap-1 ${c.cls}`}>{c.icon}<span className="text-lg font-bold tabular-nums">{c.value}</span></div>
+                      <div className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">{c.label}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* Projected cost (req 5) */}
+            {(() => {
+              const cost = proposalData?.proposal?.summary?.cost;
+              if (!cost) return null;
+              const cur = cost.currency || 'USD';
+              const money = (n: number) => `${cur} ${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+              if (!cost.hasRate) {
+                return (
+                  <div className="px-5 py-2.5 border-b border-border/20 text-[11px] text-muted-foreground">
+                    Configura la tarifa por hora en Nómina para ver el costo proyectado.
+                  </div>
+                );
+              }
+              const delta = Number(cost.delta || 0);
+              const deltaCls = delta > 0 ? 'text-red-600' : delta < 0 ? 'text-emerald-600' : 'text-muted-foreground';
+              return (
+                <div className="flex items-center justify-between px-5 py-2.5 border-b border-border/20">
+                  <div className="text-[11px] text-muted-foreground">
+                    Costo proyectado <span className="text-muted-foreground/70">(30 días)</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold tabular-nums text-foreground">{money(cost.projected)}</span>
+                    <span className={`text-xs font-semibold tabular-nums ${deltaCls}`}>
+                      {delta > 0 ? '+' : ''}{money(delta)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Coverage (Phase 7): is every puesto covered? */}
+            {(() => {
+              const cov = proposalData?.proposal?.summary?.warnings?.coverage;
+              if (!cov) return null;
+              const ok = (cov.gapCount || 0) === 0;
+              return (
+                <div className="flex items-center justify-between px-5 py-2.5 border-b border-border/20">
+                  <div className="flex items-center gap-2">
+                    {ok ? <CheckCircle2 size={15} className="text-emerald-600" /> : <AlertTriangle size={15} className="text-red-600" />}
+                    <span className="text-[11px] text-muted-foreground">Cobertura de puestos <span className="text-muted-foreground/70">(14 días)</span></span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className={`font-bold tabular-nums ${ok ? 'text-emerald-600' : 'text-red-600'}`}>{cov.coveredPct}%</span>
+                    {(cov.gapCount || 0) > 0 && <span className="font-semibold text-red-600">{cov.gapCount} sin cubrir</span>}
+                    {(cov.overstaffCount || 0) > 0 && <span className="text-amber-600">{cov.overstaffCount} sobre-cubierto</span>}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Rest-rule + sacafranco warnings (reqs 3 & 9) */}
+            {(() => {
+              const w = proposalData?.proposal?.summary?.warnings;
+              if (!w || (!w.total && !w.restViolations?.length && !w.doubleBookings?.length && !w.sfStyleInconsistencies?.length)) return null;
+              const lines: string[] = [];
+              if (w.doubleBookings?.length) lines.push(`${w.doubleBookings.length} guardia(s) con doble asignación el mismo día`);
+              if (w.restViolations?.length) lines.push(`${w.restViolations.length} guardia(s) sin descanso semanal (más de ${w.maxConsecutiveAllowed || 7} días seguidos)`);
+              if (w.sfStyleInconsistencies?.length) lines.push(`${w.sfStyleInconsistencies.length} sitio(s) con sacafrancos en estilos de turno distintos`);
+              if (!lines.length) return null;
+              return (
+                <div className="px-5 py-2.5 border-b border-border/20">
+                  <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 px-3 py-2 text-amber-700">
+                    <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                    <div className="text-[11px] leading-relaxed">
+                      <p className="font-semibold">Revisa antes de publicar:</p>
+                      <ul className="list-disc pl-4">
+                        {lines.map((l, i) => <li key={i}>{l}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Change list */}
+            <div className="flex-1 overflow-auto px-5 py-3">
+              {(() => {
+                const changes = (proposalData?.changes || []).filter((c: any) => c.action !== 'keep');
+                if (!changes.length) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <CheckCircle2 size={28} className="text-emerald-600 mb-2" />
+                      <p className="text-sm font-medium text-foreground">El horario ya está al día</p>
+                      <p className="text-xs text-muted-foreground">No hay cambios que aplicar.</p>
+                    </div>
+                  );
+                }
+                const fmt = (d: string) => {
+                  try { return new Date(d).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch { return d; }
+                };
+                const badge: Record<string, string> = {
+                  add: 'bg-emerald-500/10 text-emerald-600',
+                  remove: 'bg-red-500/10 text-red-600',
+                  change: 'bg-amber-500/10 text-amber-600',
+                };
+                const label: Record<string, string> = { add: 'Nuevo', remove: 'Eliminar', change: 'Cambio' };
+                return (
+                  <div className="divide-y divide-border/20">
+                    {changes.slice(0, 300).map((c: any) => (
+                      <div key={c.id} className="flex items-center gap-3 py-2">
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badge[c.action] || 'bg-muted text-foreground'}`}>{label[c.action] || c.action}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm text-foreground">{fmt(c.startTime)} {c.meta?.shiftType ? `· ${c.meta.shiftType === 'night' ? 'Nocturno' : c.meta.shiftType === 'day' ? 'Diurno' : c.meta.shiftType}` : ''}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {changes.length > 300 && (
+                      <p className="py-2 text-center text-[11px] text-muted-foreground">+{changes.length - 300} cambios más…</p>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+            </>
+            )}
+
+            <div className="px-5 py-3 border-t border-border/20 flex items-center justify-between gap-3">
+              {planData ? (
+                <button onClick={closeProposalModal} className="ml-auto px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#C8860A] hover:bg-[#B37809] transition-all shadow-sm">Listo</button>
+              ) : (
+                <>
+                  <button onClick={discardProposal} disabled={publishing} className="px-4 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-500/10 disabled:opacity-50 transition-all flex items-center gap-1.5">
+                    <Trash2 size={14} /> Descartar
+                  </button>
+                  {(() => {
+                    const gaps = proposalData?.proposal?.summary?.warnings?.coverage?.gapCount || 0;
+                    const hasGaps = gaps > 0;
+                    return (
+                      <button
+                        onClick={() => publishProposal(hasGaps)}
+                        disabled={publishing}
+                        className={`px-6 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all shadow-sm flex items-center gap-2 ${hasGaps ? 'bg-red-600 hover:bg-red-700' : 'bg-[#C8860A] hover:bg-[#B37809]'}`}
+                      >
+                        {publishing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                        {publishing ? 'Publicando...' : hasGaps ? 'Publicar con faltantes' : 'Publicar y aplicar'}
+                      </button>
+                    );
+                  })()}
+                </>
+              )}
             </div>
           </div>
         </div>
