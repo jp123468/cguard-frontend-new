@@ -6,7 +6,7 @@ export interface OpsAnalytics {
   range: { start: string; end: string; days: number };
   kpis: {
     guardsOnDuty: number;
-    shiftsTotal: number; shiftsCovered: number; coveragePct: number;
+    shiftsTotal: number; shiftsCovered: number; coveragePct: number; shiftsOpen?: number;
     rondasTotal: number; rondasCompleted: number; rondaCompletionPct: number;
     scansTotal: number; scansValid: number; locationCompliancePct: number;
     incidentsTotal: number; incidentsOpen: number;
@@ -18,6 +18,9 @@ export interface OpsAnalytics {
   topIncidentSites: Array<{ site: string; count: number }>;
   perSite: Array<{ site: string; guards: number; shiftsTotal: number; shiftsCovered: number; coveragePct: number; rondasCompleted: number; incidents: number; locationCompliancePct: number }>;
   perGuard: Array<{ name: string; shifts: number; hoursWorked: number; onTimePct: number; late: number; incidents: number }>;
+  coverageTrend: Array<{ date: string; scheduled: number; covered: number }>;
+  upcomingUncovered: Array<{ site: string; count: number }>;
+  upcomingUncoveredTotal: number;
 }
 
 export const analyticsService = {

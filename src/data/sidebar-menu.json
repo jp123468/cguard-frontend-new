@@ -88,7 +88,7 @@
       },
       {
         "id": "horario",
-        "name": "Horario",
+        "name": "Planificación",
         "path": "/analytics/scheduling"
       },
       {
@@ -98,7 +98,7 @@
       },
       {
         "id": "guardias",
-        "name": "security-guards",
+        "name": "Guardias",
         "path": "/analytics/guard"
       }
     ]
