@@ -104,20 +104,25 @@
     ]
   },
   {
-    "id": "rastreador",
-    "name": "Rastreador GPS",
-    "icon": "MapPin",
+    "id": "videovigilancia",
+    "name": "Videovigilancia",
+    "icon": "Cctv",
     "expandable": true,
     "subItems": [
       {
-        "id": "seguimiento",
-        "name": "Seguimiento en vivo",
-        "path": "/live-tracking"
+        "id": "video-monitoreo",
+        "name": "Monitoreo",
+        "path": "/video/monitoring"
       },
       {
-        "id": "historial",
-        "name": "Historial de seguimiento",
-        "path": "/tracking-history"
+        "id": "video-dispositivos",
+        "name": "Dispositivos",
+        "path": "/video/devices"
+      },
+      {
+        "id": "video-eventos",
+        "name": "Eventos",
+        "path": "/video/events"
       }
     ]
   },
