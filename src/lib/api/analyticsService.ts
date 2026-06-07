@@ -23,6 +23,18 @@ export interface OpsAnalytics {
   upcomingUncoveredTotal: number;
 }
 
+export interface GuardPerformance {
+  id: string; name: string; score: number | null; base?: number; tier: string; hasData: boolean;
+  attendanceRate: number | null; shiftsWorked: number | null; onTimeShifts: number | null;
+  absences: number; tardies: number;
+  components: { key: string; score: number; weight: number }[];
+}
+export interface PerfLeaderboard {
+  period: number; averageScore: number | null;
+  counts: { total: number; scored: number; excellent: number; good: number; fair: number; poor: number };
+  guards: GuardPerformance[];
+}
+
 export const analyticsService = {
   operations(params?: { startDate?: string; endDate?: string }): Promise<OpsAnalytics> {
     const qs = new URLSearchParams();
@@ -30,5 +42,9 @@ export const analyticsService = {
     if (params?.endDate) qs.set("endDate", params.endDate);
     const q = qs.toString();
     return ApiService.get(`/tenant/${tid()}/operations/analytics${q ? `?${q}` : ""}`);
+  },
+  // Official guard performance scores (same algorithm as the worker app).
+  performanceGuards(period: number): Promise<PerfLeaderboard> {
+    return ApiService.get(`/tenant/${tid()}/performance/guards?period=${period}`);
   },
 };
