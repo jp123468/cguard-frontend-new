@@ -111,6 +111,7 @@ export default function Stations({ site }: { site?: any }) {
           return {
             id: r.id || r.stationId || r._id || r.station_id || String(r._id || r.id || JSON.stringify(r)),
             name: r.name || r.stationName || r.station_name || r.label || r.title || (r.description ? String(r.description).slice(0, 60) : '') || '',
+            nickname: r.nickname || r.nominativo || '',
             numberOfGuardsInStation: r.numberOfGuardsInStation,
             assignedGuards: r.assignedGuards,
             jornadas,
@@ -713,6 +714,11 @@ export default function Stations({ site }: { site?: any }) {
                               </td>
                               <td className="px-6 py-3 text-sm text-foreground align-middle">
                                 <div className="font-medium">{name}</div>
+                                {st.nickname && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {t('postSites.stations.form.nickname', 'Nominativo')}: <span className="font-medium text-foreground/70">{st.nickname}</span>
+                                  </div>
+                                )}
                                 {jornadas.length > 0 && (
                                   <div className="flex flex-wrap gap-1 mt-1">
                                     {jornadas.map((j: any, i: number) => (
@@ -830,6 +836,12 @@ export default function Stations({ site }: { site?: any }) {
               ) : (
                 <div>
                   <h3 className="text-xl font-semibold text-foreground">{selectedStationDetail.name || selectedStationDetail.stationName || selectedStationDetail.station_name}</h3>
+                  {selectedStationDetail.nickname ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {t('postSites.stations.form.nickname', 'Nominativo')}: <span className="font-medium text-foreground/80">{selectedStationDetail.nickname}</span>
+                      <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase tracking-wide">{t('common.private', 'Privado')}</span>
+                    </p>
+                  ) : null}
                   {selectedStationDetail.description ? <p className="text-sm text-muted-foreground mt-2">{selectedStationDetail.description || selectedStationDetail.notes}</p> : null}
 
                   <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-foreground">

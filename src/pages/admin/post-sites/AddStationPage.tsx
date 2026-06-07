@@ -44,6 +44,7 @@ export default function AddStationPage() {
 
   // Form state (same fields as the previous modal).
   const [newName, setNewName] = useState('');
+  const [nickname, setNickname] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [stationSchedule, setStationSchedule] = useState('');
   const [startingTimeInDay, setStartingTimeInDay] = useState('');
@@ -95,6 +96,7 @@ export default function AddStationPage() {
       const longitud = site?.longitud || site?.longitude || '';
       const payload = {
         stationName: newName,
+        nickname: nickname.trim() || null,
         postSiteId,
         latitud,
         longitud,
@@ -160,6 +162,26 @@ export default function AddStationPage() {
                   className={inputCls}
                   autoFocus
                 />
+              </div>
+
+              {/* Nickname / nominativo — private to operations */}
+              <div>
+                <label className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
+                  {t('postSites.stations.form.nickname', 'Nominativo')}
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-normal uppercase tracking-wide text-muted-foreground">
+                    {t('common.private', 'Privado')}
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder={t('postSites.stations.placeholderNickname', 'Apodo / nominativo interno')}
+                  className={inputCls}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('postSites.stations.form.nicknameHint', 'Solo visible para operaciones del tenant. El cliente no lo ve.')}
+                </p>
               </div>
 
               {/* Schedule + guards */}
