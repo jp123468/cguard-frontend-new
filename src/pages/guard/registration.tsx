@@ -55,7 +55,9 @@ export default function GuardRegistration() {
   const errorClass = (field: string) => (errors[field] ? "!border-red-500 ring-2 ring-red-500/30" : "");
 
   const formControl = "h-11 w-full rounded-lg border border-input bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-[#C8860A] focus:ring-2 focus:ring-[#C8860A]/25 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
-  const labelClass = "mb-1.5 flex items-start gap-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground min-h-[30px] leading-[1.3]";
+  const labelClass = "mb-1.5 block min-h-[32px] text-[11px] font-semibold uppercase leading-snug tracking-wide text-muted-foreground";
+  // Native textarea/select share the input look but manage their own height.
+  const textareaControl = "w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-sm min-h-[84px] resize-none text-foreground placeholder:text-muted-foreground/70 focus:border-[#C8860A] focus:ring-2 focus:ring-[#C8860A]/25 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
 
   const validateEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -645,7 +647,7 @@ export default function GuardRegistration() {
         </div>
 
         {step === 1 && (
-          <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2">
             <div>
               <label className={labelClass}>Nombre<span style={{ color: "#F75638" }}>*</span></label>
               <Input className={`${formControl} ${errorClass('firstName')}`} value={firstName} onChange={(e: any) => { setFirstName(e.target.value); setErrors((p) => ({ ...p, firstName: undefined })); }} placeholder="Nombre" disabled={isLoading || lockedFirstName} />
@@ -665,138 +667,119 @@ export default function GuardRegistration() {
         )}
 
         {step === 2 && (
-          <>
-            <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-3">
-              <div>
-                <label className={labelClass}>Documento de identidad<span style={{ color: "#F75638" }}>*</span></label>
-                  <Input className={`${formControl} ${errorClass('governmentId')}`} value={governmentId} onChange={(e: any) => { setGovernmentId(e.target.value); setErrors((p) => ({ ...p, governmentId: undefined })); }} placeholder="Documento de identidad" disabled={isLoading} />
-                {errors.governmentId && <div className="text-red-600 text-sm mt-1">{errors.governmentId}</div>}
-              </div>
-              <div>
-                <label className={labelClass}>Fecha de nacimiento<span style={{ color: "#F75638" }}>*</span></label>
-                <Input className={`${formControl} ${errorClass('birthDate')}`} type="date" value={birthDate} onChange={(e: any) => { setBirthDate(e.target.value); setErrors((p) => ({ ...p, birthDate: undefined })); }} disabled={isLoading} />
-                {errors.birthDate && <div className="text-red-600 text-sm mt-1">{errors.birthDate}</div>}
-              </div>
-              <div>
-                <label className={labelClass}>Lugar de nacimiento<span style={{ color: "#F75638" }}>*</span></label>
-                <Input className={`${formControl} ${errorClass('birthPlace')}`} value={birthPlace} onChange={(e: any) => setBirthPlace(e.target.value)} placeholder="Lugar de nacimiento" disabled={isLoading} />
-              </div>
+          <div className="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2">
+            <div>
+              <label className={labelClass}>Documento de identidad<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <Input className={`${formControl} ${errorClass('governmentId')}`} value={governmentId} onChange={(e: any) => { setGovernmentId(e.target.value); setErrors((p) => ({ ...p, governmentId: undefined })); }} placeholder="Documento de identidad" disabled={isLoading} />
+              {errors.governmentId && <div className="mt-1 text-sm text-red-600">{errors.governmentId}</div>}
             </div>
-
-            <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-3">
-              <div>
-                <label className={labelClass}>Género<span style={{ color: "#F75638" }}>*</span></label>
-                <select value={gender} onChange={(e) => setGender(e.target.value)} className={`${formControl} ${errorClass('gender')}`} disabled={isLoading}>
-                  <option value="">Seleccione</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Femenino">Femenino</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Estado civil<span style={{ color: "#F75638" }}>*</span></label>
-                <select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} className={`${formControl} ${errorClass('maritalStatus')}`} disabled={isLoading}>
-                  <option value="">Seleccione</option>
-                  <option value="Soltero">Soltero</option>
-                  <option value="Casado">Casado</option>
-                  <option value="Divorciado">Divorciado</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Formación académica<span style={{ color: "#F75638" }}>*</span></label>
-                <select value={academicInstruction} onChange={(e) => setAcademicInstruction(e.target.value)} className={`${formControl} ${errorClass('academicInstruction')}`} disabled={isLoading}>
-                  <option value="">Seleccione</option>
-                  <option>Primaria</option>
-                  <option>Secundaria</option>
-                  <option>Universidad</option>
-                </select>
-              </div>
+            <div>
+              <label className={labelClass}>Fecha de nacimiento<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <Input className={`${formControl} ${errorClass('birthDate')}`} type="date" value={birthDate} onChange={(e: any) => { setBirthDate(e.target.value); setErrors((p) => ({ ...p, birthDate: undefined })); }} disabled={isLoading} />
+              {errors.birthDate && <div className="mt-1 text-sm text-red-600">{errors.birthDate}</div>}
             </div>
-          </>
+            <div>
+              <label className={labelClass}>Lugar de nacimiento<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <Input className={`${formControl} ${errorClass('birthPlace')}`} value={birthPlace} onChange={(e: any) => setBirthPlace(e.target.value)} placeholder="Lugar de nacimiento" disabled={isLoading} />
+            </div>
+            <div>
+              <label className={labelClass}>Género<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <select value={gender} onChange={(e) => setGender(e.target.value)} className={`${formControl} ${errorClass('gender')}`} disabled={isLoading}>
+                <option value="">Seleccione</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Estado civil<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} className={`${formControl} ${errorClass('maritalStatus')}`} disabled={isLoading}>
+                <option value="">Seleccione</option>
+                <option value="Soltero">Soltero</option>
+                <option value="Casado">Casado</option>
+                <option value="Divorciado">Divorciado</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Formación académica<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <select value={academicInstruction} onChange={(e) => setAcademicInstruction(e.target.value)} className={`${formControl} ${errorClass('academicInstruction')}`} disabled={isLoading}>
+                <option value="">Seleccione</option>
+                <option>Primaria</option>
+                <option>Secundaria</option>
+                <option>Universidad</option>
+              </select>
+            </div>
+          </div>
         )}
 
         {step === 3 && (
-          <>
-            <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-3">
-              <div>
-                <label className={labelClass}>Fecha de contratación<span style={{ color: "#F75638" }}>*</span></label>
-                <Input className={`${formControl} ${errorClass('hiringContractDate')}`} type="date" value={hiringContractDate} onChange={(e: any) => setHiringContractDate(e.target.value)} disabled={isLoading} />
-              </div>
-              <div>
-                <label className={labelClass}>Grupo sanguíneo<span style={{ color: "#F75638" }}>*</span></label>
-                <select value={bloodType} onChange={(e) => setBloodType(e.target.value)} className={`${formControl} ${errorClass('bloodType')}`} disabled={isLoading}>
-                  <option value="">Seleccione</option>
-                  <option>O+</option>
-                  <option>O-</option>
-                  <option>A+</option>
-                  <option>A-</option>
-                  <option>B+</option>
-                  <option>B-</option>
-                  <option>AB+</option>
-                  <option>AB-</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Credenciales<span style={{ color: "#F75638" }}>*</span></label>
-                <Input className={`${formControl} ${errorClass('guardCredentials')}`} value={guardCredentials} onChange={(e: any) => setGuardCredentials(e.target.value)} placeholder="Credenciales" disabled={isLoading} />
-              </div>
+          <div className="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2">
+            <div>
+              <label className={labelClass}>Fecha de contratación<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <Input className={`${formControl} ${errorClass('hiringContractDate')}`} type="date" value={hiringContractDate} onChange={(e: any) => setHiringContractDate(e.target.value)} disabled={isLoading} />
+            </div>
+            <div>
+              <label className={labelClass}>Grupo sanguíneo<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <select value={bloodType} onChange={(e) => setBloodType(e.target.value)} className={`${formControl} ${errorClass('bloodType')}`} disabled={isLoading}>
+                <option value="">Seleccione</option>
+                <option>O+</option><option>O-</option>
+                <option>A+</option><option>A-</option>
+                <option>B+</option><option>B-</option>
+                <option>AB+</option><option>AB-</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Credenciales<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <Input className={`${formControl} ${errorClass('guardCredentials')}`} value={guardCredentials} onChange={(e: any) => setGuardCredentials(e.target.value)} placeholder="Credenciales" disabled={isLoading} />
+            </div>
+            <div>
+              <label className={labelClass}>Teléfono móvil<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <PhoneInput
+                value={phone || ""}
+                onChange={(val: string) => setPhone(val)}
+                placeholder="p.ej. +12015550123"
+              />
+              {errors.phone && <div className="mt-1 text-sm text-red-600">{errors.phone}</div>}
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
-              <div>
-                <label className={labelClass}>Dirección<span style={{ color: "#F75638" }}>*</span></label>
-                <textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Dirección" className={`${formControl} min-h-[72px] md:min-h-[88px] resize-none ${errorClass('address')}`} disabled={isLoading} />
-              </div>
-              <div>
-                <label className={labelClass}>Teléfono móvil<span style={{ color: "#F75638" }}>*</span></label>
-                <PhoneInput
-                  value={phone || ""}
-                  onChange={(val: string) => setPhone(val)}
-                  placeholder="p.ej. +12015550123"
+            <div className="md:col-span-2">
+              <label className={labelClass}>Dirección<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Dirección" className={`${textareaControl} ${errorClass('address')}`} disabled={isLoading} />
+            </div>
+
+            <div>
+              <label className={labelClass}>Contraseña<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <div className="relative">
+                <input
+                  type={showPwd ? "text" : "password"}
+                  placeholder="Contraseña*"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: undefined })); }}
+                  disabled={isLoading}
+                  className={`${formControl} pr-10 ${errorClass('password')}`}
                 />
-                {errors.phone && <div className="text-red-600 text-sm mt-1">{errors.phone}</div>}
+                <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowPwd((v) => !v)}>{showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
               </div>
+              {errors.password && <div className="mt-1 text-sm text-red-600">{errors.password}</div>}
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <label className={labelClass}>Contraseña<span style={{ color: "#F75638" }}>*</span></label>
-                <div className="relative">
-                  <input
-                    type={showPwd ? "text" : "password"}
-                    placeholder="Contraseña*"
-                    value={password}
-                    onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: undefined })); }}
-                    disabled={isLoading}
-                    className={`${formControl} ${errorClass('password')}`}
-                  />
-                  <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowPwd((v) => !v)}>{showPwd ? <EyeOff /> : <Eye />}</button>
-                </div>
-                {errors.password && <div className="text-red-600 text-sm mt-1">{errors.password}</div>}
+            <div>
+              <label htmlFor="confirm-password" className={labelClass}>Confirmar contraseña<span className="ml-0.5 text-[#F75638]">*</span></label>
+              <div className="relative">
+                <input
+                  id="confirm-password"
+                  type={showConfirm ? "text" : "password"}
+                  placeholder="Confirmar contraseña*"
+                  value={confirm}
+                  onChange={(e) => { setConfirm(e.target.value); setErrors((p) => ({ ...p, confirm: undefined })); }}
+                  disabled={isLoading}
+                  className={`${formControl} pr-10 ${errorClass('confirm')}`}
+                />
+                <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowConfirm((v) => !v)}>{showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
               </div>
-
-              <div>
-                <label htmlFor="confirm-password" className={labelClass}>
-                  Confirmar contraseña
-                  
-                  <span style={{ color: "#F75638" }}>*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    id="confirm-password"
-                    type={showConfirm ? "text" : "password"}
-                    placeholder="Confirmar contraseña*"
-                    value={confirm}
-                    onChange={(e) => { setConfirm(e.target.value); setErrors((p) => ({ ...p, confirm: undefined })); }}
-                    disabled={isLoading}
-                    className={`${formControl} ${errorClass('confirm')}`}
-                  />
-                  <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={() => setShowConfirm((v) => !v)}>{showConfirm ? <EyeOff /> : <Eye />}</button>
-                </div>
-                {errors.confirm && <div className="text-red-600 text-sm mt-1">{errors.confirm}</div>}
-              </div>
+              {errors.confirm && <div className="mt-1 text-sm text-red-600">{errors.confirm}</div>}
             </div>
-          </>
+          </div>
         )}
 
         <div className="flex items-center justify-between gap-3 pt-4">
