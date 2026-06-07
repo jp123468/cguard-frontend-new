@@ -17,6 +17,12 @@ import {
   AlertTriangle,
   Bot,
   ArrowRight,
+  FileText,
+  CheckCircle2,
+  Trash2,
+  Plus as PlusIcon,
+  MinusCircle,
+  RefreshCw,
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { ApiService } from "@/services/api/apiService";
@@ -642,6 +648,50 @@ export default function Schedule() {
   // AI Auto-assign
   const [autoAssigning, setAutoAssigning] = useState(false);
   const [autoResult, setAutoResult] = useState<any>(null);
+
+  // Draft horario proposal (generate → review/diff → publish/discard).
+  const [proposalLoading, setProposalLoading] = useState(false);
+  const [proposalData, setProposalData] = useState<any>(null); // { proposal, changes }
+  const [publishing, setPublishing] = useState(false);
+
+  const generateDraft = async () => {
+    setProposalLoading(true);
+    try {
+      const gen = await ApiService.post(`/tenant/${tenantId}/scheduler/proposals`, { data: { scope: 'tenant' } });
+      const id = gen?.proposalId || gen?.data?.proposalId;
+      if (!id) throw new Error('No se pudo generar el borrador');
+      const detail = await ApiService.get(`/tenant/${tenantId}/scheduler/proposals/${id}`);
+      setProposalData(detail?.data ?? detail);
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || 'Error generando el borrador');
+    } finally {
+      setProposalLoading(false);
+    }
+  };
+
+  const publishProposal = async () => {
+    const id = proposalData?.proposal?.id;
+    if (!id) return;
+    setPublishing(true);
+    try {
+      await ApiService.post(`/tenant/${tenantId}/scheduler/proposals/${id}/publish`, { data: { confirm: true } });
+      toast.success('Horario publicado y aplicado');
+      setProposalData(null);
+      fetchAll();
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || 'Error al publicar');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const discardProposal = async () => {
+    const id = proposalData?.proposal?.id;
+    if (id) {
+      try { await ApiService.post(`/tenant/${tenantId}/scheduler/proposals/${id}/discard`, { data: {} }); } catch { /* best effort */ }
+    }
+    setProposalData(null);
+  };
   const [aiLoading, setAiLoading] = useState(false);
   const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
 
@@ -787,12 +837,23 @@ export default function Schedule() {
                   Asigna guardias automáticamente por cercanía, configura rotaciones óptimas y programa sacafrancos.
                 </p>
                 <button
-                  onClick={runAutoAssign}
-                  disabled={autoAssigning}
+                  onClick={generateDraft}
+                  disabled={proposalLoading}
                   className="w-full px-4 py-2.5 bg-[#C8860A] text-white rounded-xl text-sm font-semibold hover:bg-[#B37809] disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
                 >
+                  {proposalLoading ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+                  {proposalLoading ? 'Generando borrador...' : 'Generar borrador de horario'}
+                </button>
+                <p className="mt-1 mb-3 text-[10px] text-muted-foreground">
+                  Calcula el horario propuesto y muestra los cambios antes de aplicar. No modifica nada hasta que publiques.
+                </p>
+                <button
+                  onClick={runAutoAssign}
+                  disabled={autoAssigning}
+                  className="w-full px-4 py-2 bg-background border border-input text-foreground rounded-xl text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                >
                   {autoAssigning ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
-                  {autoAssigning ? 'Asignando...' : 'Auto-asignar todo'}
+                  {autoAssigning ? 'Asignando...' : 'Auto-asignar puestos vacíos'}
                 </button>
                 {autoResult && (
                   <div className="mt-3 p-2 bg-background/60 rounded-lg space-y-1">
@@ -1695,6 +1756,94 @@ export default function Schedule() {
             </div>
             <div className="px-5 py-3 border-t border-border/20 flex justify-end">
               <button onClick={() => setOverrideTarget(null)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-all">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Draft horario review/diff Modal ──────────────────────────────── */}
+      {proposalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl bg-card shadow-2xl border border-border/30 overflow-hidden">
+            <div className="px-5 py-4 border-b border-border/20">
+              <div className="flex items-center gap-2">
+                <FileText size={18} className="text-[#C8860A]" />
+                <h3 className="text-base font-bold text-foreground">Borrador de horario</h3>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Revisa los cambios propuestos. Nada se aplica hasta que publiques.
+              </p>
+            </div>
+
+            {/* Summary counters */}
+            {(() => {
+              const s = proposalData?.proposal?.summary || {};
+              const cards = [
+                { label: 'Nuevos', value: s.added || 0, icon: <PlusIcon size={14} />, cls: 'text-emerald-600' },
+                { label: 'Eliminados', value: s.removed || 0, icon: <MinusCircle size={14} />, cls: 'text-red-600' },
+                { label: 'Modificados', value: s.changed || 0, icon: <RefreshCw size={14} />, cls: 'text-amber-600' },
+                { label: 'Guardias afectados', value: s.guardsAffected || 0, icon: <Users size={14} />, cls: 'text-foreground' },
+              ];
+              return (
+                <div className="grid grid-cols-4 gap-2 px-5 py-3 border-b border-border/20">
+                  {cards.map((c) => (
+                    <div key={c.label} className="rounded-xl border border-border/30 p-2 text-center">
+                      <div className={`flex items-center justify-center gap-1 ${c.cls}`}>{c.icon}<span className="text-lg font-bold tabular-nums">{c.value}</span></div>
+                      <div className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">{c.label}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* Change list */}
+            <div className="flex-1 overflow-auto px-5 py-3">
+              {(() => {
+                const changes = (proposalData?.changes || []).filter((c: any) => c.action !== 'keep');
+                if (!changes.length) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <CheckCircle2 size={28} className="text-emerald-600 mb-2" />
+                      <p className="text-sm font-medium text-foreground">El horario ya está al día</p>
+                      <p className="text-xs text-muted-foreground">No hay cambios que aplicar.</p>
+                    </div>
+                  );
+                }
+                const fmt = (d: string) => {
+                  try { return new Date(d).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch { return d; }
+                };
+                const badge: Record<string, string> = {
+                  add: 'bg-emerald-500/10 text-emerald-600',
+                  remove: 'bg-red-500/10 text-red-600',
+                  change: 'bg-amber-500/10 text-amber-600',
+                };
+                const label: Record<string, string> = { add: 'Nuevo', remove: 'Eliminar', change: 'Cambio' };
+                return (
+                  <div className="divide-y divide-border/20">
+                    {changes.slice(0, 300).map((c: any) => (
+                      <div key={c.id} className="flex items-center gap-3 py-2">
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badge[c.action] || 'bg-muted text-foreground'}`}>{label[c.action] || c.action}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm text-foreground">{fmt(c.startTime)} {c.meta?.shiftType ? `· ${c.meta.shiftType === 'night' ? 'Nocturno' : c.meta.shiftType === 'day' ? 'Diurno' : c.meta.shiftType}` : ''}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {changes.length > 300 && (
+                      <p className="py-2 text-center text-[11px] text-muted-foreground">+{changes.length - 300} cambios más…</p>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="px-5 py-3 border-t border-border/20 flex items-center justify-between gap-3">
+              <button onClick={discardProposal} disabled={publishing} className="px-4 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-500/10 disabled:opacity-50 transition-all flex items-center gap-1.5">
+                <Trash2 size={14} /> Descartar
+              </button>
+              <button onClick={publishProposal} disabled={publishing} className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#C8860A] hover:bg-[#B37809] disabled:opacity-50 transition-all shadow-sm flex items-center gap-2">
+                {publishing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                {publishing ? 'Publicando...' : 'Publicar y aplicar'}
+              </button>
             </div>
           </div>
         </div>
