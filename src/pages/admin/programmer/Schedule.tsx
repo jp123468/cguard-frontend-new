@@ -23,6 +23,7 @@ import {
   Plus as PlusIcon,
   MinusCircle,
   RefreshCw,
+  MapPin,
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { ApiService } from "@/services/api/apiService";
@@ -700,6 +701,22 @@ export default function Schedule() {
   };
 
   const closeProposalModal = () => { setProposalData(null); setPlanData(null); };
+
+  // Geocode guards missing home coordinates (enables real proximity ranking).
+  const [geocoding, setGeocoding] = useState(false);
+  const runGeocode = async () => {
+    setGeocoding(true);
+    try {
+      const res = await ApiService.post(`/tenant/${tenantId}/security-guard/geocode-missing`, {});
+      const g = res?.geocoded ?? res?.data?.geocoded ?? 0;
+      const rem = res?.remaining ?? res?.data?.remaining ?? 0;
+      toast.success(`${g} guardia(s) geolocalizados${rem > 0 ? ` · ${rem} pendientes (ejecuta de nuevo)` : ''}`);
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || 'Error al geolocalizar guardias');
+    } finally {
+      setGeocoding(false);
+    }
+  };
   const [aiLoading, setAiLoading] = useState(false);
   const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
 
@@ -878,6 +895,15 @@ export default function Schedule() {
                 >
                   <Shield size={12} />
                   Optimizar Sacafrancos
+                </button>
+                <button
+                  onClick={runGeocode}
+                  disabled={geocoding}
+                  className="w-full mt-2 px-4 py-2 bg-background border border-input text-foreground rounded-xl text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                  title="Geolocaliza las direcciones de los guardias para asignar por cercanía real"
+                >
+                  {geocoding ? <Loader2 size={12} className="animate-spin" /> : <MapPin size={12} />}
+                  {geocoding ? 'Geolocalizando...' : 'Geolocalizar guardias'}
                 </button>
                 <button
                   onClick={runAiRecommend}
