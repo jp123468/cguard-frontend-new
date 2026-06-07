@@ -540,6 +540,9 @@ export default function ClientForm({
                                                     maxLength={200}
                                                 />
                                             </FormControl>
+                                            <p className="text-[10px] text-muted-foreground mt-1">
+                                                {t('clients.form.commercialNameHint', 'Se usará como nombre del sitio de servicio.')}
+                                            </p>
                                             <FormMessage />
                                         </FormItem>
                                     )}
