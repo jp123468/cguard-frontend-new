@@ -2,6 +2,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import AlarmActionPlan from "@/components/alarm/AlarmActionPlan";
 import {
   Siren,
   ArrowLeft,
@@ -504,6 +505,11 @@ export default function AlarmCaseDetail() {
             </Button>
           </div>
         </Card>
+
+        {/* Action plan — guided operator response */}
+        <div className="mb-5">
+          <AlarmActionPlan caseId={id} />
+        </div>
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           {/* Panel / site info */}

@@ -354,6 +354,12 @@ export const alarmService = {
   addNote(id: string, body: { detail: string }): Promise<AlarmAuditLog> {
     return ApiService.post(`/tenant/${tid()}/alarm/case/${id}/note`, body);
   },
+  actionPlan(id: string): Promise<{ plan: { id: string; name: string } | null; steps: ActionPlanStep[]; progress: Record<string, { done: boolean; note?: string | null; at?: string; by?: string | null }> }> {
+    return ApiService.get(`/tenant/${tid()}/alarm/case/${id}/action-plan`);
+  },
+  setStep(id: string, body: { stepIndex: number; done: boolean; note?: string }): Promise<any> {
+    return ApiService.post(`/tenant/${tid()}/alarm/case/${id}/step`, body);
+  },
 
   // --- Signals / Events ---
   signals(params?: { panelId?: string; limit?: number }): Promise<AlarmSignal[]> {

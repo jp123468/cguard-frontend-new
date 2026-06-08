@@ -1,0 +1,107 @@
+import { useCallback, useEffect, useState } from "react";
+import { ClipboardList, Check, ShieldCheck, Phone, Video, UserCog, Siren, Bell, StickyNote, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
+import { alarmService, type ActionPlanStep } from "@/lib/api/alarmService";
+
+const STEP_META: Record<string, { label: string; icon: JSX.Element }> = {
+  verify: { label: "Verificar", icon: <ShieldCheck className="size-3.5" /> },
+  call: { label: "Llamar contacto", icon: <Phone className="size-3.5" /> },
+  video: { label: "Verificación por video", icon: <Video className="size-3.5" /> },
+  dispatch_guard: { label: "Despachar guardia", icon: <UserCog className="size-3.5" /> },
+  notify_police: { label: "Notificar policía", icon: <Siren className="size-3.5" /> },
+  notify_customer: { label: "Notificar cliente", icon: <Bell className="size-3.5" /> },
+  note: { label: "Nota", icon: <StickyNote className="size-3.5" /> },
+};
+
+type Progress = Record<string, { done: boolean; note?: string | null; at?: string; by?: string | null }>;
+
+/** Guided action-plan checklist for an alarm case. Self-contained: fetches the
+ *  applicable plan + per-step progress and toggles steps via the API. */
+export default function AlarmActionPlan({ caseId }: { caseId: string }) {
+  const [steps, setSteps] = useState<ActionPlanStep[]>([]);
+  const [planName, setPlanName] = useState<string | null>(null);
+  const [progress, setProgress] = useState<Progress>({});
+  const [loading, setLoading] = useState(true);
+  const [savingIdx, setSavingIdx] = useState<number | null>(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    alarmService.actionPlan(caseId)
+      .then((r) => { setSteps(r.steps || []); setPlanName(r.plan?.name || null); setProgress((r.progress as Progress) || {}); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [caseId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const toggle = async (i: number, done: boolean) => {
+    setSavingIdx(i);
+    try {
+      const p = await alarmService.setStep(caseId, { stepIndex: i, done });
+      setProgress((p as Progress) || {});
+    } catch {
+      toast.error("No se pudo actualizar el paso");
+    } finally {
+      setSavingIdx(null);
+    }
+  };
+
+  if (loading) return null;
+
+  if (!steps.length) {
+    return (
+      <Card className="p-4">
+        <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+          <ClipboardList className="size-4 text-[#C8860A]" /> Plan de acción
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Sin plan de acción configurado para este caso. Crea uno en Paneles para guiar la respuesta del operador.
+        </p>
+      </Card>
+    );
+  }
+
+  const doneCount = steps.reduce((n, _s, i) => n + (progress[String(i)]?.done ? 1 : 0), 0);
+  const pct = Math.round((doneCount / steps.length) * 100);
+
+  return (
+    <Card className="p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <ClipboardList className="size-4 text-[#C8860A]" /> Plan de acción
+          {planName && <span className="text-xs font-normal text-muted-foreground">· {planName}</span>}
+        </div>
+        <span className="text-xs font-semibold text-muted-foreground">{doneCount}/{steps.length}</span>
+      </div>
+      <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-[#C8860A]" style={{ width: `${pct}%` }} />
+      </div>
+      <ol className="space-y-1.5">
+        {steps.map((s, i) => {
+          const meta = STEP_META[s.type] || { label: s.type, icon: <Check className="size-3.5" /> };
+          const done = !!progress[String(i)]?.done;
+          return (
+            <li key={i} className="flex items-start gap-2 rounded-lg border border-border/50 bg-background px-3 py-2">
+              <button
+                onClick={() => toggle(i, !done)}
+                disabled={savingIdx === i}
+                className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border ${done ? "border-[#C8860A] bg-[#C8860A] text-white" : "border-border text-transparent hover:border-[#C8860A]"}`}
+                title={done ? "Desmarcar" : "Marcar como completado"}
+              >
+                {savingIdx === i ? <Loader2 className="size-3 animate-spin text-muted-foreground" /> : <Check className="size-3.5" />}
+              </button>
+              <div className="min-w-0 flex-1">
+                <div className={`flex items-center gap-1.5 text-sm ${done ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                  <span className="text-[#C8860A]">{meta.icon}</span>
+                  <span className="font-medium">{meta.label}</span>
+                </div>
+                {s.detail && <p className="text-xs text-muted-foreground">{s.detail}</p>}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </Card>
+  );
+}
