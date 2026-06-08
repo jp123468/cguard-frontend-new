@@ -375,6 +375,12 @@ export const alarmService = {
   falseAlarmReport(params?: { days?: number }): Promise<{ days: number; overall: any; panels: any[] }> {
     return ApiService.get(`/tenant/${tid()}/alarm/reports/false-alarms${qstr(params)}`);
   },
+  analytics(params?: { days?: number }): Promise<any> {
+    return ApiService.get(`/tenant/${tid()}/alarm/analytics${qstr(params)}`);
+  },
+  auditExport(params?: { days?: number }): Promise<{ days: number; count: number; rows: any[] }> {
+    return ApiService.get(`/tenant/${tid()}/alarm/reports/audit-export${qstr(params)}`);
+  },
 
   // --- Signals / Events ---
   signals(params?: { panelId?: string; limit?: number }): Promise<AlarmSignal[]> {

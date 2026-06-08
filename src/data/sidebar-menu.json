@@ -151,6 +151,11 @@
         "id": "alarm-reports",
         "name": "Reportes",
         "path": "/alarm/reports"
+      },
+      {
+        "id": "alarm-analitica",
+        "name": "Análisis",
+        "path": "/alarm/analytics"
       }
     ]
   },
