@@ -93,6 +93,7 @@ import AlarmQueue from "./pages/admin/alarm/AlarmQueue"
 import AlarmPanels from "./pages/admin/alarm/AlarmPanels"
 import AlarmSignals from "./pages/admin/alarm/AlarmSignals"
 import AlarmCaseDetail from "./pages/admin/alarm/AlarmCaseDetail"
+import AlarmReports from "./pages/admin/alarm/AlarmReports"
 import GeneratePayroll from "./pages/admin/payroll/GeneratePayroll"
 import PastPayroll from "./pages/admin/payroll/PastPayroll"
 import OvertimeMultiplier from "./pages/admin/payroll/OvertimeMultiplier"
@@ -933,6 +934,7 @@ export default function App() {
               <Route path="/alarm/panels" element={<ProtectedRoute><AlarmPanels /></ProtectedRoute>} />
               <Route path="/alarm/signals" element={<ProtectedRoute><AlarmSignals /></ProtectedRoute>} />
               <Route path="/alarm/case/:id" element={<ProtectedRoute><AlarmCaseDetail /></ProtectedRoute>} />
+              <Route path="/alarm/reports" element={<ProtectedRoute><AlarmReports /></ProtectedRoute>} />
               {/* FIN CENTRAL DE MONITOREO */}
               {/* FIN ANALITICAS */}
 

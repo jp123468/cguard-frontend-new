@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import AlarmActionPlan from "@/components/alarm/AlarmActionPlan";
 import AlarmVideoVerification from "@/components/alarm/AlarmVideoVerification";
+import AlarmECV from "@/components/alarm/AlarmECV";
 import {
   Siren,
   ArrowLeft,
@@ -515,6 +516,19 @@ export default function AlarmCaseDetail() {
         {/* Video verification — live linked camera(s) + verification clips */}
         <div className="mb-5">
           <AlarmVideoVerification caseId={id} />
+        </div>
+
+        {/* ECV — enhanced call verification + police dispatch */}
+        <div className="mb-5">
+          <AlarmECV
+            caseId={id}
+            panelId={(data as any).alarmPanelId}
+            category={data.category || undefined}
+            ecvSatisfied={(data as any).ecvSatisfied}
+            calls={(data as any).calls || []}
+            status={data.status || undefined}
+            onChanged={() => load()}
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

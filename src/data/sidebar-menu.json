@@ -146,6 +146,11 @@
         "id": "alarm-signals",
         "name": "Señales",
         "path": "/alarm/signals"
+      },
+      {
+        "id": "alarm-reports",
+        "name": "Reportes",
+        "path": "/alarm/reports"
       }
     ]
   },

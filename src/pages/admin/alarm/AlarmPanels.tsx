@@ -181,6 +181,9 @@ interface PanelForm {
   testIntervalHrs: string;
   make: string;
   model: string;
+  psapAgency: string;
+  psapPhone: string;
+  asapOri: string;
   postSiteId: string;
   stationId: string;
   customerId: string;
@@ -199,6 +202,9 @@ const emptyPanelForm = (): PanelForm => ({
   testIntervalHrs: "",
   make: "",
   model: "",
+  psapAgency: "",
+  psapPhone: "",
+  asapOri: "",
   postSiteId: "",
   stationId: "",
   customerId: "",
@@ -218,6 +224,9 @@ const panelToForm = (p: AlarmPanel): PanelForm => ({
   testIntervalHrs: p.testIntervalHrs != null ? String(p.testIntervalHrs) : "",
   make: p.make ?? "",
   model: p.model ?? "",
+  psapAgency: (p as any).psapAgency ?? "",
+  psapPhone: (p as any).psapPhone ?? "",
+  asapOri: (p as any).asapOri ?? "",
   postSiteId: p.postSiteId ?? "",
   stationId: p.stationId ?? "",
   customerId: p.customerId ?? "",
@@ -277,7 +286,7 @@ function PanelModal({
       toast.error("El nombre es obligatorio");
       return;
     }
-    const payload: Partial<AlarmPanel> & { dc09Key?: string } = {
+    const payload: Partial<AlarmPanel> & { dc09Key?: string; psapAgency?: string | null; psapPhone?: string | null; asapOri?: string | null } = {
       name: form.name.trim(),
       protocol: form.protocol,
       accountNumber: form.accountNumber.trim() || null,
@@ -288,6 +297,9 @@ function PanelModal({
       testIntervalHrs: num(form.testIntervalHrs),
       make: form.make.trim() || null,
       model: form.model.trim() || null,
+      psapAgency: form.psapAgency.trim() || null,
+      psapPhone: form.psapPhone.trim() || null,
+      asapOri: form.asapOri.trim() || null,
       postSiteId: form.postSiteId.trim() || null,
       stationId: form.stationId.trim() || null,
       customerId: form.customerId.trim() || null,
@@ -425,6 +437,36 @@ function PanelModal({
                 value={form.supervisionMins}
                 onChange={(e) => set("supervisionMins", e.target.value)}
                 placeholder="0"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="ap-psapAgency">Agencia / PSAP (policía)</Label>
+              <Input
+                id="ap-psapAgency"
+                value={form.psapAgency}
+                onChange={(e) => set("psapAgency", e.target.value)}
+                placeholder="Ej. Policía Nacional - Zona 9"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="ap-psapPhone">Teléfono PSAP</Label>
+              <Input
+                id="ap-psapPhone"
+                value={form.psapPhone}
+                onChange={(e) => set("psapPhone", e.target.value)}
+                placeholder="Despacho manual"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="ap-asapOri">ORI ASAP (despacho automático)</Label>
+              <Input
+                id="ap-asapOri"
+                value={form.asapOri}
+                onChange={(e) => set("asapOri", e.target.value)}
+                placeholder="Identificador de agencia ASAP"
               />
             </div>
 

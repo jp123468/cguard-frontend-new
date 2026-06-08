@@ -366,6 +366,15 @@ export const alarmService = {
   caseClips(id: string): Promise<any[]> {
     return ApiService.get(`/tenant/${tid()}/alarm/case/${id}/clips`);
   },
+  logCall(id: string, body: { alarmContactId?: string; contactName?: string; phone?: string; outcome: string; note?: string }): Promise<{ call: any; ecvSatisfied: boolean; attempts: number }> {
+    return ApiService.post(`/tenant/${tid()}/alarm/case/${id}/call`, body);
+  },
+  dispatchPolice(id: string, body: { note?: string; override?: boolean }): Promise<any> {
+    return ApiService.post(`/tenant/${tid()}/alarm/case/${id}/dispatch`, { type: "police", ...body });
+  },
+  falseAlarmReport(params?: { days?: number }): Promise<{ days: number; overall: any; panels: any[] }> {
+    return ApiService.get(`/tenant/${tid()}/alarm/reports/false-alarms${qstr(params)}`);
+  },
 
   // --- Signals / Events ---
   signals(params?: { panelId?: string; limit?: number }): Promise<AlarmSignal[]> {
