@@ -360,6 +360,12 @@ export const alarmService = {
   setStep(id: string, body: { stepIndex: number; done: boolean; note?: string }): Promise<any> {
     return ApiService.post(`/tenant/${tid()}/alarm/case/${id}/step`, body);
   },
+  caseCameras(id: string): Promise<any[]> {
+    return ApiService.get(`/tenant/${tid()}/alarm/case/${id}/cameras`);
+  },
+  caseClips(id: string): Promise<any[]> {
+    return ApiService.get(`/tenant/${tid()}/alarm/case/${id}/clips`);
+  },
 
   // --- Signals / Events ---
   signals(params?: { panelId?: string; limit?: number }): Promise<AlarmSignal[]> {

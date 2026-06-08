@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import AlarmActionPlan from "@/components/alarm/AlarmActionPlan";
+import AlarmVideoVerification from "@/components/alarm/AlarmVideoVerification";
 import {
   Siren,
   ArrowLeft,
@@ -509,6 +510,11 @@ export default function AlarmCaseDetail() {
         {/* Action plan — guided operator response */}
         <div className="mb-5">
           <AlarmActionPlan caseId={id} />
+        </div>
+
+        {/* Video verification — live linked camera(s) + verification clips */}
+        <div className="mb-5">
+          <AlarmVideoVerification caseId={id} />
         </div>
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

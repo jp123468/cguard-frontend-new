@@ -37,6 +37,7 @@ import {
   type AlarmZone,
   type AlarmZoneType,
 } from "@/lib/api/alarmService";
+import { videoService, type Camera } from "@/lib/api/videoService";
 
 const GOLD = "#C8860A";
 
@@ -618,7 +619,13 @@ const emptyZoneForm = (): ZoneForm => ({
 
 function ZonesManager({ panelId }: { panelId: string }) {
   const [zones, setZones] = useState<AlarmZone[]>([]);
+  const [cameras, setCameras] = useState<Camera[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    videoService.cameras().then((c) => setCameras(Array.isArray(c) ? c : [])).catch(() => {});
+  }, []);
+  const cameraName = (id?: string | null) => cameras.find((c) => c.id === id)?.name || (id ? "Cámara vinculada" : "—");
   const [form, setForm] = useState<ZoneForm>(emptyZoneForm());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -740,7 +747,7 @@ function ZonesManager({ panelId }: { panelId: string }) {
                   </td>
                   <td className="px-3 py-2">{z.partition || "—"}</td>
                   <td className="px-3 py-2 font-mono text-xs">
-                    {z.linkedCameraId || "—"}
+                    {cameraName(z.linkedCameraId)}
                   </td>
                   <td className="px-3 py-2">
                     {z.bypassed ? (
@@ -835,14 +842,19 @@ function ZonesManager({ panelId }: { panelId: string }) {
         </div>
         <div>
           <Label htmlFor="z-camera" className="text-xs">
-            Cámara vinculada (ID)
+            Cámara vinculada (verificación por video)
           </Label>
-          <Input
+          <select
             id="z-camera"
             value={form.linkedCameraId}
             onChange={(e) => set("linkedCameraId", e.target.value)}
-            placeholder="ID de cámara"
-          />
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="">— Sin cámara —</option>
+            {cameras.map((c) => (
+              <option key={c.id} value={c.id}>{c.name || c.id}</option>
+            ))}
+          </select>
         </div>
         <div className="flex items-end gap-2 pb-1">
           <label className="flex cursor-pointer items-center gap-2 text-sm">
