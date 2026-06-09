@@ -60,6 +60,15 @@ export default function MessengerPage() {
 
   const onSelect = (c: Conversation) => { setSelected(c); setMessages([]); loadThread(c, true); };
 
+  // Open a specific conversation when arrived via a notification (?conversation=<id>).
+  useEffect(() => {
+    const cid = new URLSearchParams(window.location.search).get("conversation");
+    if (!cid || !conversations.length || selected?.id === cid) return;
+    const conv = conversations.find((c) => c.id === cid);
+    if (conv) onSelect(conv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations]);
+
   const onSend = async () => {
     if (!selected || !draft.trim() || sending) return;
     const body = draft.trim();

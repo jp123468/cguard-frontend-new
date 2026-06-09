@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { LogIn, LogOut, AlertTriangle, Route, CalendarClock, UserCheck, Siren, Bell, X } from 'lucide-react';
+import { LogIn, LogOut, AlertTriangle, Route, CalendarClock, UserCheck, Siren, Bell, X, MessageSquare } from 'lucide-react';
 import { fileUrlFromPrivate } from '@/lib/fileUrl';
 import type { PlatformNotification } from '@/hooks/useNotificationStream';
 
@@ -13,6 +13,7 @@ function iconFor(eventType: string): { Icon: typeof Bell; color: string } {
   if (t.startsWith('shift') || t.startsWith('timeoff')) return { Icon: CalendarClock, color: '#0ea5e9' };
   if (t.startsWith('visitor')) return { Icon: UserCheck, color: '#38bdf8' };
   if (t.startsWith('dispatch')) return { Icon: Siren, color: '#e11d48' };
+  if (t.startsWith('message')) return { Icon: MessageSquare, color: '#C8860A' };
   return { Icon: Bell, color: '#0ea5e9' };
 }
 
@@ -58,6 +59,10 @@ export function targetForNotification(n: PlatformNotification): string {
     return `/attendance?${params.toString()}`;
   }
   if (type.startsWith('incident')) return id ? `/reports/incident/${id}` : '/activities';
+  if (type.startsWith('message')) {
+    const cid = n.payload?.conversationId;
+    return cid ? `/messenger?conversation=${cid}` : '/messenger';
+  }
   if (type.startsWith('visitor')) return '/visitors';
   if (type.startsWith('patrol')) return '/vehicle-patrol';
   if (type.startsWith('device')) return '/security-guards';
