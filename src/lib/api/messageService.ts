@@ -6,6 +6,8 @@ const getTenantId = (): string => {
   return t;
 };
 
+export type MessageAttachment = { url: string; type: "image" | "video"; name?: string; sizeInBytes?: number };
+
 const unwrap = (resp: any) => (resp && resp.data !== undefined ? resp.data : resp);
 const newClientMsgId = () =>
   (globalThis.crypto && (globalThis.crypto as any).randomUUID
@@ -39,9 +41,32 @@ export const messageService = {
     return unwrap(await api.get(`/tenant/${t}/message/${id}/messages${qs ? `?${qs}` : ""}`));
   },
 
-  async sendMessage(id: string, body: string) {
+  async sendMessage(id: string, body: string, attachments?: MessageAttachment[]) {
     const t = getTenantId();
-    return unwrap(await api.post(`/tenant/${t}/message/${id}/messages`, { data: { body, clientMsgId: newClientMsgId() } }));
+    return unwrap(await api.post(`/tenant/${t}/message/${id}/messages`, { data: { body, attachments: attachments && attachments.length ? attachments : undefined, clientMsgId: newClientMsgId() } }));
+  },
+
+  /** Upload an image/video and return its attachment descriptor (private url). */
+  async uploadAttachment(file: File): Promise<MessageAttachment> {
+    const t = getTenantId();
+    const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const credsResp: any = await api.get(`/tenant/${t}/file/credentials?filename=${encodeURIComponent(filename)}&storageId=messageAttachments`);
+    const creds = credsResp && credsResp.data ? credsResp.data : credsResp;
+    const uploadUrl = creds?.uploadCredentials?.url ?? creds?.url;
+    const fields = creds?.uploadCredentials?.fields;
+    if (!uploadUrl) throw new Error("No se pudo obtener la URL de carga");
+    const form = new FormData();
+    if (fields) Object.keys(fields).forEach((k) => form.append(k, fields[k]));
+    form.append("filename", filename);
+    form.append("file", file);
+    const resp = await fetch(uploadUrl, { method: "POST", body: form });
+    if (!resp.ok) throw new Error(`Error al subir el archivo (${resp.status})`);
+    return {
+      url: creds?.privateUrl ?? "",
+      type: file.type.startsWith("video") ? "video" : "image",
+      name: file.name,
+      sizeInBytes: file.size,
+    };
   },
 
   async markRead(id: string) {

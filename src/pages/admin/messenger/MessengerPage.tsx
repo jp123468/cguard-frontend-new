@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
-import { MessageSquareText, Send, Plus, Search, Loader2, X, Check, CheckCheck } from "lucide-react";
-import { messageService } from "@/lib/api/messageService";
+import { MessageSquareText, Send, Plus, Search, Loader2, X, Check, CheckCheck, Paperclip, Play } from "lucide-react";
+import { messageService, type MessageAttachment } from "@/lib/api/messageService";
 import securityGuardService from "@/lib/api/securityGuardService";
+import { fileUrlFromPrivate } from "@/lib/fileUrl";
 import { toast } from "sonner";
 
 type Conversation = {
@@ -12,6 +13,7 @@ type Conversation = {
 };
 type Message = {
   id: string; senderUserId: string; senderType: string; senderName: string; body: string; createdAt: string;
+  attachments?: MessageAttachment[] | null;
   receipt?: { deliveryStatus: string; readAt?: string | null } | null;
 };
 
@@ -25,7 +27,10 @@ export default function MessengerPage() {
   const [sending, setSending] = useState(false);
   const [loadingList, setLoadingList] = useState(true);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [pending, setPending] = useState<MessageAttachment[]>([]);
+  const [uploading, setUploading] = useState(false);
   const threadRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -70,18 +75,40 @@ export default function MessengerPage() {
   }, [conversations]);
 
   const onSend = async () => {
-    if (!selected || !draft.trim() || sending) return;
+    if (!selected || sending || uploading) return;
     const body = draft.trim();
+    if (!body && pending.length === 0) return;
+    const atts = pending;
     setSending(true);
     setDraft("");
+    setPending([]);
     try {
-      await messageService.sendMessage(selected.id, body);
+      await messageService.sendMessage(selected.id, body, atts);
       await loadThread(selected);
       loadConversations();
     } catch (e: any) {
       toast.error(e?.data?.message || e?.message || "No se pudo enviar");
       setDraft(body);
+      setPending(atts);
     } finally { setSending(false); }
+  };
+
+  const onPickFiles = async (files: FileList | null) => {
+    if (!files || !files.length) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files).slice(0, 10)) {
+        if (!/^image\/|^video\//.test(file.type)) { toast.error(`${file.name}: solo imágenes o videos`); continue; }
+        if (file.size > 100 * 1024 * 1024) { toast.error(`${file.name}: máximo 100 MB`); continue; }
+        const att = await messageService.uploadAttachment(file);
+        setPending((p) => [...p, att]);
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "No se pudo subir el archivo");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
   };
 
   return (
@@ -146,7 +173,20 @@ export default function MessengerPage() {
                       <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                         <div className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm ${mine ? "bg-[#C8860A] text-white" : "bg-muted text-foreground"}`}>
                           {!mine && <p className="mb-0.5 text-[10px] font-semibold opacity-70">{m.senderName}</p>}
-                          <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                          {Array.isArray(m.attachments) && m.attachments.length > 0 && (
+                            <div className="mb-1 grid gap-1.5">
+                              {m.attachments.map((a, i) => (
+                                a.type === "video" ? (
+                                  <video key={i} src={fileUrlFromPrivate(a.url) || undefined} controls preload="metadata" className="max-h-72 max-w-full rounded-lg bg-black/20" />
+                                ) : (
+                                  <a key={i} href={fileUrlFromPrivate(a.url) || "#"} target="_blank" rel="noreferrer">
+                                    <img src={fileUrlFromPrivate(a.url) || undefined} alt={a.name || "imagen"} loading="lazy" className="max-h-72 max-w-full rounded-lg object-cover" />
+                                  </a>
+                                )
+                              ))}
+                            </div>
+                          )}
+                          {m.body && <p className="whitespace-pre-wrap break-words">{m.body}</p>}
                           <div className={`mt-0.5 flex items-center justify-end gap-1 text-[10px] ${mine ? "text-white/70" : "text-muted-foreground"}`}>
                             {fmtTime(m.createdAt)}
                             {mine && (m.receipt?.deliveryStatus === "read" ? <CheckCheck size={12} /> : <Check size={12} />)}
@@ -157,18 +197,38 @@ export default function MessengerPage() {
                   })}
                 </div>
 
-                <div className="flex items-end gap-2 border-t border-border p-3">
-                  <textarea
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSend(); } }}
-                    placeholder="Escribe un mensaje…"
-                    rows={1}
-                    className="max-h-32 min-h-[40px] flex-1 resize-none rounded-xl border border-input bg-background px-3.5 py-2 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20"
-                  />
-                  <button onClick={onSend} disabled={sending || !draft.trim()} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#C8860A] text-white hover:bg-[#B37809] disabled:opacity-50">
-                    {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                  </button>
+                <div className="border-t border-border p-3">
+                  {pending.length > 0 && (
+                    <div className="mb-2 flex flex-wrap gap-2">
+                      {pending.map((a, i) => (
+                        <div key={i} className="relative h-16 w-16 overflow-hidden rounded-lg border border-border">
+                          {a.type === "video" ? (
+                            <div className="flex h-full w-full items-center justify-center bg-black/60 text-white"><Play size={18} /></div>
+                          ) : (
+                            <img src={fileUrlFromPrivate(a.url) || undefined} alt="" className="h-full w-full object-cover" />
+                          )}
+                          <button onClick={() => setPending((p) => p.filter((_, j) => j !== i))} className="absolute right-0 top-0 grid h-5 w-5 place-items-center rounded-bl bg-black/70 text-white"><X size={12} /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-end gap-2">
+                    <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e) => onPickFiles(e.target.files)} />
+                    <button onClick={() => fileRef.current?.click()} disabled={uploading} title="Adjuntar imagen o video" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-input text-muted-foreground hover:text-foreground disabled:opacity-50">
+                      {uploading ? <Loader2 size={16} className="animate-spin" /> : <Paperclip size={16} />}
+                    </button>
+                    <textarea
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSend(); } }}
+                      placeholder="Escribe un mensaje…"
+                      rows={1}
+                      className="max-h-32 min-h-[40px] flex-1 resize-none rounded-xl border border-input bg-background px-3.5 py-2 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20"
+                    />
+                    <button onClick={onSend} disabled={sending || uploading || (!draft.trim() && pending.length === 0)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#C8860A] text-white hover:bg-[#B37809] disabled:opacity-50">
+                      {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                    </button>
+                  </div>
                 </div>
               </>
             )}
