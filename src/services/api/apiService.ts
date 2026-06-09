@@ -102,6 +102,13 @@ export class ApiService {
         msg = `Error: ${response.status} ${response.statusText}`;
         fullResponse = null; // avoid logging large HTML blobs
       }
+      // An authenticated request rejected with 401 → the token is no longer valid
+      // (e.g. this session was ended by a login on another device — single active
+      // session). Clear it and return to the login screen.
+      if (response.status === 401 && token && !window.location.pathname.startsWith('/login')) {
+        try { localStorage.removeItem('authToken'); } catch {}
+        try { window.location.replace('/login'); } catch {}
+      }
       // Lanzar ApiError para que la UI decida mostrar toast
       throw new ApiError(msg, response.status, fullResponse);
     }

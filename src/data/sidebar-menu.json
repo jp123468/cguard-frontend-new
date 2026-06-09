@@ -306,5 +306,11 @@
     "name": "Despachador",
     "icon": "MessageSquare",
     "path": "/dispatch-tickets"
+  },
+  {
+    "id": "seguridad-auditoria",
+    "name": "Registro de Seguridad",
+    "icon": "Shield",
+    "path": "/security/audit"
   }
 ]
