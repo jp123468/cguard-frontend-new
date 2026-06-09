@@ -7,6 +7,8 @@ import { setTenantId as setCategoryTenantId } from "@/lib/api/categoryService";
 import { useLocation, useNavigate } from "react-router-dom";
 import TenantJoinModal from "@/components/TenantJoinModal";
 import TrialBanner from "@/components/TrialBanner";
+import { RadioRealtimeProvider } from "@/components/radio/RadioRealtimeProvider";
+import RadioDispatchWidget from "@/components/radio/RadioDispatchWidget";
 import OnboardingProvider from "@/components/onboarding/OnboardingProvider";
 import tenantService from "@/services/tenant.service";
 import { cacheTenantLocation, cacheTenantCountry, cacheTenantTimezone } from "@/utils/tenantLocation";
@@ -238,6 +240,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
           {children}
         </OnboardingProvider>
       </main>
+
+      {/* Radio dispatch: one shared socket stream + a draggable widget present on
+          every CRM page (self-hides if the user lacks the radio permission). */}
+      <RadioRealtimeProvider tenantId={tenantIdNow}>
+        <RadioDispatchWidget />
+      </RadioRealtimeProvider>
 
       {/* Toaster lives once globally in main.tsx — a second one here made every
           toast (notifications included) render twice. */}

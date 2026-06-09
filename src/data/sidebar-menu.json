@@ -172,6 +172,12 @@
     "path": "/messenger"
   },
   {
+    "id": "radio",
+    "name": "Radio",
+    "icon": "Radio",
+    "path": "/radio"
+  },
+  {
     "id": "reloj",
     "name": "Reloj de Tiempo",
     "icon": "Clock",
