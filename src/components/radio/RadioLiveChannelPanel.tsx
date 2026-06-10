@@ -39,6 +39,7 @@ export default function RadioLiveChannelPanel() {
       onSpeaker: setSpeaker,
       onError: (m) => setHint(m),
     });
+    vc.resume(); // within the click gesture → iOS/Safari will allow audio
     // wait briefly for connect, then join
     const start = Date.now();
     const tick = setInterval(async () => {
