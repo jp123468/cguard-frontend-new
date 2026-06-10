@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import AppLayout from "@/layouts/app-layout";
 import { radioCheckService, radioAudioSrc } from "@/lib/api/radioCheckService";
 import { useRadioRealtime } from "@/components/radio/RadioRealtimeProvider";
+import RadioLiveChannelPanel from "@/components/radio/RadioLiveChannelPanel";
 
 const statusBadge: Record<string, { label: string; cls: string }> = {
   responded: { label: "Respondió", cls: "bg-emerald-500/15 text-emerald-600" },
@@ -121,6 +122,8 @@ export default function RadioDispatch() {
           </div>
         </div>
       )}
+
+      <div className="mb-5"><RadioLiveChannelPanel /></div>
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="animate-spin text-muted-foreground" /></div>
