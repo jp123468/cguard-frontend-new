@@ -33,7 +33,7 @@ export default function RadioLiveChannelPanel() {
     const tenantId = localStorage.getItem("tenantId") || "";
     const vc = new VoiceChannel();
     vcRef.current = vc;
-    vc.connect({ url: socketOrigin(), path: "/api/socket.io", token: getAuthToken() || "", tenantId }, {
+    vc.connect({ url: socketOrigin(), path: "/api/socket.io", token: getAuthToken() || "", tenantId, selfId: myId }, {
       onState: setState,
       onPresence: setRoster,
       onSpeaker: setSpeaker,
