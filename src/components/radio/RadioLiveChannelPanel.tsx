@@ -57,14 +57,28 @@ export default function RadioLiveChannelPanel() {
   const leave = () => { vcRef.current?.disconnect(); vcRef.current = null; setJoined(false); setRoster([]); setSpeaker(null); setTalking(false); };
 
   const someoneElseTalking = !!speaker && speaker.userId !== myId;
+  const pressedRef = useRef(false);
 
-  const press = async () => {
-    if (someoneElseTalking) return;
+  const beginTalk = async () => {
     const r = await vcRef.current?.startTalk();
+    if (!pressedRef.current) { vcRef.current?.stopTalk(); return; }
     if (r?.ok) setTalking(true);
     else if (r?.busyWith) setHint(`${r.busyWith} está hablando`);
+    else if (r?.error) setHint(r.error);
   };
-  const release = () => { vcRef.current?.stopTalk(); setTalking(false); };
+  const onPttDown = (e: React.PointerEvent) => {
+    if (someoneElseTalking) return;
+    try { (e.currentTarget as any).setPointerCapture?.(e.pointerId); } catch { /* ignore */ }
+    pressedRef.current = true;
+    setHint(null);
+    void beginTalk();
+  };
+  const onPttUp = (e: React.PointerEvent) => {
+    try { (e.currentTarget as any).releasePointerCapture?.(e.pointerId); } catch { /* ignore */ }
+    pressedRef.current = false;
+    vcRef.current?.stopTalk();
+    setTalking(false);
+  };
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -93,10 +107,12 @@ export default function RadioLiveChannelPanel() {
 
           <div className="flex items-center justify-center gap-3 py-1">
             <button
-              onPointerDown={press}
-              onPointerUp={release}
-              onPointerLeave={() => talking && release()}
+              onPointerDown={onPttDown}
+              onPointerUp={onPttUp}
+              onPointerCancel={onPttUp}
+              onContextMenu={(e) => e.preventDefault()}
               disabled={someoneElseTalking}
+              style={{ touchAction: "none", WebkitUserSelect: "none", userSelect: "none" } as any}
               className={`flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition-colors disabled:opacity-40 ${talking ? "bg-red-500" : "bg-amber-500 hover:bg-amber-600"}`}
             >
               <Mic size={18} /> {talking ? "Transmitiendo…" : someoneElseTalking ? "Ocupado" : "Mantén para hablar"}
