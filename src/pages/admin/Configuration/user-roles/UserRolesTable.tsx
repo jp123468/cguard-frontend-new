@@ -32,7 +32,13 @@ export type UserRoleRow = {
   id: string;
   name: string;
   description?: string;
+  // isDefault === built-in/system role: not deletable, not editable via the
+  // create/edit dialog (permissions are edited via the expand panel instead).
   isDefault?: boolean;
+  slug?: string;
+  isSystem?: boolean;
+  // fullyLocked === superadmin/customer: permissions are NOT tenant-editable.
+  fullyLocked?: boolean;
 };
 
 type Props = {

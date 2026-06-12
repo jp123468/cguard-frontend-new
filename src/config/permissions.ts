@@ -35,6 +35,20 @@ export const PERMISSIONS: string[] = [
   "fileCreate","fileEdit","fileDestroy","fileRead"
 ];
 
+// Admin "floor" — permissions that can never be removed from the admin role or
+// from an admin user, otherwise the tenant would lose access to role & user
+// management. Mirrors backend src/security/staticRolePermissions.ts. Rendered as
+// always-checked + disabled in the permission editors.
+export const ADMIN_FLOOR_PERMISSIONS: string[] = [
+  "settingsEdit",
+  "settingsRead",
+  "userRead",
+  "userCreate",
+  "userEdit",
+  "userDestroy",
+  "tenantEdit",
+];
+
 const ACTION_SUFFIXES = [
   'Import','Create','Edit','Destroy','Read','Autocomplete','Export','Restore','Archive'
 ];

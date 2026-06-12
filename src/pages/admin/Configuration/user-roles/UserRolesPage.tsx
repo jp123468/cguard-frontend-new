@@ -12,29 +12,13 @@ import UserRoleDialog, { UserRoleDialogValues } from "./UserRoleDialog";
 import PermissionsEditor from "./PermissionsEditor";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ADMIN_FLOOR_PERMISSIONS } from "@/config/permissions";
 
-const DEFAULT_SYSTEM_ROLE_SLUGS = [
-  'admin',
-  'operationsmanager',
-  'securitysupervisor',
-  'hrmanager',
-  'clientaccountmanager',
-  'dispatcher',
-  'securityguard',
-  'customer',
-];
+// Roles whose permissions are NEVER tenant-editable (global / external).
+const FULLY_LOCKED_ROLE_SLUGS = ['superadmin', 'customer'];
 
-// Office roles are seeded per-tenant and are EDITABLE by the tenant admin
-const EDITABLE_SEEDED_ROLE_SLUGS = [
-  'administrativesupervisor',
-  'administrativeassistant',
-  'secretary',
-];
-
-const isDefaultSystemRole = (role: { slug?: string; name?: string; id?: string }) => {
-  const slug = String(role.slug ?? role.name ?? role.id ?? '').toLowerCase();
-  return DEFAULT_SYSTEM_ROLE_SLUGS.includes(slug);
-};
+const slugOf = (role: { slug?: string; name?: string; id?: string }) =>
+  String(role.slug ?? role.name ?? role.id ?? '').toLowerCase();
 
 export default function UserRolesPage() {
   const [query, setQuery] = useState("");
@@ -72,7 +56,24 @@ export default function UserRolesPage() {
           : [];
         if (!mounted) return;
         // map to UserRoleRow shape, tolerate different id fields
-        const mapped: UserRoleRow[] = data.map((r: any) => ({ id: r.id ?? r._id ?? String(r.id), name: r.name ?? r.label ?? "", slug: r.slug ?? r.name ?? r.id ?? "", description: r.description ?? r.desc ?? "", isDefault: isDefaultSystemRole(r) }));
+        const mapped: UserRoleRow[] = data.map((r: any) => {
+          const slug = slugOf(r);
+          const fullyLocked = FULLY_LOCKED_ROLE_SLUGS.includes(slug);
+          // A built-in/system role (per the API flag, falling back to the
+          // presence of a known slug). System roles can't be deleted or renamed
+          // via the dialog, but their permissions ARE editable (unless fully
+          // locked) through the expand panel.
+          const isSystem = typeof r.isSystem === 'boolean' ? r.isSystem : fullyLocked;
+          return {
+            id: r.id ?? r._id ?? String(r.id),
+            name: r.name ?? r.label ?? "",
+            slug,
+            description: r.description ?? r.desc ?? "",
+            isSystem,
+            fullyLocked,
+            isDefault: isSystem,
+          };
+        });
         setRows(mapped);
       } catch (err) {
         console.error('Error cargando roles:', err);
@@ -89,7 +90,10 @@ export default function UserRolesPage() {
   }, [rows, query]);
 
   const expandedRole = expandedRoleId ? rows.find((r) => r.id === expandedRoleId) : null;
-  const expandedRoleIsLocked = expandedRole ? expandedRole.isDefault : false;
+  // Only superadmin/customer are read-only; all other roles (incl. built-ins) are editable.
+  const expandedRoleIsLocked = expandedRole ? !!expandedRole.fullyLocked : false;
+  // The admin role keeps its floor permissions locked-on (can't be removed).
+  const expandedLockedPerms = expandedRole && expandedRole.slug === 'admin' ? ADMIN_FLOOR_PERMISSIONS : [];
 
   const onCheckAll = (v: boolean) => {
     const next: Record<string, boolean> = {};
@@ -157,19 +161,38 @@ export default function UserRolesPage() {
   const saveExpandedPermissions = async (id: string, perms: string[]) => {
     try {
       const role = rows.find((r) => r.id === id);
-      if (role && role.isDefault) {
-        toast.error('No se pueden modificar los permisos de los roles predeterminados');
+      if (role && role.fullyLocked) {
+        toast.error('Los permisos de este rol no se pueden modificar');
         return;
       }
       const tenantId = localStorage.getItem("tenantId") || "";
       if (!tenantId) throw new Error('Tenant no configurado');
-      await ApiService.put(`/tenant/${tenantId}/role/${id}`, { permissions: perms });
+      // Always keep the admin floor in the saved set (defense in depth; the
+      // backend also force-unions it).
+      let toSave = perms;
+      if (role && role.slug === 'admin') {
+        toSave = Array.from(new Set([...perms, ...ADMIN_FLOOR_PERMISSIONS]));
+      }
+      await ApiService.put(`/tenant/${tenantId}/role/${id}`, { permissions: toSave });
       toast.success('Permisos actualizados');
       // close expanded
       setExpandedRoleId(null);
       setExpandedRolePerms([]);
     } catch (err) {
       toast.error('Error guardando permisos');
+    }
+  };
+
+  const resetRoleToDefault = async (id: string) => {
+    try {
+      const tenantId = localStorage.getItem("tenantId") || "";
+      if (!tenantId) throw new Error('Tenant no configurado');
+      const res = await ApiService.post(`/tenant/${tenantId}/role/${id}/reset`, {});
+      const perms = res && Array.isArray(res.permissions) ? res.permissions : (res?.data?.permissions ?? []);
+      setExpandedRolePerms(perms);
+      toast.success('Rol restablecido a sus valores predeterminados');
+    } catch (err) {
+      toast.error('Error al restablecer el rol');
     }
   };
 
@@ -274,13 +297,18 @@ export default function UserRolesPage() {
                 <div className="mb-2">
                   <input className="border p-2 rounded w-full" placeholder="Buscar permisos..." value={permQuery} onChange={(e) => setPermQuery(e.target.value)} />
                 </div>
-                <PermissionsEditor value={expandedRolePerms} onChange={setExpandedRolePerms} query={permQuery} readOnly={expandedRoleIsLocked} />
+                <PermissionsEditor value={expandedRolePerms} onChange={setExpandedRolePerms} query={permQuery} readOnly={expandedRoleIsLocked} lockedPermissions={expandedLockedPerms} />
                 {expandedRoleIsLocked ? (
                   <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-900">
                     Este rol está bloqueado. No se pueden modificar los permisos predeterminados.
                   </div>
                 ) : (
                   <div className="flex gap-2 justify-end mt-3">
+                    {expandedRole?.isSystem && (
+                      <Button variant="outline" className="mr-auto" onClick={() => resetRoleToDefault(expandedRoleId as string)}>
+                        Restaurar valores predeterminados
+                      </Button>
+                    )}
                     <Button variant="outline" onClick={() => { setExpandedRoleId(null); setExpandedRolePerms([]); setPermQuery(""); }}>Cancelar</Button>
                     <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={() => saveExpandedPermissions(expandedRoleId as string, expandedRolePerms)}>Guardar</Button>
                   </div>

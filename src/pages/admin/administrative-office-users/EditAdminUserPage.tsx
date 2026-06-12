@@ -26,6 +26,8 @@ import { useTranslation } from "react-i18next";
 import { newAdminUserSchema, type NewAdminUserValues } from "@/lib/validators/new-admin-user.schema";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Command, CommandInput, CommandList, CommandGroup, CommandItem } from "@/components/ui/command";
+import { usePermissions } from "@/hooks/usePermissions";
+import UserPermissionOverrides, { Overrides } from "./UserPermissionOverrides";
 
 function ClientMultiSelect({
   value,
@@ -131,6 +133,35 @@ export default function EditAdminUserPage() {
   const [siteOptions, setSiteOptions] = useState<Array<{ id: string; name: string; clientIds?: string[] }>>([]);
   const [roleOptions, setRoleOptions] = useState<Array<{ id: string; name?: string; label?: string; slug?: string }>>([]);
   const [fetchedRoleCandidate, setFetchedRoleCandidate] = useState<any>(null);
+
+  // Per-user permission overrides (PR-4). Only editable by admins (settingsEdit).
+  const { hasPermission } = usePermissions();
+  const canEditPerms = hasPermission('settingsEdit');
+  const [overrides, setOverrides] = useState<Overrides>({ grant: [], deny: [] });
+  const [rolePermissions, setRolePermissions] = useState<string[]>([]);
+  const [permsOpen, setPermsOpen] = useState(false);
+  const [permQuery, setPermQuery] = useState("");
+  const watchedAccessLevel = useWatch({ control: form.control, name: 'accessLevel' }) as string | undefined;
+  const selectedRoleSlug = (roleOptions.find((r) => String(r.id) === String(watchedAccessLevel))?.slug || '').toLowerCase();
+
+  // Load the inherited permissions of the selected role so the override panel can
+  // show what is granted by the role vs by an explicit override.
+  useEffect(() => {
+    if (!canEditPerms || !watchedAccessLevel) { setRolePermissions([]); return; }
+    let mounted = true;
+    (async () => {
+      try {
+        const tenantId = localStorage.getItem("tenantId") || "";
+        if (!tenantId) return;
+        const res = await ApiService.get(`/tenant/${tenantId}/role/${watchedAccessLevel}`);
+        const data = res && (res.data || res) ? (res.data || res) : {};
+        if (mounted) setRolePermissions(Array.isArray(data.permissions) ? data.permissions : []);
+      } catch (e) {
+        if (mounted) setRolePermissions([]);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [canEditPerms, watchedAccessLevel]);
 
   const getRoleDisplayName = useCallback((role: { id?: string; name?: string; slug?: string }) => {
     const id = (role.id || '').toString().toLowerCase();
@@ -252,6 +283,11 @@ export default function EditAdminUserPage() {
               // tenantEntry.roles might be array or single value
               if (Array.isArray(tenantEntry.roles) && tenantEntry.roles.length > 0) roleCandidate = tenantEntry.roles[0];
               else if (tenantEntry.role) roleCandidate = tenantEntry.role;
+              // Load existing per-user permission overrides.
+              const ov = tenantEntry.permissionOverrides;
+              if (ov && (Array.isArray(ov.grant) || Array.isArray(ov.deny))) {
+                setOverrides({ grant: Array.isArray(ov.grant) ? ov.grant : [], deny: Array.isArray(ov.deny) ? ov.deny : [] });
+              }
             }
           }
         } catch (e) {
@@ -367,6 +403,11 @@ export default function EditAdminUserPage() {
         clientIds: values.clientIds,
         postSiteIds: values.postSiteIds || [],
       } as any;
+      // Only admins send per-user overrides; the backend additionally requires
+      // settingsEdit and enforces the admin-floor lockout guard.
+      if (canEditPerms && id) {
+        payload.permissionOverrides = { grant: overrides.grant, deny: overrides.deny };
+      }
       if (id) {
         // prefer PUT
         try {
@@ -516,6 +557,46 @@ export default function EditAdminUserPage() {
                 )}
               />
             </div>
+
+            {canEditPerms && id && (
+              <div className="rounded-lg border bg-card dark:bg-slate-800 p-4 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setPermsOpen((v) => !v)}
+                  className="flex w-full items-center justify-between text-left"
+                >
+                  <div>
+                    <div className="text-sm font-semibold">Permisos individuales</div>
+                    <div className="text-xs text-muted-foreground">
+                      Concede o revoca permisos específicos para este usuario, además de su rol.
+                    </div>
+                  </div>
+                  <span className="text-muted-foreground">{permsOpen ? '▼' : '►'}</span>
+                </button>
+                {permsOpen && (
+                  <div className="mt-4 space-y-3">
+                    <Input
+                      placeholder="Buscar permisos..."
+                      value={permQuery}
+                      onChange={(e) => setPermQuery(e.target.value)}
+                    />
+                    {selectedRoleSlug === 'admin' && (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                        Este usuario es administrador. Los permisos esenciales de administración no se pueden denegar.
+                      </div>
+                    )}
+                    <UserPermissionOverrides
+                      rolePermissions={rolePermissions}
+                      roleSlug={selectedRoleSlug}
+                      grant={overrides.grant}
+                      deny={overrides.deny}
+                      onChange={setOverrides}
+                      query={permQuery}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end">
               <Button type="submit" disabled={formState.isSubmitting}>

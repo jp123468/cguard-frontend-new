@@ -8,9 +8,14 @@ type Props = {
   onChange: (next: string[]) => void;
   query?: string;
   readOnly?: boolean;
+  // Permissions that must stay enabled and cannot be toggled off (e.g. the admin
+  // floor). Rendered as checked + disabled even when the editor is editable.
+  lockedPermissions?: string[];
 };
 
-export default function PermissionsEditor({ value, onChange, query = "", readOnly = false }: Props) {
+export default function PermissionsEditor({ value, onChange, query = "", readOnly = false, lockedPermissions = [] }: Props) {
+  const lockedSet = React.useMemo(() => new Set(lockedPermissions), [lockedPermissions]);
+  const isLocked = (p: string) => lockedSet.has(p);
   const grouped = React.useMemo(() => groupPermissions(PERMISSIONS), []);
   const filteredGrouped = React.useMemo(() => {
     if (!query) return grouped;
@@ -32,7 +37,7 @@ export default function PermissionsEditor({ value, onChange, query = "", readOnl
   const HIDDEN_GROUPS = React.useMemo(() => new Set(["tenant", "plan"]), [] as unknown as string[]);
 
   const toggle = (p: string, checked: boolean) => {
-    if (readOnly) return;
+    if (readOnly || isLocked(p)) return;
     if (checked) onChange(Array.from(new Set([...value, p])));
     else onChange(value.filter((x) => x !== p));
   };
@@ -86,7 +91,8 @@ export default function PermissionsEditor({ value, onChange, query = "", readOnl
                     onCheckedChange={(v) => {
                       if (readOnly) return;
                       if (v) onChange(Array.from(new Set([...value, ...items])));
-                      else onChange(value.filter((x) => !items.includes(x)));
+                      // keep locked permissions selected when deselecting a group
+                      else onChange(value.filter((x) => !items.includes(x) || isLocked(x)));
                     }}
                   />
                 </label>
@@ -97,10 +103,14 @@ export default function PermissionsEditor({ value, onChange, query = "", readOnl
                     <div
                       key={p}
                       className={"flex items-start gap-3 p-2 rounded " + (readOnly ? "bg-slate-50 dark:bg-slate-800" : "hover:bg-slate-50 dark:hover:bg-slate-700")}
+                      title={isLocked(p) ? "Requerido para el acceso de administrador" : undefined}
                     >
-                      <Checkbox checked={value.includes(p)} disabled={readOnly} onCheckedChange={(v) => toggle(p, Boolean(v))} />
+                      <Checkbox checked={value.includes(p) || isLocked(p)} disabled={readOnly || isLocked(p)} onCheckedChange={(v) => toggle(p, Boolean(v))} />
                       <div className="min-w-0">
-                        <div className="text-sm truncate">{formatPermissionLabel(p)}</div>
+                        <div className="text-sm truncate">
+                          {formatPermissionLabel(p)}
+                          {isLocked(p) && <span className="ml-1 text-[10px] uppercase text-amber-600">obligatorio</span>}
+                        </div>
                         <div className="text-xs text-muted-foreground">{p}</div>
                       </div>
                     </div>
