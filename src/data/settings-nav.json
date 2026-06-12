@@ -3,178 +3,70 @@
     "title": "Configuración",
     "sections": [
       {
-        "label": "",
+        "label": "MI CUENTA",
         "items": [
-          {
-            "id": "perfil-usuario",
-            "label": "Perfil del Usuario",
-            "path": "/setting/user-profile"
-          },
-          {
-            "id": "perfil-empresa",
-            "label": "Perfil de la Empresa",
-            "path": "/setting/company-profile"
-          },
-          {
-            "id": "billing",
-            "label": "Suscripción",
-            "path": "/setting/billing"
-          }
+          { "id": "perfil-usuario", "label": "Perfil del Usuario", "path": "/setting/user-profile", "icon": "User" },
+          { "id": "cambiar-contrasena", "label": "Cambiar Contraseña", "path": "/setting/change-password", "icon": "KeyRound" },
+          { "id": "mfa", "label": "Autenticación de Dos Factores", "path": "/setting/two-factor-authentication", "icon": "ShieldCheck" }
         ]
       },
       {
-        "label": "SEGURIDAD",
+        "label": "EMPRESA",
         "items": [
-          {
-            "id": "cambiar-contrasena",
-            "label": "Cambiar Contraseña",
-            "path": "/setting/change-password"
-          },
-          {
-            "id": "mfa",
-            "label": "Método de Autenticación de Dos Factores",
-            "path": "/setting/two-factor-authentication"
-          }
+          { "id": "perfil-empresa", "label": "Perfil de la Empresa", "path": "/setting/company-profile", "icon": "Building2" },
+          { "id": "billing", "label": "Suscripción", "path": "/setting/billing", "icon": "CreditCard" },
+          { "id": "departamentos", "label": "Departamentos", "path": "/setting/departamentos", "icon": "Network" },
+          { "id": "roles", "label": "Roles de Usuario", "path": "/setting/roles", "icon": "ShieldHalf" },
+          { "id": "campos-perfil", "label": "Campos de Perfil", "path": "/setting/campos-perfil", "icon": "ListChecks" }
         ]
       },
       {
-        "label": "MOBIL",
+        "label": "OPERACIONES",
         "items": [
-          {
-            "id": "mobil",
-            "label": "MOBIL",
-            "path": "/setting/mobil"
-          }
+          { "id": "publishing-sites", "label": "Puestos de Vigilancia", "path": "/setting/publishing-sites", "icon": "MapPinned" },
+          { "id": "keep-safe", "label": "Guardias", "path": "/setting/keep-safe", "icon": "Shield" },
+          { "id": "rondas-config", "label": "Configuración de Rondas", "path": "/setting/rondas", "icon": "Route" },
+          { "id": "tipos-incidentes", "label": "Tipos de Incidentes", "path": "/setting/tipos-incidentes", "icon": "AlertTriangle" },
+          { "id": "tipos-licencias", "label": "Tipos de Licencias", "path": "/setting/tipos-licencias", "icon": "BadgeCheck" },
+          { "id": "conjunto-habilidades", "label": "Conjuntos de Habilidades", "path": "/setting/conjunto-habilidades", "icon": "Wrench" }
         ]
       },
       {
-        "label": "RONDAS DE SEGURIDAD",
+        "label": "COMUNICACIONES",
         "items": [
-          {
-            "id": "rondas-config",
-            "label": "Configuraciones de Rondas",
-            "path": "/setting/rondas"
-          }
+          { "id": "notificaciones", "label": "Notificaciones", "path": "/setting/notifications", "icon": "Bell" },
+          { "id": "preferencias-correo", "label": "Preferencias de Correo", "path": "/setting/email-preferences", "icon": "Mail" },
+          { "id": "sms", "label": "Saldo SMS", "path": "/setting/sms", "icon": "MessageSquare" },
+          { "id": "mobil", "label": "App Móvil", "path": "/setting/mobil", "icon": "Smartphone" }
         ]
       },
       {
-        "label": "",
+        "label": "NÓMINA Y ASISTENCIA",
         "items": [
-          {
-            "id": "notificaciones",
-            "label": "Notificaciones",
-            "path": "/setting/notifications"
-          },
-          {
-            "id": "preferencias-correo",
-            "label": "Preferencias de correo",
-            "path": "/setting/email-preferences"
-          },
-          {
-            "id": "sms",
-            "label": "Saldo SMS",
-            "path": "/setting/sms"
-          },
-          {
-            "id": "politicas",
-            "label": "Políticas y Documentos",
-            "path": "/setting/politicas"
-          },
-          {
-            "id": "tipos-incidentes",
-            "label": "Tipos de Incidentes",
-            "path": "/setting/tipos-incidentes"
-          },
-          {
-            "id": "tipos-licencias",
-            "label": "Tipos de Licencias",
-            "path": "/setting/tipos-licencias"
-          },
-          {
-            "id": "conjunto-habilidades",
-            "label": "Conjuntos de Habilidades",
-            "path": "/setting/conjunto-habilidades"
-          },
-          {
-            "id": "departamentos",
-            "label": "Departamentos",
-            "path": "/setting/departamentos"
-          },
-          {
-            "id": "roles",
-            "label": "Roles de Usuario",
-            "path": "/setting/roles"
-          },
-          {
-            "id": "campos-perfil",
-            "label": "Campos de Perfil",
-            "path": "/setting/campos-perfil"
-          },
-          {
-            "id": "custom-reports",
-            "label": "Informes Personalizados",
-            "path": "/setting/custom-reports"
-          },
-          {
-            "id": "integraciones",
-            "label": "Integraciones",
-            "path": "/setting/integraciones"
-          },
-          {
-            "id": "payroll-setup",
-            "label": "Configuración de Nómina",
-            "path": "/setting/payroll-setup"
-          },
-          {
-            "id": "attendance-setup",
-            "label": "Asistencia / Time & Attendance",
-            "path": "/nomina/settings"
-          }
+          { "id": "payroll-setup", "label": "Configuración de Nómina", "path": "/setting/payroll-setup", "icon": "Wallet" },
+          { "id": "attendance-setup", "label": "Asistencia (Time & Attendance)", "path": "/nomina/settings", "icon": "Clock" }
         ]
       },
       {
-        "label": "CONFIGURACIÓN GLOBAL",
+        "label": "INFORMES",
         "items": [
-          {
-            "id": "publishing-sites",
-            "label": "Puestos de Vigilancia",
-            "path": "/setting/publishing-sites"
-          },
-          {
-            "id": "keep-safe",
-            "label": "Guards",
-            "path": "/setting/keep-safe"
-          }
+          { "id": "custom-reports", "label": "Informes Personalizados", "path": "/setting/custom-reports", "icon": "FileBarChart" },
+          { "id": "report-configuration", "label": "Configuración de Informes", "path": "/setting/report-configuration", "icon": "FileCog" }
         ]
       },
       {
-        "label": "",
+        "label": "INTEGRACIONES Y DESARROLLO",
         "items": [
-          {
-            "id": "report-configuration",
-            "label": "Configuración de Informes",
-            "path": "/setting/report-configuration"
-          },
-          {
-            "id": "other-settings",
-            "label": "Otras Configuraciones",
-            "path": "/setting/other-settings"
-          }
+          { "id": "integraciones", "label": "Integraciones", "path": "/setting/integraciones", "icon": "Plug" },
+          { "id": "access-token", "label": "Token de Acceso", "path": "/setting/access-token", "icon": "Code" },
+          { "id": "request-records", "label": "Solicitar Registros", "path": "/setting/request-records", "icon": "FileDown" }
         ]
       },
       {
-        "label": "ACCESO DE DESARROLLADOR",
+        "label": "OTROS",
         "items": [
-          {
-            "id": "access-token",
-            "label": "Token de acceso",
-            "path": "/setting/access-token"
-          },
-          {
-            "id": "request-records",
-            "label": "Solicitar registros",
-            "path": "/setting/request-records"
-          }
+          { "id": "politicas", "label": "Políticas y Documentos", "path": "/setting/politicas", "icon": "FileText" },
+          { "id": "other-settings", "label": "Otras Configuraciones", "path": "/setting/other-settings", "icon": "Settings2" }
         ]
       }
     ]
