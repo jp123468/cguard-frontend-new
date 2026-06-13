@@ -25,6 +25,7 @@ const socketOrigin = () => {
 const ON_KEY = "radioVoiceOn";
 
 export type RadioVoiceSnapshot = {
+  open: boolean; // is the widget panel showing (toggled from the header icon)
   on: boolean;
   state: VoiceState; // idle | connecting | connected | error
   joined: boolean;
@@ -60,6 +61,7 @@ function installGestureResume() {
 }
 
 let snap: RadioVoiceSnapshot = {
+  open: false,
   on: false,
   state: "idle",
   joined: false,
@@ -90,6 +92,14 @@ export function getRadioSnapshot(): RadioVoiceSnapshot {
 /** Tell the manager who "I" am (so the roster can mark the dispatcher). */
 export function setRadioSelf(id?: string) {
   selfId = id;
+}
+
+/** Show/hide the floating widget panel (driven by the header radio icon). */
+export function setWidgetOpen(open: boolean) {
+  set({ open });
+}
+export function toggleWidget() {
+  set({ open: !snap.open });
 }
 
 function doConnect() {

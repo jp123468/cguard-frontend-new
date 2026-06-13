@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Radio, Mic, Power, Users, ChevronDown, Loader2, Volume2 } from "lucide-react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { Radio, Mic, Users, X, Loader2, Volume2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   subscribeRadio,
   getRadioSnapshot,
   setRadioOn,
   setRadioSelf,
+  setWidgetOpen,
   restoreRadio,
   radioResume,
   radioStartTalk,
@@ -13,18 +14,17 @@ import {
 } from "@/lib/radioVoiceManager";
 
 /**
- * Persistent floating radio widget. Toggle the open channel on; it then stays
- * connected and listening (via the module-level manager) while you navigate the
- * CRM. Collapse it to a bubble — the channel keeps running.
+ * Floating radio panel, opened from the header radio icon. One general channel
+ * with an on/off switch — when on, the dispatcher listens and can push-to-talk,
+ * and the channel keeps running (in the module singleton) across navigation even
+ * after this panel is closed.
  */
 export default function RadioVoiceWidget() {
   const { user } = useAuth();
   const myId = (user as any)?.id || (user as any)?._id;
   const snap = useSyncExternalStore(subscribeRadio, getRadioSnapshot);
-  const [expanded, setExpanded] = useState(false);
   const pressedRef = useRef(false);
 
-  // Identify self + restore the on-state once.
   useEffect(() => {
     setRadioSelf(myId);
     restoreRadio();
@@ -34,10 +34,9 @@ export default function RadioVoiceWidget() {
   const connecting = snap.on && snap.state === "connecting";
   const live = snap.on && snap.joined;
 
-  const toggle = () => {
+  const toggleOn = () => {
     radioResume();
     setRadioOn(!snap.on);
-    if (!snap.on) setExpanded(true); // expand when turning on
   };
 
   const onPttDown = async (e: React.PointerEvent) => {
@@ -47,7 +46,7 @@ export default function RadioVoiceWidget() {
     radioResume();
     const r = await radioStartTalk();
     if (!pressedRef.current) { radioStopTalk(); return; }
-    if (!r.ok && r.busyWith) { /* manager surfaces hint via state */ }
+    void r;
   };
   const onPttUp = (e: React.PointerEvent) => {
     try { (e.currentTarget as any).releasePointerCapture?.(e.pointerId); } catch { /* ignore */ }
@@ -55,49 +54,34 @@ export default function RadioVoiceWidget() {
     radioStopTalk();
   };
 
-  // ----- Collapsed bubble -----
-  if (!expanded) {
-    const ring =
-      snap.speaker ? "ring-amber-400 animate-pulse" : live ? "ring-emerald-500" : snap.on ? "ring-amber-400" : "ring-transparent";
-    return (
-      <button
-        onClick={() => { radioResume(); setExpanded(true); }}
-        title={snap.on ? "Radio — Canal general" : "Radio (apagado)"}
-        className={`fixed bottom-4 left-4 z-[70] grid h-14 w-14 place-items-center rounded-full border border-border bg-card shadow-lg ring-2 ${ring} transition-all`}
-      >
-        <Radio size={22} className={snap.on ? "text-amber-500" : "text-muted-foreground"} />
-        {snap.on && (
-          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-emerald-500 px-1 text-[9px] font-bold text-white">
-            {snap.roster.length || ""}
-          </span>
-        )}
-        {snap.speaker && (
-          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-1.5 py-0.5 text-[8px] font-bold text-white">
-            <Mic size={9} className="inline" />
-          </span>
-        )}
-      </button>
-    );
-  }
+  if (!snap.open) return null;
 
-  // ----- Expanded panel -----
   return (
     <div
       onPointerDown={() => radioResume()}
-      className="fixed bottom-4 left-4 z-[70] w-72 rounded-2xl border border-border bg-card shadow-2xl"
+      className="fixed right-3 top-16 z-[80] w-80 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border bg-card shadow-2xl"
     >
+      {/* Header + on/off switch */}
       <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
         <Radio size={16} className={snap.on ? "text-amber-500" : "text-muted-foreground"} />
-        <span className="flex-1 text-sm font-semibold">Radio · Canal general</span>
+        <div className="flex-1">
+          <p className="text-sm font-semibold leading-tight">Canal general</p>
+          <p className="text-[11px] leading-tight text-muted-foreground">
+            {snap.on ? (live ? "En vivo · todos pueden hablar" : connecting ? "Conectando…" : "Sin conexión") : "Apagado"}
+          </p>
+        </div>
+        {/* On/off switch */}
         <button
-          onClick={toggle}
-          title={snap.on ? "Apagar radio" : "Encender radio"}
-          className={`grid h-7 w-7 place-items-center rounded-full ${snap.on ? "bg-emerald-500/15 text-emerald-600" : "bg-muted text-muted-foreground"}`}
+          role="switch"
+          aria-checked={snap.on}
+          onClick={toggleOn}
+          title={snap.on ? "Apagar canal" : "Encender canal"}
+          className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${snap.on ? "bg-emerald-500" : "bg-muted"}`}
         >
-          <Power size={15} />
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${snap.on ? "left-[22px]" : "left-0.5"}`} />
         </button>
-        <button onClick={() => setExpanded(false)} title="Minimizar" className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted">
-          <ChevronDown size={16} />
+        <button onClick={() => setWidgetOpen(false)} title="Cerrar" className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted">
+          <X size={16} />
         </button>
       </div>
 
@@ -105,30 +89,21 @@ export default function RadioVoiceWidget() {
         <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
           <Volume2 size={26} className="text-muted-foreground" />
           <p className="text-xs text-muted-foreground">
-            Enciende el radio para escuchar y hablar con los guardias en el canal general en tiempo real.
+            Enciende el canal general para escuchar y hablar con los guardias en tiempo real. Sigue activo aunque cierres esta ventana.
           </p>
-          <button onClick={toggle} className="mt-1 flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600">
-            <Power size={15} /> Encender radio
-          </button>
         </div>
       ) : (
         <div className="space-y-3 p-3">
-          {/* Status */}
-          <div className="flex items-center gap-2">
-            <span className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${live ? "bg-emerald-500/15 text-emerald-600" : "bg-muted text-muted-foreground"}`}>
-              {connecting ? <Loader2 size={12} className="animate-spin" /> : <span className={`h-2 w-2 rounded-full ${live ? "bg-emerald-500" : "bg-muted-foreground"}`} />}
-              {connecting ? "Conectando…" : live ? "En vivo" : "Sin conexión"}
-            </span>
-            <span className="ml-auto flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-              <Users size={12} /> {snap.roster.length}
-            </span>
-          </div>
-
           {/* Who's talking */}
-          <div className={`rounded-lg px-3 py-2 text-center text-sm font-semibold ${snap.speaker ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground"}`}>
-            {snap.speaker
-              ? `${snap.speaker.userId === myId ? "Estás hablando" : `${snap.speaker.name} está hablando`}…`
-              : live ? "Canal libre" : "Conectando…"}
+          <div className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold ${snap.speaker ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground"}`}>
+            <span>
+              {snap.speaker
+                ? `${snap.speaker.userId === myId ? "Estás hablando" : `${snap.speaker.name} está hablando`}…`
+                : live ? "Canal libre" : "Conectando…"}
+            </span>
+            <span className="flex items-center gap-1 text-[11px] font-normal">
+              {connecting ? <Loader2 size={12} className="animate-spin" /> : <Users size={12} />} {snap.roster.length}
+            </span>
           </div>
 
           {/* PTT */}

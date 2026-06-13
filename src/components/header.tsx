@@ -16,7 +16,10 @@ import {
   Star,
   StoreIcon,
   ArrowRight,
+  Radio,
 } from "lucide-react";
+import { useSyncExternalStore } from "react";
+import { subscribeRadio, getRadioSnapshot, toggleWidget, radioResume } from "@/lib/radioVoiceManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import { useTranslation } from 'react-i18next';
@@ -57,6 +60,7 @@ export default function Header({
   const { theme, setTheme } = useThemeContext();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const radio = useSyncExternalStore(subscribeRadio, getRadioSnapshot);
 
   const userName = getDisplayName(user);
   const userEmail = user?.email ?? "";
@@ -181,6 +185,19 @@ export default function Header({
             title={t('header.help')}
           >
             <HelpCircle className="w-4.5 h-4.5 text-muted-foreground" />
+          </button>
+
+          {/* Radio: opens the persistent general-channel widget. */}
+          <button
+            onClick={() => { radioResume(); toggleWidget(); }}
+            className="relative p-2 rounded-lg hover:bg-accent transition-colors"
+            aria-label="Radio"
+            title="Radio · Canal general"
+          >
+            <Radio className={`w-4.5 h-4.5 ${radio.on ? "text-amber-500" : "text-muted-foreground"}`} />
+            {radio.on && (
+              <span className={`absolute right-1 top-1 h-2 w-2 rounded-full ring-2 ring-card ${radio.speaker ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} />
+            )}
           </button>
 
           {/* Real-time notification bell */}
