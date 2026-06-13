@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
-import { MessageSquareText, Send, Plus, Search, Loader2, X, Check, CheckCheck, Paperclip, Play } from "lucide-react";
+import { MessageSquareText, Send, Plus, Search, Loader2, X, Check, CheckCheck, Paperclip, Play, Trash2 } from "lucide-react";
 import { messageService, type MessageAttachment } from "@/lib/api/messageService";
 import securityGuardService from "@/lib/api/securityGuardService";
 import { fileUrlFromPrivate } from "@/lib/fileUrl";
@@ -93,6 +93,21 @@ export default function MessengerPage() {
     } finally { setSending(false); }
   };
 
+  const onDeleteConversation = async () => {
+    if (!selected) return;
+    if (!window.confirm(`¿Eliminar la conversación con ${selected.recipientName}? Esta acción no se puede deshacer.`)) return;
+    const id = selected.id;
+    try {
+      await messageService.deleteConversation(id);
+      setConversations((cs) => cs.filter((c) => c.id !== id));
+      setSelected(null);
+      setMessages([]);
+      toast.success("Conversación eliminada");
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || "No se pudo eliminar la conversación");
+    }
+  };
+
   const onPickFiles = async (files: FileList | null) => {
     if (!files || !files.length) return;
     setUploading(true);
@@ -164,6 +179,13 @@ export default function MessengerPage() {
                     <p className="truncate text-sm font-bold text-foreground">{selected.recipientName}</p>
                     <p className="text-[11px] text-muted-foreground">{selected.recipientType === "guard" ? "Guardia" : "Cliente"}{selected.isOneWay ? " · Solo lectura" : ""}</p>
                   </div>
+                  <button
+                    onClick={onDeleteConversation}
+                    title="Eliminar conversación"
+                    className="ml-auto grid h-9 w-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
 
                 <div ref={threadRef} className="flex-1 space-y-2 overflow-auto p-4">

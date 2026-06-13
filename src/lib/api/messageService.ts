@@ -79,6 +79,11 @@ export const messageService = {
     return unwrap(await api.patch(`/tenant/${t}/message/${id}`, { data: patch }));
   },
 
+  async deleteConversation(id: string) {
+    const t = getTenantId();
+    return unwrap(await api.delete(`/tenant/${t}/message/${id}`));
+  },
+
   async unreadCount() {
     const t = getTenantId();
     return unwrap(await api.get(`/tenant/${t}/message-unread`));
