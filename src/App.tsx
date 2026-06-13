@@ -1666,6 +1666,7 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/billing" element={<Navigate to="/setting/billing" replace />} />
               <Route
                 path="/setting/billing"
                 element={
