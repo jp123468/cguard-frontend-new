@@ -98,6 +98,7 @@ import AlarmCaseDetail from "./pages/admin/alarm/AlarmCaseDetail"
 import AlarmReports from "./pages/admin/alarm/AlarmReports"
 import AlarmAnalytics from "./pages/admin/alarm/AlarmAnalytics"
 import AuditLogs from "./pages/admin/security/AuditLogs"
+import SystemLogs from "./pages/admin/security/SystemLogs"
 import GeneratePayroll from "./pages/admin/payroll/GeneratePayroll"
 import PastPayroll from "./pages/admin/payroll/PastPayroll"
 import OvertimeMultiplier from "./pages/admin/payroll/OvertimeMultiplier"
@@ -943,6 +944,7 @@ export default function App() {
               {/* FIN CENTRAL DE MONITOREO */}
 
               <Route path="/security/audit" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
+              <Route path="/registros-sistema" element={<ProtectedRoute><SystemLogs /></ProtectedRoute>} />
               {/* FIN ANALITICAS */}
 
               <Route
