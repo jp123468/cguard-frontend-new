@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
-import { ScrollText, RefreshCw, Search, ChevronDown, ChevronRight, PlusCircle, PencilLine, Trash2, Activity } from "lucide-react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { ScrollText, RefreshCw, Search, ChevronDown, ChevronRight, PlusCircle, PencilLine, Trash2, Activity, Loader2 } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import { Card } from "@/components/ui/card";
 import { ApiService } from "@/services/api/apiService";
@@ -14,6 +14,8 @@ type LogRow = {
   timestamp: string;
   values?: any;
 };
+
+const PAGE_SIZE = 50;
 
 const fmt = (d?: string) => {
   try {
@@ -41,30 +43,88 @@ const FILTERS = [
 ];
 
 export default function SystemLogs() {
-  const [rows, setRows] = useState<LogRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<LogRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [action, setAction] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+
   const tid = () => localStorage.getItem("tenantId") || "";
+  const itemsRef = useRef<LogRow[]>([]);
+  const loadingRef = useRef(false);
+  const reqIdRef = useRef(0);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const load = () => {
+  // Debounce the search box (server-side search).
+  useEffect(() => {
+    const h = setTimeout(() => setDebouncedQ(q), 350);
+    return () => clearTimeout(h);
+  }, [q]);
+
+  const load = async (reset: boolean) => {
+    if (loadingRef.current) return;
+    if (!reset && itemsRef.current.length >= total && total > 0) return; // no more
+    loadingRef.current = true;
     setLoading(true);
-    ApiService.get(`/tenant/${tid()}/audit-log?limit=500&orderBy=timestamp_DESC`)
-      .then((r: any) => setRows(Array.isArray(r) ? r : (r?.rows ?? [])))
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false));
-  };
-  useEffect(() => { load(); }, []);
+    const reqId = ++reqIdRef.current;
 
-  const filtered = useMemo(() => {
-    return rows.filter((r) => {
-      if (action && !String(r.action || "").toLowerCase().includes(action)) return false;
-      if (!q.trim()) return true;
-      const blob = `${r.entityName} ${r.entityId} ${r.action} ${r.createdByEmail || ""}`.toLowerCase();
-      return blob.includes(q.toLowerCase());
-    });
-  }, [rows, q, action]);
+    const offset = reset ? 0 : itemsRef.current.length;
+    const params = new URLSearchParams();
+    params.set("limit", String(PAGE_SIZE));
+    params.set("offset", String(offset));
+    params.set("orderBy", "timestamp_DESC");
+    if (action) params.set("filter[action]", action);
+    if (debouncedQ.trim()) params.set("filter[search]", debouncedQ.trim());
+
+    try {
+      const r: any = await ApiService.get(`/tenant/${tid()}/audit-log?${params.toString()}`);
+      if (reqId !== reqIdRef.current) return; // a newer request superseded this one
+      const rows: LogRow[] = Array.isArray(r) ? r : (r?.rows ?? []);
+      const count: number = typeof r?.count === "number" ? r.count : rows.length;
+      setTotal(count);
+      setItems((prev) => {
+        const next = reset ? rows : [...prev, ...rows];
+        itemsRef.current = next;
+        return next;
+      });
+    } catch {
+      if (reqId === reqIdRef.current && reset) {
+        setItems([]); itemsRef.current = []; setTotal(0);
+      }
+    } finally {
+      if (reqId === reqIdRef.current) setLoading(false);
+      loadingRef.current = false;
+    }
+  };
+
+  // Reset + reload whenever the filters change.
+  useEffect(() => {
+    setExpanded(null);
+    itemsRef.current = [];
+    setItems([]);
+    setTotal(0);
+    load(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [action, debouncedQ]);
+
+  // Infinite scroll: load the next page when the sentinel comes into view.
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) load(false);
+      },
+      { rootMargin: "300px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
+
+  const hasMore = items.length < total;
 
   return (
     <AppLayout>
@@ -75,7 +135,7 @@ export default function SystemLogs() {
               <ScrollText className="size-5 text-[#C8860A]" /> Registros del Sistema
             </h1>
             <p className="text-sm text-muted-foreground">
-              Todas las acciones (creaciones, cambios y eliminaciones) realizadas en la plataforma — quién, qué y cuándo.
+              Todas las acciones (creaciones, cambios y eliminaciones) de esta empresa — quién, qué y cuándo.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -88,8 +148,8 @@ export default function SystemLogs() {
                 className="h-9 w-64 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-[#C8860A] focus:outline-none"
               />
             </div>
-            <button onClick={load} className="grid h-9 w-9 place-items-center rounded-lg border border-input text-muted-foreground hover:text-foreground" title="Recargar">
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            <button onClick={() => load(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-input text-muted-foreground hover:text-foreground" title="Recargar">
+              <RefreshCw className={`size-4 ${loading && items.length === 0 ? "animate-spin" : ""}`} />
             </button>
           </div>
         </div>
@@ -108,7 +168,9 @@ export default function SystemLogs() {
               {f.label}
             </button>
           ))}
-          <span className="ml-auto self-center text-xs text-muted-foreground">{filtered.length} registro(s)</span>
+          <span className="ml-auto self-center text-xs text-muted-foreground">
+            {items.length}{total ? ` / ${total}` : ""} registro(s)
+          </span>
         </div>
 
         <Card className="overflow-hidden">
@@ -124,11 +186,11 @@ export default function SystemLogs() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+                {loading && items.length === 0 ? (
                   <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">Cargando…</td></tr>
-                ) : filtered.length === 0 ? (
+                ) : items.length === 0 ? (
                   <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">Sin registros.</td></tr>
-                ) : filtered.map((r) => {
+                ) : items.map((r) => {
                   const m = actionMeta(r.action);
                   const isOpen = expanded === r.id;
                   return (
@@ -167,6 +229,17 @@ export default function SystemLogs() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Infinite-scroll sentinel + loader */}
+          <div ref={sentinelRef} className="flex items-center justify-center py-4 text-xs text-muted-foreground">
+            {loading && items.length > 0 ? (
+              <span className="flex items-center gap-2"><Loader2 className="size-4 animate-spin" /> Cargando más…</span>
+            ) : hasMore ? (
+              <span>Desplázate para ver más</span>
+            ) : items.length > 0 ? (
+              <span>— Fin de los registros —</span>
+            ) : null}
           </div>
         </Card>
       </div>
