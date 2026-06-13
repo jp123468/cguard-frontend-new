@@ -6,10 +6,11 @@ import { Loader2, CreditCard, Users, CheckCircle2, Clock, AlertTriangle, Sparkle
 import AppLayout from "@/layouts/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { subscriptionBillingService, BillingSummary } from "@/lib/api/subscriptionBillingService";
+import { subscriptionBillingService, BillingSummary, BillableUser } from "@/lib/api/subscriptionBillingService";
 
 function money(cents: number, currency = "USD") {
-  return new Intl.NumberFormat("es-EC", { style: "currency", currency }).format((cents || 0) / 100);
+  // en-US → dot as decimal separator (e.g. $12.50), comma as thousands.
+  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format((cents || 0) / 100);
 }
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
@@ -23,6 +24,8 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
 export default function BillingPage() {
   const { t } = useTranslation();
   const [data, setData] = useState<BillingSummary | null>(null);
+  const [users, setUsers] = useState<BillableUser[]>([]);
+  const [showUsers, setShowUsers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(false);
 
@@ -34,6 +37,12 @@ export default function BillingPage() {
       toast.error(t("billing.loadError", { defaultValue: "No se pudo cargar la facturación" }));
     } finally {
       setLoading(false);
+    }
+    // Non-blocking: the seat list is supplementary to the summary.
+    try {
+      setUsers(await subscriptionBillingService.users());
+    } catch {
+      /* ignore — summary already shows the seat count */
     }
   };
 
@@ -125,12 +134,60 @@ export default function BillingPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between border-t pt-3 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => setShowUsers((v) => !v)}
+                    className="flex w-full items-center justify-between border-t pt-3 text-sm"
+                  >
                     <span className="flex items-center gap-2 text-muted-foreground">
                       <Users size={15} /> {t("billing.seats", { defaultValue: "Usuarios facturables" })}
                     </span>
-                    <span className="font-semibold text-foreground">{data.seats}</span>
-                  </div>
+                    <span className="flex items-center gap-1 font-semibold text-foreground">
+                      {data.seats}
+                      <span className="text-xs font-normal text-[#C8860A]">
+                        {showUsers
+                          ? t("billing.hideUsers", { defaultValue: "ocultar" })
+                          : t("billing.viewUsers", { defaultValue: "ver" })}
+                      </span>
+                    </span>
+                  </button>
+
+                  {showUsers && (
+                    <div className="mt-2 max-h-72 overflow-y-auto rounded-lg border divide-y">
+                      {users.length === 0 ? (
+                        <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+                          {t("billing.noUsers", { defaultValue: "Sin usuarios" })}
+                        </div>
+                      ) : (
+                        users.map((u) => (
+                          <div key={u.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-medium text-foreground">{u.name}</div>
+                              {u.email && <div className="truncate text-xs text-muted-foreground">{u.email}</div>}
+                            </div>
+                            <div className="flex shrink-0 items-center gap-2">
+                              {u.roles[0] && (
+                                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                  {u.roles[0]}
+                                </span>
+                              )}
+                              <span
+                                className={
+                                  "h-2 w-2 rounded-full " +
+                                  (u.status === "active"
+                                    ? "bg-green-500"
+                                    : u.status === "invited" || u.status === "pending"
+                                    ? "bg-amber-400"
+                                    : "bg-slate-300")
+                                }
+                                title={u.status || ""}
+                              />
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

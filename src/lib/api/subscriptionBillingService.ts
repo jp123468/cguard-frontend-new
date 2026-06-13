@@ -27,9 +27,21 @@ export interface BillingSummary {
   trialDays: number;
 }
 
+export interface BillableUser {
+  id: string;
+  name: string;
+  email: string | null;
+  roles: string[];
+  status: string | null;
+}
+
 export const subscriptionBillingService = {
   summary(): Promise<BillingSummary> {
     return ApiService.get(`/tenant/${tenantId()}/subscription/summary`);
+  },
+  /** The users counted as billable seats (who the tenant pays for). */
+  users(): Promise<BillableUser[]> {
+    return ApiService.get(`/tenant/${tenantId()}/subscription/users`);
   },
   /** Returns a Stripe Checkout URL to redirect to. */
   checkout(): Promise<{ url: string; id: string }> {
