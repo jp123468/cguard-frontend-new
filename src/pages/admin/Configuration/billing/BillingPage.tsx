@@ -28,6 +28,7 @@ export default function BillingPage() {
   const [showUsers, setShowUsers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -68,6 +69,19 @@ export default function BillingPage() {
       toast.error(e?.response?.data?.message || e?.message || t("billing.checkoutError", { defaultValue: "No se pudo iniciar el pago" }));
     } finally {
       setActivating(false);
+    }
+  };
+
+  const openPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const res = await subscriptionBillingService.portal();
+      if (res?.url) window.location.href = res.url;
+      else toast.error(t("billing.portalError", { defaultValue: "No se pudo abrir el portal de pagos" }));
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || e?.message || t("billing.portalError", { defaultValue: "No se pudo abrir el portal de pagos" }));
+    } finally {
+      setPortalLoading(false);
     }
   };
 
@@ -238,11 +252,31 @@ export default function BillingPage() {
               </Card>
 
               {/* CTA */}
-              {!isActive && (
-                <div className="flex justify-end">
-                  <Button onClick={activate} disabled={activating} className="bg-[#f36a6d] text-white hover:bg-[#e85b5f]">
-                    {activating ? <Loader2 className="mr-2 animate-spin" size={16} /> : <CreditCard className="mr-2" size={16} />}
-                    {t("billing.activate", { defaultValue: "Activar suscripción" })}
+              {!isActive ? (
+                <div className="space-y-2">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    <Button variant="outline" onClick={openPortal} disabled={portalLoading}>
+                      {portalLoading ? <Loader2 className="mr-2 animate-spin" size={16} /> : <CreditCard className="mr-2" size={16} />}
+                      {t("billing.manageCard", { defaultValue: "Agregar / administrar tarjeta" })}
+                    </Button>
+                    <Button onClick={activate} disabled={activating} className="bg-[#f36a6d] text-white hover:bg-[#e85b5f]">
+                      {activating ? <Loader2 className="mr-2 animate-spin" size={16} /> : <CreditCard className="mr-2" size={16} />}
+                      {t("billing.activate", { defaultValue: "Activar suscripción" })}
+                    </Button>
+                  </div>
+                  <p className="text-right text-xs text-muted-foreground">
+                    {t("billing.autopayNote", { defaultValue: "Tu tarjeta se guarda de forma segura en Stripe y se cobra automáticamente cada mes." })}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CheckCircle2 size={14} className="text-green-600" />
+                    {t("billing.autopayOn", { defaultValue: "Autopago activo — se cobra automáticamente cada mes." })}
+                  </p>
+                  <Button variant="outline" onClick={openPortal} disabled={portalLoading}>
+                    {portalLoading ? <Loader2 className="mr-2 animate-spin" size={16} /> : <CreditCard className="mr-2" size={16} />}
+                    {t("billing.managePayment", { defaultValue: "Administrar método de pago" })}
                   </Button>
                 </div>
               )}

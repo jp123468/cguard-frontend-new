@@ -47,6 +47,10 @@ export const subscriptionBillingService = {
   checkout(): Promise<{ url: string; id: string }> {
     return ApiService.post(`/tenant/${tenantId()}/subscription/checkout`, {});
   },
+  /** Returns a Stripe Customer Portal URL to add/update the card & manage autopay. */
+  portal(): Promise<{ url: string }> {
+    return ApiService.post(`/tenant/${tenantId()}/subscription/portal`, {});
+  },
 };
 
 export default subscriptionBillingService;
