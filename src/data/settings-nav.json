@@ -5,68 +5,68 @@
       {
         "label": "MI CUENTA",
         "items": [
-          { "id": "perfil-usuario", "label": "Perfil del Usuario", "path": "/setting/user-profile", "icon": "User" },
-          { "id": "cambiar-contrasena", "label": "Cambiar Contraseña", "path": "/setting/change-password", "icon": "KeyRound" },
-          { "id": "mfa", "label": "Autenticación de Dos Factores", "path": "/setting/two-factor-authentication", "icon": "ShieldCheck" }
+          { "id": "perfil-usuario", "label": "Perfil del Usuario", "path": "/setting/user-profile", "icon": "User", "desc": "Tus datos personales y foto." },
+          { "id": "cambiar-contrasena", "label": "Cambiar Contraseña", "path": "/setting/change-password", "icon": "KeyRound", "desc": "Actualiza tu contraseña de acceso." },
+          { "id": "mfa", "label": "Autenticación de Dos Factores", "path": "/setting/two-factor-authentication", "icon": "ShieldCheck", "desc": "Añade una capa extra de seguridad." }
         ]
       },
       {
         "label": "EMPRESA",
         "items": [
-          { "id": "perfil-empresa", "label": "Perfil de la Empresa", "path": "/setting/company-profile", "icon": "Building2" },
-          { "id": "billing", "label": "Suscripción", "path": "/setting/billing", "icon": "CreditCard" },
-          { "id": "departamentos", "label": "Departamentos", "path": "/setting/departamentos", "icon": "Network" },
-          { "id": "roles", "label": "Roles de Usuario", "path": "/setting/roles", "icon": "ShieldHalf" },
-          { "id": "campos-perfil", "label": "Campos de Perfil", "path": "/setting/campos-perfil", "icon": "ListChecks" }
+          { "id": "perfil-empresa", "label": "Perfil de la Empresa", "path": "/setting/company-profile", "icon": "Building2", "desc": "Datos, logo e identidad de la empresa." },
+          { "id": "billing", "label": "Suscripción", "path": "/setting/billing", "icon": "CreditCard", "desc": "Plan, facturación y pagos." },
+          { "id": "departamentos", "label": "Departamentos", "path": "/setting/departamentos", "icon": "Network", "desc": "Estructura organizacional interna." },
+          { "id": "roles", "label": "Roles de Usuario", "path": "/setting/roles", "icon": "ShieldHalf", "desc": "Define roles y permisos por tenant." },
+          { "id": "campos-perfil", "label": "Campos de Perfil", "path": "/setting/campos-perfil", "icon": "ListChecks", "desc": "Personaliza los campos de los perfiles." }
         ]
       },
       {
         "label": "OPERACIONES",
         "items": [
-          { "id": "publishing-sites", "label": "Puestos de Vigilancia", "path": "/setting/publishing-sites", "icon": "MapPinned" },
-          { "id": "keep-safe", "label": "Guardias", "path": "/setting/keep-safe", "icon": "Shield" },
-          { "id": "rondas-config", "label": "Configuración de Rondas", "path": "/setting/rondas", "icon": "Route" },
-          { "id": "tipos-incidentes", "label": "Tipos de Incidentes", "path": "/setting/tipos-incidentes", "icon": "AlertTriangle" },
-          { "id": "tipos-licencias", "label": "Tipos de Licencias", "path": "/setting/tipos-licencias", "icon": "BadgeCheck" },
-          { "id": "conjunto-habilidades", "label": "Conjuntos de Habilidades", "path": "/setting/conjunto-habilidades", "icon": "Wrench" }
+          { "id": "publishing-sites", "label": "Puestos de Vigilancia", "path": "/setting/publishing-sites", "icon": "MapPinned", "desc": "Ubicaciones y puestos de servicio." },
+          { "id": "keep-safe", "label": "Guardias", "path": "/setting/keep-safe", "icon": "Shield", "desc": "Configuración del personal de seguridad." },
+          { "id": "rondas-config", "label": "Configuración de Rondas", "path": "/setting/rondas", "icon": "Route", "desc": "Parámetros de rondas y patrullaje." },
+          { "id": "tipos-incidentes", "label": "Tipos de Incidentes", "path": "/setting/tipos-incidentes", "icon": "AlertTriangle", "desc": "Categorías para reportar incidentes." },
+          { "id": "tipos-licencias", "label": "Tipos de Licencias", "path": "/setting/tipos-licencias", "icon": "BadgeCheck", "desc": "Licencias y certificaciones válidas." },
+          { "id": "conjunto-habilidades", "label": "Conjuntos de Habilidades", "path": "/setting/conjunto-habilidades", "icon": "Wrench", "desc": "Habilidades asignables a guardias." }
         ]
       },
       {
         "label": "COMUNICACIONES",
         "items": [
-          { "id": "notificaciones", "label": "Notificaciones", "path": "/setting/notifications", "icon": "Bell" },
-          { "id": "preferencias-correo", "label": "Preferencias de Correo", "path": "/setting/email-preferences", "icon": "Mail" },
-          { "id": "sms", "label": "Saldo SMS", "path": "/setting/sms", "icon": "MessageSquare" },
-          { "id": "mobil", "label": "App Móvil", "path": "/setting/mobil", "icon": "Smartphone" }
+          { "id": "notificaciones", "label": "Notificaciones", "path": "/setting/notifications", "icon": "Bell", "desc": "Alertas y avisos del sistema." },
+          { "id": "preferencias-correo", "label": "Preferencias de Correo", "path": "/setting/email-preferences", "icon": "Mail", "desc": "Qué correos recibes y cuándo." },
+          { "id": "sms", "label": "Saldo SMS", "path": "/setting/sms", "icon": "MessageSquare", "desc": "Consumo y recarga de mensajes SMS." },
+          { "id": "mobil", "label": "App Móvil", "path": "/setting/mobil", "icon": "Smartphone", "desc": "Ajustes de la aplicación móvil." }
         ]
       },
       {
         "label": "NÓMINA Y ASISTENCIA",
         "items": [
-          { "id": "payroll-setup", "label": "Configuración de Nómina", "path": "/setting/payroll-setup", "icon": "Wallet" },
-          { "id": "attendance-setup", "label": "Asistencia (Time & Attendance)", "path": "/nomina/settings", "icon": "Clock" }
+          { "id": "payroll-setup", "label": "Configuración de Nómina", "path": "/setting/payroll-setup", "icon": "Wallet", "desc": "Periodos, conceptos y reglas de pago." },
+          { "id": "attendance-setup", "label": "Asistencia (Time & Attendance)", "path": "/nomina/settings", "icon": "Clock", "desc": "Geocercas, ventanas y aprobación." }
         ]
       },
       {
         "label": "INFORMES",
         "items": [
-          { "id": "custom-reports", "label": "Informes Personalizados", "path": "/setting/custom-reports", "icon": "FileBarChart" },
-          { "id": "report-configuration", "label": "Configuración de Informes", "path": "/setting/report-configuration", "icon": "FileCog" }
+          { "id": "custom-reports", "label": "Informes Personalizados", "path": "/setting/custom-reports", "icon": "FileBarChart", "desc": "Crea y administra informes a medida." },
+          { "id": "report-configuration", "label": "Configuración de Informes", "path": "/setting/report-configuration", "icon": "FileCog", "desc": "Plantillas y opciones de informes." }
         ]
       },
       {
         "label": "INTEGRACIONES Y DESARROLLO",
         "items": [
-          { "id": "integraciones", "label": "Integraciones", "path": "/setting/integraciones", "icon": "Plug" },
-          { "id": "access-token", "label": "Token de Acceso", "path": "/setting/access-token", "icon": "Code" },
-          { "id": "request-records", "label": "Solicitar Registros", "path": "/setting/request-records", "icon": "FileDown" }
+          { "id": "integraciones", "label": "Integraciones", "path": "/setting/integraciones", "icon": "Plug", "desc": "Conecta servicios y herramientas externas." },
+          { "id": "access-token", "label": "Token de Acceso", "path": "/setting/access-token", "icon": "Code", "desc": "Credenciales para la API." },
+          { "id": "request-records", "label": "Solicitar Registros", "path": "/setting/request-records", "icon": "FileDown", "desc": "Exporta o solicita tus datos." }
         ]
       },
       {
         "label": "OTROS",
         "items": [
-          { "id": "politicas", "label": "Políticas y Documentos", "path": "/setting/politicas", "icon": "FileText" },
-          { "id": "other-settings", "label": "Otras Configuraciones", "path": "/setting/other-settings", "icon": "Settings2" }
+          { "id": "politicas", "label": "Políticas y Documentos", "path": "/setting/politicas", "icon": "FileText", "desc": "Políticas internas y documentos legales." },
+          { "id": "other-settings", "label": "Otras Configuraciones", "path": "/setting/other-settings", "icon": "Settings2", "desc": "Ajustes adicionales del sistema." }
         ]
       }
     ]

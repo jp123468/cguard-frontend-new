@@ -27,6 +27,7 @@ import LicenseTypePage from "./pages/admin/Configuration/types-licenses/Licenses
 import DepartmentPage from "./pages/admin/Configuration/department/DepartmentPage"
 import SkillSetsPage from "./pages/admin/Configuration/skill-sets/SkillSetsPage"
 import UserRolesPage from "./pages/admin/Configuration/user-roles/UserRolesPage"
+import SettingsHome from "./pages/admin/Configuration/SettingsHome"
 import IntegrationsList from "./pages/admin/Configuration/integrations/IntegrationsList"
 import ProfileFieldsPage from "./pages/admin/Configuration/profile-fields/ProfileFieldsPage"
 import IntegrationDetail from "./pages/admin/Configuration/integrations/IntegrationDetail"
@@ -1569,6 +1570,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <ProfileFieldsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting"
+                element={
+                  <ProtectedRoute>
+                    <SettingsHome />
                   </ProtectedRoute>
                 }
               />

@@ -2,50 +2,13 @@ import { useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import NAVS from "../../src/data/settings-nav.json";
 import { useTranslation } from "react-i18next";
-import {
-  Search,
-  Settings,
-  User,
-  KeyRound,
-  ShieldCheck,
-  Building2,
-  CreditCard,
-  Network,
-  ShieldHalf,
-  ListChecks,
-  MapPinned,
-  Shield,
-  Route,
-  AlertTriangle,
-  BadgeCheck,
-  Wrench,
-  Bell,
-  Mail,
-  MessageSquare,
-  Smartphone,
-  Wallet,
-  Clock,
-  FileBarChart,
-  FileCog,
-  Plug,
-  Code,
-  FileDown,
-  FileText,
-  Settings2,
-  type LucideIcon,
-} from "lucide-react";
+import { Search, Settings } from "lucide-react";
+import { settingsIcon } from "@/config/settingsIcons";
 
 type SubItem = { id: string; label: string; path: string; icon?: string };
 type Section = { label?: string; items: SubItem[] };
 type NavDef = { title?: string; sections: Section[] };
 type NavRecord = Record<string, NavDef>;
-
-const ICONS: Record<string, LucideIcon> = {
-  User, KeyRound, ShieldCheck, Building2, CreditCard, Network, ShieldHalf,
-  ListChecks, MapPinned, Shield, Route, AlertTriangle, BadgeCheck, Wrench,
-  Bell, Mail, MessageSquare, Smartphone, Wallet, Clock, FileBarChart, FileCog,
-  Plug, Code, FileDown, FileText, Settings2,
-};
 
 export default function SubSidebar({
   navKey,
@@ -140,7 +103,7 @@ export default function SubSidebar({
 
                 <ul className="space-y-0.5">
                   {sec.items.map((item) => {
-                    const Icon = (item.icon && ICONS[item.icon]) || Settings;
+                    const Icon = settingsIcon(item.icon);
                     return (
                       <li key={item.id}>
                         <NavLink
