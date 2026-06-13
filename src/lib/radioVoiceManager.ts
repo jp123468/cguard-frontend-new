@@ -1,0 +1,149 @@
+/**
+ * Persistent radio voice manager (singleton, outside React).
+ *
+ * The CRM mounts its layout per-page, so any widget inside it remounts on every
+ * navigation. To keep the open radio channel ALIVE while the dispatcher works
+ * elsewhere, the socket + audio live here at module scope — immune to React
+ * remounts. The floating widget is just a thin subscriber. Toggling on/off (and
+ * surviving a full reload) is persisted in localStorage.
+ *
+ * It joins the same tenant-wide channel (`rc-voice:<tenantId>`) the guards use,
+ * so the dispatcher listens to every station/guard on one frequency.
+ */
+import { VoiceChannel, type VoiceMember, type VoiceSpeaker, type VoiceState } from "./voiceChannel";
+import { getAuthToken } from "./api";
+
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) || "";
+const socketOrigin = () => {
+  try {
+    return new URL(API_URL || window.location.origin, window.location.origin).origin;
+  } catch {
+    return window.location.origin;
+  }
+};
+
+const ON_KEY = "radioVoiceOn";
+
+export type RadioVoiceSnapshot = {
+  on: boolean;
+  state: VoiceState; // idle | connecting | connected | error
+  joined: boolean;
+  roster: VoiceMember[];
+  speaker: VoiceSpeaker;
+  talking: boolean;
+  hint: string | null;
+};
+
+let vc: VoiceChannel | null = null;
+let joinTimer: any = null;
+let selfId: string | undefined;
+
+let snap: RadioVoiceSnapshot = {
+  on: false,
+  state: "idle",
+  joined: false,
+  roster: [],
+  speaker: null,
+  talking: false,
+  hint: null,
+};
+
+const listeners = new Set<() => void>();
+function emit() {
+  snap = { ...snap };
+  listeners.forEach((l) => { try { l(); } catch { /* ignore */ } });
+}
+function set(p: Partial<RadioVoiceSnapshot>) {
+  Object.assign(snap, p);
+  emit();
+}
+
+export function subscribeRadio(l: () => void): () => void {
+  listeners.add(l);
+  return () => { listeners.delete(l); };
+}
+export function getRadioSnapshot(): RadioVoiceSnapshot {
+  return snap;
+}
+
+/** Tell the manager who "I" am (so the roster can mark the dispatcher). */
+export function setRadioSelf(id?: string) {
+  selfId = id;
+}
+
+function doConnect() {
+  if (vc) return;
+  const tenantId = localStorage.getItem("tenantId") || "";
+  const v = new VoiceChannel();
+  vc = v;
+  set({ state: "connecting", hint: null });
+  v.connect(
+    { url: socketOrigin(), path: "/api/socket.io", token: getAuthToken() || "", tenantId, selfId },
+    {
+      onState: (s) => set({ state: s }),
+      onPresence: (r) => set({ roster: r }),
+      onSpeaker: (sp) => set({ speaker: sp }),
+      onError: (m) => set({ hint: m }),
+    },
+  );
+  v.resume();
+  // Join once the socket connects; keep retrying quietly.
+  if (joinTimer) clearInterval(joinTimer);
+  joinTimer = setInterval(async () => {
+    if (!vc) { clearInterval(joinTimer); joinTimer = null; return; }
+    if (vc.connected && !vc.joined) {
+      try {
+        const r = await vc.join();
+        set({ joined: true, roster: r.roster, speaker: r.speaker, hint: null });
+      } catch {
+        set({ hint: "No se pudo unir al canal." });
+      }
+    } else if (vc.joined) {
+      clearInterval(joinTimer);
+      joinTimer = null;
+    }
+  }, 400);
+}
+
+function doDisconnect() {
+  if (joinTimer) { clearInterval(joinTimer); joinTimer = null; }
+  try { vc?.disconnect(); } catch { /* ignore */ }
+  vc = null;
+  set({ state: "idle", joined: false, roster: [], speaker: null, talking: false, hint: null });
+}
+
+/** Turn the radio on/off. Persists across reloads. */
+export function setRadioOn(on: boolean) {
+  try { localStorage.setItem(ON_KEY, on ? "1" : "0"); } catch { /* ignore */ }
+  if (on === snap.on && (on ? vc : !vc)) { set({ on }); return; }
+  set({ on });
+  if (on) doConnect();
+  else doDisconnect();
+}
+
+/** Restore the on-state after a reload / first mount (best-effort). */
+export function restoreRadio() {
+  let was = false;
+  try { was = localStorage.getItem(ON_KEY) === "1"; } catch { /* ignore */ }
+  if (was && !snap.on) setRadioOn(true);
+}
+
+/** Resume audio playback within a user gesture (browser autoplay policy). */
+export function radioResume() {
+  try { vc?.resume(); } catch { /* ignore */ }
+}
+
+export async function radioStartTalk(): Promise<{ ok: boolean; busyWith?: string; error?: string }> {
+  if (!vc) return { ok: false, error: "off" };
+  try {
+    const r = await vc.startTalk();
+    if ((r as any)?.ok) set({ talking: true });
+    return r as any;
+  } catch (e: any) {
+    return { ok: false, error: e?.message || "mic" };
+  }
+}
+export function radioStopTalk() {
+  try { vc?.stopTalk(); } catch { /* ignore */ }
+  set({ talking: false });
+}

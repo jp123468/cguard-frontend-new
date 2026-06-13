@@ -9,6 +9,7 @@ import TenantJoinModal from "@/components/TenantJoinModal";
 import TrialBanner from "@/components/TrialBanner";
 import { RadioRealtimeProvider } from "@/components/radio/RadioRealtimeProvider";
 import RadioDispatchWidget from "@/components/radio/RadioDispatchWidget";
+import RadioVoiceWidget from "@/components/radio/RadioVoiceWidget";
 import OnboardingProvider from "@/components/onboarding/OnboardingProvider";
 import tenantService from "@/services/tenant.service";
 import { cacheTenantLocation, cacheTenantCountry, cacheTenantTimezone } from "@/utils/tenantLocation";
@@ -246,6 +247,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <RadioRealtimeProvider tenantId={tenantIdNow}>
         <RadioDispatchWidget />
       </RadioRealtimeProvider>
+
+      {/* Persistent open-channel radio: toggle on → stays connected + listening
+          across navigation (the socket/audio live in a module singleton, so this
+          widget remounting per page doesn't drop the channel). */}
+      <RadioVoiceWidget />
 
       {/* Toaster lives once globally in main.tsx — a second one here made every
           toast (notifications included) render twice. */}
