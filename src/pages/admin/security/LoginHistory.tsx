@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { LogIn, LogOut, Smartphone, AlertTriangle, RefreshCw, Search, History, ShieldCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { LogIn, LogOut, Smartphone, AlertTriangle, RefreshCw, Search, History, ShieldCheck, Loader2 } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import { Card } from "@/components/ui/card";
 import { ApiService } from "@/services/api/apiService";
@@ -10,6 +10,8 @@ type Row = {
   platform?: string | null; detail?: string | null; at: string; userId?: string | null;
 };
 
+const PAGE_SIZE = 100;
+
 const EVENT_META: Record<string, { label: string; icon: JSX.Element; color: string }> = {
   login: { label: "Inicio de sesión", icon: <LogIn className="size-3.5" />, color: "#16a34a" },
   login_failed: { label: "Intento fallido", icon: <AlertTriangle className="size-3.5" />, color: "#dc2626" },
@@ -18,12 +20,13 @@ const EVENT_META: Record<string, { label: string; icon: JSX.Element; color: stri
   device_evicted: { label: "Dispositivo retirado", icon: <Smartphone className="size-3.5" />, color: "#f59e0b" },
 };
 
+// Chip key → backend `event` param (comma-separated allowed).
 const FILTERS = [
-  { key: "", label: "Todos", match: () => true },
-  { key: "login", label: "Inicios", match: (e: string) => e === "login" },
-  { key: "login_failed", label: "Fallidos", match: (e: string) => e === "login_failed" },
-  { key: "logout", label: "Cierres", match: (e: string) => e === "logout" },
-  { key: "device", label: "Dispositivos", match: (e: string) => e.startsWith("device") },
+  { key: "", label: "Todos", event: "" },
+  { key: "login", label: "Inicios", event: "login" },
+  { key: "login_failed", label: "Fallidos", event: "login_failed" },
+  { key: "logout", label: "Cierres", event: "logout" },
+  { key: "device", label: "Dispositivos", event: "device_registered,device_evicted" },
 ];
 
 const fmt = (d?: string) => {
@@ -35,30 +38,79 @@ const fmt = (d?: string) => {
 };
 
 export default function LoginHistory() {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<Row[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [filter, setFilter] = useState("");
+
   const tid = () => localStorage.getItem("tenantId") || "";
+  const itemsRef = useRef<Row[]>([]);
+  const loadingRef = useRef(false);
+  const reqIdRef = useRef(0);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const load = () => {
+  useEffect(() => {
+    const h = setTimeout(() => setDebouncedQ(q), 350);
+    return () => clearTimeout(h);
+  }, [q]);
+
+  const load = async (reset: boolean) => {
+    if (loadingRef.current) return;
+    if (!reset && itemsRef.current.length >= total && total > 0) return;
+    loadingRef.current = true;
     setLoading(true);
-    ApiService.get(`/tenant/${tid()}/security/audit-logs?limit=300`)
-      .then((r: any) => setRows(Array.isArray(r) ? r : (r?.rows ?? [])))
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false));
-  };
-  useEffect(() => { load(); }, []);
+    const reqId = ++reqIdRef.current;
 
-  const matcher = FILTERS.find((f) => f.key === filter) || FILTERS[0];
-  const filtered = useMemo(() => {
-    return rows.filter((r) => {
-      if (!matcher.match(String(r.event || ""))) return false;
-      if (!q.trim()) return true;
-      const blob = `${r.event} ${r.email || ""} ${r.ip || ""} ${r.platform || ""} ${r.detail || ""}`.toLowerCase();
-      return blob.includes(q.toLowerCase());
-    });
-  }, [rows, q, matcher]);
+    const offset = reset ? 0 : itemsRef.current.length;
+    const eventParam = FILTERS.find((f) => f.key === filter)?.event || "";
+    const params = new URLSearchParams();
+    params.set("limit", String(PAGE_SIZE));
+    params.set("offset", String(offset));
+    if (eventParam) params.set("event", eventParam);
+    if (debouncedQ.trim()) params.set("search", debouncedQ.trim());
+
+    try {
+      const r: any = await ApiService.get(`/tenant/${tid()}/security/audit-logs?${params.toString()}`);
+      if (reqId !== reqIdRef.current) return;
+      const rows: Row[] = Array.isArray(r) ? r : (r?.rows ?? []);
+      const count: number = typeof r?.count === "number" ? r.count : rows.length;
+      setTotal(count);
+      setItems((prev) => {
+        const next = reset ? rows : [...prev, ...rows];
+        itemsRef.current = next;
+        return next;
+      });
+    } catch {
+      if (reqId === reqIdRef.current && reset) { setItems([]); itemsRef.current = []; setTotal(0); }
+    } finally {
+      if (reqId === reqIdRef.current) setLoading(false);
+      loadingRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    itemsRef.current = [];
+    setItems([]);
+    setTotal(0);
+    load(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, debouncedQ]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => { if (entries[0]?.isIntersecting) load(false); },
+      { rootMargin: "300px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
+
+  const hasMore = items.length < total;
 
   return (
     <AppLayout>
@@ -82,8 +134,8 @@ export default function LoginHistory() {
                 className="h-9 w-64 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-[#C8860A] focus:outline-none"
               />
             </div>
-            <button onClick={load} className="grid h-9 w-9 place-items-center rounded-lg border border-input text-muted-foreground hover:text-foreground" title="Recargar">
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            <button onClick={() => load(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-input text-muted-foreground hover:text-foreground" title="Recargar">
+              <RefreshCw className={`size-4 ${loading && items.length === 0 ? "animate-spin" : ""}`} />
             </button>
           </div>
         </div>
@@ -101,7 +153,9 @@ export default function LoginHistory() {
               {f.label}
             </button>
           ))}
-          <span className="ml-auto self-center text-xs text-muted-foreground">{filtered.length} evento(s)</span>
+          <span className="ml-auto self-center text-xs text-muted-foreground">
+            {items.length}{total ? ` / ${total}` : ""} evento(s)
+          </span>
         </div>
 
         <Card className="overflow-hidden">
@@ -118,11 +172,11 @@ export default function LoginHistory() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+                {loading && items.length === 0 ? (
                   <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Cargando…</td></tr>
-                ) : filtered.length === 0 ? (
+                ) : items.length === 0 ? (
                   <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Sin eventos.</td></tr>
-                ) : filtered.map((r) => {
+                ) : items.map((r) => {
                   const m = EVENT_META[r.event] || { label: r.event, icon: <ShieldCheck className="size-3.5" />, color: "#64748b" };
                   return (
                     <tr key={r.id} className="border-b border-border/50">
@@ -139,6 +193,16 @@ export default function LoginHistory() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          <div ref={sentinelRef} className="flex items-center justify-center py-4 text-xs text-muted-foreground">
+            {loading && items.length > 0 ? (
+              <span className="flex items-center gap-2"><Loader2 className="size-4 animate-spin" /> Cargando más…</span>
+            ) : hasMore ? (
+              <span>Desplázate para ver más</span>
+            ) : items.length > 0 ? (
+              <span>— Fin del historial —</span>
+            ) : null}
           </div>
         </Card>
       </div>
