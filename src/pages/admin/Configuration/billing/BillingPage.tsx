@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Loader2, CreditCard, Users, CheckCircle2, Clock, AlertTriangle, Sparkles } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
-import SettingsLayout from "@/layouts/SettingsLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { subscriptionBillingService, BillingSummary } from "@/lib/api/subscriptionBillingService";
@@ -71,8 +70,14 @@ export default function BillingPage() {
 
   return (
     <AppLayout>
-      <SettingsLayout navKey="configuracion" title={t("settings.configuracion.billing", { defaultValue: "Suscripción" })}>
+      <div className="p-4 sm:p-6">
         <div className="mx-auto max-w-2xl">
+          <div className="mb-5 flex items-center gap-2">
+            <CreditCard size={20} className="text-[#C8860A]" />
+            <h1 className="text-xl font-bold tracking-tight text-foreground">
+              {t("settings.configuracion.billing", { defaultValue: "Suscripción" })}
+            </h1>
+          </div>
           {loading || !data ? (
             <div className="flex min-h-[30vh] items-center justify-center">
               <Loader2 className="animate-spin text-[#C8860A]" size={28} />
@@ -187,7 +192,7 @@ export default function BillingPage() {
             </div>
           )}
         </div>
-      </SettingsLayout>
+      </div>
     </AppLayout>
   );
 }
