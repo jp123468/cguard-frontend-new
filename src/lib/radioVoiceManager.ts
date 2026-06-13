@@ -37,6 +37,27 @@ export type RadioVoiceSnapshot = {
 let vc: VoiceChannel | null = null;
 let joinTimer: any = null;
 let selfId: string | undefined;
+let gestureCleanup: (() => void) | null = null;
+
+// Desktop browsers keep a listen-only AudioContext SUSPENDED until a user
+// gesture — so incoming voice is scheduled silently. While the radio is on, we
+// resume on ANY interaction anywhere in the CRM, guaranteeing audio unmutes as
+// soon as the dispatcher clicks/taps/types. (Capacitor WebViews don't need this,
+// which is why the guard app hears fine but the web didn't.)
+function installGestureResume() {
+  if (gestureCleanup || typeof window === "undefined") return;
+  const h = () => { try { vc?.resume(); } catch { /* ignore */ } };
+  const opts: any = { capture: true, passive: true };
+  window.addEventListener("pointerdown", h, opts);
+  window.addEventListener("touchstart", h, opts);
+  window.addEventListener("keydown", h, opts);
+  gestureCleanup = () => {
+    window.removeEventListener("pointerdown", h, opts);
+    window.removeEventListener("touchstart", h, opts);
+    window.removeEventListener("keydown", h, opts);
+    gestureCleanup = null;
+  };
+}
 
 let snap: RadioVoiceSnapshot = {
   on: false,
@@ -87,6 +108,7 @@ function doConnect() {
     },
   );
   v.resume();
+  installGestureResume();
   // Join once the socket connects; keep retrying quietly.
   if (joinTimer) clearInterval(joinTimer);
   joinTimer = setInterval(async () => {
@@ -107,6 +129,7 @@ function doConnect() {
 
 function doDisconnect() {
   if (joinTimer) { clearInterval(joinTimer); joinTimer = null; }
+  gestureCleanup?.();
   try { vc?.disconnect(); } catch { /* ignore */ }
   vc = null;
   set({ state: "idle", joined: false, roster: [], speaker: null, talking: false, hint: null });
