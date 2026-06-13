@@ -8,7 +8,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import TenantJoinModal from "@/components/TenantJoinModal";
 import TrialBanner from "@/components/TrialBanner";
 import { RadioRealtimeProvider } from "@/components/radio/RadioRealtimeProvider";
-import RadioDispatchWidget from "@/components/radio/RadioDispatchWidget";
 import RadioVoiceWidget from "@/components/radio/RadioVoiceWidget";
 import OnboardingProvider from "@/components/onboarding/OnboardingProvider";
 import tenantService from "@/services/tenant.service";
@@ -242,16 +241,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </OnboardingProvider>
       </main>
 
-      {/* Radio dispatch: one shared socket stream + a draggable widget present on
-          every CRM page (self-hides if the user lacks the radio permission). */}
+      {/* Single radio surface: the header radio icon opens this persistent
+          open-channel widget (toggle on → stays connected + listening across
+          navigation; the socket/audio live in a module singleton). The pase de
+          novedades is started from inside it. RadioRealtimeProvider stays for the
+          /radio console + radio event context. */}
       <RadioRealtimeProvider tenantId={tenantIdNow}>
-        <RadioDispatchWidget />
+        <RadioVoiceWidget />
       </RadioRealtimeProvider>
-
-      {/* Persistent open-channel radio: toggle on → stays connected + listening
-          across navigation (the socket/audio live in a module singleton, so this
-          widget remounting per page doesn't drop the channel). */}
-      <RadioVoiceWidget />
 
       {/* Toaster lives once globally in main.tsx — a second one here made every
           toast (notifications included) render twice. */}
