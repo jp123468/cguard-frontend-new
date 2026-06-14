@@ -54,6 +54,10 @@ import AddStationPage from "./pages/admin/post-sites/AddStationPage"
 import StationDetailPage from "./pages/admin/post-sites/station-detail/StationDetailPage"
 import GlobalInventoryPage from "./pages/admin/inventory/GlobalInventoryPage"
 import ProjectsPage from "./pages/admin/projects/ProjectsPage"
+import TrainingCoursesPage from "./pages/admin/training/TrainingCoursesPage"
+import TrainingCourseDetailPage from "./pages/admin/training/TrainingCourseDetailPage"
+import TrainingEnrollmentsPage from "./pages/admin/training/TrainingEnrollmentsPage"
+import TrainingCatalogPage from "./pages/admin/training/TrainingCatalogPage"
 import NewOrEditProjectPage from "./pages/admin/projects/NewOrEditProjectPage"
 import SecurityGuardsPage from "./pages/admin/security-guards/SecurityGuardsPage"
 import NewSecurityGuardPage from "./pages/admin/security-guards/NewSecurityGuardPage"
@@ -471,6 +475,38 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <NewOrEditProjectPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/training/courses"
+                element={
+                  <ProtectedRoute>
+                    <TrainingCoursesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/training/catalog"
+                element={
+                  <ProtectedRoute>
+                    <TrainingCatalogPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/training/courses/:id"
+                element={
+                  <ProtectedRoute>
+                    <TrainingCourseDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/training/courses/:courseId/enrollments"
+                element={
+                  <ProtectedRoute>
+                    <TrainingEnrollmentsPage />
                   </ProtectedRoute>
                 }
               />

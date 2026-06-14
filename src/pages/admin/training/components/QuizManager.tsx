@@ -1,0 +1,199 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Trash2, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  trainingCourseService,
+  type TrainingQuizSummary,
+  type QuizQuestionInput,
+} from '@/lib/api/trainingCourseService';
+
+const GOLD = '#C8860A';
+
+interface Props {
+  courseId: string;
+  quiz: TrainingQuizSummary | null;
+  passingScore: number;
+  readOnly: boolean;
+  onChange: () => void;
+}
+
+interface QForm {
+  prompt: string;
+  options: string[];
+  correctIndex: number;
+}
+
+const blankQ = (): QForm => ({ prompt: '', options: ['', ''], correctIndex: 0 });
+
+export default function QuizManager({ courseId, quiz, passingScore, readOnly, onChange }: Props) {
+  const [editing, setEditing] = useState(false);
+  const [passPct, setPassPct] = useState<number>(quiz?.passPct ?? passingScore ?? 70);
+  const [questionsPerAttempt, setQuestionsPerAttempt] = useState<number>(5);
+  const [questions, setQuestions] = useState<QForm[]>([blankQ()]);
+  const [saving, setSaving] = useState(false);
+
+  const addQuestion = () => setQuestions((qs) => [...qs, blankQ()]);
+  const removeQuestion = (i: number) => setQuestions((qs) => qs.filter((_, idx) => idx !== i));
+  const setQ = (i: number, patch: Partial<QForm>) =>
+    setQuestions((qs) => qs.map((q, idx) => (idx === i ? { ...q, ...patch } : q)));
+  const addOption = (qi: number) =>
+    setQuestions((qs) => qs.map((q, idx) => (idx === qi ? { ...q, options: [...q.options, ''] } : q)));
+  const setOption = (qi: number, oi: number, val: string) =>
+    setQuestions((qs) => qs.map((q, idx) => (idx === qi ? { ...q, options: q.options.map((o, j) => (j === oi ? val : o)) } : q)));
+  const removeOption = (qi: number, oi: number) =>
+    setQuestions((qs) => qs.map((q, idx) => {
+      if (idx !== qi) return q;
+      const options = q.options.filter((_, j) => j !== oi);
+      const correctIndex = q.correctIndex >= options.length ? 0 : q.correctIndex;
+      return { ...q, options, correctIndex };
+    }));
+
+  const handleSave = async () => {
+    const cleaned: QuizQuestionInput[] = questions
+      .map((q) => ({
+        prompt: q.prompt.trim(),
+        options: q.options.map((o) => o.trim()).filter(Boolean),
+        correctIndex: q.correctIndex,
+      }))
+      .filter((q) => q.prompt && q.options.length >= 2);
+
+    if (cleaned.length === 0) {
+      toast.error('Agrega al menos una pregunta con dos opciones.');
+      return;
+    }
+    for (const q of cleaned) {
+      if (q.correctIndex < 0 || q.correctIndex >= q.options.length) {
+        toast.error('Cada pregunta debe tener una respuesta correcta válida.');
+        return;
+      }
+    }
+    setSaving(true);
+    try {
+      await trainingCourseService.saveQuiz(courseId, {
+        passPct: Number(passPct),
+        questionsPerAttempt: Number(questionsPerAttempt) || cleaned.length,
+        questions: cleaned,
+      });
+      toast.success('Cuestionario guardado.');
+      setEditing(false);
+      onChange();
+    } catch (err: any) {
+      console.error(err);
+      const msg = err?.response?.data?.error || err?.message;
+      toast.error(msg || 'No se pudo guardar el cuestionario.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <Card>
+        <CardContent className="py-6 space-y-3">
+          {quiz ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 font-medium">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" /> Cuestionario configurado
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Puntaje para aprobar: <Badge variant="outline">{quiz.passPct}%</Badge>
+                </p>
+              </div>
+              {!readOnly && (
+                <Button variant="outline" onClick={() => { setPassPct(quiz.passPct ?? passingScore); setEditing(true); }}>
+                  Editar / reemplazar preguntas
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Sin cuestionario</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Un cuestionario es opcional. Si lo agregas, el guardia debe aprobarlo para completar el curso.
+                </p>
+              </div>
+              {!readOnly && (
+                <Button className="text-white" style={{ backgroundColor: GOLD }} onClick={() => setEditing(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Crear cuestionario
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="py-6 space-y-4">
+        <div className="grid grid-cols-2 gap-3 max-w-md">
+          <div className="space-y-2">
+            <Label>Puntaje para aprobar (%)</Label>
+            <Input type="number" min={0} max={100} value={passPct} onChange={(e) => setPassPct(Number(e.target.value))} />
+          </div>
+          <div className="space-y-2">
+            <Label>Preguntas por intento</Label>
+            <Input type="number" min={1} value={questionsPerAttempt} onChange={(e) => setQuestionsPerAttempt(Number(e.target.value))} />
+          </div>
+        </div>
+
+        {quiz && (
+          <p className="text-xs text-amber-600">
+            Al guardar se reemplazarán las preguntas existentes del cuestionario.
+          </p>
+        )}
+
+        <div className="space-y-4">
+          {questions.map((q, qi) => (
+            <div key={qi} className="rounded-lg border p-4 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <Label className="pt-2">Pregunta {qi + 1}</Label>
+                {questions.length > 1 && (
+                  <button className="p-1.5 text-red-600" onClick={() => removeQuestion(qi)}><Trash2 className="h-4 w-4" /></button>
+                )}
+              </div>
+              <Input placeholder="Enunciado de la pregunta" value={q.prompt} onChange={(e) => setQ(qi, { prompt: e.target.value })} />
+              <div className="space-y-2">
+                {q.options.map((o, oi) => (
+                  <div key={oi} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name={`correct-${qi}`}
+                      checked={q.correctIndex === oi}
+                      onChange={() => setQ(qi, { correctIndex: oi })}
+                      title="Marcar como correcta"
+                    />
+                    <Input placeholder={`Opción ${oi + 1}`} value={o} onChange={(e) => setOption(qi, oi, e.target.value)} />
+                    {q.options.length > 2 && (
+                      <button className="p-1.5 text-red-600" onClick={() => removeOption(qi, oi)}><Trash2 className="h-4 w-4" /></button>
+                    )}
+                  </div>
+                ))}
+                <Button type="button" size="sm" variant="outline" onClick={() => addOption(qi)}>
+                  <Plus className="h-3 w-3 mr-1" /> Opción
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <Button type="button" variant="outline" onClick={addQuestion}><Plus className="h-4 w-4 mr-1" /> Agregar pregunta</Button>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
+          <Button className="text-white" style={{ backgroundColor: GOLD }} disabled={saving} onClick={handleSave}>
+            {saving ? 'Guardando...' : 'Guardar cuestionario'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

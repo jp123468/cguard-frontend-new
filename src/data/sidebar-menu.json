@@ -37,6 +37,24 @@
     "path": "/projects"
   },
   {
+    "id": "entrenamiento",
+    "name": "Entrenamiento",
+    "icon": "GraduationCap",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "training-courses",
+        "name": "Cursos",
+        "path": "/training/courses"
+      },
+      {
+        "id": "training-catalog",
+        "name": "Catálogo de la plataforma",
+        "path": "/training/catalog"
+      }
+    ]
+  },
+  {
     "id": "equipo",
     "name": "Equipo de Seguridad",
     "icon": "Shield",

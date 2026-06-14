@@ -4,7 +4,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   Shield, ChevronRight, Gauge, Activity, Users, BarChart3, MapPin,
   MessageSquare, Clock, FileText, Calendar, DollarSign, Receipt, Car,
-  UserPlus, SquareParking, UserCog, Building2, Briefcase, Package, Cctv, Siren, Radio, type LucideIcon,
+  UserPlus, SquareParking, UserCog, Building2, Briefcase, Package, Cctv, Siren, Radio, GraduationCap, type LucideIcon,
 } from "lucide-react";
 import sidebarMenuData from "../data/sidebar-menu.json";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,7 +27,7 @@ type MenuItem = {
 const iconMap: Record<string, LucideIcon> = {
   Shield, Gauge, Activity, Users, BarChart3, MapPin,
   MessageSquare, Clock, FileText, Calendar, DollarSign, Receipt, Car,
-  UserPlus, SquareParking, UserCog, Building2, Briefcase, Package, Cctv, Siren, Radio
+  UserPlus, SquareParking, UserCog, Building2, Briefcase, Package, Cctv, Siren, Radio, GraduationCap
 };
 
 export default function Sidebar() {
