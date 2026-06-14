@@ -93,20 +93,32 @@ export default function DispatchPublicView() {
     const lat = maybe('latitude') || maybe('lat') || maybe('locationLat') || (payload.geo && payload.geo.lat) || null;
     const lng = maybe('longitude') || maybe('lng') || maybe('locationLng') || (payload.geo && payload.geo.lng) || null;
     if (lat && lng) return { lat: Number(lat), lng: Number(lng) };
-    // try resolve from post site
+    // Resolve from the site object. The backend (publicRequest -> RequestRepository
+    // findById) already embeds the `site` (businessInfo) association, so the
+    // public page needs no authenticated lookup. businessInfo stores geo in
+    // Spanish field names (latitud/longitud); support those plus the list-shaped
+    // fallbacks. fromSite() works for both the embedded payload.site and a row
+    // resolved from the (authenticated-only) postSites list.
     try {
+      const fromSite = (site: any) => {
+        if (!site) return null;
+        const sLat = site.latitud ?? site.latitude ?? site.lat ?? site.locationLat ?? site.coords?.lat ?? null;
+        const sLng = site.longitud ?? site.longitude ?? site.lng ?? site.locationLng ?? site.coords?.lng ?? null;
+        if (sLat != null && sLng != null && sLat !== '' && sLng !== '') return { lat: Number(sLat), lng: Number(sLng) };
+        if (site.location && typeof site.location === 'string') {
+          const parts = site.location.split(',').map((s: string) => s.trim());
+          if (parts.length === 2 && !isNaN(Number(parts[0])) && !isNaN(Number(parts[1]))) return { lat: Number(parts[0]), lng: Number(parts[1]) };
+        }
+        return null;
+      };
+      // Prefer the embedded site object first (no network needed).
+      const embedded = fromSite(payload.site);
+      if (embedded) return embedded;
       const siteId = payload.siteId || payload.postSiteId || payload.site?.id;
       if (siteId && postSites && postSites.length > 0) {
         const site = postSites.find((s) => s.id === siteId || s._id === siteId || s.id === String(siteId));
-        if (site) {
-          const sLat = site.latitude || site.lat || site.locationLat || site.coords?.lat || null;
-          const sLng = site.longitude || site.lng || site.locationLng || site.coords?.lng || null;
-          if (sLat && sLng) return { lat: Number(sLat), lng: Number(sLng) };
-          if (site.location && typeof site.location === 'string') {
-            const parts = site.location.split(',').map((s: string) => s.trim());
-            if (parts.length === 2 && !isNaN(Number(parts[0])) && !isNaN(Number(parts[1]))) return { lat: Number(parts[0]), lng: Number(parts[1]) };
-          }
-        }
+        const resolved = fromSite(site);
+        if (resolved) return resolved;
       }
     } catch (e) {
       // ignore
