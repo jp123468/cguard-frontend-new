@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import AppLayout from "@/layouts/app-layout";
 
 import { Button } from "@/components/ui/button";
@@ -36,15 +36,9 @@ export default function LiveTrackingPage() {
   const [mapType, setMapType] = useState("roadmap");
   const [showGeofence, setShowGeofence] = useState(true);
 
-  // Sin datos de prueba, igual que en SecurityGuardsPage
-  const [rows, setRows] = useState<LiveTrackingRow[]>([]);
-
-  useEffect(() => {
-    // Aquí puedes cargar datos reales:
-    // fetch("/api/live-tracking")
-    //   .then(r => r.json())
-    //   .then(data => setRows(data));
-  }, []);
+  // TODO: wire to the real live-tracking API. Until then the table renders the
+  // empty state. (`setRows` is retained for when the fetch is implemented.)
+  const [rows] = useState<LiveTrackingRow[]>([]);
 
   return (
     <AppLayout>

@@ -101,6 +101,44 @@ interface SecurityGuard {
   raw?: any; // Para detalles
 }
 
+// Shared normalizer used by both the initial load and the post-resend refresh
+// so the two code paths cannot drift (status mapping in particular). The station
+// label is intentionally NOT computed here — it is derived at render time from the
+// stationByUserId lookup so that changes to that map don't require re-normalizing.
+function normalizeGuard(item: any): SecurityGuard {
+  const guardObj = item.guard ?? {};
+  // Prefer the securityGuard record id (item.id). Some API responses include a
+  // nested `guard` (user) object whose `guard.id` is the user id; using that as
+  // the list `id` makes actions that expect the securityGuard record id
+  // (delete/restore) fail with not-found.
+  const id = item.id ?? guardObj.id ?? item.guardId ?? "";
+  const name =
+    (guardObj.firstName && guardObj.lastName)
+      ? `${guardObj.firstName} ${guardObj.lastName}`
+      : item.fullName ?? `${guardObj.firstName ?? ""} ${guardObj.lastName ?? ""}`.trim();
+  const email = guardObj.email ?? item.email ?? "";
+  const phone =
+    guardObj.phone ?? guardObj.phoneNumber ?? item.guard?.phoneNumber ?? item.phoneNumber ?? item.phone ?? item.mobile ?? "";
+  const status: GuardStatus = ((): GuardStatus => {
+    const s = (guardObj.status ?? item.status ?? "").toString().toLowerCase();
+    if (s === "archived" || s === "archivado") return "Archivado";
+    if (s === "active" || s === "activo") return "Activo";
+    if (s === "invited" || s === "invitado") return "Pendiente";
+    if (s === "pending" || s === "pendiente") return "Pendiente";
+    if (typeof item.isOnDuty === "boolean") return item.isOnDuty ? "Activo" : "Pendiente";
+    return "Activo";
+  })();
+
+  return {
+    id,
+    name: name || "-",
+    email,
+    phone,
+    status,
+    raw: item,
+  };
+}
+
 export default function SecurityGuardsPage() {
   const { t } = useTranslation();
   usePageTitle('Guardias de Seguridad');
@@ -320,67 +358,12 @@ export default function SecurityGuardsPage() {
     securityGuardService
       .list(params)
       .then((data: any) => {
-        // Debugging: log raw response to help diagnose status mismatches
-        try {
-          console.debug('[SecurityGuardsPage] raw list response:', data);
-        } catch (e) {
-          // ignore
-        }
         if (!mounted) return;
         // Algunos endpoints devuelven { rows, count } u otras formas
-        const normalize = (item: any): SecurityGuard => {
-          const guardObj = item.guard ?? {};
-          // Prefer the securityGuard record id (item.id). Some API responses
-          // include nested `guard` (user) objects where `guard.id` is the user id;
-          // using that value as the list `id` causes actions that expect the
-          // securityGuard record id (delete/restore) to fail with not-found.
-          const id = item.id ?? guardObj.id ?? item.guardId ?? "";
-          const name =
-            (guardObj.firstName && guardObj.lastName)
-              ? `${guardObj.firstName} ${guardObj.lastName}`
-              : item.fullName ?? `${guardObj.firstName ?? ""} ${guardObj.lastName ?? ""}`.trim();
-          // Prefer nested guard email/phone when present, fall back to top-level fields
-          const email = guardObj.email ?? item.email ?? "";
-          const phone =
-            guardObj.phone ?? guardObj.phoneNumber ?? item.guard?.phoneNumber ?? item.phoneNumber ?? item.phone ?? item.mobile ?? "";
-          const status: GuardStatus = ((): GuardStatus => {
-            const s = (guardObj.status ?? item.status ?? "").toString().toLowerCase();
-            if (s === "archived" || s === "archivado") return "Archivado";
-            if (s === "active" || s === "activo") return "Activo";
-            if (s === "invited" || s === "invitado") return "Activo";
-            if (s === "pending" || s === "pendiente") return "Activo";
-            return "Activo";
-          })();
-
-          const guardUserId = guardObj.id ?? item.guardId ?? null;
-          const station = guardUserId ? (stationByUserId[guardUserId] ?? '') : '';
-
-          return {
-            id,
-            name: name || "-",
-            email,
-            phone,
-            status,
-            station,
-            raw: item,
-          };
-        };
-
         let normalizedList: SecurityGuard[] = [];
-        if (Array.isArray(data)) normalizedList = data.map(normalize);
-        else if (data && Array.isArray((data as any).rows)) normalizedList = (data as any).rows.map(normalize);
+        if (Array.isArray(data)) normalizedList = data.map(normalizeGuard);
+        else if (data && Array.isArray((data as any).rows)) normalizedList = (data as any).rows.map(normalizeGuard);
         else normalizedList = [];
-
-        // Log normalized entries and highlight those that map to 'Pendiente'
-        try {
-          console.debug('[SecurityGuardsPage] normalized guards:', normalizedList);
-          const pending = normalizedList.filter((g) => g.status === 'Pendiente');
-          if (pending.length) {
-            console.debug('[SecurityGuardsPage] guards with Pendiente status (raw):', pending.map((g) => ({ id: g.id, name: g.name, email: g.email, raw: g.raw })));
-          }
-        } catch (e) {
-          // ignore logging errors
-        }
 
         setGuards(normalizedList);
       })
@@ -397,7 +380,7 @@ export default function SecurityGuardsPage() {
     return () => {
       mounted = false;
     };
-  }, [filterCategory, filterClient, filterSite, filterSkills, filterDepartment, searchQuery, stationByUserId]);
+  }, [filterCategory, filterClient, filterSite, filterSkills, filterDepartment, searchQuery]);
 
   // Load filter options when sheet opens
   useEffect(() => {
@@ -427,9 +410,21 @@ export default function SecurityGuardsPage() {
     setCurrentPage(1);
   }, [searchQuery, itemsPerPage]);
 
+  // Derive the station label at render time from the lookup map so that changes
+  // to stationByUserId never re-trigger the heavy guard list fetch.
+  const guardsWithStation = useMemo(
+    () =>
+      guards.map((g) => {
+        const guardUserId = g.raw?.guard?.id ?? g.raw?.guardId ?? null;
+        const station = guardUserId ? (stationByUserId[guardUserId] ?? '') : '';
+        return station ? { ...g, station } : g;
+      }),
+    [guards, stationByUserId]
+  );
+
   // Filtrado por búsqueda
   const filteredGuards = useMemo(() => {
-    let list = guards;
+    let list = guardsWithStation;
 
     // Apply status filter
     if (filterStatus && filterStatus !== "todos") {
@@ -449,7 +444,7 @@ export default function SecurityGuardsPage() {
         g.email.toLowerCase().includes(lowerQuery) ||
         g.phone.includes(searchQuery)
     );
-  }, [guards, searchQuery]);
+  }, [guardsWithStation, searchQuery, filterStatus]);
 
   const totalPages = Math.max(1, Math.ceil(filteredGuards.length / itemsPerPage));
 
@@ -921,38 +916,8 @@ export default function SecurityGuardsPage() {
                                       // Refresh list
                                       try {
                                         const refreshed = await securityGuardService.list();
-                                        const normalize = (item: any) => {
-                                          const guardObj = item.guard ?? {};
-                                          const id = item.id ?? guardObj.id ?? item.guardId ?? "";
-                                          const name =
-                                            (guardObj.firstName && guardObj.lastName)
-                                              ? `${guardObj.firstName} ${guardObj.lastName}`
-                                              : item.fullName ?? `${guardObj.firstName ?? ""} ${guardObj.lastName ?? ""}`.trim();
-                                          const email = guardObj.email ?? item.email ?? "";
-                                          const phone =
-                                            guardObj.phone ?? guardObj.phoneNumber ?? item.guard?.phoneNumber ?? item.phoneNumber ?? item.phone ?? item.mobile ?? "";
-                                          const status: GuardStatus = ((): GuardStatus => {
-                                            const s = (guardObj.status ?? item.status ?? "").toString().toLowerCase();
-                                            if (s === "active" || s === "activo") return "Activo";
-                                            if (s === "invited" || s === "invitado") return "Pendiente";
-                                            if (s === "pending" || s === "pendiente") return "Pendiente";
-                                            if (s === "archived" || s === "archivado") return "Archivado";
-                                            if (typeof item.isOnDuty === "boolean") return item.isOnDuty ? "Activo" : "Pendiente";
-                                            return "Pendiente";
-                                          })();
-
-                                          return {
-                                            id,
-                                            name: name || "-",
-                                            email,
-                                            phone,
-                                            status,
-                                            raw: item,
-                                          };
-                                        };
-
-                                        if (Array.isArray(refreshed)) setGuards(refreshed.map(normalize));
-                                        else if (refreshed && Array.isArray((refreshed as any).rows)) setGuards((refreshed as any).rows.map(normalize));
+                                        if (Array.isArray(refreshed)) setGuards(refreshed.map(normalizeGuard));
+                                        else if (refreshed && Array.isArray((refreshed as any).rows)) setGuards((refreshed as any).rows.map(normalizeGuard));
                                       } catch (e) {
                                         // ignore refresh errors
                                       }
@@ -984,15 +949,23 @@ export default function SecurityGuardsPage() {
                                 <DropdownMenuItem
                                   onClick={async () => {
                                     try {
+                                      // Only build a registration link from a real server-issued
+                                      // invite link/code. Never fabricate one from the internal
+                                      // record id — a guessable id must not act as an auth code.
+                                      const inviteCode = guard.raw?.inviteCode || guard.raw?.code;
                                       const link =
                                         guard.raw?.inviteLink ||
-                                        `${window.location.origin}/guard/registration?code=${encodeURIComponent(
-                                          guard.raw?.inviteCode || guard.raw?.code || guard.id
-                                        )}`;
+                                        (inviteCode
+                                          ? `${window.location.origin}/guard/registration?code=${encodeURIComponent(inviteCode)}`
+                                          : null);
+                                      if (!link) {
+                                        toast.error("No hay enlace de registro disponible para este guardia");
+                                        return;
+                                      }
                                       await navigator.clipboard.writeText(link);
                                       toast.success("Enlace de registro copiado");
                                     } catch (err) {
-                                      console.error(err);
+                                      if (import.meta.env.DEV) console.error(err);
                                       toast.error("No se pudo copiar el enlace");
                                     }
                                   }}

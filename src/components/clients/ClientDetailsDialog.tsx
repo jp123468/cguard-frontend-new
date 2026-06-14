@@ -149,21 +149,34 @@ export function ClientDetailsDialog({
                         </div>
 
                         {/* Sitio web */}
-                        {client.website && (
-                            <div className="border-t pt-3">
-                                <p className="text-xs text-foreground/70 font-semibold">Sitio Web</p>
-                                <p className="text-sm">
-                                    <a
-                                        href={client.website}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-[#C8860A] hover:underline truncate block"
-                                    >
-                                        {client.website}
-                                    </a>
-                                </p>
-                            </div>
-                        )}
+                        {client.website && (() => {
+                            // Only allow http(s) links; otherwise render plain text to
+                            // avoid javascript:/data: schemes from tenant-editable data.
+                            const safeHref = /^https?:\/\//i.test(client.website)
+                                ? client.website
+                                : /^[\w.-]+\.[a-z]{2,}/i.test(client.website)
+                                    ? `https://${client.website}`
+                                    : null;
+                            return (
+                                <div className="border-t pt-3">
+                                    <p className="text-xs text-foreground/70 font-semibold">Sitio Web</p>
+                                    <p className="text-sm">
+                                        {safeHref ? (
+                                            <a
+                                                href={safeHref}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[#C8860A] hover:underline truncate block"
+                                            >
+                                                {client.website}
+                                            </a>
+                                        ) : (
+                                            <span className="truncate block">{client.website}</span>
+                                        )}
+                                    </p>
+                                </div>
+                            );
+                        })()}
 
                         {/* Acciones */}
                         <div className="flex justify-end gap-2 pt-3 border-t">

@@ -13,6 +13,17 @@ type Props = {
     guard?: any;
 };
 
+// Render a translation string that may contain <br /> markers as real JSX line
+// breaks, instead of feeding it through dangerouslySetInnerHTML (no HTML sink).
+function renderWithLineBreaks(text: string): React.ReactNode {
+    return text.split(/<br\s*\/?>/i).map((part, idx, arr) => (
+        <React.Fragment key={idx}>
+            {part}
+            {idx < arr.length - 1 && <br />}
+        </React.Fragment>
+    ));
+}
+
 export default function GuardNotes({ guard }: Props) {
     const actionRef = useRef<HTMLDivElement>(null);
     const [actionOpen, setActionOpen] = useState(false);
@@ -261,7 +272,7 @@ export default function GuardNotes({ guard }: Props) {
                                                     </div>
                                                     <div className="text-center">
                                                         <h3 className="text-lg font-semibold text-foreground">{t('guards.notes.empty.title', { defaultValue: 'No results found' })}</h3>
-                                                        <p className="text-sm text-muted-foreground mt-1" dangerouslySetInnerHTML={{ __html: t('guards.notes.empty.message', { defaultValue: "We couldn't find<br />any items matching<br />your search" }) }} />
+                                                        <p className="text-sm text-muted-foreground mt-1">{renderWithLineBreaks(t('guards.notes.empty.message', { defaultValue: "We couldn't find<br />any items matching<br />your search" }))}</p>
                                                     </div>
                                                 </div>
                                             </td>

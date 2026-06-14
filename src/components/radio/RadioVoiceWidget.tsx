@@ -26,6 +26,11 @@ export default function RadioVoiceWidget() {
   const myId = (user as any)?.id || (user as any)?._id;
   const snap = useSyncExternalStore(subscribeRadio, getRadioSnapshot);
   const pressedRef = useRef(false);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   // Pase de novedades (roll call) — started from this same widget.
   const [paseBusy, setPaseBusy] = useState(false);
@@ -35,9 +40,11 @@ export default function RadioVoiceWidget() {
   const refreshPase = async () => {
     try {
       const c: any = await radioCheckService.getConsole();
+      if (!mountedRef.current) return;
       setPasePermitted(true);
       setRunningId(c?.runningSessionId || null);
     } catch (e: any) {
+      if (!mountedRef.current) return;
       if (e?.response?.status === 403 || e?.response?.status === 401) setPasePermitted(false);
     }
   };

@@ -102,7 +102,7 @@
       "title": "No results found"
     },
     "pagination": {
-      "range": "1 – {{end}} of {{total}}",
+      "range": "{{start}} – {{end}} of {{total}}",
       "zero": "0 – 0 of 0"
     },
     "roleNames": {
@@ -2299,7 +2299,6 @@
     "integraciones": "Integraciones",
     "keep-safe": "security-guards",
     "mensajero": "Messenger",
-    "mfa": "Autenticación de dos factores",
     "notificaciones": "Notificaciones",
     "other-settings": "Otras configuraciones",
     "panel": "Dashboard",
@@ -2383,7 +2382,7 @@
         "title": "No results found"
       },
       "pagination": {
-        "range": "1 – {{end}} of {{total}}",
+        "range": "{{start}} – {{end}} of {{total}}",
         "zero": "0 – 0 of 0"
       },
       "roleNames": {
@@ -4645,7 +4644,6 @@
         "impuestos": "Taxes",
         "integraciones": "Integrations",
         "keep-safe": "Security Guards",
-        "mfa": "Two-Factor Authentication",
         "notificaciones": "Notifications",
         "preferencias-correo": "Email Preferences",
         "sms": "SMS Balance",

@@ -44,12 +44,6 @@ export class ApiService {
 
     const url = `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
-    try {
-      try {
-        const tokenMask = token ? `${String(token).slice(0, 6)}...${String(token).slice(-4)}` : null;
-      } catch {}
-    } catch {}
-
     let response: Response;
     try {
       // Ensure credentials (cookies) are sent so backend session auth works

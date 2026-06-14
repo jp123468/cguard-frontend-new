@@ -13,18 +13,13 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { ShiftRecord, guardDisplayName } from "@/lib/api/shiftService";
+import { isSameDay, colorForGuard } from "./scheduleUtils";
 
 const HOUR_HEIGHT = 64; // px per hour
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 function formatHour(h: number) {
     return `${String(h).padStart(2, '0')}:00`;
-}
-
-function isSameDay(a: Date, b: Date) {
-    return a.getFullYear() === b.getFullYear() &&
-        a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate();
 }
 
 function getShiftTop(shift: ShiftRecord): number {
@@ -37,20 +32,6 @@ function getShiftHeight(shift: ShiftRecord): number {
     const end = new Date(shift.endTime);
     const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
     return Math.max(hours * HOUR_HEIGHT, HOUR_HEIGHT * 0.5);
-}
-
-const SHIFT_COLORS = [
-    'bg-blue-500/15 border-blue-400 text-blue-900',
-    'bg-green-100 border-green-400 text-green-900',
-    'bg-purple-500/15 border-purple-400 text-purple-900',
-    'bg-orange-500/15 border-orange-400 text-orange-900',
-    'bg-teal-100 border-teal-400 text-teal-900',
-];
-
-function colorForGuard(guardId: string | null): string {
-    if (!guardId) return 'bg-muted border-gray-400 text-foreground';
-    const code = guardId.charCodeAt(0) + guardId.charCodeAt(guardId.length - 1);
-    return SHIFT_COLORS[code % SHIFT_COLORS.length];
 }
 
 interface CoverageGap {

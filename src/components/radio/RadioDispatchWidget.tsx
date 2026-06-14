@@ -38,19 +38,28 @@ export default function RadioDispatchWidget() {
   const x = useMotionValue(pos.x);
   const y = useMotionValue(pos.y);
   const lastSeen = useRef<string | null>(null);
+  const mountedRef = useRef(true);
 
   const refresh = useCallback(async () => {
     try {
       const c = await radioCheckService.getConsole();
+      if (!mountedRef.current) return;
       setPermitted(true);
       setData(c);
       if (c?.runningSessionId) {
         const s = await radioCheckService.getSession(c.runningSessionId).catch(() => null);
+        if (!mountedRef.current) return;
         setRunning(s?.session || null);
       } else { setRunning(null); }
     } catch (e: any) {
+      if (!mountedRef.current) return;
       if (e?.response?.status === 403 || e?.response?.status === 401) setPermitted(false);
     }
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);

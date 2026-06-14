@@ -41,30 +41,10 @@ const getTenantId = (): string => {
         return local;
     }
 
-    // Fallback: AuthProvider exposes debugging info on window.__APP_AUTH
-    try {
-        const w: any = window as any;
-        const info = w.__APP_AUTH;
-        if (info) {
-            if (info.tenantId) {
-                globalTenantId = info.tenantId;
-                try { localStorage.setItem('tenantId', info.tenantId); } catch {}
-                return info.tenantId;
-            }
-            const u = info.user;
-            if (u && Array.isArray(u.tenants) && u.tenants.length > 0) {
-                const t = u.tenants[0];
-                const tid = t.tenantId || (t.tenant && (t.tenant.id || t.tenant.tenantId));
-                if (tid) {
-                    globalTenantId = tid;
-                    try { localStorage.setItem('tenantId', tid); } catch {}
-                    return tid;
-                }
-            }
-        }
-    } catch (e) {
-        // ignore
-    }
+    // NOTE: previously this fell back to a `window.__APP_AUTH` global, but that
+    // handle is now dev-only and never exposes the token. The AuthProvider always
+    // persists the resolved tenantId to localStorage (and calls setTenantId), so
+    // the localStorage lookup above is the canonical source.
 
     throw new Error("El usuario debe estar vinculado a una empresa para continuar");
 };
@@ -592,6 +572,11 @@ export const clientService = {
             }
         }
 
+        const { data } = await api.get<any>(
+            `/tenant/${tenantId}/client-account/${clientId}/incidents?${params.toString()}`,
+            { toast: { silentError: true } } as any,
+        );
+        return data;
     },
 
     /**

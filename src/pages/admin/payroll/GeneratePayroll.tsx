@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -74,21 +75,15 @@ export default function GeneratePayroll() {
         setOpenFilter(false);
     };
 
-    const handleExportPdf = () => {
-        console.log("Exportar como PDF");
-    };
+    // This screen is not yet wired to the payroll backend. Surface a clear
+    // message instead of silently no-op'ing so the controls don't appear functional.
+    const notAvailable = () =>
+        toast.info("Esta función aún no está disponible. Usa Nómina › Resumen.");
 
-    const handleExportExcel = () => {
-        console.log("Exportar como Excel");
-    };
-
-    const handlePrint = () => {
-        console.log("Imprimir");
-    };
-
-    const handleSendEmail = () => {
-        console.log("Enviar informe por correo");
-    };
+    const handleExportPdf = notAvailable;
+    const handleExportExcel = notAvailable;
+    const handlePrint = notAvailable;
+    const handleSendEmail = notAvailable;
 
     return (
         <AppLayout>

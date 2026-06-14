@@ -158,7 +158,7 @@ export default function Incidents({ site }: { site?: any }) {
       try {
         const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
         const postSiteId = site?.id || '';
-        if (!postSiteId) return;
+        if (!postSiteId || !tenantId) return;
         setLoading(true);
         const res = await ApiService.get(`/tenant/${tenantId}/incident?postSiteId=${encodeURIComponent(postSiteId)}&limit=50`);
         const rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
@@ -190,9 +190,10 @@ export default function Incidents({ site }: { site?: any }) {
         setLoadingDispatches(true);
 
         // load assigned guards for this post site
+        let guardsRows: any[] = [];
         try {
           const guardsResp = await ApiService.get(`/tenant/${tenantId}/post-site/${postSiteId}/guards`);
-          const guardsRows = Array.isArray(guardsResp) ? guardsResp : (guardsResp && guardsResp.rows) ? guardsResp.rows : [];
+          guardsRows = Array.isArray(guardsResp) ? guardsResp : (guardsResp && guardsResp.rows) ? guardsResp.rows : [];
           if (mounted) setAssignedGuards(guardsRows);
         } catch (err) {
           console.warn('Failed to load assigned guards', err);
@@ -205,7 +206,8 @@ export default function Incidents({ site }: { site?: any }) {
         // Fetch dispatches for each assigned guard (if any)
         let guardRows: any[] = [];
         try {
-          const guardIds = (Array.isArray(assignedGuards) ? assignedGuards : []).map((g: any) => g.securityGuardId || g.guardId || g.userId || g.id).filter(Boolean);
+          const sourceGuards = guardsRows.length ? guardsRows : (Array.isArray(assignedGuards) ? assignedGuards : []);
+          const guardIds = sourceGuards.map((g: any) => g.securityGuardId || g.guardId || g.userId || g.id).filter(Boolean);
           // If we already fetched guards above, use that; otherwise retrieve guards now
           const idsToQuery = guardIds.length ? guardIds : [];
           const guardPromises = idsToQuery.map((gid: string) => ApiService.get(`/tenant/${tenantId}/request?filter[guardName]=${encodeURIComponent(gid)}&limit=50`));

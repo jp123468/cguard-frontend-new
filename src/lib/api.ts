@@ -48,14 +48,6 @@ const ERROR_DEDUPE_WINDOW = 3000; // ms
 
 api.interceptors.request.use((config) => {
   const token = getAuthToken()
-  // Debug: log token presence (masked) and url
-  try {
-    const mask = (t: string | null) => {
-      if (!t) return null;
-      if (t.length <= 12) return t;
-      return `${t.slice(0, 6)}...${t.slice(-4)}`;
-    };
-  } catch {}
   if (token) {
     if (!config.headers) config.headers = {} as any;
     try {
@@ -83,16 +75,19 @@ api.interceptors.request.use((config) => {
   } catch (e) {
     // ignore environments without FormData
   }
-  // Debug: log outgoing incident payloads for troubleshooting
-  try {
-    const method = (config.method || '').toLowerCase();
-    const url = String(config.url || '');
-    if (method === 'post' && url.indexOf('/incident') !== -1) {
-      // eslint-disable-next-line no-console
-      console.debug('[api] outgoing incident POST', { url, data: config.data });
+  // Debug: log outgoing incident payloads for troubleshooting (dev only — the
+  // payload may carry PII/location data and must never be logged in production).
+  if (import.meta.env.DEV) {
+    try {
+      const method = (config.method || '').toLowerCase();
+      const url = String(config.url || '');
+      if (method === 'post' && url.indexOf('/incident') !== -1) {
+        // eslint-disable-next-line no-console
+        console.debug('[api] outgoing incident POST', { url, data: config.data });
+      }
+    } catch (e) {
+      // ignore logging errors
     }
-  } catch (e) {
-    // ignore logging errors
   }
   if (config.toast?.loading) {
     const id = toast.loading(config.toast.loading)
@@ -153,14 +148,30 @@ api.interceptors.response.use(
     if (apiError.status === 402 && apiError.code === 'subscription_required') {
       const now = Date.now();
       const msg = apiError.message || 'Activa tu suscripción para continuar'
-      if (!cfg.toast?.silentError && !(__lastErrorMsg === msg && now - __lastErrorAt < ERROR_DEDUPE_WINDOW)) {
+      const isSilent = !!cfg.toast?.silentError
+      if (!isSilent && !(__lastErrorMsg === msg && now - __lastErrorAt < ERROR_DEDUPE_WINDOW)) {
         toast.error(msg)
         __lastErrorMsg = msg
         __lastErrorAt = now
       }
       try {
-        if (typeof window !== 'undefined' && !String(window.location.pathname).includes('/setting/billing')) {
-          window.location.assign('/setting/billing')
+        if (
+          typeof window !== 'undefined' &&
+          // Don't yank the user (and lose unsaved form state) on background/poll
+          // requests — those pass `toast.silentError`. Only redirect on
+          // foreground/user-initiated requests.
+          !isSilent &&
+          // Avoid redirect loops: the billing page itself may issue 402s.
+          !String(window.location.pathname).includes('/setting/billing')
+        ) {
+          // Prefer router-level handling: dispatch an event a route guard can
+          // listen for and navigate via the SPA router (no full reload / no lost
+          // state). Fall back to a hard navigation only if nothing handled it.
+          const evt = new CustomEvent('app:subscription-required', { cancelable: true })
+          const notHandled = window.dispatchEvent(evt)
+          if (notHandled && !evt.defaultPrevented) {
+            window.location.assign('/setting/billing')
+          }
         }
       } catch {}
       return Promise.reject(apiError)

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import securityGuardService from '@/lib/api/securityGuardService';
 import userService from '@/lib/api/userService';
 
@@ -8,13 +8,16 @@ export default function useActiveMarkers(pollInterval = 10000) {
   const [activeMarkers, setActiveMarkers] = useState<Marker[]>([]);
   const [userFallbackMarker, setUserFallbackMarker] = useState<Marker | null>(null);
   const [centerRequest, setCenterRequest] = useState<number>(0);
+  // Cache the heavy list-fallback results so the 1000-row scans run at most once
+  // (one-shot) instead of on every 10s poll tick.
+  const guardListCache = useRef<Marker[] | null>(null);
+  const userMarkersCache = useRef<Marker[] | null>(null);
 
   const hasTenantContext = () => {
     try {
-      if (localStorage.getItem('tenantId')) return true;
-      const info = (window as any)?.__APP_AUTH;
-      const tenants = info?.user?.tenants;
-      return Array.isArray(tenants) && tenants.length > 0;
+      // tenantId is persisted to localStorage by the AuthProvider on login and
+      // is the canonical source of tenant context.
+      return !!localStorage.getItem('tenantId');
     } catch {
       return false;
     }
@@ -68,38 +71,51 @@ export default function useActiveMarkers(pollInterval = 10000) {
           seenGuards.add(String(guardId));
         });
 
-        // If no markers, fallback to scanning security-guard list (in case some guards
-        // have coordinates stored on the guard record itself).
+        // If no markers from the consolidated endpoint, fall back to scanning the
+        // security-guard list (in case some guards store coords on the record
+        // itself). This is a heavy 1000-row fetch, so run it at most ONCE and
+        // reuse the cached result on subsequent poll ticks.
         if (guardMarkers.length === 0) {
-          const guardsRes: any = await securityGuardService.list({ limit: 1000, offset: 0 } as any).catch(() => null);
-          const guardRows = guardsRes && Array.isArray(guardsRes.rows) ? guardsRes.rows : Array.isArray(guardsRes) ? guardsRes : [];
+          if (guardListCache.current === null) {
+            const guardsRes: any = await securityGuardService.list({ limit: 1000, offset: 0 } as any).catch(() => null);
+            const guardRows = guardsRes && Array.isArray(guardsRes.rows) ? guardsRes.rows : Array.isArray(guardsRes) ? guardsRes : [];
 
-          (guardRows || []).forEach((g: any) => {
-            const isOnDuty = (g.isOnDuty ?? g.onDuty ?? g.raw?.isOnDuty ?? g.raw?.onDuty) ?? false;
-            if (!isOnDuty) return;
-            const guardId = g && g.id;
-            if (!guardId) return;
-            if (seenGuards.has(String(guardId))) return;
-            const coords = extractCoords(g) || extractCoords(g.raw) || null;
-            if (!coords) return;
-            const label = (g.name || g.fullName || g.guard?.name || g.raw?.name) ?? (g.firstName ? `${g.firstName} ${g.lastName || ''}`.trim() : `Guard ${g.id}`);
-            guardMarkers.push({ id: `guard-${g.id}`, lat: coords.lat!, lng: coords.lng!, label, role: 'guard' });
-          });
+            const fromList: Marker[] = [];
+            (guardRows || []).forEach((g: any) => {
+              const isOnDuty = (g.isOnDuty ?? g.onDuty ?? g.raw?.isOnDuty ?? g.raw?.onDuty) ?? false;
+              if (!isOnDuty) return;
+              const guardId = g && g.id;
+              if (!guardId) return;
+              if (seenGuards.has(String(guardId))) return;
+              const coords = extractCoords(g) || extractCoords(g.raw) || null;
+              if (!coords) return;
+              const label = (g.name || g.fullName || g.guard?.name || g.raw?.name) ?? (g.firstName ? `${g.firstName} ${g.lastName || ''}`.trim() : `Guard ${g.id}`);
+              fromList.push({ id: `guard-${g.id}`, lat: coords.lat!, lng: coords.lng!, label, role: 'guard' });
+            });
+            guardListCache.current = fromList;
+          }
+          guardMarkers.push(...guardListCache.current);
         }
 
-        const usersRes: any[] = await userService.listUsers({ limit: 1000, offset: 0 }).catch(() => []);
-        const userMarkers: Marker[] = [];
-        (usersRes || []).forEach((u: any) => {
-          const roles = (u.roles || u.role || u.rolesList || []).map ? (u.roles || u.role || u.rolesList) : (u.roles ?? u.role ?? []);
-          const rolesStr = Array.isArray(roles) ? roles.map((r: any) => (typeof r === 'string' ? r : (r && (r.name || r.role) ? (r.name || r.role) : '') )).join(',').toLowerCase() : String(roles).toLowerCase();
-          const isSupervisor = rolesStr.includes('supervisor');
-          const isOnDuty = (u.isOnDuty ?? u.onDuty ?? u.raw?.isOnDuty) ?? false;
-          if (!isSupervisor || !isOnDuty) return;
-          const coords = extractCoords(u) || extractCoords(u.raw) || null;
-          if (!coords) return;
-          const label = (u.name || u.fullName || u.firstName ? `${u.firstName} ${u.lastName || ''}`.trim() : `User ${u.id}`) as string;
-          userMarkers.push({ id: `user-${u.id}`, lat: coords.lat!, lng: coords.lng!, label, role: 'supervisor' });
-        });
+        // Supervisor markers also come from a heavy 1000-row listing; cache the
+        // derived markers and reuse them across poll ticks (one-shot fetch).
+        if (userMarkersCache.current === null) {
+          const usersRes: any[] = await userService.listUsers({ limit: 1000, offset: 0 }).catch(() => []);
+          const fromUsers: Marker[] = [];
+          (usersRes || []).forEach((u: any) => {
+            const roles = (u.roles || u.role || u.rolesList || []).map ? (u.roles || u.role || u.rolesList) : (u.roles ?? u.role ?? []);
+            const rolesStr = Array.isArray(roles) ? roles.map((r: any) => (typeof r === 'string' ? r : (r && (r.name || r.role) ? (r.name || r.role) : '') )).join(',').toLowerCase() : String(roles).toLowerCase();
+            const isSupervisor = rolesStr.includes('supervisor');
+            const isOnDuty = (u.isOnDuty ?? u.onDuty ?? u.raw?.isOnDuty) ?? false;
+            if (!isSupervisor || !isOnDuty) return;
+            const coords = extractCoords(u) || extractCoords(u.raw) || null;
+            if (!coords) return;
+            const label = (u.name || u.fullName || u.firstName ? `${u.firstName} ${u.lastName || ''}`.trim() : `User ${u.id}`) as string;
+            fromUsers.push({ id: `user-${u.id}`, lat: coords.lat!, lng: coords.lng!, label, role: 'supervisor' });
+          });
+          userMarkersCache.current = fromUsers;
+        }
+        const userMarkers: Marker[] = userMarkersCache.current;
 
         if (!mounted) return;
         const merged = [...guardMarkers, ...userMarkers];
@@ -126,12 +142,29 @@ export default function useActiveMarkers(pollInterval = 10000) {
       }
     };
 
+    // Skip polling work while the tab is hidden to avoid heavy background fetches.
+    const tick = () => {
+      try {
+        if (typeof document !== 'undefined' && document.hidden) return;
+      } catch {}
+      loadMarkers();
+    };
+
+    // Refresh immediately when the tab becomes visible again.
+    const onVisibility = () => {
+      try {
+        if (typeof document !== 'undefined' && !document.hidden) loadMarkers();
+      } catch {}
+    };
+
     loadMarkers();
-    iv = setInterval(loadMarkers, pollInterval);
+    iv = setInterval(tick, pollInterval);
+    try { document.addEventListener('visibilitychange', onVisibility); } catch {}
 
     return () => {
       mounted = false;
       try { if (iv) clearInterval(iv); } catch {}
+      try { document.removeEventListener('visibilitychange', onVisibility); } catch {}
     };
   }, [pollInterval]);
 

@@ -48,6 +48,12 @@ export function DataTable<T extends { id: string }>({
 
     const showSelection = Array.isArray(selectedIds) && typeof onSelectOne === 'function' && typeof onSelectAll === 'function';
 
+    // O(1) membership instead of O(rows x selected) Array.includes per row.
+    const selectedSet = React.useMemo(
+        () => new Set(selectedIds ?? []),
+        [selectedIds]
+    );
+
     const table = (
         <table className="min-w-full text-sm text-left border-collapse">
             <thead className="bg-muted/30">
@@ -132,7 +138,7 @@ export function DataTable<T extends { id: string }>({
                             {showSelection && (
                                 <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                                     <Checkbox
-                                        checked={selectedIds?.includes(row.id) ?? false}
+                                        checked={selectedSet.has(row.id)}
                                         onCheckedChange={(checked) => onSelectOne && onSelectOne(row.id, !!checked)}
                                     />
                                 </td>

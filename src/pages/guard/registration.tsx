@@ -65,7 +65,7 @@ export default function GuardRegistration() {
 
   useEffect(() => { 
     const fetchInvite = async () => {
-      console.log('[registration] params ->', { inviteToken, securityGuardId, inviteType });
+      if (import.meta.env.DEV) console.log('[registration] params ->', { inviteToken, securityGuardId, inviteType });
       
       // Si hay un token de invitación, limpiar cualquier sesión activa para evitar conflictos
       if (inviteToken) {
@@ -92,7 +92,7 @@ export default function GuardRegistration() {
         const urlWithQs = qp.toString() ? `${endpointBase}?${qp.toString()}` : endpointBase;
         const res = await ApiService.get(urlWithQs);
         const data = res?.data || res;
-        console.log('[registration] invite response ->', data);
+        if (import.meta.env.DEV) console.log('[registration] invite response ->', data);
         if (!data) {
           setInviteNotFound(true);
           return;
@@ -109,7 +109,7 @@ export default function GuardRegistration() {
         const emailCandidate = data.email || data.guard?.email || undefined;
         const phoneCandidate = data.guard?.phoneNumber || data.phoneNumber || data.phone || data.mobile || undefined;
         // Log which fields we will prefill
-        console.log('[registration] prefill candidates ->', { rootFirst, rootLast, emailCandidate, phoneCandidate });
+        if (import.meta.env.DEV) console.log('[registration] prefill candidates ->', { rootFirst, rootLast, emailCandidate, phoneCandidate });
         if (rootFirst) { setFirstName(rootFirst); setLockedFirstName(true); }
         if (rootLast) { setLastName(rootLast); setLockedLastName(true); }
         if (emailCandidate) { setEmail(emailCandidate); setLockedEmail(true); }
@@ -348,8 +348,7 @@ export default function GuardRegistration() {
       if (inviteToken) payload.token = inviteToken;
       if (securityGuardId) payload.securityGuardId = securityGuardId;
 
-      // Log final payload for backend debugging
-      console.log("[registration] payload ->", payload);
+      // Note: payload contains the plaintext password — never log it.
 
       // Persist tenantId from fetched invite if missing so tenant-scoped endpoint can be used
       try {
@@ -420,7 +419,6 @@ export default function GuardRegistration() {
                 if (uid) {
                   // Update the user with password and mark email as verified to avoid login issues
                   await userService.updateUser(String(uid), { password: password || undefined, emailVerified: true } as any);
-                  console.debug('[registration] updated created user credentials ->', { uid });
                 }
               } catch (e) {
                 console.warn('[registration] could not update user credentials', e);
@@ -494,15 +492,16 @@ export default function GuardRegistration() {
           const tenantId = localStorage.getItem('tenantId');
           let createResp: any = null;
 
-          // Debug: log payloads so developer can inspect Network/console
-          try {
-            console.debug('[registration] about to send invite payload (redacted shown):', {
-              ...payload,
-              guard: { ...payload.guard, password: payload.guard?.password ? '<REDACTED>' : undefined },
-            });
-            console.debug('[registration] raw guard object (contains password if provided):', payload.guard);
-          } catch (e) {
-            console.warn('[registration] could not log invite payload', e);
+          // Debug: log a redacted payload (never the raw object with the password).
+          if (import.meta.env.DEV) {
+            try {
+              console.debug('[registration] about to send invite payload (redacted):', {
+                ...payload,
+                guard: { ...payload.guard, password: payload.guard?.password ? '<REDACTED>' : undefined },
+              });
+            } catch (e) {
+              console.warn('[registration] could not log invite payload', e);
+            }
           }
 
           // For invitation flows use the public endpoint that does not require auth

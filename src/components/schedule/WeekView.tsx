@@ -12,26 +12,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { ShiftRecord, guardDisplayName } from "@/lib/api/shiftService";
-
-function isSameDay(a: Date, b: Date) {
-    return a.getFullYear() === b.getFullYear() &&
-        a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate();
-}
-
-const SHIFT_COLORS = [
-    'bg-blue-500/15 border-blue-400 text-blue-900',
-    'bg-green-100 border-green-400 text-green-900',
-    'bg-purple-500/15 border-purple-400 text-purple-900',
-    'bg-orange-500/15 border-orange-400 text-orange-900',
-    'bg-teal-100 border-teal-400 text-teal-900',
-];
-
-function colorForGuard(guardId: string | null): string {
-    if (!guardId) return 'bg-muted border-gray-400 text-foreground';
-    const code = guardId.charCodeAt(0) + guardId.charCodeAt(guardId.length - 1);
-    return SHIFT_COLORS[code % SHIFT_COLORS.length];
-}
+import { isSameDay, colorForGuard } from "./scheduleUtils";
 
 interface WeekViewProps {
     currentDate: Date;

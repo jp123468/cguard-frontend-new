@@ -87,6 +87,11 @@ function useDebouncedValue<T>(value: T, delay = 300): T {
   return debounced;
 }
 
+// Guard against the literal string 'undefined' that some legacy records persisted
+// for lastName (from a String(undefined) concat on save). Hides bad data until cleaned.
+const cleanLastName = (lastName: any): string =>
+  lastName && lastName !== 'undefined' ? String(lastName) : '';
+
 const getServerErrorMessage = (error: any, defaultMessage = "Error") => {
   try {
     return (
@@ -434,10 +439,6 @@ export default function ClientesPage() {
   const handleCategorizeSubmit = async () => {
     if (!categorizeClientId) return;
     setCategorizeSaving(true);
-    console.log('🔵 Categorizando cliente:', {
-      clientId: categorizeClientId,
-      categoryIds: categorizeCategories,
-    });
     try {
       await clientService.updateClient(categorizeClientId, {
         categoryIds: categorizeCategories,
@@ -459,26 +460,29 @@ export default function ClientesPage() {
       return;
     }
     setMoveLoading(true);
-    console.log('🟢 Moviendo clientes a Sectores:', {
-      selectedIds,
-      categoryIds: moveCategories,
-    });
     try {
-      await Promise.all(
+      const results = await Promise.allSettled(
         selectedIds.map((id) =>
           clientService.updateClient(id, {
             categoryIds: moveCategories,
           } as any)
         )
       );
-      toast.success(t('clients.categoriesUpdated'));
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      const succeeded = results.length - failed;
+      if (failed === 0) {
+        toast.success(t('clients.categoriesUpdated'));
+      } else if (succeeded === 0) {
+        toast.error(getServerErrorMessage(null, t('clients.errorLoadingClients')));
+      } else {
+        toast.warning(t('clients.bulkPartialSuccess', '{{succeeded}} actualizados, {{failed}} con error', { succeeded, failed }));
+      }
       setOpenMoveDialog(false);
       setSelectedIds([]);
+    } finally {
+      // Always refresh so the UI reflects whatever actually persisted.
       loadClients();
       loadCategories();
-    } catch (error: any) {
-      // backend handles error notification
-    } finally {
       setMoveLoading(false);
     }
   };
@@ -499,7 +503,7 @@ export default function ClientesPage() {
     }
     if (hasPermission('clientAccountEdit')) actions.push({ value: "gestionar-Sectores", label: t('actions.manageCategories') });
     return actions;
-  }, [filters.active]);
+  }, [filters.active, hasPermission, t]);
 
   const columns: Column<Client>[] = useMemo(
     () => [
@@ -509,7 +513,7 @@ export default function ClientesPage() {
         className: "font-medium",
         render: (value, row) => {
           if ((row as any).commercialName) return (row as any).commercialName;
-          const lastName = row.lastName && row.lastName !== 'undefined' ? row.lastName : '';
+          const lastName = cleanLastName(row.lastName);
           return lastName ? `${row.name} ${lastName}` : row.name;
         }
 
@@ -532,7 +536,7 @@ export default function ClientesPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-3 py-2 text-sm">
-                  <div className="font-medium truncate">{(row as any).commercialName || (row.lastName ? `${row.name} ${row.lastName}` : row.name)}</div>
+                  <div className="font-medium truncate">{(row as any).commercialName || (cleanLastName(row.lastName) ? `${row.name} ${cleanLastName(row.lastName)}` : row.name)}</div>
                   <div className="text-xs text-muted-foreground truncate">{row.email || '-'}</div>
                   <div className="text-xs text-muted-foreground truncate">{row.phoneNumber || '-'}</div>
                   <div className="mt-2">
@@ -918,7 +922,7 @@ export default function ClientesPage() {
               <div className="p-4 bg-card border rounded-lg">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-sm truncate">{client.name}{client.lastName ? ` ${client.lastName}` : ''}</div>
+                    <div className="font-medium text-sm truncate">{client.name}{cleanLastName(client.lastName) ? ` ${cleanLastName(client.lastName)}` : ''}</div>
                     <div className="text-xs text-muted-foreground truncate">{client.email || '-'}</div>
                   </div>
 
@@ -1040,17 +1044,24 @@ export default function ClientesPage() {
             <AlertDialogAction
               onClick={async () => {
                 try {
-                  await Promise.all(
+                  const results = await Promise.allSettled(
                     selectedIds.map((id) =>
                       clientService.updateClient(id, { active: false } as any)
                     )
                   );
-                  toast.success(t('clients.clientsArchived'));
+                  const failed = results.filter((r) => r.status === 'rejected').length;
+                  const succeeded = results.length - failed;
+                  if (failed === 0) {
+                    toast.success(t('clients.clientsArchived'));
+                  } else if (succeeded === 0) {
+                    toast.error(getServerErrorMessage(null, t('clients.errorArchiveClient')));
+                  } else {
+                    toast.warning(t('clients.bulkPartialSuccess', '{{succeeded}} actualizados, {{failed}} con error', { succeeded, failed }));
+                  }
                   setSelectedIds([]);
-                  loadClients();
                   setOpenArchiveBulkDialog(false);
-                } catch (error: any) {
-                  // backend handles errors
+                } finally {
+                  loadClients();
                 }
               }}
             >
@@ -1074,17 +1085,24 @@ export default function ClientesPage() {
               className="bg-[#C8860A] hover:bg-[#B37809] text-white"
               onClick={async () => {
                 try {
-                  await Promise.all(
+                  const results = await Promise.allSettled(
                     selectedIds.map((id) =>
                       clientService.updateClient(id, { active: true } as any)
                     )
                   );
-                  toast.success(t('clients.clientsRestored'));
+                  const failed = results.filter((r) => r.status === 'rejected').length;
+                  const succeeded = results.length - failed;
+                  if (failed === 0) {
+                    toast.success(t('clients.clientsRestored'));
+                  } else if (succeeded === 0) {
+                    toast.error(getServerErrorMessage(null, t('clients.errorLoadingClients')));
+                  } else {
+                    toast.warning(t('clients.bulkPartialSuccess', '{{succeeded}} actualizados, {{failed}} con error', { succeeded, failed }));
+                  }
                   setSelectedIds([]);
-                  loadClients();
                   setOpenRestoreBulkDialog(false);
-                } catch (error: any) {
-                  // backend handles errors
+                } finally {
+                  loadClients();
                 }
               }}
             >

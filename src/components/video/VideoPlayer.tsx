@@ -17,7 +17,11 @@ const GOLD = "#C8860A";
 /* hls.js dynamic loader (single shared <script> from CDN)             */
 /* ------------------------------------------------------------------ */
 
-const HLS_CDN = "https://cdn.jsdelivr.net/npm/hls.js@1";
+// Pin an exact version with an SRI hash so a compromised/altered CDN build
+// cannot execute arbitrary JS in the authenticated app context. The hash must
+// be regenerated if HLS_CDN is bumped (openssl dgst -sha384 -binary | base64).
+const HLS_CDN = "https://cdn.jsdelivr.net/npm/hls.js@1.5.18/dist/hls.min.js";
+const HLS_SRI = "sha384-R2JqybiEexSXz60H6Zz28MdsqWWnMQlP+NDb7nIhDHWxx6sM7Otw7OWCq9EBCPsz";
 let hlsLoaderPromise: Promise<any> | null = null;
 
 function loadHlsJs(): Promise<any> {
@@ -46,6 +50,9 @@ function loadHlsJs(): Promise<any> {
     const script = document.createElement("script");
     script.src = HLS_CDN;
     script.async = true;
+    script.integrity = HLS_SRI;
+    script.crossOrigin = "anonymous";
+    script.referrerPolicy = "no-referrer";
     script.dataset.hlsLoader = "true";
     script.onload = () => {
       if ((window as any).Hls) resolve((window as any).Hls);

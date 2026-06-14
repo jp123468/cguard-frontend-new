@@ -74,11 +74,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Quick diagnostics: dump persisted auth keys and restore tenantId for services
+    // Restore tenantId for services. Diagnostics are dev-only and never dump tokens.
     try {
-      console.debug('[AuthProvider] localStorage userPermissions=', localStorage.getItem('userPermissions'));
-      console.debug('[AuthProvider] localStorage userIsAdmin=', localStorage.getItem('userIsAdmin'));
-      console.debug('[AuthProvider] localStorage tenantId=', localStorage.getItem('tenantId'));
+      if (import.meta.env.DEV) {
+        console.debug('[AuthProvider] localStorage userPermissions=', localStorage.getItem('userPermissions'));
+        console.debug('[AuthProvider] localStorage userIsAdmin=', localStorage.getItem('userIsAdmin'));
+        console.debug('[AuthProvider] localStorage tenantId=', localStorage.getItem('tenantId'));
+      }
       const t = localStorage.getItem('tenantId');
       if (t) {
         try { setClientServiceTenantId(t); } catch {}
@@ -88,8 +90,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
-  // Expose debug handle for quick inspection in the browser console
+  // Expose a debug handle for quick inspection in the browser console.
+  // SECURITY: never put the raw bearer token (or anything else sensitive) on this
+  // global — any third-party script / XSS payload can read it with one property
+  // access. Services that need the tenant id use the setTenantId singletons.
+  // Gated to dev builds only.
   useEffect(() => {
+    if (!import.meta.env.DEV) return;
     try {
       (window as any).__APP_AUTH = {
         user,
@@ -97,7 +104,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAdmin,
         tenantAdmin,
         loading,
-        authToken: localStorage.getItem('authToken'),
         tenantId: localStorage.getItem('tenantId'),
       };
     } catch (e) {}
@@ -186,24 +192,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(userData);
       // normalize permissions and admin flag
       const { perms, admin, tenantAdmin } = extractPermissionsFromUser(userData);
-      // Only overwrite cached permissions if the backend returned a non-empty set.
-      // This protects against responses that do not include tenant-scoped permissions
-      // and would otherwise clear permissions that were persisted at login.
-      if (Array.isArray(perms) && perms.length > 0) {
-        setPermissions(perms);
-        // Debug: show extracted permissions for current tenant
+      // /auth/me is the source of truth: ALWAYS reconcile (including clearing)
+      // permissions and the admin flags from the server. Cached localStorage
+      // values are only a render-flash optimization and must never be allowed to
+      // keep admin/permissions elevated once the server has answered. (The backend
+      // still independently authorizes every request regardless of client state.)
+      setPermissions(perms);
+      if (import.meta.env.DEV) {
         try { console.debug('[AuthContext] extracted permissions for tenant:', perms); } catch (e) {}
-        try { localStorage.setItem('userPermissions', JSON.stringify(perms)); } catch {}
-      } else {
-        try { console.debug('[AuthContext] profile returned no permissions; keeping cached permissions'); } catch (e) {}
       }
+      try { localStorage.setItem('userPermissions', JSON.stringify(perms)); } catch {}
 
       setTenantAdmin(tenantAdmin);
-      // Only set admin flag to true if backend indicates admin; avoid clearing a cached admin flag
-      if (admin) {
-        setIsAdmin(admin);
-        try { localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
-      }
+      setIsAdmin(admin);
+      try { localStorage.setItem('userIsAdmin', admin ? 'true' : 'false'); } catch {}
+      try { localStorage.setItem('userTenantAdmin', tenantAdmin ? 'true' : 'false'); } catch {}
     } catch (e: any) {
       if (e instanceof ApiError) {
         console.warn("getProfile falló:", e.status, e.message);
@@ -296,7 +299,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             try { setCategoryTenantId(String(tenantId)); } catch {}
           }
         } catch {}
-        try { console.debug('[AuthContext] permissions after signIn:', perms); } catch (e) {}
+        if (import.meta.env.DEV) { try { console.debug('[AuthContext] permissions after signIn:', perms); } catch (e) {} }
         setIsAdmin(admin);
         return { success: true };
       }
@@ -443,23 +446,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   function matchesByAlias(requested: string): boolean {
     if (!requested) return false;
-    // direct match
+    // direct match (preferred)
     if (permissions.includes(requested)) return true;
-    // try to match by action suffix and resource substring
-    const m = requested.match(/(.*?)(Import|Create|Edit|Destroy|Read|Autocomplete|Export|Restore|Archive)$/i);
+
+    // Alias match: only bridge well-known resource-name variants for the SAME
+    // action (e.g. `clientAccountEdit` vs `clientEdit`). We deliberately avoid the
+    // previous loose `includes()` substring test, which could let a narrow perm
+    // satisfy a broader check (over-grant in the UI).
+    const m = requested.match(/^(.*?)(Import|Create|Edit|Destroy|Read|Autocomplete|Export|Restore|Archive)$/i);
     if (m) {
-      const resource = m[1];
-      const action = m[2];
-      const actionNorm = action.charAt(0).toUpperCase() + action.slice(1);
-      const found = permissions.find((p) => p.endsWith(actionNorm) && p.toLowerCase().includes(resource.toLowerCase()));
-      if (found) return true;
-    }
-    // try reverse: requested might be full resource like clientAccountEdit while permissions use clientEdit
-    const m2 = requested.match(/(.*?)(Import|Create|Edit|Destroy|Read|Autocomplete|Export|Restore|Archive)$/i);
-    if (m2) {
-      const action = m2[2];
-      const actionNorm = action.charAt(0).toUpperCase() + action.slice(1);
-      const found = permissions.find((p) => p.endsWith(actionNorm) && p.toLowerCase().includes(requested.toLowerCase()));
+      const reqResource = m[1].toLowerCase();
+      const actionNorm = m[2].charAt(0).toUpperCase() + m[2].slice(1).toLowerCase();
+      const found = permissions.find((p) => {
+        const pm = p.match(/^(.*?)(Import|Create|Edit|Destroy|Read|Autocomplete|Export|Restore|Archive)$/i);
+        if (!pm) return false;
+        // Same action required.
+        if (pm[2].toLowerCase() !== actionNorm.toLowerCase()) return false;
+        const permResource = pm[1].toLowerCase();
+        // Resources must be aliases of one another: equal, or one is a
+        // prefix of the other at a name boundary (clientAccount <-> client).
+        return (
+          permResource === reqResource ||
+          permResource.startsWith(reqResource) ||
+          reqResource.startsWith(permResource)
+        );
+      });
       if (found) return true;
     }
     return false;
@@ -470,12 +481,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (tenantAdmin) return true;
     if (!permissions || permissions.length === 0) return false;
     const ok = matchesByAlias(perm);
-    // Debug: only log client-related permission checks to avoid noisy logs
-    try {
-      if (perm && perm.toLowerCase().includes('client')) {
-        console.debug('[AuthContext] hasPermission check', { perm, isAdmin, permissions, result: ok });
-      }
-    } catch (e) {}
+    // Debug: only log client-related permission checks to avoid noisy logs (dev only)
+    if (import.meta.env.DEV) {
+      try {
+        if (perm && perm.toLowerCase().includes('client')) {
+          console.debug('[AuthContext] hasPermission check', { perm, isAdmin, permissions, result: ok });
+        }
+      } catch (e) {}
+    }
     return ok;
   };
 

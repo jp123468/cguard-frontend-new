@@ -365,103 +365,44 @@ export default function Visitors() {
         }
     };
 
-    const handleExportPDF = () => {
-        const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
-        if (!ids || ids.length === 0) {
-            toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
-            return;
-        }
+    // Escape any user/server-supplied value before interpolating into print/PDF HTML.
+    // Visitor fields (names, idNumber, reason) and client/site labels are free-text and
+    // attacker-influenced; without escaping a value like `<img src=x onerror=...>` would
+    // execute in the same-origin print popup and could read localStorage tokens.
+    const escapeHtml = (val: unknown): string =>
+        String(val ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
 
-        const rowsToExport = logs.filter((r) => ids.includes(String(r.id)));
-        if (!rowsToExport.length) {
-            toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
-            return;
-        }
-
-        const tableRows = rowsToExport.map((r) => `
-                    <tr>
-                        <td>${formatDateTime(r.visitDate)}</td>
-                        <td>${(r.lastName || '')}</td>
-                        <td>${(r.firstName || '')}</td>
-                        <td>${(r.idNumber || '')}</td>
-                        <td>${(r.reason || '')}</td>
-                        <td>${(formatDateTime(r.exitTime) || '')}</td>
-                        <td>${(r.numPeople ?? '')}</td>
-                        <td>${(r.station?.stationName || r.station?.name || r.stationName || '')}</td>
-                        <td>${(getClientLabelFromRecord(r) || '')}</td>
-                        <td>${(getPostSiteLabelFromRecord(r) || '')}</td>
-                    </tr>
-                `).join('');
-
-        const html = `
-                        <html>
-                        <head>
-                            <title>Bitácoras</title>
-                            <style>
-                                table{border-collapse:collapse;width:100%}
-                                th,td{border:1px solid #ccc;padding:6px;text-align:left}
-                                th{background:#f5f5f5}
-                            </style>
-                        </head>
-                        <body>
-                            <h2>${t('visitantes.bitacoras') || 'Bitácoras'}</h2>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>ID</th><th>${t('visitantes.logTable.firstName') || 'Nombre'}</th><th>${t('visitantes.logTable.lastName') || 'Apellidos'}</th><th>${t('visitantes.logTable.idNumber') || 'ID'}</th><th>${t('visitantes.logTable.date') || 'Fecha'}</th><th>${t('visitantes.logTable.station') || 'Estación'}</th><th>${t('visitantes.logTable.client') || 'Cliente'}</th><th>${t('visitantes.logTable.postSite') || 'Sitio'}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${tableRows}
-                                </tbody>
-                            </table>
-                        </body>
-                        </html>
-                `;
-
-        const w = window.open('', '_blank');
-        if (w) {
-            w.document.write(html);
-            w.document.close();
-            w.focus();
-            setTimeout(() => { w.print(); }, 500);
-        } else {
-            toast.error(t('visitantes.printError') || 'No se pudo abrir ventana para imprimir');
-        }
-    };
-
-    const handlePrintSelected = () => {
-        const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
-        if (!ids || ids.length === 0) {
-            toast.error(t('visitantes.notprint') || 'No hay registros seleccionados para imprimir');
-            return;
-        }
-
-        const rowsToPrint = logs.filter((r) => ids.includes(String(r.id)));
-        if (!rowsToPrint.length) {
-            toast.error(t('visitantes.notprint') || 'No hay registros seleccionados para imprimir');
-            return;
-        }
-
+    // Shared builder for PDF/print: escapes every cell once and opens a print window.
+    const buildAndPrint = (
+        rowsToPrint: any[],
+        opts: { title: string; headers: string[] },
+    ) => {
         const tableRows = rowsToPrint.map((r) => `
             <tr>
-                <td>${formatDateTime(r.visitDate)}</td>
-                <td>${(r.lastName || '')}</td>
-                <td>${(r.firstName || '')}</td>
-                <td>${(r.idNumber || '')}</td>
-                <td>${(r.reason || '')}</td>
-                <td>${(formatDateTime(r.exitTime) || '')}</td>
-                <td>${(r.numPeople ?? '')}</td>
-                <td>${(r.station?.stationName || r.station?.name || r.stationName || '')}</td>
-                <td>${(getClientLabelFromRecord(r) || '')}</td>
-                <td>${(getPostSiteLabelFromRecord(r) || '')}</td>
+                <td>${escapeHtml(formatDateTime(r.visitDate))}</td>
+                <td>${escapeHtml(r.lastName || '')}</td>
+                <td>${escapeHtml(r.firstName || '')}</td>
+                <td>${escapeHtml(r.idNumber || '')}</td>
+                <td>${escapeHtml(r.reason || '')}</td>
+                <td>${escapeHtml(formatDateTime(r.exitTime) || '')}</td>
+                <td>${escapeHtml(r.numPeople ?? '')}</td>
+                <td>${escapeHtml(r.station?.stationName || r.station?.name || r.stationName || '')}</td>
+                <td>${escapeHtml(getClientLabelFromRecord(r) || '')}</td>
+                <td>${escapeHtml(getPostSiteLabelFromRecord(r) || '')}</td>
             </tr>
         `).join('');
+
+        const headerCells = opts.headers.map((h) => `<th>${escapeHtml(h)}</th>`).join('');
 
         const html = `
             <html>
             <head>
-                <title>Bitácoras - Imprimir</title>
+                <title>${escapeHtml(opts.title)}</title>
                 <style>
                     table{border-collapse:collapse;width:100%}
                     th,td{border:1px solid #ccc;padding:6px;text-align:left}
@@ -469,12 +410,10 @@ export default function Visitors() {
                 </style>
             </head>
             <body>
-                <h2>${t('visitantes.bitacoras') || 'Bitácoras'}</h2>
+                <h2>${escapeHtml(t('visitantes.bitacoras') || 'Bitácoras')}</h2>
                 <table>
                     <thead>
-                        <tr>
-                            <th>Date</th><th>Last name</th><th>First name</th><th>ID</th><th>Reason of visit</th><th>Exit Time</th><th>Number of people</th><th>Station</th><th>Client</th><th>Site</th>
-                        </tr>
+                        <tr>${headerCells}</tr>
                     </thead>
                     <tbody>
                         ${tableRows}
@@ -493,6 +432,55 @@ export default function Visitors() {
         } else {
             toast.error(t('visitantes.printError') || 'No se pudo abrir ventana para imprimir');
         }
+    };
+
+    const handleExportPDF = () => {
+        const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
+        if (!ids || ids.length === 0) {
+            toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
+            return;
+        }
+
+        const rowsToExport = logs.filter((r) => ids.includes(String(r.id)));
+        if (!rowsToExport.length) {
+            toast.error(t('visitantes.noSelectionExport') || 'No hay registros seleccionados para exportar');
+            return;
+        }
+
+        buildAndPrint(rowsToExport, {
+            title: 'Bitácoras',
+            headers: [
+                t('visitantes.logTable.date') || 'Fecha',
+                t('visitantes.logTable.lastName') || 'Apellidos',
+                t('visitantes.logTable.firstName') || 'Nombre',
+                t('visitantes.logTable.idNumber') || 'ID',
+                t('visitantes.logTable.reason') || 'Motivo',
+                t('visitantes.logTable.exitTime') || 'Hora de salida',
+                t('visitantes.logTable.numPeople') || 'Número de personas',
+                t('visitantes.logTable.station') || 'Estación',
+                t('visitantes.logTable.client') || 'Cliente',
+                t('visitantes.logTable.postSite') || 'Sitio',
+            ],
+        });
+    };
+
+    const handlePrintSelected = () => {
+        const ids = Object.keys(selectedLogs).filter((k) => selectedLogs[k]);
+        if (!ids || ids.length === 0) {
+            toast.error(t('visitantes.notprint') || 'No hay registros seleccionados para imprimir');
+            return;
+        }
+
+        const rowsToPrint = logs.filter((r) => ids.includes(String(r.id)));
+        if (!rowsToPrint.length) {
+            toast.error(t('visitantes.notprint') || 'No hay registros seleccionados para imprimir');
+            return;
+        }
+
+        buildAndPrint(rowsToPrint, {
+            title: 'Bitácoras - Imprimir',
+            headers: ['Date', 'Last name', 'First name', 'ID', 'Reason of visit', 'Exit Time', 'Number of people', 'Station', 'Client', 'Site'],
+        });
     };
 
     const fetchLogs = async () => {
@@ -530,7 +518,6 @@ export default function Visitors() {
         }
     };
 
-    useEffect(() => { fetchLogs(); }, [logsLimit, logsOffset]);
     // when filter client changes, load postSites for that client
     useEffect(() => {
         const load = async () => {
@@ -663,11 +650,25 @@ export default function Visitors() {
         load();
     }, []);
 
+    // Single consolidated effect: debounce on every query/filter/pagination change.
+    // Including the filter fields the fetch reads (client/site/guard/placeType/tag/archived)
+    // ensures filters apply on the same render instead of a render late, and removing the
+    // separate mount fetch avoids the redundant double initial request.
     useEffect(() => {
-        const t = setTimeout(() => { setLogsOffset(0); fetchLogs(); }, 300);
-        return () => clearTimeout(t);
+        const handle = setTimeout(() => { fetchLogs(); }, 300);
+        return () => clearTimeout(handle);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [logsSearch]);
+    }, [
+        logsSearch,
+        logsLimit,
+        logsOffset,
+        filters.client,
+        filters.site,
+        filters.guard,
+        filters.placeType,
+        filters.tag,
+        filters.archived,
+    ]);
 
     const perPageText = useMemo(() => {
         if (perPage === "10") return "10";
@@ -677,10 +678,8 @@ export default function Visitors() {
 
     const onSubmitFilters = (e: FormEvent) => {
         e.preventDefault();
-        console.log("Aplicando filtros:", filters);
-        // reset paging and refetch with new filters
+        // reset paging; the consolidated effect refetches when offset/filters change
         setLogsOffset(0);
-        fetchLogs();
         setOpenFilter(false);
     };
 
@@ -808,7 +807,7 @@ export default function Visitors() {
                             <Input
                                 className="w-72 pl-9"
                                 placeholder={t('visitantes.searchVisitor') || 'Buscar visitante'}
-                                onChange={(e) => setLogsSearch(e.target.value)}
+                                onChange={(e) => { setLogsSearch(e.target.value); setLogsOffset(0); }}
                             />
                         </div>
 

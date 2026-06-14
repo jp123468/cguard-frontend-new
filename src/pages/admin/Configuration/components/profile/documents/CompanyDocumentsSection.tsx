@@ -14,6 +14,9 @@ interface Props {
   canEdit?: boolean;
 }
 
+// Only allow http(s) document URLs; neutralize javascript:/data:/other schemes.
+const safeDocHref = (url?: string) => (url && /^https?:\/\//i.test(url) ? url : '#');
+
 export default function CompanyDocumentsSection({ documents, onUpload, onDelete, canEdit }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,7 +51,7 @@ export default function CompanyDocumentsSection({ documents, onUpload, onDelete,
         {documents.length === 0 && <li className="text-xs text-muted-foreground">No hay documentos cargados.</li>}
         {documents.map((doc) => (
           <li key={doc.id} className="flex items-center justify-between border-b pb-1">
-            <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm">{doc.name}</a>
+            <a href={safeDocHref(doc.url)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm">{doc.name}</a>
             <span className="text-xs text-muted-foreground ml-2">{doc.type}</span>
             {canEdit && (
               <button

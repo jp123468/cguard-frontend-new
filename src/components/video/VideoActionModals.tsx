@@ -153,6 +153,14 @@ export function TrimShareModal({
   const [shareUrl, setShareUrl] = React.useState<string | null>(null);
   const [expiresAt, setExpiresAt] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
+  const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear any pending "copied" reset timer on unmount.
+  React.useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
 
   React.useEffect(() => {
     if (open) {
@@ -205,7 +213,8 @@ export function TrimShareModal({
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       toast.success("Enlace copiado");
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("No se pudo copiar el enlace");
     }

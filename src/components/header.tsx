@@ -132,7 +132,8 @@ export default function Header({
       toast.error(t('header.select_rating'));
       return;
     }
-    console.log({ rating, feedback: feedbackText });
+    // NOTE: no feedback submit endpoint exists yet, so this is currently a
+    // local-only acknowledgement. Do not log the free-text feedback (PII).
     toast.success(t('header.feedback_thanks'));
     setFeedbackOpen(false);
     setRating(0);

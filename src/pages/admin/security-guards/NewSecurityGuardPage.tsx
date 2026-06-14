@@ -264,6 +264,20 @@ export default function NewSecurityGuardPage() {
   const setDoc = (key: keyof GuardDocuments) => (val: any) =>
     setGuardDocs((prev) => ({ ...prev, [key]: val }));
 
+  // Object URL for the profile-photo preview. Created once per selected File (not
+  // on every render) and revoked when the File changes / on unmount to avoid
+  // leaking blob URLs while the user fills out the large controlled form.
+  const profilePhotoFile = guardDocs.profilePhoto ?? null;
+  const profilePhotoPreviewUrl = useMemo(
+    () => (profilePhotoFile ? URL.createObjectURL(profilePhotoFile) : null),
+    [profilePhotoFile]
+  );
+  useEffect(() => {
+    return () => {
+      if (profilePhotoPreviewUrl) URL.revokeObjectURL(profilePhotoPreviewUrl);
+    };
+  }, [profilePhotoPreviewUrl]);
+
   /** Upload a single document file and return the file object with token */
   const uploadDoc = async (file: File, storageId: string) => {
     try {
@@ -543,7 +557,7 @@ export default function NewSecurityGuardPage() {
                       <ProfilePhotoCapture
                         value={guardDocs.profilePhoto ?? null}
                         onChange={setDoc("profilePhoto") as (f: File | null) => void}
-                        previewUrl={guardDocs.profilePhoto ? URL.createObjectURL(guardDocs.profilePhoto) : null}
+                        previewUrl={profilePhotoPreviewUrl}
                       />
                     </div>
 

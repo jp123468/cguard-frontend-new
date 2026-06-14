@@ -76,7 +76,8 @@ export default function TenantsPage() {
     try {
       // In superadmin UI we must fetch via the superadmin endpoint so we get the requested tenant,
       // not the tenant associated to the current user token.
-      const resp: any = await tenantService.findByIdSuperadmin ? await tenantService.findByIdSuperadmin(id) : await tenantService.findById(id);
+      const fn = tenantService.findByIdSuperadmin ?? tenantService.findById;
+      const resp: any = await fn.call(tenantService, id);
       const tenant = resp?.data ?? resp;
       setSelectedTenant(tenant);
     } catch (e) {

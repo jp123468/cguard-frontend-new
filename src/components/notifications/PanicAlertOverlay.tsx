@@ -34,6 +34,11 @@ export function PanicAlertOverlay({
 
   const latest = alerts[0];
   const p: any = latest.payload || {};
+  // Only trust http(s)/geo map links from the alert payload; never allow
+  // javascript:/data: schemes to reach the href on this high-trust overlay.
+  const safeMapsUrl = typeof p.mapsUrl === "string" && /^(https?:|geo:)/i.test(p.mapsUrl)
+    ? p.mapsUrl
+    : null;
   const when = (() => {
     try {
       return new Date(p.at || latest.createdAt).toLocaleString("es", {
@@ -91,9 +96,9 @@ export function PanicAlertOverlay({
             >
               <Phone size={18} /> Llamar 911
             </a>
-            {p.mapsUrl ? (
+            {safeMapsUrl ? (
               <a
-                href={p.mapsUrl}
+                href={safeMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 rounded-xl bg-red-800 text-white font-bold py-3 hover:bg-red-900 transition-colors"

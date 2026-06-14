@@ -722,7 +722,7 @@ export default function Stations({ site }: { site?: any }) {
                                 {jornadas.length > 0 && (
                                   <div className="flex flex-wrap gap-1 mt-1">
                                     {jornadas.map((j: any, i: number) => (
-                                      <span key={i} className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${JORNADA_COLORS[j.tipo] || JORNADA_COLORS.personalizada}`}>
+                                      <span key={`${j.tipo ?? ''}-${j.startTime ?? ''}-${j.endTime ?? ''}-${i}`} className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${JORNADA_COLORS[j.tipo] || JORNADA_COLORS.personalizada}`}>
                                         {j.nombre || j.tipo}
                                         {j.startTime && j.endTime && (
                                           <span className="font-mono opacity-60 ml-1">{j.startTime}–{j.endTime}</span>
@@ -782,7 +782,7 @@ export default function Stations({ site }: { site?: any }) {
                             {jornadas.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-2 ml-8">
                                 {jornadas.map((j: any, i: number) => (
-                                  <span key={i} className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${JORNADA_COLORS[j.tipo] || JORNADA_COLORS.personalizada}`}>
+                                  <span key={`${j.tipo ?? ''}-${j.startTime ?? ''}-${j.endTime ?? ''}-${i}`} className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${JORNADA_COLORS[j.tipo] || JORNADA_COLORS.personalizada}`}>
                                     {j.nombre || j.tipo}
                                     {j.startTime && j.endTime && <span className="font-mono opacity-60 ml-1">{j.startTime}–{j.endTime}</span>}
                                   </span>
@@ -898,6 +898,14 @@ export default function Stations({ site }: { site?: any }) {
                                       const popup = window.open('', '_blank');
                                       (async () => {
                                         try {
+                                          // Fast path: if the assigned-guard payload already carries the canonical
+                                          // security-guard id/route, navigate directly without any extra lookups.
+                                          const directId = g.securityGuardId || g.securityGuard?.id || g.guard?.securityGuardId;
+                                          if (directId) {
+                                            const directUrl = `${window.location.origin}/guards/${directId}/overview`;
+                                            if (popup) popup.location.href = directUrl;
+                                            return;
+                                          }
                                           // Try several queries and attempt to find the best matching security-guard record
                                           const tryPaths = [
                                             `/tenant/${tenantId}/security-guard?filter[guardId]=${encodeURIComponent(g.id)}&limit=50`,
@@ -933,22 +941,9 @@ export default function Stations({ site }: { site?: any }) {
                                             }
                                           }
 
-                                          // If still not found, do a broader fetch and try to match nested guard.id
-                                          if (!candidate) {
-                                            try {
-                                              const respAll = await ApiService.get(`/tenant/${tenantId}/security-guard?limit=999`, { toast: { silentError: true } } as any);
-                                              const allRows = normalizeRows(respAll);
-                                              const match = allRows.find((row: any) => {
-                                                const nested = row.guard || {};
-                                                const gidCandidates = [nested.id, nested.guardId, row.guardId, row.id];
-                                                return gidCandidates.some((x: any) => x && String(x) === String(g.id));
-                                              });
-                                              if (match) candidate = match;
-                                            } catch (e) {
-                                              // ignore
-                                            }
-                                          }
-
+                                          // If still not found, fall back to the clicked guard id directly.
+                                          // (Previously this did a /security-guard?limit=999 full-roster scan,
+                                          // which loaded the entire tenant guard list on every click.)
                                           const finalId = candidate ? (candidate.id || candidate.guard?.id || candidate.guardId || g.id) : g.id;
                                           const finalUrl = `${window.location.origin}/guards/${finalId}/overview`;
                                           if (popup) popup.location.href = finalUrl;

@@ -105,6 +105,12 @@ interface ScheduleOverride {
 
 const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
+// Format a Date as a LOCAL date-only string (YYYY-MM-DD). Using toISOString() here
+// would convert local-midnight dates to UTC and shift the day back for users west of
+// UTC (all of LATAM), causing wrong-month queries and off-by-one cell/override matching.
+const fmtDate = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 const POSITION_COLORS: Record<string, { bg: string; border: string; text: string; icon: any }> = {
   fijo: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-600', icon: Sun },
   sacafranco: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-500', icon: Shield },
@@ -171,8 +177,8 @@ export default function Schedule() {
     return days;
   }, [currentDate]);
 
-  const startDateStr = monthDays[0].toISOString().slice(0, 10);
-  const endDateStr = monthDays[monthDays.length - 1].toISOString().slice(0, 10);
+  const startDateStr = fmtDate(monthDays[0]);
+  const endDateStr = fmtDate(monthDays[monthDays.length - 1]);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -218,6 +224,37 @@ export default function Schedule() {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
+  // Pre-indexed lookups (built once per data load) to replace repeated O(n) .find()
+  // scans inside the month grid / coverage memos.
+  const stationsById = useMemo(() => {
+    const m = new Map<string, Station>();
+    for (const s of stations) m.set(s.id, s);
+    return m;
+  }, [stations]);
+
+  const rotationStylesById = useMemo(() => {
+    const m = new Map<string, RotationStyle>();
+    for (const r of rotationStyles) m.set(r.id, r);
+    return m;
+  }, [rotationStyles]);
+
+  const positionsById = useMemo(() => {
+    const m = new Map<string, StationPosition>();
+    for (const p of positions) m.set(p.id, p);
+    return m;
+  }, [positions]);
+
+  // `${positionId}-${dateStr}` → shift for that day (avoids per-cell shifts.find scan).
+  // Key uses the raw startTime date slice to match the previous .find() semantics exactly.
+  const shiftsByPositionDate = useMemo(() => {
+    const m = new Map<string, ShiftRecord>();
+    for (const s of shifts) {
+      if (!s.positionId || !s.startTime) continue;
+      m.set(`${s.positionId}-${s.startTime.slice(0, 10)}`, s);
+    }
+    return m;
+  }, [shifts]);
+
   const getPositionsForStation = (stationId: string) =>
     positions.filter(p => p.stationId === stationId && p.type !== 'sacafranco');
 
@@ -242,13 +279,15 @@ export default function Schedule() {
     return map;
   }, [assignments, shifts]);
 
-  // Check if a guard works on a given date based on rotation
-  const isWorkDay = (assignment: GuardAssignment, date: Date): 'day' | 'night' | 'rest' => {
+  // Check if a guard works on a given date based on rotation.
+  // useCallback so dependent memos (sfStationCoverage, localStationAlerts) keep a stable
+  // identity and only recompute when their real inputs change.
+  const isWorkDay = useCallback((assignment: GuardAssignment, date: Date): 'day' | 'night' | 'rest' => {
     const rot = assignment.rotationStyle;
     if (!rot) return 'rest';
 
     // For sacafranco positions, check if any fijo guard at the same station is resting
-    const pos = positions.find(p => p.id === assignment.positionId);
+    const pos = positionsById.get(assignment.positionId);
     if (pos?.type === 'sacafranco' || assignment.isRelief) {
       // Sacafranco follows its OWN rotation using global epoch (Jan 1)
       const sfCycle = rot.dayShifts + rot.nightShifts + rot.restDays;
@@ -275,19 +314,19 @@ export default function Schedule() {
 
     // For 24H positions: distinguish day/night phases
     // For 12H positions: both day and night rotation phases are just "work" days
-    const assignStation = stations.find(s => s.id === assignment.stationId);
+    const assignStation = stationsById.get(assignment.stationId);
     const is24h = assignStation?.scheduleType === '24h';
     if (adjustedDay < rot.dayShifts) return 'day';
     if (adjustedDay < rot.dayShifts + rot.nightShifts) return is24h ? 'night' : 'day';
     return 'rest';
-  };
+  }, [positionsById, stationsById]);
 
   // Compute the rotation slot status for a position (no guard needed)
   // Uses the station's rotation style and position offset
-  const getSlotStatus = (stationId: string, position: StationPosition, date: Date): 'day' | 'night' | 'rest' => {
-    const station = stations.find(s => s.id === stationId);
+  const getSlotStatus = useCallback((stationId: string, position: StationPosition, date: Date): 'day' | 'night' | 'rest' => {
+    const station = stationsById.get(stationId);
     if (!station?.rotationStyleId) return 'rest';
-    const rot = rotationStyles.find(r => r.id === station.rotationStyleId);
+    const rot = rotationStylesById.get(station.rotationStyleId);
     if (!rot) return 'rest';
 
     const cycleLength = rot.dayShifts + rot.nightShifts + rot.restDays;
@@ -309,7 +348,7 @@ export default function Schedule() {
     if (adjustedDay < rot.dayShifts) return 'day';
     if (adjustedDay < rot.dayShifts + rot.nightShifts) return is24hSlot ? 'night' : 'day';
     return 'rest';
-  };
+  }, [stationsById, rotationStylesById]);
 
   // Unassigned guards (not in any active assignment)
   const unassignedGuards = useMemo(() => {
@@ -320,7 +359,7 @@ export default function Schedule() {
   // Sacafranco availability: guards assigned to sacafranco positions + their D/N/L schedule
   const sacafrancoData = useMemo(() => {
     const reliefAssignments = assignments.filter(a => {
-      const pos = positions.find(p => p.id === a.positionId);
+      const pos = positionsById.get(a.positionId);
       return pos?.type === 'sacafranco' || a.isRelief;
     });
 
@@ -358,10 +397,10 @@ export default function Schedule() {
           // Work day — find which station has a fijo resting
           let coveringStation: string | undefined;
           for (const asgn of data.assignments) {
-            const station = stations.find(s => s.id === asgn.stationId);
+            const station = stationsById.get(asgn.stationId);
             const stationFijos = assignments.filter(ma =>
               ma.stationId === asgn.stationId && !ma.isRelief &&
-              positions.find(p => p.id === ma.positionId)?.type === 'fijo'
+              positionsById.get(ma.positionId)?.type === 'fijo'
             );
             for (const mainA of stationFijos) {
               const mainRot = mainA.rotationStyle;
@@ -382,7 +421,7 @@ export default function Schedule() {
     });
 
     return Array.from(byGuard.values());
-  }, [assignments, positions, stations, monthDays]);
+  }, [assignments, positionsById, stationsById, monthDays]);
 
   // Map: `${stationId}-${dateStr}` → covering SF guard name(s)
   // Algorithm: on each day, match working SFs to stations that have fijos resting
@@ -392,12 +431,12 @@ export default function Schedule() {
     // Pre-compute: which stations have fijos resting on each day
     const stationRestDays = new Map<string, string[]>(); // dateStr → [stationId, ...]
     const fijoAssigns = assignments.filter(a => {
-      const pos = positions.find(p => p.id === a.positionId);
+      const pos = positionsById.get(a.positionId);
       return pos?.type === 'fijo' && !a.isRelief;
     });
 
     for (const day of monthDays) {
-      const dateStr = day.toISOString().slice(0, 10);
+      const dateStr = fmtDate(day);
       const stationsNeeding: string[] = [];
       // Group fijo assignments by station
       const byStation = new Map<string, GuardAssignment[]>();
@@ -415,7 +454,7 @@ export default function Schedule() {
 
     // Pre-compute: which SFs are working on each day
     for (const day of monthDays) {
-      const dateStr = day.toISOString().slice(0, 10);
+      const dateStr = fmtDate(day);
       const stationsNeeding = stationRestDays.get(dateStr) || [];
       if (stationsNeeding.length === 0) continue;
 
@@ -424,7 +463,7 @@ export default function Schedule() {
       for (const sf of sacafrancoData) {
         if (!sf.guard) continue;
         const entry = sf.availability.find(a => {
-          const d = a.date instanceof Date ? a.date.toISOString().slice(0, 10) : String(a.date).slice(0, 10);
+          const d = a.date instanceof Date ? fmtDate(a.date) : String(a.date).slice(0, 10);
           return d === dateStr;
         });
         if (entry?.status === 'covering') {
@@ -448,17 +487,16 @@ export default function Schedule() {
     }
 
     return map;
-  }, [sacafrancoData, assignments, positions, monthDays, isWorkDay]);
+  }, [sacafrancoData, assignments, positionsById, monthDays, isWorkDay]);
 
   // Per-station alerts for uncovered fijo slots and SF rest-day coverage gaps.
   const localStationAlerts = useMemo(() => {
-    const posById = new Map(positions.map(p => [p.id, p]));
     const rows: { stationId: string; stationName: string; missingFijoCount: number; sfUncoveredDays: number }[] = [];
 
     for (const st of stations) {
       const stationFijoPositions = positions.filter(p => p.stationId === st.id && p.type === 'fijo');
       const stationFijoAssignments = assignments.filter(a => {
-        const pos = posById.get(a.positionId);
+        const pos = positionsById.get(a.positionId);
         return a.stationId === st.id && !a.isRelief && pos?.type === 'fijo';
       });
 
@@ -468,7 +506,7 @@ export default function Schedule() {
       let sfUncoveredDays = 0;
       if (stationFijoAssignments.length > 0) {
         for (const day of monthDays) {
-          const dateStr = day.toISOString().slice(0, 10);
+          const dateStr = fmtDate(day);
           const anyResting = stationFijoAssignments.some(a => isWorkDay(a, day) === 'rest');
           if (!anyResting) continue;
 
@@ -490,7 +528,7 @@ export default function Schedule() {
 
     rows.sort((a, b) => (b.missingFijoCount + b.sfUncoveredDays) - (a.missingFijoCount + a.sfUncoveredDays));
     return rows;
-  }, [stations, positions, assignments, monthDays, sfStationCoverage, isWorkDay]);
+  }, [stations, positions, positionsById, assignments, monthDays, sfStationCoverage, isWorkDay]);
 
   const stationAlerts = useMemo(() => {
     const apiAlerts = staffing?.stationAlerts;
@@ -511,7 +549,7 @@ export default function Schedule() {
   const openAssignForm = (stationId: string, positionId: string) => {
     setAssignTarget({ stationId, positionId });
     setAssignGuard('');
-    setAssignStartDate(new Date().toISOString().slice(0, 10));
+    setAssignStartDate(fmtDate(new Date()));
     setAssignOffset(0);
     setAssignRotation('');
     setShowAssignForm(true);
@@ -523,7 +561,7 @@ export default function Schedule() {
     if (!guardId) return;
     setAssignTarget({ stationId, positionId });
     setAssignGuard(guardId);
-    setAssignStartDate(new Date().toISOString().slice(0, 10));
+    setAssignStartDate(fmtDate(new Date()));
     setAssignOffset(0);
     setAssignRotation('');
     setShowAssignForm(true);
@@ -822,7 +860,7 @@ export default function Schedule() {
     return currentDate.toLocaleDateString('es', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
   }, [currentDate]);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = fmtDate(new Date());
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -1083,7 +1121,7 @@ export default function Schedule() {
                   Estación / Posición
                 </div>
                 {monthDays.map((day, i) => {
-                  const isToday = day.toISOString().slice(0, 10) === todayStr;
+                  const isToday = fmtDate(day) === todayStr;
                   const isSunday = day.getDay() === 0;
                   return (
                     <div key={i} className={`px-0.5 py-2 text-center border-r border-border/20 last:border-r-0 ${isToday ? 'bg-[#C8860A]/5' : ''} ${isSunday ? 'bg-red-500/5' : ''}`}>
@@ -1219,7 +1257,7 @@ export default function Schedule() {
 
                           {/* Day cells */}
                           {monthDays.map((day, dayIdx) => {
-                            const dateStr = day.toISOString().slice(0, 10);
+                            const dateStr = fmtDate(day);
                             const isToday = dateStr === todayStr;
                             const isSunday = day.getDay() === 0;
 
@@ -1438,13 +1476,13 @@ export default function Schedule() {
 
                           {/* Day cells */}
                           {monthDays.map((day, dayIdx) => {
-                            const dateStr = day.toISOString().slice(0, 10);
+                            const dateStr = fmtDate(day);
                             const isToday = dateStr === todayStr;
                             const isSunday = day.getDay() === 0;
 
-                            // Find the shift for this day to determine which station
-                            const dayShift = shifts.find(s => s.positionId === pos.id && s.startTime.slice(0, 10) === dateStr);
-                            const coveringStationName = dayShift ? stations.find(st => st.id === dayShift.stationId)?.stationName?.slice(0, 3) : '';
+                            // Find the shift for this day to determine which station (Map lookup, not O(n) find)
+                            const dayShift = shiftsByPositionDate.get(`${pos.id}-${dateStr}`);
+                            const coveringStationName = dayShift ? stationsById.get(dayShift.stationId)?.stationName?.slice(0, 3) : '';
 
                             if (posAssignments.length > 0) {
                               const assignment = posAssignments[0];
@@ -1466,7 +1504,7 @@ export default function Schedule() {
 
                               return (
                                 <div key={dayIdx} className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}>
-                                  <div className={`h-[20px] rounded flex flex-col items-center justify-center ${bg}`} title={coveringStationName ? `Cubre: ${stations.find(st => st.id === dayShift?.stationId)?.stationName}` : code}>
+                                  <div className={`h-[20px] rounded flex flex-col items-center justify-center ${bg}`} title={coveringStationName ? `Cubre: ${dayShift ? stationsById.get(dayShift.stationId)?.stationName : ''}` : code}>
                                     <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
                                     {coveringStationName && <span className="text-[7px] text-muted-foreground leading-none">{coveringStationName}</span>}
                                   </div>

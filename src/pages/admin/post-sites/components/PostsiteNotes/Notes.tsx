@@ -338,7 +338,7 @@ export default function PostSiteNotes({ site }: Props) {
                       {formData.attachments && formData.attachments.length > 0 ? (
                         <div className="space-y-2">
                           {formData.attachments.map((f, i) => (
-                            <div key={i} className="flex items-center justify-between gap-3">
+                            <div key={`${f.name}-${(f as any).size ?? ''}-${(f as any).lastModified ?? ''}-${i}`} className="flex items-center justify-between gap-3">
                               <div className="flex items-center gap-3 truncate">
                                 <span className="text-sm text-foreground font-medium truncate" style={{ maxWidth: 200 }} title={f.name}>{shortName(f.name, 28)}</span>
                               </div>

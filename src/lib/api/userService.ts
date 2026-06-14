@@ -11,13 +11,14 @@ export const userService = {
   async createUser(data: UserCreateData) {
     const tenantId = getTenantId();
     const url = `/tenant/${tenantId}/user`;
-    try { console.log('[userService] createUser ->', { url, payload: data }); } catch (e) {}
+    // NOTE: do not log the payload/response — createUser commonly carries a temp password.
     try {
       const { data: resp } = await api.post<any>(url, data);
-      try { console.log('[userService] createUser response ->', resp); } catch (e) {}
       return resp;
     } catch (err: any) {
-      try { console.error('[userService] createUser ERROR', { url, payload: data, status: err?.response?.status, responseData: err?.response?.data, message: err?.message }); } catch (e) {}
+      if (import.meta.env.DEV) {
+        try { console.error('[userService] createUser ERROR', { url, status: err?.response?.status, message: err?.message }); } catch (e) {}
+      }
       throw err;
     }
   },
@@ -25,25 +26,21 @@ export const userService = {
   async updateUser(id: string, data: Partial<UserUpdateData>) {
     const tenantId = getTenantId();
     const url = `/tenant/${tenantId}/user/${id}`;
-    try {
-      console.log('[userService] updateUser ->', { url, id, payload: data });
-    } catch (e) {}
-
+    // NOTE: do not log the payload/response — updateUser may carry credentials/PII.
     try {
       const { data: resp } = await api.patch<any>(url, data);
-      try { console.log('[userService] updateUser response ->', resp); } catch (e) {}
       return resp;
     } catch (err: any) {
-      try {
-        console.error('[userService] updateUser ERROR', {
-          url,
-          id,
-          payload: data,
-          status: err?.response?.status,
-          responseData: err?.response?.data,
-          message: err?.message,
-        });
-      } catch (e) {}
+      if (import.meta.env.DEV) {
+        try {
+          console.error('[userService] updateUser ERROR', {
+            url,
+            id,
+            status: err?.response?.status,
+            message: err?.message,
+          });
+        } catch (e) {}
+      }
       throw err;
     }
   },
@@ -51,13 +48,13 @@ export const userService = {
   async fetchUser(id: string): Promise<UserCurrent | null> {
     const tenantId = getTenantId();
     const url = `/tenant/${tenantId}/user/${id}`;
-    try { console.log('[userService] fetchUser ->', { url, id }); } catch (e) {}
     try {
       const { data: resp } = await api.get<any>(url, { toast: { silentError: true } } as any);
-      try { console.log('[userService] fetchUser response ->', resp); } catch (e) {}
       return resp?.data || resp || null;
     } catch (err: any) {
-      try { console.error('[userService] fetchUser ERROR', { url, id, status: err?.response?.status, responseData: err?.response?.data, message: err?.message }); } catch (e) {}
+      if (import.meta.env.DEV) {
+        try { console.error('[userService] fetchUser ERROR', { url, id, status: err?.response?.status, message: err?.message }); } catch (e) {}
+      }
       throw err;
     }
   },

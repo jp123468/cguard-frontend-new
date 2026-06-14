@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useMemo, useEffect } from "react";
 import {
   Camera,
   Upload,
@@ -33,9 +33,23 @@ export default function ProfilePhotoCapture({ value, onChange, previewUrl }: Pro
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [capturedUrl, setCapturedUrl] = useState<string | null>(null);
 
+  // Object URL for a File `value`. Created once per File (not on every render)
+  // and revoked when the File changes / on unmount so we don't leak blob URLs.
+  const valueFile = value instanceof File ? value : null;
+  const valueObjectUrl = useMemo(
+    () => (valueFile ? URL.createObjectURL(valueFile) : null),
+    [valueFile]
+  );
+  useEffect(() => {
+    return () => {
+      if (valueObjectUrl) URL.revokeObjectURL(valueObjectUrl);
+    };
+  }, [valueObjectUrl]);
+
   // Compute current preview
   const currentPreview = capturedUrl
-    ?? (value instanceof File ? URL.createObjectURL(value) : typeof value === "string" ? value : null)
+    ?? valueObjectUrl
+    ?? (typeof value === "string" ? value : null)
     ?? previewUrl
     ?? null;
 

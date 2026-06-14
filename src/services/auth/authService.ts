@@ -59,15 +59,9 @@ export class AuthService {
       firstName: firstName || undefined,
       lastName: lastName || undefined,
     }
-    try {
-      console.log('[AuthService] signUp payload ->', payload)
-      const response = await ApiService.post('/auth/sign-up', payload, { skipAuth: true })
-      console.log('[AuthService] signUp response <-', response)
-      return response
-    } catch (err: any) {
-      console.error('[AuthService] signUp error <-', err)
-      throw err
-    }
+    // NOTE: never log `payload`/`response` here — they contain the plaintext password.
+    const response = await ApiService.post('/auth/sign-up', payload, { skipAuth: true })
+    return response
   }
 
   static async getProfile(): Promise<any> {

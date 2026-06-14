@@ -313,18 +313,31 @@ export default function PostSiteKPIs({ site }: Props) {
       const start = new Date(Date.UTC(year, monthIndex, 1, 0, 0, 0)).toISOString();
       const end = new Date(Date.UTC(year, monthIndex + 1, 1, 0, 0, 0)).toISOString();
 
+      // NOTE: ideally the postSite/guard filter (and precomputed counts) would be pushed
+      // to the backend /report query; until that endpoint exists we fetch the month's rows
+      // once and tally them in a single pass below instead of filtering per-KPI.
       const q = `?generatedDateRange[]=${encodeURIComponent(start)}&generatedDateRange[]=${encodeURIComponent(end)}&limit=10000`;
       const resp: any = await ApiService.get(`/tenant/${tenantId}/report${q}`);
-      console.debug('[PostSiteKPIs] reports response:', resp);
+      if (import.meta.env.DEV) console.debug('[PostSiteKPIs] reports response:', resp);
       const rows = Array.isArray(resp?.rows) ? resp.rows : (Array.isArray(resp) ? resp : []);
+
+      // Single pass over rows: build count maps keyed by guard id and station id.
+      const countsByGuard: Record<string, number> = {};
+      const countsByStation: Record<string, number> = {};
+      for (const r of rows) {
+        const guardId = r?.createdById ?? r?.createdBy?.id;
+        if (guardId != null) countsByGuard[String(guardId)] = (countsByGuard[String(guardId)] || 0) + 1;
+        const stationId = r?.stationId ?? r?.station?.id;
+        if (stationId != null) countsByStation[String(stationId)] = (countsByStation[String(stationId)] || 0) + 1;
+      }
 
       const countsByKpi: Record<string, number> = {};
       for (const kpi of kpis) {
         let cnt = 0;
         if (kpi.scope === 'guard' && kpi.guard && kpi.guard.id) {
-          cnt = rows.filter((r: any) => r.createdById === kpi.guard.id || (r.createdBy && r.createdBy.id === kpi.guard.id)).length;
+          cnt = countsByGuard[String(kpi.guard.id)] || 0;
         } else if (kpi.scope === 'postSite' && kpi.postSite && kpi.postSite.id) {
-          cnt = rows.filter((r: any) => String(r.stationId) === String(kpi.postSite.id) || (r.station && String(r.station.id) === String(kpi.postSite.id))).length;
+          cnt = countsByStation[String(kpi.postSite.id)] || 0;
         } else {
           cnt = rows.length;
         }

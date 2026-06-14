@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { LogIn, LogOut, Smartphone, AlertTriangle, RefreshCw, Search, History, ShieldCheck, Loader2 } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import { Card } from "@/components/ui/card";
-import { ApiService } from "@/services/api/apiService";
+import { useInfiniteAuditList } from "./useInfiniteAuditList";
 
 type Row = {
   id: string; event: string; outcome?: string | null; email?: string | null;
@@ -38,79 +38,36 @@ const fmt = (d?: string) => {
 };
 
 export default function LoginHistory() {
-  const [items, setItems] = useState<Row[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [filter, setFilter] = useState("");
 
   const tid = () => localStorage.getItem("tenantId") || "";
-  const itemsRef = useRef<Row[]>([]);
-  const loadingRef = useRef(false);
-  const reqIdRef = useRef(0);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const h = setTimeout(() => setDebouncedQ(q), 350);
     return () => clearTimeout(h);
   }, [q]);
 
-  const load = async (reset: boolean) => {
-    if (loadingRef.current) return;
-    if (!reset && itemsRef.current.length >= total && total > 0) return;
-    loadingRef.current = true;
-    setLoading(true);
-    const reqId = ++reqIdRef.current;
+  const buildParams = useCallback(
+    (offset: number, limit: number) => {
+      const eventParam = FILTERS.find((f) => f.key === filter)?.event || "";
+      const params = new URLSearchParams();
+      params.set("limit", String(limit));
+      params.set("offset", String(offset));
+      if (eventParam) params.set("event", eventParam);
+      if (debouncedQ.trim()) params.set("search", debouncedQ.trim());
+      return params;
+    },
+    [filter, debouncedQ],
+  );
 
-    const offset = reset ? 0 : itemsRef.current.length;
-    const eventParam = FILTERS.find((f) => f.key === filter)?.event || "";
-    const params = new URLSearchParams();
-    params.set("limit", String(PAGE_SIZE));
-    params.set("offset", String(offset));
-    if (eventParam) params.set("event", eventParam);
-    if (debouncedQ.trim()) params.set("search", debouncedQ.trim());
-
-    try {
-      const r: any = await ApiService.get(`/tenant/${tid()}/security/audit-logs?${params.toString()}`);
-      if (reqId !== reqIdRef.current) return;
-      const rows: Row[] = Array.isArray(r) ? r : (r?.rows ?? []);
-      const count: number = typeof r?.count === "number" ? r.count : rows.length;
-      setTotal(count);
-      setItems((prev) => {
-        const next = reset ? rows : [...prev, ...rows];
-        itemsRef.current = next;
-        return next;
-      });
-    } catch {
-      if (reqId === reqIdRef.current && reset) { setItems([]); itemsRef.current = []; setTotal(0); }
-    } finally {
-      if (reqId === reqIdRef.current) setLoading(false);
-      loadingRef.current = false;
-    }
-  };
-
-  useEffect(() => {
-    itemsRef.current = [];
-    setItems([]);
-    setTotal(0);
-    load(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, debouncedQ]);
-
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => { if (entries[0]?.isIntersecting) load(false); },
-      { rootMargin: "300px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [total]);
-
-  const hasMore = items.length < total;
+  const { items, total, loading, hasMore, load, sentinelRef } = useInfiniteAuditList<Row>({
+    endpoint: `/tenant/${tid()}/security/audit-logs`,
+    pageSize: PAGE_SIZE,
+    buildParams,
+    deps: [filter, debouncedQ],
+  });
 
   return (
     <AppLayout>

@@ -7,7 +7,6 @@ export type ProfilePayload = {
   phoneNumber?: string;
   timezone?: string;
   skype?: string;
-  twoFactorEnabled?: boolean;
   email?: string;
   avatars?: any[];
 };

@@ -41,7 +41,14 @@ interface Jornada {
   endTime: string;
   guardsCount: string | number;
   days: string[]; // ['lun','mar','mie',...]
+  _key?: string; // client-only stable React key; stripped before persisting
 }
+
+let _jornadaKeySeq = 0;
+const nextJornadaKey = () => `j-${Date.now().toString(36)}-${(_jornadaKeySeq++).toString(36)}`;
+// Persist jornadas without any client-only fields (keys prefixed with '_').
+const serializeJornadas = (list: Jornada[]) =>
+  JSON.stringify(list.map(({ _key, ...rest }) => rest));
 
 export default function StationOverview({ station, stationId, postSiteId }: Props) {
   const { t } = useTranslation();
@@ -64,11 +71,12 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
       if (Array.isArray(raw)) parsed = raw;
       else if (raw && typeof raw === 'string' && raw.trim().startsWith('[')) parsed = JSON.parse(raw);
     } catch {}
-    // Ensure each jornada has 'days' field
+    // Ensure each jornada has 'days' field and a stable client-only key
     parsed = parsed.map(j => ({
       ...j,
       days: j.days || [...ALL_DAYS],
       guardsCount: j.guardsCount || '1',
+      _key: j._key || nextJornadaKey(),
     }));
     if (parsed.length === 0) {
       // Default from station fields
@@ -78,6 +86,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
         endTime: station.finishTimeInDay || '19:00',
         guardsCount: station.numberOfGuardsInStation || '1',
         days: [...ALL_DAYS],
+        _key: nextJornadaKey(),
       }];
     }
     setJornadas(parsed);
@@ -127,16 +136,18 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
 
       await ApiService.put(`/tenant/${tenantId}/station/${stationId}`, {
         data: {
-          stationSchedule: JSON.stringify(jornadas),
+          stationSchedule: serializeJornadas(jornadas),
           startingTimeInDay: mainStart,
           finishTimeInDay: mainEnd,
           numberOfGuardsInStation: String(totalGuards),
         },
       });
+      // Reflect saved values in local display state instead of reloading the whole SPA.
+      setStartTime(mainStart);
+      setEndTime(mainEnd);
+      setGuardsCount(String(totalGuards));
       toast.success('Horario actualizado');
       setEditing(false);
-      // Reload page to reflect changes
-      window.location.reload();
     } catch (e: any) {
       toast.error(e?.message || 'Error al guardar');
     } finally {
@@ -152,6 +163,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
       endTime: '19:00',
       guardsCount: '1',
       days: [...ALL_DAYS],
+      _key: nextJornadaKey(),
     }]);
   };
 
@@ -351,7 +363,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
         {/* Jornadas editor */}
         <div className="p-6 space-y-5">
           {jornadas.map((jornada, idx) => (
-            <div key={idx} className="bg-muted/10 border border-border/30 rounded-xl p-4 space-y-4 relative group">
+            <div key={jornada._key || idx} className="bg-muted/10 border border-border/30 rounded-xl p-4 space-y-4 relative group">
               {jornadas.length > 1 && (
                 <button
                   onClick={() => removeJornada(idx)}

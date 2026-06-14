@@ -6,6 +6,12 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tsconfigPaths(), tailwindcss()],
+  // Defense-in-depth: strip console.*/debugger from production bundles so any
+  // stray payload/token logging never reaches the shipped app. esbuild applies
+  // `drop` only when minifying (i.e. production builds), leaving dev untouched.
+  esbuild: {
+    drop: ["console", "debugger"],
+  },
   build: {
     // Raise warning threshold — chunks are intentionally split below
     chunkSizeWarningLimit: 600,

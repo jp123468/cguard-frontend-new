@@ -1021,7 +1021,7 @@
     },
     "pagination": {
       "zero": "0 – 0 de 0",
-      "range": "1 – {{end}} de {{total}}"
+      "range": "{{start}} – {{end}} de {{total}}"
     },
     "dialogs": {
       "common": {

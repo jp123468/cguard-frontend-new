@@ -80,7 +80,9 @@ export default function SubscriptionDetailsModule() {
           <div className="space-y-1">
             <div className="text-muted-foreground">Cliente</div>
             <div className="font-medium">
-              michaelurresta@seguridadbas.com
+              {/* Mock screen — no real customer PII is committed here.
+                  Replace with backend-driven data when billing is wired up. */}
+              &mdash;
             </div>
           </div>
           <div className="space-y-1">

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import api, { getAuthToken } from "@/lib/api";
+import api from "@/lib/api";
+import { openEventStream } from "@/lib/api/eventStream";
 import securityGuardService from "@/lib/api/securityGuardService";
 import tenantService from "@/services/tenant.service";
 import type {
@@ -168,31 +169,25 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
   // ── SSE live event feed (real-time layer the backend already exposes) ────
   useEffect(() => {
     if (!tenantId()) return;
-    const token = getAuthToken();
-    const base = (import.meta as any).env?.VITE_API_URL || "";
-    if (!base || !token) return;
-    let es: EventSource | null = null;
-    try {
-      // NOTE: events routes are mounted at /api/:tenantId/events/* (no /tenant/ segment),
-      // unlike the rest of the tenant API.
-      es = new EventSource(`${base}/${tenantId()}/events/stream?token=${encodeURIComponent(token)}`);
-      sseRef.current = es;
-      es.onopen = () => setState((s) => ({ ...s, health: { ...s.health, sseConnected: true } }));
-      es.onerror = () => setState((s) => ({ ...s, health: { ...s.health, sseConnected: false } }));
-      es.onmessage = (ev) => {
-        try {
-          const data = JSON.parse(ev.data);
-          const item: ActivityItem = {
-            id: data.id || `ev-${Date.now()}`, kind: mapEventKind(data.type),
-            title: data.title || data.message || data.type || "Evento",
-            sub: data.subtitle || data.stationName || "", at: data.createdAt || new Date().toISOString(),
-            status: data.severity === "critical" ? "emergency" : "online",
-          };
-          setState((s) => ({ ...s, activity: [item, ...s.activity].slice(0, 30) }));
-        } catch { /* heartbeat / non-JSON */ }
-      };
-    } catch { /* SSE unsupported — polling above still drives the map */ }
-    return () => { es?.close(); sseRef.current = null; };
+    // Shared helper centralizes the token-in-URL setup (see eventStream.ts security note).
+    const es = openEventStream(tenantId());
+    if (!es) return; // SSE unsupported — polling above still drives the map
+    sseRef.current = es;
+    es.onopen = () => setState((s) => ({ ...s, health: { ...s.health, sseConnected: true } }));
+    es.onerror = () => setState((s) => ({ ...s, health: { ...s.health, sseConnected: false } }));
+    es.onmessage = (ev) => {
+      try {
+        const data = JSON.parse(ev.data);
+        const item: ActivityItem = {
+          id: data.id || `ev-${Date.now()}`, kind: mapEventKind(data.type),
+          title: data.title || data.message || data.type || "Evento",
+          sub: data.subtitle || data.stationName || "", at: data.createdAt || new Date().toISOString(),
+          status: data.severity === "critical" ? "emergency" : "online",
+        };
+        setState((s) => ({ ...s, activity: [item, ...s.activity].slice(0, 30) }));
+      } catch { /* heartbeat / non-JSON */ }
+    };
+    return () => { es.close(); sseRef.current = null; };
   }, []);
 
   return { ...state, refresh };

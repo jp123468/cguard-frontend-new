@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
@@ -87,13 +88,17 @@ export default function OvertimeMultiplier() {
         );
         if (filteredRules.length === 0) return;
 
-        console.log({
-            name,
-            guard,
-            type,
-            days: selectedDays,
-            rules: filteredRules,
-        });
+        // Not yet wired to the payroll backend; avoid logging the payload (PII) in prod.
+        if (import.meta.env.DEV) {
+            console.log({
+                name,
+                guard,
+                type,
+                days: selectedDays,
+                rules: filteredRules,
+            });
+        }
+        toast.info("Esta función aún no está disponible.");
     };
 
     if (mode === "create") {

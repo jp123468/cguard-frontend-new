@@ -75,6 +75,15 @@ export default function Step3Payment({ data, updateData, onPrevious, onSubmit }:
                     </div>
 
                     {/* Card Payment Form */}
+                    {/*
+                      PCI-DSS WARNING: Before wiring this form's submit to the backend,
+                      replace these manual PAN/CVC/expiry inputs with Stripe Elements
+                      (hosted fields / tokenization) — the same approach already used in
+                      admin/Configuration/billing. Raw card numbers and CVC must NEVER be
+                      sent to or stored by our servers; doing so puts the app in PCI scope.
+                      autoComplete is disabled below so browsers/password managers don't
+                      persist these values while the form remains a client-only stub.
+                    */}
                     {data.paymentMethod === "card" && (
                         <div className="space-y-4">
                             {/* Card Number */}
@@ -91,6 +100,8 @@ export default function Step3Payment({ data, updateData, onPrevious, onSubmit }:
                                             updateData({ cardNumber: formatted });
                                         }}
                                         maxLength={19}
+                                        inputMode="numeric"
+                                        autoComplete="off"
                                         required
                                     />
                                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-1">
@@ -117,6 +128,8 @@ export default function Step3Payment({ data, updateData, onPrevious, onSubmit }:
                                             updateData({ expiryDate: value });
                                         }}
                                         maxLength={5}
+                                        inputMode="numeric"
+                                        autoComplete="off"
                                         required
                                     />
                                 </div>
@@ -133,6 +146,8 @@ export default function Step3Payment({ data, updateData, onPrevious, onSubmit }:
                                             updateData({ cvc: value });
                                         }}
                                         maxLength={4}
+                                        inputMode="numeric"
+                                        autoComplete="off"
                                         required
                                     />
                                 </div>

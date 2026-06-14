@@ -8,17 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Plus, UserCircle2, MapPin, Clock } from "lucide-react";
 import { ShiftRecord, guardDisplayName } from "@/lib/api/shiftService";
-
-function isSameDay(a: Date, b: Date) {
-    return a.getFullYear() === b.getFullYear() &&
-        a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate();
-}
-
-function shiftDurationHours(shift: ShiftRecord): number {
-    const ms = new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime();
-    return Math.round((ms / (1000 * 60 * 60)) * 10) / 10;
-}
+import { isSameDay, shiftDurationHours } from "./scheduleUtils";
 
 interface ListViewProps {
     currentDate: Date;

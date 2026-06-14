@@ -50,6 +50,7 @@ export default function GlobalInventoryPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [page, setPage] = useState(0);
@@ -94,14 +95,18 @@ export default function GlobalInventoryPage() {
     }
   };
 
-  useEffect(() => { setPage(0); }, [query, filterType, filterStatus]);
-  useEffect(() => { load(); }, [page, filterType, filterStatus]);
-
-  // Debounce text search
+  // Debounce text search into a settled value that drives loading.
   useEffect(() => {
-    const t = setTimeout(() => load(), 350);
+    const t = setTimeout(() => setDebouncedQuery(query), 350);
     return () => clearTimeout(t);
   }, [query]);
+
+  // Reset to first page when the settled search text changes (filter Selects
+  // reset the page imperatively in their onValueChange to avoid a double fetch).
+  useEffect(() => { setPage(0); }, [debouncedQuery]);
+
+  // Single source of truth for list requests: exactly one per settled change.
+  useEffect(() => { load(); }, [page, debouncedQuery, filterType, filterStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openCreate = () => {
     setEditingItem(null);
@@ -242,7 +247,7 @@ export default function GlobalInventoryPage() {
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
-          <Select value={filterType || '__all__'} onValueChange={(v) => setFilterType(v === '__all__' ? '' : v)}>
+          <Select value={filterType || '__all__'} onValueChange={(v) => { setPage(0); setFilterType(v === '__all__' ? '' : v); }}>
             <SelectTrigger className="w-44">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
@@ -253,7 +258,7 @@ export default function GlobalInventoryPage() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={filterStatus || '__all__'} onValueChange={(v) => setFilterStatus(v === '__all__' ? '' : v)}>
+          <Select value={filterStatus || '__all__'} onValueChange={(v) => { setPage(0); setFilterStatus(v === '__all__' ? '' : v); }}>
             <SelectTrigger className="w-44">
               <SelectValue placeholder="Estado" />
             </SelectTrigger>

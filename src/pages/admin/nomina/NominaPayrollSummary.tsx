@@ -109,23 +109,25 @@ export default function NominaPayrollSummary() {
   };
 
   const exportPdf = () => {
+    const esc = (s: any) =>
+      String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
     const head = ["Guardia", "Turnos", "H. reg.", "H. extra", "H. tot.", "Tardanzas", "Inasist.", "Correc."]
       .concat(ratesEnabled ? ["Pago bruto"] : []);
     const body = rows
       .map((r) => {
         const cells = [r.guardName, r.shifts, r.regularHours.toFixed(2), r.overtimeHours.toFixed(2), r.totalHours.toFixed(2), r.lateCount, r.noShows, r.approvedCorrections]
           .concat(ratesEnabled ? [money(r.grossPay)] : []);
-        return `<tr>${cells.map((c) => `<td>${c}</td>`).join("")}</tr>`;
+        return `<tr>${cells.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`;
       })
       .join("");
     const w = window.open("", "_blank");
     if (!w) return;
-    w.document.write(`<html><head><title>Nómina ${from} a ${to}</title>
+    w.document.write(`<html><head><title>Nómina ${esc(from)} a ${esc(to)}</title>
       <style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:18px}
       table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
       th,td{border:1px solid #ddd;padding:6px;text-align:left}th{background:#C8860A;color:#fff}</style></head>
-      <body><h1>Resumen de Nómina · ${from} a ${to}</h1>
-      <table><thead><tr>${head.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>
+      <body><h1>Resumen de Nómina · ${esc(from)} a ${esc(to)}</h1>
+      <table><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>
       </body></html>`);
     w.document.close();
     w.focus();

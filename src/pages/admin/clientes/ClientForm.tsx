@@ -165,12 +165,14 @@ export default function ClientForm({
     // Cargar datos del cliente en modo edición
     useEffect(() => {
         if (mode === "edit" && id) {
+            let mounted = true;
             (async () => {
                 try {
                     const data = await clientService.getClient(id);
+                    if (!mounted) return;
                     const initial: FormValues = {
                         name: data.name ?? "",
-                        lastName: data.lastName ?? "",
+                        lastName: data.lastName && data.lastName !== 'undefined' ? data.lastName : "",
                         personType: (data as any)?.personType ?? 'PN',
                         documentNumber: (data as any)?.documentNumber ?? '',
                         commercialName: (data as any)?.commercialName ?? '',
@@ -209,6 +211,7 @@ export default function ClientForm({
 
                     form.reset(initial);
                 } catch (e) {
+                    if (!mounted) return;
                     console.error(e);
                     if (!redirecting) {
                         setRedirecting(true);
@@ -217,11 +220,30 @@ export default function ClientForm({
                     }
                 }
             })();
+            return () => { mounted = false; };
         }
-    }, [mode, id, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mode, id]);
 
     // Keep a ref with the initial data loaded in edit mode to compute diffs
     const initialDataRef = useRef<FormValues | null>(null);
+
+    // Revoke any outstanding blob: preview URLs on unmount to avoid leaking them.
+    // Track latest preview values via refs so the unmount cleanup sees current ones.
+    const logoPreviewRef = useRef<string | null>(null);
+    const placePicPreviewRef = useRef<string | null>(null);
+    logoPreviewRef.current = logoPreview;
+    placePicPreviewRef.current = placePicPreview;
+    useEffect(() => {
+        return () => {
+            if (logoPreviewRef.current && logoPreviewRef.current.startsWith('blob:')) {
+                URL.revokeObjectURL(logoPreviewRef.current);
+            }
+            if (placePicPreviewRef.current && placePicPreviewRef.current.startsWith('blob:')) {
+                URL.revokeObjectURL(placePicPreviewRef.current);
+            }
+        };
+    }, []);
 
     async function onSubmit(values: FormValues) {
         // Crear payload solo con los campos que el backend actual soporta
@@ -591,7 +613,10 @@ export default function ClientForm({
                                                 const file = e.target.files?.[0];
                                                 if (!file) return;
                                                 setLogoFile(file);
-                                                setLogoPreview(URL.createObjectURL(file));
+                                                setLogoPreview((prev) => {
+                                                    if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+                                                    return URL.createObjectURL(file);
+                                                });
                                                 setLogoExisting(null);
                                             }}
                                         />
@@ -601,7 +626,7 @@ export default function ClientForm({
                                                 <button
                                                     type="button"
                                                     className="absolute top-2 right-2 rounded-full bg-card border border-slate-200 dark:border-slate-600 p-0.5 shadow-sm text-muted-foreground hover:text-red-500 hover:border-red-300"
-                                                    onClick={(e) => { e.stopPropagation(); setLogoFile(null); setLogoPreview(null); setLogoExisting(null); }}
+                                                    onClick={(e) => { e.stopPropagation(); setLogoFile(null); setLogoPreview((prev) => { if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev); return null; }); setLogoExisting(null); }}
                                                 >
                                                     <X className="h-3.5 w-3.5" />
                                                 </button>
@@ -636,7 +661,10 @@ export default function ClientForm({
                                                 const file = e.target.files?.[0];
                                                 if (!file) return;
                                                 setPlacePicFile(file);
-                                                setPlacePicPreview(URL.createObjectURL(file));
+                                                setPlacePicPreview((prev) => {
+                                                    if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+                                                    return URL.createObjectURL(file);
+                                                });
                                                 setPlacePicExisting(null);
                                             }}
                                         />
@@ -646,7 +674,7 @@ export default function ClientForm({
                                                 <button
                                                     type="button"
                                                     className="absolute top-2 right-2 rounded-full bg-card border border-slate-200 dark:border-slate-600 p-0.5 shadow-sm text-muted-foreground hover:text-red-500 hover:border-red-300"
-                                                    onClick={(e) => { e.stopPropagation(); setPlacePicFile(null); setPlacePicPreview(null); setPlacePicExisting(null); }}
+                                                    onClick={(e) => { e.stopPropagation(); setPlacePicFile(null); setPlacePicPreview((prev) => { if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev); return null; }); setPlacePicExisting(null); }}
                                                 >
                                                     <X className="h-3.5 w-3.5" />
                                                 </button>
@@ -934,7 +962,8 @@ export default function ClientForm({
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
-                                                    {t('clients.form.city', 'Ciudad')} <span className="text-[#C8860A]">*</span>
+                                                    {t('clients.form.city', 'Ciudad')}
+                                                    <span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
                                                 </FormLabel>
                                                 <FormControl>
                                                     <input
@@ -954,7 +983,8 @@ export default function ClientForm({
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
-                                                    {t('clients.form.country', 'País')} <span className="text-[#C8860A]">*</span>
+                                                    {t('clients.form.country', 'País')}
+                                                    <span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span>
                                                 </FormLabel>
                                                 <FormControl>
                                                     <input

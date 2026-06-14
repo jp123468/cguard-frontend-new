@@ -32,7 +32,7 @@ export default function PastPayroll() {
 
             <section className="p-6">
                 <div className="mb-4 flex items-center gap-3">
-                    <Select onValueChange={(v) => console.log("Acción:", v)}>
+                    <Select>
                         <SelectTrigger className="w-40">
                             <SelectValue placeholder="Acción" />
                         </SelectTrigger>

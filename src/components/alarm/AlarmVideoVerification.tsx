@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Video, Scissors, Film, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,20 @@ export default function AlarmVideoVerification({ caseId }: { caseId: string }) {
   const [clips, setClips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [trimCam, setTrimCam] = useState<any | null>(null);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const load = useCallback(() => {
     Promise.all([alarmService.caseCameras(caseId), alarmService.caseClips(caseId)])
-      .then(([cams, cl]) => { setCameras(Array.isArray(cams) ? cams : []); setClips(Array.isArray(cl) ? cl : []); })
+      .then(([cams, cl]) => {
+        if (!mountedRef.current) return;
+        setCameras(Array.isArray(cams) ? cams : []); setClips(Array.isArray(cl) ? cl : []);
+      })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => { if (mountedRef.current) setLoading(false); });
   }, [caseId]);
 
   useEffect(() => { load(); }, [load]);

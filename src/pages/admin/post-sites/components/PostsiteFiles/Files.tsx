@@ -171,7 +171,7 @@ export default function PostSiteFiles({ site }: Props) {
                   <h4 className="text-sm font-medium mb-2">Files to upload</h4>
                   <ul className="space-y-2 max-h-40 overflow-y-auto">
                     {uploadFiles.map((f, i) => (
-                      <li key={i} className="flex items-center justify-between text-sm min-w-0">
+                      <li key={`${f.name}-${(f as any).size ?? ''}-${(f as any).lastModified ?? ''}-${i}`} className="flex items-center justify-between text-sm min-w-0">
                         <span className="truncate mr-4 block min-w-0">{f.name}</span>
                         <button onClick={() => setUploadFiles(prev => prev.filter((_, idx) => idx !== i))} className="text-red-500 p-1 rounded hover:bg-red-500/10" aria-label={`Remove ${f.name}`}><X size={14} /></button>
                       </li>

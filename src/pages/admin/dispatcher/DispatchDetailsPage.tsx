@@ -118,9 +118,11 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
         // ignore
       }
 
+      // NOTE: do NOT send a client-derived `author` — the backend must attach the
+      // authenticated user to the comment (a client-supplied author could be spoofed).
+      // `author` (read from localStorage above) is used only for optimistic local UI below.
       const body: any = { data: { text: newComment } };
       if (attachment) body.data.attachment = attachment;
-      if (author) body.data.author = author;
       try {
         const resp = await api.post(`/tenant/${tenantId}/${resourceType}/${requestId}/comments`, body);
         const p = resp && resp.data ? resp.data : resp;

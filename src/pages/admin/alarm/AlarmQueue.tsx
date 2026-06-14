@@ -27,6 +27,7 @@ import {
   type AlarmCase,
   type AlarmCaseStatus,
 } from "@/lib/api/alarmService";
+import { openEventStream } from "@/lib/api/eventStream";
 
 const GOLD = "#C8860A";
 
@@ -186,14 +187,11 @@ export default function AlarmQueue() {
   // Real-time: subscribe to the platform SSE stream; refresh instantly on alarm events.
   React.useEffect(() => {
     const tid = localStorage.getItem("tenantId") || "";
-    const token = localStorage.getItem("authToken") || "";
-    const base = (import.meta as any).env?.VITE_API_URL || "";
-    if (!tid || !token || !base) return;
-    let es: EventSource | null = null;
     let t: ReturnType<typeof setTimeout> | null = null;
     const debouncedReload = () => { if (t) clearTimeout(t); t = setTimeout(() => load({ silent: true }), 600); };
-    try {
-      es = new EventSource(`${base}/${tid}/events/stream?token=${encodeURIComponent(token)}`);
+    // Shared helper centralizes the token-in-URL setup (see eventStream.ts security note).
+    const es = openEventStream(tid);
+    if (es) {
       const onEvent = (ev: MessageEvent) => {
         try {
           const data = JSON.parse(ev.data);
@@ -206,7 +204,7 @@ export default function AlarmQueue() {
         } catch { /* heartbeat / non-JSON */ }
       };
       es.addEventListener("notification", onEvent as EventListener);
-    } catch { /* SSE unsupported — the poll covers it */ }
+    } // else SSE unsupported — the poll covers it
     return () => { es?.close(); if (t) clearTimeout(t); };
   }, [load]);
 

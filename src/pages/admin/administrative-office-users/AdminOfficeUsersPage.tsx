@@ -67,6 +67,7 @@ export default function AdminOfficeUsersPage() {
   const [clientOptions, setClientOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [query, setQuery] = useState("");
   const [pageSize, setPageSize] = useState(25);
+  const [currentPage, setCurrentPage] = useState(1);
   const [bulkAction, setBulkAction] = useState<string | null>(null);
   const [selectKey, setSelectKey] = useState(0);
 
@@ -101,6 +102,11 @@ export default function AdminOfficeUsersPage() {
     return [(roles.name || roles.role || '').toString().toLowerCase().trim()];
   };
 
+  // UX-ONLY guard. This role-string check prevents the suspend/delete UI from
+  // targeting admins, but it is NOT authorization: roles may arrive in an
+  // unrecognized shape (normalizeRolesForUser handles only a few), so the real
+  // protection MUST be enforced server-side (the backend must reject suspend/
+  // delete of admin users regardless of this client check).
   const isUserAdmin = (u: any) => {
     if (!u) return false;
     const r = normalizeRolesForUser(u.roles || u.role || u.rolesList || u._rolesDisplay);
@@ -354,6 +360,24 @@ export default function AdminOfficeUsersPage() {
 
     return out;
   }, [rows, debouncedQuery, filterClient, filterStatus]);
+
+  // Client-side pagination: slice the filtered list by the selected pageSize.
+  // (Server-side paging in userService.listUsers would be the ideal next step.)
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+
+  // Keep the current page within range when the result set or pageSize changes.
+  useEffect(() => {
+    setCurrentPage((p) => Math.min(Math.max(1, p), pageCount));
+  }, [pageCount]);
+
+  const pageStartIndex = (currentPage - 1) * pageSize;
+  const pagedRows = useMemo(
+    () => filteredRows.slice(pageStartIndex, pageStartIndex + pageSize),
+    [filteredRows, pageStartIndex, pageSize],
+  );
+
+  const rangeStart = filteredRows.length === 0 ? 0 : pageStartIndex + 1;
+  const rangeEnd = Math.min(pageStartIndex + pageSize, filteredRows.length);
 
   const handleSelectUser = (userId: string, checked: boolean) => {
     setSelectedUsers((prev) => {
@@ -640,8 +664,8 @@ export default function AdminOfficeUsersPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredRows.map((u, i) => (
-                    <tr key={u.id || i} className="border-b">
+                  pagedRows.map((u, i) => (
+                    <tr key={u.id || u._id || u.raw?.id || `${currentPage}-${i}`} className="border-b">
                       <td className="px-4 py-3"><Checkbox disabled={!canManageUsers || isUserAdmin(u)} checked={selectedUsers.includes(String(u.id || u._id || u.raw?.id))} onCheckedChange={(v) => handleSelectUser(String(u.id || u._id || u.raw?.id), Boolean(v))} /></td>
                       <td className="px-4 py-3">{[u.firstName, u.lastName].filter(Boolean).join(" ") || u.name || "-"}</td>
                       <td className="px-4 py-3">{u.email || "-"}</td>
@@ -784,7 +808,7 @@ export default function AdminOfficeUsersPage() {
 
           <div className="md:hidden">
             <MobileCardList
-              items={filteredRows || []}
+              items={pagedRows || []}
               loading={false}
               emptyMessage={t('adminOfficeUsers.noData.title', { defaultValue: 'No se encontraron resultados' }) as string}
               renderCard={(u: any) => (
@@ -817,7 +841,7 @@ export default function AdminOfficeUsersPage() {
             <span>{t('adminOfficeUsers.footer.itemsPerPage', { defaultValue: 'Elementos por página' })}</span>
             <Select
               value={String(pageSize)}
-              onValueChange={(v) => setPageSize(Number(v))}
+              onValueChange={(v) => { setPageSize(Number(v)); setCurrentPage(1); }}
             >
               <SelectTrigger className="h-8 w-20">
                 <SelectValue placeholder="25" />
@@ -829,8 +853,29 @@ export default function AdminOfficeUsersPage() {
               </SelectContent>
             </Select>
           </div>
-          <div>
-            {filteredRows.length === 0 ? t('adminOfficeUsers.pagination.zero', { defaultValue: '0 – 0 de 0' }) : t('adminOfficeUsers.pagination.range', { defaultValue: '1 – {{end}} de {{total}}', start: 1, end: filteredRows.length, total: filteredRows.length })}
+          <div className="flex items-center gap-4">
+            <div>
+              {filteredRows.length === 0 ? t('adminOfficeUsers.pagination.zero', { defaultValue: '0 – 0 de 0' }) : t('adminOfficeUsers.pagination.range', { defaultValue: '{{start}} – {{end}} de {{total}}', start: rangeStart, end: rangeEnd, total: filteredRows.length })}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
+                ◀
+              </Button>
+              <span className="text-xs">{currentPage} / {pageCount}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= pageCount}
+                onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))}
+              >
+                ▶
+              </Button>
+            </div>
           </div>
         </div>
 

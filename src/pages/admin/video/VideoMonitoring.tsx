@@ -122,7 +122,7 @@ function CameraTile({
     }
     // 2) Fall back to the configured snapshot URL.
     const snap = streamRef.current?.snapshotUrl || camera.snapshotUrl;
-    if (snap) {
+    if (snap && /^https?:\/\//i.test(snap)) {
       window.open(snap, "_blank", "noopener,noreferrer");
       toast.success("Captura abierta en una pestaña");
       return;

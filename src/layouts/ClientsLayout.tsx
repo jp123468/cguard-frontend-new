@@ -92,12 +92,11 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
                           ? (client?.postSites?.length ?? client?.postSiteIds?.length ?? client?.postSitesCount ?? undefined)
                           : undefined;
                         const badgeCount = it.id === 'postSites' ? (postSitesCount ?? initialBadge ?? 0) : undefined;
-                        // If this item is in the hidden list, render an HTML comment instead
+                        // If this item is in the hidden list, render nothing.
+                        // (Previously emitted an HTML comment via dangerouslySetInnerHTML,
+                        // which is an unnecessary XSS sink and serves no purpose.)
                         if (hiddenIds.includes(it.id)) {
-                          const comment = `<!-- hidden:${it.id} ${t(it.label)} -->`;
-                          return (
-                            <li key={it.id} className="bg-card" dangerouslySetInnerHTML={{ __html: comment }} />
-                          );
+                          return null;
                         }
 
                         return (

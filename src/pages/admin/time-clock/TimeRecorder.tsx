@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { toast } from "sonner";
 import AppLayout from "@/layouts/app-layout";
 
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,13 @@ export default function TimeRecorder() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, itemsPerPage]);
+
+  // This screen is not yet wired to the attendance backend. Surface a clear
+  // message instead of silently no-op'ing so the controls don't appear functional.
+  const notAvailable = useCallback(
+    () => toast.info("Esta función aún no está disponible. Usa Nómina › Registros."),
+    []
+  );
 
   const filteredRecords = useMemo(() => {
     if (!searchQuery) return records;
@@ -539,19 +547,19 @@ export default function TimeRecorder() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuItem onClick={() => console.log("PDF")}>
+                <DropdownMenuItem onClick={notAvailable}>
                   <FileDown className="mr-2 h-4 w-4" />
                   Exportar como PDF
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => console.log("Excel")}>
+                <DropdownMenuItem onClick={notAvailable}>
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                   Exportar como Excel
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => console.log("Print")}>
+                <DropdownMenuItem onClick={notAvailable}>
                   <Printer className="mr-2 h-4 w-4" />
                   Imprimir
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => console.log("Mail")}>
+                <DropdownMenuItem onClick={notAvailable}>
                   <Mail className="mr-2 h-4 w-4" />
                   Enviar Informe por Correo
                 </DropdownMenuItem>

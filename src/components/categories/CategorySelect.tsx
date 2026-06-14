@@ -43,15 +43,29 @@ export function CategorySelect({
     const [items, setItems] = useState<CategoryOption[]>(options);
     const [isLoading, setIsLoading] = useState(false);
     const prevValueRef = useRef<string | undefined>(undefined);
+    const hasLoadedRef = useRef(false);
 
+    // Sync provided options into local state. Depend on a stable signal (count)
+    // instead of the array identity so a parent passing a fresh `[]` each render
+    // doesn't thrash this effect.
+    const optionsCount = options?.length ?? 0;
     useEffect(() => {
-        setItems(options);
-    }, [options]);
+        if (optionsCount > 0) setItems(options);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [optionsCount]);
 
+    // Re-allow a fetch when the target module changes.
     useEffect(() => {
-        const shouldLoad = !options || options.length === 0;
-        if (!shouldLoad) return;
+        hasLoadedRef.current = false;
+    }, [module]);
 
+    // When the parent supplies no options, fetch the list once for this module.
+    useEffect(() => {
+        const shouldLoad = optionsCount === 0;
+        if (!shouldLoad || hasLoadedRef.current) return;
+        hasLoadedRef.current = true;
+
+        let cancelled = false;
         const load = async () => {
             try {
                 setIsLoading(true);
@@ -59,17 +73,21 @@ export function CategorySelect({
                     filter: { module },
                     limit: 1000,
                 });
+                if (cancelled) return;
                 const mapped = res.rows.map((c) => ({ id: c.id, name: c.name }));
                 setItems(mapped);
             } catch {
+                if (cancelled) return;
                 toast.error(t('categories.notcategories', 'No hay Sectores disponibles'));
             } finally {
-                setIsLoading(false);
+                if (!cancelled) setIsLoading(false);
             }
         };
 
         load();
-    }, [module, options]);
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [module, optionsCount]);
 
     const selectedSingle = useMemo(() => {
         if (multiple) return undefined;

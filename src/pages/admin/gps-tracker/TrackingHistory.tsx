@@ -109,7 +109,7 @@ export default function TrackingHistoryPage() {
                     </label>
                     <Select>
                       <SelectTrigger>
-                        <SelectValue placeholder="central (+1 otro)" />
+                        <SelectValue placeholder="Seleccionar cliente" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="central">Central</SelectItem>
@@ -124,7 +124,7 @@ export default function TrackingHistoryPage() {
                     </label>
                     <Select>
                       <SelectTrigger>
-                        <SelectValue placeholder="Catolica (+2 otros)" />
+                        <SelectValue placeholder="Seleccionar sitio" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="catolica">Católica</SelectItem>
@@ -154,7 +154,7 @@ export default function TrackingHistoryPage() {
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="relative">
-                        <Input defaultValue="Nov 17, 2025" />
+                        <Input placeholder="Seleccionar fecha" />
                         <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       </div>
 
@@ -169,7 +169,7 @@ export default function TrackingHistoryPage() {
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="relative">
-                        <Input defaultValue="Nov 17, 2025" />
+                        <Input placeholder="Seleccionar fecha" />
                         <CalendarDays className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       </div>
 

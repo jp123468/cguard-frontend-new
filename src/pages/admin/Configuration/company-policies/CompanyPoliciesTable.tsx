@@ -31,6 +31,14 @@ type Policy = {
   status: "published" | "draft";
 };
 
+// Guard against missing/invalid createdAt so real API rows don't render "Invalid Date".
+const formatPolicyDate = (value?: string) => {
+  if (!value) return "—";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString();
+};
+
+// NOTE: not yet wired to a backend policies endpoint — these are placeholder rows.
 const MOCK_POLICIES: Policy[] = [
   { id: "1", title: "Política de Seguridad en Sitio", createdAt: new Date().toISOString(), status: "published" },
   { id: "2", title: "Procedimiento de Reportes", createdAt: new Date().toISOString(), status: "draft" },
@@ -143,7 +151,7 @@ export default function CompanyPoliciesTable() {
                       />
                     </TableCell>
                     <TableCell className="font-medium">{p.title}</TableCell>
-                    <TableCell className="text-right">{new Date(p.createdAt).toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{formatPolicyDate(p.createdAt)}</TableCell>
                   </TableRow>
                 ))
               )}

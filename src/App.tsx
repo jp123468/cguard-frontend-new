@@ -17,7 +17,6 @@ import { ApiService } from '@/services/api/apiService';
 
 import ProfileUser from "./pages/admin/Configuration/ProfileUserPage"
 import ProfileCompany from "./pages/admin/Configuration/ProfileCompanyPage"
-import TwoFactorAuthentication from "./pages/admin/Configuration/TwoFactorAuthenticationPage"
 import Notification from "./pages/admin/Configuration/NotificationPage"
 import MobilPage from "./pages/admin/Configuration/mobil/MobilPage"
 import { ArrowLeftCircle } from "lucide-react"
@@ -1538,14 +1537,6 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <PasswordChangePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/setting/two-factor-authentication"
-                element={
-                  <ProtectedRoute>
-                    <TwoFactorAuthentication />
                   </ProtectedRoute>
                 }
               />

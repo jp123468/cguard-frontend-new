@@ -6,8 +6,7 @@
         "label": "MI CUENTA",
         "items": [
           { "id": "perfil-usuario", "label": "Perfil del Usuario", "path": "/setting/user-profile", "icon": "User", "desc": "Tus datos personales y foto." },
-          { "id": "cambiar-contrasena", "label": "Cambiar Contraseña", "path": "/setting/change-password", "icon": "KeyRound", "desc": "Actualiza tu contraseña de acceso." },
-          { "id": "mfa", "label": "Autenticación de Dos Factores", "path": "/setting/two-factor-authentication", "icon": "ShieldCheck", "desc": "Añade una capa extra de seguridad." }
+          { "id": "cambiar-contrasena", "label": "Cambiar Contraseña", "path": "/setting/change-password", "icon": "KeyRound", "desc": "Actualiza tu contraseña de acceso." }
         ]
       },
       {

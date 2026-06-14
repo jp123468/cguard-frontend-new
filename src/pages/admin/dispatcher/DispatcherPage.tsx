@@ -136,6 +136,23 @@ export default function DispatcherPage() {
   const [emailMessage, setEmailMessage] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
 
+  // Resolve the backend origin from VITE_API_URL. In production (non-DEV) builds we
+  // do NOT fall back to a hardcoded localhost origin to avoid pointing prod at a dev host.
+  const getApiOrigin = (): string | null => {
+    try {
+      const configured = (import.meta as any).env?.VITE_API_URL as string | undefined;
+      if (configured) return configured.replace(/\/$/, '');
+    } catch (e) { /* ignore */ }
+    return import.meta.env.DEV ? 'http://localhost:3001' : null;
+  };
+
+  // Single place to read the bearer token (JWT in localStorage is XSS-exfiltratable;
+  // centralizing keeps these raw-fetch paths consistent with the rest of the app).
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('idToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   // close share dialog when clicking outside its content
   const { hasPermission } = usePermissions();
   const canCreate = hasPermission('requestCreate');
@@ -175,11 +192,13 @@ export default function DispatcherPage() {
 
         if (payload && Array.isArray(payload.rows)) {
           rowsData = payload.rows;
-          count = typeof payload.count === 'number' ? payload.count : payload.rows.length;
         } else if (Array.isArray(payload)) {
           rowsData = payload;
-          count = payload.length;
         }
+        // Client-side pagination: total must match the rows we actually hold,
+        // otherwise Next would advance past the loaded slice (count from API can
+        // exceed the returned page).
+        count = rowsData.length;
 
         setRows(rowsData);
         setTotalCount(count);
@@ -443,11 +462,11 @@ export default function DispatcherPage() {
 
       if (payload && Array.isArray(payload.rows)) {
         rowsData = payload.rows;
-        count = typeof payload.count === 'number' ? payload.count : payload.rows.length;
       } else if (Array.isArray(payload)) {
         rowsData = payload;
-        count = payload.length;
       }
+      // Client-side pagination: total derives from loaded rows (see loadRows).
+      count = rowsData.length;
 
       setRows(rowsData);
       setTotalCount(count);
@@ -552,11 +571,11 @@ export default function DispatcherPage() {
 
       if (payload && Array.isArray(payload.rows)) {
         rowsData = payload.rows;
-        count = typeof payload.count === 'number' ? payload.count : payload.rows.length;
       } else if (Array.isArray(payload)) {
         rowsData = payload;
-        count = payload.length;
       }
+      // Client-side pagination: total derives from loaded rows (see loadRows).
+      count = rowsData.length;
 
       setRows(rowsData);
       setTotalCount(count);
@@ -666,11 +685,11 @@ export default function DispatcherPage() {
 
         if (payload && Array.isArray(payload.rows)) {
           rowsData = payload.rows;
-          count = typeof payload.count === 'number' ? payload.count : payload.rows.length;
         } else if (Array.isArray(payload)) {
           rowsData = payload;
-          count = payload.length;
         }
+        // Client-side pagination: total derives from loaded rows.
+        count = rowsData.length;
 
         setRows(rowsData);
         setTotalCount(count);
@@ -807,23 +826,16 @@ export default function DispatcherPage() {
         const tenantId = localStorage.getItem('tenantId');
         if (!tenantId) { toast.error(t('dispatcher.tenantUnavailable')); return; }
 
-        // Determine backend origin: prefer VITE_API_URL, fallback to localhost:3001
-        let apiOrigin = 'http://localhost:3001';
-
-
-        try {
-          const configured = (import.meta as any).env?.VITE_API_URL as string | undefined;
-          if (configured) apiOrigin = configured.replace(/\/$/, '');
-        } catch (e) { }
+        // Determine backend origin from VITE_API_URL (no prod localhost fallback)
+        const apiOrigin = getApiOrigin();
+        if (!apiOrigin) { toast.error(t('dispatcher.pdf_generate_failed')); return; }
 
         const apiPrefix = apiOrigin.endsWith('/api') ? '' : '/api';
         const id = selectedIds[0];
         const idsParam = selectedIds.join(',');
         const url = `${apiOrigin}${apiPrefix}/tenant/${tenantId}/request/${id}/export/pdf?ids=${encodeURIComponent(idsParam)}`;
 
-        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('idToken');
-        const headers: any = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const headers: any = getAuthHeaders();
 
         const resp = await fetch(url, { method: 'GET', credentials: 'include', headers });
         if (!resp.ok) {
@@ -1059,11 +1071,11 @@ export default function DispatcherPage() {
 
                       if (payload && Array.isArray(payload.rows)) {
                         rowsData = payload.rows;
-                        count = typeof payload.count === 'number' ? payload.count : payload.rows.length;
                       } else if (Array.isArray(payload)) {
                         rowsData = payload;
-                        count = payload.length;
                       }
+                      // Client-side pagination: total derives from loaded rows.
+                      count = rowsData.length;
 
                       setRows(rowsData);
                       setTotalCount(count);
@@ -1309,14 +1321,9 @@ export default function DispatcherPage() {
                     const tenantId = localStorage.getItem('tenantId');
                     if (!tenantId) { toast.error(t('dispatcher.tenantUnavailable')); return; }
 
-                    // Determine backend origin: prefer VITE_API_URL, fallback to localhost:3001
-                    let apiOrigin = 'http://localhost:3001';
-                    try {
-                      const configured = (import.meta as any).env?.VITE_API_URL as string | undefined;
-                      if (configured) apiOrigin = configured.replace(/\/$/, '');
-                    } catch (e) {
-                      // ignore and use default
-                    }
+                    // Determine backend origin from VITE_API_URL (no prod localhost fallback)
+                    const apiOrigin = getApiOrigin();
+                    if (!apiOrigin) { toast.error(t('dispatcher.pdf_generate_failed')); return; }
 
                     // If `apiOrigin` already contains the `/api` prefix, avoid doubling it
                     const apiPrefix = apiOrigin.endsWith('/api') ? '' : '/api';
@@ -1324,10 +1331,7 @@ export default function DispatcherPage() {
 
                     // Always fetch the PDF with credentials to ensure auth cookies or CORS credentials are sent.
                     // This avoids relying on `window.open(url)` which cannot attach Authorization headers.
-                    // Try to attach an Authorization header if a token exists in localStorage
-                    const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || localStorage.getItem('authToken') || localStorage.getItem('idToken');
-                    const headers: any = {};
-                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    const headers: any = getAuthHeaders();
 
                     const resp = await fetch(url, { method: 'GET', credentials: 'include', headers });
                     if (!resp.ok) {
@@ -1455,7 +1459,9 @@ export default function DispatcherPage() {
                       {
                         (() => {
                           const dateValue = r.dateTime || r.incidentAt;
-                          return dateValue ? new Date(dateValue).toLocaleString() : '-';
+                          if (!dateValue) return '-';
+                          const d = new Date(dateValue);
+                          return isNaN(d.getTime()) ? '-' : d.toLocaleString();
                         })()
                       }
                     </td>

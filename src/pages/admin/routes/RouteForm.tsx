@@ -206,21 +206,24 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
     }
   }, [initialData]);
 
-  // If we have initialData with only IDs (no names), fetch fallbacks so the select shows the text
+  // If we have initialData with only IDs (no names), fetch fallbacks so the select shows the text.
+  // Keyed ONLY on the IDs — collections/fallbacks are read/updated via functional setState so a
+  // successful set does not re-trigger this effect (avoids refetch/render churn loops).
+  const initialVehicleId = initialData?.vehicleId ? String(initialData.vehicleId) : '';
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const supId = initialSupervisorId ? String(initialSupervisorId) : '';
-        if (supId && !supervisors.some((s) => String(s.id) === supId) && (!fallbackSupervisor || String(fallbackSupervisor.id) !== supId)) {
+        if (supId) {
           try {
             const u = await userService.fetchUser(supId);
             if (!mounted) return;
             if (u) {
               const name = u.displayName || u.fullName || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email || supId;
               const fb = { id: supId, name };
-              console.debug('[RouteForm] fetched fallback supervisor', fb);
-              setFallbackSupervisor(fb);
+              if (import.meta.env.DEV) console.debug('[RouteForm] fetched fallback supervisor', fb);
+              setFallbackSupervisor((prev) => (prev && String(prev.id) === supId ? prev : fb));
               setSupervisors((prev) => (prev.some((p) => String(p.id) === supId) ? prev : [...prev, fb]));
             }
           } catch (err) {
@@ -228,16 +231,16 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
           }
         }
 
-        const vehId = initialData?.vehicleId ? String(initialData.vehicleId) : '';
-        if (vehId && !vehicles.some((v) => String(v.id) === vehId) && (!fallbackVehicle || String(fallbackVehicle.id) !== vehId)) {
+        const vehId = initialVehicleId;
+        if (vehId) {
           try {
             const v = await vehicleService.find(vehId);
             if (!mounted) return;
             if (v) {
               const name = v.name || v.model || v.licensePlate || vehId;
               const fbv = { id: vehId, name, licensePlate: v.licensePlate || undefined };
-              console.debug('[RouteForm] fetched fallback vehicle', fbv);
-              setFallbackVehicle(fbv);
+              if (import.meta.env.DEV) console.debug('[RouteForm] fetched fallback vehicle', fbv);
+              setFallbackVehicle((prev) => (prev && String(prev.id) === vehId ? prev : fbv));
               setVehicles((prev) => (prev.some((p) => String(p.id) === vehId) ? prev : [...prev, fbv]));
             }
           } catch (err) {
@@ -251,7 +254,8 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
     return () => {
       mounted = false;
     };
-  }, [initialData, supervisors, vehicles, fallbackSupervisor, fallbackVehicle]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSupervisorId, initialVehicleId]);
 
   useEffect(() => {
     if (!fallbackSupervisor) return;

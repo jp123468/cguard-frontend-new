@@ -79,16 +79,25 @@ function CameraModal({ open, mode, onClose, onCapture }: {
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [ready, setReady] = useState(false);
   const [captured, setCaptured] = useState<{ blob: Blob; url: string } | null>(null);
+  const capturedUrlRef = useRef<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
+  const setCapturedPhoto = useCallback((next: { blob: Blob; url: string } | null) => {
+    if (capturedUrlRef.current) { URL.revokeObjectURL(capturedUrlRef.current); }
+    capturedUrlRef.current = next ? next.url : null;
+    setCaptured(next);
+  }, []);
+
   const startCamera = useCallback(async () => {
-    setErr(null); setCaptured(null); setReady(false);
+    setErr(null); setCapturedPhoto(null); setReady(false);
     try {
       const facingMode = mode === 'id-scan' ? { ideal: 'environment' } : { ideal: 'user' };
       const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode, width: { ideal: 1920 } }, audio: false });
+      streamRef.current = s;
       setStream(s);
       if (videoRef.current) {
         videoRef.current.srcObject = s;
@@ -97,18 +106,26 @@ function CameraModal({ open, mode, onClose, onCapture }: {
     } catch (e: any) {
       setErr(e?.name === 'NotAllowedError' ? 'Permiso de cámara denegado.' : e?.name === 'NotFoundError' ? 'No se encontró cámara.' : 'No se pudo acceder a la cámara.');
     }
-  }, [mode]);
+  }, [mode, setCapturedPhoto]);
 
-  const stopCamera = useCallback(() => { stream?.getTracks().forEach(t => t.stop()); setStream(null); setReady(false); }, [stream]);
+  const stopCamera = useCallback(() => { streamRef.current?.getTracks().forEach(t => t.stop()); streamRef.current = null; setStream(null); setReady(false); }, []);
 
-  useEffect(() => { if (open) { startCamera(); } return () => { stream?.getTracks().forEach(t => t.stop()); }; }, [open]);
+  useEffect(() => {
+    if (open) { startCamera(); }
+    return () => {
+      streamRef.current?.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+      // revoke any captured photo URL not handed off to the parent
+      if (capturedUrlRef.current) { URL.revokeObjectURL(capturedUrlRef.current); capturedUrlRef.current = null; }
+    };
+  }, [open]);
 
   const capture = () => {
     const v = videoRef.current, c = canvasRef.current;
     if (!v || !c) return;
     c.width = v.videoWidth; c.height = v.videoHeight;
     c.getContext('2d')?.drawImage(v, 0, 0);
-    c.toBlob(blob => { if (!blob) return; setCaptured({ blob, url: URL.createObjectURL(blob) }); stopCamera(); }, 'image/jpeg', 0.92);
+    c.toBlob(blob => { if (!blob) return; setCapturedPhoto({ blob, url: URL.createObjectURL(blob) }); stopCamera(); }, 'image/jpeg', 0.92);
   };
 
   return (
@@ -124,8 +141,8 @@ function CameraModal({ open, mode, onClose, onCapture }: {
             <div className="space-y-3">
               <img src={captured.url} alt="Captura" className="w-full rounded border" />
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => { setCaptured(null); startCamera(); }} className="flex-1 gap-1"><X size={14} /> Retomar</Button>
-                <Button onClick={() => { onCapture(captured.blob, captured.url); onClose(); }} className="flex-1 gap-1 bg-[#C8860A] hover:bg-[#a86e08] text-white"><Check size={14} /> Usar foto</Button>
+                <Button variant="outline" onClick={() => { setCapturedPhoto(null); startCamera(); }} className="flex-1 gap-1"><X size={14} /> Retomar</Button>
+                <Button onClick={() => { capturedUrlRef.current = null; onCapture(captured.blob, captured.url); onClose(); }} className="flex-1 gap-1 bg-[#C8860A] hover:bg-[#a86e08] text-white"><Check size={14} /> Usar foto</Button>
               </div>
             </div>
           ) : (
@@ -158,12 +175,23 @@ function VisitorFormModal({ open, initialData, stationId, onClose, onSaved }: {
   const isEdit = !!initialData?.id;
   const [form, setForm] = useState(emptyForm);
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrlState] = useState<string | null>(null);
+  const photoUrlRef = useRef<string | null>(null);
   const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null);
   const [cameraMode, setCameraMode] = useState<CameraMode | null>(null);
   const [scanning, setScanning] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Revoke the previous object URL whenever the captured/uploaded photo URL changes.
+  const setPhotoUrl = useCallback((next: string | null) => {
+    if (photoUrlRef.current && photoUrlRef.current !== next) { URL.revokeObjectURL(photoUrlRef.current); }
+    photoUrlRef.current = next;
+    setPhotoUrlState(next);
+  }, []);
+
+  // Revoke any outstanding object URL on unmount.
+  useEffect(() => () => { if (photoUrlRef.current) { URL.revokeObjectURL(photoUrlRef.current); photoUrlRef.current = null; } }, []);
 
   useEffect(() => {
     if (!open) return;

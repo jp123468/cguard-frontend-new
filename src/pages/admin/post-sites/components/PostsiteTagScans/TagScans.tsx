@@ -257,12 +257,14 @@ export default function TagScans({
       const url = `/tenant/${tenantId}/site-tour/tag-scans/export?format=${format}${qs}`;
       const blob: Blob = await ApiService.getBlob(url);
       const filename = `etiquetas-recorrido${tourId ? `-${tourId}` : ''}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+      const objectUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
+      link.href = objectUrl;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(objectUrl);
     } catch (e: any) {
       console.error('Export failed', e);
       if (e && e.status) {

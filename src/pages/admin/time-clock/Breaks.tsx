@@ -1,5 +1,6 @@
 // src/pages/Breaks.tsx
 import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
 import AppLayout from "@/layouts/app-layout";
 
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -393,7 +394,7 @@ export default function Breaks() {
                         <DropdownMenuContent align="end" className="w-36">
                           <DropdownMenuItem
                             onClick={() =>
-                              console.log("Editar descanso", item.id)
+                              toast.info("La edición aún no está disponible.")
                             }
                           >
                             <Pencil className="mr-2 h-4 w-4" />

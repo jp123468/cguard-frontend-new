@@ -1,8 +1,8 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { ScrollText, RefreshCw, Search, ChevronDown, ChevronRight, PlusCircle, PencilLine, Trash2, Activity, Loader2 } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import { Card } from "@/components/ui/card";
-import { ApiService } from "@/services/api/apiService";
+import { useInfiniteAuditList } from "./useInfiniteAuditList";
 
 type LogRow = {
   id: string;
@@ -43,19 +43,12 @@ const FILTERS = [
 ];
 
 export default function SystemLogs() {
-  const [items, setItems] = useState<LogRow[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [action, setAction] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const tid = () => localStorage.getItem("tenantId") || "";
-  const itemsRef = useRef<LogRow[]>([]);
-  const loadingRef = useRef(false);
-  const reqIdRef = useRef(0);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   // Debounce the search box (server-side search).
   useEffect(() => {
@@ -63,68 +56,26 @@ export default function SystemLogs() {
     return () => clearTimeout(h);
   }, [q]);
 
-  const load = async (reset: boolean) => {
-    if (loadingRef.current) return;
-    if (!reset && itemsRef.current.length >= total && total > 0) return; // no more
-    loadingRef.current = true;
-    setLoading(true);
-    const reqId = ++reqIdRef.current;
+  const buildParams = useCallback(
+    (offset: number, limit: number) => {
+      const params = new URLSearchParams();
+      params.set("limit", String(limit));
+      params.set("offset", String(offset));
+      params.set("orderBy", "timestamp_DESC");
+      if (action) params.set("filter[action]", action);
+      if (debouncedQ.trim()) params.set("filter[search]", debouncedQ.trim());
+      return params;
+    },
+    [action, debouncedQ],
+  );
 
-    const offset = reset ? 0 : itemsRef.current.length;
-    const params = new URLSearchParams();
-    params.set("limit", String(PAGE_SIZE));
-    params.set("offset", String(offset));
-    params.set("orderBy", "timestamp_DESC");
-    if (action) params.set("filter[action]", action);
-    if (debouncedQ.trim()) params.set("filter[search]", debouncedQ.trim());
-
-    try {
-      const r: any = await ApiService.get(`/tenant/${tid()}/audit-log?${params.toString()}`);
-      if (reqId !== reqIdRef.current) return; // a newer request superseded this one
-      const rows: LogRow[] = Array.isArray(r) ? r : (r?.rows ?? []);
-      const count: number = typeof r?.count === "number" ? r.count : rows.length;
-      setTotal(count);
-      setItems((prev) => {
-        const next = reset ? rows : [...prev, ...rows];
-        itemsRef.current = next;
-        return next;
-      });
-    } catch {
-      if (reqId === reqIdRef.current && reset) {
-        setItems([]); itemsRef.current = []; setTotal(0);
-      }
-    } finally {
-      if (reqId === reqIdRef.current) setLoading(false);
-      loadingRef.current = false;
-    }
-  };
-
-  // Reset + reload whenever the filters change.
-  useEffect(() => {
-    setExpanded(null);
-    itemsRef.current = [];
-    setItems([]);
-    setTotal(0);
-    load(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [action, debouncedQ]);
-
-  // Infinite scroll: load the next page when the sentinel comes into view.
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) load(false);
-      },
-      { rootMargin: "300px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [total]);
-
-  const hasMore = items.length < total;
+  const { items, total, loading, hasMore, load, sentinelRef } = useInfiniteAuditList<LogRow>({
+    endpoint: `/tenant/${tid()}/audit-log`,
+    pageSize: PAGE_SIZE,
+    buildParams,
+    deps: [action, debouncedQ],
+    onReset: () => setExpanded(null),
+  });
 
   return (
     <AppLayout>

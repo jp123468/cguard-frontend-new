@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Search,
   ChevronDown,
@@ -48,6 +48,9 @@ export default function GuardIndicators({ guard }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [toDeleteId, setToDeleteId] = useState<string | null>(null);
+  // Monotonic token so a slower in-flight loadKpis can't overwrite a newer one,
+  // and so results are dropped after unmount (last-write-wins race guard).
+  const loadKpisReqId = useRef(0);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -132,6 +135,8 @@ export default function GuardIndicators({ guard }: Props) {
   };
 
   const loadKpis = async () => {
+    const reqId = ++loadKpisReqId.current;
+    const isStale = () => reqId !== loadKpisReqId.current;
     try {
       const monthStr = selectedMonth ? `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}` : undefined;
       const guardId = guard && (guard.guard?.id || guard.guardId || guard.id || guard.userId || (guard.guard && guard.guardId));
@@ -141,7 +146,7 @@ export default function GuardIndicators({ guard }: Props) {
         params.description = searchQuery.trim();
       }
       const resGuard: any = await KpiService.list(params);
-      console.debug('[GuardKPIs] kpi guard response:', resGuard);
+      if (import.meta.env.DEV) console.debug('[GuardKPIs] kpi guard response:', resGuard);
       let combinedRows: any[] = Array.isArray(resGuard?.rows) ? resGuard.rows : (Array.isArray(resGuard) ? resGuard : []);
 
       // Also fetch assigned post-sites for this guard and include KPIs attached to those post-sites
@@ -149,7 +154,7 @@ export default function GuardIndicators({ guard }: Props) {
         const tenantId = localStorage.getItem('tenantId');
         if (tenantId && guardId) {
           const resp = await ApiService.get(`/tenant/${tenantId}/security-guard/${guardId}/assignments`);
-          console.debug('[GuardKPIs] assignments response:', resp);
+          if (import.meta.env.DEV) console.debug('[GuardKPIs] assignments response:', resp);
           const assignData = resp?.data ?? resp;
           const rows = Array.isArray(assignData?.rows) ? assignData.rows : (Array.isArray(assignData) ? assignData : []);
           const siteIds = Array.from(new Set(rows.map((r: any) => {
@@ -157,16 +162,18 @@ export default function GuardIndicators({ guard }: Props) {
             if (!r) return null;
             return r.businessInfoId || r.postSiteId || r.stationId || r.business_info_id || r.post_site_id || (r.businessInfo && (r.businessInfo.id || r.businessInfoId)) || (r.postSite && (r.postSite.id || r.postSiteId)) || null;
           }).filter(Boolean)));
-          for (const siteId of siteIds) {
+          // Fetch all per-site KPIs in parallel instead of a serial await loop.
+          const perSite = await Promise.all(siteIds.map(async (siteId) => {
             try {
               const resSite: any = await KpiService.list({ scope: 'postSite', postSite: siteId, month: monthStr });
-              console.debug('[GuardKPIs] kpi postSite response for', siteId, resSite);
-              const siteRows: any[] = Array.isArray(resSite?.rows) ? resSite.rows : (Array.isArray(resSite) ? resSite : []);
-              combinedRows = combinedRows.concat(siteRows);
+              if (import.meta.env.DEV) console.debug('[GuardKPIs] kpi postSite response for', siteId, resSite);
+              return Array.isArray(resSite?.rows) ? resSite.rows : (Array.isArray(resSite) ? resSite : []);
             } catch (e) {
               console.error('[GuardKPIs] error loading kpis for site', siteId, e);
+              return [];
             }
-          }
+          }));
+          for (const siteRows of perSite) combinedRows = combinedRows.concat(siteRows);
         }
       } catch (e) {
         console.error('Failed to load guard assignments for KPIs', e);
@@ -181,8 +188,9 @@ export default function GuardIndicators({ guard }: Props) {
         return true;
       });
 
+      if (isStale()) return;
       setKpiData(combinedRows);
-      await computeActualsForKpis(combinedRows, selectedMonth);
+      await computeActualsForKpis(combinedRows, selectedMonth, isStale);
     } catch (error) {
       console.error('Error loading KPIs', error);
     }
@@ -259,6 +267,8 @@ export default function GuardIndicators({ guard }: Props) {
         const blob = new Blob([byteArray], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
+        // Revoke after the new tab has had time to load so the Blob isn't pinned.
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
         toast.success(t('guards.KPI.toasts.pdfGenerated', 'PDF generado'));
         setMenuOpenId(null);
         return;
@@ -270,6 +280,8 @@ export default function GuardIndicators({ guard }: Props) {
           const blob = await KpiService.getPdf(kpi.id);
           const url = URL.createObjectURL(blob);
           window.open(url, '_blank');
+          // Revoke after the new tab has had time to load so the Blob isn't pinned.
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
           toast.success(t('guards.KPI.toasts.pdfGenerated', 'PDF generated'));
         } catch (err) {
           console.error('Error fetching PDF', err);
@@ -352,12 +364,7 @@ export default function GuardIndicators({ guard }: Props) {
     }
   };
 
-  useEffect(() => {
-    loadKpis();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [guard?.id]);
-
-  async function computeActualsForKpis(kpis: any[], monthDate?: Date) {
+  async function computeActualsForKpis(kpis: any[], monthDate?: Date, isStale?: () => boolean) {
     try {
       if (!kpis || !kpis.length) return;
       const tenantId = localStorage.getItem('tenantId');
@@ -370,7 +377,7 @@ export default function GuardIndicators({ guard }: Props) {
 
       const q = `?generatedDateRange[]=${encodeURIComponent(start)}&generatedDateRange[]=${encodeURIComponent(end)}&limit=10000`;
       const resp: any = await ApiService.get(`/tenant/${tenantId}/report${q}`);
-      console.debug('[GuardKPIs] reports response:', resp);
+      if (import.meta.env.DEV) console.debug('[GuardKPIs] reports response:', resp);
       const rows = Array.isArray(resp?.rows) ? resp.rows : (Array.isArray(resp) ? resp : []);
 
       const countsByKpi: Record<string, number> = {};
@@ -400,6 +407,7 @@ export default function GuardIndicators({ guard }: Props) {
         countsByKpi[kpi.id] = cnt;
       }
 
+      if (isStale && isStale()) return;
       setKpiData((prev) => (prev || []).map((kk: any) => ({ ...kk, actual: countsByKpi[kk.id] ?? kk.actual ?? 0 })));
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -426,12 +434,18 @@ export default function GuardIndicators({ guard }: Props) {
     return () => { mounted = false; };
   }, [guard?.id]);
 
-  // Reload when month or search query changes (debounced)
+  // Single source of truth for loading KPIs: reload (debounced) when the guard,
+  // month or search query changes. Consolidated from a separate [guard?.id]
+  // effect to avoid the double-fetch on mount. On cleanup we bump the request id
+  // so any in-flight loadKpis is treated as stale and won't setState.
   useEffect(() => {
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       loadKpis();
     }, 300);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(timer);
+      loadKpisReqId.current++;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMonth, searchQuery, guard?.id]);
 

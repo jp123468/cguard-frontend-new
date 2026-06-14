@@ -92,6 +92,10 @@ export default function Login() {
     // are addressed correctly. Fall back to the typical local API URL.
     const base = (import.meta.env.VITE_API_URL ?? "http://localhost:3001/api").replace(/\/+$/, '');
     const url = `${base}/auth/oauth/${provider}`;
+    // Expected origin of the backend that sends the postMessage. Derived from the
+    // API base so we can reject messages from any other (attacker) origin.
+    let expectedOrigin = "";
+    try { expectedOrigin = new URL(base, window.location.origin).origin; } catch {}
     const popup = window.open(url, "oauth_popup", `width=${width},height=${height},left=${left},top=${top}`);
     if (!popup) {
       toast.error(t('auth.could_not_open_auth_window'));
@@ -99,6 +103,9 @@ export default function Login() {
     }
 
     const listener = async (e: MessageEvent) => {
+      // Only trust messages from the exact backend origin and from the popup we opened.
+      if (!expectedOrigin || e.origin !== expectedOrigin) return;
+      if (e.source !== popup) return;
       if (!e.data || e.data.type !== "oauth_callback") return;
       const { token, user, error } = e.data;
       window.removeEventListener("message", listener);

@@ -1,5 +1,5 @@
 import { Camera } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -34,6 +34,12 @@ import {
 
 export default function NewVehiclePage() {
   const [preview, setPreview] = useState<string | null>(null);
+  const previewRef = useRef<string | null>(null);
+  previewRef.current = preview;
+  // Revoke any outstanding blob preview URL on unmount to avoid leaking it.
+  useEffect(() => () => {
+    if (previewRef.current?.startsWith("blob:")) URL.revokeObjectURL(previewRef.current);
+  }, []);
   const location = useLocation();
   const navigate = useNavigate();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -203,14 +209,15 @@ export default function NewVehiclePage() {
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
-                  if (f) {
-                    form.setValue("image", f);
-                    const url = URL.createObjectURL(f);
-                    setPreview(url);
-                  } else {
+                  setPreview((prev) => {
+                    if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+                    if (f) {
+                      form.setValue("image", f);
+                      return URL.createObjectURL(f);
+                    }
                     form.setValue("image", undefined);
-                    setPreview(null);
-                  }
+                    return null;
+                  });
                 }}
               />
             </div>

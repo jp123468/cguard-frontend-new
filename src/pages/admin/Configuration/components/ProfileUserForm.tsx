@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -131,6 +131,8 @@ export default function ProfileUserForm() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  // Tracks the current blob: object URL so it can be revoked when replaced/unmounted.
+  const avatarObjectUrlRef = useRef<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentTenantId, setCurrentTenantId] = useState<string | null>(null);
 
@@ -154,7 +156,7 @@ export default function ProfileUserForm() {
         const res = await AccountService.getMe();
         const raw = res?.user ?? res?.data ?? res;
         const me = normalizeMe(res);
-        console.log('[ProfileUserForm] /auth/me response raw:', raw, 'normalized:', me);
+        if (import.meta.env.DEV) console.log('[ProfileUserForm] /auth/me response raw:', raw, 'normalized:', me);
         setCurrentUserId(raw?.id ?? null);
         const tid = raw?.tenants && raw.tenants.length ? raw.tenants[0].tenant?.id : localStorage.getItem('tenantId');
         setCurrentTenantId(tid ?? null);
@@ -220,9 +222,29 @@ export default function ProfileUserForm() {
 
   const handleAvatarChange = (file: File | null) => {
     setAvatarFile(file);
-    if (file) setAvatar(URL.createObjectURL(file));
-    else setAvatar(null);
+    // Revoke any previously created object URL before replacing the preview.
+    if (avatarObjectUrlRef.current) {
+      URL.revokeObjectURL(avatarObjectUrlRef.current);
+      avatarObjectUrlRef.current = null;
+    }
+    if (file) {
+      const objectUrl = URL.createObjectURL(file);
+      avatarObjectUrlRef.current = objectUrl;
+      setAvatar(objectUrl);
+    } else {
+      setAvatar(null);
+    }
   };
+
+  // Revoke the outstanding avatar object URL on unmount.
+  useEffect(() => {
+    return () => {
+      if (avatarObjectUrlRef.current) {
+        URL.revokeObjectURL(avatarObjectUrlRef.current);
+        avatarObjectUrlRef.current = null;
+      }
+    };
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
@@ -270,6 +292,11 @@ export default function ProfileUserForm() {
 
           const refreshed = await AccountService.getMe();
           const refreshedMe = normalizeMe(refreshed);
+          // The server now has the avatar; drop the local blob preview URL.
+          if (avatarObjectUrlRef.current) {
+            URL.revokeObjectURL(avatarObjectUrlRef.current);
+            avatarObjectUrlRef.current = null;
+          }
           setAvatar(refreshedMe.avatarUrl ?? null);
           didUpdate = true;
         } catch (err) {

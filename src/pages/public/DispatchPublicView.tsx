@@ -5,6 +5,19 @@ import { clientService } from '@/lib/api/clientService';
 import { postSiteService } from '@/lib/api/postSiteService';
 import IncidentTypesService from '@/services/incident-types.service';
 
+// Only allow http/https URLs to be used as navigable hrefs. Rejects
+// javascript:/data:/other schemes that could come from server-stored data.
+function safeHttpUrl(raw: unknown): string | null {
+  if (typeof raw !== 'string' || !raw) return null;
+  try {
+    const u = new URL(raw, window.location.origin);
+    if (u.protocol === 'http:' || u.protocol === 'https:') return u.href;
+  } catch (e) {
+    // not a parseable absolute/relative URL
+  }
+  return null;
+}
+
 export default function DispatchPublicView() {
   const { token } = useParams();
   const [payload, setPayload] = useState<any | null>(null);
@@ -40,6 +53,18 @@ export default function DispatchPublicView() {
   }, [token]);
 
   useEffect(() => {
+    // These endpoints are authenticated, tenant-scoped CRM APIs. On a genuine
+    // public viewer they would 401 and only waste requests. The public payload
+    // already embeds resolved client/site/incidentType names (used first in the
+    // render lookups below), so only fetch the aux lists when a session exists
+    // (e.g. an admin opening the share/print view).
+    let isAuthenticated = false;
+    try {
+      isAuthenticated = !!(localStorage.getItem('authToken') || localStorage.getItem('token'));
+    } catch (e) {
+      isAuthenticated = false;
+    }
+    if (!isAuthenticated) return;
     const loadAux = async () => {
       try {
         const [clientsResp, sitesResp] = await Promise.all([
@@ -272,9 +297,9 @@ export default function DispatchPublicView() {
                       <div className="flex-1">
                         <div className="text-xs text-foreground/70">{(c.author && (c.author.name || c.author.fullName || c.author.username)) || 'Usuario'} · {c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</div>
                         <div className="mt-1 text-sm text-foreground whitespace-pre-wrap">{c.text || c.body || c.message}</div>
-                        {c.attachment && c.attachment.url && (
+                        {c.attachment && c.attachment.url && safeHttpUrl(c.attachment.url) && (
                           <div className="mt-2">
-                            <a className="text-xs text-blue-600 underline" href={c.attachment.url} target="_blank" rel="noreferrer">Adjunto: {c.attachment.name || c.attachment.url}</a>
+                            <a className="text-xs text-blue-600 underline" href={safeHttpUrl(c.attachment.url) as string} target="_blank" rel="noreferrer">Adjunto: {c.attachment.name || c.attachment.url}</a>
                           </div>
                         )}
                       </div>

@@ -102,7 +102,7 @@
       "title": "No se encontraron resultados"
     },
     "pagination": {
-      "range": "1 – {{end}} de {{total}}",
+      "range": "{{start}} – {{end}} de {{total}}",
       "zero": "0 – 0 de 0"
     },
     "roleNames": {
@@ -2383,7 +2383,7 @@
         "title": "No se encontraron resultados"
       },
       "pagination": {
-        "range": "1 – {{end}} de {{total}}",
+        "range": "{{start}} – {{end}} de {{total}}",
         "zero": "0 – 0 de 0"
       },
       "roleNames": {

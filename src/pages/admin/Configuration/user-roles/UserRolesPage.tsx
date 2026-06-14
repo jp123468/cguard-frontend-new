@@ -39,10 +39,14 @@ export default function UserRolesPage() {
     let mounted = true;
     (async () => {
       try {
+        // SECURITY: tenantId is client-supplied (localStorage) and used only as a
+        // path segment. The backend MUST authorize the authenticated user against
+        // this tenant for every /tenant/:id/role route; isolation cannot rely on
+        // this client value. (Frontend contract left intact intentionally.)
         const tenantId = localStorage.getItem("tenantId") || "";
         if (!tenantId) return;
         const res = await ApiService.get(`/tenant/${tenantId}/role`);
-        console.debug('[UserRolesPage] GET /role response ->', res);
+        if (import.meta.env.DEV) console.debug('[UserRolesPage] GET /role response ->', res);
         // Support several possible shapes returned by the API
         //  - an array of roles
         //  - { rows: [...], count }
@@ -89,6 +93,13 @@ export default function UserRolesPage() {
     return rows.filter((r) => r.name.toLowerCase().includes(q));
   }, [rows, query]);
 
+  // Cap the rendered rows to the selected page size so the per-page control
+  // is functional (this screen has no page navigation, so we show page 1).
+  const paged = useMemo(() => {
+    const size = Number(pageSize) || filtered.length;
+    return filtered.slice(0, size);
+  }, [filtered, pageSize]);
+
   const expandedRole = expandedRoleId ? rows.find((r) => r.id === expandedRoleId) : null;
   // Only superadmin/customer are read-only; all other roles (incl. built-ins) are editable.
   const expandedRoleIsLocked = expandedRole ? !!expandedRole.fullyLocked : false;
@@ -97,7 +108,7 @@ export default function UserRolesPage() {
 
   const onCheckAll = (v: boolean) => {
     const next: Record<string, boolean> = {};
-    if (v) filtered.forEach((r) => {
+    if (v) paged.forEach((r) => {
       if (!r.isDefault) next[r.id] = true;
     });
     setChecked(next);
@@ -114,7 +125,7 @@ export default function UserRolesPage() {
   };
 
   const onEdit = async (r: UserRoleRow) => {
-    console.debug('[UserRolesPage] onEdit clicked for role', r.id, r.name);
+    if (import.meta.env.DEV) console.debug('[UserRolesPage] onEdit clicked for role', r.id, r.name);
     setEdit(r);
     setDialogDefaults(null);
     try {
@@ -198,7 +209,7 @@ export default function UserRolesPage() {
 
  
 
-  const pageLabel = `${filtered.length === 0 ? 0 : 1} – ${filtered.length} of ${filtered.length}`;
+  const pageLabel = `${paged.length === 0 ? 0 : 1} – ${paged.length} of ${filtered.length}`;
 
   const submit = async (data: UserRoleDialogValues) => {
     try {
@@ -280,7 +291,7 @@ export default function UserRolesPage() {
     <AppLayout>
       <SettingsLayout navKey="configuracion" title="Roles de Usuario">
         <UserRolesTable
-          rows={filtered}
+          rows={paged}
           checked={checked}
           onCheckAll={onCheckAll}
           onCheckRow={onCheckRow}

@@ -605,65 +605,37 @@ export default function NewAdminUserPage() {
       setInviteLoading(true);
       setGeneratedToken(null);
 
-      // Try backend endpoint; fallback to local token generation
-      // Try backend endpoint first; if it fails, fallback to local 6-digit token
-      try {
-        const payload = { email: inviteEmail || undefined, expiresInSeconds: 3600 };
-        const resp: any = await ApiService.post(`/tenant/${tenantId}/tenant-user/invitation-token`, payload);
-        const token = resp?.token || resp?.invitationToken || resp?.data?.token || resp?.data?.invitationToken;
-        const expiresAt = resp?.expiresAt || resp?.invitationTokenExpiresAt || resp?.data?.expiresAt || null;
-        if (token) {
-          setGeneratedToken(String(token));
-          setGeneratedExpiresAt(expiresAt ? String(expiresAt) : new Date(Date.now() + 3600 * 1000).toISOString());
-          toast.success(t('adminOfficeUsers.newUser.toasts.inviteCreated', { defaultValue: 'Código de invitación creado' }));
-          return;
-        }
-        throw new Error("No token in response");
-      } catch (e) {
-        // fallback: generate a local 6-digit numeric token
-        const token = generateNumericCode(6);
-        setGeneratedToken(token);
-        setGeneratedExpiresAt(new Date(Date.now() + 3600 * 1000).toISOString());
-        toast.success(t('adminOfficeUsers.newUser.toasts.inviteGeneratedLocal', { defaultValue: 'Código generado localmente (no guardado en servidor)' }));
+      // Only the backend can issue a valid invitation code. Never fall back to a
+      // locally-generated code: it would be server-unknown (the backend would reject
+      // it) and a Math.random 6-digit value is not cryptographically strong. On any
+      // failure, surface an error and do not display a fake code.
+      const payload = { email: inviteEmail || undefined, expiresInSeconds: 3600 };
+      const resp: any = await ApiService.post(`/tenant/${tenantId}/tenant-user/invitation-token`, payload);
+      const token = resp?.token || resp?.invitationToken || resp?.data?.token || resp?.data?.invitationToken;
+      const expiresAt = resp?.expiresAt || resp?.invitationTokenExpiresAt || resp?.data?.expiresAt || null;
+      if (!token) {
+        throw new Error(t('adminOfficeUsers.newUser.errors.createCode', { defaultValue: 'Error creando código' }));
       }
+      setGeneratedToken(String(token));
+      setGeneratedExpiresAt(expiresAt ? String(expiresAt) : new Date(Date.now() + 3600 * 1000).toISOString());
+      toast.success(t('adminOfficeUsers.newUser.toasts.inviteCreated', { defaultValue: 'Código de invitación creado' }));
     } catch (err: any) {
+      setGeneratedToken(null);
+      setGeneratedExpiresAt(null);
       toast.error(err?.message || t('adminOfficeUsers.newUser.errors.createCode', { defaultValue: 'Error creando código' }));
     } finally {
       setInviteLoading(false);
     }
   };
 
-  const generateRandomToken = (length = 48) => {
-    try {
-      const array = new Uint8Array(length / 2);
-      if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
-        window.crypto.getRandomValues(array);
-        return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
-      }
-    } catch (e) {
-      // ignore
-    }
-    // fallback simple random
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let out = '';
-    for (let i = 0; i < length; i++) out += chars[Math.floor(Math.random() * chars.length)];
-    return out;
-  };
-
-  const generateNumericCode = (digits = 6) => {
-    const max = Math.pow(10, digits);
-    const num = Math.floor(Math.random() * max);
-    return String(num).padStart(digits, '0');
-  };
-
   const regenCode = async () => {
-    // regenerate locally first for instant UX; also attempt backend if available
-    setGeneratedToken(generateNumericCode(6));
-    setGeneratedExpiresAt(new Date(Date.now() + 3600 * 1000).toISOString());
+    // Always request a fresh code from the backend; never surface a local code.
+    setGeneratedToken(null);
+    setGeneratedExpiresAt(null);
     try {
       await createInvitationToken();
     } catch (e) {
-      // ignore — createInvitationToken handles errors
+      // ignore — createInvitationToken handles errors and toasts
     }
   };
 

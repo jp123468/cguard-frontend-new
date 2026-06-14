@@ -70,6 +70,13 @@ export default function CheckInOut() {
       />
 
       <section className="p-6">
+        {/* NOTE: This report is a static placeholder/mockup — it is not wired to real
+            data and renders an empty table by design. Flagged as not-yet-implemented so
+            it is not mistaken for a working feature. See finding #7 (Reports slice). */}
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
+          Esta sección es una vista previa y aún no está implementada. Los datos mostrados son de ejemplo.
+        </div>
+
         {/* Toolbar */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
