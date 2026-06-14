@@ -118,13 +118,6 @@ import Vehicles from "./pages/admin/visitor-management/Vehicles"
 import Visits from "./pages/admin/visitor-management/Visits"
 import PostSite from "./pages/admin/analytics/PostSite"
 import Guard from "./pages/admin/analytics/Guard"
-import ParkingContact from "./pages/admin/parking-manager/ParkingContact"
-import ParkingVehicles from "./pages/admin/parking-manager/ParkingVehicles"
-import ParkingArea from "./pages/admin/parking-manager/ParkingArea"
-import ParkingLot from "./pages/admin/parking-manager/ParkingLot"
-import ParkingIncident from "./pages/admin/parking-manager/ParkingIncident"
-import ParkingIncidentType from "./pages/admin/parking-manager/ParkingIncidentType"
-import NewIncidentType from "./pages/admin/parking-manager/NewIncidentType"
 import TimeOff from "./pages/admin/programmer/TimeOff"
 import Attendance from "./pages/admin/programmer/Attendance"
 import Schedule from "./pages/admin/programmer/Schedule"
@@ -1257,64 +1250,6 @@ export default function App() {
 
               {/* FIN NOMINA */}
 
-
-              {/* INTEGRACIONES */}
-              <Route
-                path="/parking-manager/parking-contact"
-                element={
-                  <ProtectedRoute>
-                    <ParkingContact />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/parking-manager/parking-vehicle"
-                element={
-                  <ProtectedRoute>
-                    <ParkingVehicles />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/parking-manager/parking-area"
-                element={
-                  <ProtectedRoute>
-                    <ParkingArea />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/parking-manager/parking-lot"
-                element={
-                  <ProtectedRoute>
-                    <ParkingLot />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/parking-manager/parking-incident"
-                element={
-                  <ProtectedRoute>
-                    <ParkingIncident />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/parking-manager/incident-type"
-                element={
-                  <ProtectedRoute>
-                    <ParkingIncidentType />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/parking-manager/incident-type/new"
-                element={
-                  <ProtectedRoute>
-                    <NewIncidentType />
-                  </ProtectedRoute>
-                }
-              />
 
               {/* PROGRAMADOR */}
               <Route
