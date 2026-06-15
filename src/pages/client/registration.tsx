@@ -57,7 +57,13 @@ export default function ClientRegistration() {
         navigate(`/auth/invitation?token=${encodeURIComponent(inviteToken)}&inviteType=guard`);
         return;
       }
-      // inviteType puede ser 'client' o 'staff' (supervisores, admins, etc.)
+      // Internal administrative staff (admins, supervisors, …) belong in the CRM
+      // panel, NOT the customer registration view — redirect older links there.
+      if (inviteType === 'staff' || inviteType === 'admin') {
+        navigate(`/auth/accept-invitation?token=${encodeURIComponent(inviteToken)}&inviteType=staff`, { replace: true });
+        return;
+      }
+      // inviteType puede ser 'client' (clientes)
       setIsLoading(true);
       try {
         const endpointBase = `/user/public`;

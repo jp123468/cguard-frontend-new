@@ -13,6 +13,7 @@ import { LanguageProvider } from "./contexts/LanguageContext"
 import "./i18n"
 import Register from "./pages/auth/register"
 import VerifyEmail from "./pages/auth/verify-email"
+import AcceptInvitation from "./pages/auth/accept-invitation"
 import { ApiService } from '@/services/api/apiService';
 
 import ProfileUser from "./pages/admin/Configuration/ProfileUserPage"
@@ -188,6 +189,13 @@ function LoginRouteResolver() {
       return;
     }
 
+    // Administrative / internal staff invites: they work in THIS CRM, so send
+    // them to the panel onboarding (NOT the customer registration view).
+    if (inviteType === 'staff' || inviteType === 'admin') {
+      navigate(`/auth/accept-invitation?token=${encodeURIComponent(inviteToken)}&inviteType=staff`, { replace: true });
+      return;
+    }
+
     // Default behavior: treat as guard invitation and open the public invitation
     // registration page directly. Avoid probing backend endpoints here because
     // that can return 400/204 preflight errors and leave the user on the login page.
@@ -280,6 +288,14 @@ export default function App() {
                 element={
                   <PublicOnlyRoute>
                     <GuardRegistration />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/auth/accept-invitation"
+                element={
+                  <PublicOnlyRoute>
+                    <AcceptInvitation />
                   </PublicOnlyRoute>
                 }
               />
