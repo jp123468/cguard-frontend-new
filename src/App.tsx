@@ -71,8 +71,6 @@ import DispatcherPage from "./pages/admin/dispatcher/DispatcherPage"
 import NewDispatchPage from "./pages/admin/dispatcher/NewDispatchPage"
 import EditDispatchPage from "./pages/admin/dispatcher/EditDispatchPage"
 import VehiclesPage from "./pages/admin/vehicles/VehiclesPage"
-import BranchList from "./pages/admin/branch/BranchList"
-import AddBranch from "./pages/admin/branch/AddBranch"
 import DispatchDetailsPage from '@/pages/admin/dispatcher/DispatchDetailsPage';
 import DispatchPrintablePage from '@/pages/admin/dispatcher/DispatchPrintablePage';
 import DispatchPublicView from '@/pages/public/DispatchPublicView';
@@ -725,24 +723,6 @@ export default function App() {
               <Route path="/post-sites/:postSiteId/stations/:stationId/parking" element={<ProtectedRoute><StationDetailPage /></ProtectedRoute>} />
               {/* FIN CLIENTES */}
 
-              {/* SUCURSALES */}
-              <Route
-                path="/branch"
-                element={
-                  <ProtectedRoute>
-                    <BranchList />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/branch/add-branch"
-                element={
-                  <ProtectedRoute>
-                    <AddBranch />
-                  </ProtectedRoute>
-                }
-              />
-              {/* FIN SUCURSALES */}
 
               {/* EQUIPOS DE SEGURIDAD */}
               <Route

@@ -14,7 +14,6 @@ import {
   Sun,
   Moon,
   Star,
-  StoreIcon,
   ArrowRight,
   Radio,
 } from "lucide-react";
@@ -253,10 +252,6 @@ export default function Header({
                   <NavLink to="/setting/billing" className="flex items-center gap-3 px-4 py-2 hover:bg-accent text-sm text-foreground transition-colors">
                     <CreditCard className="w-4 h-4 text-muted-foreground" />
                     {t('header.subscription')}
-                  </NavLink>
-                  <NavLink to="/branch" className="flex items-center gap-3 px-4 py-2 hover:bg-accent text-sm text-foreground transition-colors">
-                    <StoreIcon className="w-4 h-4 text-muted-foreground" />
-                    {t('header.branches')}
                   </NavLink>
                   <NavLink to="/registros-sistema" className="flex items-center gap-3 px-4 py-2 hover:bg-accent text-sm text-foreground transition-colors">
                     <Clock className="w-4 h-4 text-muted-foreground" />
