@@ -298,6 +298,12 @@ export default function ActivitiesPage() {
                   {g.items.map((e) => {
                     const { Icon, color } = visualFor(e.eventType);
                     const read = isRead(e);
+                    // NOTE (token migration): inside a .map() callback, so the
+                    // useFileUrl hook can't be used (hooks rules), and the event
+                    // payload only carries a raw photoUrl privateUrl string (no
+                    // companion downloadUrl). Left on fileUrlFromPrivate as a
+                    // documented transitional fallback; when the backend adds a
+                    // token downloadUrl to the activity payload, switch to it.
                     const photoUrl = fileUrlFromPrivate(e.payload?.photoUrl);
                     return (
                       <button

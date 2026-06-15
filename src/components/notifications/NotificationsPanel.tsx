@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { fileUrlFromPrivate } from '@/lib/fileUrl';
+import { useFileUrl } from '@/lib/fileUrl';
 import type { PlatformNotification } from '@/hooks/useNotificationStream';
 import { targetForNotification } from './notificationToast';
 
@@ -143,7 +143,9 @@ function NotificationItem({
   notification: PlatformNotification;
   onOpen: (n: PlatformNotification) => void;
 }) {
-  const photoUrl = fileUrlFromPrivate(n.payload?.photoUrl);
+  // Migrated to token URLs: NotificationItem is a component, so a hook is safe.
+  // payload carries only a raw privateUrl string, so useFileUrl fetches a token.
+  const photoUrl = useFileUrl(n.payload?.photoUrl);
   return (
     <div
       className={cn(

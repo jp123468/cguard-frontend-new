@@ -4,8 +4,34 @@ import Breadcrumb from "@/components/ui/breadcrumb";
 import { MessageSquareText, Send, Plus, Search, Loader2, X, Check, CheckCheck, Paperclip, Play, Trash2 } from "lucide-react";
 import { messageService, type MessageAttachment } from "@/lib/api/messageService";
 import securityGuardService from "@/lib/api/securityGuardService";
-import { fileUrlFromPrivate } from "@/lib/fileUrl";
+import { useFileUrl } from "@/lib/fileUrl";
 import { toast } from "sonner";
+
+/**
+ * Renders one message attachment (image/video). The attachment `url` is a raw
+ * privateUrl, so resolve a token-based download URL via `useFileUrl`. Extracted
+ * as a component because the attachments are rendered inside a `.map()`, where
+ * hooks can't be called directly.
+ */
+function MessageAttachmentView({ att }: { att: MessageAttachment }) {
+  const url = useFileUrl(att.url);
+  if (att.type === "video") {
+    return (
+      <video src={url || undefined} controls preload="metadata" className="max-h-72 max-w-full rounded-lg bg-black/20" />
+    );
+  }
+  return (
+    <a href={url || "#"} target="_blank" rel="noreferrer">
+      <img src={url || undefined} alt={att.name || "imagen"} loading="lazy" className="max-h-72 max-w-full rounded-lg object-cover" />
+    </a>
+  );
+}
+
+/** Thumbnail for a pending (just-uploaded) image attachment; same token logic. */
+function PendingThumb({ att }: { att: MessageAttachment }) {
+  const url = useFileUrl(att.url);
+  return <img src={url || undefined} alt="" className="h-full w-full object-cover" />;
+}
 
 type Conversation = {
   id: string; recipientType: string; recipientUserId: string | null; recipientName: string;
@@ -198,13 +224,7 @@ export default function MessengerPage() {
                           {Array.isArray(m.attachments) && m.attachments.length > 0 && (
                             <div className="mb-1 grid gap-1.5">
                               {m.attachments.map((a, i) => (
-                                a.type === "video" ? (
-                                  <video key={i} src={fileUrlFromPrivate(a.url) || undefined} controls preload="metadata" className="max-h-72 max-w-full rounded-lg bg-black/20" />
-                                ) : (
-                                  <a key={i} href={fileUrlFromPrivate(a.url) || "#"} target="_blank" rel="noreferrer">
-                                    <img src={fileUrlFromPrivate(a.url) || undefined} alt={a.name || "imagen"} loading="lazy" className="max-h-72 max-w-full rounded-lg object-cover" />
-                                  </a>
-                                )
+                                <MessageAttachmentView key={i} att={a} />
                               ))}
                             </div>
                           )}
@@ -227,7 +247,7 @@ export default function MessengerPage() {
                           {a.type === "video" ? (
                             <div className="flex h-full w-full items-center justify-center bg-black/60 text-white"><Play size={18} /></div>
                           ) : (
-                            <img src={fileUrlFromPrivate(a.url) || undefined} alt="" className="h-full w-full object-cover" />
+                            <PendingThumb att={a} />
                           )}
                           <button onClick={() => setPending((p) => p.filter((_, j) => j !== i))} className="absolute right-0 top-0 grid h-5 w-5 place-items-center rounded-bl bg-black/70 text-white"><X size={12} /></button>
                         </div>

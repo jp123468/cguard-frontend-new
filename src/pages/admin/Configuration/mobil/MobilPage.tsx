@@ -90,6 +90,12 @@ export default function MobilPage() {
 
   const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api').replace(/\/+$/, '');
 
+    // Token migration: always prefer the backend-attached token `downloadUrl`
+    // (fillDownloadUrl). `publicUrl`/`privateUrl` remain only as transitional
+    // fallbacks for legacy file objects that lack a downloadUrl. The raw
+    // `?privateUrl=` path below is reached only when neither token nor public
+    // URL is present; it can't use the useFileUrl hook because this helper runs
+    // inside `.map()` render callbacks.
     const resolveFileUrl = (file: any) => {
     const rawUrl = file?.downloadUrl || file?.publicUrl || file?.privateUrl || '';
     const url = String(rawUrl || '').trim();

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getTenantTimezone } from "@/utils/tenantLocation";
-import { fileUrlFromPrivate } from "@/lib/fileUrl";
+import { useFileUrl } from "@/lib/fileUrl";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -150,6 +150,27 @@ function StatusBadge({ status }: { status: string }) {
 
 // ── Detail Panel ───────────────────────────────────────────────────────────
 
+/**
+ * Small clock-in selfie thumbnail for a table row. `punchInPhoto` is a raw
+ * privateUrl, so resolve a token-based URL via `useFileUrl`. Extracted as a
+ * component because rows are rendered inside a `.map()` (hooks can't be called
+ * inside a callback).
+ */
+function SelfieThumb({ privateUrl }: { privateUrl?: string | null }) {
+  const url = useFileUrl(privateUrl ?? null);
+  return url ? (
+    <img
+      src={url}
+      alt=""
+      loading="lazy"
+      className="h-9 w-9 rounded-md border object-cover"
+      onError={(e) => (e.currentTarget.style.display = "none")}
+    />
+  ) : (
+    <div className="h-9 w-9 rounded-md border bg-muted" />
+  );
+}
+
 function DetailPanel({
   record,
   open,
@@ -159,9 +180,11 @@ function DetailPanel({
   open: boolean;
   onClose: () => void;
 }) {
+  // punchInPhoto is a raw privateUrl; resolve a token URL. Hook must run before
+  // the early return below to satisfy the rules of hooks.
+  const selfieUrl = useFileUrl(record?.punchInPhoto ?? null);
   if (!record) return null;
   const status = shiftStatus(record);
-  const selfieUrl = fileUrlFromPrivate(record.punchInPhoto);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -657,20 +680,7 @@ export default function Attendance() {
                         <Checkbox />
                       </TableCell>
                       <TableCell>
-                        {(() => {
-                          const url = fileUrlFromPrivate(rec.punchInPhoto);
-                          return url ? (
-                            <img
-                              src={url}
-                              alt=""
-                              loading="lazy"
-                              className="h-9 w-9 rounded-md border object-cover"
-                              onError={(e) => (e.currentTarget.style.display = "none")}
-                            />
-                          ) : (
-                            <div className="h-9 w-9 rounded-md border bg-muted" />
-                          );
-                        })()}
+                        <SelfieThumb privateUrl={rec.punchInPhoto} />
                       </TableCell>
                       <TableCell className="font-medium whitespace-nowrap">
                         {formatDate(rec.punchInTime)}

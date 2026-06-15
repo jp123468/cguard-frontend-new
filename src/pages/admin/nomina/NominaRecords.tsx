@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import attendanceService, { type AttendanceRecord } from "@/lib/api/attendanceService";
 import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
-import { fileUrlFromPrivate } from "@/lib/fileUrl";
+import { useFileUrl } from "@/lib/fileUrl";
 import { StatusBadge, fmtDateTime, fmtTime, fmtHours } from "./shared";
 import { MapPin, ImageOff } from "lucide-react";
 
@@ -21,6 +21,10 @@ export default function NominaRecords() {
   const [status, setStatus] = useState("");
   const [selected, setSelected] = useState<AttendanceRecord | null>(null);
   const [busy, setBusy] = useState(false);
+  // Token-based selfie URL for the open record. punchInPhoto is a raw
+  // privateUrl string (no companion downloadUrl), so resolve a token here at the
+  // component top level (hooks rules) rather than inside the JSX IIFE below.
+  const selfieUrl = useFileUrl(selected?.punchInPhoto ?? null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -122,7 +126,6 @@ export default function NominaRecords() {
               <div className="mt-4 space-y-4 text-sm">
                 {/* Clock-in selfie (geo-stamped by the worker app) + timestamp */}
                 {(() => {
-                  const selfieUrl = fileUrlFromPrivate(selected.punchInPhoto);
                   if (!selfieUrl) {
                     return (
                       <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border bg-muted/40 py-8 text-muted-foreground">

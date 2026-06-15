@@ -83,6 +83,13 @@ export function showNotificationToast(
   navigate?: (to: string) => void,
 ) {
   const { Icon, color } = iconFor(n.eventType);
+  // NOTE (token migration): this is a plain imperative function (not a React
+  // component), so the `useFileUrl` hook can't be used here, and the live
+  // notification payload carries only a raw `photoUrl` privateUrl string (no
+  // companion `downloadUrl`). Left on `fileUrlFromPrivate` as a documented
+  // transitional fallback. If FILE_DOWNLOAD_REQUIRE_TOKEN is enabled, the
+  // backend should start emitting a token `downloadUrl` in the notification
+  // payload instead — switch to that field here when it's available.
   const photoUrl = fileUrlFromPrivate(n.payload?.photoUrl);
   const target = targetForNotification(n);
 

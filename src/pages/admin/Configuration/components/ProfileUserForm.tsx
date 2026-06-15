@@ -51,9 +51,12 @@ function pickAvatarUrl(avatars?: MeAvatar[] | null): string | null {
   if (!avatars || avatars.length === 0) return null;
   const a = avatars[0];
   if (typeof a === "string") return a;
-  // Prefer an explicit full download URL
+  // Prefer the token-based download URL the backend attaches (fillDownloadUrl).
   if ((a as any).downloadUrl) return String((a as any).downloadUrl);
-  // Some APIs return a privateUrl path; build a download endpoint if it's relative
+  // Transitional fallback only: a legacy avatar object that carries just a raw
+  // privateUrl (no token downloadUrl). This is a plain helper (not a React
+  // component), so the useFileUrl hook can't be used; the raw download path
+  // remains until the backend guarantees a downloadUrl on every avatar object.
   if ((a as any).privateUrl) {
     const privateUrl = String((a as any).privateUrl);
     // If it's already an absolute URL, return it; otherwise construct download path

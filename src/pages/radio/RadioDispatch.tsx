@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Radio, Play, Square, Loader2, Settings2, AlertTriangle, RefreshCw, FileText } from "lucide-react";
 import { toast } from "sonner";
 import AppLayout from "@/layouts/app-layout";
-import { radioCheckService, radioAudioSrc } from "@/lib/api/radioCheckService";
+import { radioCheckService } from "@/lib/api/radioCheckService";
+import { useFileUrl } from "@/lib/fileUrl";
 import { useRadioRealtime } from "@/components/radio/RadioRealtimeProvider";
 import RadioLiveChannelPanel from "@/components/radio/RadioLiveChannelPanel";
 
@@ -18,6 +19,17 @@ const classChip: Record<string, { label: string; cls: string }> = {
   novedad: { label: "Novedad", cls: "bg-amber-500/15 text-amber-600" },
   sin_novedad: { label: "Sin novedad", cls: "bg-emerald-500/15 text-emerald-600" },
 };
+
+/**
+ * Audio player for a radio-check clip. The entry's `audioUrl` is a raw
+ * privateUrl, so resolve a token-based download URL via `useFileUrl`. Extracted
+ * as a component because entries are rendered inside a `.map()` (hooks can't be
+ * called in a callback).
+ */
+function RadioAudio({ audioUrl }: { audioUrl?: string | null }) {
+  const src = useFileUrl(audioUrl ?? null);
+  return <audio controls preload="none" src={src || undefined} className="h-8 w-full max-w-xs" />;
+}
 
 export default function RadioDispatch() {
   const { version, connected } = useRadioRealtime();
@@ -149,7 +161,7 @@ export default function RadioDispatch() {
                   <div className="mt-2 space-y-1.5 border-t border-border pt-2">
                     {e.transcript ? <p className="text-sm">{e.transcript}</p> : e.transcriptStatus === "pending" ? <p className="text-xs italic text-muted-foreground">Transcribiendo…</p> : null}
                     {e.hasAudio && e.audioUrl !== undefined && (
-                      <audio controls preload="none" src={radioAudioSrc(e.audioUrl)} className="h-8 w-full max-w-xs" />
+                      <RadioAudio audioUrl={e.audioUrl} />
                     )}
                     {st === "responded" && e.classification !== "incident" && (
                       <button onClick={() => escalate(e.entryId || e.id)} className="flex items-center gap-1 text-[11px] text-red-600 hover:underline"><AlertTriangle size={12} /> Marcar como incidente</button>
