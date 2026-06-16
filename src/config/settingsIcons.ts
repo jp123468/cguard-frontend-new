@@ -17,6 +17,7 @@ import {
   Bell,
   Mail,
   MessageSquare,
+  Radio,
   Smartphone,
   Wallet,
   Clock,
@@ -35,7 +36,7 @@ import {
 export const SETTINGS_ICONS: Record<string, LucideIcon> = {
   User, KeyRound, ShieldCheck, Building2, CreditCard, Network, ShieldHalf,
   ListChecks, MapPinned, Shield, Route, AlertTriangle, BadgeCheck, Wrench,
-  Bell, Mail, MessageSquare, Smartphone, Wallet, Clock, FileBarChart, FileCog,
+  Bell, Mail, MessageSquare, Radio, Smartphone, Wallet, Clock, FileBarChart, FileCog,
   Plug, Code, FileDown, FileText, Settings2,
 };
 

@@ -35,6 +35,7 @@
         "items": [
           { "id": "notificaciones", "label": "Notificaciones", "path": "/setting/notifications", "icon": "Bell", "desc": "Alertas y avisos del sistema." },
           { "id": "preferencias-correo", "label": "Preferencias de Correo", "path": "/setting/email-preferences", "icon": "Mail", "desc": "Qué correos recibes y cuándo." },
+          { "id": "comunicaciones", "label": "Comunicaciones", "path": "/setting/comunicaciones", "icon": "Radio", "desc": "Canales, WhatsApp, saldo y uso de mensajería." },
           { "id": "sms", "label": "Saldo SMS", "path": "/setting/sms", "icon": "MessageSquare", "desc": "Consumo y recarga de mensajes SMS." },
           { "id": "mobil", "label": "App Móvil", "path": "/setting/mobil", "icon": "Smartphone", "desc": "Ajustes de la aplicación móvil." }
         ]

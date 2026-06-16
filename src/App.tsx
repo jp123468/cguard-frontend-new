@@ -41,6 +41,7 @@ import GuardsGlobalSettingsPage from "./pages/admin/Configuration/guards-setting
 import RondasSettingsPage from "./pages/admin/Configuration/rondas-settings/RondasSettingsPage"
 import EmailPreferencesPage from "./pages/admin/Configuration/email-preferences/EmailPreferencesPage"
 import SmsBalancePage from "./pages/admin/Configuration/sms/SmsBalancePage"
+import CommunicationsPage from "./pages/admin/Configuration/communications/CommunicationsPage"
 import BillingPage from "./pages/admin/Configuration/billing/BillingPage"
 import DeveloperTokensPage from "./pages/admin/Configuration/developer-tokens/DeveloperTokensPage"
 import ActivitiesPage from "./pages/admin/actividades/ActivitiesPage"
@@ -1625,6 +1626,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <SmsBalancePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/comunicaciones"
+                element={
+                  <ProtectedRoute>
+                    <CommunicationsPage />
                   </ProtectedRoute>
                 }
               />
