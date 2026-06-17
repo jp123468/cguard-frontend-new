@@ -14,18 +14,26 @@
 
 /* ── glass surfaces ──────────────────────────────────────────────────────── */
 .cc-glass, .glass {
+  /* Light mode: clean solid card with a neutral border + soft shadow. */
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px -1px color-mix(in oklab, #000 12%, transparent),
+              0 4px 16px -8px color-mix(in oklab, #000 10%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+.cc-glass::after, .glass::after { content: none; }
+.dark .cc-glass, .dark .glass {
   background: var(--cc-glass-bg);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
   border: 1px solid var(--cc-glass-brd);
-  border-radius: 1rem;
   box-shadow:
     0 1px 0 0 color-mix(in oklab, #fff 7%, transparent) inset,
     0 18px 40px -24px color-mix(in oklab, #000 60%, transparent);
-  position: relative;
-  overflow: hidden;
 }
-.cc-glass::after, .glass::after {
+.dark .cc-glass::after, .dark .glass::after {
   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--cc-accent) 55%, transparent), transparent);
   opacity: .55;
@@ -69,7 +77,11 @@
    Subtle in light mode, richer in dark mode. Pure decoration, no interaction.
    ───────────────────────────────────────────────────────────────────────── */
 .app-shell { position: relative; isolation: isolate; }
-.app-shell::before {
+/* Ambient grid + amber glow are DARK-MODE ONLY. In light mode they read as
+   gamer/techy decoration, so the light canvas stays clean and enterprise. */
+.app-shell::before { content: none; }
+.app-shell::after { content: none; }
+.dark .app-shell::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background-image:
     linear-gradient(color-mix(in oklab, var(--cc-accent) 5%, transparent) 1px, transparent 1px),
@@ -79,7 +91,7 @@
   mask-image: radial-gradient(ellipse 90% 55% at 70% -10%, #000 20%, transparent 70%);
   opacity: .5;
 }
-.app-shell::after {
+.dark .app-shell::after {
   content: ""; position: fixed; top: -160px; right: -120px; width: 520px; height: 520px;
   z-index: -1; pointer-events: none; border-radius: 9999px; filter: blur(90px); opacity: .12;
   background: radial-gradient(circle, var(--cc-accent), transparent 65%);
@@ -90,16 +102,28 @@
    ───────────────────────────────────────────────────────────────────────── */
 .app-sidebar {
   position: relative;
+  /* Light mode: clean solid surface with a hairline divider from the canvas. */
+  background: var(--sidebar);
+  border-right: 1px solid var(--sidebar-border);
+}
+.app-sidebar::before { content: none; }
+.app-sidebar-head {
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--sidebar-border);
+}
+/* Dark mode keeps the richer glass/amber treatment. */
+.dark .app-sidebar {
   background:
     linear-gradient(180deg, color-mix(in oklab, var(--cc-accent) 6%, var(--sidebar)) 0%, var(--sidebar) 55%);
+  border-right: 0;
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
-.app-sidebar::before {
+.dark .app-sidebar::before {
   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 160px; pointer-events: none;
   background: radial-gradient(120% 80% at 30% 0%, color-mix(in oklab, var(--cc-accent) 16%, transparent), transparent 70%);
 }
-.app-sidebar-head {
+.dark .app-sidebar-head {
   background: color-mix(in oklab, var(--sidebar) 70%, transparent);
   border-bottom: 1px solid color-mix(in oklab, var(--cc-accent) 16%, var(--border));
   backdrop-filter: blur(12px);
@@ -126,9 +150,13 @@
 
 /* ── glassy header ───────────────────────────────────────────────────────── */
 .app-header {
+  background: color-mix(in oklab, var(--card) 85%, transparent);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  border-bottom: 1px solid var(--border) !important;
+}
+.dark .app-header {
   background: color-mix(in oklab, var(--background) 65%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
   border-bottom: 1px solid color-mix(in oklab, var(--cc-accent) 12%, var(--border)) !important;
 }
 

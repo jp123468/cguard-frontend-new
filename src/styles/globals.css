@@ -83,8 +83,9 @@
 
   --radius: 0.625rem;
 
-  /* Soft cool "paper" page — not stark white — so white cards lift off it. */
-  --background: oklch(0.98 0.003 264);
+  /* Cool gray canvas — clearly distinct from white cards so they lift off it.
+     This page-vs-card separation is the hallmark of a serious CRM. */
+  --background: oklch(0.962 0.005 264);
 
   /* Slate ink rather than warm near-black: reads enterprise, not cozy. */
   --foreground: oklch(0.21 0.015 264);
