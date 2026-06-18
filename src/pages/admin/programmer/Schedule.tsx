@@ -907,6 +907,31 @@ export default function Schedule() {
             <p className="text-sm mt-2">Crea una estación desde la sección de Puestos para comenzar.</p>
           </div>
         ) : (
+          <>
+          {/* ─── Onboarding CTA: stations exist but unconfigured ─── */}
+          {(positions.length === 0 || assignments.length === 0) && (
+            <div className="bg-gradient-to-br from-[#C8860A]/10 to-[#C8860A]/5 border border-[#C8860A]/30 rounded-xl p-4 lg:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-start gap-3 flex-1">
+                <div className="shrink-0 w-10 h-10 rounded-xl bg-[#C8860A]/15 flex items-center justify-center">
+                  <Sparkles size={20} className="text-[#C8860A]" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-foreground">Tus estaciones aún no tienen horario</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Tienes {stations.length} estaciones sin puestos ni guardias asignados. Genera la asignación automática para crear los puestos de cada estación, asignar guardias por cercanía y escalonar los turnos (sacafrancos incluidos).
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={runAutoAssign}
+                disabled={autoAssigning}
+                className="shrink-0 px-4 py-2.5 bg-[#C8860A] text-white rounded-xl text-sm font-semibold hover:bg-[#B37809] disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                {autoAssigning ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
+                {autoAssigning ? 'Asignando...' : 'Generar asignación automática'}
+              </button>
+            </div>
+          )}
           <div className="flex gap-4">
             {/* ─── Left Sidebar Panel ─── */}
             <div className="w-[260px] shrink-0 space-y-3 hidden xl:block">
@@ -1613,6 +1638,7 @@ export default function Schedule() {
             )}
             </div>
           </div>
+          </>
         )}
       </div>
 
