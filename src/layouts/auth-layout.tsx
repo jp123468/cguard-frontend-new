@@ -1,14 +1,22 @@
 import SplashScreen from "@/components/SplashScreen";
 import { ReactNode, useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
-import { Shield, Clock, BarChart3, CheckCircle2 } from "lucide-react";
+import { Shield, Clock, BarChart3, CheckCircle2, MapPin, AlertTriangle } from "lucide-react";
 
 interface AuthLayoutProps {
   children: ReactNode;
   title: string;
+  /**
+   * 'field' renders the guard-app variant (used by the worker-app password-reset
+   * link) so field users see app-focused content, not the tenant platform
+   * marketing. Defaults to the standard admin/tenant variant.
+   */
+  variant?: 'admin' | 'field';
+  /** Optional override for the right-side subtitle under the page title. */
+  subtitle?: string;
 }
 
-export default function AuthLayout({ children, title }: AuthLayoutProps) {
+export default function AuthLayout({ children, title, variant = 'admin', subtitle }: AuthLayoutProps) {
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
 
@@ -19,11 +27,33 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
 
   if (loading) return <SplashScreen />;
 
-  const features = [
-    { icon: Shield, label: t('auth.landing.tag_cloud') },
-    { icon: Clock, label: t('auth.landing.tag_realtime') },
-    { icon: BarChart3, label: t('auth.landing.tag_analytics') },
-  ];
+  const isField = variant === 'field';
+
+  const features = isField
+    ? [
+        { icon: Clock, label: t('auth.fieldLanding.tag_clock', { defaultValue: 'Marca tu entrada y salida' }) },
+        { icon: MapPin, label: t('auth.fieldLanding.tag_patrol', { defaultValue: 'Rondas y patrullajes' }) },
+        { icon: AlertTriangle, label: t('auth.fieldLanding.tag_incidents', { defaultValue: 'Reporta incidentes' }) },
+      ]
+    : [
+        { icon: Shield, label: t('auth.landing.tag_cloud') },
+        { icon: Clock, label: t('auth.landing.tag_realtime') },
+        { icon: BarChart3, label: t('auth.landing.tag_analytics') },
+      ];
+
+  const eyebrow = isField
+    ? t('auth.fieldLanding.eyebrow', { defaultValue: 'App para Guardias' })
+    : t('auth.landing.eyebrow', { defaultValue: 'Plataforma de Seguridad' });
+  const titlePart1 = isField
+    ? t('auth.fieldLanding.title_part1', { defaultValue: 'Tu turno,' })
+    : t('auth.landing.title_part1');
+  const titlePart2 = isField
+    ? t('auth.fieldLanding.title_part2', { defaultValue: 'bajo control.' })
+    : t('auth.landing.title_part2');
+  const panelDesc = isField
+    ? t('auth.fieldLanding.desc', { defaultValue: 'Restablece la contraseña de tu cuenta de guardia para volver a entrar a la app C-Guard Pro.' })
+    : t('auth.landing.desc', { product: 'CGUARD' });
+  const formSubtitle = subtitle ?? panelDesc;
 
   return (
     <div className="min-h-screen w-full flex">
@@ -63,21 +93,21 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
             style={{ background: "rgba(200,134,10,0.15)", color: "#F5C300", border: "1px solid rgba(200,134,10,0.3)" }}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-[#F5C300] animate-pulse" />
-            Plataforma de Seguridad
+            {eyebrow}
           </div>
 
           <h1 className="text-5xl xl:text-6xl font-extrabold leading-[1.1] text-white mb-6">
-            {t('auth.landing.title_part1')}{" "}
+            {titlePart1}{" "}
             <span
               className="block"
               style={{ WebkitTextFillColor: "transparent", WebkitBackgroundClip: "text", backgroundClip: "text", backgroundImage: "linear-gradient(90deg, #C8860A, #F5C300)" }}
             >
-              {t('auth.landing.title_part2')}
+              {titlePart2}
             </span>
           </h1>
 
           <p className="text-base xl:text-lg text-muted-foreground leading-relaxed max-w-md mb-10">
-            {t('auth.landing.desc', { product: 'CGUARD' })}
+            {panelDesc}
           </p>
 
           {/* Feature pills */}
@@ -119,7 +149,7 @@ export default function AuthLayout({ children, title }: AuthLayoutProps) {
               {title}
             </h2>
             <p className="text-sm text-muted-foreground dark:text-muted-foreground">
-              {t('auth.landing.desc', { product: 'CGUARD' })}
+              {formSubtitle}
             </p>
           </div>
 

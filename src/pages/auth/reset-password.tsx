@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, NavLink, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2, Smartphone } from "lucide-react";
 import AuthLayout from "@/layouts/auth-layout";
 import { toast } from "sonner";
 import { AuthService } from "@/services/auth/authService";
@@ -10,11 +10,16 @@ export default function ResetPassword() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") || searchParams.get("t") || "";
+  // Field users (guards/supervisors) reach this page from the worker-app reset
+  // email. Show them the guard-app variant, not the tenant marketing/admin login.
+  const isField =
+    searchParams.get("audience") === "field" || searchParams.get("app") === "worker";
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [doneField, setDoneField] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,6 +48,11 @@ export default function ResetPassword() {
     try {
       await AuthService.resetPassword(token, password);
       toast.success(t('auth.reset_success', { defaultValue: 'Password reset successfully. Please log in.' }));
+      // Field users sign in from the native app, not the web admin login.
+      if (isField) {
+        setDoneField(true);
+        return;
+      }
       navigate("/login");
     } catch (err: any) {
       console.error("Error restableciendo contraseña:", err);
@@ -53,8 +63,35 @@ export default function ResetPassword() {
     }
   };
 
+  if (doneField) {
+    return (
+      <AuthLayout
+        variant="field"
+        title={t('auth.reset_done_title', { defaultValue: '¡Contraseña actualizada!' })}
+        subtitle={t('auth.reset_done_field_subtitle', { defaultValue: 'Vuelve a la app C-Guard Pro e inicia sesión con tu nueva contraseña.' })}
+      >
+        <div className="flex flex-col items-center text-center gap-5 py-2">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "rgba(34,197,94,0.12)" }}>
+            <CheckCircle2 className="h-9 w-9" style={{ color: "#16a34a" }} />
+          </div>
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground max-w-xs">
+            {t('auth.reset_done_field_body', { defaultValue: 'Tu contraseña fue restablecida. Abre la app C-Guard Pro en tu teléfono e inicia sesión con tu correo y tu nueva contraseña.' })}
+          </p>
+          <a
+            href="cguardpro://login"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg py-3 font-semibold text-white"
+            style={{ background: "linear-gradient(135deg, #0C2459 0%, #1a3a7d 100%)" }}
+          >
+            <Smartphone className="h-5 w-5" />
+            {t('auth.reset_open_app', { defaultValue: 'Abrir la app C-Guard Pro' })}
+          </a>
+        </div>
+      </AuthLayout>
+    );
+  }
+
   return (
-    <AuthLayout title={t('auth.reset_title_short', { defaultValue: 'Reset password' })}>
+    <AuthLayout variant={isField ? 'field' : 'admin'} title={t('auth.reset_title_short', { defaultValue: 'Reset password' })}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="new-password" className="mb-2 block text-sm font-medium text-foreground">
@@ -127,11 +164,13 @@ export default function ResetPassword() {
           {loading ? t('auth.resetting', { defaultValue: 'Resetting...' }) : t('auth.reset_password', { defaultValue: 'Reset password' })}
         </button>
 
-        <div className="flex items-center justify-between text-sm">
-          <NavLink to="/login" className="font-medium hover:underline" style={{ color: "#F75638" }}>
-            {t('auth.back_to_login', { defaultValue: 'Back to login' })}
-          </NavLink>
-        </div>
+        {!isField && (
+          <div className="flex items-center justify-between text-sm">
+            <NavLink to="/login" className="font-medium hover:underline" style={{ color: "#F75638" }}>
+              {t('auth.back_to_login', { defaultValue: 'Back to login' })}
+            </NavLink>
+          </div>
+        )}
       </form>
     </AuthLayout>
   );
