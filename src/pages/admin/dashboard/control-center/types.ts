@@ -1,5 +1,6 @@
 /** Types for the Control Center. Where the backend response shape is loose
  *  (the /dashboard/stats handler returns plain objects), these mirror it. */
+import type { MapCenter } from "./defaultCenter";
 
 export type EntityKind = "tenant" | "station" | "supervisor" | "guard" | "incident";
 export type LiveStatus =
@@ -69,6 +70,8 @@ export interface DashboardStats {
 export interface ControlCenterData {
   kpis: Kpi[];
   entities: MapEntity[];
+  /** Resolved default map center (company → address → IP country → fallback). */
+  defaultCenter?: MapCenter;
   revenue: RevenueSeries;
   incidentsTrend: MonthPoint[];
   responseTrend: MonthPoint[];

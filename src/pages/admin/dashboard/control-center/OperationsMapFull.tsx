@@ -87,7 +87,7 @@ export default function OperationsMapFull() {
         </div>
       </div>
 
-      <OperationsMap entities={data.entities} prefs={prefs} height={h} />
+      <OperationsMap entities={data.entities} prefs={prefs} height={h} defaultCenter={data.defaultCenter} />
     </div>
   );
 }

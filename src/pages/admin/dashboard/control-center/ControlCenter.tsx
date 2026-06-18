@@ -108,7 +108,7 @@ export default function ControlCenter() {
                       </div>
                     } />
                   <div className="relative">
-                    <OperationsMap entities={data.entities} prefs={prefs} height={480} />
+                    <OperationsMap entities={data.entities} prefs={prefs} height={480} defaultCenter={data.defaultCenter} />
                     {/* Click anywhere on the preview → open the interactive map full screen. */}
                     <button
                       onClick={openFullMap}

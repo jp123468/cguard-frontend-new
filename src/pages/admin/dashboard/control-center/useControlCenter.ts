@@ -3,6 +3,7 @@ import api from "@/lib/api";
 import { openEventStream } from "@/lib/api/eventStream";
 import securityGuardService from "@/lib/api/securityGuardService";
 import tenantService from "@/services/tenant.service";
+import { resolveDefaultCenter, companyCenter } from "./defaultCenter";
 import type {
   ControlCenterData, DashboardStats, Kpi, MapEntity, MonthPoint,
   RevenueSeries, ActivityItem, LiveStatus,
@@ -136,8 +137,16 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
       setState((s) => ({
         ...s, kpis, entities, revenue, incidentsTrend, responseTrend, acquisitionTrend,
         activity, counts, loading: false, error: null, gaps: dedupe(gaps),
+        // Instant company-coordinate center; the async resolve below fills in the
+        // address-geocode / IP-country fallback when the company has no coords.
+        defaultCenter: companyCenter(tenant) ?? s.defaultCenter,
         health: { ...s.health, onlineDevices: onDuty, lastSync: new Date().toISOString() },
       }));
+
+      // Default map center: company coords → company address → IP country → fallback.
+      resolveDefaultCenter(tenant)
+        .then((center) => { if (alive) setState((s) => ({ ...s, defaultCenter: center })); })
+        .catch(() => { /* never blocks the dashboard */ });
     })();
     return () => { alive = false; };
   }, [tick]);

@@ -68,12 +68,17 @@ function pinSvg(color: string, pulse: boolean, iconName?: string) {
 }
 
 export function OperationsMap({
-  entities, prefs, height = 460, onSelect,
-}: { entities: MapEntity[]; prefs: DashboardPrefs; height?: number; onSelect?: (e: MapEntity) => void }) {
+  entities, prefs, height = 460, onSelect, defaultCenter,
+}: {
+  entities: MapEntity[]; prefs: DashboardPrefs; height?: number;
+  onSelect?: (e: MapEntity) => void;
+  defaultCenter?: { lat: number; lng: number; zoom?: number };
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<Record<string, any>>({});
   const infoRef = useRef<any>(null);
+  const appliedCenterRef = useRef<string | null>(null);
   const [ready, setReady] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const isDark = useIsDark();
@@ -84,9 +89,14 @@ export function OperationsMap({
       if (cancelled || !ref.current) return;
       const g = (window as any).google;
       const first = entities[0];
+      // Default center priority: resolved company/IP center → first entity → fallback.
+      const initCenter = defaultCenter
+        ? { lat: defaultCenter.lat, lng: defaultCenter.lng }
+        : first ? { lat: first.lat, lng: first.lng } : { lat: -0.18, lng: -78.46 };
+      if (defaultCenter) appliedCenterRef.current = `${defaultCenter.lat},${defaultCenter.lng},${defaultCenter.zoom ?? 12}`;
       mapRef.current = new g.maps.Map(ref.current, {
-        center: first ? { lat: first.lat, lng: first.lng } : { lat: -0.18, lng: -78.46 },
-        zoom: 12, disableDefaultUI: true, gestureHandling: "greedy", clickableIcons: false,
+        center: initCenter,
+        zoom: defaultCenter?.zoom ?? 12, disableDefaultUI: true, gestureHandling: "greedy", clickableIcons: false,
         styles: mapStyles(isDark, prefs.mapTheme),
         backgroundColor: isDark ? "#0b1020" : "#eef1f6",
       });
@@ -105,6 +115,19 @@ export function OperationsMap({
       backgroundColor: isDark ? "#0b1020" : "#eef1f6",
     });
   }, [isDark, prefs.mapTheme, ready]);
+
+  // recenter when the default center resolves asynchronously (company coords →
+  // geocoded address → IP country). Skipped once fitBounds has framed the live
+  // entities, so it never fights the operations auto-frame.
+  useEffect(() => {
+    if (!ready || !mapRef.current || !defaultCenter) return;
+    if ((mapRef.current as any).__fitted) return;
+    const sig = `${defaultCenter.lat},${defaultCenter.lng},${defaultCenter.zoom ?? 12}`;
+    if (appliedCenterRef.current === sig) return;
+    appliedCenterRef.current = sig;
+    mapRef.current.setCenter({ lat: defaultCenter.lat, lng: defaultCenter.lng });
+    if (defaultCenter.zoom) mapRef.current.setZoom(defaultCenter.zoom);
+  }, [defaultCenter, ready]);
 
   // sync markers whenever entities/prefs change
   useEffect(() => {
