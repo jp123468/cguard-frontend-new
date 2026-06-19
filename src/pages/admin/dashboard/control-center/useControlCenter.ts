@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import api from "@/lib/api";
+import { io } from "socket.io-client";
+import api, { getAuthToken } from "@/lib/api";
 import { openEventStream } from "@/lib/api/eventStream";
 import securityGuardService from "@/lib/api/securityGuardService";
 import tenantService from "@/services/tenant.service";
@@ -10,6 +11,13 @@ import type {
 } from "./types";
 
 const tenantId = () => localStorage.getItem("tenantId") || "";
+// socket.io is served under /api/socket.io (same origin/proxy as REST).
+const SOCKET_PATH = "/api/socket.io";
+function socketOrigin(): string {
+  const apiUrl = (import.meta.env.VITE_API_URL as string | undefined) || "";
+  try { return new URL(apiUrl || window.location.origin, window.location.origin).origin; }
+  catch { return window.location.origin; }
+}
 const num = (v: any) => (typeof v === "number" ? v : Number(v) || 0);
 const count = (r: any) => (!r ? 0 : r.total ?? r.count ?? (Array.isArray(r.rows) ? r.rows.length : Array.isArray(r) ? r.length : 0));
 const rows = (r: any): any[] => (Array.isArray(r) ? r : r?.rows ?? r?.data ?? []);
@@ -197,6 +205,41 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
       } catch { /* heartbeat / non-JSON */ }
     };
     return () => { es.close(); sseRef.current = null; };
+  }, []);
+
+  // ── live positions over socket.io (location:update) ──────────────────────
+  // Real-time moving markers (e.g. a supervisor's vehicle on patrol). The
+  // backend emits `location:update` to the tenant room; we upsert the marker by
+  // id. Purely additive — when no event fires, the map is unchanged. Non-guard
+  // entities survive the 15s guard poll, so a moving supervisor isn't wiped.
+  useEffect(() => {
+    const tid = tenantId();
+    if (!tid) return;
+    const socket = io(socketOrigin(), {
+      path: SOCKET_PATH,
+      transports: ["websocket"],
+      withCredentials: true,
+      auth: { token: getAuthToken(), tenantId: tid },
+    });
+    const onLocation = (e: any) => {
+      const la = coord(e?.lat), ln = coord(e?.lng);
+      if (la == null || ln == null || !e?.id) return;
+      setState((s) => {
+        const others = s.entities.filter((x) => x.id !== String(e.id));
+        const entity: MapEntity = {
+          id: String(e.id),
+          kind: (e.kind as MapEntity["kind"]) || "supervisor",
+          lat: la, lng: ln,
+          status: e.status || "patrol",
+          label: e.label || "Supervisor",
+          sub: e.sub || "Patrulla",
+          meta: e.meta,
+        };
+        return { ...s, entities: [...others, entity] };
+      });
+    };
+    socket.on("location:update", onLocation);
+    return () => { socket.off("location:update", onLocation); socket.disconnect(); };
   }, []);
 
   return { ...state, refresh };
