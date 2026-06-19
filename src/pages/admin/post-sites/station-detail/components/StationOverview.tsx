@@ -60,6 +60,9 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [guardsCount, setGuardsCount] = useState('');
+  // Per-station clock-in tolerance windows (minutes). Empty = use tenant default.
+  const [clockInEarlyBufferMin, setClockInEarlyBufferMin] = useState('');
+  const [clockInLateGraceMin, setClockInLateGraceMin] = useState('');
 
   // Sync state from station prop
   useEffect(() => {
@@ -93,6 +96,16 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
     setStartTime(station.startingTimeInDay || '');
     setEndTime(station.finishTimeInDay || '');
     setGuardsCount(String(station.numberOfGuardsInStation || ''));
+    setClockInEarlyBufferMin(
+      station.clockInEarlyBufferMin === null || station.clockInEarlyBufferMin === undefined
+        ? ''
+        : String(station.clockInEarlyBufferMin),
+    );
+    setClockInLateGraceMin(
+      station.clockInLateGraceMin === null || station.clockInLateGraceMin === undefined
+        ? ''
+        : String(station.clockInLateGraceMin),
+    );
   }, [station]);
 
   if (!station) {
@@ -140,6 +153,9 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
           startingTimeInDay: mainStart,
           finishTimeInDay: mainEnd,
           numberOfGuardsInStation: String(totalGuards),
+          // Empty input → null so the tenant Nómina default applies.
+          clockInEarlyBufferMin: clockInEarlyBufferMin.trim() === '' ? null : Number(clockInEarlyBufferMin),
+          clockInLateGraceMin: clockInLateGraceMin.trim() === '' ? null : Number(clockInLateGraceMin),
         },
       });
       // Reflect saved values in local display state instead of reloading the whole SPA.
@@ -358,6 +374,43 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             centerLat={Number(lat) || undefined}
             centerLng={Number(lng) || undefined}
           />
+        </div>
+
+        {/* Clock-in tolerance windows */}
+        <div className="p-6 border-t border-border/30 space-y-3">
+          <div className="flex items-center gap-2">
+            <Clock size={16} className="text-[#C8860A]" />
+            <h3 className="text-sm font-semibold text-foreground">Tolerancia de marcación de entrada</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Minutos antes/después de la hora de inicio en que el guardia puede marcar entrada. Vacío = usar el valor por defecto de la empresa.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Tolerancia de entrada anticipada (min)</label>
+              <input
+                type="number"
+                min="0"
+                max="240"
+                value={clockInEarlyBufferMin}
+                onChange={(e) => setClockInEarlyBufferMin(e.target.value)}
+                placeholder="Por defecto"
+                className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Tolerancia de entrada tardía (min)</label>
+              <input
+                type="number"
+                min="0"
+                max="240"
+                value={clockInLateGraceMin}
+                onChange={(e) => setClockInLateGraceMin(e.target.value)}
+                placeholder="Por defecto"
+                className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Jornadas editor */}

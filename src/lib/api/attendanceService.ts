@@ -102,6 +102,24 @@ const attendanceService = {
     return unwrap(await api.patch(`/tenant/${t}/attendance/clock-out-requests/${id}`, { data }));
   },
 
+  // ── Late clock-in approval requests ────────────────────────────────────────
+  async clockInRequests(params?: Record<string, any>) {
+    const t = getTenantId();
+    return unwrap(
+      await api.get(`/tenant/${t}/attendance/clock-in-requests${buildQuery(params)}`),
+    );
+  },
+
+  async decideClockInRequest(
+    id: string,
+    data: { status: "approved" | "rejected"; notes?: string },
+  ) {
+    const t = getTenantId();
+    return unwrap(
+      await api.post(`/tenant/${t}/attendance/clock-in-requests/${id}/decision`, { data }),
+    );
+  },
+
   async approve(id: string, notes?: string) {
     const t = getTenantId();
     return unwrap(await api.patch(`/tenant/${t}/attendance/${id}/approve`, { data: { notes } }));

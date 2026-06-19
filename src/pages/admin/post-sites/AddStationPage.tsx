@@ -95,6 +95,9 @@ export default function AddStationPage() {
   };
   const [geofenceRadius, setGeofenceRadius] = useState('100');
   const [geofencePolygon, setGeofencePolygon] = useState<PolyPoint[]>([]);
+  // Per-station clock-in tolerance windows (minutes). Empty = use tenant default.
+  const [clockInEarlyBufferMin, setClockInEarlyBufferMin] = useState('');
+  const [clockInLateGraceMin, setClockInLateGraceMin] = useState('');
 
   const stationsUrl = `/post-sites/${id}/stations`;
 
@@ -161,6 +164,9 @@ export default function AddStationPage() {
         finishTimeInDay: stationEnd,
         geofenceRadius: Number(geofenceRadius) || 100,
         geofencePolygon: geofencePolygon.length >= 3 ? geofencePolygon : null,
+        // Empty input → null so the tenant Nómina default applies.
+        clockInEarlyBufferMin: clockInEarlyBufferMin.trim() === '' ? null : Number(clockInEarlyBufferMin),
+        clockInLateGraceMin: clockInLateGraceMin.trim() === '' ? null : Number(clockInLateGraceMin),
         description: newDescription,
       } as any;
       await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
@@ -328,6 +334,41 @@ export default function AddStationPage() {
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
                   {t('postSites.stations.form.geofenceHint', 'Distancia máxima para marcar entrada')}
+                </p>
+              </div>
+
+              {/* Clock-in tolerance windows */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-foreground">
+                    {t('postSites.stations.form.clockInEarlyBuffer', 'Tolerancia de entrada anticipada (min)')}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="240"
+                    value={clockInEarlyBufferMin}
+                    onChange={(e) => setClockInEarlyBufferMin(e.target.value)}
+                    placeholder={t('common.default', 'Por defecto')}
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-foreground">
+                    {t('postSites.stations.form.clockInLateGrace', 'Tolerancia de entrada tardía (min)')}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="240"
+                    value={clockInLateGraceMin}
+                    onChange={(e) => setClockInLateGraceMin(e.target.value)}
+                    placeholder={t('common.default', 'Por defecto')}
+                    className={inputCls}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground sm:col-span-2">
+                  {t('postSites.stations.form.clockInBufferHint', 'Minutos antes/después de la hora de inicio en que el guardia puede marcar entrada. Vacío = usar el valor por defecto de la empresa.')}
                 </p>
               </div>
 
