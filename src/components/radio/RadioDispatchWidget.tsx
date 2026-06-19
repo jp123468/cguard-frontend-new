@@ -40,6 +40,26 @@ export default function RadioDispatchWidget() {
   const lastSeen = useRef<string | null>(null);
   const mountedRef = useRef(true);
 
+  // Sequential player for the AI dispatcher voice (TTS prompts + closing summary)
+  // so the operator HEARS the pase de novedades being conducted.
+  const audioQueue = useRef<string[]>([]);
+  const audioPlaying = useRef(false);
+  const playNext = useCallback(() => {
+    if (audioPlaying.current) return;
+    const url = audioQueue.current.shift();
+    if (!url) return;
+    audioPlaying.current = true;
+    const a = new Audio(url);
+    const done = () => { audioPlaying.current = false; playNext(); };
+    a.onended = done; a.onerror = done;
+    a.play().catch(done);
+  }, []);
+  const enqueueAudio = useCallback((url?: string | null) => {
+    if (!url || typeof url !== "string") return;
+    audioQueue.current.push(url);
+    playNext();
+  }, [playNext]);
+
   const refresh = useCallback(async () => {
     try {
       const c = await radioCheckService.getConsole();
@@ -69,11 +89,18 @@ export default function RadioDispatchWidget() {
   useEffect(() => {
     if (!lastEvent || lastEvent.id === lastSeen.current) return;
     lastSeen.current = lastEvent.id;
+    // AI dispatcher voice: play the spoken station call + spoken closing summary.
+    if (lastEvent.eventType === "radio.station_notified") {
+      enqueueAudio(lastEvent.payload?.promptAudioUrl);
+    }
+    if (lastEvent.eventType === "radio.session_completed") {
+      enqueueAudio(lastEvent.payload?.summaryAudioUrl);
+    }
     if (lastEvent.eventType === "radio.reply") {
       chime();
       toast.message(`Respuesta: ${lastEvent.body || "puesto"}`, { description: lastEvent.payload?.classification === "incident" ? "⚠️ Posible incidente" : undefined });
     }
-  }, [lastEvent]);
+  }, [lastEvent, enqueueAudio]);
 
   const start = async () => {
     setBusy(true);
