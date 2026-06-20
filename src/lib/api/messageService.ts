@@ -6,7 +6,8 @@ const getTenantId = (): string => {
   return t;
 };
 
-export type MessageAttachment = { url: string; type: "image" | "video"; name?: string; sizeInBytes?: number };
+export type MessageAttachment = { url: string; type: "image" | "video" | "audio"; name?: string; sizeInBytes?: number };
+export type GroupMember = { id: string; userId: string; name: string; participantType: "staff" | "guard"; role: "admin" | "member"; source: "auto" | "manual" };
 
 const unwrap = (resp: any) => (resp && resp.data !== undefined ? resp.data : resp);
 const newClientMsgId = () =>
@@ -63,7 +64,7 @@ export const messageService = {
     if (!resp.ok) throw new Error(`Error al subir el archivo (${resp.status})`);
     return {
       url: creds?.privateUrl ?? "",
-      type: file.type.startsWith("video") ? "video" : "image",
+      type: file.type.startsWith("video") ? "video" : file.type.startsWith("audio") ? "audio" : "image",
       name: file.name,
       sizeInBytes: file.size,
     };
@@ -74,9 +75,37 @@ export const messageService = {
     return unwrap(await api.post(`/tenant/${t}/message/${id}/read`, { data: {} }));
   },
 
-  async patchConversation(id: string, patch: { isOneWay?: boolean; archived?: boolean }) {
+  async patchConversation(id: string, patch: { isOneWay?: boolean; archived?: boolean; name?: string }) {
     const t = getTenantId();
     return unwrap(await api.patch(`/tenant/${t}/message/${id}`, { data: patch }));
+  },
+
+  // ── Group chats ──────────────────────────────────────────────────────────
+  /** Create a group anchored to a post site / station; members are derived from
+   *  its guard assignments (plus any extraMemberUserIds). */
+  async createGroup(input: { name: string; anchorType?: "postSite" | "station"; anchorId?: string; isOneWay?: boolean; extraMemberUserIds?: string[]; body?: string; attachments?: MessageAttachment[] }) {
+    const t = getTenantId();
+    return unwrap(await api.post(`/tenant/${t}/message/groups`, { data: { ...input, clientMsgId: newClientMsgId() } }));
+  },
+
+  async listMembers(id: string): Promise<{ rows: GroupMember[] }> {
+    const t = getTenantId();
+    return unwrap(await api.get(`/tenant/${t}/message/groups/${id}/members`));
+  },
+
+  async addMembers(id: string, userIds: string[]) {
+    const t = getTenantId();
+    return unwrap(await api.post(`/tenant/${t}/message/groups/${id}/members`, { data: { userIds } }));
+  },
+
+  async removeMember(id: string, userId: string) {
+    const t = getTenantId();
+    return unwrap(await api.delete(`/tenant/${t}/message/groups/${id}/members/${userId}`));
+  },
+
+  async resyncMembers(id: string) {
+    const t = getTenantId();
+    return unwrap(await api.post(`/tenant/${t}/message/groups/${id}/resync`, { data: {} }));
   },
 
   async deleteConversation(id: string) {
