@@ -4460,12 +4460,6 @@
       "label": "GPS Tracker",
       "seguimiento": "Live Tracking"
     },
-    "reloj": {
-      "descansos": "Breaks",
-      "label": "Time Clock",
-      "registro": "Time Recorder",
-      "tarjeta": "Time Card"
-    },
     "tenants": {
       "searchPlaceholder": "Search tenants",
       "actions": {

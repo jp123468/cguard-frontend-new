@@ -84,9 +84,6 @@ import EditRoutePage from "./pages/admin/routes/EditRoutePage"
 import PatrolExecutionPage from "./pages/guard/PatrolExecutionPage"
 import LiveTrackingPage from "./pages/admin/gps-tracker/LiveTracking"
 import TrackingHistoryPage from "./pages/admin/gps-tracker/TrackingHistory"
-import TimeRecorder from "./pages/admin/time-clock/TimeRecorder"
-import TimeCard from "./pages/admin/time-clock/TimeCard"
-import Breaks from "./pages/admin/time-clock/Breaks"
 import Reports from "./pages/admin/Reports/Reports"
 import Reporting from "./pages/admin/analytics/Reporting"
 import Scheduling from "./pages/admin/analytics/Scheduling"
@@ -1006,31 +1003,6 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <RadioDispatch />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/time-log"
-                element={
-                  <ProtectedRoute>
-                    <TimeRecorder />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/time-card"
-                element={
-                  <ProtectedRoute>
-                    <TimeCard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/breaks"
-                element={
-                  <ProtectedRoute>
-                    <Breaks />
                   </ProtectedRoute>
                 }
               />

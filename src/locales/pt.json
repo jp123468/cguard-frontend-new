@@ -85,12 +85,6 @@
       "historial": "Histórico de rastreamento"
     },
     "mensajero": "Mensageiro",
-    "reloj": {
-      "label": "Ponto",
-      "registro": "Gravador de tempo",
-      "tarjeta": "Cartão de tempo",
-      "descansos": "Pausas"
-    },
     "informes": "Relatórios",
     "programador": {
       "label": "Agendador",

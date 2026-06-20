@@ -4461,12 +4461,6 @@
       "label": "Rastreador GPS",
       "seguimiento": "Seguimiento en vivo"
     },
-    "reloj": {
-      "descansos": "Descansos",
-      "label": "Reloj de control",
-      "registro": "Registro de tiempo",
-      "tarjeta": "Tarjeta de tiempo"
-    },
     "tenants": {
       "searchPlaceholder": "Buscar tenants",
       "actions": {
