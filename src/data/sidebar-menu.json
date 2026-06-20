@@ -196,29 +196,6 @@
     "path": "/radio"
   },
   {
-    "id": "reloj",
-    "name": "Reloj de Tiempo",
-    "icon": "Clock",
-    "expandable": true,
-    "subItems": [
-      {
-        "id": "registro",
-        "name": "Registro de tiempo",
-        "path": "/time-log"
-      },
-      {
-        "id": "tarjeta",
-        "name": "Tarjeta de tiempo",
-        "path": "/time-card"
-      },
-      {
-        "id": "descansos",
-        "name": "Descansos",
-        "path": "/breaks"
-      }
-    ]
-  },
-  {
     "id": "informes",
     "name": "Informes",
     "icon": "FileText",
