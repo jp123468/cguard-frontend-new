@@ -255,20 +255,19 @@ export default function Schedule() {
     return m;
   }, [shifts]);
 
-  // Gap-driven sacafranco PREVIEW (mirrors the backend): SFs are GLOBAL — shared
-  // across ALL post sites/stations. For each day, derive every station's fijo
-  // rest-gaps into one pool, then assign them to the SFs (globally ordered) by a
-  // fixed 6-1 staggered rotation + claim-index (SF i takes the gap at position =
-  // #lower-index SFs working that day). Drives the SF row so the borrador shows
-  // the real chain (D/N + covered station, or L) even before guards are assigned.
+  // Gap-driven sacafranco PREVIEW (mirrors the backend FLEXIBLE model): SFs are
+  // GLOBAL. Each day's fijo rest-gaps form one pool; SFs are assigned greedily
+  // (least-recently-worked first), capped at 4-4-2 (≤8 consecutive, then 2 rest),
+  // working whenever there's a gap. Anchored at the global epoch so the rolling
+  // rest state matches the backend; we render the visible month from it.
   const sfPreview = useMemo(() => {
     const map = new Map<string, { half: 'day' | 'night'; stationId: string }>();
+    if (!monthDays.length) return map;
     const epoch = new Date(2024, 0, 1);
     const reqHalves = (st?: string | null): ('day' | 'night')[] =>
       st === '24h' ? ['day', 'night'] : st === '12h-night' ? ['night'] : ['day'];
     const covHalf = (st: string | null | undefined, status: 'day' | 'night' | 'rest'): 'day' | 'night' | null =>
       status === 'rest' ? null : st === '12h-day' ? 'day' : st === '12h-night' ? 'night' : (status === 'night' ? 'night' : 'day');
-    const sfWorks = (i: number, dse: number) => (((dse - i) % 7) + 7) % 7 < 6; // 6-1, staggered by index
 
     const fijoByStation = new Map<string, StationPosition[]>();
     const sfList: StationPosition[] = [];
@@ -280,36 +279,51 @@ export default function Schedule() {
         sfList.push(p);
       }
     }
-    sfList.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); // global SF order → index
+    sfList.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    const N = sfList.length;
+    if (N === 0) return map;
 
-    for (const day of monthDays) {
-      const dse = Math.floor((new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime() - epoch.getTime()) / 86400000);
-      const dateStr = fmtDate(day);
-      // One global gap pool across every station.
+    const MAXWORK = 8; const REST = 2; // SF on 4-4-2
+    const consec = new Array(N).fill(0);
+    const forced = new Array(N).fill(0);
+    const gapsOn = (dse: number): { stationId: string; half: 'day' | 'night' }[] => {
       const gaps: { stationId: string; half: 'day' | 'night' }[] = [];
       for (const [stId, fijos] of fijoByStation) {
         const st = stationsById.get(stId);
         if (!st?.rotationStyleId) continue;
         const rot = rotationStylesById.get(st.rotationStyleId);
         if (!rot) continue;
-        const covered = new Set<string>();
+        const cov = new Set<string>();
         for (const f of fijos) {
           const c = rot.dayShifts + rot.nightShifts + rot.restDays;
           if (c <= 0) continue;
           const adj = ((dse - (f.platoonOffset || 0)) % c + c) % c;
           const status = adj < rot.dayShifts ? 'day' : adj < rot.dayShifts + rot.nightShifts ? 'night' : 'rest';
           const h = covHalf(st.scheduleType, status);
-          if (h) covered.add(h);
+          if (h) cov.add(h);
         }
-        for (const h of reqHalves(st.scheduleType)) if (!covered.has(h)) gaps.push({ stationId: stId, half: h });
+        for (const h of reqHalves(st.scheduleType)) if (!cov.has(h)) gaps.push({ stationId: stId, half: h });
       }
       gaps.sort((a, b) => `${a.stationId}|${a.half}`.localeCompare(`${b.stationId}|${b.half}`));
-      for (let i = 0; i < sfList.length; i++) {
-        if (!sfWorks(i, dse)) continue;
-        let claim = 0;
-        for (let j = 0; j < i; j++) if (sfWorks(j, dse)) claim++;
-        const pick = gaps[claim];
-        if (pick) map.set(`${sfList[i].id}-${dateStr}`, pick);
+      return gaps;
+    };
+
+    const startDse = Math.floor((new Date(monthDays[0].getFullYear(), monthDays[0].getMonth(), monthDays[0].getDate()).getTime() - epoch.getTime()) / 86400000);
+    const visibleFrom = startDse;
+    const visibleTo = startDse + monthDays.length - 1;
+    const dateStrOf = (dse: number) => fmtDate(new Date(epoch.getTime() + dse * 86400000));
+
+    for (let dse = 0; dse <= visibleTo; dse++) {
+      const avail: number[] = [];
+      for (let i = 0; i < N; i++) { if (forced[i] > 0) { forced[i]--; consec[i] = 0; } else avail.push(i); }
+      avail.sort((a, b) => consec[a] - consec[b] || a - b);
+      const gaps = gapsOn(dse);
+      for (let k = 0; k < avail.length; k++) {
+        const i = avail[k];
+        if (k < gaps.length) {
+          consec[i]++; if (consec[i] >= MAXWORK) forced[i] = REST;
+          if (dse >= visibleFrom) map.set(`${sfList[i].id}-${dateStrOf(dse)}`, gaps[k]);
+        } else { consec[i] = 0; }
       }
     }
     return map;
