@@ -255,6 +255,78 @@ export default function Schedule() {
     return m;
   }, [shifts]);
 
+  // Gap-driven sacafranco PREVIEW (mirrors the backend): for each day, derive the
+  // fijo rest-gaps per sitio (post site), then assign them to that sitio's SFs by
+  // a fixed 6-1 staggered rotation + claim-index (SF i takes the gap at position =
+  // #lower-index SFs working that day). Drives the SF row so the borrador shows
+  // the real chain (D/N + covered station, or L) even before guards are assigned.
+  const sfPreview = useMemo(() => {
+    const map = new Map<string, { half: 'day' | 'night'; stationId: string }>();
+    const epoch = new Date(2024, 0, 1);
+    const reqHalves = (st?: string | null): ('day' | 'night')[] =>
+      st === '24h' ? ['day', 'night'] : st === '12h-night' ? ['night'] : ['day'];
+    const covHalf = (st: string | null | undefined, status: 'day' | 'night' | 'rest'): 'day' | 'night' | null =>
+      status === 'rest' ? null : st === '12h-day' ? 'day' : st === '12h-night' ? 'night' : (status === 'night' ? 'night' : 'day');
+    const sfWorks = (i: number, dse: number) => (((dse - i) % 7) + 7) % 7 < 6; // 6-1, staggered by index
+
+    const sitioOf = (stId: string) => stationsById.get(stId)?.postSiteId || 'none';
+    // fijo positions by station; SF positions by sitio (sorted → index)
+    const fijoByStation = new Map<string, StationPosition[]>();
+    const sfBySitio = new Map<string, StationPosition[]>();
+    for (const p of positions) {
+      if (p.type === 'fijo') {
+        if (!fijoByStation.has(p.stationId)) fijoByStation.set(p.stationId, []);
+        fijoByStation.get(p.stationId)!.push(p);
+      } else if (p.type === 'sacafranco') {
+        const sitio = sitioOf(p.stationId);
+        if (!sfBySitio.has(sitio)) sfBySitio.set(sitio, []);
+        sfBySitio.get(sitio)!.push(p);
+      }
+    }
+    for (const list of sfBySitio.values()) list.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    // fijo stations grouped by sitio
+    const fijoStationsBySitio = new Map<string, string[]>();
+    for (const stId of fijoByStation.keys()) {
+      const sitio = sitioOf(stId);
+      if (!fijoStationsBySitio.has(sitio)) fijoStationsBySitio.set(sitio, []);
+      fijoStationsBySitio.get(sitio)!.push(stId);
+    }
+
+    for (const day of monthDays) {
+      const dse = Math.floor((new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime() - epoch.getTime()) / 86400000);
+      const dateStr = fmtDate(day);
+      for (const [sitio, sfList] of sfBySitio) {
+        // gaps for this sitio this day
+        const gaps: { stationId: string; half: 'day' | 'night' }[] = [];
+        for (const stId of (fijoStationsBySitio.get(sitio) || [])) {
+          const st = stationsById.get(stId);
+          if (!st?.rotationStyleId) continue;
+          const rot = rotationStylesById.get(st.rotationStyleId);
+          if (!rot) continue;
+          const covered = new Set<string>();
+          for (const f of (fijoByStation.get(stId) || [])) {
+            const c = rot.dayShifts + rot.nightShifts + rot.restDays;
+            if (c <= 0) continue;
+            const adj = ((dse - (f.platoonOffset || 0)) % c + c) % c;
+            const status = adj < rot.dayShifts ? 'day' : adj < rot.dayShifts + rot.nightShifts ? 'night' : 'rest';
+            const h = covHalf(st.scheduleType, status);
+            if (h) covered.add(h);
+          }
+          for (const h of reqHalves(st.scheduleType)) if (!covered.has(h)) gaps.push({ stationId: stId, half: h });
+        }
+        gaps.sort((a, b) => `${a.stationId}|${a.half}`.localeCompare(`${b.stationId}|${b.half}`));
+        for (let i = 0; i < sfList.length; i++) {
+          if (!sfWorks(i, dse)) continue;
+          let claim = 0;
+          for (let j = 0; j < i; j++) if (sfWorks(j, dse)) claim++;
+          const pick = gaps[claim];
+          if (pick) map.set(`${sfList[i].id}-${dateStr}`, pick);
+        }
+      }
+    }
+    return map;
+  }, [positions, stationsById, rotationStylesById, monthDays]);
+
   const getPositionsForStation = (stationId: string) =>
     positions.filter(p => p.stationId === stationId && p.type !== 'sacafranco');
 
@@ -1499,65 +1571,42 @@ export default function Schedule() {
                             )}
                           </div>
 
-                          {/* Day cells */}
+                          {/* Day cells — gap-driven chain preview (same for assigned/unassigned) */}
                           {monthDays.map((day, dayIdx) => {
                             const dateStr = fmtDate(day);
                             const isToday = dateStr === todayStr;
                             const isSunday = day.getDay() === 0;
+                            const assigned = posAssignments.length > 0;
+                            const cov = sfPreview.get(`${pos.id}-${dateStr}`);
+                            const cellBase = `border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`;
 
-                            // Find the shift for this day to determine which station (Map lookup, not O(n) find)
-                            const dayShift = shiftsByPositionDate.get(`${pos.id}-${dateStr}`);
-                            const coveringStationName = dayShift ? stationsById.get(dayShift.stationId)?.stationName?.slice(0, 3) : '';
-
-                            if (posAssignments.length > 0) {
-                              // Gap-driven SF: render from the REAL generated shift (it chains
-                              // across stations covering fijo rest-gaps). A shift that day → D/N
-                              // + the covered station; no shift → rest (L). (The SF's own
-                              // rotation can't represent this, so we read shifts, not isWorkDay.)
-                              if (!dayShift) {
-                                return (
-                                  <div key={dayIdx} className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}>
-                                    <div className="h-[20px] rounded bg-muted/30 flex items-center justify-center">
-                                      <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
-                                    </div>
-                                  </div>
-                                );
-                              }
-
-                              const hr = new Date(dayShift.startTime).getUTCHours();
-                              const half = (hr >= 18 || hr < 6) ? 'night' : 'day';
-                              const code = half === 'night' ? 'N' : 'D';
-                              const bg = half === 'night' ? 'bg-indigo-500/15' : 'bg-emerald-500/15';
-                              const textColor = half === 'night' ? 'text-indigo-400' : 'text-emerald-500';
-
+                            if (!cov) {
+                              // Rest day (no gap for this SF). Unassigned → clickable to assign.
                               return (
-                                <div key={dayIdx} className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}>
-                                  <div className={`h-[20px] rounded flex flex-col items-center justify-center ${bg}`} title={coveringStationName ? `Cubre: ${stationsById.get(dayShift.stationId)?.stationName || ''}` : code}>
-                                    <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
-                                    {coveringStationName && <span className="text-[7px] text-muted-foreground leading-none">{coveringStationName}</span>}
+                                <div key={dayIdx} className={cellBase}>
+                                  <div
+                                    className={`h-[20px] rounded flex items-center justify-center ${assigned ? 'bg-muted/30' : 'bg-muted/20 border border-dashed border-border/30 cursor-pointer'}`}
+                                    onClick={assigned ? undefined : () => openAssignForm(pos.stationId, pos.id)}
+                                  >
+                                    <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
                                   </div>
                                 </div>
                               );
                             }
 
-                            // Unassigned: show D/N/L pattern
-                            const slotStatus = getSlotStatus(pos.stationId, pos, day);
-                            if (slotStatus === 'rest') {
-                              return (
-                                <div key={dayIdx} className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}>
-                                  <div className="h-[20px] rounded bg-muted/20 border border-dashed border-border/30 flex items-center justify-center cursor-pointer" onClick={() => openAssignForm(pos.stationId, pos.id)}>
-                                    <span className="text-[10px] font-bold text-muted-foreground/40">L</span>
-                                  </div>
-                                </div>
-                              );
-                            }
-                            const sfCode = slotStatus === 'night' ? 'N' : 'D';
-                            const sfBg = slotStatus === 'night' ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-emerald-500/10 border-emerald-500/30';
-                            const sfText = slotStatus === 'night' ? 'text-indigo-400/60' : 'text-emerald-500/60';
+                            const code = cov.half === 'night' ? 'N' : 'D';
+                            const stName = stationsById.get(cov.stationId)?.stationName?.slice(0, 3) || '';
+                            const bg = cov.half === 'night' ? 'bg-indigo-500/15' : 'bg-emerald-500/15';
+                            const textColor = cov.half === 'night' ? 'text-indigo-400' : 'text-emerald-500';
                             return (
-                              <div key={dayIdx} className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}>
-                                <div className={`h-[20px] rounded border border-dashed flex items-center justify-center cursor-pointer ${sfBg}`} onClick={() => openAssignForm(pos.stationId, pos.id)}>
-                                  <span className={`text-[10px] font-bold ${sfText}`}>{sfCode}</span>
+                              <div key={dayIdx} className={cellBase}>
+                                <div
+                                  className={`h-[20px] rounded flex flex-col items-center justify-center ${bg} ${assigned ? '' : 'border border-dashed border-border/30 cursor-pointer'}`}
+                                  title={`Cubre: ${stationsById.get(cov.stationId)?.stationName || ''}`}
+                                  onClick={assigned ? undefined : () => openAssignForm(pos.stationId, pos.id)}
+                                >
+                                  <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
+                                  {stName && <span className="text-[7px] text-muted-foreground leading-none">{stName}</span>}
                                 </div>
                               </div>
                             );
