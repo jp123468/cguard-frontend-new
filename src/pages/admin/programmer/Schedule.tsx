@@ -255,11 +255,11 @@ export default function Schedule() {
     return m;
   }, [shifts]);
 
-  // Gap-driven sacafranco PREVIEW (mirrors the backend FLEXIBLE model): SFs are
-  // GLOBAL. Each day's fijo rest-gaps form one pool; SFs are assigned greedily
-  // (least-recently-worked first), capped at 4-4-2 (≤8 consecutive, then 2 rest),
-  // working whenever there's a gap. Anchored at the global epoch so the rolling
-  // rest state matches the backend; we render the visible month from it.
+  // Sacafranco PREVIEW (mirrors the backend STRICT 4-4-2 model): every SF runs a
+  // real day→night→rest rotation (its platoonOffset = the planned SF offset). On
+  // a day-block day it covers a DAY gap; on a night-block day a NIGHT gap; it
+  // rests otherwise — never a night then a day next morning. When >1 SF, they
+  // split the day's same-half gaps by index.
   const sfPreview = useMemo(() => {
     const map = new Map<string, { half: 'day' | 'night'; stationId: string }>();
     if (!monthDays.length) return map;
@@ -280,12 +280,13 @@ export default function Schedule() {
       }
     }
     sfList.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-    const N = sfList.length;
-    if (N === 0) return map;
+    if (sfList.length === 0) return map;
 
-    const MAXWORK = 8; const REST = 2; // SF on 4-4-2
-    const consec = new Array(N).fill(0);
-    const forced = new Array(N).fill(0);
+    // SF rotation is 4-4-2 (day 4, night 4, rest 2).
+    const sfStatus = (dse: number, off: number): 'day' | 'night' | 'rest' => {
+      const adj = ((dse - off) % 10 + 10) % 10;
+      return adj < 4 ? 'day' : adj < 8 ? 'night' : 'rest';
+    };
     const gapsOn = (dse: number): { stationId: string; half: 'day' | 'night' }[] => {
       const gaps: { stationId: string; half: 'day' | 'night' }[] = [];
       for (const [stId, fijos] of fijoByStation) {
@@ -304,26 +305,22 @@ export default function Schedule() {
         }
         for (const h of reqHalves(st.scheduleType)) if (!cov.has(h)) gaps.push({ stationId: stId, half: h });
       }
-      gaps.sort((a, b) => `${a.stationId}|${a.half}`.localeCompare(`${b.stationId}|${b.half}`));
       return gaps;
     };
 
-    const startDse = Math.floor((new Date(monthDays[0].getFullYear(), monthDays[0].getMonth(), monthDays[0].getDate()).getTime() - epoch.getTime()) / 86400000);
-    const visibleFrom = startDse;
-    const visibleTo = startDse + monthDays.length - 1;
-    const dateStrOf = (dse: number) => fmtDate(new Date(epoch.getTime() + dse * 86400000));
-
-    for (let dse = 0; dse <= visibleTo; dse++) {
-      const avail: number[] = [];
-      for (let i = 0; i < N; i++) { if (forced[i] > 0) { forced[i]--; consec[i] = 0; } else avail.push(i); }
-      avail.sort((a, b) => consec[a] - consec[b] || a - b);
+    for (const day of monthDays) {
+      const dse = Math.floor((new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime() - epoch.getTime()) / 86400000);
+      const dateStr = fmtDate(day);
       const gaps = gapsOn(dse);
-      for (let k = 0; k < avail.length; k++) {
-        const i = avail[k];
-        if (k < gaps.length) {
-          consec[i]++; if (consec[i] >= MAXWORK) forced[i] = REST;
-          if (dse >= visibleFrom) map.set(`${sfList[i].id}-${dateStrOf(dse)}`, gaps[k]);
-        } else { consec[i] = 0; }
+      const dayGaps = gaps.filter((g) => g.half === 'day').sort((a, b) => a.stationId.localeCompare(b.stationId));
+      const nightGaps = gaps.filter((g) => g.half === 'night').sort((a, b) => a.stationId.localeCompare(b.stationId));
+      for (let i = 0; i < sfList.length; i++) {
+        const off = sfList[i].platoonOffset || 0;
+        const st = sfStatus(dse, off);
+        if (st === 'rest') continue;
+        const pool = st === 'day' ? dayGaps : nightGaps;
+        const pick = pool[i]; // SFs split same-half gaps by index
+        if (pick) map.set(`${sfList[i].id}-${dateStr}`, pick);
       }
     }
     return map;
