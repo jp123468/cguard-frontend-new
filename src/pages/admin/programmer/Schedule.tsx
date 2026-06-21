@@ -255,9 +255,10 @@ export default function Schedule() {
     return m;
   }, [shifts]);
 
-  // Gap-driven sacafranco PREVIEW (mirrors the backend): for each day, derive the
-  // fijo rest-gaps per sitio (post site), then assign them to that sitio's SFs by
-  // a fixed 6-1 staggered rotation + claim-index (SF i takes the gap at position =
+  // Gap-driven sacafranco PREVIEW (mirrors the backend): SFs are GLOBAL — shared
+  // across ALL post sites/stations. For each day, derive every station's fijo
+  // rest-gaps into one pool, then assign them to the SFs (globally ordered) by a
+  // fixed 6-1 staggered rotation + claim-index (SF i takes the gap at position =
   // #lower-index SFs working that day). Drives the SF row so the borrador shows
   // the real chain (D/N + covered station, or L) even before guards are assigned.
   const sfPreview = useMemo(() => {
@@ -269,59 +270,46 @@ export default function Schedule() {
       status === 'rest' ? null : st === '12h-day' ? 'day' : st === '12h-night' ? 'night' : (status === 'night' ? 'night' : 'day');
     const sfWorks = (i: number, dse: number) => (((dse - i) % 7) + 7) % 7 < 6; // 6-1, staggered by index
 
-    const sitioOf = (stId: string) => stationsById.get(stId)?.postSiteId || 'none';
-    // fijo positions by station; SF positions by sitio (sorted → index)
     const fijoByStation = new Map<string, StationPosition[]>();
-    const sfBySitio = new Map<string, StationPosition[]>();
+    const sfList: StationPosition[] = [];
     for (const p of positions) {
       if (p.type === 'fijo') {
         if (!fijoByStation.has(p.stationId)) fijoByStation.set(p.stationId, []);
         fijoByStation.get(p.stationId)!.push(p);
       } else if (p.type === 'sacafranco') {
-        const sitio = sitioOf(p.stationId);
-        if (!sfBySitio.has(sitio)) sfBySitio.set(sitio, []);
-        sfBySitio.get(sitio)!.push(p);
+        sfList.push(p);
       }
     }
-    for (const list of sfBySitio.values()) list.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-    // fijo stations grouped by sitio
-    const fijoStationsBySitio = new Map<string, string[]>();
-    for (const stId of fijoByStation.keys()) {
-      const sitio = sitioOf(stId);
-      if (!fijoStationsBySitio.has(sitio)) fijoStationsBySitio.set(sitio, []);
-      fijoStationsBySitio.get(sitio)!.push(stId);
-    }
+    sfList.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); // global SF order → index
 
     for (const day of monthDays) {
       const dse = Math.floor((new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime() - epoch.getTime()) / 86400000);
       const dateStr = fmtDate(day);
-      for (const [sitio, sfList] of sfBySitio) {
-        // gaps for this sitio this day
-        const gaps: { stationId: string; half: 'day' | 'night' }[] = [];
-        for (const stId of (fijoStationsBySitio.get(sitio) || [])) {
-          const st = stationsById.get(stId);
-          if (!st?.rotationStyleId) continue;
-          const rot = rotationStylesById.get(st.rotationStyleId);
-          if (!rot) continue;
-          const covered = new Set<string>();
-          for (const f of (fijoByStation.get(stId) || [])) {
-            const c = rot.dayShifts + rot.nightShifts + rot.restDays;
-            if (c <= 0) continue;
-            const adj = ((dse - (f.platoonOffset || 0)) % c + c) % c;
-            const status = adj < rot.dayShifts ? 'day' : adj < rot.dayShifts + rot.nightShifts ? 'night' : 'rest';
-            const h = covHalf(st.scheduleType, status);
-            if (h) covered.add(h);
-          }
-          for (const h of reqHalves(st.scheduleType)) if (!covered.has(h)) gaps.push({ stationId: stId, half: h });
+      // One global gap pool across every station.
+      const gaps: { stationId: string; half: 'day' | 'night' }[] = [];
+      for (const [stId, fijos] of fijoByStation) {
+        const st = stationsById.get(stId);
+        if (!st?.rotationStyleId) continue;
+        const rot = rotationStylesById.get(st.rotationStyleId);
+        if (!rot) continue;
+        const covered = new Set<string>();
+        for (const f of fijos) {
+          const c = rot.dayShifts + rot.nightShifts + rot.restDays;
+          if (c <= 0) continue;
+          const adj = ((dse - (f.platoonOffset || 0)) % c + c) % c;
+          const status = adj < rot.dayShifts ? 'day' : adj < rot.dayShifts + rot.nightShifts ? 'night' : 'rest';
+          const h = covHalf(st.scheduleType, status);
+          if (h) covered.add(h);
         }
-        gaps.sort((a, b) => `${a.stationId}|${a.half}`.localeCompare(`${b.stationId}|${b.half}`));
-        for (let i = 0; i < sfList.length; i++) {
-          if (!sfWorks(i, dse)) continue;
-          let claim = 0;
-          for (let j = 0; j < i; j++) if (sfWorks(j, dse)) claim++;
-          const pick = gaps[claim];
-          if (pick) map.set(`${sfList[i].id}-${dateStr}`, pick);
-        }
+        for (const h of reqHalves(st.scheduleType)) if (!covered.has(h)) gaps.push({ stationId: stId, half: h });
+      }
+      gaps.sort((a, b) => `${a.stationId}|${a.half}`.localeCompare(`${b.stationId}|${b.half}`));
+      for (let i = 0; i < sfList.length; i++) {
+        if (!sfWorks(i, dse)) continue;
+        let claim = 0;
+        for (let j = 0; j < i; j++) if (sfWorks(j, dse)) claim++;
+        const pick = gaps[claim];
+        if (pick) map.set(`${sfList[i].id}-${dateStr}`, pick);
       }
     }
     return map;
