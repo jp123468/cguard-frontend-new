@@ -34,6 +34,34 @@ const JORNADA_COLORS: Record<string, string> = {
   personalizada: 'bg-muted text-foreground border-border',
 };
 
+// A station's "horario" = the scheduling engine's scheduleType, configured via
+// /auto-positions (the same path Programador › Horario uses). The turno picker
+// maps to scheduleType so assigned guards abide by the station's horario.
+type TurnoType = 'diurno' | 'nocturno' | '24h' | 'custom';
+const TURNO_LABELS: { key: TurnoType; label: string; sub: string }[] = [
+  { key: 'diurno',   label: '12h Diurno',   sub: '07:00–19:00' },
+  { key: 'nocturno', label: '12h Nocturno', sub: '19:00–07:00' },
+  { key: '24h',      label: '24 Horas',     sub: 'Día + Noche' },
+  { key: 'custom',   label: 'Personalizado', sub: 'Define las horas' },
+];
+function turnoToScheduleType(turno: TurnoType): '12h-day' | '12h-night' | '24h' | 'custom' {
+  switch (turno) {
+    case 'diurno': return '12h-day';
+    case 'nocturno': return '12h-night';
+    case '24h': return '24h';
+    default: return 'custom';
+  }
+}
+function scheduleTypeToTurno(st?: string | null): TurnoType | '' {
+  switch (st) {
+    case '12h-day': return 'diurno';
+    case '12h-night': return 'nocturno';
+    case '24h': return '24h';
+    case 'custom': return 'custom';
+    default: return '';
+  }
+}
+
 interface Jornada {
   tipo: string;
   nombre?: string;
@@ -63,6 +91,12 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   // Per-station clock-in tolerance windows (minutes). Empty = use tenant default.
   const [clockInEarlyBufferMin, setClockInEarlyBufferMin] = useState('');
   const [clockInLateGraceMin, setClockInLateGraceMin] = useState('');
+
+  // Station horario (turno) — drives scheduleType + positions via /auto-positions.
+  const [turno, setTurno] = useState<TurnoType | ''>('');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+  const [savingHorario, setSavingHorario] = useState(false);
 
   // Sync state from station prop
   useEffect(() => {
@@ -106,6 +140,9 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
         ? ''
         : String(station.clockInLateGraceMin),
     );
+    setTurno(scheduleTypeToTurno(station.scheduleType));
+    setCustomStart(station.startingTimeInDay || '');
+    setCustomEnd(station.finishTimeInDay || '');
   }, [station]);
 
   if (!station) {
@@ -168,6 +205,40 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
       toast.error(e?.message || 'Error al guardar');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Update the station's horario through the scheduling engine (same endpoint as
+  // Programador › Horario). Reconfigures the turno positions + regenerates
+  // shifts, so it only runs when the horario actually changed and after a
+  // confirm (it clears existing assignments at this station).
+  const updateHorario = async () => {
+    if (!turno) { toast.error('Selecciona un turno'); return; }
+    if (turno === 'custom' && (!customStart || !customEnd)) {
+      toast.error('Define la hora de inicio y fin'); return;
+    }
+    const scheduleType = turnoToScheduleType(turno);
+    const currentType = station.scheduleType || '';
+    const unchangedType = scheduleType === currentType;
+    const unchangedCustom = turno !== 'custom'
+      || (customStart === (station.startingTimeInDay || '') && customEnd === (station.finishTimeInDay || ''));
+    if (unchangedType && unchangedCustom) { toast.info('El horario no cambió'); return; }
+    if (!window.confirm('Cambiar el horario reconfigura los puestos del turno. Si hay guardias asignados a esta estación, deberán reasignarse. ¿Continuar?')) return;
+    setSavingHorario(true);
+    try {
+      const tenantId = localStorage.getItem('tenantId') || '';
+      await ApiService.post(`/tenant/${tenantId}/station/${stationId}/auto-positions`, {
+        data: {
+          scheduleType,
+          startTime: turno === 'custom' ? customStart : undefined,
+          endTime: turno === 'custom' ? customEnd : undefined,
+        },
+      });
+      toast.success('Horario actualizado. Los puestos del turno se reconfiguraron.');
+    } catch (e: any) {
+      toast.error(e?.message || 'Error al actualizar el horario');
+    } finally {
+      setSavingHorario(false);
     }
   };
 
@@ -345,6 +416,53 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             >
               {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
               Guardar
+            </button>
+          </div>
+        </div>
+
+        {/* Horario del turno — drives scheduleType + positions (engine source of truth) */}
+        <div className="p-6 border-t border-border/30 space-y-3">
+          <div className="flex items-center gap-2">
+            <Clock size={16} className="text-[#C8860A]" />
+            <h3 className="text-sm font-semibold text-foreground">Horario del turno</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Define el turno del puesto. Los guardias asignados a esta estación seguirán este horario. También editable en Programador › Horario.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {TURNO_LABELS.map((o) => (
+              <button
+                key={o.key}
+                type="button"
+                onClick={() => setTurno(o.key)}
+                className={`rounded-xl border px-3 py-2 text-left transition-all ${turno === o.key ? 'border-[#C8860A] bg-[#C8860A]/10' : 'border-border/40 hover:border-[#C8860A]/40'}`}
+              >
+                <div className="text-xs font-semibold text-foreground">{o.label}</div>
+                <div className="text-[10px] text-muted-foreground">{o.sub}</div>
+              </button>
+            ))}
+          </div>
+          {turno === 'custom' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Hora inicio</label>
+                <input type="time" value={customStart} onChange={(e) => setCustomStart(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] outline-none" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Hora fin</label>
+                <input type="time" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] outline-none" />
+              </div>
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] text-amber-600">Cambiar el horario reconfigura los puestos; los guardias asignados deberán reasignarse.</p>
+            <button
+              onClick={updateHorario}
+              disabled={savingHorario}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#C8860A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#B37809] disabled:opacity-50"
+            >
+              {savingHorario ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+              Actualizar horario
             </button>
           </div>
         </div>

@@ -28,6 +28,19 @@ function requiredFijos(_schedule?: string): number {
   return 1;
 }
 
+// The station's "horario" maps to the scheduling engine's scheduleType, which
+// drives positions + shift generation (the SAME field Programador › Horario
+// sets via /auto-positions). This keeps a single source of truth so any guard
+// assigned to the station abides by its horario.
+function turnoToScheduleType(turno: 'diurno' | 'nocturno' | '24h' | 'custom'): '12h-day' | '12h-night' | '24h' | 'custom' {
+  switch (turno) {
+    case 'diurno': return '12h-day';
+    case 'nocturno': return '12h-night';
+    case '24h': return '24h';
+    default: return 'custom';
+  }
+}
+
 // A turno (horario) is one of four types — the same way it's set up in the
 // station's horario. Each type presets the jornada window(s); "custom" lets the
 // user define the hours. A 24h post is two 12h jornadas (diurno + nocturno),
@@ -169,7 +182,26 @@ export default function AddStationPage() {
         clockInLateGraceMin: clockInLateGraceMin.trim() === '' ? null : Number(clockInLateGraceMin),
         description: newDescription,
       } as any;
-      await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
+      const created: any = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
+      const newStationId = created?.id || created?.data?.id || null;
+      // Configure the station's horario through the scheduling engine (the same
+      // endpoint Programador › Horario uses): this sets scheduleType, creates the
+      // turno positions and regenerates shifts, so assigned guards abide by it.
+      // Rotation pattern auto-defaults (4-4-2 for 24h, 5-2 for 12h).
+      if (newStationId) {
+        try {
+          await ApiService.post(`/tenant/${tenantId}/station/${newStationId}/auto-positions`, {
+            data: {
+              scheduleType: turnoToScheduleType(turnoType),
+              startTime: startingTimeInDay || undefined,
+              endTime: finishTimeInDay || undefined,
+            },
+          });
+        } catch (cfgErr: any) {
+          console.error('auto-positions failed', cfgErr);
+          toast.warning(t('postSites.stations.horarioConfigFailed', 'Estación creada, pero no se pudo configurar el horario. Configúralo en Programador › Horario.'));
+        }
+      }
       toast.success(t('postSites.stations.created', 'Station created'));
       navigate(stationsUrl);
     } catch (err: any) {
