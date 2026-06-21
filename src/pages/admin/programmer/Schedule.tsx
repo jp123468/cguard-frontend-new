@@ -1510,10 +1510,11 @@ export default function Schedule() {
                             const coveringStationName = dayShift ? stationsById.get(dayShift.stationId)?.stationName?.slice(0, 3) : '';
 
                             if (posAssignments.length > 0) {
-                              const assignment = posAssignments[0];
-                              const workStatus = isWorkDay(assignment, day);
-
-                              if (workStatus === 'rest') {
+                              // Gap-driven SF: render from the REAL generated shift (it chains
+                              // across stations covering fijo rest-gaps). A shift that day → D/N
+                              // + the covered station; no shift → rest (L). (The SF's own
+                              // rotation can't represent this, so we read shifts, not isWorkDay.)
+                              if (!dayShift) {
                                 return (
                                   <div key={dayIdx} className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}>
                                     <div className="h-[20px] rounded bg-muted/30 flex items-center justify-center">
@@ -1523,13 +1524,15 @@ export default function Schedule() {
                                 );
                               }
 
-                              const code = workStatus === 'night' ? 'N' : 'D';
-                              const bg = workStatus === 'night' ? 'bg-indigo-500/15' : 'bg-emerald-500/15';
-                              const textColor = workStatus === 'night' ? 'text-indigo-400' : 'text-emerald-500';
+                              const hr = new Date(dayShift.startTime).getUTCHours();
+                              const half = (hr >= 18 || hr < 6) ? 'night' : 'day';
+                              const code = half === 'night' ? 'N' : 'D';
+                              const bg = half === 'night' ? 'bg-indigo-500/15' : 'bg-emerald-500/15';
+                              const textColor = half === 'night' ? 'text-indigo-400' : 'text-emerald-500';
 
                               return (
                                 <div key={dayIdx} className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}>
-                                  <div className={`h-[20px] rounded flex flex-col items-center justify-center ${bg}`} title={coveringStationName ? `Cubre: ${dayShift ? stationsById.get(dayShift.stationId)?.stationName : ''}` : code}>
+                                  <div className={`h-[20px] rounded flex flex-col items-center justify-center ${bg}`} title={coveringStationName ? `Cubre: ${stationsById.get(dayShift.stationId)?.stationName || ''}` : code}>
                                     <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
                                     {coveringStationName && <span className="text-[7px] text-muted-foreground leading-none">{coveringStationName}</span>}
                                   </div>
