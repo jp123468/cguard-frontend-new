@@ -46,7 +46,14 @@ export interface AttendanceRecord {
   punchInLongitude: number | null;
   /** Every clock in/out pair within this shift's record (dedup model). */
   sessions?: Array<{ in: string; out?: string | null }> | null;
-  guardName?: { id: string; fullName?: string } | null;
+  // ── Operational fields (merged from the former Programador · Asistencia view) ──
+  shiftSchedule?: "Diurno" | "Nocturno" | null;
+  numberOfPatrolsDuringShift?: number | null;
+  numberOfIncidentsDurindShift?: number | null;
+  observations?: string | null;
+  punchOutLatitude?: number | null;
+  punchOutLongitude?: number | null;
+  guardName?: { id: string; fullName?: string; governmentId?: string } | null;
   stationName?: { id: string; stationName?: string; latitud?: string; longitud?: string; geofenceRadius?: number; geofencePolygon?: { lat: number; lng: number }[] | null } | null;
 }
 

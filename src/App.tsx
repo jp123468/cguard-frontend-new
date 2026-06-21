@@ -100,9 +100,6 @@ import AlarmAnalytics from "./pages/admin/alarm/AlarmAnalytics"
 import AuditLogs from "./pages/admin/security/AuditLogs"
 import SystemLogs from "./pages/admin/security/SystemLogs"
 import LoginHistory from "./pages/admin/security/LoginHistory"
-import GeneratePayroll from "./pages/admin/payroll/GeneratePayroll"
-import PastPayroll from "./pages/admin/payroll/PastPayroll"
-import OvertimeMultiplier from "./pages/admin/payroll/OvertimeMultiplier"
 import NominaDashboard from "./pages/admin/nomina/NominaDashboard"
 import NominaTimeClock from "./pages/admin/nomina/NominaTimeClock"
 import NominaRecords from "./pages/admin/nomina/NominaRecords"
@@ -116,7 +113,6 @@ import Visits from "./pages/admin/visitor-management/Visits"
 import PostSite from "./pages/admin/analytics/PostSite"
 import Guard from "./pages/admin/analytics/Guard"
 import TimeOff from "./pages/admin/programmer/TimeOff"
-import Attendance from "./pages/admin/programmer/Attendance"
 import Schedule from "./pages/admin/programmer/Schedule"
 import ShiftExchange from "./pages/admin/programmer/ShiftExchange"
 import ShiftStatus from "./pages/admin/programmer/ShiftStatus"
@@ -1175,32 +1171,9 @@ export default function App() {
 
               {/* NOMINA */}
 
-              <Route
-                path="/payroll/generate-payroll"
-                element={
-                  <ProtectedRoute>
-                    <GeneratePayroll />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/payroll/past-payroll"
-                element={
-                  <ProtectedRoute>
-                    <PastPayroll />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/payroll/overtime-multiplier"
-                element={
-                  <ProtectedRoute>
-                    <OvertimeMultiplier />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* NÓMINA · Time & Attendance */}
+              {/* NÓMINA · Time & Attendance.
+                  Payroll output lives in /nomina/payroll-summary (the old /payroll/*
+                  stub pages were removed — they had no backend). */}
               <Route path="/nomina/dashboard" element={<ProtectedRoute><NominaDashboard /></ProtectedRoute>} />
               <Route path="/nomina/time-clock" element={<ProtectedRoute><NominaTimeClock /></ProtectedRoute>} />
               <Route path="/nomina/records" element={<ProtectedRoute><NominaRecords /></ProtectedRoute>} />
@@ -1208,14 +1181,6 @@ export default function App() {
               <Route path="/nomina/approvals" element={<ProtectedRoute><NominaApprovals /></ProtectedRoute>} />
               <Route path="/nomina/payroll-summary" element={<ProtectedRoute><NominaPayrollSummary /></ProtectedRoute>} />
               <Route path="/nomina/settings" element={<ProtectedRoute><NominaSettings /></ProtectedRoute>} />
-              {/* <Route
-            path="/payroll/overtime-multiplier/new-overtime-multiplier"
-            element={
-              <ProtectedRoute>
-                <OvertimeMultiplier />
-              </ProtectedRoute>
-            }
-          /> */}
 
               {/* FIN NOMINA */}
 
@@ -1229,14 +1194,8 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/attendance"
-                element={
-                  <ProtectedRoute>
-                    <Attendance />
-                  </ProtectedRoute>
-                }
-              />
+              {/* /attendance (Programador · Asistencia) removed — merged into
+                  /nomina/records, which now shows patrols/incidents per shift. */}
               <Route
                 path="/schedule"
                 element={

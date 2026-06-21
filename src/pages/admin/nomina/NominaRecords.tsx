@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -16,6 +17,12 @@ const STATUS_OPTIONS = [
 ];
 
 export default function NominaRecords() {
+  // Deep-link from a clock-in notification: ?focus=<id> auto-opens that record's
+  // detail once the list loads (carried over from the old Programador · Asistencia).
+  const [searchParams] = useSearchParams();
+  const focusId = searchParams.get("focus");
+  const [focusHandled, setFocusHandled] = useState(false);
+
   const [rows, setRows] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
@@ -35,6 +42,16 @@ export default function NominaRecords() {
       .finally(() => setLoading(false));
   }, [status]);
   useEffect(load, [load]);
+
+  // Once rows are loaded, open the detail for the notification's record (once).
+  useEffect(() => {
+    if (focusHandled || !focusId || loading) return;
+    const match = rows.find((r) => r.id === focusId);
+    if (match) {
+      setSelected(match);
+      setFocusHandled(true);
+    }
+  }, [focusId, focusHandled, loading, rows]);
 
   const act = async (fn: () => Promise<any>, okMsg: string) => {
     setBusy(true);
@@ -70,6 +87,25 @@ export default function NominaRecords() {
     },
     { key: "punchOutTime", header: "Salida", render: (_v, r) => fmtTime(r.punchOutTime) },
     { key: "hoursWorked", header: "Horas", render: (_v, r) => fmtHours(r.hoursWorked) },
+    {
+      key: "patrols",
+      header: "Rondas",
+      render: (_v, r) => (
+        <span className="font-medium text-[#C8860A]">{r.numberOfPatrolsDuringShift ?? 0}</span>
+      ),
+    },
+    {
+      key: "incidents",
+      header: "Incidentes",
+      render: (_v, r) =>
+        (r.numberOfIncidentsDurindShift ?? 0) > 0 ? (
+          <span className="font-bold text-red-600 dark:text-red-400">
+            {r.numberOfIncidentsDurindShift}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">0</span>
+        ),
+    },
     {
       key: "geo",
       header: "Ubicación",
@@ -169,7 +205,23 @@ export default function NominaRecords() {
                   <Field label="Salida" value={fmtDateTime(selected.punchOutTime)} />
                   <Field label="Tarde (min)" value={String(selected.lateMinutes || 0)} />
                   <Field label="Extra (min)" value={String(selected.overtimeMinutes || 0)} />
+                  {selected.shiftSchedule && (
+                    <Field label="Turno" value={selected.shiftSchedule} />
+                  )}
+                  <Field label="Rondas" value={String(selected.numberOfPatrolsDuringShift ?? 0)} />
+                  <Field label="Incidentes" value={String(selected.numberOfIncidentsDurindShift ?? 0)} />
                 </div>
+
+                {selected.observations && (
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      Observaciones
+                    </p>
+                    <p className="mt-0.5 whitespace-pre-wrap rounded-lg bg-muted/50 p-3 text-foreground">
+                      {selected.observations}
+                    </p>
+                  </div>
+                )}
 
                 {/* Sessions — every clock in/out pair accumulated in this record */}
                 {Array.isArray(selected.sessions) && selected.sessions.length > 0 && (

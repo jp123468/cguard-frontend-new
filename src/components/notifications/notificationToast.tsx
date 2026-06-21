@@ -48,7 +48,7 @@ export function targetForNotification(n: PlatformNotification): string {
     return '/nomina/approvals';
   }
 
-  // Clock-in/out + attendance exceptions → that day's attendance, focused.
+  // Clock-in/out + attendance exceptions → the Nómina attendance records, focused.
   if (
     type === 'guard.checkin' ||
     type === 'guard.checkout' ||
@@ -56,7 +56,7 @@ export function targetForNotification(n: PlatformNotification): string {
   ) {
     const params = new URLSearchParams({ date: localDay(n.createdAt) });
     if (id) params.set('focus', id);
-    return `/attendance?${params.toString()}`;
+    return `/nomina/records?${params.toString()}`;
   }
   if (type.startsWith('incident')) return id ? `/reports/incident/${id}` : '/activities';
   if (type.startsWith('message')) {

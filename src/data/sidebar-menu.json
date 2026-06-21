@@ -218,11 +218,6 @@
         "path": "/shift-templates"
       },
       {
-        "id": "asistencia",
-        "name": "Asistencia",
-        "path": "/attendance"
-      },
-      {
         "id": "estado",
         "name": "Estado de Turno",
         "path": "/shift-status"
@@ -250,21 +245,6 @@
     "icon": "DollarSign",
     "expandable": true,
     "subItems": [
-      {
-        "id": "ejecutar",
-        "name": "Ejecutar Nómina",
-        "path": "/payroll/generate-payroll"
-      },
-      {
-        "id": "pasadas",
-        "name": "Nóminas Pasadas",
-        "path": "/payroll/past-payroll"
-      },
-      {
-        "id": "horas-extras",
-        "name": "Multiplicador de Horas Extras",
-        "path": "/payroll/overtime-multiplier"
-      },
       {
         "id": "nomina-dashboard",
         "name": "Asistencia · Dashboard",
