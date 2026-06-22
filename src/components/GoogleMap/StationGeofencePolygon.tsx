@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { loadGoogleMaps } from "@/utils/loadGoogleMaps";
 import { getTenantLocation } from "@/utils/tenantLocation";
-import { Undo2, Trash2, MapPin } from "lucide-react";
+import { Undo2, Trash2, MapPin, Search, Building2 } from "lucide-react";
 
 export type PolyPoint = { lat: number; lng: number };
 
@@ -23,11 +23,19 @@ export default function StationGeofencePolygon({
   onChange,
   centerLat,
   centerLng,
+  showLocation = false,
+  onCenterChange,
+  siteLocation,
 }: {
   value: PolyPoint[];
   onChange: (pts: PolyPoint[]) => void;
   centerLat?: number;
   centerLng?: number;
+  /** When true, this map ALSO edits the station's center point (address search +
+   *  draggable pin + "same as sitio"), so one map does both location + geofence. */
+  showLocation?: boolean;
+  onCenterChange?: (lat: number, lng: number) => void;
+  siteLocation?: { lat: number; lng: number } | null;
 }) {
   const pts = value || [];
 
@@ -36,6 +44,10 @@ export default function StationGeofencePolygon({
   const polyRef = useRef<any>(null);
   const lineRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const searchRef = useRef<HTMLInputElement | null>(null);
+  const centerMarkerRef = useRef<any>(null);
+  const onCenterChangeRef = useRef(onCenterChange);
+  onCenterChangeRef.current = onCenterChange;
   const [ready, setReady] = useState(false);
 
   // The map-click listener is registered once; read the latest props via refs.
@@ -89,6 +101,37 @@ export default function StationGeofencePolygon({
           onChangeRef.current([...(ptsRef.current || []), { lat, lng }]);
         });
 
+        // Location editing: a draggable CENTER pin (the station point, distinct
+        // from the numbered geofence vertices) + Google Places address search.
+        if (showLocation) {
+          centerMarkerRef.current = new g.maps.Marker({
+            position: center,
+            map,
+            draggable: true,
+            title: "Ubicación del puesto (arrastra para ajustar)",
+            zIndex: 5000,
+          });
+          centerMarkerRef.current.addListener("dragend", (e: any) => {
+            if (!e?.latLng) return;
+            onCenterChangeRef.current?.(e.latLng.lat(), e.latLng.lng());
+          });
+
+          if (g.maps.places && searchRef.current) {
+            const ac = new g.maps.places.Autocomplete(searchRef.current, { fields: ["geometry"] });
+            ac.bindTo("bounds", map);
+            ac.addListener("place_changed", () => {
+              const place = ac.getPlace();
+              const loc = place?.geometry?.location;
+              if (!loc) return;
+              const lat = loc.lat();
+              const lng = loc.lng();
+              map.setCenter({ lat, lng });
+              map.setZoom(18);
+              onCenterChangeRef.current?.(lat, lng);
+            });
+          }
+        }
+
         setReady(true);
       } catch (err) {
         console.error("[StationGeofencePolygon] map init failed", err);
@@ -101,6 +144,7 @@ export default function StationGeofencePolygon({
         markersRef.current = [];
         if (lineRef.current) lineRef.current.setMap(null);
         if (polyRef.current) polyRef.current.setMap(null);
+        if (centerMarkerRef.current) { centerMarkerRef.current.setMap(null); centerMarkerRef.current = null; }
         mapRef.current = null;
       } catch {
         /* ignore */
@@ -109,13 +153,21 @@ export default function StationGeofencePolygon({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Recenter when site coords arrive (they load async) ─────────────────────
+  // ── Recenter + move the center pin when coords change ──────────────────────
   useEffect(() => {
     if (mapRef.current && hasCenter) {
-      mapRef.current.setCenter({ lat: centerLat as number, lng: centerLng as number });
+      const c = { lat: centerLat as number, lng: centerLng as number };
+      mapRef.current.setCenter(c);
+      if (centerMarkerRef.current) centerMarkerRef.current.setPosition(c);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [centerLat, centerLng]);
+
+  const hasSite =
+    siteLocation && Number.isFinite(siteLocation.lat) && Number.isFinite(siteLocation.lng);
+  const useSite = () => {
+    if (hasSite) onCenterChange?.(siteLocation!.lat, siteLocation!.lng);
+  };
 
   // ── Redraw markers + line/polygon whenever the points change ───────────────
   useEffect(() => {
@@ -187,6 +239,33 @@ export default function StationGeofencePolygon({
 
   return (
     <div className="space-y-2">
+      {showLocation && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder="Buscar dirección del puesto…"
+              className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A]"
+            />
+          </div>
+          {hasSite && (
+            <button
+              type="button"
+              onClick={useSite}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-input px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              <Building2 size={13} /> Igual que el sitio
+            </button>
+          )}
+        </div>
+      )}
+      {showLocation && (
+        <p className="text-[11px] text-muted-foreground">
+          Busca la dirección o arrastra el pin para fijar dónde marca entrada el guardia; luego toca el mapa para dibujar la geocerca.
+        </p>
+      )}
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin size={12} /> {pts.length} punto(s) · toca el mapa para agregar vértices
