@@ -4,6 +4,7 @@ import { MapPin, Clock, Users, Pencil, Check, Loader2 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
+import { reverseGeocode } from '@/lib/geocodeClient';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -57,6 +58,19 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   const [savingLoc, setSavingLoc] = useState(false);
   const [siteLoc, setSiteLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [polygon, setPolygon] = useState<PolyPoint[]>([]);
+  // Human-readable address for the station coords (reverse-geocoded for display).
+  const [stationAddress, setStationAddress] = useState('');
+
+  useEffect(() => {
+    const la = station?.latitud ?? station?.latitude;
+    const ln = station?.longitud ?? station?.longitude;
+    if (la == null || ln == null || la === '' || ln === '') { setStationAddress(''); return; }
+    let alive = true;
+    reverseGeocode(la, ln)
+      .then((r: any) => { if (alive) setStationAddress(r?.display_name || ''); })
+      .catch(() => { /* keep coords fallback */ });
+    return () => { alive = false; };
+  }, [station?.latitud, station?.longitud, station?.latitude, station?.longitude]);
 
   // Load the parent sitio's coordinates (for the "Igual que el sitio" button).
   useEffect(() => {
@@ -246,7 +260,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
                 </div>
                 <div>
                   <div className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">Ubicación</div>
-                  <div className="text-sm text-foreground font-mono">{lat}, {lng}</div>
+                  <div className="text-sm text-foreground">{stationAddress || `${lat}, ${lng}`}</div>
                 </div>
               </div>
             )}
