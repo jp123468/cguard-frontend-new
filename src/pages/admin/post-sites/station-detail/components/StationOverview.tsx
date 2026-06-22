@@ -4,6 +4,7 @@ import { MapPin, Clock, Users, Shield, Pencil, X, Check, Loader2, Plus, Trash2 }
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
+import AddressAutocomplete, { type AddressComponents } from '@/components/maps/AddressAutocomplete';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -98,6 +99,12 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   const [customEnd, setCustomEnd] = useState('');
   const [savingHorario, setSavingHorario] = useState(false);
 
+  // Station LOCATION (coordinates the clock-in geofence uses). Editable here —
+  // a station does NOT auto-inherit changes to the client/sitio address.
+  const [editLat, setEditLat] = useState('');
+  const [editLng, setEditLng] = useState('');
+  const [savingLoc, setSavingLoc] = useState(false);
+
   // Sync state from station prop
   useEffect(() => {
     if (!station) return;
@@ -143,6 +150,8 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
     setTurno(scheduleTypeToTurno(station.scheduleType));
     setCustomStart(station.startingTimeInDay || '');
     setCustomEnd(station.finishTimeInDay || '');
+    setEditLat(station.latitud != null && station.latitud !== '' ? String(station.latitud) : (station.latitude != null ? String(station.latitude) : ''));
+    setEditLng(station.longitud != null && station.longitud !== '' ? String(station.longitud) : (station.longitude != null ? String(station.longitude) : ''));
   }, [station]);
 
   if (!station) {
@@ -239,6 +248,50 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
       toast.error(e?.message || 'Error al actualizar el horario');
     } finally {
       setSavingHorario(false);
+    }
+  };
+
+  // Save the station's coordinates (used by the clock-in geofence).
+  const saveLocation = async () => {
+    const latNum = Number(editLat);
+    const lngNum = Number(editLng);
+    if (!editLat.trim() || !editLng.trim() || !Number.isFinite(latNum) || !Number.isFinite(lngNum)) {
+      toast.error('Define una latitud y longitud válidas (busca la dirección o ajusta el mapa).');
+      return;
+    }
+    setSavingLoc(true);
+    try {
+      const tenantId = localStorage.getItem('tenantId') || '';
+      await ApiService.put(`/tenant/${tenantId}/station/${stationId}`, { data: { latitud: latNum, longitud: lngNum } });
+      toast.success('Ubicación del puesto actualizada');
+    } catch (e: any) {
+      toast.error(e?.message || 'Error al guardar la ubicación');
+    } finally {
+      setSavingLoc(false);
+    }
+  };
+
+  // Copy the parent sitio's (post site) coordinates into this station — useful
+  // after updating the sitio/client address, since it does NOT cascade.
+  const useSiteLocation = async () => {
+    setSavingLoc(true);
+    try {
+      const tenantId = localStorage.getItem('tenantId') || '';
+      const res: any = await ApiService.get(`/tenant/${tenantId}/post-site/${postSiteId}`);
+      const site = res?.data ?? res ?? {};
+      const sLat = site.latitud ?? site.latitude;
+      const sLng = site.longitud ?? site.longitude;
+      if (sLat == null || sLng == null || sLat === '' || sLng === '') {
+        toast.error('El sitio no tiene coordenadas. Edita la dirección del sitio primero.');
+        return;
+      }
+      setEditLat(String(sLat));
+      setEditLng(String(sLng));
+      toast.message('Coordenadas del sitio cargadas. Pulsa "Guardar ubicación" para aplicarlas.');
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo leer la ubicación del sitio');
+    } finally {
+      setSavingLoc(false);
     }
   };
 
@@ -464,6 +517,57 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
               {savingHorario ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
               Actualizar horario
             </button>
+          </div>
+        </div>
+
+        {/* Ubicación del puesto — coordinates the clock-in geofence uses */}
+        <div className="p-6 border-t border-border/30 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin size={16} className="text-[#C8860A]" />
+              <h3 className="text-sm font-semibold text-foreground">Ubicación del puesto</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={useSiteLocation}
+                disabled={savingLoc}
+                className="rounded-lg border border-input px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
+              >
+                Usar ubicación del sitio
+              </button>
+              <button
+                onClick={saveLocation}
+                disabled={savingLoc}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#C8860A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#B37809] disabled:opacity-50"
+              >
+                {savingLoc ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                Guardar ubicación
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Busca la dirección o arrastra el marcador para fijar dónde el guardia marca entrada. El puesto NO hereda automáticamente cambios de dirección del cliente o del sitio — actualízalo aquí.
+          </p>
+          <AddressAutocomplete
+            showMap
+            mapHeight="260px"
+            placeholder="Buscar dirección del puesto…"
+            initialLat={editLat ? Number(editLat) : undefined}
+            initialLng={editLng ? Number(editLng) : undefined}
+            onAddressSelect={(a: AddressComponents) => {
+              if (Number.isFinite(a.latitude)) setEditLat(String(a.latitude));
+              if (Number.isFinite(a.longitude)) setEditLng(String(a.longitude));
+            }}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Latitud</label>
+              <input value={editLat} onChange={(e) => setEditLat(e.target.value)} placeholder="-0.000000" className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] outline-none" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Longitud</label>
+              <input value={editLng} onChange={(e) => setEditLng(e.target.value)} placeholder="-0.000000" className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] outline-none" />
+            </div>
           </div>
         </div>
 
