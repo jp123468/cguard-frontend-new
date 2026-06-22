@@ -80,6 +80,20 @@ interface StationDraft {
   description: string;
   jornadas: JornadaDraft[];
   existingId?: string;
+  existingScheduleType?: string; // current engine scheduleType (to detect changes)
+}
+
+// Map the station's turnos (jornadas) to the scheduling engine's scheduleType.
+// Day = matutina, night = nocturna; both → 24h; otherwise custom. Sacafranco
+// jornadas are relief, not a station coverage type.
+function deriveScheduleType(jornadas: JornadaDraft[]): '24h' | '12h-day' | '12h-night' | 'custom' | null {
+  const hasDay = jornadas.some((j) => j.tipo === 'matutina');
+  const hasNight = jornadas.some((j) => j.tipo === 'nocturna');
+  if (hasDay && hasNight) return '24h';
+  if (hasNight) return '12h-night';
+  if (hasDay) return '12h-day';
+  if (jornadas.length) return 'custom';
+  return null;
 }
 
 // ─── tiny helpers ─────────────────────────────────────────────────────────────
@@ -536,6 +550,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
               description: r.description || '',
               jornadas,
               existingId: r.id,
+              existingScheduleType: r.scheduleType || undefined,
             };
           });
           originalStationIdsRef.current = loadedStations.map((s) => s.existingId!).filter(Boolean);
@@ -635,16 +650,34 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
       toDelete.map((sid) => ApiService.delete(`/tenant/${tenantId}/station/${sid}`)),
     );
 
-    // Update existing or create new
-    await Promise.all(
-      valid.map((s) => {
-        const payload = buildStationPayload(s, postSiteId);
-        if (s.existingId) {
-          return ApiService.put(`/tenant/${tenantId}/station/${s.existingId}`, { data: payload });
+    // Update existing or create new, then link the turno to the scheduling
+    // engine (Programador › Horario) by setting scheduleType + rebuilding the
+    // turno positions via /auto-positions. We only fire auto-positions when the
+    // turno actually changed (or the station is new), because that rebuild also
+    // clears the station's existing guard assignments.
+    for (const s of valid) {
+      const payload = buildStationPayload(s, postSiteId);
+      let stationId = s.existingId || '';
+      if (s.existingId) {
+        await ApiService.put(`/tenant/${tenantId}/station/${s.existingId}`, { data: payload });
+      } else {
+        const created: any = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
+        stationId = created?.id || created?.data?.id || '';
+      }
+
+      const desired = deriveScheduleType(s.jornadas);
+      const changed = !s.existingId || (desired && desired !== (s.existingScheduleType || ''));
+      if (stationId && desired && changed) {
+        const first = s.jornadas[0];
+        try {
+          await ApiService.post(`/tenant/${tenantId}/station/${stationId}/auto-positions`, {
+            data: { scheduleType: desired, startTime: first?.startTime || undefined, endTime: first?.endTime || undefined },
+          });
+        } catch {
+          // Non-blocking: the station saved; the horario can still be set in Programador › Horario.
         }
-        return ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
-      }),
-    );
+      }
+    }
   };
 
   // ── upload site photo to post site ───────────────────────────────────────────
