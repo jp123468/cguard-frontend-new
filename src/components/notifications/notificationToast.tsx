@@ -33,19 +33,17 @@ export function targetForNotification(n: PlatformNotification): string {
   const type = (n.eventType || '').toLowerCase();
   const id = n.sourceEntityId;
 
-  // Early clock-out approval requests → the approvals queue where the supervisor
-  // approves/rejects (with the reason). Must precede the generic attendance rule.
-  if (type === 'attendance.clockout_requested') {
-    return id ? `/nomina/approvals?focus=${id}` : '/nomina/approvals';
-  }
-
-  // Early-clock-out requests + approvals → the Nómina approvals queue.
+  // Requests that need a supervisor DECISION → the Nómina approvals queue,
+  // focused on the specific request. Includes LATE clock-in requests
+  // (attendance.clockin_requested) and early clock-out requests. Must precede
+  // the generic attendance rule below (which otherwise sends them to records).
   if (
+    type === 'attendance.clockin_requested' ||
     type === 'attendance.clockout_requested' ||
     type === 'attendance.approval_required' ||
     type === 'attendance.correction_submitted'
   ) {
-    return '/nomina/approvals';
+    return id ? `/nomina/approvals?focus=${id}` : '/nomina/approvals';
   }
 
   // Clock-in/out + attendance exceptions → the Nómina attendance records, focused.
