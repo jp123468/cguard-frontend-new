@@ -110,7 +110,7 @@ export default function PostingGlobalForm({ defaultValues, onSubmit }: Props) {
                 </FormControl>
                 <div className="flex items-center gap-2">
                   <Label onClick={() => field.onChange(!field.value)} className="cursor-pointer">
-                    Notificar cuando el guardia entre o salga de la geocerca
+                    Notificar cuando el vigilante entre o salga de la geocerca
                   </Label>
                   <Info className="h-4 w-4 text-muted-foreground" />
                 </div>
@@ -190,7 +190,7 @@ export default function PostingGlobalForm({ defaultValues, onSubmit }: Props) {
                 </FormControl>
                 <div className="flex items-center gap-2">
                   <Label onClick={() => field.onChange(!field.value)} className="cursor-pointer">
-                    Habilitar auto salida del guardia después de 24 horas
+                    Habilitar auto salida del vigilante después de 24 horas
                   </Label>
                   <Info className="h-4 w-4 text-muted-foreground" />
                 </div>
@@ -210,7 +210,7 @@ export default function PostingGlobalForm({ defaultValues, onSubmit }: Props) {
                 </FormControl>
                 <div className="flex items-center gap-2">
                   <Label onClick={() => field.onChange(!field.value)} className="cursor-pointer">
-                    Recordar al guardia enviar al menos un registro de entrega antes de salir del sitio
+                    Recordar al vigilante enviar al menos un registro de entrega antes de salir del sitio
                   </Label>
                   <Info className="h-4 w-4 text-muted-foreground" />
                 </div>
@@ -230,7 +230,7 @@ export default function PostingGlobalForm({ defaultValues, onSubmit }: Props) {
                 </FormControl>
                 <div className="flex items-center gap-2">
                   <Label onClick={() => field.onChange(!field.value)} className="cursor-pointer">
-                    Forzar al guardia a enviar al menos un registro de entrega antes de salir del sitio
+                    Forzar al vigilante a enviar al menos un registro de entrega antes de salir del sitio
                   </Label>
                   <Info className="h-4 w-4 text-muted-foreground" />
                 </div>
@@ -250,7 +250,7 @@ export default function PostingGlobalForm({ defaultValues, onSubmit }: Props) {
                 </FormControl>
                 <div className="flex items-center gap-2">
                   <Label onClick={() => field.onChange(!field.value)} className="cursor-pointer">
-                    Permitir que el guardia vea los detalles del equipo de seguridad
+                    Permitir que el vigilante vea los detalles del equipo de seguridad
                   </Label>
                   <Info className="h-4 w-4 text-muted-foreground" />
                 </div>

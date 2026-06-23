@@ -17,7 +17,7 @@ export default function GuardAppLayout() {
           <Shield size={20} className="text-[#C8860A]" />
           <span className="font-bold text-foreground text-sm">CGuard Pro</span>
         </div>
-        <span className="text-xs text-muted-foreground">Guardia</span>
+        <span className="text-xs text-muted-foreground">Vigilante</span>
       </header>
 
       {/* Content */}

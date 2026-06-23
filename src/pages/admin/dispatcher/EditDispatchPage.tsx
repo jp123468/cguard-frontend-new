@@ -42,7 +42,7 @@ const prioridades = [
 
 const tiposLlamador = [
   { id: "cliente", name: "Cliente" },
-  { id: "guardia", name: "Guardia" },
+  { id: "guardia", name: "Vigilante" },
   { id: "supervisor", name: "Supervisor" },
 ];
 
@@ -53,7 +53,7 @@ export default function EditDispatchPage() {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [clientes, setClientes] = useState<Array<{ id: string; name: string }>>([]);
   const [sitios, setSitios] = useState<Array<{ id: string; name: string }>>([]);
-  const [guardias, setGuardias] = useState<Array<{ id: string; name: string }>>([]);
+  const [vigilantes, setVigilantes] = useState<Array<{ id: string; name: string }>>([]);
   const [tiposIncidente, setTiposIncidente] = useState<Array<{ id: string; name: string }>>([]);
   const [clienteFilter, setClienteFilter] = useState("");
   const [sitioFilter, setSitioFilter] = useState("");
@@ -127,7 +127,7 @@ export default function EditDispatchPage() {
             const gov = g.governmentId ?? g.government_id ?? g.user?.governmentId ?? g.user?.government_id;
             return gov && String(gov).toLowerCase() !== "pending";
           });
-          setGuardias(
+          setVigilantes(
             filtered.map((g: any) => {
               const display =
                 g.fullName ||
@@ -143,11 +143,11 @@ export default function EditDispatchPage() {
             })
           );
         } else {
-          setGuardias([]);
+          setVigilantes([]);
         }
       } catch (e) {
-        console.error("Error cargando guardias:", e);
-        setGuardias([]);
+        console.error("Error cargando vigilantes:", e);
+        setVigilantes([]);
       }
     })();
 
@@ -308,8 +308,8 @@ export default function EditDispatchPage() {
         // the saved value even if the initial guard list didn't include it.
         try {
           if (prefill.guardId) {
-            const guardNameDisplay = derivedGuard.name || (data.guardName && (data.guardName.fullName || data.guardName.name)) || data.guardName || 'Guardia';
-            setGuardias((prev) => {
+            const guardNameDisplay = derivedGuard.name || (data.guardName && (data.guardName.fullName || data.guardName.name)) || data.guardName || 'Vigilante';
+            setVigilantes((prev) => {
               const exists = Array.isArray(prev) && prev.some((g) => String(g.id) === String(prefill.guardId));
               if (exists) return prev;
               return [{ id: String(prefill.guardId), name: guardNameDisplay }, ...(prev || [])];
@@ -467,7 +467,7 @@ export default function EditDispatchPage() {
                 name="guardId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Asignar Guardia</FormLabel>
+                    <FormLabel>Asignar Vigilante</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value} onOpenChange={(open) => {
                       if (open) {
                         setTimeout(() => guardInputRef.current?.focus(), 50);
@@ -482,12 +482,12 @@ export default function EditDispatchPage() {
                         <div className="px-2 py-2">
                           <Input
                             ref={(el) => (guardInputRef.current = el)}
-                            placeholder="Buscar guardia..."
+                            placeholder="Buscar vigilante..."
                             value={guardFilter}
                             onChange={(e) => setGuardFilter(e.target.value)}
                           />
                         </div>
-                        {guardias
+                        {vigilantes
                           .filter((g) => g.name.toLowerCase().includes(guardFilter.trim().toLowerCase()))
                           .map((g) => (
                             <SelectItem key={g.id} value={g.id}>

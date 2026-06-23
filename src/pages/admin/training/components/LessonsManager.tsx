@@ -155,7 +155,7 @@ export default function LessonsManager({ courseId, lessons, readOnly, onChange }
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Lecciones ordenadas que verán los guardias.</p>
+        <p className="text-sm text-muted-foreground">Lecciones ordenadas que verán los vigilantes.</p>
         {!readOnly && (
           <Button className="text-white" style={{ backgroundColor: GOLD }} onClick={openNew}>
             <Plus className="h-4 w-4 mr-1" /> Agregar lección

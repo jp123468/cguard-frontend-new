@@ -263,7 +263,7 @@ export default function StationGeofencePolygon({
       )}
       {showLocation && (
         <p className="text-[11px] text-muted-foreground">
-          Busca la dirección o arrastra el pin para fijar dónde marca entrada el guardia; luego toca el mapa para dibujar la geocerca.
+          Busca la dirección o arrastra el pin para fijar dónde marca entrada el vigilante; luego toca el mapa para dibujar la geocerca.
         </p>
       )}
       <div className="flex items-center justify-between">

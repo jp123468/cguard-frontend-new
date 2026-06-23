@@ -40,13 +40,13 @@ export default function GeneralTab() {
         ]}
       />
 
-      <RowCheck label="Permitir que el guardia envíe informes por correo electrónico" />
-      <RowCheck label="Deshabilitar creación de chats grupales e individuales para los guardias" />
-      <RowCheck label="Permitir que el guardia vea informes enviados por otros guardias" defaultChecked />
-      <RowCheck label="Permitir al guardia subir medios desde la galería" defaultChecked />
-      <RowCheck label="Forzar al guardia a reconocer y firmar documentos y políticas de la empresa antes de usar la aplicación." />
-      <RowCheck label="Permitir a los guardias crear tareas para sí mismos en la aplicación móvil" />
-      <RowCheck label="Activar alerta de caída del guardia/dispositivo en la aplicación móvil" />
+      <RowCheck label="Permitir que el vigilante envíe informes por correo electrónico" />
+      <RowCheck label="Deshabilitar creación de chats grupales e individuales para los vigilantes" />
+      <RowCheck label="Permitir que el vigilante vea informes enviados por otros vigilantes" defaultChecked />
+      <RowCheck label="Permitir al vigilante subir medios desde la galería" defaultChecked />
+      <RowCheck label="Forzar al vigilante a reconocer y firmar documentos y políticas de la empresa antes de usar la aplicación." />
+      <RowCheck label="Permitir a los vigilantes crear tareas para sí mismos en la aplicación móvil" />
+      <RowCheck label="Activar alerta de caída del vigilante/dispositivo en la aplicación móvil" />
     </div>
   );
 }

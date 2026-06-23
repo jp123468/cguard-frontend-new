@@ -156,7 +156,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
     const unchangedCustom = turno !== 'custom'
       || (customStart === (station.startingTimeInDay || '') && customEnd === (station.finishTimeInDay || ''));
     if (unchangedType && unchangedCustom) { toast.info('El horario no cambió'); return; }
-    if (!window.confirm('Cambiar el horario reconfigura los puestos del turno. Si hay guardias asignados a esta estación, deberán reasignarse. ¿Continuar?')) return;
+    if (!window.confirm('Cambiar el horario reconfigura los puestos del turno. Si hay vigilantes asignados a esta estación, deberán reasignarse. ¿Continuar?')) return;
     setSavingHorario(true);
     try {
       const tenantId = localStorage.getItem('tenantId') || '';
@@ -270,7 +270,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
         {/* Assigned guards */}
         {assignedGuards.length > 0 && (
           <div className="bg-card border border-border/40 rounded-2xl p-6">
-            <h3 className="text-base font-semibold text-foreground mb-3">Guardias Asignados</h3>
+            <h3 className="text-base font-semibold text-foreground mb-3">Vigilantes Asignados</h3>
             <ul className="divide-y divide-border/20">
               {assignedGuards.slice(0, 8).map((g: any, i: number) => {
                 const gname = g.fullName || g.name || `${g.firstName || ''} ${g.lastName || ''}`.trim() || g.email || '-';
@@ -321,7 +321,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             <h3 className="text-sm font-semibold text-foreground">Horario del turno</h3>
           </div>
           <p className="text-xs text-muted-foreground">
-            Define el turno del puesto. Los guardias asignados a esta estación seguirán este horario. También editable en Programador › Horario.
+            Define el turno del puesto. Los vigilantes asignados a esta estación seguirán este horario. También editable en Programador › Horario.
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {TURNO_LABELS.map((o) => (
@@ -349,7 +349,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             </div>
           )}
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[11px] text-amber-600">Cambiar el horario reconfigura los puestos; los guardias asignados deberán reasignarse.</p>
+            <p className="text-[11px] text-amber-600">Cambiar el horario reconfigura los puestos; los vigilantes asignados deberán reasignarse.</p>
             <button
               onClick={updateHorario}
               disabled={savingHorario}
@@ -399,7 +399,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             <h3 className="text-sm font-semibold text-foreground">Tolerancia de marcación de entrada</h3>
           </div>
           <p className="text-xs text-muted-foreground">
-            Minutos antes/después de la hora de inicio en que el guardia puede marcar entrada. Vacío = usar el valor por defecto de la empresa.
+            Minutos antes/después de la hora de inicio en que el vigilante puede marcar entrada. Vacío = usar el valor por defecto de la empresa.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>

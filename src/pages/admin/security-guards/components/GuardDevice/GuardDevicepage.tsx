@@ -50,7 +50,7 @@ export default function GuardDevicePage({ guard }: Props) {
       await guardDeviceService.resetBinding(d.id);
       toast.success(
         t('guards.device.resetDone', {
-          defaultValue: 'Vínculo restablecido. El próximo dispositivo del guardia quedará vinculado.',
+          defaultValue: 'Vínculo restablecido. El próximo dispositivo del vigilante quedará vinculado.',
         }),
       );
       await load();
@@ -73,12 +73,12 @@ export default function GuardDevicePage({ guard }: Props) {
             <div>
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Smartphone className="h-5 w-5 text-muted-foreground" />
-                {t('guards.device.title', { defaultValue: 'Dispositivo del guardia' })}
+                {t('guards.device.title', { defaultValue: 'Dispositivo del vigilante' })}
               </h2>
               <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
                 {t('guards.device.subtitle', {
                   defaultValue:
-                    'El primer dispositivo desde el que el guardia inicia sesión queda vinculado. Si aparece otro dispositivo, se marca como no reconocido (no se bloquea). Restablece el vínculo si el guardia cambió de teléfono.',
+                    'El primer dispositivo desde el que el vigilante inicia sesión queda vinculado. Si aparece otro dispositivo, se marca como no reconocido (no se bloquea). Restablece el vínculo si el vigilante cambió de teléfono.',
                 })}
               </p>
             </div>
@@ -102,7 +102,7 @@ export default function GuardDevicePage({ guard }: Props) {
             <div className="rounded-xl border border-dashed p-10 text-center text-muted-foreground">
               <Smartphone className="h-8 w-8 mx-auto mb-2 opacity-50" />
               {t('guards.device.empty', {
-                defaultValue: 'Aún no se ha registrado ningún dispositivo para este guardia.',
+                defaultValue: 'Aún no se ha registrado ningún dispositivo para este vigilante.',
               })}
             </div>
           ) : (

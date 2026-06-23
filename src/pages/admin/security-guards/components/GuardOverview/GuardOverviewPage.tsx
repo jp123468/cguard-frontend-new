@@ -26,7 +26,7 @@ export default function GuardResumenPage() {
         setGuard({ ...g, fullName });
       })
       .catch((err: any) => {
-        console.error('Error cargando guardia:', err);
+        console.error('Error cargando vigilante:', err);
         toast.error(t('guards.overview.loadError'));
       })
       .finally(() => {

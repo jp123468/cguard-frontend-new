@@ -326,7 +326,7 @@ export default function ShiftTemplates() {
                     </div>
 
                     <div className="grid gap-2">
-                      <Label>Guardia</Label>
+                      <Label>Vigilante</Label>
                       <Select
                         value={form.guardId || NONE}
                         onValueChange={(v) => setForm({ ...form, guardId: v === NONE ? "" : v })}
@@ -443,7 +443,7 @@ export default function ShiftTemplates() {
                 <TableHead className="font-bold text-foreground">Hora de Inicio</TableHead>
                 <TableHead className="font-bold text-foreground">Hora de Fin</TableHead>
                 <TableHead className="font-bold text-foreground">Puesto de seguridad</TableHead>
-                <TableHead className="font-bold text-foreground">Guardia</TableHead>
+                <TableHead className="font-bold text-foreground">Vigilante</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>

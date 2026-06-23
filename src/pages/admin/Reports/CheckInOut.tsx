@@ -135,7 +135,7 @@ export default function CheckInOut() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Guardia *</Label>
+                    <Label>Vigilante *</Label>
                     <Select>
                       <SelectTrigger className="w-full"><SelectValue placeholder="José Alejo Pinos" /></SelectTrigger>
                       <SelectContent><SelectItem value="1">José Alejo Pinos</SelectItem></SelectContent>
@@ -220,7 +220,7 @@ export default function CheckInOut() {
                     Puesto de seguridad <ChevronUp className="inline h-3 w-3" />
                   </div>
                 </th>
-                <th className="px-4 py-3 font-semibold text-foreground">Guardia</th>
+                <th className="px-4 py-3 font-semibold text-foreground">Vigilante</th>
                 <th className="px-4 py-3 font-semibold text-foreground">Registrado</th>
                 <th className="px-4 py-3 font-semibold text-foreground">Dado de salida</th>
                 <th className="px-4 py-3 font-semibold text-foreground">Duración</th>
@@ -302,10 +302,10 @@ export default function CheckInOut() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Guardia*</Label>
+                <Label className="text-muted-foreground">Vigilante*</Label>
                 <Select>
                   <SelectTrigger className="w-full"><SelectValue placeholder="" /></SelectTrigger>
-                  <SelectContent><SelectItem value="1">Guardia 1</SelectItem></SelectContent>
+                  <SelectContent><SelectItem value="1">Vigilante 1</SelectItem></SelectContent>
                 </Select>
               </div>
 

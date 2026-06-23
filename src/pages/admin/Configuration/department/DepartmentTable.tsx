@@ -81,7 +81,7 @@ export default function DepartmentsTable({
                 <Checkbox checked={false} onCheckedChange={() => {}} />
               </TableHead>
               <TableHead>Departamento</TableHead>
-              <TableHead>Guardia Asignado</TableHead>
+              <TableHead>Vigilante Asignado</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead className="w-[56px]" />
             </TableRow>

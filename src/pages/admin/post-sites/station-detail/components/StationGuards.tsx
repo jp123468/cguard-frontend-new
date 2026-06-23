@@ -173,7 +173,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
       setRows(out);
       setPositions(Array.isArray(pRes) ? pRes : (pRes?.rows ?? []));
     } catch (e: any) {
-      setError(e?.message || t('station.guards.loadError', 'Error al cargar guardias'));
+      setError(e?.message || t('station.guards.loadError', 'Error al cargar vigilantes'));
     } finally {
       setLoading(false);
     }
@@ -220,7 +220,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
   };
 
   const submitAssign = async () => {
-    if (!pickGuard) { toast.error(t('station.guards.pickGuard', 'Selecciona un guardia')); return; }
+    if (!pickGuard) { toast.error(t('station.guards.pickGuard', 'Selecciona un vigilante')); return; }
     setSaving(true);
     try {
       if (changeTarget) {
@@ -237,12 +237,12 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
             await ApiService.patch(`/tenant/${tenantId}/shift/${encodeURIComponent(sid)}/assign`, { data: { guard: pickGuard } });
           }
         }
-        toast.success(t('station.guards.changed', 'Guardia actualizado'));
+        toast.success(t('station.guards.changed', 'Vigilante actualizado'));
       } else if (assignType) {
         await doAssign(pickGuard, assignType);
         toast.success(assignType === 'sacafranco'
           ? t('station.guards.sacaAdded', 'Sacafranco asignado')
-          : t('station.guards.added', 'Guardia asignado'));
+          : t('station.guards.added', 'Vigilante asignado'));
       }
       closeModal();
       load();
@@ -262,7 +262,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
       // Remove their shifts so they disappear from the Turnos tab too.
       await deleteShifts(a.shiftIds);
       setRows((rs) => rs.filter((x) => x.id !== a.id));
-      toast.success(t('station.guards.removed', 'Guardia removido del puesto y de los turnos'));
+      toast.success(t('station.guards.removed', 'Vigilante removido del puesto y de los turnos'));
     } catch (e: any) {
       toast.error(e?.message || t('station.guards.removeFailed', 'No se pudo quitar'));
     }
@@ -282,7 +282,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
         <div className="flex flex-col gap-3 border-b px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-foreground">
-              {t('station.guards.title', 'Guardias Asignados')}
+              {t('station.guards.title', 'Vigilantes Asignados')}
               {rows.length > 0 && <span className="ml-2 text-sm font-normal text-muted-foreground">({rows.length})</span>}
             </h3>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -299,7 +299,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowShiftModal(true)} className="inline-flex items-center gap-1.5 rounded-full bg-[#C8860A] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#B37809]">
-              <UserPlus size={15} /> {t('station.guards.assign', 'Asignar guardia')}
+              <UserPlus size={15} /> {t('station.guards.assign', 'Asignar vigilante')}
             </button>
             <button onClick={() => openAssign('sacafranco')} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/30">
               <Repeat size={15} /> {t('station.guards.addSaca', 'Agregar sacafranco')}
@@ -314,7 +314,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
         ) : rows.length === 0 ? (
           <div className="flex flex-col items-center gap-2 p-10 text-center text-muted-foreground">
             <Users className="h-8 w-8 opacity-50" />
-            <p className="text-sm">{t('station.guards.empty', 'No hay guardias asignados. Asigna un guardia fijo para empezar.')}</p>
+            <p className="text-sm">{t('station.guards.empty', 'No hay vigilantes asignados. Asigna un vigilante fijo para empezar.')}</p>
           </div>
         ) : (
           <ul className="divide-y">
@@ -357,12 +357,12 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
                 </div>
                 <div>
                   <h4 className="text-base font-semibold text-foreground">
-                    {changeTarget ? t('station.guards.changeTitle', 'Cambiar guardia') : modalIsSaca ? t('station.guards.sacaTitle', 'Agregar sacafranco') : t('station.guards.assignTitle', 'Asignar guardia')}
+                    {changeTarget ? t('station.guards.changeTitle', 'Cambiar vigilante') : modalIsSaca ? t('station.guards.sacaTitle', 'Agregar sacafranco') : t('station.guards.assignTitle', 'Asignar vigilante')}
                   </h4>
                   <p className="text-xs text-muted-foreground">
                     {modalIsSaca
-                      ? t('station.guards.sacaSub', 'Cubre los días de descanso del guardia fijo')
-                      : t('station.guards.assignSub', 'Guardia fijo de la rotación del puesto')}
+                      ? t('station.guards.sacaSub', 'Cubre los días de descanso del vigilante fijo')
+                      : t('station.guards.assignSub', 'Vigilante fijo de la rotación del puesto')}
                   </p>
                 </div>
               </div>
@@ -376,9 +376,9 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
                 </div>
               )}
               <div>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t('station.guards.guard', 'Guardia')}</label>
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t('station.guards.guard', 'Vigilante')}</label>
                 <select value={pickGuard} onChange={(e) => setPickGuard(e.target.value)} className={selectCls} autoFocus>
-                  <option value="">{t('station.guards.selectGuard', 'Seleccionar guardia…')}</option>
+                  <option value="">{t('station.guards.selectGuard', 'Seleccionar vigilante…')}</option>
                   {guards.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
                 </select>
               </div>

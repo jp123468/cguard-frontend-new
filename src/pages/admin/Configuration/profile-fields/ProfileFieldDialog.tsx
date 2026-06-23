@@ -14,7 +14,7 @@ import { useState } from "react";
 const TYPE_OPTIONS = [
   { id: "client", label: "Cliente" },
   { id: "jobsite", label: "Puesto de seguridad" },
-  { id: "guard", label: "Guardia" },
+  { id: "guard", label: "Vigilante" },
   { id: "office_user", label: "Usuario de oficina administrativa" },
 ];
 

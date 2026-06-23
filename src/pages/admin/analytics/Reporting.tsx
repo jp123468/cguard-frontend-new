@@ -21,13 +21,13 @@ export default function Reporting() {
   return (
     <AnalyticsShell
       title="Analíticas de Operaciones"
-      subtitle="Indicadores clave del servicio de guardia para tu operación."
+      subtitle="Indicadores clave del servicio de vigilante para tu operación."
       days={days} setDays={setDays} loading={loading} error={error} reload={reload}
     >
       {data && k && (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <MetricCard icon={<Shield size={16} />} accent={GOLD} value={k.guardsOnDuty} label="Guardias en servicio" sub="ahora mismo" />
+            <MetricCard icon={<Shield size={16} />} accent={GOLD} value={k.guardsOnDuty} label="Vigilantes en servicio" sub="ahora mismo" />
             <MetricCard icon={<ClipboardCheck size={16} />} accent="#0ea5e9" value={`${k.coveragePct}%`} label="Cobertura de turnos" sub={`${k.shiftsCovered}/${k.shiftsTotal} cubiertos`} pct={k.coveragePct} />
             <MetricCard icon={<TrendingUp size={16} />} accent="#22c55e" value={`${k.rondaCompletionPct}%`} label="Rondas completadas" sub={`${k.rondasCompleted}/${k.rondasTotal}`} pct={k.rondaCompletionPct} />
             <MetricCard icon={<MapPin size={16} />} accent="#8b5cf6" value={`${k.locationCompliancePct}%`} label="Cumplimiento de ubicación" sub={`${k.scansValid}/${k.scansTotal} escaneos`} pct={k.locationCompliancePct} />
@@ -35,22 +35,22 @@ export default function Reporting() {
             <MetricCard icon={<Clock size={16} />} accent="#f59e0b" value={`${k.punctualityPct}%`} label="Puntualidad" sub={`${k.clockinsOnTime}/${k.clockinsTotal} a tiempo`} pct={k.punctualityPct} />
           </div>
 
-          {/* Team performance — official score (links to Guardias) */}
+          {/* Team performance — official score (links to Vigilantes) */}
           {lb && lb.averageScore != null && (
             <Section title="Desempeño del equipo" icon={<Award size={16} className="text-[#C8860A]" />}>
               <div className="grid gap-5 md:grid-cols-3">
                 <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-muted/10 p-4 text-center">
                   <p className="text-5xl font-bold text-[#C8860A]">{lb.averageScore}</p>
                   <p className="text-xs text-muted-foreground">Puntuación promedio /100</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{lb.counts.scored} guardias evaluados · {lb.counts.excellent} excelentes</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{lb.counts.scored} vigilantes evaluados · {lb.counts.excellent} excelentes</p>
                 </div>
                 <div className="md:col-span-2">
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-sm font-semibold text-foreground">Guardias con menor desempeño</p>
+                    <p className="text-sm font-semibold text-foreground">Vigilantes con menor desempeño</p>
                     <Link to="/analytics/guard" className="inline-flex items-center gap-1 text-xs font-medium text-[#C8860A] hover:underline">Ver ranking completo <ArrowRight size={12} /></Link>
                   </div>
                   {lb.guards.filter((g) => g.hasData).length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Sin guardias evaluados en el período.</p>
+                    <p className="text-sm text-muted-foreground">Sin vigilantes evaluados en el período.</p>
                   ) : (
                     <ul className="space-y-1.5">
                       {lb.guards.filter((g) => g.hasData).slice(-5).reverse().map((g) => (
@@ -107,7 +107,7 @@ export default function Reporting() {
                   <thead className="border-b text-xs uppercase tracking-wide text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 text-left font-semibold">Sitio</th>
-                      <th className="px-3 py-2 text-right font-semibold">Guardias</th>
+                      <th className="px-3 py-2 text-right font-semibold">Vigilantes</th>
                       <th className="px-3 py-2 text-right font-semibold">Cobertura</th>
                       <th className="px-3 py-2 text-right font-semibold">Rondas</th>
                       <th className="px-3 py-2 text-right font-semibold">Ubicación</th>

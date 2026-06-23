@@ -16,7 +16,7 @@ export default function ScheduleSidebar({ selectedView, onViewChange }: Schedule
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Guardia">Guardia</SelectItem>
+                        <SelectItem value="Vigilante">Vigilante</SelectItem>
                         <SelectItem value="Sitio">Sitio</SelectItem>
                     </SelectContent>
                 </Select>
@@ -28,7 +28,7 @@ export default function ScheduleSidebar({ selectedView, onViewChange }: Schedule
             </div>
 
             <div>
-                <div className="text-xs text-blue-600 font-medium">Turnos sin guardias</div>
+                <div className="text-xs text-blue-600 font-medium">Turnos sin vigilantes</div>
             </div>
         </div>
     );

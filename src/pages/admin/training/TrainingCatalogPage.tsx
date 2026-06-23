@@ -65,7 +65,7 @@ export default function TrainingCatalogPage() {
           <h1 className="text-xl font-semibold">Cursos de la plataforma</h1>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Cursos addon otorgados a tu empresa por C-Guard Pro. Son de solo lectura, pero puedes asignarlos a tus guardias.
+          Cursos addon otorgados a tu empresa por C-Guard Pro. Son de solo lectura, pero puedes asignarlos a tus vigilantes.
         </p>
 
         {loading && <div className="py-16 text-center text-muted-foreground">Cargando...</div>}

@@ -267,7 +267,7 @@ export default function TimeOff() {
             <div className="relative w-full md:w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Buscar guardia, tipo o razón"
+                placeholder="Buscar vigilante, tipo o razón"
                 className="pl-9"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
@@ -292,7 +292,7 @@ export default function TimeOff() {
                   <div className="grid gap-6 py-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
-                        <Label>Guardia</Label>
+                        <Label>Vigilante</Label>
                         <Select value={form.guard} onValueChange={(v) => setForm({ ...form, guard: v })}>
                           <SelectTrigger>
                             <SelectValue placeholder="Seleccionar" />
@@ -441,7 +441,7 @@ export default function TimeOff() {
               <TableRow>
                 <TableHead className="w-[50px]"><Checkbox /></TableHead>
                 <TableHead className="font-bold text-foreground">Fecha de solicitud</TableHead>
-                <TableHead className="font-bold text-foreground">Guardia</TableHead>
+                <TableHead className="font-bold text-foreground">Vigilante</TableHead>
                 <TableHead className="font-bold text-foreground">Tipo</TableHead>
                 <TableHead className="font-bold text-foreground">Desde</TableHead>
                 <TableHead className="font-bold text-foreground">Hasta</TableHead>

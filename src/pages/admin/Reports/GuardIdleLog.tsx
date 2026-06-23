@@ -50,7 +50,7 @@ export default function GuardIdleLog() {
       <Breadcrumb
         items={[
           { label: "Panel de control", path: "/dashboard" },
-          { label: "Registros de Guardia Inactivo" },
+          { label: "Registros de Vigilante Inactivo" },
         ]}
       />
 
@@ -92,7 +92,7 @@ export default function GuardIdleLog() {
 
                 <div className="mt-6 space-y-5">
                   <div className="space-y-2">
-                    <Label>Guardia *</Label>
+                    <Label>Vigilante *</Label>
                     <Select>
                       <SelectTrigger className="w-full"><SelectValue placeholder="José Alejo Pinos" /></SelectTrigger>
                       <SelectContent><SelectItem value="1">José Alejo Pinos</SelectItem></SelectContent>

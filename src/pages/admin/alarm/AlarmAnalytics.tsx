@@ -127,7 +127,7 @@ export default function AlarmAnalytics() {
               </Section>
               <Section title="Despachos" icon={<Send size={16} className="text-[#C8860A]" />}>
                 <HBars
-                  items={toItems(d.dispatchByType, (k) => ({ guard: "Guardia", police: "Policía", fire: "Bomberos", medical: "Médico" }[k] || k))}
+                  items={toItems(d.dispatchByType, (k) => ({ guard: "Vigilante", police: "Policía", fire: "Bomberos", medical: "Médico" }[k] || k))}
                   color="#0ea5e9" empty="Sin despachos" />
               </Section>
             </div>

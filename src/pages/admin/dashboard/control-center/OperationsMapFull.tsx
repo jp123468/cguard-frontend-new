@@ -32,7 +32,7 @@ export default function OperationsMapFull() {
   const legend = [
     { k: "tenant", label: "Sede" },
     { k: "station", label: "Puestos" },
-    { k: "guard", label: "Guardias" },
+    { k: "guard", label: "Vigilantes" },
     { k: "supervisor", label: "Supervisores" },
   ] as const;
 

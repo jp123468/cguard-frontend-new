@@ -107,7 +107,7 @@ export default function StationTagScans({ stationId }: Props) {
                     {t('station.tagScans.col.tag', 'Tag')}
                   </th>
                   <th className="px-6 py-3 text-left font-semibold text-foreground/70">
-                    {t('station.tagScans.col.guard', 'Guardia')}
+                    {t('station.tagScans.col.guard', 'Vigilante')}
                   </th>
                   <th className="px-6 py-3 text-left font-semibold text-foreground/70">
                     {t('station.tagScans.col.location', 'Ubicación')}

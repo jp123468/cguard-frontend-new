@@ -97,7 +97,7 @@ export default function AssignGuardsPanel({ courseId, published }: Props) {
       return;
     }
     if (assignmentType === 'individual' && !selected) {
-      toast.error('Selecciona un guardia.');
+      toast.error('Selecciona un vigilante.');
       return;
     }
     setAssigning(true);
@@ -107,7 +107,7 @@ export default function AssignGuardsPanel({ courseId, published }: Props) {
         securityGuardId: assignmentType === 'individual' ? selected!.id : undefined,
         dueDate: dueDate || undefined,
       });
-      toast.success(assignmentType === 'all_guards' ? 'Curso asignado a todos los guardias.' : `Curso asignado a ${selected!.name}.`);
+      toast.success(assignmentType === 'all_guards' ? 'Curso asignado a todos los vigilantes.' : `Curso asignado a ${selected!.name}.`);
       setSelected(null);
       setQuery('');
       setDueDate('');
@@ -133,15 +133,15 @@ export default function AssignGuardsPanel({ courseId, published }: Props) {
             <Select value={assignmentType} onValueChange={(v) => setAssignmentType(v as any)}>
               <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="individual">Guardia específico</SelectItem>
-                <SelectItem value="all_guards">Todos los guardias</SelectItem>
+                <SelectItem value="individual">Vigilante específico</SelectItem>
+                <SelectItem value="all_guards">Todos los vigilantes</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {assignmentType === 'individual' && (
             <div className="space-y-2">
-              <Label>Buscar guardia</Label>
+              <Label>Buscar vigilante</Label>
               {selected ? (
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="gap-1"><Users className="h-3 w-3" /> {selected.name}</Badge>
@@ -150,7 +150,7 @@ export default function AssignGuardsPanel({ courseId, published }: Props) {
               ) : (
                 <div className="relative">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-9" placeholder="Nombre del guardia" value={query} onChange={(e) => setQuery(e.target.value)} />
+                  <Input className="pl-9" placeholder="Nombre del vigilante" value={query} onChange={(e) => setQuery(e.target.value)} />
                   {(options.length > 0 || searching) && (
                     <div className="absolute z-10 mt-1 w-full rounded-md border bg-popover shadow">
                       {searching && <div className="px-3 py-2 text-sm text-muted-foreground">Buscando...</div>}
@@ -182,12 +182,12 @@ export default function AssignGuardsPanel({ courseId, published }: Props) {
       </Card>
 
       <div>
-        <h3 className="text-sm font-semibold mb-2">Guardias asignados</h3>
+        <h3 className="text-sm font-semibold mb-2">Vigilantes asignados</h3>
         <div className="border rounded-lg overflow-hidden">
           <table className="min-w-full text-sm text-left">
             <thead className="bg-muted/30">
               <tr className="border-b">
-                <th className="px-4 py-3 font-semibold">Guardia</th>
+                <th className="px-4 py-3 font-semibold">Vigilante</th>
                 <th className="px-4 py-3 font-semibold">Estado</th>
                 <th className="px-4 py-3 font-semibold">Progreso</th>
                 <th className="px-4 py-3 font-semibold">Cuestionario</th>
@@ -197,13 +197,13 @@ export default function AssignGuardsPanel({ courseId, published }: Props) {
             <tbody>
               {loadingList && <tr><td colSpan={5} className="py-12 text-center text-muted-foreground">Cargando...</td></tr>}
               {!loadingList && enrollments.length === 0 && (
-                <tr><td colSpan={5} className="py-12 text-center text-muted-foreground">Aún no hay guardias asignados</td></tr>
+                <tr><td colSpan={5} className="py-12 text-center text-muted-foreground">Aún no hay vigilantes asignados</td></tr>
               )}
               {!loadingList && enrollments.map((e) => (
                 <tr key={e.id} className="border-b">
                   <td className="px-4 py-3">
                     {e.assignmentType === 'all_guards' && !e.guardId
-                      ? <Badge variant="outline">Todos los guardias (plantilla)</Badge>
+                      ? <Badge variant="outline">Todos los vigilantes (plantilla)</Badge>
                       : (e.guardName || '-')}
                   </td>
                   <td className="px-4 py-3">

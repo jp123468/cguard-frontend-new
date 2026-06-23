@@ -735,7 +735,7 @@ export default function ProfileCompanyForm() {
                 Detectar por dirección
               </button>
             )}
-            <p className="text-xs text-muted-foreground">La zona horaria es la <strong>única fuente de verdad</strong> para los horarios: determina cómo se muestran y calculan turnos, registros y reportes — para todos (administradores y guardias), sin importar la zona del dispositivo.</p>
+            <p className="text-xs text-muted-foreground">La zona horaria es la <strong>única fuente de verdad</strong> para los horarios: determina cómo se muestran y calculan turnos, registros y reportes — para todos (administradores y vigilantes), sin importar la zona del dispositivo.</p>
           </div>
 
           <div className="flex justify-end">

@@ -143,7 +143,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
       setEditingCard(null);
       if (onGuardUpdate) onGuardUpdate(editedGuard);
     } catch (error) {
-      console.error('Error actualizando guardia:', error);
+      console.error('Error actualizando vigilante:', error);
       toast.error(t('guards.profile.toasts.updateError'));
     } finally {
       setSaving(false);
@@ -165,7 +165,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
         savedGuardRef.current = { ...savedGuardRef.current, ...payload };
         if (onGuardUpdate) onGuardUpdate(payload);
       } catch (err) {
-        console.error('Error cargando guardia:', err);
+        console.error('Error cargando vigilante:', err);
       } finally {
         if (mounted) setLoading(false);
       }

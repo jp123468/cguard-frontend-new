@@ -42,7 +42,7 @@ export const PROJECT_TYPES: ProjectTypeDefinition[] = [
   {
     value: 'alarm_response',
     label: 'Respuesta a alarma',
-    description: 'Respuesta de guardia ante activación de alarma. Sin puesto fijo permanente.',
+    description: 'Respuesta de vigilante ante activación de alarma. Sin puesto fijo permanente.',
     color: 'bg-red-50',
     textColor: 'text-red-700',
     borderColor: 'border-red-300',

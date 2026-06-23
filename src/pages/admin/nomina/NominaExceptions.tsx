@@ -59,7 +59,7 @@ export default function NominaExceptions() {
       ),
     },
     { key: "type", header: "Tipo", render: (_v, r) => EXCEPTION_LABEL[r.type] || r.type },
-    { key: "guard", header: "Guardia", render: (_v, r) => r.guard?.fullName || "—" },
+    { key: "guard", header: "Vigilante", render: (_v, r) => r.guard?.fullName || "—" },
     { key: "station", header: "Puesto", render: (_v, r) => r.station?.stationName || "—" },
     { key: "reason", header: "Motivo", render: (_v, r) => <span className="text-xs text-muted-foreground">{r.reason || "—"}</span> },
     { key: "detectedAt", header: "Detectado", render: (_v, r) => fmtDateTime(r.detectedAt) },

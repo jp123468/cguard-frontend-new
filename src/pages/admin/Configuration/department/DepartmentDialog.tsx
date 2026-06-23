@@ -90,14 +90,14 @@ export default function DepartmentDialog({
               name="guardId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Asignar Guardia</FormLabel>
+                  <FormLabel>Asignar Vigilante</FormLabel>
                   <Select
                     onValueChange={(v) => field.onChange(v || undefined)}
                     defaultValue={field.value ?? undefined}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Asignar Guardia" />
+                        <SelectValue placeholder="Asignar Vigilante" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>

@@ -13,7 +13,7 @@ export const joinByCodeSchema = z.object({
     .trim()
     .length(6, "El código debe tener 6 dígitos")
     .regex(/^\d{6}$/, "El código debe ser numérico"),
-  entries: z.array(joinByCodeEntrySchema).min(1, "Agregue al menos un guardia"),
+  entries: z.array(joinByCodeEntrySchema).min(1, "Agregue al menos un vigilante"),
 });
 
 export type JoinByCodeEntry = z.infer<typeof joinByCodeEntrySchema>;

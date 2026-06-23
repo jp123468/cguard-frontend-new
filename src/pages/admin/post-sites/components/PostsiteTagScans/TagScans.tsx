@@ -341,7 +341,7 @@ export default function TagScans({
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar etiqueta, estación o guardia"
+            placeholder="Buscar etiqueta, estación o vigilante"
             className="h-10 w-full max-w-[44rem] rounded-2xl"
           />
         </div>
@@ -361,13 +361,13 @@ export default function TagScans({
 
               <div className="mt-6 space-y-6">
                 <div className="space-y-2">
-                  <label className="text-base font-medium text-foreground">Guardia</label>
+                  <label className="text-base font-medium text-foreground">Vigilante</label>
                   <Select value={filterGuard || "__all_guards__"} onValueChange={(value) => setFilterGuard(value === "__all_guards__" ? "" : value)}>
                     <SelectTrigger className="rounded-2xl border border-slate-200 bg-card px-3 text-base text-foreground focus:border-slate-400 focus:ring-1 focus:ring-slate-200 w-full">
-                      <SelectValue placeholder="Todos los guardias" />
+                      <SelectValue placeholder="Todos los vigilantes" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl border border-slate-200 bg-card shadow-lg w-full">
-                      <SelectItem value="__all_guards__">Todos los guardias</SelectItem>
+                      <SelectItem value="__all_guards__">Todos los vigilantes</SelectItem>
                       {guardOptions.map((guard) => (
                         <SelectItem key={guard} value={guard}>{guard}</SelectItem>
                       ))}
@@ -459,7 +459,7 @@ export default function TagScans({
                 <th className="px-4 py-2 text-left">Fecha y hora</th>
                 <th className="px-4 py-2 text-left">Etiqueta / Datos</th>
                 <th className="px-4 py-2 text-left">Estación</th>
-                <th className="px-4 py-2 text-left">Guardia</th>
+                <th className="px-4 py-2 text-left">Vigilante</th>
                 <th className="px-4 py-2 text-left">Acción</th>
               </tr>
             </thead>
@@ -545,7 +545,7 @@ export default function TagScans({
                   { label: 'Etiqueta (ID)', value: d.tagIdentifier || '-' },
                   { label: 'Nombre etiqueta', value: d.tagName || (detailNames.tagName || '-') },
                   { label: 'Estación', value: d.stationName || '-' },
-                  { label: 'Guardia', value: getGuardDisplay(detailRow) },
+                  { label: 'Vigilante', value: getGuardDisplay(detailRow) },
                   { label: 'Recorrido', value: detailNames.tourName || d.tourId || '-' },
                   { label: 'Asignación', value: detailNames.assignmentName || d.tourAssignmentId || '-' },
                   { label: 'Etiqueta recorrido (tag)', value: detailNames.tagName || d.siteTourTagId || '-' },

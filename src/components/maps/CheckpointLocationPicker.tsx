@@ -101,7 +101,7 @@ export default function CheckpointLocationPicker({
           disabled={!hasPin}
         />
         <p className="mt-1 text-[11px] text-muted-foreground">
-          El guardia debe estar dentro de este radio para que el escaneo cuente como válido.
+          El vigilante debe estar dentro de este radio para que el escaneo cuente como válido.
         </p>
       </div>
     </div>

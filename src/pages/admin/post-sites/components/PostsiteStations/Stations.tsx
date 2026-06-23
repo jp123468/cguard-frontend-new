@@ -350,7 +350,7 @@ export default function Stations({ site }: { site?: any }) {
     }
   };
 
-  // Normaliza diferentes formas en que el backend puede devolver guardias asignados
+  // Normaliza diferentes formas en que el backend puede devolver vigilantes asignados
   const normalizeAssignedGuards = (detail: any) => {
     if (!detail) return [];
     if (Array.isArray(detail.assignedGuards)) return detail.assignedGuards;

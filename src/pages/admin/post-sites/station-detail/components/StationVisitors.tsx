@@ -380,7 +380,7 @@ export default function StationVisitors({ stationId }: Props) {
                   <th className="px-4 py-3 text-left font-semibold text-foreground/70">Lugar</th>
                   <th className="px-4 py-3 text-left font-semibold text-foreground/70">Entrada</th>
                   <th className="px-4 py-3 text-left font-semibold text-foreground/70">Salida</th>
-                  <th className="px-4 py-3 text-left font-semibold text-foreground/70">Guardia</th>
+                  <th className="px-4 py-3 text-left font-semibold text-foreground/70">Vigilante</th>
                   <th className="px-4 py-3 text-right font-semibold text-foreground/70">Acciones</th>
                 </tr>
               </thead>

@@ -452,7 +452,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   };
 
   const saveShift = async () => {
-    if (!shiftGuard) { toast.error('Seleccione un guardia'); return; }
+    if (!shiftGuard) { toast.error('Seleccione un vigilante'); return; }
 
     if (assignMode === 'single') {
       // Single shift creation (original behavior)
@@ -543,10 +543,10 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-red-400">
-              {futureUncovered} turno{futureUncovered > 1 ? 's' : ''} sin guardia asignado
+              {futureUncovered} turno{futureUncovered > 1 ? 's' : ''} sin vigilante asignado
             </p>
             <p className="text-xs text-red-400/70 mt-0.5">
-              Hay horarios programados sin cobertura completa. Asigna guardias para cubrir los turnos.
+              Hay horarios programados sin cobertura completa. Asigna vigilantes para cubrir los turnos.
             </p>
           </div>
           <button
@@ -677,7 +677,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
                               onClick={() => openForm(selectedDate)}
                               className="mt-2 text-[10px] text-red-400 font-semibold hover:text-red-300 flex items-center gap-1"
                             >
-                              <Plus size={10} /> Asignar guardia
+                              <Plus size={10} /> Asignar vigilante
                             </button>
                           )}
                         </div>
@@ -688,7 +688,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
                   {/* Assigned shifts */}
                   {selectedDayEvents.length > 0 && (
                     <div className="space-y-1.5 pt-1">
-                      <h5 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">Guardias asignados</h5>
+                      <h5 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">Vigilantes asignados</h5>
                       {selectedDayEvents.map((ev, i) => {
                         const color = guardColorMap[ev.guardId] || GUARD_COLORS[0];
                         const isSelected = selectedShift?.id === ev.id;
@@ -768,7 +768,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
                     <UserPlus size={18} />
                   </div>
                   <div>
-                    <h4 className="text-base font-semibold text-foreground">Asignar guardia</h4>
+                    <h4 className="text-base font-semibold text-foreground">Asignar vigilante</h4>
                     <p className="text-xs text-muted-foreground">Programa la cobertura del turno de este puesto</p>
                   </div>
                 </div>
@@ -789,12 +789,12 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
 
                 {/* Guard selection */}
                 <div>
-                  <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Guardia</label>
+                  <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Vigilante</label>
                   {loadingGuards ? (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground py-3"><Loader2 size={12} className="animate-spin" /> Cargando...</div>
                   ) : (
                     <select value={shiftGuard} onChange={(e) => setShiftGuard(e.target.value)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none">
-                      <option value="">Seleccionar guardia...</option>
+                      <option value="">Seleccionar vigilante...</option>
                       {guardsOptions.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
                     </select>
                   )}

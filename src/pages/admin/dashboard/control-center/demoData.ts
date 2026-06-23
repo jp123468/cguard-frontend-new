@@ -55,7 +55,7 @@ function buildStations(): MapEntity[] {
       id: `demo-st-${i}`, kind: "station", lat: STATION_COORDS[i].lat, lng: STATION_COORDS[i].lng,
       status: incident ? "incident" : uncovered ? "delayed" : "online",
       label: name,
-      sub: incident ? "Incidente activo" : uncovered ? "Sin cobertura" : "Cubierto · 1 guardia",
+      sub: incident ? "Incidente activo" : uncovered ? "Sin cobertura" : "Cubierto · 1 vigilante",
       meta: { geofenceRadius: 80, ...(color ? { color } : {}) },
     };
   });
@@ -143,7 +143,7 @@ function buildBase(): ControlCenterData {
 
   return {
     kpis: [
-      kpi("onDuty", "Guardias en servicio", guards.length, { status: "online", trend: 0.09 }),
+      kpi("onDuty", "Vigilantes en servicio", guards.length, { status: "online", trend: 0.09 }),
       kpi("stations", "Puestos activos", stations.length, { status: "patrol" }),
       kpi("supervisors", "Supervisores", SUPERVISOR_NAMES.length, { status: "online" }),
       kpi("openIncidents", "Incidentes abiertos", 1, { status: "incident", trend: -0.33 }),

@@ -71,7 +71,7 @@ export default function DashboardPage() {
     scans: true,
   });
 
-  const [data, setData] = useState({ clientes: 0, sitios: 0, guardias: 0, equipo: 0, registros: 0, fichados: 0 });
+  const [data, setData] = useState({ clientes: 0, sitios: 0, vigilantes: 0, equipo: 0, registros: 0, fichados: 0 });
   const [loadingStats, setLoadingStats] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
@@ -115,7 +115,7 @@ export default function DashboardPage() {
     let mounted = true;
 
     if (!hasTenantContext) {
-      setData({ clientes: 0, sitios: 0, guardias: 0, equipo: 0, registros: 0, fichados: 0 });
+      setData({ clientes: 0, sitios: 0, vigilantes: 0, equipo: 0, registros: 0, fichados: 0 });
       setLoadingStats(false);
       return () => { mounted = false; };
     }
@@ -140,10 +140,10 @@ export default function DashboardPage() {
 
         const clientes = getCount(clientsRes);
         const sitios = getCount(sitesRes);
-        const guardias = getCount(guardsRes);
+        const vigilantes = getCount(guardsRes);
         const equipo = Array.isArray(usersRes) ? usersRes.length : getCount(usersRes);
 
-        setData((d) => ({ ...d, clientes, sitios, guardias, equipo }));
+        setData((d) => ({ ...d, clientes, sitios, vigilantes, equipo }));
       } catch (e) {
         const msg = (e as any)?.message || '';
         if (!String(msg).toLowerCase().includes('debe estar vinculado')) {
@@ -316,7 +316,7 @@ export default function DashboardPage() {
             
 
                 <div className="mt-2 text-xs text-muted-foreground">
-                  <div>Guardias activos mostrados: {activeMarkers.length}</div>
+                  <div>Vigilantes activos mostrados: {activeMarkers.length}</div>
                 </div>
               </div>
 
@@ -453,7 +453,7 @@ export default function DashboardPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>#</TableHead>
-                        <TableHead>Guardia</TableHead>
+                        <TableHead>Vigilante</TableHead>
                         <TableHead>Puesto de seguridad</TableHead>
                         <TableHead>Hora de Registro</TableHead>
                       </TableRow>
@@ -499,7 +499,7 @@ export default function DashboardPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>#</TableHead>
-                        <TableHead>Guardia</TableHead>
+                        <TableHead>Vigilante</TableHead>
                         <TableHead>Puesto de seguridad</TableHead>
                         <TableHead>Hora de Salida</TableHead>
                       </TableRow>
@@ -550,7 +550,7 @@ export default function DashboardPage() {
                       <TableHead>#</TableHead>
                       <TableHead>Incidente</TableHead>
                       <TableHead>Puesto de seguridad</TableHead>
-                      <TableHead>Guardia</TableHead>
+                      <TableHead>Vigilante</TableHead>
                       <TableHead>Fecha/Hora del Incidente</TableHead>
                       <TableHead>Estado</TableHead>
                     </TableRow>
@@ -594,7 +594,7 @@ export default function DashboardPage() {
                     <TableRow>
                       <TableHead>#</TableHead>
                       <TableHead>Puesto de seguridad</TableHead>
-                      <TableHead>Guardia</TableHead>
+                      <TableHead>Vigilante</TableHead>
                       <TableHead>Informe</TableHead>
                       <TableHead>Informe Fecha/Hora</TableHead>
                       <TableHead>Estado</TableHead>
@@ -640,7 +640,7 @@ export default function DashboardPage() {
                       <TableHead>#</TableHead>
                       <TableHead>Recorrido Nombre</TableHead>
                       <TableHead>Puesto de seguridad</TableHead>
-                      <TableHead>Guardia</TableHead>
+                      <TableHead>Vigilante</TableHead>
                       <TableHead>Hora de Inicio</TableHead>
                       <TableHead>Hora de Fin</TableHead>
                       <TableHead>Etiqueta Perdida</TableHead>
@@ -685,7 +685,7 @@ export default function DashboardPage() {
                     <TableRow>
                       <TableHead>Punto de control</TableHead>
                       <TableHead>Puesto de seguridad</TableHead>
-                      <TableHead>Guardia</TableHead>
+                      <TableHead>Vigilante</TableHead>
                       <TableHead>Fecha y hora del escaneo</TableHead>
                     </TableRow>
                   </TableHeader>

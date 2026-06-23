@@ -104,7 +104,7 @@ export default function WatchMode() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Guardia *</Label>
+                    <Label>Vigilante *</Label>
                     <Select>
                       <SelectTrigger className="w-full"><SelectValue placeholder="José Alejo Pinos" /></SelectTrigger>
                       <SelectContent><SelectItem value="1">José Alejo Pinos</SelectItem></SelectContent>
@@ -181,7 +181,7 @@ export default function WatchMode() {
           <div>Fecha/Hora</div>
           <div>Cliente</div>
           <div>Puesto de seguridad</div>
-          <div>Guardia</div>
+          <div>Vigilante</div>
           <div>Archivos multimedia</div>
         </div>
 

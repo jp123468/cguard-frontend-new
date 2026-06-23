@@ -217,7 +217,7 @@ export default function ShiftStatus() {
             <div className="relative w-full md:w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Buscar guardia o estación"
+                placeholder="Buscar vigilante o estación"
                 className="pl-9"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
@@ -342,7 +342,7 @@ export default function ShiftStatus() {
               <TableRow>
                 <TableHead className="w-[50px]"><Checkbox /></TableHead>
                 <TableHead className="font-bold text-foreground">Fecha</TableHead>
-                <TableHead className="font-bold text-foreground">Guardia</TableHead>
+                <TableHead className="font-bold text-foreground">Vigilante</TableHead>
                 <TableHead className="font-bold text-foreground">Estación</TableHead>
                 <TableHead className="font-bold text-foreground">Hora de Inicio</TableHead>
                 <TableHead className="font-bold text-foreground">Hora de Fin</TableHead>

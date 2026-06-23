@@ -188,7 +188,7 @@ export default function ProfilePhotoCapture({ value, onChange, previewUrl }: Pro
 
         {/* Instruction label */}
         <p className="text-xs text-center text-muted-foreground max-w-[200px] leading-snug">
-          Foto del guardia con uniforme completo en fondo neutro
+          Foto del vigilante con uniforme completo en fondo neutro
         </p>
 
         {/* Action buttons */}
@@ -230,7 +230,7 @@ export default function ProfilePhotoCapture({ value, onChange, previewUrl }: Pro
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Camera className="w-5 h-5 text-blue-600" />
-              Capturar Foto del Guardia
+              Capturar Foto del Vigilante
             </DialogTitle>
           </DialogHeader>
 
@@ -238,7 +238,7 @@ export default function ProfilePhotoCapture({ value, onChange, previewUrl }: Pro
           <div className="rounded-lg bg-blue-500/10 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-4 py-3 text-sm text-blue-600 dark:text-blue-300">
             <p className="font-semibold mb-1 flex items-center gap-1.5"><ClipboardList className="h-4 w-4" /> Instrucciones para la foto:</p>
             <ul className="list-disc list-inside space-y-0.5 text-xs">
-              <li>El guardia debe vestir <strong>uniforme completo</strong> y presentable</li>
+              <li>El vigilante debe vestir <strong>uniforme completo</strong> y presentable</li>
               <li>Use un fondo <strong>neutro</strong> (pared blanca o gris)</li>
               <li>La foto debe mostrar <strong>rostro y parte superior del cuerpo</strong></li>
               <li>Buena iluminación — evite sombras y contraluz</li>

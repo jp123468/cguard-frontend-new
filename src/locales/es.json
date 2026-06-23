@@ -365,7 +365,7 @@
     "archivedAll": "Todos los sitios seleccionados archivados",
     "archivedPartial": "{{count}} sitio(s) archivados",
     "archiving": "Archivando...",
-    "cannotArchiveLinkedGuards": "No se pueden archivar {{count}} sitio(s) porque tienen guardias asignados. Desvincula los guardias primero.",
+    "cannotArchiveLinkedGuards": "No se pueden archivar {{count}} sitio(s) porque tienen vigilantes asignados. Desvincula los vigilantes primero.",
     "confirmArchiveDescription": "¿Estás seguro de archivar {{count}} sitio(s)?",
     "confirmArchiveTitle": "¿Archivar {{count}} sitio(s)?",
     "newPostSite": "Nuevo sitio",
@@ -438,42 +438,42 @@
       "actionUnassign": "Quitar asignación",
       "actionView": "Ver",
       "addStation": "Agregar Estación",
-      "assignButton": "Asignar guardia",
+      "assignButton": "Asignar vigilante",
       "assignButtonAria": "Asignar",
-      "assignFailed": "Error al asignar guardia",
+      "assignFailed": "Error al asignar vigilante",
       "assignmentRemoved": "Asignación removida",
       "bulkDeleteSuccess": "Asignaciones seleccionadas eliminadas",
       "cancel": "Cancelar",
       "checklistsLabel": "Listas de verificación",
       "confirmBulkRemovalDesc": "¿Estás seguro de que deseas eliminar las asignaciones seleccionadas? Esta acción no se puede deshacer.",
       "confirmBulkRemovalTitle": "Confirmar eliminación múltiple",
-      "confirmRemovalDesc": "¿Estás seguro de que deseas eliminar esta asignación de guardia? Esta acción no se puede deshacer.",
+      "confirmRemovalDesc": "¿Estás seguro de que deseas eliminar esta asignación de vigilante? Esta acción no se puede deshacer.",
       "confirmRemovalTitle": "Confirmar eliminación",
       "departmentLabel": "Departamento",
-      "emptyMessage": "No hay guardias asignados a este puesto.",
+      "emptyMessage": "No hay vigilantes asignados a este puesto.",
       "emptyTitle": "No se encontraron resultados",
       "endRequired": "La hora de fin es obligatoria",
       "endShort": "Fin (hh:mm)",
-      "failedLoadAssignments": "Error al cargar las asignaciones del guardia",
-      "guardsLabel": "Guardias*",
-      "headerSearchPlaceholder": "Buscar guardias",
+      "failedLoadAssignments": "Error al cargar las asignaciones del vigilante",
+      "guardsLabel": "Vigilantes*",
+      "headerSearchPlaceholder": "Buscar vigilantes",
       "hoursRequiredToast": "Por favor ingresa la hora de inicio y fin antes de asignar",
       "missingPostSite": "Falta el id del puesto",
-      "modalTitle": "Asignar guardia",
-      "noGuardIdentifier": "No hay identificador del guardia",
+      "modalTitle": "Asignar vigilante",
+      "noGuardIdentifier": "No hay identificador del vigilante",
       "noResults": "Sin resultados",
       "noSelection": "No hay elementos seleccionados",
       "postOrdersLabel": "Órdenes del puesto",
       "postSiteLabel": "Puesto",
       "remove": "Eliminar",
       "removeFailed": "Error al remover la asignación",
-      "searchHelp": "Escribe para buscar y selecciona un guardia",
-      "searchPlaceholder": "Buscar guardias",
-      "securityGuardLabel": "Guardia",
-      "selectGuardRequired": "Por favor selecciona un guardia antes de asignar",
+      "searchHelp": "Escribe para buscar y selecciona un vigilante",
+      "searchPlaceholder": "Buscar vigilantes",
+      "securityGuardLabel": "Vigilante",
+      "selectGuardRequired": "Por favor selecciona un vigilante antes de asignar",
       "selectStationOption": "-- seleccionar estación --",
       "selectStationRequired": "Por favor selecciona o crea un puesto antes de asignar",
-      "shiftCreated": "Turno creado y guardia asignada",
+      "shiftCreated": "Turno creado y vigilante asignada",
       "siteToursLabel": "Recorridos",
       "skillSetLabel": "Conjunto de habilidades",
       "sourceLabel": "Origen",
@@ -481,7 +481,7 @@
       "startShort": "Inicio (hh:mm)",
       "stationLabel": "Estación*",
       "tasksLabel": "Tareas",
-      "viewModalTitle": "Asignaciones de guardia",
+      "viewModalTitle": "Asignaciones de vigilante",
       "viewNoAssignments": "No se encontraron asignaciones.",
       "table": {
         "actions": "Acciones",
@@ -538,7 +538,7 @@
         "Email": "Correo electrónico *",
         "Mobile Number": "Número móvil *",
         "Name": "Nombre *",
-        "checkbox": "Permitir que el guardia vea el contacto",
+        "checkbox": "Permitir que el vigilante vea el contacto",
         "descriptioninput": "Ingresa la descripción del contacto"
       }
     },
@@ -653,7 +653,7 @@
       "createFailed": "Error al crear la estación",
       "created": "Estación creada",
       "detailsTitle": "Detalles de la estación",
-      "guardsCount": "Guardias",
+      "guardsCount": "Vigilantes",
       "lat": "Latitud",
       "lng": "Longitud",
       "loading": "Cargando...",
@@ -711,7 +711,7 @@
     },
     "overview": {
       "cards": {
-        "guardsAssigned": "Guardias asignados",
+        "guardsAssigned": "Vigilantes asignados",
         "hoursWorked": "Horas trabajadas (últimos 7 días)",
         "incidents": "Informes de Incidentes (últimos 7 días)",
         "postSites": "Sitios activos",
@@ -781,13 +781,13 @@
         "stats": "Cuadro de Estadísticas",
         "timeLog": "Reloj de Tiempo",
         "tours": "Últimos Recorridos por el Sitio",
-        "tracker": "Guardias Activos"
+        "tracker": "Vigilantes Activos"
       }
     },
     "table": {
       "headers": {
         "battery": "Estado de la Batería",
-        "guard": "Guardia",
+        "guard": "Vigilante",
         "image": "Imagen",
         "index": "#",
         "lastLocation": "Última Ubicación",
@@ -835,8 +835,8 @@
     "filters": "Filtros",
     "generate_share_link": "Generar enlace compartible",
     "generate_shareable_link": "Generar enlace compartible",
-    "guard": "Guardia",
-    "guard_assigned": "Guardia asignado",
+    "guard": "Vigilante",
+    "guard_assigned": "Vigilante asignado",
     "header_caller_type": "Tipo de Informador",
     "header_client": "Cliente",
     "header_datetime": "Fecha/Hora",
@@ -960,7 +960,7 @@
         }
       },
       "new": {
-        "title": "Nuevo Guardia",
+        "title": "Nuevo Vigilante",
         "actions": {
           "copy": "Copiar",
           "create": "Crear",
@@ -974,11 +974,11 @@
           "dashboard": "Panel de control"
         },
         "create": {
-          "description": "Cree manualmente el perfil del guardia. Deberá validar su correo y número móvil antes de iniciar sesión."
+          "description": "Cree manualmente el perfil del vigilante. Deberá validar su correo y número móvil antes de iniciar sesión."
         },
         "errors": {
           "error_create_profile": "Error al crear perfil",
-          "no_permission_create": "No tienes permiso para crear guardias"
+          "no_permission_create": "No tienes permiso para crear vigilantes"
         },
         "form": {
           "assignPostSite": "Asignar puesto de vigilancia",
@@ -1002,7 +1002,7 @@
           "send": "Enviar"
         },
         "invite": {
-          "description": "Ingrese el nombre, correo electrónico/número de móvil del guardia. Se enviará un mensaje con un enlace."
+          "description": "Ingrese el nombre, correo electrónico/número de móvil del vigilante. Se enviará un mensaje con un enlace."
         },
         "join_code": {
           "copied": "Código copiado",
@@ -1030,7 +1030,7 @@
     },
     "assignSites": {
       "assignButton": "Asignar Estacionesde seguridad",
-      "loadError": "No se pudo cargar el guardia",
+      "loadError": "No se pudo cargar el vigilante",
       "loading": "Cargando...",
       "noPostSites": "No se encontraron puestos de seguridad",
       "noStations": "No se encontraron estaciones",
@@ -1085,7 +1085,7 @@
       }
     },
     "files": {
-      "loadError": "No se pudo cargar el guardia",
+      "loadError": "No se pudo cargar el vigilante",
       "searchPlaceholder": "Buscar archivos",
       "uploadButton": "Subir",
       "action": {
@@ -1160,11 +1160,11 @@
       "clearFilters": "Limpiar filtros",
       "filters": "Filtros",
       "import": "Importar",
-      "newGuard": "Nuevo Guardia",
+      "newGuard": "Nuevo Vigilante",
       "openOverviewAria": "Abrir resumen de {{name}}",
-      "pageTitle": "Guardias",
-      "searchPlaceholder": "Buscar guardia",
-      "selectAllAria": "Seleccionar todos los guardias de esta página",
+      "pageTitle": "Vigilantes",
+      "searchPlaceholder": "Buscar vigilante",
+      "selectAllAria": "Seleccionar todos los vigilantes de esta página",
       "selectAria": "Seleccionar {{name}}",
       "actions": {
         "archive": "Archivar",
@@ -1185,8 +1185,8 @@
         "restoring": "Restaurando…"
       },
       "details": {
-        "description": "Información detallada del guardia seleccionado.",
-        "title": "Detalles del Guardia",
+        "description": "Información detallada del vigilante seleccionado.",
+        "title": "Detalles del Vigilante",
         "fields": {
           "academicInstruction": "Instrucción académica",
           "address": "Dirección",
@@ -1197,7 +1197,7 @@
           "firstName": "Nombre",
           "gender": "Género",
           "governmentId": "Cédula",
-          "guardCredentials": "Credencial Guardia",
+          "guardCredentials": "Credencial Vigilante",
           "hiringContractDate": "Contrato",
           "lastName": "Apellidos",
           "maritalStatus": "Estado civil",
@@ -1225,8 +1225,8 @@
         "skillsAll": "Todos",
         "status": "Estado*",
         "statusActive": "Activos",
-        "statusAll": "Todos los Guardias",
-        "statusAllPlaceholder": "Todos los Guardias",
+        "statusAll": "Todos los Vigilantes",
+        "statusAllPlaceholder": "Todos los Vigilantes",
         "statusArchived": "Archivados",
         "statusPending": "Pendientes"
       },
@@ -1234,7 +1234,7 @@
         "browsePlaceholder": "Explorar tu archivo Excel aquí....",
         "clickToSelect": "Click para seleccionar",
         "completed": "Importación completada",
-        "description": "Sube un archivo .xlsx/.xls/.csv para importar guardias.",
+        "description": "Sube un archivo .xlsx/.xls/.csv para importar vigilantes.",
         "downloadTemplate": "Descargar plantilla de ejemplo",
         "fileFormat": "El archivo debe ser formato .xlsx, .xls o .csv",
         "howTo": "Antes de cargar, asegúrese de:",
@@ -1244,7 +1244,7 @@
         "requiredColumns": "Nombre, Correo, Teléfono, Estado, Cédula, Fecha Contrato, Género, Tipo Sangre, Credenciales, Fecha Nac., Lugar Nac., Estado Civ., Educación, Dirección",
         "requiredColumnsLabel": "Columnas obligatorias:",
         "templateDownloaded": "Plantilla descargada",
-        "title": "Importar Guardias desde Excel",
+        "title": "Importar Vigilantes desde Excel",
         "errors": {
           "csvValidationFailed": "No se pudo validar el archivo CSV antes de subir. Asegúrate del formato.",
           "emptyCsvRows": "El CSV no contiene filas de datos",
@@ -1257,7 +1257,7 @@
       },
       "labels": {
         "name": "Nombre",
-        "selectedGuards": "Guardias seleccionados"
+        "selectedGuards": "Vigilantes seleccionados"
       },
       "pagination": {
         "emptyRange": "0 – 0 de 0",
@@ -1271,49 +1271,49 @@
         "status": "Estado"
       },
       "toasts": {
-        "archiveError": "Error al archivar guardia",
-        "archiveOnDutyError": "No se puede archivar: el guardia está actualmente en servicio",
-        "archived": "Guardia archivado",
-        "bulkArchived": "Guardias archivados",
-        "bulkDeleted": "Guardias eliminados permanentemente",
-        "bulkRestored": "Guardias restaurados",
+        "archiveError": "Error al archivar vigilante",
+        "archiveOnDutyError": "No se puede archivar: el vigilante está actualmente en servicio",
+        "archived": "Vigilante archivado",
+        "bulkArchived": "Vigilantes archivados",
+        "bulkDeleted": "Vigilantes eliminados permanentemente",
+        "bulkRestored": "Vigilantes restaurados",
         "copyLinkError": "No se pudo copiar el enlace",
         "copyLinkSuccess": "Enlace de registro copiado",
-        "deleteError": "No se pudo eliminar el guardia: {{msg}}",
-        "deleteSuccess": "Guardia eliminado permanentemente",
+        "deleteError": "No se pudo eliminar el vigilante: {{msg}}",
+        "deleteSuccess": "Vigilante eliminado permanentemente",
         "inviteResendError": "Error reenviando invitación",
         "inviteResent": "Invitación reenviada",
-        "noPermissionDelete": "No tienes permiso para eliminar guardias",
-        "noPermissionEdit": "No tienes permiso para modificar guardias",
+        "noPermissionDelete": "No tienes permiso para eliminar vigilantes",
+        "noPermissionEdit": "No tienes permiso para modificar vigilantes",
         "printWindowOpenError": "No se pudo abrir la ventana de impresión",
-        "restoreError": "Error restaurando guardia: {{msg}}",
-        "restoreSuccess": "Guardia restaurado",
-        "selectAtLeastOne": "Selecciona al menos un guardia"
+        "restoreError": "Error restaurando vigilante: {{msg}}",
+        "restoreSuccess": "Vigilante restaurado",
+        "selectAtLeastOne": "Selecciona al menos un vigilante"
       },
       "dialog": {
         "archive": {
-          "description": "¿Estás seguro que deseas archivar este guardia? Esta acción se puede revertir desde el filtro.",
-          "title": "Archivar guardia"
+          "description": "¿Estás seguro que deseas archivar este vigilante? Esta acción se puede revertir desde el filtro.",
+          "title": "Archivar vigilante"
         },
         "bulk": {
-          "archiveDescription": "¿Estás seguro de que deseas archivar {{count}} guardia(s)? Esta acción se puede revertir desde el filtro de archivados.",
-          "archiveTitle": "Archivar guardias",
+          "archiveDescription": "¿Estás seguro de que deseas archivar {{count}} vigilante(s)? Esta acción se puede revertir desde el filtro de archivados.",
+          "archiveTitle": "Archivar vigilantes",
           "confirmTitle": "Confirmar acción",
-          "deleteDescription": "Esta acción eliminará permanentemente {{count}} guardia(s). ¿Deseas continuar?",
-          "deleteTitle": "Eliminar guardias",
-          "restoreDescription": "¿Deseas restaurar {{count}} guardia(s)? Estos guardias volverán al estado activo.",
-          "restoreTitle": "Restaurar guardias"
+          "deleteDescription": "Esta acción eliminará permanentemente {{count}} vigilante(s). ¿Deseas continuar?",
+          "deleteTitle": "Eliminar vigilantes",
+          "restoreDescription": "¿Deseas restaurar {{count}} vigilante(s)? Estos vigilantes volverán al estado activo.",
+          "restoreTitle": "Restaurar vigilantes"
         },
         "delete": {
-          "title": "Eliminar guardia permanentemente",
+          "title": "Eliminar vigilante permanentemente",
           "description": {
-            "default": "Esta acción eliminará permanentemente al guardia. Asegúrate de que el guardia esté archivado y no esté en servicio.",
-            "pending": "Esta acción eliminará permanentemente al guardia pendiente. No podrá recuperarse después de eliminarlo."
+            "default": "Esta acción eliminará permanentemente al vigilante. Asegúrate de que el vigilante esté archivado y no esté en servicio.",
+            "pending": "Esta acción eliminará permanentemente al vigilante pendiente. No podrá recuperarse después de eliminarlo."
           }
         },
         "restore": {
-          "description": "¿Deseas restaurar este guardia? La acción lo devolverá al estado activo.",
-          "title": "Restaurar guardia"
+          "description": "¿Deseas restaurar este vigilante? La acción lo devolverá al estado activo.",
+          "title": "Restaurar vigilante"
         }
       }
     },
@@ -1325,7 +1325,7 @@
       "departamento": "Departamento",
       "disponibilidad": "Disponibilidad",
       "dispositivo": "Dispositivo",
-      "indicadores": "Indicadores claves de guardias",
+      "indicadores": "Indicadores claves de vigilantes",
       "licencias": "Licencias",
       "notas": "Notas",
       "perfil": "Perfil",
@@ -1333,7 +1333,7 @@
       "resumen": "Resumen"
     },
     "new": {
-      "title": "Nuevo Guardia",
+      "title": "Nuevo Vigilante",
       "actions": {
         "copy": "Copiar",
         "create": "Crear",
@@ -1347,11 +1347,11 @@
         "dashboard": "Panel de control"
       },
       "create": {
-        "description": "Crea el perfil del guardia manualmente. Necesitarán verificar su correo electrónico y número de móvil antes de iniciar sesión."
+        "description": "Crea el perfil del vigilante manualmente. Necesitarán verificar su correo electrónico y número de móvil antes de iniciar sesión."
       },
       "errors": {
         "error_create_profile": "Error al crear el perfil",
-        "no_permission_create": "No tienes permiso para crear guardias"
+        "no_permission_create": "No tienes permiso para crear vigilantes"
       },
       "form": {
         "assignPostSite": "Asignar puesto de vigilancia",
@@ -1374,7 +1374,7 @@
         "send": "Enviar"
       },
       "invite": {
-        "description": "Ingrese el nombre y correo electrónico/número de móvil del guardia. Se enviará un mensaje con un enlace."
+        "description": "Ingrese el nombre y correo electrónico/número de móvil del vigilante. Se enviará un mensaje con un enlace."
       },
       "join_code": {
         "copied": "Código copiado",
@@ -1508,8 +1508,8 @@
         "skills": "Ej: Primeros auxilios, Defensa personal"
       },
       "toasts": {
-        "updateError": "Error al actualizar la guardia",
-        "updated": "Guardia actualizado correctamente"
+        "updateError": "Error al actualizar la vigilante",
+        "updated": "Vigilante actualizado correctamente"
       },
       "values": {
         "background": "Background",
@@ -1551,7 +1551,7 @@
         "description": "Descripción",
         "descriptionPlaceholder": "Descripción",
         "priority": "Prioridad",
-        "selectGuards": "Seleccionar guardias",
+        "selectGuards": "Seleccionar vigilantes",
         "selectedDate": "Fecha seleccionada",
         "title": "Título",
         "titlePlaceholder": "Título*"
@@ -1594,7 +1594,7 @@
         "title": "Título"
       },
       "toasts": {
-        "loadError": "No se pudo cargar el guardia"
+        "loadError": "No se pudo cargar el vigilante"
       }
     },
     "skills": {
@@ -1627,21 +1627,21 @@
         "name": "Nombre"
       },
       "toasts": {
-        "loadError": "No se pudo cargar el guardia",
+        "loadError": "No se pudo cargar el vigilante",
         "provideName": "Por favor proporciona un nombre de habilidad",
         "selectAtLeastOne": "Por favor selecciona al menos un conjunto de habilidades"
       }
     },
     "summary": {
       "previous": "Anterior",
-      "roleDefault": "Guardia de seguridad",
+      "roleDefault": "Vigilante de seguridad",
       "badge": {
-        "joined": "Guardia se unió"
+        "joined": "Vigilante se unió"
       },
       "header": {
         "about": "Acerca de",
         "addedOn": "Añadido el",
-        "guardNumber": "Número de guardia",
+        "guardNumber": "Número de vigilante",
         "lastShift": "Último turno"
       },
       "recentActivity": {
@@ -1805,14 +1805,14 @@
     "sitesArchived": "Puestos archivados",
     "viewDetails": "Ver Detalles",
     "Details": {
-      "AssignGuards": "Asignar guardias",
+      "AssignGuards": "Asignar vigilantes",
       "AssignReports": "Asignar informes",
       "Checklists": "Listas de verificación",
       "Contacts": "Contactos",
       "EmailReports": "Informes por correo electrónico",
       "Files": "Archivos",
       "GeoFence": "Geo-Cerca",
-      "GuardsList": "Lista de guardias",
+      "GuardsList": "Lista de vigilantes",
       "Incidents": "Incidentes",
       "Inventories": "Inventarios",
       "KPIs": "KPIs",
@@ -1843,8 +1843,8 @@
       "emailReport": "Informe por correo electrónico",
       "exportExcel": "Exportar como Excel",
       "exportPdf": "Exportar como PDF",
-      "guardOnSite": "Guardia en el sitio",
-      "guardsAssigned": "Guardias asignados",
+      "guardOnSite": "Vigilante en el sitio",
+      "guardsAssigned": "Vigilantes asignados",
       "hoursLogged": "Horas registradas (últimos 7 días)",
       "incidentsReported": "Incidentes reportados (últimos 7 días)",
       "kpiadded": "KPI agregado",
@@ -2022,8 +2022,8 @@
         "title": "Mapa"
       },
       "Stats": {
-        "guardOnSite": "Guardias en el sitio",
-        "guardsAssigned": "Guardias asignados",
+        "guardOnSite": "Vigilantes en el sitio",
+        "guardsAssigned": "Vigilantes asignados",
         "hoursLogged": "Horas registradas (últimos 7 días)",
         "incidentsReported": "Incidentes reportados (últimos 7 días)",
         "tasksCompleted": "Tareas completadas (últimos 7 días)",
@@ -2041,9 +2041,9 @@
         "dispatch": "Incidente",
         "exchangeShift": "Intercambio de turno",
         "geoFence": "Geo Fence",
-        "guardAvailability": "Disponibilidad de guardia",
-        "guardDeviceFall": "Fallo guardia/dispositivo",
-        "guardIdle": "Guardia inactivo",
+        "guardAvailability": "Disponibilidad de vigilante",
+        "guardDeviceFall": "Fallo vigilante/dispositivo",
+        "guardIdle": "Vigilante inactivo",
         "incidentReport": "Informe de incidente",
         "lowBattery": "Batería baja",
         "openShiftConfirmation": "Confirmación de turno abierto",
@@ -2104,7 +2104,7 @@
     "stations": {
       "action": "Acción",
       "add": "Agregar estación",
-      "assignedGuardsTitle": "Guardias asignados",
+      "assignedGuardsTitle": "Vigilantes asignados",
       "cancel": "Cancelar",
       "company": "Empresa",
       "confirmRemovalBlockedDesc": "Una o más estaciones seleccionadas tienen registros relacionados y no se pueden eliminar.",
@@ -2118,7 +2118,7 @@
       "deleteSelected": "Eliminar seleccionados",
       "detailsTitle": "Detalles de la estación",
       "endTime": "Fin",
-      "guardsCount": "Guardias",
+      "guardsCount": "Vigilantes",
       "hShort": "h",
       "hours": "horas",
       "lat": "Latitud",
@@ -2126,7 +2126,7 @@
       "loading": "Cargando...",
       "mShort": "m",
       "manageAssignments": "Asignar",
-      "noAssignedGuards": "No hay guardias asignados",
+      "noAssignedGuards": "No hay vigilantes asignados",
       "noDetails": "No hay detalles disponibles",
       "noStations": "No hay estaciones agregadas.",
       "placeholderName": "Nombre de la estación",
@@ -2149,7 +2149,7 @@
         "description": "Descripción",
         "descriptionPlaceholder": "Descripción opcional",
         "finishTime": "Fin",
-        "guards": "Guardias",
+        "guards": "Vigilantes",
         "name": "Nombre *",
         "schedule": "Horario *",
         "selectSchedule": "Selecciona horario",
@@ -2157,7 +2157,7 @@
       },
       "table": {
         "description": "Descripción",
-        "guards": "Guardias",
+        "guards": "Vigilantes",
         "name": "Nombre"
       }
     },
@@ -2180,7 +2180,7 @@
         "title": "No se encontraron resultados"
       },
       "form": {
-        "assignGuard": "Asignar Guardia*",
+        "assignGuard": "Asignar Vigilante*",
         "maxDuration": "Duración máxima",
         "newSubTask": "Nueva subtarea",
         "selectStationFirst": "Selecciona primero una estación",
@@ -2539,7 +2539,7 @@
     },
     "analiticas": {
       "facturador": "Facturación",
-      "guardias": "Guardias",
+      "guardias": "Vigilantes",
       "horario": "Planificación",
       "informe": "Informes",
       "label": "Analíticas",
@@ -2718,42 +2718,42 @@
         "actionUnassign": "Quitar asignación",
         "actionView": "Ver",
         "addStation": "Agregar Estación",
-        "assignButton": "Asignar guardia",
+        "assignButton": "Asignar vigilante",
         "assignButtonAria": "Asignar",
-        "assignFailed": "Error al asignar guardia",
+        "assignFailed": "Error al asignar vigilante",
         "assignmentRemoved": "Asignación removida",
         "bulkDeleteSuccess": "Asignaciones seleccionadas eliminadas",
         "cancel": "Cancelar",
         "checklistsLabel": "Listas de verificación",
         "confirmBulkRemovalDesc": "¿Estás seguro de que deseas eliminar las asignaciones seleccionadas? Esta acción no se puede deshacer.",
         "confirmBulkRemovalTitle": "Confirmar eliminación múltiple",
-        "confirmRemovalDesc": "¿Estás seguro de que deseas eliminar esta asignación de guardia? Esta acción no se puede deshacer.",
+        "confirmRemovalDesc": "¿Estás seguro de que deseas eliminar esta asignación de vigilante? Esta acción no se puede deshacer.",
         "confirmRemovalTitle": "Confirmar eliminación",
         "departmentLabel": "Departamento",
-        "emptyMessage": "No hay guardias asignados a este puesto.",
+        "emptyMessage": "No hay vigilantes asignados a este puesto.",
         "emptyTitle": "No se encontraron resultados",
         "endRequired": "La hora de fin es obligatoria",
         "endShort": "Fin (hh:mm)",
-        "failedLoadAssignments": "Error al cargar las asignaciones del guardia",
-        "guardsLabel": "Guardias*",
-        "headerSearchPlaceholder": "Buscar guardias",
+        "failedLoadAssignments": "Error al cargar las asignaciones del vigilante",
+        "guardsLabel": "Vigilantes*",
+        "headerSearchPlaceholder": "Buscar vigilantes",
         "hoursRequiredToast": "Por favor ingresa la hora de inicio y fin antes de asignar",
         "missingPostSite": "Falta el id del puesto",
-        "modalTitle": "Asignar guardia",
-        "noGuardIdentifier": "No hay identificador del guardia",
+        "modalTitle": "Asignar vigilante",
+        "noGuardIdentifier": "No hay identificador del vigilante",
         "noResults": "Sin resultados",
         "noSelection": "No hay elementos seleccionados",
         "postOrdersLabel": "Órdenes del puesto",
         "postSiteLabel": "Puesto",
         "remove": "Eliminar",
         "removeFailed": "Error al remover la asignación",
-        "searchHelp": "Escribe para buscar y selecciona un guardia",
-        "searchPlaceholder": "Buscar guardias",
-        "securityGuardLabel": "Guardia",
-        "selectGuardRequired": "Por favor selecciona un guardia antes de asignar",
+        "searchHelp": "Escribe para buscar y selecciona un vigilante",
+        "searchPlaceholder": "Buscar vigilantes",
+        "securityGuardLabel": "Vigilante",
+        "selectGuardRequired": "Por favor selecciona un vigilante antes de asignar",
         "selectStationOption": "-- seleccionar estación --",
         "selectStationRequired": "Por favor selecciona o crea un puesto antes de asignar",
-        "shiftCreated": "Turno creado y guardia asignada",
+        "shiftCreated": "Turno creado y vigilante asignada",
         "siteToursLabel": "Recorridos",
         "skillSetLabel": "Conjunto de habilidades",
         "sourceLabel": "Origen",
@@ -2761,7 +2761,7 @@
         "startShort": "Inicio (hh:mm)",
         "stationLabel": "Estación*",
         "tasksLabel": "Tareas",
-        "viewModalTitle": "Asignaciones de guardia",
+        "viewModalTitle": "Asignaciones de vigilante",
         "viewNoAssignments": "No se encontraron asignaciones.",
         "table": {
           "actions": "Acciones",
@@ -2881,7 +2881,7 @@
       },
       "stations": {
         "add": "Agregar estación",
-        "assignedGuardsTitle": "Guardias asignados",
+        "assignedGuardsTitle": "Vigilantes asignados",
         "cancel": "Cancelar",
         "company": "Empresa",
         "confirmRemovalDesc": "¿Estás seguro de que deseas eliminar este puesto? Esta acción no se puede deshacer.",
@@ -2891,7 +2891,7 @@
         "created": "Estación creada",
         "detailsTitle": "Detalles de la estación",
         "endTime": "Fin",
-        "guardsCount": "Guardias",
+        "guardsCount": "Vigilantes",
         "hShort": "h",
         "hours": "horas",
         "lat": "Latitud",
@@ -2899,7 +2899,7 @@
         "loading": "Cargando...",
         "mShort": "m",
         "manageAssignments": "Gestionar asignaciones",
-        "noAssignedGuards": "Sin guardias asignados",
+        "noAssignedGuards": "Sin vigilantes asignados",
         "noStations": "No hay estaciones agregadas aún.",
         "placeholderName": "Nombre de la estación",
         "provideName": "Proporciona un nombre",
@@ -2980,7 +2980,7 @@
         "Email": "Correo electrónico *",
         "Mobile Number": "Número de celular *",
         "Name": "Nombre *",
-        "checkbox": "Permitir que el guardia vea el contacto",
+        "checkbox": "Permitir que el vigilante vea el contacto",
         "descriptioninput": "Ingresa la descripción del contacto"
       }
     },
@@ -3025,13 +3025,13 @@
           "stats": "Cuadro de Estadísticas",
           "timeLog": "Reloj de Tiempo",
           "tours": "Últimos Recorridos por el Sitio",
-          "tracker": "Guardias Activos"
+          "tracker": "Vigilantes Activos"
         }
       },
       "table": {
         "headers": {
           "battery": "Estado de la Batería",
-          "guard": "Guardia",
+          "guard": "Vigilante",
           "image": "Imagen",
           "index": "#",
           "lastLocation": "Última Ubicación",
@@ -3118,7 +3118,7 @@
       "view_details": "Ver detalles"
     },
     "equipo": {
-      "guardias": "Guardias de seguridad",
+      "guardias": "Vigilantes de seguridad",
       "label": "Equipo de seguridad",
       "usuarios": "Usuarios administrativos"
     },
@@ -3167,7 +3167,7 @@
       },
       "assignSites": {
         "assignButton": "Asignar Estacionesde seguridad",
-        "loadError": "No se pudo cargar el guardia",
+        "loadError": "No se pudo cargar el vigilante",
         "loading": "Cargando...",
         "noPostSites": "No se encontraron puestos de seguridad",
         "searchPlaceholder": "Buscar puestos de seguridad",
@@ -3216,7 +3216,7 @@
         }
       },
       "files": {
-        "loadError": "No se pudo cargar el guardia",
+        "loadError": "No se pudo cargar el vigilante",
         "searchPlaceholder": "Buscar archivos",
         "uploadButton": "Subir",
         "action": {
@@ -3291,11 +3291,11 @@
         "clearFilters": "Limpiar filtros",
         "filters": "Filtros",
         "import": "Importar",
-        "newGuard": "Nuevo Guardia",
+        "newGuard": "Nuevo Vigilante",
         "openOverviewAria": "Abrir resumen de {{name}}",
-        "pageTitle": "Guardias",
-        "searchPlaceholder": "Buscar guardia",
-        "selectAllAria": "Seleccionar todos los guardias de esta página",
+        "pageTitle": "Vigilantes",
+        "searchPlaceholder": "Buscar vigilante",
+        "selectAllAria": "Seleccionar todos los vigilantes de esta página",
         "selectAria": "Seleccionar {{name}}",
         "actions": {
           "archive": "Archivar",
@@ -3316,8 +3316,8 @@
           "restoring": "Restaurando…"
         },
         "details": {
-          "description": "Información detallada del guardia seleccionado.",
-          "title": "Detalles del Guardia",
+          "description": "Información detallada del vigilante seleccionado.",
+          "title": "Detalles del Vigilante",
           "fields": {
             "academicInstruction": "Instrucción académica",
             "address": "Dirección",
@@ -3328,7 +3328,7 @@
             "firstName": "Nombre",
             "gender": "Género",
             "governmentId": "Cédula",
-            "guardCredentials": "Credencial Guardia",
+            "guardCredentials": "Credencial Vigilante",
             "hiringContractDate": "Contrato",
             "lastName": "Apellidos",
             "maritalStatus": "Estado civil",
@@ -3356,8 +3356,8 @@
           "skillsAll": "Todos",
           "status": "Estado*",
           "statusActive": "Activos",
-          "statusAll": "Todos los Guardias",
-          "statusAllPlaceholder": "Todos los Guardias",
+          "statusAll": "Todos los Vigilantes",
+          "statusAllPlaceholder": "Todos los Vigilantes",
           "statusArchived": "Archivados",
           "statusPending": "Pendientes"
         },
@@ -3365,7 +3365,7 @@
           "browsePlaceholder": "Explorar tu archivo Excel aquí....",
           "clickToSelect": "Click para seleccionar",
           "completed": "Importación completada",
-          "description": "Sube un archivo .xlsx/.xls/.csv para importar guardias.",
+          "description": "Sube un archivo .xlsx/.xls/.csv para importar vigilantes.",
           "downloadTemplate": "Descargar plantilla de ejemplo",
           "fileFormat": "El archivo debe ser formato .xlsx, .xls o .csv",
           "howTo": "Antes de cargar, asegúrese de:",
@@ -3375,7 +3375,7 @@
           "requiredColumns": "Nombre, Correo, Teléfono, Estado, Cédula, Fecha Contrato, Género, Tipo Sangre, Credenciales, Fecha Nac., Lugar Nac., Estado Civ., Educación, Dirección",
           "requiredColumnsLabel": "Columnas obligatorias:",
           "templateDownloaded": "Plantilla descargada",
-          "title": "Importar Guardias desde Excel",
+          "title": "Importar Vigilantes desde Excel",
           "errors": {
             "csvValidationFailed": "No se pudo validar el archivo CSV antes de subir. Asegúrate del formato.",
             "emptyCsvRows": "El CSV no contiene filas de datos",
@@ -3388,7 +3388,7 @@
         },
         "labels": {
           "name": "Nombre",
-          "selectedGuards": "Guardias seleccionados"
+          "selectedGuards": "Vigilantes seleccionados"
         },
         "pagination": {
           "emptyRange": "0 – 0 de 0",
@@ -3402,49 +3402,49 @@
           "status": "Estado"
         },
         "toasts": {
-          "archiveError": "Error al archivar guardia",
-          "archiveOnDutyError": "No se puede archivar: el guardia está actualmente en servicio",
-          "archived": "Guardia archivado",
-          "bulkArchived": "Guardias archivados",
-          "bulkDeleted": "Guardias eliminados permanentemente",
-          "bulkRestored": "Guardias restaurados",
+          "archiveError": "Error al archivar vigilante",
+          "archiveOnDutyError": "No se puede archivar: el vigilante está actualmente en servicio",
+          "archived": "Vigilante archivado",
+          "bulkArchived": "Vigilantes archivados",
+          "bulkDeleted": "Vigilantes eliminados permanentemente",
+          "bulkRestored": "Vigilantes restaurados",
           "copyLinkError": "No se pudo copiar el enlace",
           "copyLinkSuccess": "Enlace de registro copiado",
-          "deleteError": "No se pudo eliminar el guardia: {{msg}}",
-          "deleteSuccess": "Guardia eliminado permanentemente",
+          "deleteError": "No se pudo eliminar el vigilante: {{msg}}",
+          "deleteSuccess": "Vigilante eliminado permanentemente",
           "inviteResendError": "Error reenviando invitación",
           "inviteResent": "Invitación reenviada",
-          "noPermissionDelete": "No tienes permiso para eliminar guardias",
-          "noPermissionEdit": "No tienes permiso para modificar guardias",
+          "noPermissionDelete": "No tienes permiso para eliminar vigilantes",
+          "noPermissionEdit": "No tienes permiso para modificar vigilantes",
           "printWindowOpenError": "No se pudo abrir la ventana de impresión",
-          "restoreError": "Error restaurando guardia: {{msg}}",
-          "restoreSuccess": "Guardia restaurado",
-          "selectAtLeastOne": "Selecciona al menos un guardia"
+          "restoreError": "Error restaurando vigilante: {{msg}}",
+          "restoreSuccess": "Vigilante restaurado",
+          "selectAtLeastOne": "Selecciona al menos un vigilante"
         },
         "dialog": {
           "archive": {
-            "description": "¿Estás seguro que deseas archivar este guardia? Esta acción se puede revertir desde el filtro.",
-            "title": "Archivar guardia"
+            "description": "¿Estás seguro que deseas archivar este vigilante? Esta acción se puede revertir desde el filtro.",
+            "title": "Archivar vigilante"
           },
           "bulk": {
-            "archiveDescription": "¿Estás seguro de que deseas archivar {{count}} guardia(s)? Esta acción se puede revertir desde el filtro de archivados.",
-            "archiveTitle": "Archivar guardias",
+            "archiveDescription": "¿Estás seguro de que deseas archivar {{count}} vigilante(s)? Esta acción se puede revertir desde el filtro de archivados.",
+            "archiveTitle": "Archivar vigilantes",
             "confirmTitle": "Confirmar acción",
-            "deleteDescription": "Esta acción eliminará permanentemente {{count}} guardia(s). ¿Deseas continuar?",
-            "deleteTitle": "Eliminar guardias",
-            "restoreDescription": "¿Deseas restaurar {{count}} guardia(s)? Estos guardias volverán al estado activo.",
-            "restoreTitle": "Restaurar guardias"
+            "deleteDescription": "Esta acción eliminará permanentemente {{count}} vigilante(s). ¿Deseas continuar?",
+            "deleteTitle": "Eliminar vigilantes",
+            "restoreDescription": "¿Deseas restaurar {{count}} vigilante(s)? Estos vigilantes volverán al estado activo.",
+            "restoreTitle": "Restaurar vigilantes"
           },
           "delete": {
-            "title": "Eliminar guardia permanentemente",
+            "title": "Eliminar vigilante permanentemente",
             "description": {
-              "default": "Esta acción eliminará permanentemente al guardia. Asegúrate de que el guardia esté archivado y no esté en servicio.",
-              "pending": "Esta acción eliminará permanentemente al guardia pendiente. No podrá recuperarse después de eliminarlo."
+              "default": "Esta acción eliminará permanentemente al vigilante. Asegúrate de que el vigilante esté archivado y no esté en servicio.",
+              "pending": "Esta acción eliminará permanentemente al vigilante pendiente. No podrá recuperarse después de eliminarlo."
             }
           },
           "restore": {
-            "description": "¿Deseas restaurar este guardia? La acción lo devolverá al estado activo.",
-            "title": "Restaurar guardia"
+            "description": "¿Deseas restaurar este vigilante? La acción lo devolverá al estado activo.",
+            "title": "Restaurar vigilante"
           }
         }
       },
@@ -3455,7 +3455,7 @@
         "conjuntoHabilidades": "Conjunto de Habilidades",
         "departamento": "Departamento",
         "disponibilidad": "Disponibilidad",
-        "indicadores": "Indicadores claves de guardias",
+        "indicadores": "Indicadores claves de vigilantes",
         "licencias": "Licencias",
         "notas": "Notas",
         "memos": "Memos",
@@ -3464,7 +3464,7 @@
         "resumen": "Resumen"
       },
       "new": {
-        "title": "Nuevo Guardia",
+        "title": "Nuevo Vigilante",
         "actions": {
           "copy": "Copiar",
           "create": "Crear",
@@ -3478,11 +3478,11 @@
           "dashboard": "Panel de control"
         },
         "create": {
-          "description": "Crea el perfil del guardia manualmente. Necesitarán verificar su correo electrónico y número de móvil antes de iniciar sesión."
+          "description": "Crea el perfil del vigilante manualmente. Necesitarán verificar su correo electrónico y número de móvil antes de iniciar sesión."
         },
         "errors": {
           "error_create_profile": "Error al crear el perfil",
-          "no_permission_create": "No tienes permiso para crear guardias"
+          "no_permission_create": "No tienes permiso para crear vigilantes"
         },
         "form": {
           "assignPostSite": "Asignar puesto de vigilancia",
@@ -3506,7 +3506,7 @@
           "send": "Enviar"
         },
         "invite": {
-          "description": "Ingrese el nombre y correo electrónico/número de móvil del guardia. Se enviará un mensaje con un enlace."
+          "description": "Ingrese el nombre y correo electrónico/número de móvil del vigilante. Se enviará un mensaje con un enlace."
         },
         "join_code": {
           "copied": "Código copiado",
@@ -3567,7 +3567,7 @@
         }
       },
       "overview": {
-        "loadError": "No se pudo cargar el guardia",
+        "loadError": "No se pudo cargar el vigilante",
         "loading": "Cargando..."
       },
       "profile": {
@@ -3626,8 +3626,8 @@
           "skills": "Ej: Primeros auxilios, Defensa personal"
         },
         "toasts": {
-          "updateError": "Error al actualizar la guardia",
-          "updated": "Guardia actualizado correctamente"
+          "updateError": "Error al actualizar la vigilante",
+          "updated": "Vigilante actualizado correctamente"
         },
         "values": {
           "background": "Background",
@@ -3669,7 +3669,7 @@
           "description": "Descripción",
           "descriptionPlaceholder": "Descripción",
           "priority": "Prioridad",
-          "selectGuards": "Seleccionar guardias",
+          "selectGuards": "Seleccionar vigilantes",
           "selectedDate": "Fecha seleccionada",
           "title": "Título",
           "titlePlaceholder": "Título*"
@@ -3712,7 +3712,7 @@
           "title": "Título"
         },
         "toasts": {
-          "loadError": "No se pudo cargar el guardia"
+          "loadError": "No se pudo cargar el vigilante"
         }
       },
       "skills": {
@@ -3742,25 +3742,25 @@
         },
         "table": {
           "description": "Descripción",
-          "guards": "Guardias",
+          "guards": "Vigilantes",
           "name": "Nombre"
         },
         "toasts": {
-          "loadError": "No se pudo cargar el guardia",
+          "loadError": "No se pudo cargar el vigilante",
           "provideName": "Por favor proporciona un nombre de habilidad",
           "selectAtLeastOne": "Por favor selecciona al menos un conjunto de habilidades"
         }
       },
       "summary": {
         "previous": "Anterior",
-        "roleDefault": "Guardia de seguridad",
+        "roleDefault": "Vigilante de seguridad",
         "badge": {
-          "joined": "Guardia se unió"
+          "joined": "Vigilante se unió"
         },
         "header": {
           "about": "Acerca de",
           "addedOn": "Añadido el",
-          "guardNumber": "Número de guardia",
+          "guardNumber": "Número de vigilante",
           "lastShift": "Último turno"
         },
         "recentActivity": {
@@ -3941,7 +3941,7 @@
       "viewDetails": "Ver Detalles",
       "website": "Sitio web",
       "Details": {
-        "AssignGuards": "Asignar guardias",
+        "AssignGuards": "Asignar vigilantes",
         "AssignReports": "Asignar informes",
         "Checklists": "Listas de verificación",
         "Contacts": "Contactos",
@@ -3975,8 +3975,8 @@
         "emailReport": "Informe por correo electrónico",
         "exportExcel": "Exportar como Excel",
         "exportPdf": "Exportar como PDF",
-        "guardOnSite": "Guardia en el sitio",
-        "guardsAssigned": "Guardias asignados",
+        "guardOnSite": "Vigilante en el sitio",
+        "guardsAssigned": "Vigilantes asignados",
         "hoursLogged": "Horas registradas (últimos 7 días)",
         "incidentsReported": "Incidentes reportados (últimos 7 días)",
         "kpiadded": "KPI agregado",
@@ -4155,8 +4155,8 @@
           "title": "Mapa"
         },
         "Stats": {
-          "guardOnSite": "Guardias en el sitio",
-          "guardsAssigned": "Guardias asignados",
+          "guardOnSite": "Vigilantes en el sitio",
+          "guardsAssigned": "Vigilantes asignados",
           "hoursLogged": "Horas registradas (últimos 7 días)",
           "incidentsReported": "Incidentes reportados (últimos 7 días)",
           "tasksCompleted": "Tareas completadas (últimos 7 días)",
@@ -4174,9 +4174,9 @@
           "dispatch": "Incidente",
           "exchangeShift": "Intercambio de turno",
           "geoFence": "Geo Fence",
-          "guardAvailability": "Disponibilidad de guardia",
-          "guardDeviceFall": "Fallo guardia/dispositivo",
-          "guardIdle": "Guardia inactivo",
+          "guardAvailability": "Disponibilidad de vigilante",
+          "guardDeviceFall": "Fallo vigilante/dispositivo",
+          "guardIdle": "Vigilante inactivo",
           "incidentReport": "Informe de incidente",
           "lowBattery": "Batería baja",
           "openShiftConfirmation": "Confirmación de turno abierto",
@@ -4246,13 +4246,13 @@
           "title": "Sin resultados"
         },
         "form": {
-          "assignGuard": "Asignar guardia*",
+          "assignGuard": "Asignar vigilante*",
           "continuous": "Continuo",
           "enableNotes": "Habilitar notas del recorrido",
-          "forceMedia": "Obligar al guardia a adjuntar varios archivos",
-          "loadingGuards": "Cargando guardias...",
-          "noGuardsForStation": "No se encontraron guardias para esta estación",
-          "noGuardsFound": "No se encontraron guardias",
+          "forceMedia": "Obligar al vigilante a adjuntar varios archivos",
+          "loadingGuards": "Cargando vigilantes...",
+          "noGuardsForStation": "No se encontraron vigilantes para esta estación",
+          "noGuardsFound": "No se encontraron vigilantes",
           "scheduledDays": "Días programados*",
           "selectStationFirst": "Selecciona primero una estación",
           "selectTime": "Seleccionar hora",
@@ -4300,10 +4300,10 @@
       "siteTourTag": {
         "action": "Acción",
         "loading": "Cargando...",
-        "loadingGuards": "Cargando guardias...",
+        "loadingGuards": "Cargando vigilantes...",
         "newTagButton": "Nueva etiqueta",
-        "noGuardsForStation": "No se encontraron guardias para este sitio de servicio",
-        "noGuardsFound": "No se encontraron guardias",
+        "noGuardsForStation": "No se encontraron vigilantes para este sitio de servicio",
+        "noGuardsFound": "No se encontraron vigilantes",
         "noTags": "Sin etiquetas",
         "qrButton": "QR",
         "searchPlaceholder": "Buscar...",
@@ -4321,11 +4321,11 @@
           "title": "Sin etiquetas"
         },
         "form": {
-          "askQuestionsLabel": "Hacer preguntas específicas a los guardias tras escanear la etiqueta",
+          "askQuestionsLabel": "Hacer preguntas específicas a los vigilantes tras escanear la etiqueta",
           "attachToShift": "Adjuntar al turno (opcional)",
           "coordsPlaceholder": "Lat, Lng",
           "createTourAndTag": "Crear recorrido y etiqueta",
-          "instructions": "Instrucciones para los guardias",
+          "instructions": "Instrucciones para los vigilantes",
           "latitude": "Latitud*",
           "loadingStations": "Cargando estaciones...",
           "loadingTours": "Cargando recorridos...",
@@ -4380,7 +4380,7 @@
         "created": "Estación creada",
         "deleteSelected": "Eliminar seleccionados",
         "detailsTitle": "Detalles de la estación",
-        "guardsCount": "Guardias",
+        "guardsCount": "Vigilantes",
         "lat": "Latitud",
         "lng": "Longitud",
         "loading": "Cargando...",
@@ -4400,7 +4400,7 @@
           "description": "Descripción",
           "descriptionPlaceholder": "Descripción opcional",
           "finishTime": "Fin",
-          "guards": "Guardias",
+          "guards": "Vigilantes",
           "name": "Nombre *",
           "schedule": "Horario *",
           "selectSchedule": "Selecciona horario",
@@ -4430,7 +4430,7 @@
           "title": "No se encontraron resultados"
         },
         "form": {
-          "assignGuard": "Asignar Guardia*",
+          "assignGuard": "Asignar Vigilante*",
           "maxDuration": "Duración máxima",
           "newSubTask": "Nueva subtarea",
           "taskDescriptionPlaceholder": "Descripción de la tarea",
@@ -4495,7 +4495,7 @@
       "exportSuccess": "Exportación exitosa",
       "filterButton": "Filtro",
       "filters": "Filtros",
-      "guard": "Guardia",
+      "guard": "Vigilante",
       "importVisitors": "Importar visitantes",
       "label": "Gestión de visitantes",
       "loading": "Cargando...",
@@ -4518,7 +4518,7 @@
       "searchLogs": "Buscar en bitácoras",
       "searchVisitor": "Buscar visitante",
       "selectClient": "Selecciona un cliente",
-      "selectGuard": "Selecciona un guardia",
+      "selectGuard": "Selecciona un vigilante",
       "selectSite": "Selecciona un sitio",
       "selectStation": "Selecciona una estación",
       "selectTag": "Selecciona una etiqueta",
@@ -4553,7 +4553,7 @@
         "date": "Fecha",
         "exitTime": "Hora de salida",
         "firstName": "Nombre",
-        "guard": "Guardia",
+        "guard": "Vigilante",
         "id": "ID",
         "idNumber": "ID",
         "lastName": "Apellidos",
@@ -4606,7 +4606,7 @@
     },
     "overview": {
       "cards": {
-        "guardsAssigned": "Guardias asignados",
+        "guardsAssigned": "Vigilantes asignados",
         "hoursWorked": "Horas trabajadas (últimos 7 días)",
         "incidents": "Informes de incidentes",
         "postSites": "Sitios de servicio",
@@ -4638,7 +4638,7 @@
         "departamentos": "Departamentos",
         "impuestos": "Impuestos",
         "integraciones": "Integraciones",
-        "keep-safe": "Guardias de seguridad",
+        "keep-safe": "Vigilantes de seguridad",
         "mfa": "Autenticación de dos factores",
         "notificaciones": "Notificaciones",
         "preferencias-correo": "Preferencias de correo",
@@ -4699,7 +4699,7 @@
       "title": "No se encontraron resultados"
     },
     "form": {
-      "assignGuard": "Asignar Guardia*",
+      "assignGuard": "Asignar Vigilante*",
       "continuous": "Continuo",
       "createAndAttach": "Crear recorrido y etiqueta",
       "createTitle": "Crear recorrido",
@@ -4707,7 +4707,7 @@
       "forceMedia": "Forzar adjuntar varios archivos multimedia",
       "name": "Nombre del recorrido",
       "scheduledDays": "Días Programados*",
-      "selectGuard": "Seleccionar guardia",
+      "selectGuard": "Seleccionar vigilante",
       "selectStation": "Seleccionar estación",
       "selectTime": "Seleccionar hora",
       "station": "Estación (opcional)",
@@ -4762,10 +4762,10 @@
   "siteTourTag": {
     "action": "Acción",
     "loading": "Cargando...",
-    "loadingGuards": "Cargando guardias...",
+    "loadingGuards": "Cargando vigilantes...",
     "newTagButton": "Nueva etiqueta",
-    "noGuardsForStation": "No se encontraron guardias para este puesto",
-    "noGuardsFound": "No se encontraron guardias",
+    "noGuardsForStation": "No se encontraron vigilantes para este puesto",
+    "noGuardsFound": "No se encontraron vigilantes",
     "noTags": "No hay etiquetas",
     "qrButton": "QR",
     "searchPlaceholder": "Buscar...",
@@ -4783,11 +4783,11 @@
       "title": "Sin etiquetas"
     },
     "form": {
-      "askQuestionsLabel": "Pedir preguntas al guardia tras escanear",
+      "askQuestionsLabel": "Pedir preguntas al vigilante tras escanear",
       "attachToShift": "Adjuntar a turno (opcional)",
       "coordsPlaceholder": "Lat, Lng",
       "createTourAndTag": "Crear recorrido y etiqueta",
-      "instructions": "Instrucciones para los guardias",
+      "instructions": "Instrucciones para los vigilantes",
       "latitude": "Latitud*",
       "loadingStations": "Cargando estaciones...",
       "loadingTours": "Cargando recorridos...",
@@ -4889,7 +4889,7 @@
     "exportPDF": "Exportar como PDF",
     "filterButton": "Filtro",
     "filters": "Filtros",
-    "guard": "Guardia",
+    "guard": "Vigilante",
     "importVisitors": "Importar visitantes",
     "loading": "Cargando...",
     "logDetails": "Detalles del Registro",
@@ -4911,7 +4911,7 @@
     "searchLogs": "Buscar en bitácoras",
     "searchVisitor": "Buscar visitante",
     "selectClient": "Selecciona un cliente",
-    "selectGuard": "Selecciona un guardia",
+    "selectGuard": "Selecciona un vigilante",
     "selectSite": "Selecciona un sitio",
     "selectStation": "Selecciona una estación",
     "selectTag": "Selecciona una etiqueta",
@@ -4942,7 +4942,7 @@
       "date": "Fecha",
       "exitTime": "Hora de salida",
       "firstName": "Nombre",
-      "guard": "Guardia",
+      "guard": "Vigilante",
       "id": "ID",
       "idNumber": "ID",
       "lastName": "Apellidos",
@@ -4989,7 +4989,7 @@
       "remove": "Eliminar"
     },
     "overview": {
-      "loadError": "No se pudo cargar el guardia",
+      "loadError": "No se pudo cargar el vigilante",
       "loading": "Cargando..."
     },
     "profile": {
@@ -5048,8 +5048,8 @@
         "skills": "Ej: Primeros auxilios, Defensa personal"
       },
       "toasts": {
-        "updateError": "Error al actualizar el guardia",
-        "updated": "Guardia actualizado exitosamente"
+        "updateError": "Error al actualizar el vigilante",
+        "updated": "Vigilante actualizado exitosamente"
       },
       "values": {
         "background": "Background",
@@ -5063,14 +5063,14 @@
     },
     "summary": {
       "previous": "Anterior",
-      "roleDefault": "Guardia de Seguridad",
+      "roleDefault": "Vigilante de Seguridad",
       "badge": {
-        "joined": "Guardia unido"
+        "joined": "Vigilante unido"
       },
       "header": {
         "about": "Acerca de",
         "addedOn": "Añadido el",
-        "guardNumber": "Número del Guardia",
+        "guardNumber": "Número del Vigilante",
         "lastShift": "Última Jornada"
       },
       "recentActivity": {
@@ -5107,11 +5107,11 @@
     },
     "orders": {
       "title": "Consignas específicas",
-      "subtitle": "Requisitos recurrentes que los guardias deben completar en esta estación.",
+      "subtitle": "Requisitos recurrentes que los vigilantes deben completar en esta estación.",
       "add": "Agregar consigna",
       "edit": "Editar consigna",
       "emptyTitle": "Sin consignas",
-      "emptyHint": "Agrega tareas recurrentes (por ejemplo: abrir los baños públicos a las 09:00) que el guardia deberá completar.",
+      "emptyHint": "Agrega tareas recurrentes (por ejemplo: abrir los baños públicos a las 09:00) que el vigilante deberá completar.",
       "loadError": "No se pudieron cargar las consignas",
       "saveError": "No se pudo guardar",
       "deleteError": "No se pudo eliminar",
@@ -5153,11 +5153,11 @@
       },
       "tabList": "Consignas",
       "tabLog": "Registro de actividad",
-      "fNotify": "Notificar a los guardias por push",
+      "fNotify": "Notificar a los vigilantes por push",
       "fNotifyBefore": "Avisar",
       "fNotifyMin": "minutos antes de la hora",
       "logEmpty": "Sin actividad registrada",
-      "logEmptyHint": "Cuando un guardia complete una consigna, aparecerá aquí con su evidencia.",
+      "logEmptyHint": "Cuando un vigilante complete una consigna, aparecerá aquí con su evidencia.",
       "viewVideo": "Ver video",
       "order": "Consigna"
     }

@@ -602,7 +602,7 @@ export default function OnboardingWizard({
 function WelcomeStep({ days, trialEnd }: { days: number | null; trialEnd: string | null }) {
   const items = [
     { icon: Building2, text: "Los datos de tu empresa (nombre, razón social, RUC)" },
-    { icon: Camera, text: "El logo que verán tus guardias y clientes" },
+    { icon: Camera, text: "El logo que verán tus vigilantes y clientes" },
     { icon: MapPin, text: "Contacto, dirección y zona horaria" },
   ];
   return (
@@ -616,7 +616,7 @@ function WelcomeStep({ days, trialEnd }: { days: number | null; trialEnd: string
       <div className="space-y-1.5">
         <h2 className="text-xl font-bold text-foreground">¡Te damos la bienvenida a CGuardPro!</h2>
         <p className="mx-auto max-w-md text-sm text-muted-foreground">
-          En menos de 2 minutos dejaremos lista tu empresa para que empieces a gestionar tus guardias, turnos y rondas.
+          En menos de 2 minutos dejaremos lista tu empresa para que empieces a gestionar tus vigilantes, turnos y rondas.
         </p>
       </div>
 

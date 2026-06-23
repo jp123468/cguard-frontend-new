@@ -29,7 +29,7 @@ type MatrixState = Record<
 
 // ================== Datos (puedes moverlos a un JSON externo) ==================
 const NOTIFICATIONS: NotificationItem[] = [
-  { id: "check-in-out", label: "Guardia registrado/salida", hint: "Check-in/out del guardia", default: { dashboard: true, email: true } },
+  { id: "check-in-out", label: "Vigilante registrado/salida", hint: "Check-in/out del vigilante", default: { dashboard: true, email: true } },
   { id: "report-sent", label: "Informe enviado", default: { dashboard: true } },
   { id: "task-completed", label: "Tarea completada", default: { dashboard: true } },
   { id: "task-missed", label: "Tarea perdida o retrasada", default: { dashboard: true } },
@@ -42,17 +42,17 @@ const NOTIFICATIONS: NotificationItem[] = [
   { id: "late-on-shift", label: "Retraso en el turno", default: { dashboard: true } },
   { id: "vigilance-mode", label: "Entrada de modo vigilancia enviada", default: { dashboard: true } },
   { id: "checklist-complete", label: "Lista de verificación completada", default: { dashboard: true } },
-  { id: "inactive-guard-alert", label: "Alerta de inactividad para guardias inactivos", default: { dashboard: true } },
+  { id: "inactive-guard-alert", label: "Alerta de inactividad para vigilantes inactivos", default: { dashboard: true } },
   { id: "geofence-alert", label: "Alertas de geovalla al entrar/salir", default: { dashboard: true } },
   { id: "pto-request", label: "Solicitud de tiempo libre", default: { dashboard: true } },
   { id: "panic-button", label: "Informe del botón de pánico", default: { dashboard: true } },
-  { id: "guard-late", label: "Guardia tardío", default: { dashboard: true } },
-  { id: "no-show", label: "Guardia sin asistencia", default: { dashboard: true } },
+  { id: "guard-late", label: "Vigilante tardío", default: { dashboard: true } },
+  { id: "no-show", label: "Vigilante sin asistencia", default: { dashboard: true } },
   { id: "patrol-route", label: "Inicio y fin de ruta de patrulla vehicular", default: { dashboard: true } },
   { id: "comment-mention", label: "Mención en un comentario", default: { dashboard: true } },
   { id: "parking-admin", label: "Administrador de estacionamiento", default: { dashboard: true } },
   { id: "license-expiry", label: "Expiración de Licencia" },
-  { id: "fall-detection", label: "Caída del Guardia/Dispositivo" },
+  { id: "fall-detection", label: "Caída del Vigilante/Dispositivo" },
 ];
 
 const columns: { key: ChannelKey; label: string }[] = [

@@ -24,7 +24,7 @@ export default function PostSiteLayout({ title, children, site }: Props) {
         { id: 'overview', label: t('postSites.Details.Stats', 'Estadísticas'), path: `/post-sites/${id || ':id'}/overview` },
         { id: 'profile', label: t('postSites.Details.Profile', 'Perfil'), path: `/post-sites/${id || ':id'}/profile` },
         { id: 'contacts', label: t('postSites.Details.Contacts', 'Contactos'), path: `/post-sites/${id || ':id'}/contacts` },
-        { id: 'assignGuards', label: t('postSites.Details.GuardsList', 'Lista de guardias'), path: `/post-sites/${id || ':id'}/assign-guards` },
+        { id: 'assignGuards', label: t('postSites.Details.GuardsList', 'Lista de vigilantes'), path: `/post-sites/${id || ':id'}/assign-guards` },
         { id: 'postOrders', label: t('postSites.Details.OperationalRequirements', 'Requisitos operativos'), path: `/post-sites/${id || ':id'}/post-orders` },
         { id: 'tasks', label: t('postSites.Details.TasksAssigned', 'Tareas asignadas'), path: `/post-sites/${id || ':id'}/tasks` },
         { id: 'stations', label: t('postSites.Details.Stations', 'Estaciones'), path: `/post-sites/${id || ':id'}/stations` },

@@ -20,7 +20,7 @@ export default function StationLayout({ title, children, station }: Props) {
       items: [
         { id: 'overview',   label: t('station.details.overview',   'Vista General'),         path: `${base}/overview` },
         { id: 'visitors',   label: t('station.details.visitors',   'Gestión de Visitantes'), path: `${base}/visitors` },
-        { id: 'guards',     label: t('station.details.guards',     'Guardias Asignados'),    path: `${base}/guards` },
+        { id: 'guards',     label: t('station.details.guards',     'Vigilantes Asignados'),    path: `${base}/guards` },
         { id: 'shifts',     label: t('station.details.shifts',     'Turnos'),                path: `${base}/shifts` },
         { id: 'orders',     label: t('station.details.orders',     'Consignas específicas'), path: `${base}/orders` },
         { id: 'site-tours', label: t('station.details.siteTours',  'Rondas de Seguridad'),   path: `${base}/site-tours` },

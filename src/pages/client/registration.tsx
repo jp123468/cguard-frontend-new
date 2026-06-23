@@ -300,7 +300,7 @@ export default function ClientRegistration() {
                 <img src="/assets/logo/miseguridad.png" alt="Mi Seguridad" className="h-12 w-12 rounded-xl object-contain shrink-0" />
                 <div>
                   <p className="text-sm font-bold text-foreground">Mi Seguridad</p>
-                  <p className="text-xs text-muted-foreground">Guardias y puestos en tiempo real, rondas con GPS, incidentes y reportes.</p>
+                  <p className="text-xs text-muted-foreground">Vigilantes y puestos en tiempo real, rondas con GPS, incidentes y reportes.</p>
                 </div>
               </div>
 

@@ -68,7 +68,7 @@ export default function NominaRecords() {
   };
 
   const columns: Column<AttendanceRecord>[] = [
-    { key: "guard", header: "Guardia", render: (_v, r) => r.guardName?.fullName || "—" },
+    { key: "guard", header: "Vigilante", render: (_v, r) => r.guardName?.fullName || "—" },
     { key: "station", header: "Puesto", render: (_v, r) => r.stationName?.stationName || "—" },
     { key: "scheduledStart", header: "Programado", render: (_v, r) => `${fmtTime(r.scheduledStart)} – ${fmtTime(r.scheduledEnd)}` },
     {
@@ -157,7 +157,7 @@ export default function NominaRecords() {
           {selected && (
             <>
               <SheetHeader>
-                <SheetTitle>{selected.guardName?.fullName || "Guardia"}</SheetTitle>
+                <SheetTitle>{selected.guardName?.fullName || "Vigilante"}</SheetTitle>
               </SheetHeader>
               <div className="mt-4 space-y-4 text-sm">
                 {/* Clock-in selfie (geo-stamped by the worker app) + timestamp */}

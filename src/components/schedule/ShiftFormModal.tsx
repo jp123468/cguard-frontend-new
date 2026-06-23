@@ -200,7 +200,7 @@ export default function ShiftFormModal({
       if (editShift.guard) {
         setGuard({
           id: editShift.guard.id,
-          label: guardDisplayName(editShift.guard) || "Guardia",
+          label: guardDisplayName(editShift.guard) || "Vigilante",
         });
       }
       if (editShift.station) {
@@ -291,11 +291,11 @@ export default function ShiftFormModal({
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           {/* Guard */}
           <SearchSelect
-            label="Guardia"
+            label="Vigilante"
             value={guard}
             onChange={setGuard}
             onSearch={searchGuards}
-            placeholder="Buscar guardia..."
+            placeholder="Buscar vigilante..."
           />
 
           {/* Post Site */}

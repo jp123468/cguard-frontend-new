@@ -106,7 +106,7 @@ export default function SiteTour() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Guardia *</Label>
+                    <Label>Vigilante *</Label>
                     <Select>
                       <SelectTrigger className="w-full"><SelectValue placeholder="José Alejo Pinos" /></SelectTrigger>
                       <SelectContent><SelectItem value="1">José Alejo Pinos</SelectItem></SelectContent>

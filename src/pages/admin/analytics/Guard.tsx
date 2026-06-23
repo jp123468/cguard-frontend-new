@@ -64,7 +64,7 @@ export default function Guard() {
 
   return (
     <AnalyticsShell
-      title="Analíticas de Guardias"
+      title="Analíticas de Vigilantes"
       subtitle="Puntuación de desempeño (mismo algoritmo de la app) y asistencia de tu personal."
       days={ops.days} setDays={ops.setDays} loading={ops.loading} error={ops.error}
       reload={() => { ops.reload(); loadLb(ops.days); }}
@@ -73,7 +73,7 @@ export default function Guard() {
         <>
           {/* KPIs */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard icon={<Award size={16} />} accent={GOLD} value={lb?.averageScore ?? "—"} label="Puntuación promedio" sub={`${counts?.scored ?? 0} guardias evaluados`} pct={lb?.averageScore ?? undefined} />
+            <MetricCard icon={<Award size={16} />} accent={GOLD} value={lb?.averageScore ?? "—"} label="Puntuación promedio" sub={`${counts?.scored ?? 0} vigilantes evaluados`} pct={lb?.averageScore ?? undefined} />
             <MetricCard icon={<Shield size={16} />} accent="#059669" value={counts?.excellent ?? 0} label="Excelentes" sub={`${counts?.good ?? 0} buenos · ${counts?.poor ?? 0} bajos`} />
             <MetricCard icon={<Shield size={16} />} accent="#0ea5e9" value={k.guardsOnDuty} label="En servicio" sub="ahora mismo" />
             <MetricCard icon={<Clock size={16} />} accent="#f59e0b" value={`${k.punctualityPct}%`} label="Puntualidad" sub={`${k.clockinsOnTime}/${k.clockinsTotal} a tiempo`} pct={k.punctualityPct} />
@@ -101,14 +101,14 @@ export default function Guard() {
             {lbLoading ? (
               <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-[#C8860A]" size={18} /></div>
             ) : !lb || lb.guards.length === 0 ? (
-              <p className="py-4 text-sm text-muted-foreground">No hay guardias para evaluar.</p>
+              <p className="py-4 text-sm text-muted-foreground">No hay vigilantes para evaluar.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead className="border-b text-xs uppercase tracking-wide text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 text-left font-semibold">#</th>
-                      <th className="px-3 py-2 text-left font-semibold">Guardia</th>
+                      <th className="px-3 py-2 text-left font-semibold">Vigilante</th>
                       <th className="px-3 py-2 text-left font-semibold">Puntuación</th>
                       <th className="px-3 py-2 text-left font-semibold">Nivel</th>
                       <th className="px-3 py-2 text-right font-semibold">Asistencia</th>

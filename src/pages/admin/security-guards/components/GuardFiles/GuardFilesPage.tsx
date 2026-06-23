@@ -36,7 +36,7 @@ export default function GuardFilesPage() {
         setGuard({ ...g, fullName });
       })
       .catch((err: any) => {
-        console.error('Error cargando guardia:', err);
+        console.error('Error cargando vigilante:', err);
         toast.error(t('guards.files.toasts.loadError', { defaultValue: 'Could not load guard' }));
       })
       .finally(() => {

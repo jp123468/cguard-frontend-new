@@ -522,7 +522,7 @@ export default function NewRoutePage() {
               </Card>
             </div>
 
-            {/* Filtro de Guardia eliminado según solicitud */}
+            {/* Filtro de Vigilante eliminado según solicitud */}
 
             <FormField
               control={form.control}
@@ -731,7 +731,7 @@ export default function NewRoutePage() {
                   <div className="flex items-center gap-3">
                     <Checkbox id="syncHits" checked={field.value} onCheckedChange={field.onChange} />
                     <Label htmlFor="syncHits" className="cursor-pointer">
-                      Sincronizar pasadas entre guardias
+                      Sincronizar pasadas entre vigilantes
                     </Label>
                   </div>
                 )}
@@ -744,7 +744,7 @@ export default function NewRoutePage() {
                   <div className="flex items-center gap-3">
                     <Checkbox id="forceOrder" checked={field.value} onCheckedChange={field.onChange} />
                     <Label htmlFor="forceOrder" className="cursor-pointer">
-                      Forzar al guardia a seguir la ruta de patrulla vehicular en orden
+                      Forzar al vigilante a seguir la ruta de patrulla vehicular en orden
                     </Label>
                   </div>
                 )}

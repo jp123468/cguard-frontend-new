@@ -104,7 +104,7 @@ export default function StationParking({ stationId }: Props) {
                   {t('station.parking.col.exit', 'Salida')}
                 </th>
                 <th className="px-6 py-3 text-left font-semibold text-foreground/70">
-                  {t('station.parking.col.guard', 'Guardia')}
+                  {t('station.parking.col.guard', 'Vigilante')}
                 </th>
               </tr>
             </thead>

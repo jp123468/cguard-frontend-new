@@ -26,28 +26,28 @@ export const REPORT_SECTIONS: ReportSection[] = [
         id: "entry-exit",
         title: "Informe de Entrada/Salida",
         description:
-          "Ver cuando su guardia de seguridad registra entrada y salida del sitio",
+          "Ver cuando su vigilante de seguridad registra entrada y salida del sitio",
         href: "/reports/check-in-out",
       },
       {
         id: "site-tours",
         title: "Informe de Recorridos del Sitio",
         description:
-          "Ver recorridos completados y perdidos por guardias de seguridad",
+          "Ver recorridos completados y perdidos por vigilantes de seguridad",
         href: "/reports/site-tour",
       },
       {
         id: "tasks",
         title: "Informe de Tareas",
         description:
-          "Ver las tareas completadas por los guardias de seguridad",
+          "Ver las tareas completadas por los vigilantes de seguridad",
         href: "/reports/tasks",
       },
       {
         id: "dar",
         title: "Informe DAR",
         description:
-          "Ver actividad diaria de los guardias de seguridad",
+          "Ver actividad diaria de los vigilantes de seguridad",
         href: "/reports/dar",
       },
       {
@@ -60,7 +60,7 @@ export const REPORT_SECTIONS: ReportSection[] = [
         id: "checklist",
         title: "Informe de lista de verificación",
         description:
-          "Ver las listas de verificación completadas por los guardias",
+          "Ver las listas de verificación completadas por los vigilantes",
         href: "/reports/checklist",
       },
       {
@@ -71,8 +71,8 @@ export const REPORT_SECTIONS: ReportSection[] = [
       },
       {
         id: "guard-kpi",
-        title: "Informe de KPI del Guardia",
-        description: "Ver informe de KPI del guardia",
+        title: "Informe de KPI del Vigilante",
+        description: "Ver informe de KPI del vigilante",
         href: "/reports/guard-kpi",
       },
     ],
@@ -206,9 +206,9 @@ export const REPORT_SECTIONS: ReportSection[] = [
       },
       {
         id: "timecard-guard",
-        title: "Horas de Tarjeta de Tiempo por Guardia",
+        title: "Horas de Tarjeta de Tiempo por Vigilante",
         description:
-          "Ver horas de tarjeta de tiempo por guardia",
+          "Ver horas de tarjeta de tiempo por vigilante",
         href: "/reports/timecard/by-guard",
       },
     ],
@@ -254,49 +254,49 @@ export const REPORT_SECTIONS: ReportSection[] = [
         id: "delivery-logs",
         title: "Registros de Entrega",
         description:
-          "Ver entregas compartidas por guardias de seguridad",
+          "Ver entregas compartidas por vigilantes de seguridad",
         href: "/reports/passdown",
       },
       {
         id: "watch-mode-logs",
         title: "Registros de Modo Vigilancia",
         description:
-          "Ver los archivos multimedia enviados por los guardias de seguridad",
+          "Ver los archivos multimedia enviados por los vigilantes de seguridad",
         href: "/reports/watch-mode",
       },
       {
         id: "checkpoint-logs",
         title: "Registros de Puntos de Control de Recorridos",
         description:
-          "Ver los puntos de control escaneados por los guardias de seguridad",
+          "Ver los puntos de control escaneados por los vigilantes de seguridad",
         href: "/reports/tour-check-point",
       },
       {
         id: "inactive-guard-logs",
-        title: "Registros de Guardia Inactivo",
+        title: "Registros de Vigilante Inactivo",
         description:
-          "Ver registros de inactividad de los guardias de seguridad",
+          "Ver registros de inactividad de los vigilantes de seguridad",
         href: "/reports/guard-idle-log",
       },
       {
         id: "panic-button-logs",
         title: "Registros del Botón de Pánico",
         description:
-          "Ver registros del botón de pánico presionado por los guardias",
+          "Ver registros del botón de pánico presionado por los vigilantes",
         href: "/reports/panic-button-log",
       },
       {
         id: "geofence-logs",
         title: "Registros de Geo Vallas",
         description:
-          "Ver registros de geovalla de los guardias de seguridad",
+          "Ver registros de geovalla de los vigilantes de seguridad",
         href: "/reports/geo-fence-log",
       },
       {
         id: "fall-alert-logs",
-        title: "Registros de Alerta de Caída de Guardia",
+        title: "Registros de Alerta de Caída de Vigilante",
         description:
-          "Ver registros de alerta de caída de guardias/dispositivos de seguridad",
+          "Ver registros de alerta de caída de vigilantes/dispositivos de seguridad",
         href: "/reports/guard-device-fall-report",
       },
       {
@@ -317,7 +317,7 @@ export const REPORT_SECTIONS: ReportSection[] = [
         id: "license-logs",
         title: "Registro de Licencias",
         description:
-          "Ver registro de licencias de los guardias",
+          "Ver registro de licencias de los vigilantes",
         href: "/reports/license",
       },
     ],

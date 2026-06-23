@@ -91,7 +91,7 @@ export default function NominaPayrollSummary() {
 
   const exportXlsx = () => {
     const data = rows.map((r) => ({
-      Guardia: r.guardName,
+      Vigilante: r.guardName,
       Turnos: r.shifts,
       "Horas regulares": r.regularHours,
       "Horas extra": r.overtimeHours,
@@ -111,7 +111,7 @@ export default function NominaPayrollSummary() {
   const exportPdf = () => {
     const esc = (s: any) =>
       String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
-    const head = ["Guardia", "Turnos", "H. reg.", "H. extra", "H. tot.", "Tardanzas", "Inasist.", "Correc."]
+    const head = ["Vigilante", "Turnos", "H. reg.", "H. extra", "H. tot.", "Tardanzas", "Inasist.", "Correc."]
       .concat(ratesEnabled ? ["Pago bruto"] : []);
     const body = rows
       .map((r) => {
@@ -136,7 +136,7 @@ export default function NominaPayrollSummary() {
 
   const exportCsv = () => {
     const headers = [
-      "Guardia", "Turnos", "Horas regulares", "Horas extra", "Horas totales",
+      "Vigilante", "Turnos", "Horas regulares", "Horas extra", "Horas totales",
       "Tardanzas", "Sin salida", "Inasistencias", "Correcciones", "Horas pagables",
     ].concat(ratesEnabled ? ["Pago bruto"] : []);
     const lines = rows.map((r) =>
@@ -153,7 +153,7 @@ export default function NominaPayrollSummary() {
   };
 
   const columns: Column<any>[] = [
-    { key: "guardName", header: "Guardia" },
+    { key: "guardName", header: "Vigilante" },
     { key: "shifts", header: "Turnos" },
     { key: "regularHours", header: "H. regulares", render: (_v, r) => r.regularHours.toFixed(2) },
     { key: "overtimeHours", header: "H. extra", render: (_v, r) => r.overtimeHours.toFixed(2) },
@@ -190,7 +190,7 @@ export default function NominaPayrollSummary() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold text-foreground">Resumen de Nómina</h1>
-            <p className="text-sm text-muted-foreground">Horas pagables por guardia (sin cálculo de pago)</p>
+            <p className="text-sm text-muted-foreground">Horas pagables por vigilante (sin cálculo de pago)</p>
           </div>
           <div className="flex flex-wrap items-end gap-2">
             <label className="text-xs text-muted-foreground">

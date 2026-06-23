@@ -95,7 +95,7 @@ export default function GuardMemosPage() {
           wasAccepted: false,
         },
       });
-      toast.success(t('guards.memos.created', { defaultValue: 'Memo enviado al guardia' }));
+      toast.success(t('guards.memos.created', { defaultValue: 'Memo enviado al vigilante' }));
       setShowModal(false);
       setForm({ subject: '', content: '' });
       await loadMemos();
@@ -134,7 +134,7 @@ export default function GuardMemosPage() {
                   {t('guards.memos.title', { defaultValue: 'Memos' })}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {t('guards.memos.subtitle', { defaultValue: 'Comunicados dirigidos a este guardia.' })}
+                  {t('guards.memos.subtitle', { defaultValue: 'Comunicados dirigidos a este vigilante.' })}
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -171,7 +171,7 @@ export default function GuardMemosPage() {
                     {t('guards.memos.empty.title', { defaultValue: 'Sin memos' })}
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {t('guards.memos.empty.message', { defaultValue: 'Este guardia aún no tiene memos.' })}
+                    {t('guards.memos.empty.message', { defaultValue: 'Este vigilante aún no tiene memos.' })}
                   </p>
                 </div>
               </div>

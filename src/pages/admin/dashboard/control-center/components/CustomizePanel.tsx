@@ -6,7 +6,7 @@ import type { EntityKind, LiveStatus } from "../types";
 import { MAP_ICONS, ICON_NAMES } from "../iconRegistry";
 
 const KIND_LABEL: Record<EntityKind, string> = {
-  tenant: "Sede / negocio", station: "Puesto", supervisor: "Supervisor", guard: "Guardia", incident: "Incidente",
+  tenant: "Sede / negocio", station: "Puesto", supervisor: "Supervisor", guard: "Vigilante", incident: "Incidente",
 };
 const STATUS_LABEL: Record<LiveStatus, string> = {
   online: "En línea", offline: "Fuera de línea", patrol: "En ronda",

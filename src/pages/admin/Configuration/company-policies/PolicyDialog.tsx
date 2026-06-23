@@ -141,7 +141,7 @@ export default function PolicyDialog({
             </div>
 
             <div>
-              <Label className="mb-1 block">Seleccionar Guardias Específicos</Label>
+              <Label className="mb-1 block">Seleccionar Vigilantes Específicos</Label>
               <GuardMultiSelect value={guards} onChange={setGuards} />
               {selectedGuards.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -196,13 +196,13 @@ function GuardMultiSelect({
           {picked.length ? (
             <span className="truncate">{picked.map((g) => g.name).join(", ")}</span>
           ) : (
-            <span className="text-muted-foreground">Seleccionar guardias…</span>
+            <span className="text-muted-foreground">Seleccionar vigilantes…</span>
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[360px]">
         <Command>
-          <CommandInput placeholder="Buscar guardia…" />
+          <CommandInput placeholder="Buscar vigilante…" />
           <CommandList>
             <CommandGroup>
               {MOCK_GUARDS.map((g) => {

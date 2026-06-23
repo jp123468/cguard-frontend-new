@@ -139,7 +139,7 @@ export default function RadioVoiceWidget() {
         <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
           <Volume2 size={26} className="text-muted-foreground" />
           <p className="text-xs text-muted-foreground">
-            Enciende el canal general para escuchar y hablar con los guardias en tiempo real. Sigue activo aunque cierres esta ventana.
+            Enciende el canal general para escuchar y hablar con los vigilantes en tiempo real. Sigue activo aunque cierres esta ventana.
           </p>
         </div>
       ) : (

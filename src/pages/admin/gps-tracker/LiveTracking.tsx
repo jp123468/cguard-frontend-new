@@ -123,10 +123,10 @@ export default function LiveTrackingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Guardia*</Label>
+                    <Label>Vigilante*</Label>
                     <Select>
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar guardia" />
+                        <SelectValue placeholder="Seleccionar vigilante" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="jose">José Alejo Pinos</SelectItem>
@@ -166,7 +166,7 @@ export default function LiveTrackingPage() {
             <table className="min-w-full text-sm text-left border-collapse">
               <thead className="bg-muted/30">
                 <tr className="border-b">
-                  <th className="px-4 py-3 font-semibold">Guardia</th>
+                  <th className="px-4 py-3 font-semibold">Vigilante</th>
                   <th className="px-4 py-3 font-semibold">
                     Puesto de seguridad
                   </th>

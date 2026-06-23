@@ -179,7 +179,7 @@ function Fields() {
         {[
           { name: "enableSkillSet", label: "Habilitar Conjunto de Habilidades en la Programación" },
           { name: "enableDepartment", label: "Habilitar Departamento en la Programación" },
-          { name: "photoTimestamp", label: "Habilitar marca de tiempo en fotos tomadas por los guardias" },
+          { name: "photoTimestamp", label: "Habilitar marca de tiempo en fotos tomadas por los vigilantes" },
         ].map((row) => (
           <FormField
             key={row.name}

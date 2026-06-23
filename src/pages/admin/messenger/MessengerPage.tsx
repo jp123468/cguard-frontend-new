@@ -210,7 +210,7 @@ export default function MessengerPage() {
                         <p className="truncate text-sm font-semibold text-foreground">{c.recipientName}</p>
                         <span className="shrink-0 text-[10px] text-muted-foreground">{fmtTime(c.lastMessageAt)}</span>
                       </div>
-                      <p className="truncate text-xs text-muted-foreground">{c.lastMessagePreview || (c.isGroup ? `Grupo · ${c.memberCount || 0} miembros` : c.recipientType === "guard" ? "Guardia" : "Cliente")}</p>
+                      <p className="truncate text-xs text-muted-foreground">{c.lastMessagePreview || (c.isGroup ? `Grupo · ${c.memberCount || 0} miembros` : c.recipientType === "guard" ? "Vigilante" : "Cliente")}</p>
                     </div>
                     {(c.unreadCount || 0) > 0 && <span className="ml-1 grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">{c.unreadCount}</span>}
                   </button>
@@ -232,7 +232,7 @@ export default function MessengerPage() {
                   <div className="grid h-9 w-9 place-items-center rounded-full bg-[#C8860A]/15 text-xs font-bold text-[#C8860A]">{selected.isGroup ? <Users size={16} /> : (selected.recipientName || "?").slice(0, 2).toUpperCase()}</div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-foreground">{selected.recipientName}</p>
-                    <p className="text-[11px] text-muted-foreground">{selected.isGroup ? `Grupo · ${selected.memberCount || 0} miembros` : selected.recipientType === "guard" ? "Guardia" : "Cliente"}{selected.isOneWay ? " · Solo lectura" : ""}</p>
+                    <p className="text-[11px] text-muted-foreground">{selected.isGroup ? `Grupo · ${selected.memberCount || 0} miembros` : selected.recipientType === "guard" ? "Vigilante" : "Cliente"}{selected.isOneWay ? " · Solo lectura" : ""}</p>
                   </div>
                   {selected.isGroup && (
                     <button
@@ -380,7 +380,7 @@ function ComposeDialog({ onClose, onSent }: { onClose: () => void; onSent: (conv
       try {
         const res = await securityGuardService.autocomplete(q.trim(), 15);
         const rows = Array.isArray(res) ? res : (res?.rows || []);
-        if (active) setResults(rows.filter((r: any) => r && r.id && !String(r.id).startsWith("sg:")).map((r: any) => ({ id: r.id, label: r.label || r.name || "Guardia" })));
+        if (active) setResults(rows.filter((r: any) => r && r.id && !String(r.id).startsWith("sg:")).map((r: any) => ({ id: r.id, label: r.label || r.name || "Vigilante" })));
       } catch { /* ignore */ }
     }, 300);
     return () => { active = false; clearTimeout(t); };
@@ -461,7 +461,7 @@ function ComposeDialog({ onClose, onSent }: { onClose: () => void; onSent: (conv
                 <div>
                   <div className="relative">
                     <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar guardia…" className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
+                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar vigilante…" className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
                   </div>
                   {results.length > 0 && (
                     <div className="mt-2 max-h-44 overflow-auto rounded-xl border border-border">
@@ -495,7 +495,7 @@ function ComposeDialog({ onClose, onSent }: { onClose: () => void; onSent: (conv
                       ))}
                     </div>
                   )}
-                  <p className="mt-1.5 text-[11px] text-muted-foreground">Los guardias asignados a este puesto se añaden automáticamente y el grupo se mantiene al día con las asignaciones.</p>
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">Los vigilantes asignados a este puesto se añaden automáticamente y el grupo se mantiene al día con las asignaciones.</p>
                 </div>
               )}
               <label className="flex items-center gap-2 text-sm text-foreground">
@@ -546,7 +546,7 @@ function MembersPanel({ conversation, onClose, onChanged }: { conversation: Conv
       try {
         const res = await securityGuardService.autocomplete(q.trim(), 15);
         const rows = Array.isArray(res) ? res : (res?.rows || []);
-        if (active) setResults(rows.filter((r: any) => r && r.id && !String(r.id).startsWith("sg:")).map((r: any) => ({ id: r.id, label: r.label || r.name || "Guardia" })));
+        if (active) setResults(rows.filter((r: any) => r && r.id && !String(r.id).startsWith("sg:")).map((r: any) => ({ id: r.id, label: r.label || r.name || "Vigilante" })));
       } catch { /* ignore */ }
     }, 300);
     return () => { active = false; clearTimeout(t); };
@@ -584,7 +584,7 @@ function MembersPanel({ conversation, onClose, onChanged }: { conversation: Conv
         <div className="border-b border-border p-3">
           <div className="relative">
             <UserPlus size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Añadir guardia…" disabled={busy} className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Añadir vigilante…" disabled={busy} className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
           </div>
           {results.length > 0 && (
             <div className="mt-2 max-h-40 overflow-auto rounded-xl border border-border">
@@ -606,7 +606,7 @@ function MembersPanel({ conversation, onClose, onChanged }: { conversation: Conv
                 <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#C8860A]/15 text-[10px] font-bold text-[#C8860A]">{(m.name || "?").slice(0, 2).toUpperCase()}</div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{m.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{m.participantType === "staff" ? "Operador" : "Guardia"}{m.role === "admin" ? " · Admin" : ""}{m.source === "auto" ? " · Auto" : ""}</p>
+                  <p className="text-[10px] text-muted-foreground">{m.participantType === "staff" ? "Operador" : "Vigilante"}{m.role === "admin" ? " · Admin" : ""}{m.source === "auto" ? " · Auto" : ""}</p>
                 </div>
                 {m.role !== "admin" && (
                   <button onClick={() => removeMember(m.userId)} disabled={busy} title="Quitar" className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground hover:bg-red-50 hover:text-red-600 disabled:opacity-50"><X size={14} /></button>

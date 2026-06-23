@@ -10,9 +10,9 @@ import NotificationsTab from "./NotificationsTab";
 export default function GuardsGlobalSettingsPage() {
   return (
     <AppLayout>
-      <SettingsLayout navKey="configuracion" title="Configuración Global de Guardias">
+      <SettingsLayout navKey="configuracion" title="Configuración Global de Vigilantes">
         <div className="text-sm font-semibold text-red-600 mb-4">
-          Los cambios se reflejarán en todos los guardias
+          Los cambios se reflejarán en todos los vigilantes
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">

@@ -161,7 +161,7 @@ export default function TrainingCoursesPage() {
           <h1 className="text-xl font-semibold">Cursos de Entrenamiento</h1>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Crea cursos profesionales, agrega lecciones y cuestionarios, y asígnalos a tus guardias.
+          Crea cursos profesionales, agrega lecciones y cuestionarios, y asígnalos a tus vigilantes.
         </p>
 
         <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -263,7 +263,7 @@ export default function TrainingCoursesPage() {
                           <Pencil className="mr-2 h-4 w-4" /> Abrir / Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/training/courses/${c.id}/enrollments`)}>
-                          <Users className="mr-2 h-4 w-4" /> Progreso de guardias
+                          <Users className="mr-2 h-4 w-4" /> Progreso de vigilantes
                         </DropdownMenuItem>
                         {canDestroy && !c.isAddon && (
                           <DropdownMenuItem className="text-red-600" onClick={() => setDeleteId(c.id)}>

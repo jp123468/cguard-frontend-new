@@ -93,7 +93,7 @@ function priorityMeta(p?: number) {
 }
 
 const DISPATCH_TYPES: { value: AlarmDispatchType; label: string }[] = [
-  { value: "guard", label: "Guardia" },
+  { value: "guard", label: "Vigilante" },
   { value: "police", label: "Policía" },
   { value: "fire", label: "Bomberos" },
   { value: "medical", label: "Médico" },

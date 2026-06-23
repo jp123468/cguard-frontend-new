@@ -164,10 +164,10 @@ export default function Incident() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Guardia*</Label>
+                    <Label>Vigilante*</Label>
                     <Select>
                       <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                      <SelectContent><SelectItem value="1">Guardia 1</SelectItem></SelectContent>
+                      <SelectContent><SelectItem value="1">Vigilante 1</SelectItem></SelectContent>
                     </Select>
                   </div>
 
@@ -252,7 +252,7 @@ export default function Incident() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Guardia *</Label>
+                    <Label>Vigilante *</Label>
                     <Select>
                       <SelectTrigger className="w-full"><SelectValue placeholder="José Alejo Pinos" /></SelectTrigger>
                       <SelectContent><SelectItem value="1">José Alejo Pinos</SelectItem></SelectContent>
@@ -358,7 +358,7 @@ export default function Incident() {
           <div>ID</div>
           <div>Cliente</div>
           <div>Puesto de seguridad</div>
-          <div>Guardia</div>
+          <div>Vigilante</div>
           <div>Informe</div>
           <div>Fecha/Hora</div>
           <div>Tipo de Incidente</div>

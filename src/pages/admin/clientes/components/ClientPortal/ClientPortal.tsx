@@ -49,7 +49,7 @@ export default function ClientPortal({ client }: Props) {
           Acceso al Portal del Cliente
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Permite que el cliente acceda al portal para ver sus facturas, guardias asignados y más.
+          Permite que el cliente acceda al portal para ver sus facturas, vigilantes asignados y más.
         </p>
       </div>
 

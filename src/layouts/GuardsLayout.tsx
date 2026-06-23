@@ -23,8 +23,8 @@ export default function GuardsLayout({ navKey, title, children }: Props) {
   // Labels to hide (normalized, lowercase, without accents)
   const hiddenLabels = [
     'disponibilidad',
-    'indicadores claves de guardias',
-    'indicadores clave de guardias',
+    'indicadores claves de vigilantes',
+    'indicadores clave de vigilantes',
     'indicadores clave',
     'recordatorios',
     'archivos',

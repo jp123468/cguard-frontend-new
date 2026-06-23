@@ -88,7 +88,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
         onDuty++;
         if (la == null || ln == null) return;
         entities.push({ id: `g-${g.guardId || g.id}`, kind: "guard", lat: la, lng: ln, status: "online",
-          label: g.fullName || g.name || "Guardia", sub: g.postSiteName || "En servicio",
+          label: g.fullName || g.name || "Vigilante", sub: g.postSiteName || "En servicio",
           meta: { punchInTime: g.punchInTime, battery: g.punchInBattery } });
       });
 
@@ -123,7 +123,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
 
       // ── KPIs (real where available; fallback flagged otherwise) ──
       const kpis: Kpi[] = [
-        kpi("onDuty", "Guardias en servicio", onDuty, { status: onDuty > 0 ? "online" : "offline" }),
+        kpi("onDuty", "Vigilantes en servicio", onDuty, { status: onDuty > 0 ? "online" : "offline" }),
         kpi("stations", "Puestos activos", counts.stations, { status: "patrol" }),
         kpi("supervisors", "Supervisores", supervisors, { status: "online", hint: "Estado en línea no disponible en backend." , fallback: supervisors === 0 }),
         kpi("openIncidents", "Incidentes abiertos", openIncidents, { status: openIncidents > 0 ? "incident" : "online" }),
@@ -174,7 +174,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
           const la = coord(g.latitude ?? g.punchInLatitude), ln = coord(g.longitude ?? g.punchInLongitude);
           if (la == null || ln == null) return;
           guards.push({ id: `g-${g.guardId || g.id}`, kind: "guard", lat: la, lng: ln, status: "online",
-            label: g.fullName || "Guardia", sub: g.postSiteName || "En servicio", meta: { battery: g.punchInBattery } });
+            label: g.fullName || "Vigilante", sub: g.postSiteName || "En servicio", meta: { battery: g.punchInBattery } });
         });
         return { ...s, entities: [...others, ...guards],
           health: { ...s.health, onlineDevices: onDuty, lastSync: new Date().toISOString() } };

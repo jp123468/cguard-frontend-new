@@ -42,7 +42,7 @@ export default function AuthLayout({ children, title, variant = 'admin', subtitl
       ];
 
   const eyebrow = isField
-    ? t('auth.fieldLanding.eyebrow', { defaultValue: 'App para Guardias' })
+    ? t('auth.fieldLanding.eyebrow', { defaultValue: 'App para Vigilantes' })
     : t('auth.landing.eyebrow', { defaultValue: 'Plataforma de Seguridad' });
   const titlePart1 = isField
     ? t('auth.fieldLanding.title_part1', { defaultValue: 'Tu turno,' })
@@ -51,7 +51,7 @@ export default function AuthLayout({ children, title, variant = 'admin', subtitl
     ? t('auth.fieldLanding.title_part2', { defaultValue: 'bajo control.' })
     : t('auth.landing.title_part2');
   const panelDesc = isField
-    ? t('auth.fieldLanding.desc', { defaultValue: 'Restablece la contraseña de tu cuenta de guardia para volver a entrar a la app C-Guard Pro.' })
+    ? t('auth.fieldLanding.desc', { defaultValue: 'Restablece la contraseña de tu cuenta de vigilante para volver a entrar a la app C-Guard Pro.' })
     : t('auth.landing.desc', { product: 'CGUARD' });
   const formSubtitle = subtitle ?? panelDesc;
 

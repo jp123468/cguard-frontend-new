@@ -73,7 +73,7 @@ export function PanicAlertOverlay({
           <Siren size={40} className="text-white animate-pulse shrink-0" />
           <div className="min-w-0">
             <div className="text-2xl font-black tracking-tight text-white leading-none">ALERTA DE PÁNICO</div>
-            <div className="text-sm text-red-100 mt-1">Un guardia activó el botón de emergencia</div>
+            <div className="text-sm text-red-100 mt-1">Un vigilante activó el botón de emergencia</div>
           </div>
           {alerts.length > 1 && (
             <span className="ml-auto shrink-0 rounded-full bg-white text-red-700 text-sm font-bold px-3 py-1">
@@ -85,7 +85,7 @@ export function PanicAlertOverlay({
         <div className="px-6 py-5 space-y-4">
           <Row icon={<Building2 size={20} />} label="Puesto" value={p.stationName || p.siteName} />
           <Row icon={<MapPin size={20} />} label="Ubicación" value={p.address || p.location} />
-          <Row icon={<User size={20} />} label="Guardia" value={p.guardName} />
+          <Row icon={<User size={20} />} label="Vigilante" value={p.guardName} />
           <Row icon={<Phone size={20} />} label="Teléfono del sitio" value={p.phone} />
           <Row icon={<Clock size={20} />} label="Hora" value={when} />
 

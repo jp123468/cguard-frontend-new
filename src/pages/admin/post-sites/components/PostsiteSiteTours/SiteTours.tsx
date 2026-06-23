@@ -127,7 +127,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
   const [selectTime, setSelectTime] = useState('');
   const [maxDuration, setMaxDuration] = useState('');
   const [stationId, setStationId] = useState('');
-  // Eliminado assignGuard: los recorridos no requieren guardia específico
+  // Eliminado assignGuard: los recorridos no requieren vigilante específico
   const [enableNotes, setEnableNotes] = useState(false);
   const [forceMedia, setForceMedia] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -184,7 +184,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
   
 
   useEffect(() => {
-    // Solo cargar guardias asignados a este post site cuando se abre el modal
+    // Solo cargar vigilantes asignados a este post site cuando se abre el modal
     // Load stations for this post site when opening modal
     if (showNewTourModal && stations.length === 0) {
       (async () => {
@@ -1220,7 +1220,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                 )}
               </div>
 
-              {/* Eliminado campo de asignación de guardia: los recorridos pueden ser realizados por cualquier guardia de la estación */}
+              {/* Eliminado campo de asignación de vigilante: los recorridos pueden ser realizados por cualquier vigilante de la estación */}
 
               {/*<div className="space-y-2">
                 <label className="flex items-center gap-2"><input type="checkbox" checked={enableNotes} onChange={e => setEnableNotes(e.target.checked)} /> {t('siteTour.form.enableNotes')}</label>
@@ -1276,7 +1276,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                           toast.success(t('siteTour.notifications.created', 'Site tour created'));
                         }
 
-                        // Ya no se persiste asignación de guardia: los recorridos son generales para la estación
+                        // Ya no se persiste asignación de vigilante: los recorridos son generales para la estación
                         // refresh list
                         try { await fetchTours(); } catch (e) { /* ignore */ }
                         // reset and close

@@ -150,7 +150,7 @@ export default function ShiftExchange() {
 
   const handleCreate = async () => {
     if (!form.fromGuardId) {
-      alert("Por favor seleccione un guardia solicitante");
+      alert("Por favor seleccione un vigilante solicitante");
       return;
     }
     setSaving(true);
@@ -259,7 +259,7 @@ export default function ShiftExchange() {
             <div className="relative w-full md:w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Buscar guardia..."
+                placeholder="Buscar vigilante..."
                 className="pl-9"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
@@ -283,7 +283,7 @@ export default function ShiftExchange() {
                   </SheetHeader>
                   <div className="grid gap-6 py-6">
                     <div className="grid gap-2">
-                      <Label>Guardia solicitante*</Label>
+                      <Label>Vigilante solicitante*</Label>
                       <Select value={form.fromGuardId} onValueChange={(v) => setForm({ ...form, fromGuardId: v })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar" />
@@ -297,13 +297,13 @@ export default function ShiftExchange() {
                     </div>
 
                     <div className="grid gap-2">
-                      <Label>Guardia receptor (opcional)</Label>
+                      <Label>Vigilante receptor (opcional)</Label>
                       <Select value={form.toGuardId} onValueChange={(v) => setForm({ ...form, toGuardId: v })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Cualquier guardia</SelectItem>
+                          <SelectItem value="">Cualquier vigilante</SelectItem>
                           {guards.map((g) => (
                             <SelectItem key={g.userId} value={g.userId}>{g.fullName}</SelectItem>
                           ))}

@@ -156,7 +156,7 @@ export default function TrainingCourseDetailPage() {
             </div>
             {isAddon && (
               <p className="text-xs text-muted-foreground mt-1">
-                Curso de la plataforma otorgado a tu empresa. Es de solo lectura; puedes asignarlo a tus guardias.
+                Curso de la plataforma otorgado a tu empresa. Es de solo lectura; puedes asignarlo a tus vigilantes.
               </p>
             )}
           </div>
@@ -231,7 +231,7 @@ export default function TrainingCourseDetailPage() {
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <div>
                     <Label className="cursor-pointer">Publicado</Label>
-                    <p className="text-xs text-muted-foreground">Los cursos publicados pueden asignarse a los guardias.</p>
+                    <p className="text-xs text-muted-foreground">Los cursos publicados pueden asignarse a los vigilantes.</p>
                   </div>
                   <Switch checked={meta.published} disabled={readOnly} onCheckedChange={(v) => setMeta({ ...meta, published: v })} />
                 </div>

@@ -319,7 +319,7 @@ export default function AddStationPage() {
                     <input type="time" value={finishTimeInDay} onChange={(e) => setFinishTimeInDay(e.target.value)} className={inputCls} />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-foreground">{t('postSites.stations.form.guards', 'Guardias')}</label>
+                    <label className="mb-2 block text-sm font-medium text-foreground">{t('postSites.stations.form.guards', 'Vigilantes')}</label>
                     <div className="flex h-[42px] items-center rounded-md border border-input bg-muted/40 px-3 text-sm">
                       <span className="font-semibold text-foreground">{requiredGuards} fijo{requiredGuards > 1 ? 's' : ''}</span>
                       {jornadaType(startingTimeInDay, finishTimeInDay) && (
@@ -344,9 +344,9 @@ export default function AddStationPage() {
 
               {turnoType && (
                 <p className="rounded-md bg-muted/30 p-3 text-xs text-muted-foreground">
-                  <strong className="text-foreground/80">{requiredGuards} guardia{requiredGuards > 1 ? 's' : ''} fijo{requiredGuards > 1 ? 's' : ''}</strong> en el puesto +{' '}
+                  <strong className="text-foreground/80">{requiredGuards} vigilante{requiredGuards > 1 ? 's' : ''} fijo{requiredGuards > 1 ? 's' : ''}</strong> en el puesto +{' '}
                   <strong className="text-foreground/80">1 sacafranco</strong> que cubre los días de descanso. El sacafranco salta entre
-                  puestos — no pertenece a un solo puesto, por eso no se cuenta en las guardias requeridas.
+                  puestos — no pertenece a un solo puesto, por eso no se cuenta en las vigilantes requeridas.
                 </p>
               )}
 
@@ -400,7 +400,7 @@ export default function AddStationPage() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground sm:col-span-2">
-                  {t('postSites.stations.form.clockInBufferHint', 'Minutos antes/después de la hora de inicio en que el guardia puede marcar entrada. Vacío = usar el valor por defecto de la empresa.')}
+                  {t('postSites.stations.form.clockInBufferHint', 'Minutos antes/después de la hora de inicio en que el vigilante puede marcar entrada. Vacío = usar el valor por defecto de la empresa.')}
                 </p>
               </div>
 

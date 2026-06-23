@@ -132,14 +132,14 @@ export default function TrackingHistoryPage() {
                     </Select>
                   </div>
 
-                  {/* Guardia */}
+                  {/* Vigilante */}
                   <div>
                     <label className="text-sm font-medium block mb-2">
-                      Guardia*
+                      Vigilante*
                     </label>
                     <Select>
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar Guardia" />
+                        <SelectValue placeholder="Seleccionar Vigilante" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="jose">José Alejo Pinos</SelectItem>

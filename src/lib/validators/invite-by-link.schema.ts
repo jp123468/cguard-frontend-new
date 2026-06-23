@@ -9,7 +9,7 @@ export const inviteByLinkEntrySchema = z.object({
 
 export const inviteByLinkSchema = z.object({
   link: z.string().trim().url("Enlace inválido"),
-  entries: z.array(inviteByLinkEntrySchema).min(1, "Agregue al menos un guardia"),
+  entries: z.array(inviteByLinkEntrySchema).min(1, "Agregue al menos un vigilante"),
 });
 
 export type InviteByLinkEntry = z.infer<typeof inviteByLinkEntrySchema>;

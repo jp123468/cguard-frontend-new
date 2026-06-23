@@ -29,9 +29,9 @@ export interface ServiceTypeDefinition {
 export const SERVICE_TYPES: ServiceTypeDefinition[] = [
   {
     value: 'manned',
-    label: 'Vigilancia con Guardias',
+    label: 'Vigilancia con Vigilantes',
     labelEn: 'Manned Guarding',
-    description: 'Guardias de seguridad asignados al puesto de forma permanente o por turno.',
+    description: 'Vigilantes de seguridad asignados al puesto de forma permanente o por turno.',
     color: 'bg-amber-50',
     textColor: 'text-amber-700',
     borderColor: 'border-amber-300',

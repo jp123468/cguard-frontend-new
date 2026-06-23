@@ -114,7 +114,7 @@ export default function TrainingEnrollmentsPage() {
           <div>
             <h1 className="text-xl font-semibold">{course?.title ?? 'Progreso del curso'}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {completedCount} de {realEnrollments.length} guardias completaron el curso.
+              {completedCount} de {realEnrollments.length} vigilantes completaron el curso.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -135,7 +135,7 @@ export default function TrainingEnrollmentsPage() {
           <table className="min-w-full text-sm text-left">
             <thead className="bg-muted/30">
               <tr className="border-b">
-                <th className="px-4 py-3 font-semibold">Guardia</th>
+                <th className="px-4 py-3 font-semibold">Vigilante</th>
                 <th className="px-4 py-3 font-semibold">Estado</th>
                 <th className="px-4 py-3 font-semibold">Progreso</th>
                 <th className="px-4 py-3 font-semibold">Cuestionario</th>
@@ -154,7 +154,7 @@ export default function TrainingEnrollmentsPage() {
                 return (
                   <tr key={r.id} className="border-b hover:bg-muted/30">
                     <td className="px-4 py-3">
-                      {isTemplate ? <Badge variant="outline">Todos los guardias (plantilla)</Badge> : (r.guardName || '-')}
+                      {isTemplate ? <Badge variant="outline">Todos los vigilantes (plantilla)</Badge> : (r.guardName || '-')}
                     </td>
                     <td className="px-4 py-3"><Badge variant={ENROLLMENT_STATUS_VARIANT[r.status]}>{ENROLLMENT_STATUS_LABELS[r.status]}</Badge></td>
                     <td className="px-4 py-3">

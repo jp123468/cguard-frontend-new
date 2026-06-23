@@ -116,7 +116,7 @@ const JORNADA_STYLE: Record<JornadaDraft['tipo'], { badge: string; ring: string 
 };
 
 const DEPLOY_CHECKS: { key: string; label: string; defaultOn?: boolean }[] = [
-  { key: 'armedService',    label: 'Guardia armado' },
+  { key: 'armedService',    label: 'Vigilante armado' },
   { key: 'uniformRequired', label: 'Uniforme obligatorio', defaultOn: true },
   { key: 'periodicPatrol',  label: 'Patrullaje perimetral' },
   { key: 'k9Service',       label: 'Canes / K9' },
@@ -1208,7 +1208,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
           <div>
             <h2 className="text-xl font-bold text-foreground mb-1">Estaciones de vigilancia</h2>
             <p className="text-sm text-muted-foreground">
-              Define los puestos de guardia. Cada estación tiene su propio horario y número de guardias.
+              Define los puestos de vigilante. Cada estación tiene su propio horario y número de vigilantes.
             </p>
           </div>
 

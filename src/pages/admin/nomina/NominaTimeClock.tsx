@@ -92,7 +92,7 @@ export default function NominaTimeClock() {
             <div className="py-10 text-sm text-muted-foreground">Cargando…</div>
           ) : notGuard ? (
             <p className="mt-4 text-sm text-muted-foreground">
-              Este reloj es para guardias. Tu cuenta no tiene un perfil de guardia asignado, por lo
+              Este reloj es para vigilantes. Tu cuenta no tiene un perfil de vigilante asignado, por lo
               que no puedes marcar entrada/salida desde aquí.
             </p>
           ) : (

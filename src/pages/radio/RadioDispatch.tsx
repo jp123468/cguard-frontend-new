@@ -12,7 +12,7 @@ const statusBadge: Record<string, { label: string; cls: string }> = {
   no_response: { label: "Sin respuesta", cls: "bg-red-500/15 text-red-600" },
   notified: { label: "Llamando…", cls: "bg-amber-500/15 text-amber-600" },
   pending: { label: "En cola", cls: "bg-zinc-500/15 text-zinc-500" },
-  skipped: { label: "Sin guardia", cls: "bg-zinc-500/10 text-zinc-400" },
+  skipped: { label: "Sin vigilante", cls: "bg-zinc-500/10 text-zinc-400" },
 };
 const classChip: Record<string, { label: string; cls: string }> = {
   incident: { label: "Incidente", cls: "bg-red-500/15 text-red-600" },
@@ -179,7 +179,7 @@ export default function RadioDispatch() {
                 <div className="flex items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{s.stationName}</p>
-                    <p className="truncate text-xs text-muted-foreground">{(s.onDutyGuards || []).join(", ") || "Sin guardia en turno"}</p>
+                    <p className="truncate text-xs text-muted-foreground">{(s.onDutyGuards || []).join(", ") || "Sin vigilante en turno"}</p>
                   </div>
                   {cc && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${cc.cls}`}>{cc.label}</span>}
                   {badge && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.cls}`}>{badge.label}</span>}

@@ -20,7 +20,7 @@ export const INTEGRATIONS: Record<string, IntegrationInfo> = {
         features: ["Enviar hojas de tiempo a QuickBooks Online"],
         requirements: ["QuickBooks Online Plus con Nómina"],
         notes: [
-            "Asegúrese de que todos los guardias en nuestro sistema también estén en su cuenta de QuickBooks Online y viceversa.",
+            "Asegúrese de que todos los vigilantes en nuestro sistema también estén en su cuenta de QuickBooks Online y viceversa.",
             "Todas las horas se transfieren a QuickBooks Online como horas regulares. Si hay tiempo libre/vacaciones/permiso, ajuste manualmente en QuickBooks después de exportar."
         ]
     },
@@ -89,7 +89,7 @@ export const INTEGRATIONS: Record<string, IntegrationInfo> = {
         ],
         requirements: ["Xero (Reino Unido) con Nómina"],
         notes: [
-            "Asegúrese de que los guardias existan también en Xero (UK) y viceversa.",
+            "Asegúrese de que los vigilantes existan también en Xero (UK) y viceversa.",
             "Verifique que las reglas de pago estén asignadas a tasas de ganancias en Xero.",
             "Asigne tipos de permisos/tiempos libres en nuestro sistema a los de Xero.",
             "Asocie a los empleados al calendario de nómina relevante en Xero (UK).",

@@ -689,7 +689,7 @@ export default function Visitors() {
         const missing: string[] = [];
         if (!newVisitor.client) missing.push(t('visitantes.client') || 'Cliente');
         if (!newVisitor.site) missing.push(t('visitantes.site') || 'Sitio');
-        if (!newVisitor.guard) missing.push(t('visitantes.guard') || 'Guardia');
+        if (!newVisitor.guard) missing.push(t('visitantes.guard') || 'Vigilante');
         if (!newVisitor.firstName) missing.push(t('visitantes.form.name') || 'Nombre');
         if (!newVisitor.lastName) missing.push(t('visitantes.form.lastName') || 'Apellidos');
         if (!newVisitor.idNumber) missing.push(t('visitantes.form.idNumber') || 'Número de identificación');
@@ -876,7 +876,7 @@ export default function Visitors() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>{t('visitantes.guard') || 'Guardia'}</Label>
+                                        <Label>{t('visitantes.guard') || 'Vigilante'}</Label>
                                         <Select
                                             value={filters.guard}
                                             onValueChange={(v) =>
@@ -885,7 +885,7 @@ export default function Visitors() {
                                             disabled={guardsForFilter.length === 0}
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder={t('visitantes.selectGuard') || 'Selecciona un guardia'} />
+                                                <SelectValue placeholder={t('visitantes.selectGuard') || 'Selecciona un vigilante'} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {guardsForFilter.map((g) => (
@@ -1268,7 +1268,7 @@ export default function Visitors() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label>{t('visitantes.guard') || 'Guardia'}<span className="text-red-600">*</span></Label>
+                            <Label>{t('visitantes.guard') || 'Vigilante'}<span className="text-red-600">*</span></Label>
                             <Select
                                 value={newVisitor.guard}
                                 onValueChange={(v) =>
@@ -1278,7 +1278,7 @@ export default function Visitors() {
                                 aria-required="true"
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder={t('visitantes.selectGuard') || 'Selecciona un guardia'} />
+                                    <SelectValue placeholder={t('visitantes.selectGuard') || 'Selecciona un vigilante'} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {guardsForNewVisitor.map((g) => (

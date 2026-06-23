@@ -53,7 +53,7 @@ export default function ControlCenter() {
   const accentStyle = useMemo(() => ({ ["--cc-accent" as any]: prefs.accent }), [prefs.accent]);
   const legend = [
     { k: "tenant", label: "Sede" }, { k: "station", label: "Puestos" },
-    { k: "guard", label: "Guardias" }, { k: "supervisor", label: "Supervisores" },
+    { k: "guard", label: "Vigilantes" }, { k: "supervisor", label: "Supervisores" },
   ] as const;
 
   return (

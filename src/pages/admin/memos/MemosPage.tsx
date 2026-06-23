@@ -101,7 +101,7 @@ export default function MemosPage() {
           .filter((guard: any) => guard.id);
         if (mounted) setGuards(mappedGuards);
       } catch (err) {
-        console.error('Error cargando guardias:', err);
+        console.error('Error cargando vigilantes:', err);
       }
     };
 
@@ -190,7 +190,7 @@ export default function MemosPage() {
     }
 
     if (!guardId) {
-      toast.error('Selecciona la guardia para el memo');
+      toast.error('Selecciona la vigilante para el memo');
       return;
     }
 
@@ -343,7 +343,7 @@ export default function MemosPage() {
 
   const columns: Column<MemoItem>[] = [
     { key: 'subject', header: 'Asunto', sortable: true },
-    { key: 'guardName', header: 'Guardia', sortable: true },
+    { key: 'guardName', header: 'Vigilante', sortable: true },
     { key: 'createdBy', header: 'Creado por', sortable: true },
     {
       key: 'dateTime',
@@ -420,7 +420,7 @@ export default function MemosPage() {
 
                   <div className="mt-6 space-y-4">
                     <div className="space-y-2">
-                      <Label>Guardia</Label>
+                      <Label>Vigilante</Label>
                       <Select
                         value={filters.guardId ?? undefined}
                         onValueChange={(value) => setFilters({ ...filters, guardId: value === 'all' ? undefined : value })}
@@ -546,10 +546,10 @@ export default function MemosPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-foreground">Guardia</label>
+                <label className="mb-2 block text-sm font-medium text-foreground">Vigilante</label>
                 <Select value={guardId} onValueChange={(value) => setGuardId(value)}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecciona una guardia" />
+                    <SelectValue placeholder="Selecciona una vigilante" />
                   </SelectTrigger>
                   <SelectContent>
                     {guards.map((guard) => (
@@ -625,7 +625,7 @@ export default function MemosPage() {
                 <p className="mt-1 text-sm text-foreground">{viewMemo?.subject || '-'}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-foreground">Guardia</h3>
+                <h3 className="text-sm font-medium text-foreground">Vigilante</h3>
                 <p className="mt-1 text-sm text-foreground">{typeof viewMemo?.guardName === 'string' ? viewMemo?.guardName : viewMemo?.guardName?.name || '-'}</p>
               </div>
               <div>

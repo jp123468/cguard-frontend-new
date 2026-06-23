@@ -657,7 +657,7 @@ export default function Schedule() {
           ...(isSacafranco && assignRotation ? { rotationStyleId: assignRotation } : {}),
         },
       });
-      toast.success('Guardia asignado con rotación');
+      toast.success('Vigilante asignado con rotación');
       setShowAssignForm(false);
       fetchAll();
     } catch (e: any) {
@@ -790,7 +790,7 @@ export default function Schedule() {
     try {
       const res = await ApiService.post(`/tenant/${tenantId}/scheduler/proposals/${id}/publish`, { data: { confirm: true, allowGaps } });
       const notified = res?.plan?.notifiedGuards ?? res?.data?.plan?.notifiedGuards ?? 0;
-      toast.success(`Horario publicado · ${notified} guardia${notified === 1 ? '' : 's'} notificado${notified === 1 ? '' : 's'}`);
+      toast.success(`Horario publicado · ${notified} vigilante${notified === 1 ? '' : 's'} notificado${notified === 1 ? '' : 's'}`);
       // Switch the modal to the implementation plan (who was notified).
       try {
         const plan = await ApiService.get(`/tenant/${tenantId}/scheduler/proposals/${id}/plan`);
@@ -822,9 +822,9 @@ export default function Schedule() {
       const res = await ApiService.post(`/tenant/${tenantId}/security-guard/geocode-missing`, {});
       const g = res?.geocoded ?? res?.data?.geocoded ?? 0;
       const rem = res?.remaining ?? res?.data?.remaining ?? 0;
-      toast.success(`${g} guardia(s) geolocalizados${rem > 0 ? ` · ${rem} pendientes (ejecuta de nuevo)` : ''}`);
+      toast.success(`${g} vigilante(s) geolocalizados${rem > 0 ? ` · ${rem} pendientes (ejecuta de nuevo)` : ''}`);
     } catch (e: any) {
-      toast.error(e?.data?.message || e?.message || 'Error al geolocalizar guardias');
+      toast.error(e?.data?.message || e?.message || 'Error al geolocalizar vigilantes');
     } finally {
       setGeocoding(false);
     }
@@ -848,7 +848,7 @@ export default function Schedule() {
   };
 
   const runAutoAssign = async () => {
-    if (!confirm('¿Asignar automáticamente guardias a todas las estaciones sin cubrir?\n\nSolo se cubren los puestos VACÍOS con guardias sin asignar (por cercanía, configurando rotaciones y sacafrancos). NO se moverá ni reasignará ningún guardia que ya esté asignado a un puesto.')) return;
+    if (!confirm('¿Asignar automáticamente vigilantes a todas las estaciones sin cubrir?\n\nSolo se cubren los puestos VACÍOS con vigilantes sin asignar (por cercanía, configurando rotaciones y sacafrancos). NO se moverá ni reasignará ningún vigilante que ya esté asignado a un puesto.')) return;
     setAutoAssigning(true);
     setAutoResult(null);
     try {
@@ -864,7 +864,7 @@ export default function Schedule() {
   };
 
   const runOptimizeSacafrancos = async () => {
-    if (!confirm('¿Optimizar la rotación de sacafrancos?\n\nATENCIÓN: esto MOVERÁ guardias sacafranco ya asignados a otros puestos/estaciones y regenerará sus turnos para maximizar cobertura. Los guardias fijos NO se tocan.')) return;
+    if (!confirm('¿Optimizar la rotación de sacafrancos?\n\nATENCIÓN: esto MOVERÁ vigilantes sacafranco ya asignados a otros puestos/estaciones y regenerará sus turnos para maximizar cobertura. Los vigilantes fijos NO se tocan.')) return;
     setAutoAssigning(true);
     try {
       const res = await ApiService.post(`/tenant/${tenantId}/scheduler/optimize-sacafrancos`, { data: { rotationStyleId: assignRotation || undefined } });
@@ -989,7 +989,7 @@ export default function Schedule() {
                 <div className="space-y-1">
                   <h3 className="text-sm font-bold text-foreground">Tus estaciones aún no tienen horario</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Tienes {stations.length} estaciones sin puestos ni guardias asignados. Genera la asignación automática para crear los puestos de cada estación, asignar guardias por cercanía y escalonar los turnos (sacafrancos incluidos).
+                    Tienes {stations.length} estaciones sin puestos ni vigilantes asignados. Genera la asignación automática para crear los puestos de cada estación, asignar vigilantes por cercanía y escalonar los turnos (sacafrancos incluidos).
                   </p>
                 </div>
               </div>
@@ -1013,7 +1013,7 @@ export default function Schedule() {
                   <h3 className="text-sm font-bold text-foreground">Asignación AI</h3>
                 </div>
                 <p className="text-[11px] text-muted-foreground mb-3">
-                  Asigna guardias automáticamente por cercanía, configura rotaciones óptimas y programa sacafrancos.
+                  Asigna vigilantes automáticamente por cercanía, configura rotaciones óptimas y programa sacafrancos.
                 </p>
                 <button
                   onClick={generateDraft}
@@ -1039,7 +1039,7 @@ export default function Schedule() {
                     <div className="text-[11px] text-foreground font-medium">Resultado:</div>
                     <div className="text-[10px] text-muted-foreground">• {autoResult.titularesAssigned} titulares asignados</div>
                     <div className="text-[10px] text-muted-foreground">• {autoResult.sacafrancosAssigned} sacafrancos asignados</div>
-                    <div className="text-[10px] text-muted-foreground">• {autoResult.unassignedRemaining} guardias sin asignar</div>
+                    <div className="text-[10px] text-muted-foreground">• {autoResult.unassignedRemaining} vigilantes sin asignar</div>
                   </div>
                 )}
                 <button
@@ -1054,10 +1054,10 @@ export default function Schedule() {
                   onClick={runGeocode}
                   disabled={geocoding}
                   className="w-full mt-2 px-4 py-2 bg-background border border-input text-foreground rounded-xl text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                  title="Geolocaliza las direcciones de los guardias para asignar por cercanía real"
+                  title="Geolocaliza las direcciones de los vigilantes para asignar por cercanía real"
                 >
                   {geocoding ? <Loader2 size={12} className="animate-spin" /> : <MapPin size={12} />}
-                  {geocoding ? 'Geolocalizando...' : 'Geolocalizar guardias'}
+                  {geocoding ? 'Geolocalizando...' : 'Geolocalizar vigilantes'}
                 </button>
                 <button
                   onClick={runAiRecommend}
@@ -1136,7 +1136,7 @@ export default function Schedule() {
                             <div key={alert.stationId} className="text-[10px] bg-red-500/5 border border-red-500/20 rounded px-2 py-1">
                               <div className="font-medium text-foreground truncate">{alert.stationName}</div>
                               {alert.missingFijoCount > 0 && (
-                                <div className="text-red-500">• {alert.missingFijoCount} fijo(s) sin guardia</div>
+                                <div className="text-red-500">• {alert.missingFijoCount} fijo(s) sin vigilante</div>
                               )}
                               {alert.sfUncoveredDays > 0 && (
                                 <div className="text-red-500">• {alert.sfUncoveredDays} día(s) L sin SF cubriendo</div>
@@ -1336,7 +1336,7 @@ export default function Schedule() {
                                 <button
                                   onClick={() => openAssignForm(station.id, pos.id)}
                                   className="p-1 rounded-md bg-[#C8860A]/10 hover:bg-[#C8860A]/20 text-[#C8860A] transition-colors"
-                                  title="Asignar guardia"
+                                  title="Asignar vigilante"
                                 >
                                   <Plus size={12} />
                                 </button>
@@ -1381,7 +1381,7 @@ export default function Schedule() {
                                       const sfBg = slotStatus === 'night' ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-emerald-500/10 border-emerald-500/30';
                                       const sfText = slotStatus === 'night' ? 'text-indigo-400/60' : 'text-emerald-500/60';
                                       return (
-                                        <div className={`h-[20px] rounded border border-dashed flex items-center justify-center cursor-pointer ${sfBg}`} title={`Sacafranco — ${sfCode} (sin guardia)`} onClick={() => openAssignForm(station.id, pos.id)}>
+                                        <div className={`h-[20px] rounded border border-dashed flex items-center justify-center cursor-pointer ${sfBg}`} title={`Sacafranco — ${sfCode} (sin vigilante)`} onClick={() => openAssignForm(station.id, pos.id)}>
                                           <span className={`text-[10px] font-bold ${sfText}`}>{sfCode}</span>
                                         </div>
                                       );
@@ -1389,7 +1389,7 @@ export default function Schedule() {
                                     // Fijo position: show D/N/L pattern
                                     if (slotStatus === 'rest') {
                                       return (
-                                        <div className="h-[20px] rounded bg-muted/20 border border-dashed border-border/30 flex items-center justify-center cursor-pointer" title="Slot libre (sin guardia asignado)" onClick={() => openAssignForm(station.id, pos.id)}>
+                                        <div className="h-[20px] rounded bg-muted/20 border border-dashed border-border/30 flex items-center justify-center cursor-pointer" title="Slot libre (sin vigilante asignado)" onClick={() => openAssignForm(station.id, pos.id)}>
                                           <span className="text-[10px] font-bold text-muted-foreground/40">L</span>
                                         </div>
                                       );
@@ -1403,7 +1403,7 @@ export default function Schedule() {
                                     const bg = code === 'N' ? 'bg-indigo-500/8 border-indigo-500/20' : 'bg-sky-500/8 border-sky-500/20';
                                     const textColor = code === 'N' ? 'text-indigo-400/50' : 'text-sky-500/50';
                                     return (
-                                      <div className={`h-[20px] rounded border border-dashed flex items-center justify-center cursor-pointer ${bg}`} title={`Slot ${code} (sin guardia asignado — click para asignar)`} onClick={() => openAssignForm(station.id, pos.id)}>
+                                      <div className={`h-[20px] rounded border border-dashed flex items-center justify-center cursor-pointer ${bg}`} title={`Slot ${code} (sin vigilante asignado — click para asignar)`} onClick={() => openAssignForm(station.id, pos.id)}>
                                         <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
                                       </div>
                                     );
@@ -1563,7 +1563,7 @@ export default function Schedule() {
                               <button
                                 onClick={() => openAssignForm(pos.stationId, pos.id)}
                                 className="p-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors"
-                                title="Asignar guardia sacafranco"
+                                title="Asignar vigilante sacafranco"
                               >
                                 <Plus size={12} />
                               </button>
@@ -1622,11 +1622,11 @@ export default function Schedule() {
             <div className="bg-card border border-border/40 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Users size={16} className="text-muted-foreground" />
-                <h3 className="text-sm font-semibold text-foreground">Guardias disponibles</h3>
+                <h3 className="text-sm font-semibold text-foreground">Vigilantes disponibles</h3>
                 <span className="text-xs text-muted-foreground">({unassignedGuards.length})</span>
               </div>
               {unassignedGuards.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Todos los guardias están asignados.</p>
+                <p className="text-xs text-muted-foreground">Todos los vigilantes están asignados.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {unassignedGuards.map(g => (
@@ -1698,7 +1698,7 @@ export default function Schedule() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowAssignForm(false)}>
           <div className="bg-card border border-border/30 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-border/20 flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-foreground">Asignar Guardia a Posición</h4>
+              <h4 className="text-sm font-semibold text-foreground">Asignar Vigilante a Posición</h4>
               <button onClick={() => setShowAssignForm(false)} className="p-1.5 rounded-lg hover:bg-muted/30 text-muted-foreground"><X size={15} /></button>
             </div>
             <div className="p-5 space-y-4">
@@ -1718,7 +1718,7 @@ export default function Schedule() {
 
               {/* Guard */}
               <div>
-                <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Guardia</label>
+                <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Vigilante</label>
                 {(() => {
                   const targetPos = positions.find(p => p.id === assignTarget?.positionId);
                   const isSacafranco = targetPos?.type === 'sacafranco';
@@ -1735,7 +1735,7 @@ export default function Schedule() {
 
                   return (
                     <select value={assignGuard} onChange={e => setAssignGuard(e.target.value)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none">
-                      <option value="">Seleccionar guardia...</option>
+                      <option value="">Seleccionar vigilante...</option>
                       {availableGuards.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
                       {!isSacafranco && fijoAssignedIds.size > 0 && (
                         <option disabled>── Ya asignados como Fijo ──</option>
@@ -1940,7 +1940,7 @@ export default function Schedule() {
                 <h3 className="text-base font-bold text-foreground">{planData ? 'Plan de implementación' : 'Borrador de horario'}</h3>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {planData ? 'Horario publicado. Estos guardias fueron notificados de sus cambios.' : 'Revisa los cambios propuestos. Nada se aplica hasta que publiques.'}
+                {planData ? 'Horario publicado. Estos vigilantes fueron notificados de sus cambios.' : 'Revisa los cambios propuestos. Nada se aplica hasta que publiques.'}
               </p>
             </div>
 
@@ -1950,7 +1950,7 @@ export default function Schedule() {
                 <div className="mb-3 flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-emerald-700">
                   <Users size={16} />
                   <span className="text-sm font-semibold">
-                    {(planData?.plan?.notifiedGuards ?? 0)} de {(planData?.plan?.totalGuards ?? planData?.items?.length ?? 0)} guardias notificados
+                    {(planData?.plan?.notifiedGuards ?? 0)} de {(planData?.plan?.totalGuards ?? planData?.items?.length ?? 0)} vigilantes notificados
                   </span>
                 </div>
                 {(planData?.items || []).length ? (
@@ -1964,14 +1964,14 @@ export default function Schedule() {
                       return (
                         <div key={it.id || it.guardId} className="flex items-center gap-3 py-2">
                           <span className={`shrink-0 ${ok ? 'text-emerald-600' : 'text-muted-foreground'}`}>{ok ? <CheckCircle2 size={15} /> : <Clock size={15} />}</span>
-                          <span className="min-w-0 flex-1 truncate text-sm text-foreground">{it.guardName || 'Guardia'}</span>
+                          <span className="min-w-0 flex-1 truncate text-sm text-foreground">{it.guardName || 'Vigilante'}</span>
                           <span className="shrink-0 font-mono text-xs text-muted-foreground">{ch.join(' ')}</span>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <p className="py-8 text-center text-sm text-muted-foreground">No hubo guardias afectados.</p>
+                  <p className="py-8 text-center text-sm text-muted-foreground">No hubo vigilantes afectados.</p>
                 )}
               </div>
             ) : (
@@ -1983,7 +1983,7 @@ export default function Schedule() {
                 { label: 'Nuevos', value: s.added || 0, icon: <PlusIcon size={14} />, cls: 'text-emerald-600' },
                 { label: 'Eliminados', value: s.removed || 0, icon: <MinusCircle size={14} />, cls: 'text-red-600' },
                 { label: 'Modificados', value: s.changed || 0, icon: <RefreshCw size={14} />, cls: 'text-amber-600' },
-                { label: 'Guardias afectados', value: s.guardsAffected || 0, icon: <Users size={14} />, cls: 'text-foreground' },
+                { label: 'Vigilantes afectados', value: s.guardsAffected || 0, icon: <Users size={14} />, cls: 'text-foreground' },
               ];
               return (
                 <div className="grid grid-cols-4 gap-2 px-5 py-3 border-b border-border/20">
@@ -2052,8 +2052,8 @@ export default function Schedule() {
               const w = proposalData?.proposal?.summary?.warnings;
               if (!w || (!w.total && !w.restViolations?.length && !w.doubleBookings?.length && !w.sfStyleInconsistencies?.length)) return null;
               const lines: string[] = [];
-              if (w.doubleBookings?.length) lines.push(`${w.doubleBookings.length} guardia(s) con doble asignación el mismo día`);
-              if (w.restViolations?.length) lines.push(`${w.restViolations.length} guardia(s) sin descanso semanal (más de ${w.maxConsecutiveAllowed || 7} días seguidos)`);
+              if (w.doubleBookings?.length) lines.push(`${w.doubleBookings.length} vigilante(s) con doble asignación el mismo día`);
+              if (w.restViolations?.length) lines.push(`${w.restViolations.length} vigilante(s) sin descanso semanal (más de ${w.maxConsecutiveAllowed || 7} días seguidos)`);
               if (w.sfStyleInconsistencies?.length) lines.push(`${w.sfStyleInconsistencies.length} sitio(s) con sacafrancos en estilos de turno distintos`);
               if (!lines.length) return null;
               return (

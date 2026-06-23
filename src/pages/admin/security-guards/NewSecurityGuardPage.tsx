@@ -688,7 +688,7 @@ export default function NewSecurityGuardPage() {
                       <FormField control={createCtrl} name="email" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Correo Electrónico <span className="text-destructive">*</span></FormLabel>
-                          <FormControl><Input type="email" placeholder="guardia@ejemplo.com" {...field} /></FormControl>
+                          <FormControl><Input type="email" placeholder="vigilante@ejemplo.com" {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -720,7 +720,7 @@ export default function NewSecurityGuardPage() {
                                 setCreateValue("homeAddressLng", result.longitude ?? undefined);
                               }}
                               showMap={true}
-                              placeholder="Buscar dirección del guardia..."
+                              placeholder="Buscar dirección del vigilante..."
                             />
                           </FormControl>
                           <FormDescription>Indique la ubicación exacta moviendo el pin en el mapa.</FormDescription>
@@ -806,13 +806,13 @@ export default function NewSecurityGuardPage() {
                       />
                       <DocumentUpload
                         label="Certificación Nivel 1"
-                        description="Certificación de guardia nivel 1"
+                        description="Certificación de vigilante nivel 1"
                         value={guardDocs.certificationLevel1 ?? null}
                         onChange={setDoc("certificationLevel1") as (f: any) => void}
                       />
                       <DocumentUpload
                         label="Certificación Nivel 2"
-                        description="Certificación de guardia nivel 2"
+                        description="Certificación de vigilante nivel 2"
                         value={guardDocs.certificationLevel2 ?? null}
                         onChange={setDoc("certificationLevel2") as (f: any) => void}
                       />

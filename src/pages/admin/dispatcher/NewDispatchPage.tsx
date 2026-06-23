@@ -49,7 +49,7 @@ const prioridades = [
 
 const tiposLlamador = [
   { id: "cliente", name: "Cliente" },
-  { id: "guardia", name: "Guardia" },
+  { id: "guardia", name: "Vigilante" },
   { id: "supervisor", name: "Supervisor" },
 ];
 
@@ -82,8 +82,8 @@ export default function NewDispatchPage() {
   const [stationFilter, setStationFilter] = useState("");
   const stationInputRef = useRef<HTMLInputElement | null>(null);
   const [callerNameEdited, setCallerNameEdited] = useState<boolean>(false);
-  const [guardias, setGuardias] = useState<Array<{ id: string; name: string }>>([]);
-  const [assignedGuardias, setAssignedGuardias] = useState<AssignedGuard[]>([]);
+  const [vigilantes, setVigilantes] = useState<Array<{ id: string; name: string }>>([]);
+  const [assignedVigilantes, setAssignedVigilantes] = useState<AssignedGuard[]>([]);
   const [tiposIncidente, setTiposIncidente] = useState<Array<{ id: string; name: string }>>([]);
   const [clienteFilter, setClienteFilter] = useState("");
   const [sitioFilter, setSitioFilter] = useState("");
@@ -127,7 +127,7 @@ export default function NewDispatchPage() {
 
     // NOTA: la carga de `sitios` se hace cuando cambia el `clientId` seleccionado
 
-    // Cargar guardias (securityGuard) — intentamos múltiples endpoints/formatos por compatibilidad
+    // Cargar vigilantes (securityGuard) — intentamos múltiples endpoints/formatos por compatibilidad
     (async () => {
       try {
         const tenantId = localStorage.getItem("tenantId");
@@ -167,7 +167,7 @@ export default function NewDispatchPage() {
             const gov = g.governmentId ?? g.government_id ?? g.user?.governmentId ?? g.user?.government_id;
             return gov && String(gov).toLowerCase() !== "pending";
           });
-          setGuardias(
+          setVigilantes(
             filtered.map((g: any) => {
               const display =
                 g.fullName ||
@@ -183,12 +183,12 @@ export default function NewDispatchPage() {
             })
           );
         } else {
-          // No se encontraron guardias; limpiar
-          setGuardias([]);
+          // No se encontraron vigilantes; limpiar
+          setVigilantes([]);
         }
       } catch (e) {
-        console.error("Error cargando guardias:", e);
-        setGuardias([]);
+        console.error("Error cargando vigilantes:", e);
+        setVigilantes([]);
       }
     })();
 
@@ -238,7 +238,7 @@ export default function NewDispatchPage() {
   const watchedSiteId = useWatch({ control: form.control, name: "siteId" }) as string | undefined;
   const watchedClientId = useWatch({ control: form.control, name: "clientId" }) as string | undefined;
 
-  // Debug flag: show assignedGuardias in-page when URL contains ?debugGuards=1
+  // Debug flag: show assignedVigilantes in-page when URL contains ?debugGuards=1
   const debugGuards = typeof window !== "undefined" && window.location.search.indexOf("debugGuards=1") !== -1;
 
   // Helper to fetch stations for a given post-site id. Extracted so
@@ -404,7 +404,7 @@ export default function NewDispatchPage() {
         const siteToLoad = dupSiteId || watchedSiteId;
         const tenantId = localStorage.getItem('tenantId');
         if (!tenantId || !siteToLoad) {
-          if (mounted) setAssignedGuardias([]);
+          if (mounted) setAssignedVigilantes([]);
           return;
         }
 
@@ -426,7 +426,7 @@ export default function NewDispatchPage() {
                 const postSiteIdFromRow = r.postSiteId || (r.raw && (r.raw.postSiteId || r.raw.post_site_id)) || null;
                 return { id, name: display, raw: r, stationId: stationIdFromRow, stationName: stationNameFromRow, postSiteId: postSiteIdFromRow };
               }).filter((x:any) => x.id);
-              if (mounted) setAssignedGuardias(mappedExact);
+              if (mounted) setAssignedVigilantes(mappedExact);
               return;
             }
           } catch (err) {
@@ -535,11 +535,11 @@ export default function NewDispatchPage() {
                     // If c is a primitive id (string/number), resolve name from loaded guard list if possible
                     if (typeof c === 'string' || typeof c === 'number') {
                       const gid = String(c);
-                      const found = (guardias || []).find((g) => String(g.id) === gid);
+                      const found = (vigilantes || []).find((g) => String(g.id) === gid);
                       guardObj = { id: gid, name: found?.name || null, raw: c };
                     } else if (typeof c === 'object') {
                       const gid = c.id || c.userId || c.guardId || c.user?.id || null;
-                      const found = gid ? (guardias || []).find((g) => String(g.id) === String(gid)) : null;
+                      const found = gid ? (vigilantes || []).find((g) => String(g.id) === String(gid)) : null;
                       const display = c.fullName || c.displayName || c.name || c.user?.fullName || found?.name || null;
                       guardObj = { id: gid || null, name: display, raw: c };
                     }
@@ -555,11 +555,11 @@ export default function NewDispatchPage() {
                   let guardObj: any = null;
                   if (typeof c === 'string' || typeof c === 'number') {
                     const gid = String(c);
-                    const found = (guardias || []).find((g) => String(g.id) === gid);
+                    const found = (vigilantes || []).find((g) => String(g.id) === gid);
                     guardObj = { id: gid, name: found?.name || null, raw: c };
                   } else if (typeof c === 'object') {
                     const gid = c.id || c.userId || c.guardId || c.user?.id || null;
-                    const found = gid ? (guardias || []).find((g) => String(g.id) === String(gid)) : null;
+                    const found = gid ? (vigilantes || []).find((g) => String(g.id) === String(gid)) : null;
                     const display = c.fullName || c.displayName || c.name || c.user?.fullName || found?.name || null;
                     guardObj = { id: gid || null, name: display, raw: c };
                   }
@@ -592,7 +592,7 @@ export default function NewDispatchPage() {
           // ignore stringify errors
         }
         if (!rows || !Array.isArray(rows) || rows.length === 0) {
-          if (mounted) setAssignedGuardias([]);
+          if (mounted) setAssignedVigilantes([]);
           return;
         }
 
@@ -670,7 +670,7 @@ export default function NewDispatchPage() {
               const stationMatches = mappedCanon.filter((m:any) => String(m.stationId) === String(selectedStationId) || String(m.stationId || '').trim() === String(selectedStationId).trim());
               // eslint-disable-next-line no-console
               if (stationMatches && stationMatches.length) {
-                if (mounted) setAssignedGuardias(stationMatches);
+                if (mounted) setAssignedVigilantes(stationMatches);
                 return;
               }
             }
@@ -700,11 +700,11 @@ export default function NewDispatchPage() {
                   if (!c) continue;
                   if (typeof c === 'string' || typeof c === 'number') {
                     const gid = String(c);
-                    const found = (guardias || []).find((g) => String(g.id) === gid);
+                    const found = (vigilantes || []).find((g) => String(g.id) === gid);
                     guardObj = { id: gid, name: found?.name || null, raw: c };
                   } else if (typeof c === 'object') {
                     const gid = c.id || c.userId || c.guardId || c.user?.id || null;
-                    const found = gid ? (guardias || []).find((g) => String(g.id) === String(gid)) : null;
+                    const found = gid ? (vigilantes || []).find((g) => String(g.id) === String(gid)) : null;
                     const display = c.fullName || c.displayName || c.name || c.user?.fullName || found?.name || null;
                     guardObj = { id: gid || null, name: display, raw: c };
                   }
@@ -720,11 +720,11 @@ export default function NewDispatchPage() {
                 let guardObj: any = null;
                 if (typeof c === 'string' || typeof c === 'number') {
                   const gid = String(c);
-                  const found = (guardias || []).find((g) => String(g.id) === gid);
+                  const found = (vigilantes || []).find((g) => String(g.id) === gid);
                   guardObj = { id: gid, name: found?.name || null, raw: c };
                 } else if (typeof c === 'object') {
                   const gid = c.id || c.userId || c.guardId || c.user?.id || null;
-                  const found = gid ? (guardias || []).find((g) => String(g.id) === String(gid)) : null;
+                  const found = gid ? (vigilantes || []).find((g) => String(g.id) === String(gid)) : null;
                   const display = c.fullName || c.displayName || c.name || c.user?.fullName || found?.name || null;
                   guardObj = { id: gid || null, name: display, raw: c };
                 }
@@ -739,7 +739,7 @@ export default function NewDispatchPage() {
             if (extracted.length) {
               const mappedStation = extracted.map((g: any) => ({ id: g.id, name: g.name, raw: g, stationId: g.stationId, stationName: null, postSiteId: g.postSiteId })).filter((x: any) => x.id);
               // eslint-disable-next-line no-console
-              if (mounted) setAssignedGuardias(mappedStation);
+              if (mounted) setAssignedVigilantes(mappedStation);
               return;
             }
           } catch (err) {
@@ -748,9 +748,9 @@ export default function NewDispatchPage() {
           }
         }
 
-        if (mounted) setAssignedGuardias(mapped);
+        if (mounted) setAssignedVigilantes(mapped);
       } catch (e) {
-        if (mounted) setAssignedGuardias([]);
+        if (mounted) setAssignedVigilantes([]);
       }
     };
 
@@ -892,7 +892,7 @@ export default function NewDispatchPage() {
         if (watchedGuardId) {
           const id = String(watchedGuardId);
           // Prefer the global guard list, then assigned guards returned for the site/station
-          const g = (guardias || []).find((x) => String(x.id) === id) || (assignedGuardias || []).find((x) => String(x.id) === id);
+          const g = (vigilantes || []).find((x) => String(x.id) === id) || (assignedVigilantes || []).find((x) => String(x.id) === id);
           if (g && g.name) form.setValue('callerName', g.name);
         }
       } else if (ct === 'cliente') {
@@ -908,7 +908,7 @@ export default function NewDispatchPage() {
       // noop
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchedCallerType, watchedGuardId, watchedClientId, guardias, clientes, user, callerNameEdited, assignedGuardias]);
+  }, [watchedCallerType, watchedGuardId, watchedClientId, vigilantes, clientes, user, callerNameEdited, assignedVigilantes]);
 
   const onSubmit = async (data: DispatchCreateSchema) => {
     const incidentAt =
@@ -963,7 +963,7 @@ export default function NewDispatchPage() {
       try {
         const sel = payload.guardId;
         if (sel) {
-          const found = (assignedGuardias || []).find((g) => String(g.id) === String(sel));
+          const found = (assignedVigilantes || []).find((g) => String(g.id) === String(sel));
           if (found) {
             // Safely resolve candidate using optional chaining to avoid undefined errors
             const candidate =
@@ -1058,7 +1058,7 @@ export default function NewDispatchPage() {
     try {
       const stationNameForSid = (stations || []).find((s) => String(s.id) === sid)?.name || '';
 
-      const byStation = (assignedGuardias || []).filter((m) => {
+      const byStation = (assignedVigilantes || []).filter((m) => {
         // Prefer direct mapped stationId on the mapped object
         if (m.stationId && String(m.stationId) === sid) return true;
         // Also consider backend-provided canonical station id
@@ -1080,9 +1080,9 @@ export default function NewDispatchPage() {
 
         return false;
       }).map((m) => ({ id: m.id as string, name: m.name }));
-      // Debug: inspect assignedGuardias and matches
+      // Debug: inspect assignedVigilantes and matches
       // eslint-disable-next-line no-console
-      console.debug('guardOptions compute', { sid, stationNameForSid, assignedCount: (assignedGuardias || []).length, matchCount: byStation.length, sampleMatch: byStation[0] });
+      console.debug('guardOptions compute', { sid, stationNameForSid, assignedCount: (assignedVigilantes || []).length, matchCount: byStation.length, sampleMatch: byStation[0] });
 
       // If a station is selected, only return guards that match that station (no fallbacks)
       if (sid) {
@@ -1095,7 +1095,7 @@ export default function NewDispatchPage() {
       try {
         const currentSite = dupSiteId || watchedSiteId || null;
         if (currentSite) {
-          const byPostSite = (assignedGuardias || []).filter((m) => String(m.postSiteId || m.raw?.postSiteId || m.raw?.post_site_id || m.raw?.siteId || m.raw?.site || '') === String(currentSite)).map((m) => ({ id: m.id as string, name: m.name }));
+          const byPostSite = (assignedVigilantes || []).filter((m) => String(m.postSiteId || m.raw?.postSiteId || m.raw?.post_site_id || m.raw?.siteId || m.raw?.site || '') === String(currentSite)).map((m) => ({ id: m.id as string, name: m.name }));
           if (byPostSite && byPostSite.length) {
             // eslint-disable-next-line no-console
             console.debug('guardOptions fallback byPostSite', { currentSite, count: byPostSite.length, sample: byPostSite[0] });
@@ -1108,8 +1108,8 @@ export default function NewDispatchPage() {
 
       // Fallback: return all assigned guards for this post-site (last resort)
       // eslint-disable-next-line no-console
-      console.debug('guardOptions fallback to all assignedGuardias', { assignedCount: (assignedGuardias || []).length });
-      return (assignedGuardias || []).map((m) => ({ id: m.id as string, name: m.name }));
+      console.debug('guardOptions fallback to all assignedVigilantes', { assignedCount: (assignedVigilantes || []).length });
+      return (assignedVigilantes || []).map((m) => ({ id: m.id as string, name: m.name }));
     } catch (e) {
       return [];
     }
@@ -1127,7 +1127,7 @@ export default function NewDispatchPage() {
     } catch (e) {
       // ignore
     }
-  }, [selectedStationId, assignedGuardias, guardias]);
+  }, [selectedStationId, assignedVigilantes, vigilantes]);
 
   return (
     <AppLayout>
@@ -1302,7 +1302,7 @@ export default function NewDispatchPage() {
                 name="guardId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Guardia a Informar</FormLabel>
+                    <FormLabel>Vigilante a Informar</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value} onOpenChange={(open) => {
                       if (open) {
                         setTimeout(() => guardInputRef.current?.focus(), 50);
@@ -1317,7 +1317,7 @@ export default function NewDispatchPage() {
                         <div className="px-2 py-2">
                           <Input
                             ref={(el) => (guardInputRef.current = el)}
-                            placeholder="Buscar guardia..."
+                            placeholder="Buscar vigilante..."
                             value={guardFilter}
                             onChange={(e) => setGuardFilter(e.target.value)}
                           />
@@ -1340,7 +1340,7 @@ export default function NewDispatchPage() {
                                     ))
                                 : (
                                     <SelectItem key="__no_assigned_guards" value="__no_assigned_guards" disabled>
-                                      No hay guardias asignados a esta estación
+                                      No hay vigilantes asignados a esta estación
                                     </SelectItem>
                                   )
                             )}
@@ -1687,8 +1687,8 @@ export default function NewDispatchPage() {
         </Form>
         {debugGuards ? (
           <div className="mt-4 rounded border p-3 bg-card text-xs">
-            <div className="font-medium mb-2">DEBUG: assignedGuardias (truncated)</div>
-            <pre style={{ maxHeight: 300, overflow: 'auto' }}>{JSON.stringify((assignedGuardias || []).slice(0,50), null, 2)}</pre>
+            <div className="font-medium mb-2">DEBUG: assignedVigilantes (truncated)</div>
+            <pre style={{ maxHeight: 300, overflow: 'auto' }}>{JSON.stringify((assignedVigilantes || []).slice(0,50), null, 2)}</pre>
           </div>
         ) : null}
       </div>

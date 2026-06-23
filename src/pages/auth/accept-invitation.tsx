@@ -164,7 +164,7 @@ export default function AcceptInvitation() {
             Te damos acceso a<span className="block bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(90deg, #C8860A, #F5C300)" }}>{tenantName || "tu organización"}</span>
           </h1>
           <p className="mt-5 text-base leading-relaxed text-slate-400">
-            Configura tu contraseña y entra al panel para gestionar operaciones, guardias, incidentes y reportes en tiempo real.
+            Configura tu contraseña y entra al panel para gestionar operaciones, vigilantes, incidentes y reportes en tiempo real.
           </p>
         </div>
 

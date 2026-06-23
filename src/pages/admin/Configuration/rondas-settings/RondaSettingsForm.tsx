@@ -142,10 +142,10 @@ export default function RondaSettingsForm({
           </CardTitle>
         </CardHeader>
         <CardContent className="divide-y">
-          <ToggleRow label="Requerir foto" hint="El guardia debe tomar una foto con marca de tiempo en cada punto" checked={s.requirePhoto} onCheckedChange={(b) => set("requirePhoto", b)} />
-          <ToggleRow label="Requerir geolocalización" hint="Validar la ubicación del guardia en cada punto" checked={s.requireGeofence} onCheckedChange={(b) => set("requireGeofence", b)} />
+          <ToggleRow label="Requerir foto" hint="El vigilante debe tomar una foto con marca de tiempo en cada punto" checked={s.requirePhoto} onCheckedChange={(b) => set("requirePhoto", b)} />
+          <ToggleRow label="Requerir geolocalización" hint="Validar la ubicación del vigilante en cada punto" checked={s.requireGeofence} onCheckedChange={(b) => set("requireGeofence", b)} />
           <NumberRow label="Radio de geocerca" hint="Distancia permitida desde el punto" value={s.geofenceRadius} onChange={(v) => set("geofenceRadius", (v ?? 0) as number)} suffix="m" />
-          <ToggleRow label="Requerir nota" hint="El guardia debe dejar una observación en cada punto" checked={s.requireNote} onCheckedChange={(b) => set("requireNote", b)} />
+          <ToggleRow label="Requerir nota" hint="El vigilante debe dejar una observación en cada punto" checked={s.requireNote} onCheckedChange={(b) => set("requireNote", b)} />
         </CardContent>
       </Card>
 
@@ -156,7 +156,7 @@ export default function RondaSettingsForm({
           </CardTitle>
         </CardHeader>
         <CardContent className="divide-y">
-          <ToggleRow label="Notificar al iniciar" hint="Avisar cuando un guardia inicia una ronda" checked={s.notifyTenantOnStart} onCheckedChange={(b) => set("notifyTenantOnStart", b)} />
+          <ToggleRow label="Notificar al iniciar" hint="Avisar cuando un vigilante inicia una ronda" checked={s.notifyTenantOnStart} onCheckedChange={(b) => set("notifyTenantOnStart", b)} />
           <ToggleRow label="Notificar al completar" hint="Avisar cuando una ronda se completa" checked={s.notifyTenantOnComplete} onCheckedChange={(b) => set("notifyTenantOnComplete", b)} />
           <ToggleRow label="Enviar correo al completar" hint="Enviar un correo a los administradores/supervisores cuando una ronda se completa (requiere correo configurado)" checked={s.emailOnComplete} onCheckedChange={(b) => set("emailOnComplete", b)} />
           <ToggleRow label="Notificar rondas perdidas/tarde" checked={s.notifyTenantOnMissed} onCheckedChange={(b) => set("notifyTenantOnMissed", b)} />

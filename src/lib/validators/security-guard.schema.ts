@@ -45,9 +45,9 @@ export const guardEntrySchema = z
 
 export type GuardEntryValues = z.infer<typeof guardEntrySchema>;
 
-// Formulario raíz: muchos registros de guardias
+// Formulario raíz: muchos registros de vigilantes
 export const securityGuardsSchema = z.object({
-  entries: z.array(guardEntrySchema).min(1, "Agregue al menos un guardia"),
+  entries: z.array(guardEntrySchema).min(1, "Agregue al menos un vigilante"),
 });
 
 export type SecurityGuardsFormValues = z.infer<typeof securityGuardsSchema>;

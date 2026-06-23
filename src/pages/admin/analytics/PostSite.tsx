@@ -35,7 +35,7 @@ export default function PostSite() {
                   <thead className="border-b text-xs uppercase tracking-wide text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 text-left font-semibold">Sitio</th>
-                      <th className="px-3 py-2 text-right font-semibold">Guardias</th>
+                      <th className="px-3 py-2 text-right font-semibold">Vigilantes</th>
                       <th className="px-3 py-2 text-right font-semibold">Turnos</th>
                       <th className="px-3 py-2 text-right font-semibold">Cobertura</th>
                       <th className="px-3 py-2 text-right font-semibold">Rondas</th>

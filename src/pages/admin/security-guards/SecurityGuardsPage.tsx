@@ -141,14 +141,14 @@ function normalizeGuard(item: any): SecurityGuard {
 
 export default function SecurityGuardsPage() {
   const { t } = useTranslation();
-  usePageTitle('Guardias de Seguridad');
+  usePageTitle('Vigilantes de Seguridad');
   const { hasPermission } = usePermissions();
   const [openFilter, setOpenFilter] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGuards, setSelectedGuards] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
-  // Mostrar guardias activos por defecto; el usuario puede cambiar el filtro.
+  // Mostrar vigilantes activos por defecto; el usuario puede cambiar el filtro.
   const [filterStatus, setFilterStatus] = useState<string>("todos");
   // Filtros adicionales (controlados) para permitir "Limpiar filtros"
   const [filterCategory, setFilterCategory] = useState<string>("todas");
@@ -208,7 +208,7 @@ export default function SecurityGuardsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `guardias_${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = `vigilantes_${new Date().toISOString().slice(0,10)}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -228,7 +228,7 @@ export default function SecurityGuardsPage() {
     const htmlRows = list
       .map((g) => `<tr><td>${escapeHtml(g.name)}</td><td>${escapeHtml(g.email)}</td><td>${escapeHtml(g.phone)}</td><td>${escapeHtml(g.status)}</td></tr>`)
       .join("\n");
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Guardias</title><style>table{width:100%;border-collapse:collapse}td,th{border:1px solid #ddd;padding:8px}</style></head><body><h2>Guardias</h2><table><thead><tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Estado</th></tr></thead><tbody>${htmlRows}</tbody></table></body></html>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Vigilantes</title><style>table{width:100%;border-collapse:collapse}td,th{border:1px solid #ddd;padding:8px}</style></head><body><h2>Vigilantes</h2><table><thead><tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Estado</th></tr></thead><tbody>${htmlRows}</tbody></table></body></html>`;
     const w = window.open("", "_blank");
     if (!w) {
       toast.error(t('guards.list.toasts.printWindowOpenError', 'No se pudo abrir la ventana de impresión'));
@@ -248,7 +248,7 @@ export default function SecurityGuardsPage() {
     try {
       const blob = await securityGuardService.export(format);
       const ext = format === "csv" ? "csv" : format === "pdf" ? "pdf" : "xlsx";
-      const filename = `guardias_${new Date().toISOString().slice(0,10)}.${ext}`;
+      const filename = `vigilantes_${new Date().toISOString().slice(0,10)}.${ext}`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -303,7 +303,7 @@ export default function SecurityGuardsPage() {
       await api.post(`/tenant/${tenantId}/stations/${assignStationId}/assign-guard`, {
         data: { guardId: guardUserId, securityGuardId, stationId: assignStationId },
       });
-      toast.success(t('guards.list.toasts.assigned', 'Guardia asignado exitosamente'));
+      toast.success(t('guards.list.toasts.assigned', 'Vigilante asignado exitosamente'));
       setAssignDialogOpen(false);
       setAssignGuard(null);
       setAssignStationId("");
@@ -311,7 +311,7 @@ export default function SecurityGuardsPage() {
       navigate(`/schedule?stationId=${assignStationId}`);
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.data?.message || err?.message || t('guards.list.toasts.assignError', 'Error al asignar guardia'));
+      toast.error(err?.data?.message || err?.message || t('guards.list.toasts.assignError', 'Error al asignar vigilante'));
     } finally {
       setAssignLoading(false);
     }
@@ -369,7 +369,7 @@ export default function SecurityGuardsPage() {
       })
       .catch((err: any) => {
         if (!mounted) return;
-        console.error("Error cargando guardias:", err);
+        console.error("Error cargando vigilantes:", err);
         setError(String(err?.message || err));
       })
       .finally(() => {
@@ -524,16 +524,16 @@ export default function SecurityGuardsPage() {
             <Breadcrumb
               items={[
                 { label: t('sidebar.panel', 'Panel de control'), path: "/dashboard" },
-                { label: t('guards.list.pageTitle', 'Guardias') },
+                { label: t('guards.list.pageTitle', 'Vigilantes') },
               ]}
             />
-            <h1 className="mt-1 text-xl font-bold text-foreground">Guardias de Seguridad</h1>
+            <h1 className="mt-1 text-xl font-bold text-foreground">Vigilantes de Seguridad</h1>
           </div>
           {hasPermission('securityGuardCreate') && (
             <Button className="shrink-0 bg-[#C8860A] hover:bg-[#B37809] text-white" asChild>
               <Link to="/security-guards/new">
                 <UserPlus className="mr-2 h-4 w-4" />
-                {t('guards.list.newGuard', 'Nuevo Guardia')}
+                {t('guards.list.newGuard', 'Nuevo Vigilante')}
               </Link>
             </Button>
           )}
@@ -542,7 +542,7 @@ export default function SecurityGuardsPage() {
 
       {error && (
         <div className="mx-6 mt-4 rounded-md bg-red-500/10 p-4 text-red-700">
-          {t('guards.list.error.loading', 'Error cargando guardias: {{msg}}', { msg: error })}
+          {t('guards.list.error.loading', 'Error cargando vigilantes: {{msg}}', { msg: error })}
         </div>
       )}
 
@@ -602,19 +602,19 @@ export default function SecurityGuardsPage() {
                   // set and immediately clear to avoid leaving the option selected
                   setBulkActionValue(v);
                   if (selectedGuards.length === 0) {
-                    toast.error(t('guards.list.toasts.selectAtLeastOne', 'Selecciona al menos un guardia'));
+                    toast.error(t('guards.list.toasts.selectAtLeastOne', 'Selecciona al menos un vigilante'));
                     setBulkActionValue("");
                     return;
                   }
 
                   // Permission checks for bulk actions
                   if (v === 'eliminar' && !hasPermission('securityGuardDestroy')) {
-                    toast.error(t('guards.list.toasts.noPermissionDelete', 'No tienes permiso para eliminar guardias'));
+                    toast.error(t('guards.list.toasts.noPermissionDelete', 'No tienes permiso para eliminar vigilantes'));
                     setBulkActionValue("");
                     return;
                   }
                   if ((v === 'archivar' || v === 'restaurar' || v === 'mover') && !hasPermission('securityGuardEdit')) {
-                    toast.error(t('guards.list.toasts.noPermissionEdit', 'No tienes permiso para modificar guardias'));
+                    toast.error(t('guards.list.toasts.noPermissionEdit', 'No tienes permiso para modificar vigilantes'));
                     setBulkActionValue("");
                     return;
                   }
@@ -654,7 +654,7 @@ export default function SecurityGuardsPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder={t('guards.list.searchPlaceholder', 'Buscar guardia')}
+                  placeholder={t('guards.list.searchPlaceholder', 'Buscar vigilante')}
                   className="pl-9 w-64"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -824,7 +824,7 @@ export default function SecurityGuardsPage() {
                       onCheckedChange={(v) =>
                         handleSelectAllGuards(Boolean(v))
                       }
-                      aria-label={t('guards.list.selectAllAria', 'Seleccionar todos los guardias de esta página')}
+                      aria-label={t('guards.list.selectAllAria', 'Seleccionar todos los vigilantes de esta página')}
                     />
                   </th>
                   <th className="px-4 py-3 font-semibold">{t('guards.list.table.name', 'Nombre')}</th>
@@ -959,7 +959,7 @@ export default function SecurityGuardsPage() {
                                           ? `${window.location.origin}/guard/registration?code=${encodeURIComponent(inviteCode)}`
                                           : null);
                                       if (!link) {
-                                        toast.error("No hay enlace de registro disponible para este guardia");
+                                        toast.error("No hay enlace de registro disponible para este vigilante");
                                         return;
                                       }
                                       await navigator.clipboard.writeText(link);
@@ -1120,21 +1120,21 @@ export default function SecurityGuardsPage() {
                         </div>
                         <h3 className="text-lg font-semibold text-foreground">
                           {filterStatus !== 'todos'
-                            ? 'Sin guardias en este estado'
-                            : 'No se encontraron guardias'}
+                            ? 'Sin vigilantes en este estado'
+                            : 'No se encontraron vigilantes'}
                         </h3>
                         <p className="mt-1 max-w-xs text-sm text-muted-foreground">
                           {filterStatus !== 'todos'
                             ? 'Prueba con otro filtro de estado.'
                             : searchQuery
-                            ? 'Ningún guardia coincide con tu búsqueda.'
-                            : 'Agrega tu primer guardia para comenzar.'}
+                            ? 'Ningún vigilante coincide con tu búsqueda.'
+                            : 'Agrega tu primer vigilante para comenzar.'}
                         </p>
                         {hasPermission('securityGuardCreate') && filterStatus === 'todos' && !searchQuery && (
                           <Button className="mt-4 bg-[#C8860A] hover:bg-[#B37809] text-white" asChild>
                             <Link to="/security-guards/new">
                               <UserPlus className="mr-2 h-4 w-4" />
-                              Nuevo Guardia
+                              Nuevo Vigilante
                             </Link>
                           </Button>
                         )}
@@ -1225,15 +1225,15 @@ export default function SecurityGuardsPage() {
           </div>
         </section>
       </div>
-      {/* Modal de detalles del guardia */}
-      {/* Diálogo de confirmación para archivar guardia */}
+      {/* Modal de detalles del vigilante */}
+      {/* Diálogo de confirmación para archivar vigilante */}
       <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('guards.list.dialog.archive.title', 'Archivar guardia')}</DialogTitle>
+            <DialogTitle>{t('guards.list.dialog.archive.title', 'Archivar vigilante')}</DialogTitle>
           </DialogHeader>
           <DialogDescription>
-            {t('guards.list.dialog.archive.description', '¿Estás seguro que deseas archivar este guardia? Esta acción se puede revertir desde el filtro.')}
+            {t('guards.list.dialog.archive.description', '¿Estás seguro que deseas archivar este vigilante? Esta acción se puede revertir desde el filtro.')}
           </DialogDescription>
           <div className="mt-4">
             <div className="text-sm text-foreground">
@@ -1255,7 +1255,7 @@ export default function SecurityGuardsPage() {
                   // Prevent archiving if guard is currently on duty
                   const isOnDuty = guardToArchive.raw?.isOnDuty ?? guardToArchive.raw?.onDuty ?? false;
                   if (isOnDuty) {
-                    toast.error(t('guards.list.toasts.archiveOnDutyError', 'No se puede archivar: el guardia está actualmente en servicio.'));
+                    toast.error(t('guards.list.toasts.archiveOnDutyError', 'No se puede archivar: el vigilante está actualmente en servicio.'));
                     setArchiveLoading(false);
                     return;
                   }
@@ -1266,11 +1266,11 @@ export default function SecurityGuardsPage() {
                       g.id === guardToArchive.id ? { ...g, status: "Archivado", raw: { ...g.raw, status: "archived" } } : g
                     )
                   );
-                  toast.success(t('guards.list.toasts.archived', 'Guardia archivado'));
+                  toast.success(t('guards.list.toasts.archived', 'Vigilante archivado'));
                   setArchiveDialogOpen(false);
                 } catch (err: any) {
-                  console.error("Error archivando guardia:", err);
-                  toast.error(t('guards.list.toasts.archiveError', 'Error archivando guardia: {{msg}}', { msg: err?.message || String(err) }));
+                  console.error("Error archivando vigilante:", err);
+                  toast.error(t('guards.list.toasts.archiveError', 'Error archivando vigilante: {{msg}}', { msg: err?.message || String(err) }));
                 } finally {
                   setArchiveLoading(false);
                 }
@@ -1286,10 +1286,10 @@ export default function SecurityGuardsPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('guards.list.dialog.delete.title', 'Eliminar guardia permanentemente')}</DialogTitle>
+            <DialogTitle>{t('guards.list.dialog.delete.title', 'Eliminar vigilante permanentemente')}</DialogTitle>
           </DialogHeader>
           <DialogDescription>
-            {t('guards.list.dialog.delete.description.default', 'Esta acción eliminará permanentemente al guardia y no podrá recuperarse. Si el guardia está activo, será archivado antes de ser eliminado.')}
+            {t('guards.list.dialog.delete.description.default', 'Esta acción eliminará permanentemente al vigilante y no podrá recuperarse. Si el vigilante está activo, será archivado antes de ser eliminado.')}
           </DialogDescription>
           <div className="mt-4">
             <div className="text-sm text-foreground">
@@ -1310,11 +1310,11 @@ export default function SecurityGuardsPage() {
                   const realId = guardToDelete.raw?.id || guardToDelete.id;
                   await securityGuardService.destroy([realId]);
                   setGuards((prev) => prev.filter((g) => g.id !== guardToDelete.id));
-                  toast.success(t('guards.list.toasts.deleteSuccess', 'Guardia eliminado permanentemente'));
+                  toast.success(t('guards.list.toasts.deleteSuccess', 'Vigilante eliminado permanentemente'));
                   setDeleteDialogOpen(false);
                 } catch (err: any) {
-                  console.error("Error eliminando guardia:", err);
-                  toast.error(t('guards.list.toasts.deleteError', 'No se pudo eliminar el guardia: {{msg}}', { msg: err?.message || String(err) }));
+                  console.error("Error eliminando vigilante:", err);
+                  toast.error(t('guards.list.toasts.deleteError', 'No se pudo eliminar el vigilante: {{msg}}', { msg: err?.message || String(err) }));
                 } finally {
                   setDeleteLoading(false);
                 }
@@ -1326,14 +1326,14 @@ export default function SecurityGuardsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Diálogo para restaurar guardia (si está archivado) */}
+      {/* Diálogo para restaurar vigilante (si está archivado) */}
       <Dialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('guards.list.dialog.restore.title', 'Restaurar guardia')}</DialogTitle>
+            <DialogTitle>{t('guards.list.dialog.restore.title', 'Restaurar vigilante')}</DialogTitle>
           </DialogHeader>
           <DialogDescription>
-            {t('guards.list.dialog.restore.description', '¿Deseas restaurar este guardia? La acción lo devolverá al estado activo.')}
+            {t('guards.list.dialog.restore.description', '¿Deseas restaurar este vigilante? La acción lo devolverá al estado activo.')}
           </DialogDescription>
           <div className="mt-4">
             <div className="text-sm text-foreground">
@@ -1357,11 +1357,11 @@ export default function SecurityGuardsPage() {
                   setGuards((prev) =>
                     prev.map((g) => (g.id === guardToRestore.id ? { ...g, status: "Activo", raw: { ...g.raw, status: "active" } } : g))
                   );
-                  toast.success(t('guards.list.toasts.restoreSuccess', 'Guardia restaurado'));
+                  toast.success(t('guards.list.toasts.restoreSuccess', 'Vigilante restaurado'));
                   setRestoreDialogOpen(false);
                 } catch (err: any) {
-                  console.error("Error restaurando guardia:", err);
-                  toast.error(t('guards.list.toasts.restoreError', 'Error restaurando guardia: {{msg}}', { msg: err?.message || String(err) }));
+                  console.error("Error restaurando vigilante:", err);
+                  toast.error(t('guards.list.toasts.restoreError', 'Error restaurando vigilante: {{msg}}', { msg: err?.message || String(err) }));
                 } finally {
                   setRestoreLoading(false);
                 }
@@ -1379,28 +1379,28 @@ export default function SecurityGuardsPage() {
           <DialogHeader>
             <DialogTitle>
               {bulkActionType === "archivar"
-                ? t('guards.list.dialog.bulk.archiveTitle', 'Archivar guardias')
+                ? t('guards.list.dialog.bulk.archiveTitle', 'Archivar vigilantes')
                 : bulkActionType === "restaurar"
-                ? t('guards.list.dialog.bulk.restoreTitle', 'Restaurar guardias')
+                ? t('guards.list.dialog.bulk.restoreTitle', 'Restaurar vigilantes')
                 : bulkActionType === "eliminar"
-                ? t('guards.list.dialog.bulk.deleteTitle', 'Eliminar guardias')
+                ? t('guards.list.dialog.bulk.deleteTitle', 'Eliminar vigilantes')
                 : t('guards.list.dialog.bulk.confirmTitle', 'Confirmar acción')}
             </DialogTitle>
           </DialogHeader>
           <DialogDescription>
             {bulkActionType === "archivar" && (
-              <>{t('guards.list.dialog.bulk.archiveDescription', '¿Estás seguro de que deseas archivar {{count}} guardia(s)? Esta acción se puede revertir desde el filtro de archivados.', { count: selectedGuards.length })}</>
+              <>{t('guards.list.dialog.bulk.archiveDescription', '¿Estás seguro de que deseas archivar {{count}} vigilante(s)? Esta acción se puede revertir desde el filtro de archivados.', { count: selectedGuards.length })}</>
             )}
             {bulkActionType === "restaurar" && (
-              <>{t('guards.list.dialog.bulk.restoreDescription', '¿Deseas restaurar {{count}} guardia(s)? Estos guardias volverán al estado activo.', { count: selectedGuards.length })}</>
+              <>{t('guards.list.dialog.bulk.restoreDescription', '¿Deseas restaurar {{count}} vigilante(s)? Estos vigilantes volverán al estado activo.', { count: selectedGuards.length })}</>
             )}
             {bulkActionType === "eliminar" && (
-              <>{t('guards.list.dialog.bulk.deleteDescription', 'Esta acción eliminará permanentemente {{count}} guardia(s). ¿Deseas continuar?', { count: selectedGuards.length })}</>
+              <>{t('guards.list.dialog.bulk.deleteDescription', 'Esta acción eliminará permanentemente {{count}} vigilante(s). ¿Deseas continuar?', { count: selectedGuards.length })}</>
             )}
           </DialogDescription>
           <div className="mt-4">
             <div className="text-sm text-foreground">
-              <strong>{t('guards.list.labels.selectedGuards', 'Guardias seleccionados')}: </strong>
+              <strong>{t('guards.list.labels.selectedGuards', 'Vigilantes seleccionados')}: </strong>
               {selectedGuards.length}
             </div>
           </div>
@@ -1419,17 +1419,17 @@ export default function SecurityGuardsPage() {
                     setGuards((prev) =>
                       prev.map((g) => (selectedGuards.includes(g.id) ? { ...g, status: "Archivado", raw: { ...g.raw, status: "archived" } } : g))
                     );
-                    toast.success(t('guards.list.toasts.bulkArchived', 'Guardias archivados'));
+                    toast.success(t('guards.list.toasts.bulkArchived', 'Vigilantes archivados'));
                   } else if (bulkActionType === "restaurar") {
                     await securityGuardService.restore(ids);
                     setGuards((prev) =>
                       prev.map((g) => (selectedGuards.includes(g.id) ? { ...g, status: "Activo", raw: { ...g.raw, status: "active" } } : g))
                     );
-                    toast.success(t('guards.list.toasts.bulkRestored', 'Guardias restaurados'));
+                    toast.success(t('guards.list.toasts.bulkRestored', 'Vigilantes restaurados'));
                   } else if (bulkActionType === "eliminar") {
                     await securityGuardService.destroy(ids);
                     setGuards((prev) => prev.filter((g) => !selectedGuards.includes(g.id)));
-                    toast.success(t('guards.list.toasts.bulkDeleted', 'Guardias eliminados permanentemente'));
+                    toast.success(t('guards.list.toasts.bulkDeleted', 'Vigilantes eliminados permanentemente'));
                   }
                   setSelectedGuards([]);
                   setBulkActionDialogOpen(false);
@@ -1488,8 +1488,8 @@ export default function SecurityGuardsPage() {
             >
               ×
             </button>
-            <h2 className="text-xl sm:text-2xl font-bold mb-1 text-center">{t('guards.list.details.title', 'Detalles del Guardia')}</h2>
-            <div className="mb-4 text-xs sm:text-sm text-muted-foreground text-center">{t('guards.list.details.description', 'Información detallada del guardia seleccionado.')}</div>
+            <h2 className="text-xl sm:text-2xl font-bold mb-1 text-center">{t('guards.list.details.title', 'Detalles del Vigilante')}</h2>
+            <div className="mb-4 text-xs sm:text-sm text-muted-foreground text-center">{t('guards.list.details.description', 'Información detallada del vigilante seleccionado.')}</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-6">
               <div>
                 <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.firstName', 'Nombre')}</div>
@@ -1512,7 +1512,7 @@ export default function SecurityGuardsPage() {
                 <div className="text-foreground text-sm break-words">{detailsGuard.raw?.governmentId ?? "-"}</div>
               </div>
               <div>
-                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.guardCredentials', 'Credencial Guardia')}</div>
+                <div className="font-semibold text-foreground text-sm">{t('guards.list.details.fields.guardCredentials', 'Credencial Vigilante')}</div>
                 <div className="text-foreground text-sm break-words">{detailsGuard.raw?.guardCredentials ?? "-"}</div>
               </div>
               <div>
@@ -1577,8 +1577,8 @@ export default function SecurityGuardsPage() {
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('guards.list.importDialog.title', 'Importar Guardias desde Excel')}</DialogTitle>
-            <DialogDescription>{t('guards.list.importDialog.description', 'Sube un archivo .xlsx/.xls/.csv para importar guardias.')}</DialogDescription>
+            <DialogTitle>{t('guards.list.importDialog.title', 'Importar Vigilantes desde Excel')}</DialogTitle>
+            <DialogDescription>{t('guards.list.importDialog.description', 'Sube un archivo .xlsx/.xls/.csv para importar vigilantes.')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -1599,7 +1599,7 @@ export default function SecurityGuardsPage() {
                   const url = window.URL.createObjectURL(blob);
                   const link = document.createElement('a');
                   link.href = url;
-                  link.download = 'plantilla-guardias.csv';
+                  link.download = 'plantilla-vigilantes.csv';
                   link.click();
                   window.URL.revokeObjectURL(url);
                   toast.success(t('guards.list.importDialog.templateDownloaded', 'Plantilla descargada'));
@@ -1902,13 +1902,13 @@ export default function SecurityGuardsPage() {
                         setGuards(data.map(normalize));
                       }
                     } catch (e) {
-                      console.error('Error recargando guardias:', e);
+                      console.error('Error recargando vigilantes:', e);
                     } finally {
                       setLoading(false);
                     }
                   } catch (error: any) {
                     toast.dismiss(toastId);
-                    console.error('Error importando guardias:', error);
+                    console.error('Error importando vigilantes:', error);
                     const msg = error?.details || error?.response?.data?.message || error?.message || 'Error al importar';
                     toast.error(msg);
                   } finally {

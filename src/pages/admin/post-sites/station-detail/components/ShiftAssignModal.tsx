@@ -23,7 +23,7 @@ type Props = {
 };
 
 /**
- * The full guard-assignment modal used by the Turnos tab AND "Guardias Asignados":
+ * The full guard-assignment modal used by the Turnos tab AND "Vigilantes Asignados":
  * pick a guard, a rotation pattern (5-2 / 6-1 / …), start date and number of weeks
  * (or a single turno), and it generates the station's shifts. Self-contained:
  * loads its own guards, positions, jornadas and existing shifts.
@@ -143,7 +143,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   };
 
   const saveShift = async () => {
-    if (!shiftGuard) { toast.error('Seleccione un guardia'); return; }
+    if (!shiftGuard) { toast.error('Seleccione un vigilante'); return; }
     // Always work from a FRESH snapshot of the station's shifts so overlap
     // cleanup is accurate (the stale snapshot was causing uniq_shift_slot 400s).
     const current = await fetchCurrentShifts();
@@ -160,7 +160,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
         toast.success('Turno creado');
         onSaved(start);
       } catch (e: any) {
-        if (isBenignSlotConflict(e)) { toast.success('El guardia ya estaba asignado a ese turno'); onSaved(start); }
+        if (isBenignSlotConflict(e)) { toast.success('El vigilante ya estaba asignado a ese turno'); onSaved(start); }
         else toast.error(e?.data?.message || e?.message || 'Error al crear turno');
       } finally { setSaving(false); }
       return;
@@ -210,7 +210,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C8860A]/12 text-[#C8860A]"><UserPlus size={18} /></div>
             <div>
-              <h4 className="text-base font-semibold text-foreground">Asignar guardia</h4>
+              <h4 className="text-base font-semibold text-foreground">Asignar vigilante</h4>
               <p className="text-xs text-muted-foreground">Programa la cobertura del turno de este puesto</p>
             </div>
           </div>
@@ -224,12 +224,12 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Guardia</label>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Vigilante</label>
             {loadingGuards ? (
               <div className="flex items-center gap-2 py-3 text-xs text-muted-foreground"><Loader2 size={12} className="animate-spin" /> Cargando…</div>
             ) : (
               <select value={shiftGuard} onChange={(e) => setShiftGuard(e.target.value)} className={inputCls}>
-                <option value="">Seleccionar guardia…</option>
+                <option value="">Seleccionar vigilante…</option>
                 {guardsOptions.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
               </select>
             )}

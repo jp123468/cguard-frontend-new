@@ -31,7 +31,7 @@ const LIGHT_STYLE: any[] = [
 ];
 
 const KIND_LABEL: Record<EntityKind, string> = {
-  tenant: "Sede", station: "Puesto", supervisor: "Supervisor", guard: "Guardia", incident: "Incidente",
+  tenant: "Sede", station: "Puesto", supervisor: "Supervisor", guard: "Vigilante", incident: "Incidente",
 };
 
 /** Tracks the app's dark mode (ThemeContext toggles `.dark` on <html>). */

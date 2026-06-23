@@ -191,7 +191,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         ctx.fillStyle = '#555555'; ctx.font = '24px monospace';
         ctx.fillText(identifier.slice(0, 40), W / 2, 740);
         ctx.fillStyle = '#999999'; ctx.font = '18px Arial, sans-serif';
-        ctx.fillText('Escanear con la app de guardia · CGuardPro', W / 2, 786);
+        ctx.fillText('Escanear con la app de vigilante · CGuardPro', W / 2, 786);
 
         const safe = (s: string) => s.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 40);
         const a = document.createElement('a');
@@ -418,11 +418,11 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
         try {
             const payload: any = { name: tourForm.name, postSiteId };
             if (tourForm.stationId) payload.stationId = tourForm.stationId;
-            // Eliminado: no se asigna guardia al crear recorrido
+            // Eliminado: no se asigna vigilante al crear recorrido
             const tourResp: any = await ApiService.post(`/tenant/${tenantId}/site-tour`, payload);
             const tourId = tourResp && (tourResp.id || tourResp._id);
             if (!tourId) throw new Error('No se obtuvo id del recorrido');
-                // Eliminado: no se crea asignación de guardia
+                // Eliminado: no se crea asignación de vigilante
 
             // Now create the tag attached to this tour using current form values
             const tagPayload: any = {

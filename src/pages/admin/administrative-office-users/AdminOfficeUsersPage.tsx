@@ -134,7 +134,7 @@ export default function AdminOfficeUsersPage() {
         return [];
       };
 
-      // Mostrar todos los usuarios (incluye guardias). Normalizar roles para mostrar.
+      // Mostrar todos los usuarios (incluye vigilantes). Normalizar roles para mostrar.
       const filtered = (users || [])
         .map((u) => ({
           ...u,

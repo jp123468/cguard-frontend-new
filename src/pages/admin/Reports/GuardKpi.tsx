@@ -49,7 +49,7 @@ export default function GuardKpi() {
       <Breadcrumb
         items={[
           { label: "Panel de control", path: "/dashboard" },
-          { label: "Informe de KPI del Guardia" },
+          { label: "Informe de KPI del Vigilante" },
         ]}
       />
 
@@ -83,7 +83,7 @@ export default function GuardKpi() {
 
                 <div className="mt-6 space-y-5">
                   <div className="space-y-2">
-                    <Label>Guardia *</Label>
+                    <Label>Vigilante *</Label>
                     <Select>
                       <SelectTrigger className="w-full"><SelectValue placeholder="José Alejo Pinos" /></SelectTrigger>
                       <SelectContent><SelectItem value="1">José Alejo Pinos</SelectItem></SelectContent>

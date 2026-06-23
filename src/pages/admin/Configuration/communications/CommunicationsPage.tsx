@@ -343,7 +343,7 @@ export default function CommunicationsPage() {
                         defaultValue: "Recordatorios de turno por WhatsApp",
                       })}
                       desc={t("comms.whatsappShiftRemindersDesc", {
-                        defaultValue: "Notifica turnos por WhatsApp si el guardia no tiene push.",
+                        defaultValue: "Notifica turnos por WhatsApp si el vigilante no tiene push.",
                       })}
                       checked={!!settings.whatsapp_shift_reminders}
                       onChange={(v) => patch("whatsapp_shift_reminders", v)}

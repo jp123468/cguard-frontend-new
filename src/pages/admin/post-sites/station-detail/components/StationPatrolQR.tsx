@@ -172,7 +172,7 @@ export default function StationPatrolQR({ station, stationId }: Props) {
               )}
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              {t('station.patrolQr.subtitle', 'Imprime y coloca estos QR en cada punto de control. El guardia los escanea durante la ronda.')}
+              {t('station.patrolQr.subtitle', 'Imprime y coloca estos QR en cada punto de control. El vigilante los escanea durante la ronda.')}
             </p>
           </div>
           {checkpoints.length > 0 && (
@@ -188,7 +188,7 @@ export default function StationPatrolQR({ station, stationId }: Props) {
         <div className="mt-4 flex items-start gap-2 rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-700">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            {t('station.patrolQr.verifyNote', 'Verificación de ubicación: al escanear, el servidor compara el GPS del guardia con la ubicación del punto. Solo cuenta como válido si está dentro de')}{' '}
+            {t('station.patrolQr.verifyNote', 'Verificación de ubicación: al escanear, el servidor compara el GPS del vigilante con la ubicación del punto. Solo cuenta como válido si está dentro de')}{' '}
             <strong>{stationRadius} m</strong>. {t('station.patrolQr.verifyNote2', 'Los escaneos fuera de rango quedan registrados como "fuera de ubicación".')}
           </p>
         </div>

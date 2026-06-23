@@ -108,7 +108,7 @@ export default function StationOrders({ stationId }: Props) {
           </div>
           <div>
             <h2 className="text-base font-semibold text-foreground">{t('station.orders.title', 'Consignas específicas')}</h2>
-            <p className="text-xs text-muted-foreground">{t('station.orders.subtitle', 'Requisitos recurrentes que los guardias deben completar en esta estación.')}</p>
+            <p className="text-xs text-muted-foreground">{t('station.orders.subtitle', 'Requisitos recurrentes que los vigilantes deben completar en esta estación.')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export default function StationOrders({ stationId }: Props) {
         <div className="glass grid place-items-center py-14 text-center">
           <ClipboardList className="mb-2 text-muted-foreground/40" size={32} />
           <p className="text-sm font-medium text-foreground">{t('station.orders.emptyTitle', 'Sin consignas')}</p>
-          <p className="mt-1 max-w-sm text-xs text-muted-foreground">{t('station.orders.emptyHint', 'Agrega tareas recurrentes (por ejemplo: abrir los baños públicos a las 09:00) que el guardia deberá completar.')}</p>
+          <p className="mt-1 max-w-sm text-xs text-muted-foreground">{t('station.orders.emptyHint', 'Agrega tareas recurrentes (por ejemplo: abrir los baños públicos a las 09:00) que el vigilante deberá completar.')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -245,7 +245,7 @@ function OrderModal({ value, onChange, onClose, onSave, saving, t }: any) {
           {/* Notifications */}
           <div className="rounded-lg border border-border bg-white/[0.02] p-3">
             <label className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-sm font-medium text-foreground"><Bell size={14} className="text-[color:var(--cc-accent)]" />{t('station.orders.fNotify', 'Notificar a los guardias por push')}</span>
+              <span className="flex items-center gap-1.5 text-sm font-medium text-foreground"><Bell size={14} className="text-[color:var(--cc-accent)]" />{t('station.orders.fNotify', 'Notificar a los vigilantes por push')}</span>
               <button type="button" onClick={() => set({ notifyEnabled: !o.notifyEnabled })}
                 className={`relative h-5 w-9 rounded-full transition-colors ${o.notifyEnabled ? '' : 'bg-white/10'}`} style={o.notifyEnabled ? { background: 'var(--cc-accent)' } : undefined}>
                 <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${o.notifyEnabled ? 'left-[18px]' : 'left-0.5'}`} />
@@ -299,7 +299,7 @@ function ActivityLog({ stationId, t }: { stationId: string; t: any }) {
     <div className="glass grid place-items-center py-14 text-center">
       <CheckCircle2 className="mb-2 text-muted-foreground/40" size={32} />
       <p className="text-sm font-medium text-foreground">{t('station.orders.logEmpty', 'Sin actividad registrada')}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{t('station.orders.logEmptyHint', 'Cuando un guardia complete una consigna, aparecerá aquí con su evidencia.')}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{t('station.orders.logEmptyHint', 'Cuando un vigilante complete una consigna, aparecerá aquí con su evidencia.')}</p>
     </div>
   );
 

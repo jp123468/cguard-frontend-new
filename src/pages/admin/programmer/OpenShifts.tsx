@@ -382,7 +382,7 @@ export default function OpenShifts() {
                         </svg>
                       </div>
                       <h3 className="text-lg font-medium text-foreground mb-1">No hay turnos abiertos</h3>
-                      <p className="text-sm max-w-xs">Todos los turnos tienen guardia asignado o no hay turnos en el período seleccionado.</p>
+                      <p className="text-sm max-w-xs">Todos los turnos tienen vigilante asignado o no hay turnos en el período seleccionado.</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -406,7 +406,7 @@ export default function OpenShifts() {
                           setGuardSearch("");
                         }}
                       >
-                        <UserCheck className="h-4 w-4 mr-1" /> Asignar guardia
+                        <UserCheck className="h-4 w-4 mr-1" /> Asignar vigilante
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -458,7 +458,7 @@ export default function OpenShifts() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Asignar Guardia</DialogTitle>
+            <DialogTitle>Asignar Vigilante</DialogTitle>
           </DialogHeader>
           {assignTarget && (
             <div className="space-y-4">
@@ -473,7 +473,7 @@ export default function OpenShifts() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar guardia..."
+                  placeholder="Buscar vigilante..."
                   className="pl-9"
                   value={guardSearch}
                   onChange={(e) => setGuardSearch(e.target.value)}
@@ -483,7 +483,7 @@ export default function OpenShifts() {
               <div className="border rounded-md max-h-56 overflow-y-auto">
                 {filteredGuards.length === 0 ? (
                   <div className="p-4 text-center text-sm text-muted-foreground">
-                    {allGuards.length === 0 ? "Cargando guardias..." : "No se encontraron guardias"}
+                    {allGuards.length === 0 ? "Cargando vigilantes..." : "No se encontraron vigilantes"}
                   </div>
                 ) : (
                   filteredGuards.map((g) => (

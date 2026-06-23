@@ -27,7 +27,7 @@ export default function EditSecurityGuardPage() {
     if (!hasPermission('securityGuardEdit')) {
       if (!toastAndRedirected.current) {
         toastAndRedirected.current = true;
-        toast.error('No tienes permiso para editar guardias');
+        toast.error('No tienes permiso para editar vigilantes');
         navigate('/security-guards');
       }
     }
@@ -107,7 +107,7 @@ export default function EditSecurityGuardPage() {
             governmentId: "",
             guardCredentials: "",
           });
-          showToastOnce('edit-guard-not-found', "No se encontró el guardia solicitado.");
+          showToastOnce('edit-guard-not-found', "No se encontró el vigilante solicitado.");
           navigate('/security-guards', { replace: true });
         } else if (!generalErrorShown.current) {
           generalErrorShown.current = true;
@@ -117,8 +117,8 @@ export default function EditSecurityGuardPage() {
           } else if (err?.stack) {
             details = err.stack;
           }
-          showToastOnce('edit-guard-general-error', `Error cargando guardia: ${msg}`);
-          setError(`Error cargando guardia: ${msg}${details ? '\n' + details : ''}`);
+          showToastOnce('edit-guard-general-error', `Error cargando vigilante: ${msg}`);
+          setError(`Error cargando vigilante: ${msg}${details ? '\n' + details : ''}`);
           setRedirecting(true);
           navigate('/security-guards', { replace: true });
         }
@@ -187,7 +187,7 @@ export default function EditSecurityGuardPage() {
         <Breadcrumb
           items={[
             { label: "Panel de control", path: "/dashboard" },
-            { label: "Editar guardia" },
+            { label: "Editar vigilante" },
           ]}
           className="mb-4"
         />

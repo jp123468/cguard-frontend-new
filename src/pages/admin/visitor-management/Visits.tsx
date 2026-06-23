@@ -160,7 +160,7 @@ export default function Visits() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label className="text-xs">Guardia</Label>
+                                        <Label className="text-xs">Vigilante</Label>
                                         <Select
                                             value={filters.guardId}
                                             onValueChange={(v) =>
@@ -168,11 +168,11 @@ export default function Visits() {
                                             }
                                         >
                                             <SelectTrigger className="h-10 text-xs">
-                                                <SelectValue placeholder="Selecciona un guardia" />
+                                                <SelectValue placeholder="Selecciona un vigilante" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="guard-1">José Alejo Pinos</SelectItem>
-                                                <SelectItem value="guard-2">Guardia 2</SelectItem>
+                                                <SelectItem value="guard-2">Vigilante 2</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>

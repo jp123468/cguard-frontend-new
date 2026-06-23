@@ -165,7 +165,7 @@ function MannedFields({ form }: { form: UseFormReturn<any> }) {
     <div className="space-y-6">
       {/* Deployment */}
       <div>
-        <SectionTitle icon={<Users className="h-4 w-4" />} title="Despliegue de guardias" />
+        <SectionTitle icon={<Users className="h-4 w-4" />} title="Despliegue de vigilantes" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <FieldLabel hint="obligatorio">Estaciones requeridas</FieldLabel>
@@ -230,7 +230,7 @@ function MannedFields({ form }: { form: UseFormReturn<any> }) {
             checked={!!get('armedService', false)}
             onChange={(v) => set('armedService', v)}
             label="Servicio armado"
-            description="El guardia porta arma de fuego autorizada"
+            description="El vigilante porta arma de fuego autorizada"
           />
           <Toggle
             checked={!!get('uniformRequired', true)}
@@ -248,7 +248,7 @@ function MannedFields({ form }: { form: UseFormReturn<any> }) {
             checked={!!get('keyAccessRequired', false)}
             onChange={(v) => set('keyAccessRequired', v)}
             label="Acceso con llaves / tarjeta"
-            description="El guardia necesita acceso físico al inmueble"
+            description="El vigilante necesita acceso físico al inmueble"
           />
         </div>
       </div>
@@ -702,7 +702,7 @@ interface Props {
 }
 
 const CONFIG_META: Record<string, { label: string; icon: React.ReactNode }> = {
-  manned:  { label: 'Configuración — Vigilancia con Guardias', icon: <Shield className="h-4 w-4" /> },
+  manned:  { label: 'Configuración — Vigilancia con Vigilantes', icon: <Shield className="h-4 w-4" /> },
   alarm:   { label: 'Configuración — Alarma y Respuesta',      icon: <BellElectric className="h-4 w-4" /> },
   cctv:    { label: 'Configuración — Videovigilancia',          icon: <Camera className="h-4 w-4" /> },
   patrol:  { label: 'Configuración — Patrulla Móvil',           icon: <Car className="h-4 w-4" /> },

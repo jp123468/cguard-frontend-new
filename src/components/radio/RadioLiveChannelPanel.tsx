@@ -93,7 +93,7 @@ export default function RadioLiveChannelPanel() {
       {!joined ? (
         <div className="flex flex-col items-center gap-3 py-4 text-center">
           <Volume2 size={28} className="text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">Únete para escuchar y hablar con los guardias en tiempo real (push-to-talk).</p>
+          <p className="text-xs text-muted-foreground">Únete para escuchar y hablar con los vigilantes en tiempo real (push-to-talk).</p>
           <button onClick={join} disabled={busy} className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50">
             {busy ? <Loader2 size={15} className="animate-spin" /> : <Radio size={15} />} Unirse al canal
           </button>

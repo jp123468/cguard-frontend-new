@@ -54,8 +54,8 @@ export default function GuardDepartamentoPage() {
         setGuard({ ...g, fullName });
       })
       .catch((err: any) => {
-        console.error('Error cargando guardia:', err);
-        toast.error('No se pudo cargar guardia');
+        console.error('Error cargando vigilante:', err);
+        toast.error('No se pudo cargar vigilante');
       })
       .finally(() => {
         if (!mounted) return;
@@ -182,7 +182,7 @@ export default function GuardDepartamentoPage() {
           </div>
         ) : (
           <div className="flex items-center justify-center h-32">
-            <div className="text-muted-foreground">No se pudo cargar el guardia</div>
+            <div className="text-muted-foreground">No se pudo cargar el vigilante</div>
           </div>
         )}
 

@@ -108,7 +108,7 @@ export default function StationIncidents({ stationId, postSiteId }: Props) {
                   {t('station.incidents.col.date', 'Fecha')}
                 </th>
                 <th className="px-6 py-3 text-left font-semibold text-foreground/70">
-                  {t('station.incidents.col.guard', 'Guardia')}
+                  {t('station.incidents.col.guard', 'Vigilante')}
                 </th>
               </tr>
             </thead>

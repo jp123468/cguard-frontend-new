@@ -56,7 +56,7 @@ export default function GuardRemindersPage() {
         setGuard({ ...g, fullName });
       })
       .catch((err: any) => {
-        console.error('Error cargando guardia:', err);
+        console.error('Error cargando vigilante:', err);
         toast.error(t('guards.reminders.toasts.loadError', { defaultValue: 'Could not load guard' }));
       })
       .finally(() => {

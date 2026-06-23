@@ -116,7 +116,7 @@ export default function QuizManager({ courseId, quiz, passingScore, readOnly, on
               <div>
                 <p className="font-medium">Sin cuestionario</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Un cuestionario es opcional. Si lo agregas, el guardia debe aprobarlo para completar el curso.
+                  Un cuestionario es opcional. Si lo agregas, el vigilante debe aprobarlo para completar el curso.
                 </p>
               </div>
               {!readOnly && (

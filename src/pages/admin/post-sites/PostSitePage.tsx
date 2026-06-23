@@ -856,7 +856,7 @@ export default function PostSitePage() {
                         </td>
                         <td className="px-4 py-2.5">
                           <span className="text-xs text-muted-foreground">
-                            {assignedCount > 0 ? `${assignedCount} guardia${assignedCount > 1 ? 's' : ''}` : 'Sin guardias'}
+                            {assignedCount > 0 ? `${assignedCount} vigilante${assignedCount > 1 ? 's' : ''}` : 'Sin vigilantes'}
                           </span>
                         </td>
                         <td className="px-4 py-2.5">

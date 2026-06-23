@@ -51,7 +51,7 @@ export default function GuardSkillsPage() {
         setGuard({ ...g, fullName });
       })
       .catch((err: any) => {
-        console.error('Error cargando guardia:', err);
+        console.error('Error cargando vigilante:', err);
         toast.error(t('guards.skills.toasts.loadError', { defaultValue: 'Could not load guard' }));
       })
       .finally(() => {
@@ -74,7 +74,7 @@ export default function GuardSkillsPage() {
         setGuard({ ...g, fullName });
       })
       .catch((err: any) => {
-        console.error('Error cargando guardia:', err);
+        console.error('Error cargando vigilante:', err);
         toast.error(t('guards.skills.toasts.loadError', { defaultValue: 'Could not load guard' }));
       })
       .finally(() => {

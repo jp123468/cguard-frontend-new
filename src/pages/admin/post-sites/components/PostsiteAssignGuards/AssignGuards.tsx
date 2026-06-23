@@ -831,7 +831,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                                     <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{a.deletedAt || a.deleted_at || '-'}</div></dd>
                                                                 </div>
                                                                 <div>
-                                                                    <dt className="text-sm font-medium text-foreground/70">Guardia</dt>
+                                                                    <dt className="text-sm font-medium text-foreground/70">Vigilante</dt>
                                                                     <dd><div className="bg-muted/30 p-2 rounded text-base text-foreground">{resolveSecurityGuardName(a)}</div></dd>
                                                                 </div>
                                                                 <div>
@@ -917,7 +917,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                     <div className="rounded-lg border border-blue-200 bg-blue-500/10 px-4 py-3 flex gap-3">
                                       <span className="text-blue-500 text-lg leading-none mt-0.5">ℹ</span>
                                       <div>
-                                        <p className="text-xs font-semibold text-blue-600 mb-1">Capacitación requerida para guardias de este puesto</p>
+                                        <p className="text-xs font-semibold text-blue-600 mb-1">Capacitación requerida para vigilantes de este puesto</p>
                                         <div className="flex flex-wrap gap-1.5">
                                           {training.map((item: string) => (
                                             <span key={item} className="inline-block rounded-full bg-blue-500/15 border border-blue-300 text-blue-600 text-[11px] font-medium px-2 py-0.5">{item}</span>

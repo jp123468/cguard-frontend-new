@@ -38,7 +38,7 @@ export default function GuardOverview() {
                   : (pi?.downloadUrl || pi?.publicUrl || (typeof pi === 'string' && pi ? pi : null));
                 setGuard({ ...g, fullName, profileImage: pi, photoUrl: photoUrl || g.photoUrl || null });
             } catch (err) {
-                console.error('Error cargando guardia (security-guard):', err);
+                console.error('Error cargando vigilante (security-guard):', err);
                 const status = (err as any) && ((err as any).status || (err as any).response?.status || (err as any).code);
 
                 const tenantId = localStorage.getItem('tenantId') || '';
@@ -142,7 +142,7 @@ export default function GuardOverview() {
                         </>
                     ) : (
                         <div className="flex items-center justify-center h-32">
-                            <div className="text-muted-foreground">No se pudo cargar el guardia</div>
+                            <div className="text-muted-foreground">No se pudo cargar el vigilante</div>
                         </div>
                     )}
                 </div>
