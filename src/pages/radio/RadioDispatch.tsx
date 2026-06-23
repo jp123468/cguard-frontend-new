@@ -40,6 +40,7 @@ export default function RadioDispatch() {
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<any>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   const refresh = useCallback(async () => {
     try {
@@ -58,6 +59,8 @@ export default function RadioDispatch() {
   useEffect(() => { refresh(); radioCheckService.getSettings().then(setSettings).catch(() => {}); }, [refresh]);
   useEffect(() => { const id = setInterval(refresh, 20000); return () => clearInterval(id); }, [refresh]);
   useEffect(() => { if (version > 0) refresh(); }, [version, refresh]);
+  // Tick every second while a pase is running to drive the report countdown.
+  useEffect(() => { if (!running) return; const id = setInterval(() => setNowMs(Date.now()), 1000); return () => clearInterval(id); }, [running]);
 
   const start = async (scope: "all" | "station", stationId?: string) => {
     setBusy(true);
@@ -82,6 +85,17 @@ export default function RadioDispatch() {
   // Merge running-session entries (richer: transcript/audio) over the console rows.
   const entryByStation: Record<string, any> = {};
   entries.forEach((e) => { entryByStation[e.stationId] = e; });
+
+  // Report countdown: all stations share the same 60s deadline (simultaneous
+  // window). Take the latest still-open timeout among notified entries.
+  const deadlineMs = entries.reduce((max, e) => {
+    if (e?.status === "notified" && e?.timeoutAt) { const t = new Date(e.timeoutAt).getTime(); return t > max ? t : max; }
+    return max;
+  }, 0);
+  const remainingSec = deadlineMs ? Math.max(0, Math.ceil((deadlineMs - nowMs) / 1000)) : null;
+  const countdown = remainingSec != null
+    ? `${String(Math.floor(remainingSec / 60)).padStart(2, "0")}:${String(remainingSec % 60).padStart(2, "0")}`
+    : null;
 
   return (
     <AppLayout>
@@ -125,9 +139,23 @@ export default function RadioDispatch() {
 
       {running && (
         <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-          <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="font-semibold">{done >= total ? "Finalizando…" : `Puesto ${Math.min(done + 1, total)} de ${total}`}</span>
-            <span className="text-muted-foreground">{running.respondedCount || 0} respondieron · {running.noResponseCount || 0} sin respuesta</span>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-3 text-sm">
+            <span className="font-semibold">
+              {done >= total ? "Finalizando…" : "Reportes entrantes"} · {running.respondedCount || 0}/{total} recibidos
+            </span>
+            <div className="flex items-center gap-3">
+              {countdown && (
+                <span
+                  className={`rounded-lg px-3 py-1 font-mono text-lg font-bold tabular-nums ${
+                    (remainingSec ?? 0) > 0 ? "bg-amber-500/20 text-amber-700" : "bg-red-500/15 text-red-600"
+                  }`}
+                  title="Tiempo restante para completar el reporte"
+                >
+                  {(remainingSec ?? 0) > 0 ? `⏱ ${countdown}` : "Tiempo agotado"}
+                </span>
+              )}
+              <span className="text-muted-foreground">{running.respondedCount || 0} respondieron · {running.noResponseCount || 0} sin respuesta</span>
+            </div>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
             <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${total ? Math.round((done / total) * 100) : 0}%` }} />
