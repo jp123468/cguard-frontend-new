@@ -55,6 +55,7 @@ import {
   type DeviceProtocol,
   type DeviceStatus,
   type DeviceType,
+  type RelaySite,
 } from "@/lib/api/videoService";
 
 const GOLD = "#C8860A";
@@ -84,6 +85,8 @@ interface DeviceForm {
   postSiteId: string;
   stationId: string;
   notes: string;
+  connectionMode: "direct" | "relay";
+  relaySiteId: string;
 }
 
 const emptyForm = (): DeviceForm => ({
@@ -101,6 +104,8 @@ const emptyForm = (): DeviceForm => ({
   postSiteId: "",
   stationId: "",
   notes: "",
+  connectionMode: "direct",
+  relaySiteId: "",
 });
 
 const deviceToForm = (d: Device): DeviceForm => ({
@@ -118,6 +123,8 @@ const deviceToForm = (d: Device): DeviceForm => ({
   postSiteId: d.postSiteId ?? "",
   stationId: d.stationId ?? "",
   notes: d.notes ?? "",
+  connectionMode: (d.connectionMode as "direct" | "relay") ?? "direct",
+  relaySiteId: d.relaySiteId ?? "",
 });
 
 function StatusBadge({ status }: { status?: DeviceStatus }) {
@@ -169,6 +176,7 @@ export default function VideoDevices() {
   const [deleteTarget, setDeleteTarget] = useState<Device | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [gatewayTarget, setGatewayTarget] = useState<Device | null>(null);
+  const [relaySites, setRelaySites] = useState<RelaySite[]>([]);
 
   const load = async () => {
     setLoading(true);
@@ -184,6 +192,7 @@ export default function VideoDevices() {
 
   useEffect(() => {
     load();
+    videoService.relaySites().then(setRelaySites).catch(() => {});
   }, []);
 
   const openCreate = () => {
@@ -220,6 +229,8 @@ export default function VideoDevices() {
       postSiteId: form.postSiteId.trim() || null,
       stationId: form.stationId.trim() || null,
       notes: form.notes.trim() || null,
+      connectionMode: form.connectionMode,
+      relaySiteId: form.connectionMode === "relay" ? form.relaySiteId || null : null,
     };
     // Only send password when provided (never overwrite with empty on edit).
     if (form.password) payload.password = form.password;
@@ -505,6 +516,37 @@ export default function VideoDevices() {
                   required
                 />
               </div>
+
+              {/* Connection: direct (same LAN) vs relay (remote site behind NAT) */}
+              <div className={form.connectionMode === "relay" ? "" : "sm:col-span-2"}>
+                <Label htmlFor="vd-conn">Conexión</Label>
+                <Select value={form.connectionMode} onValueChange={(v) => set("connectionMode", v as "direct" | "relay")}>
+                  <SelectTrigger id="vd-conn"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="direct">Directa (misma red / accesible)</SelectItem>
+                    <SelectItem value="relay">Remota — vía relay (otra red/país)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {form.connectionMode === "relay" && (
+                <div>
+                  <Label htmlFor="vd-relay">Sitio relay</Label>
+                  <Select value={form.relaySiteId} onValueChange={(v) => set("relaySiteId", v)}>
+                    <SelectTrigger id="vd-relay"><SelectValue placeholder="Selecciona un sitio" /></SelectTrigger>
+                    <SelectContent>
+                      {relaySites.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {form.connectionMode === "relay" && (
+                <p className="sm:col-span-2 -mt-2 text-xs text-muted-foreground">
+                  La IP/host de abajo es la del DVR en su red local (la usa el relay del sitio). El servidor
+                  no la alcanza directamente; el relay empuja el video a la nube.
+                </p>
+              )}
 
               <div>
                 <Label htmlFor="vd-type">Tipo</Label>

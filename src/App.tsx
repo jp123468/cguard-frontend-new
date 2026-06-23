@@ -90,6 +90,7 @@ import Reporting from "./pages/admin/analytics/Reporting"
 import Scheduling from "./pages/admin/analytics/Scheduling"
 import VideoMonitoring from "./pages/admin/video/VideoMonitoring"
 import VideoDevices from "./pages/admin/video/VideoDevices"
+import VideoRelaySites from "./pages/admin/video/VideoRelaySites"
 import VideoEvents from "./pages/admin/video/VideoEvents"
 import VideoSharedClip from "./pages/admin/video/VideoSharedClip"
 import AlarmQueue from "./pages/admin/alarm/AlarmQueue"
@@ -951,6 +952,7 @@ export default function App() {
               {/* VIDEOVIGILANCIA */}
               <Route path="/video/monitoring" element={<ProtectedRoute><VideoMonitoring /></ProtectedRoute>} />
               <Route path="/video/devices" element={<ProtectedRoute><VideoDevices /></ProtectedRoute>} />
+              <Route path="/video/relays" element={<ProtectedRoute><VideoRelaySites /></ProtectedRoute>} />
               <Route path="/video/events" element={<ProtectedRoute><VideoEvents /></ProtectedRoute>} />
               {/* FIN VIDEOVIGILANCIA */}
 

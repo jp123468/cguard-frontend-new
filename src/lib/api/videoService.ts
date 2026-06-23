@@ -27,11 +27,39 @@ export interface Device {
   active?: boolean;
   streamGatewayBase?: string | null;
   streamFormat?: "hls" | "webrtc";
+  // 'direct' = pull RTSP from host; 'relay' = streamed in via a remote site relay.
+  connectionMode?: "direct" | "relay";
+  relaySiteId?: string | null;
   tenantId?: string;
   createdById?: string | null;
   updatedById?: string | null;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface RelaySite {
+  id: string;
+  name: string;
+  siteKey: string;
+  // publishToken is never returned; these masked fields are:
+  publishTokenConfigured?: boolean;
+  publishTokenLast4?: string | null;
+  ingestProtocol?: "rtmps" | "srt";
+  status?: "unknown" | "publishing" | "offline";
+  lastSeenAt?: string | null;
+  notes?: string | null;
+  active?: boolean;
+  tenantId?: string;
+  createdAt?: string;
+}
+
+export interface RelayBundle {
+  siteId: string;
+  siteKey: string;
+  ingest: string;
+  channelCount: number;
+  tokenEmbedded: boolean;
+  compose: string;
 }
 
 export type CameraStatus = "online" | "offline" | "unknown";
@@ -151,6 +179,25 @@ export const videoService = {
   },
   gatewayConfig(id: string): Promise<{ deviceName: string; cameraCount: number; gatewayBase: string | null; format: string; yaml: string }> {
     return ApiService.get(`/tenant/${tid()}/video/device/${id}/gateway-config`);
+  },
+
+  // --- Relay sites (remote cameras) ---
+  relaySites(): Promise<RelaySite[]> {
+    return ApiService.get(`/tenant/${tid()}/video/relay-sites`).then((r: any) =>
+      Array.isArray(r) ? r : r?.rows ?? [],
+    );
+  },
+  createRelaySite(body: { name: string; ingestProtocol?: string; notes?: string }): Promise<RelaySite> {
+    return ApiService.post(`/tenant/${tid()}/video/relay-site`, body);
+  },
+  updateRelaySite(id: string, body: Partial<RelaySite> & { regenToken?: boolean }): Promise<RelaySite> {
+    return ApiService.put(`/tenant/${tid()}/video/relay-site/${id}`, body);
+  },
+  deleteRelaySite(id: string): Promise<any> {
+    return ApiService.delete(`/tenant/${tid()}/video/relay-site/${id}`);
+  },
+  relayBundle(id: string): Promise<RelayBundle> {
+    return ApiService.get(`/tenant/${tid()}/video/relay-site/${id}/bundle`);
   },
 
   // --- Cameras ---

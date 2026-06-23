@@ -138,6 +138,11 @@
         "path": "/video/devices"
       },
       {
+        "id": "video-relays",
+        "name": "Sitios remotos",
+        "path": "/video/relays"
+      },
+      {
         "id": "video-eventos",
         "name": "Eventos",
         "path": "/video/events"
