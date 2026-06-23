@@ -11,6 +11,21 @@ import userService from "@/lib/api/userService";
 import { AuthService } from '@/services/auth/authService';
 import { PhoneInput } from "@/components/phone/PhoneInput";
 
+/**
+ * Mirror the BACKEND password policy (securityGuardCreate.isStrongPassword):
+ * ≥8 chars + uppercase + lowercase + number + special char. Keeping this in sync
+ * is what stops a password the form accepts but the server rejects (which used to
+ * surface as a misleading "Extraviado"/404). Returns an error message or undefined.
+ */
+function passwordPolicyError(pw: string): string | undefined {
+  if (!pw || pw.length < 8) return "La contraseña debe tener al menos 8 caracteres";
+  if (!/[A-Z]/.test(pw)) return "Debe contener al menos una letra mayúscula";
+  if (!/[a-z]/.test(pw)) return "Debe contener al menos una letra minúscula";
+  if (!/[0-9]/.test(pw)) return "Debe contener al menos un número";
+  if (!/[^A-Za-z0-9]/.test(pw)) return "Debe contener al menos un carácter especial (p. ej. ! @ # $ %)";
+  return undefined;
+}
+
 export default function GuardRegistration() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -229,8 +244,8 @@ export default function GuardRegistration() {
         if (!phone?.trim()) nextErrors.phone = "El teléfono es obligatorio";
         if (!password) nextErrors.password = "La contraseña es obligatoria";
         else {
-          if ((password || "").length < 8) nextErrors.password = "La contraseña debe tener al menos 8 caracteres";
-          else if (!/[A-Z]/.test(password)) nextErrors.password = "La contraseña debe contener al menos una letra mayúscula";
+          const pe = passwordPolicyError(password);
+          if (pe) nextErrors.password = pe;
         }
         if (!confirm) nextErrors.confirm = "Confirme la contraseña";
         if (password && confirm && password !== confirm) nextErrors.confirm = "Las contraseñas no coinciden";
@@ -279,8 +294,8 @@ export default function GuardRegistration() {
         if (!phone?.trim()) nextErrors.phone = "El teléfono es obligatorio";
         if (!password) nextErrors.password = "La contraseña es obligatoria";
         else {
-          if ((password || "").length < 8) nextErrors.password = "La contraseña debe tener al menos 8 caracteres";
-          else if (!/[A-Z]/.test(password)) nextErrors.password = "La contraseña debe contener al menos una letra mayúscula";
+          const pe = passwordPolicyError(password);
+          if (pe) nextErrors.password = pe;
         }
         if (!confirm) nextErrors.confirm = "Confirme la contraseña";
         if (password && confirm && password !== confirm) nextErrors.confirm = "Las contraseñas no coinciden";
@@ -508,8 +523,13 @@ export default function GuardRegistration() {
           // This avoids 403 Forbidden when completing an invitation before having credentials.
             try {
             createResp = await ApiService.patch(`/security-guard/public`, payload, { skipAuth: true });
-          } catch (e) {
-            // Fallback: try tenant-scoped endpoint if public fails for some reason
+          } catch (e: any) {
+            // Do NOT mask real validation/auth errors (e.g. weak password = 400)
+            // by retrying the tenant-scoped endpoint — that retry 404s and the
+            // guard saw a misleading "Extraviado". Only fall back when the public
+            // route itself looks unavailable (network error, or 404/405 routing).
+            const st = e?.status;
+            if (st && st !== 404 && st !== 405) throw e;
             const tenantIdFallback = localStorage.getItem('tenantId');
             if (tenantIdFallback) {
               createResp = await ApiService.post(`/tenant/${tenantIdFallback}/security-guard`, payload, { skipAuth: true });
