@@ -69,6 +69,7 @@ import NewAdminUserPage from "./pages/admin/administrative-office-users/NewAdmin
 import EditAdminUserPage from "./pages/admin/administrative-office-users/EditAdminUserPage";
 import MessengerPage from "./pages/admin/messenger/MessengerPage"
 import RadioDispatch from "./pages/radio/RadioDispatch"
+import RadioDevices from "./pages/admin/radio/RadioDevices"
 import DispatcherPage from "./pages/admin/dispatcher/DispatcherPage"
 import NewDispatchPage from "./pages/admin/dispatcher/NewDispatchPage"
 import EditDispatchPage from "./pages/admin/dispatcher/EditDispatchPage"
@@ -999,6 +1000,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <RadioDispatch />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/radio/devices"
+                element={
+                  <ProtectedRoute>
+                    <RadioDevices />
                   </ProtectedRoute>
                 }
               />

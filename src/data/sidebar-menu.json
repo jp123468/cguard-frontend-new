@@ -193,7 +193,19 @@
     "id": "radio",
     "name": "Radio",
     "icon": "Radio",
-    "path": "/radio"
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "radio-despacho",
+        "name": "Despacho",
+        "path": "/radio"
+      },
+      {
+        "id": "radio-dispositivos",
+        "name": "Radios IP",
+        "path": "/radio/devices"
+      }
+    ]
   },
   {
     "id": "informes",
