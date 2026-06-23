@@ -600,7 +600,7 @@ export default function GuardRegistration() {
     <GuardInviteLayout
       tenantName={fetched?.tenantName || fetched?.tenant?.name}
       tenantLogoUrl={fetched?.tenantLogoUrl}
-      title={done ? '¡Registro completado!' : t('guard.registration_title', { defaultValue: 'Registro de guardia' })}
+      title={done ? '¡Registro completado!' : t('guard.registration_title', { defaultValue: 'Registro de vigilante' })}
       subtitle={done ? 'Tu solicitud fue enviada a tu empresa de seguridad.' : t('guard.registration_subtitle', { defaultValue: 'Completa tus datos para activar tu cuenta.' })}
     >
       {done ? (
@@ -624,7 +624,7 @@ export default function GuardRegistration() {
             <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 p-3.5">
               <Smartphone className="mt-0.5 h-5 w-5 shrink-0 text-[#C8860A]" />
               <div>
-                <p className="text-sm font-semibold text-foreground">Descarga la app de guardia</p>
+                <p className="text-sm font-semibold text-foreground">Descarga la app de vigilante</p>
                 <p className="text-xs text-muted-foreground">Google Play · App Store. Inicia sesión cuando tu cuenta esté activa.</p>
               </div>
             </div>
