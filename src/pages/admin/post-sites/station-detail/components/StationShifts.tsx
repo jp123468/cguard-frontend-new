@@ -255,19 +255,17 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
         if (!jornada.days.includes(dayKey)) return; // not an operating day for this jornada
         const guardsNeeded = parseInt(String(jornada.guardsCount)) || 1;
 
-        // Count assigned guards whose shift overlaps with this jornada's time window
-        const [jStartH, jStartM] = (jornada.startTime || '07:00').split(':').map(Number);
-        const [jEndH, jEndM] = (jornada.endTime || '19:00').split(':').map(Number);
-        const jStart = jStartH * 60 + (jStartM || 0);
-        const jEnd = jEndH * 60 + (jEndM || 0);
-
+        // Count assigned guards by attributing each shift to the day it STARTS
+        // (tenant tz) and matching its day/night class to the jornada. The old
+        // time-overlap math was broken for NIGHT shifts that cross midnight
+        // (e.g. 19:00→07:00 never "overlapped" an 18:00→06:00 window), so a guard
+        // assigned to a night station ALWAYS showed as "sin guardia asignado".
+        const jornadaNight = String(jornada.tipo || '').toLowerCase().includes('noct');
         const guardsAssigned = dayEvents.filter(ev => {
-          // Compare in the tenant timezone (shift times are UTC; jornada is local).
-          const evStartH = minutesInTenantTz(ev.start);
-          const evEndH = minutesInTenantTz(ev.end);
-          // Overlap check: shift overlaps with jornada time window
-          const overlap = evStartH < (jEnd || 1440) && evEndH > jStart;
-          return overlap;
+          if (dateKey(ev.start) !== dateStr) return false; // attribute to its start day
+          const startMin = minutesInTenantTz(ev.start);
+          const evNight = startMin >= 18 * 60 || startMin < 6 * 60; // evening/pre-dawn start = night
+          return jornadaNight ? evNight : !evNight;
         }).length;
 
         slots.push({
@@ -820,14 +818,30 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
                     {/* Rotation pattern */}
                     <div>
                       <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Patrón de rotación</label>
-                      <div className="grid grid-cols-4 gap-2">
-                        {['5-2', '6-1', '4-3', '4-2'].map(p => (
+                      <div className="grid grid-cols-5 gap-2">
+                        {['5-2', '6-1', '4-3', '4-2', '8-2'].map(p => (
                           <button
                             key={p}
                             onClick={() => setRotationPattern(p)}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border ${rotationPattern === p ? 'bg-[#C8860A]/10 border-[#C8860A] text-[#C8860A]' : 'border-border/40 text-muted-foreground hover:border-border'}`}
                           >{p}</button>
                         ))}
+                      </div>
+                      {/* Custom factor: choose how many days work / how many rest. */}
+                      <div className="mt-2 flex items-end gap-2">
+                        <div className="flex-1">
+                          <label className="block text-[10px] font-medium text-muted-foreground mb-1 uppercase tracking-wide">Días trabaja</label>
+                          <input type="number" min={1} max={30} value={rotationPattern.split('-')[0] || ''}
+                            onChange={(e) => setRotationPattern(`${Math.max(1, parseInt(e.target.value) || 1)}-${rotationPattern.split('-')[1] || '2'}`)}
+                            className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono outline-none focus:border-[#C8860A]" />
+                        </div>
+                        <span className="pb-2 text-muted-foreground">-</span>
+                        <div className="flex-1">
+                          <label className="block text-[10px] font-medium text-muted-foreground mb-1 uppercase tracking-wide">Días descansa</label>
+                          <input type="number" min={1} max={30} value={rotationPattern.split('-')[1] || ''}
+                            onChange={(e) => setRotationPattern(`${rotationPattern.split('-')[0] || '5'}-${Math.max(1, parseInt(e.target.value) || 1)}`)}
+                            className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono outline-none focus:border-[#C8860A]" />
+                        </div>
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-1.5">
                         {rotationPattern.split('-')[0]} días trabaja, {rotationPattern.split('-')[1]} días descansa
