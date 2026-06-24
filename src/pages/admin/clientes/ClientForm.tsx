@@ -43,7 +43,7 @@ import {
     CategoryOption,
 } from "@/components/categories/CategorySelect";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info, User, Mail, Phone, Tag, Globe, Building2, Upload, X, Image, Loader2 } from "lucide-react";
+import { Info, User, Mail, Phone, Tag, Globe, Building2, Upload, X, Image, Loader2, UserPlus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export type Category = { id: string; name: string };
@@ -132,6 +132,17 @@ export default function ClientForm({
     });
 
     const personType = form.watch('personType' as any) || 'PN';
+
+    // Additional people who ALSO get access to the client app. PJ: persona
+    // encargada (CEO + ops). PN: family/others (hijo, madre…). The PRIMARY access
+    // user is the client's own name/email above (representante legal / titular).
+    type AccessPerson = { name: string; email: string; phone: string; relationship: string };
+    const [accessPeople, setAccessPeople] = useState<AccessPerson[]>([]);
+    const addAccessPerson = () =>
+        setAccessPeople((p) => [...p, { name: '', email: '', phone: '', relationship: personType === 'PJ' ? 'Persona encargada' : '' }]);
+    const updateAccessPerson = (i: number, patch: Partial<AccessPerson>) =>
+        setAccessPeople((p) => p.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+    const removeAccessPerson = (i: number) => setAccessPeople((p) => p.filter((_, idx) => idx !== i));
     // Watch latitude/longitude so we can force remount of the map when they change
     const watchedLat = form.watch('latitude' as any);
     const watchedLng = form.watch('longitude' as any);
@@ -306,6 +317,13 @@ export default function ClientForm({
 
         try {
             if (mode === "create") {
+                // Extra app-access people (persona encargada / family). Each valid
+                // one (name + email) is provisioned as a customer user linked to
+                // this client. Only on create — edit manages access elsewhere.
+                const additionalContacts = accessPeople
+                    .filter((a) => a.name.trim() && a.email.trim())
+                    .map((a) => ({ name: a.name.trim(), email: a.email.trim(), phone: a.phone.trim() || null, relationship: a.relationship.trim() || null }));
+                if (additionalContacts.length) (basePayload as any).additionalContacts = additionalContacts;
                 const data = await clientService.createClient(basePayload as ClientInput);
                 toast.success(t('clients.clientCreated') || "Cliente creado exitosamente");
                 onSaved?.({ id: data.id, data: values as unknown as ClientInput });
@@ -405,7 +423,7 @@ export default function ClientForm({
                             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C8860A]/10">
                                 <User className="h-4 w-4 text-[#C8860A]" />
                             </div>
-                            <span className="text-sm font-semibold text-foreground">{t('clients.form.personalInfo', 'Información personal')}</span>
+                            <span className="text-sm font-semibold text-foreground">{personType === 'PJ' ? t('clients.form.legalRep', 'Representante legal') : t('clients.form.personalInfo', 'Información personal')}</span>
                         </div>
                         <div className="p-5 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -757,6 +775,39 @@ export default function ClientForm({
                             </div>
                         </div>
                     </div>
+
+                    {/* ── Personas con acceso adicionales (optional) ──────────── */}
+                    {mode === 'create' && (
+                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
+                        <div className="flex items-center justify-between gap-2 px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#C8860A]/10"><UserPlus className="h-4 w-4 text-[#C8860A]" /></div>
+                            <span className="text-sm font-semibold text-foreground">{t('clients.form.extraAccess', 'Personas con acceso adicionales')}</span>
+                          </div>
+                          <button type="button" onClick={addAccessPerson} className="inline-flex items-center gap-1.5 rounded-lg border border-input px-3 py-1.5 text-xs font-medium text-[#C8860A] hover:bg-[#C8860A]/10">
+                            <UserPlus size={13} /> {t('clients.form.addPerson', 'Agregar persona')}
+                          </button>
+                        </div>
+                        <div className="p-5 space-y-3">
+                          <p className="text-xs text-muted-foreground -mt-1">
+                            {personType === 'PJ'
+                              ? 'Opcional. Ej: la persona encargada de la operación. Recibirá acceso a la app además del representante legal.'
+                              : 'Opcional. Otras personas que también tendrán acceso a la app (ej: hijo, cónyuge).'}
+                          </p>
+                          {accessPeople.length === 0 && (
+                            <p className="text-xs text-muted-foreground italic">Sin personas adicionales. Solo el contacto principal tendrá acceso.</p>
+                          )}
+                          {accessPeople.map((p, i) => (
+                            <div key={i} className="grid grid-cols-1 sm:grid-cols-12 gap-2 rounded-lg border border-border/40 bg-background p-3">
+                              <input value={p.name} onChange={(e) => updateAccessPerson(i, { name: e.target.value })} placeholder="Nombre completo *" className="sm:col-span-4 px-3 py-2 border border-border/40 rounded-lg text-sm bg-background outline-none focus:border-[#C8860A]" />
+                              <input value={p.email} onChange={(e) => updateAccessPerson(i, { email: e.target.value })} type="email" placeholder="Correo *" className="sm:col-span-4 px-3 py-2 border border-border/40 rounded-lg text-sm bg-background outline-none focus:border-[#C8860A]" />
+                              <input value={p.relationship} onChange={(e) => updateAccessPerson(i, { relationship: e.target.value })} placeholder={personType === 'PJ' ? 'Cargo (ej: Encargado)' : 'Relación (ej: hijo)'} className="sm:col-span-3 px-3 py-2 border border-border/40 rounded-lg text-sm bg-background outline-none focus:border-[#C8860A]" />
+                              <button type="button" onClick={() => removeAccessPerson(i)} className="sm:col-span-1 grid place-items-center rounded-lg text-muted-foreground hover:text-red-500" aria-label="Quitar"><Trash2 size={15} /></button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* ── Section 3: Sector ─────────────────────────────────── */}
                     <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
