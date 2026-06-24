@@ -131,17 +131,18 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
         }
       }
 
-      // Rows: guard-assignments first (rich: type + position), then shift-only
-      // guards added via the Turnos tab (no guard-assignment record).
+      // SINGLE SOURCE OF TRUTH = guardAssignment (the exact same records as
+      // Programador › Horario). Adding/removing/changing here and there operate on
+      // these, so the two views can never diverge. Shifts only enrich each row
+      // with the guard's work-days/ids (for display + cleanup). A one-off "Turno
+      // único" creates a raw shift, NOT an assignment, so it is not listed here.
       const aRows = Array.isArray(aRes) ? aRes : (aRes?.rows ?? []);
-      const seen = new Set<string>();
       const out: Assignment[] = [];
       for (const a of aRows) {
         const g = a.guard || a.user || {};
         const pos = a.position || {};
         const type: PosType = (pos.type || (a.isRelief ? 'sacafranco' : 'fijo')) as PosType;
         const uid = aliasToUser[String(g.id || a.guardId || '')] || String(g.id || a.guardId || '');
-        if (uid) seen.add(uid);
         out.push({
           id: `a:${a.id}`,
           assignmentId: String(a.id),
@@ -151,21 +152,6 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
           positionName: pos.name || (type === 'sacafranco' ? 'Sacafranco' : 'Fijo'),
           type,
           rotation: a.rotationStyle?.name || a.rotationStyle?.pattern || '',
-          workDays: workByGuard[uid] || new Set(),
-          shiftIds: Array.from(new Set(shiftIdsByGuard[uid] || [])),
-        });
-      }
-      for (const uid of Object.keys(shiftIdsByGuard)) {
-        if (seen.has(uid)) continue;
-        out.push({
-          id: `s:${uid}`,
-          assignmentId: null,
-          guardUserId: uid,
-          guardName: nameByUser[uid] || '—',
-          positionId: null,
-          positionName: t('station.guards.viaTurnos', 'Turno asignado'),
-          type: 'fijo',
-          rotation: '',
           workDays: workByGuard[uid] || new Set(),
           shiftIds: Array.from(new Set(shiftIdsByGuard[uid] || [])),
         });
@@ -223,20 +209,13 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
     if (!pickGuard) { toast.error(t('station.guards.pickGuard', 'Selecciona un vigilante')); return; }
     setSaving(true);
     try {
-      if (changeTarget) {
-        if (changeTarget.assignmentId) {
-          // Assignment-based: end the old assignment + its shifts, then create a
-          // fresh assignment (with rotation) for the new guard.
-          await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${encodeURIComponent(changeTarget.assignmentId)}`);
-          await deleteShifts(changeTarget.shiftIds);
-          await doAssign(pickGuard, changeTarget.type, changeTarget.positionId);
-        } else {
-          // Turnos-based (raw shifts): reassign each shift to the new guard,
-          // keeping the existing schedule intact.
-          for (const sid of changeTarget.shiftIds) {
-            await ApiService.patch(`/tenant/${tenantId}/shift/${encodeURIComponent(sid)}/assign`, { data: { guard: pickGuard } });
-          }
-        }
+      if (changeTarget && changeTarget.assignmentId) {
+        // End the old assignment (+ its shifts), then create a fresh assignment
+        // for the new guard on the SAME position. Single source = guardAssignment,
+        // so this stays in sync with Programador › Horario.
+        await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${encodeURIComponent(changeTarget.assignmentId)}`);
+        await deleteShifts(changeTarget.shiftIds);
+        await doAssign(pickGuard, changeTarget.type, changeTarget.positionId);
         toast.success(t('station.guards.changed', 'Vigilante actualizado'));
       } else if (assignType) {
         await doAssign(pickGuard, assignType);
