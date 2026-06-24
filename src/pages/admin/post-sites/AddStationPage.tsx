@@ -9,6 +9,7 @@ import { ApiService } from '@/services/api/apiService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
+import RotationStyleSelect from '@/components/schedule/RotationStyleSelect';
 
 // Mirrors the staffing model used in the Stations tab: one jornada = 1 fijo.
 function jornadaType(start?: string, end?: string): 'diurno' | 'nocturno' | null {
@@ -89,6 +90,7 @@ export default function AddStationPage() {
   const [nickname, setNickname] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [turnoType, setTurnoType] = useState<TurnoType | ''>('');
+  const [rotationStyleId, setRotationStyleId] = useState('');
   const [startingTimeInDay, setStartingTimeInDay] = useState('');
   const [finishTimeInDay, setFinishTimeInDay] = useState('');
 
@@ -193,6 +195,7 @@ export default function AddStationPage() {
           await ApiService.post(`/tenant/${tenantId}/station/${newStationId}/auto-positions`, {
             data: {
               scheduleType: turnoToScheduleType(turnoType),
+              rotationStyleId: rotationStyleId || undefined,
               startTime: startingTimeInDay || undefined,
               endTime: finishTimeInDay || undefined,
             },
@@ -306,6 +309,13 @@ export default function AddStationPage() {
                   })}
                 </div>
               </div>
+
+              {/* Patrón de rotación — chosen here at the station; assigned guards inherit it. */}
+              {turnoType && (
+                <div className="rounded-xl border border-input bg-card p-3">
+                  <RotationStyleSelect scheduleType={turnoToScheduleType(turnoType)} value={rotationStyleId} onChange={setRotationStyleId} />
+                </div>
+              )}
 
               {/* Times: editable for diurno / nocturno / custom */}
               {turnoType && turnoType !== '24h' && (

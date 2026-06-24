@@ -151,7 +151,6 @@ export default function Schedule() {
   const [assignGuard, setAssignGuard] = useState('');
   const [assignStartDate, setAssignStartDate] = useState('');
   const [assignOffset, setAssignOffset] = useState(0);
-  const [assignRotation, setAssignRotation] = useState('');
   const [assignSaving, setAssignSaving] = useState(false);
   const [coverage, setCoverage] = useState<any>(null); // real coverage of live schedule
 
@@ -622,7 +621,6 @@ export default function Schedule() {
     setAssignGuard('');
     setAssignStartDate(fmtDate(new Date()));
     setAssignOffset(0);
-    setAssignRotation('');
     setShowAssignForm(true);
   };
 
@@ -634,7 +632,6 @@ export default function Schedule() {
     setAssignGuard(guardId);
     setAssignStartDate(fmtDate(new Date()));
     setAssignOffset(0);
-    setAssignRotation('');
     setShowAssignForm(true);
   };
 
@@ -654,10 +651,11 @@ export default function Schedule() {
           startDate: assignStartDate,
           platoonOffset: assignOffset,
           isRelief: isSacafranco,
-          ...(isSacafranco && assignRotation ? { rotationStyleId: assignRotation } : {}),
+          // No rotationStyleId here — the guard INHERITS the station's patrón de
+          // rotación (resolved server-side in assignmentService from station.rotationStyleId).
         },
       });
-      toast.success('Vigilante asignado con rotación');
+      toast.success('Vigilante asignado');
       setShowAssignForm(false);
       fetchAll();
     } catch (e: any) {
@@ -867,7 +865,7 @@ export default function Schedule() {
     if (!confirm('¿Optimizar la rotación de sacafrancos?\n\nATENCIÓN: esto MOVERÁ vigilantes sacafranco ya asignados a otros puestos/estaciones y regenerará sus turnos para maximizar cobertura. Los vigilantes fijos NO se tocan.')) return;
     setAutoAssigning(true);
     try {
-      const res = await ApiService.post(`/tenant/${tenantId}/scheduler/optimize-sacafrancos`, { data: { rotationStyleId: assignRotation || undefined } });
+      const res = await ApiService.post(`/tenant/${tenantId}/scheduler/optimize-sacafrancos`, { data: {} });
       toast.success(res?.message || 'Sacafrancos optimizados');
       fetchAll();
     } catch (e: any) {
@@ -1754,24 +1752,19 @@ export default function Schedule() {
                 )}
               </div>
 
-              {/* Sacafranco rotation style (independent from station) */}
-              {positions.find(p => p.id === assignTarget?.positionId)?.type === 'sacafranco' && (
-                <div>
-                  <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Rotación del Sacafranco</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {rotationStyles.map(r => (
-                      <button
-                        key={r.id}
-                        onClick={() => setAssignRotation(r.id)}
-                        className={`px-2 py-2 rounded-lg text-xs font-medium border transition-all ${assignRotation === r.id ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600' : 'border-border/40 text-muted-foreground hover:border-border'}`}
-                      >
-                        {r.name}
-                      </button>
-                    ))}
+              {/* The patrón de rotación is set on the STATION (Sitios › Estación ›
+                  Horario del turno) and inherited here — not chosen per guard. */}
+              {(() => {
+                const st = stationsById.get(assignTarget?.stationId || '');
+                const rot = st?.rotationStyleId ? rotationStylesById.get(st.rotationStyleId) : null;
+                return (
+                  <div className="rounded-lg border border-border/40 bg-muted/10 px-3 py-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Patrón de rotación: <span className="font-semibold text-foreground">{rot?.name || 'el de la estación'}</span> · se hereda de la estación.
+                    </p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Rotación propia del sacafranco (independiente de la estación)</p>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Start date */}
               <div>

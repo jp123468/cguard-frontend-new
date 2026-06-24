@@ -4,6 +4,7 @@ import { MapPin, Clock, Users, Pencil, Check, Loader2 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
+import RotationStyleSelect from '@/components/schedule/RotationStyleSelect';
 import { reverseGeocode } from '@/lib/geocodeClient';
 
 type Props = { station: any; stationId: string; postSiteId: string };
@@ -49,6 +50,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   const [turno, setTurno] = useState<TurnoType | ''>('');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
+  const [rotationStyleId, setRotationStyleId] = useState('');
   const [savingHorario, setSavingHorario] = useState(false);
 
   // Station LOCATION (coordinates the clock-in geofence uses). Editable here —
@@ -105,6 +107,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
     setTurno(scheduleTypeToTurno(station.scheduleType));
     setCustomStart(station.startingTimeInDay || '');
     setCustomEnd(station.finishTimeInDay || '');
+    setRotationStyleId(station.rotationStyleId || '');
     setEditLat(station.latitud != null && station.latitud !== '' ? String(station.latitud) : (station.latitude != null ? String(station.latitude) : ''));
     setEditLng(station.longitud != null && station.longitud !== '' ? String(station.longitud) : (station.longitude != null ? String(station.longitude) : ''));
     setPolygon(Array.isArray(station.geofencePolygon) ? station.geofencePolygon : []);
@@ -155,7 +158,8 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
     const unchangedType = scheduleType === currentType;
     const unchangedCustom = turno !== 'custom'
       || (customStart === (station.startingTimeInDay || '') && customEnd === (station.finishTimeInDay || ''));
-    if (unchangedType && unchangedCustom) { toast.info('El horario no cambió'); return; }
+    const unchangedRotation = (rotationStyleId || '') === (station.rotationStyleId || '');
+    if (unchangedType && unchangedCustom && unchangedRotation) { toast.info('El horario no cambió'); return; }
     if (!window.confirm('Cambiar el horario reconfigura los puestos del turno. Si hay vigilantes asignados a esta estación, deberán reasignarse. ¿Continuar?')) return;
     setSavingHorario(true);
     try {
@@ -163,6 +167,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
       await ApiService.post(`/tenant/${tenantId}/station/${stationId}/auto-positions`, {
         data: {
           scheduleType,
+          rotationStyleId: rotationStyleId || undefined,
           startTime: turno === 'custom' ? customStart : undefined,
           endTime: turno === 'custom' ? customEnd : undefined,
         },
@@ -347,6 +352,9 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
                 <input type="time" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] outline-none" />
               </div>
             </div>
+          )}
+          {turno && (
+            <RotationStyleSelect scheduleType={turnoToScheduleType(turno)} value={rotationStyleId} onChange={setRotationStyleId} />
           )}
           <div className="flex items-center justify-between gap-3">
             <p className="text-[11px] text-amber-600">Cambiar el horario reconfigura los puestos; los vigilantes asignados deberán reasignarse.</p>
