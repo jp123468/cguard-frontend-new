@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import ShiftAssignModal from './ShiftAssignModal';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Plus, ChevronLeft, ChevronRight, X, Clock, User, Calendar, AlertTriangle, CheckCircle2, UserPlus, Repeat, CalendarRange } from 'lucide-react';
+import { Loader2, Plus, ChevronLeft, ChevronRight, User, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { getTenantTimezone } from '@/utils/tenantLocation';
@@ -84,21 +84,8 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedShift, setSelectedShift] = useState<any>(null);
 
+  // Assignment is handled entirely by <ShiftAssignModal/> (self-contained).
   const [showForm, setShowForm] = useState(false);
-  const [shiftStart, setShiftStart] = useState('');
-  const [shiftEnd, setShiftEnd] = useState('');
-  const [shiftGuard, setShiftGuard] = useState('');
-  const [guardsOptions, setGuardsOptions] = useState<{ id: string; label: string }[]>([]);
-  const [loadingGuards, setLoadingGuards] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  // Rotation-based assignment. The guard is assigned to a POSITION (Vigilante 1/2)
-  // and the engine generates the staggered rotation from the station's inherited
-  // patrón de rotación — no per-guard jornada or pattern.
-  const [assignMode, setAssignMode] = useState<'single' | 'rotation'>('rotation');
-  const [stationRotName, setStationRotName] = useState('');
-  const [rotationStartDate, setRotationStartDate] = useState('');
-  const [selectedPositionId, setSelectedPositionId] = useState('');
 
   const tenantId = localStorage.getItem('tenantId') || '';
 
@@ -353,19 +340,6 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   const fmtTime = (d: Date) => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: getTenantTimezone() });
   const fmtDate = (d: Date) => d.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  const fetchGuards = async () => {
-    try {
-      setLoadingGuards(true);
-      const res = await ApiService.get(`/tenant/${tenantId}/security-guard/autocomplete?limit=200`);
-      const list = Array.isArray(res) ? res : (res?.rows ?? []);
-      setGuardsOptions(list.map((r: any) => ({
-        id: r.guardId || r.id || r.value,
-        label: r.fullName || r.name || r.label || r.email || '',
-      })).filter((g: any) => g.id));
-    } catch { setGuardsOptions([]); }
-    finally { setLoadingGuards(false); }
-  };
-
   // Guard currently assigned to this station (the predominant guard across its
   // existing shifts) — used to pre-select the dropdown when creating a turno.
   const stationGuardId = useMemo(() => {
@@ -381,143 +355,9 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
     return best;
   }, [rows]);
 
-  const openForm = (dateStr?: string) => {
-    const startHour = station?.startingTimeInDay || '07:00';
-    const endHour = station?.finishTimeInDay || '19:00';
-    const target = dateStr || dateKey(new Date());
-    setShiftStart(`${target}T${startHour}`);
-    setShiftEnd(`${target}T${endHour}`);
-    setShiftGuard(stationGuardId || '');
-    setRotationStartDate(target);
-    setAssignMode('rotation');
-    fetchGuards();
-    setShowForm(true);
-  };
+  // The assign modal (ShiftAssignModal) initializes itself on open.
+  const openForm = (_dateStr?: string) => { setShowForm(true); };
 
-  // Generate rotation dates: work N days, rest M days, repeat for given weeks
-  // Resolve the station's patrón de rotación so the rotation tab uses it (the
-  // choice was removed — rotation lives on the station now).
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const rotId = (station as any)?.rotationStyleId;
-      if (!rotId) return;
-      try {
-        const res: any = await ApiService.get(`/tenant/${tenantId}/rotation-styles`);
-        const rows = Array.isArray(res?.rows) ? res.rows : (Array.isArray(res) ? res : []);
-        const rs = rows.find((r: any) => r.id === rotId);
-        if (rs && alive) {
-          const work = (Number(rs.dayShifts) || 0) + (Number(rs.nightShifts) || 0);
-          const rest = Number(rs.restDays) || 0;
-          setStationRotName(rs.name || (work && rest ? `${work}-${rest}` : ''));
-        }
-      } catch { /* keep default */ }
-    })();
-    return () => { alive = false; };
-  }, [(station as any)?.rotationStyleId, tenantId]);
-
-  // Assignable positions (puestos). Fijos shown as "Vigilante 1/2…" (they rotate
-  // through day AND night, staggered by the engine); sacafranco shown separately.
-  const positionOptions = useMemo(() => {
-    const fijos = positions.filter((p: any) => (p.type || 'fijo') !== 'sacafranco');
-    const sacas = positions.filter((p: any) => (p.type || 'fijo') === 'sacafranco');
-    return [
-      ...fijos.map((p: any, i: number) => ({ id: p.id, label: `Vigilante ${i + 1}`, type: 'fijo' as const })),
-      ...sacas.map((p: any, i: number) => ({ id: p.id, label: sacas.length > 1 ? `Sacafranco ${i + 1}` : 'Sacafranco', type: 'sacafranco' as const })),
-    ];
-  }, [positions]);
-
-  // When the modal opens, default the puesto to the first available and the start
-  // date to today, so a rotative station just needs "who" for each slot.
-  useEffect(() => {
-    if (!showForm) return;
-    if (!selectedPositionId && positionOptions.length) setSelectedPositionId(positionOptions[0].id);
-    if (!rotationStartDate) setRotationStartDate(dateKey(new Date()));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showForm, positionOptions]);
-
-  // One turno per station per time slot: before creating, delete any existing
-  // shift at THIS station whose time overlaps [start,end) — regardless of guard.
-  // The new turno replaces it, so a slot is never double-booked (and this also
-  // clears a same-guard duplicate that would otherwise hit the unique-slot index
-  // and fail silently). Returns how many were removed.
-  const deleteOverlappingShifts = async (start: Date, end: Date) => {
-    const s = start.getTime();
-    const e = end.getTime();
-    const ids = rows
-      .filter((r: any) => {
-        const rs = new Date(r.startTime || r.start).getTime();
-        const re = new Date(r.endTime || r.end).getTime();
-        return Number.isFinite(rs) && Number.isFinite(re) && rs < e && re > s;
-      })
-      .map((r: any) => r.id)
-      .filter(Boolean);
-    if (ids.length) {
-      // Do NOT swallow this: if the slot isn't actually cleared, the create
-      // below just adds a second turno over the same period — the duplicate the
-      // replace was meant to prevent. Let it throw so the caller reports it.
-      await ApiService.delete(`/tenant/${tenantId}/shift?ids=${ids.join(',')}`);
-    }
-    return ids.length;
-  };
-
-  const saveShift = async () => {
-    if (!shiftGuard) { toast.error('Seleccione un vigilante'); return; }
-
-    if (assignMode === 'single') {
-      // Single shift creation (original behavior)
-      if (!shiftStart || !shiftEnd) { toast.error('Complete todos los campos'); return; }
-      const start = new Date(shiftStart);
-      const end = new Date(shiftEnd);
-      if (end <= start) { toast.error('La hora de fin debe ser posterior al inicio'); return; }
-      if ((end.getTime() - start.getTime()) > 24 * 60 * 60 * 1000) { toast.error('Un turno no puede durar más de 24 horas'); return; }
-      setSaving(true);
-      try {
-        // Replace whatever already occupies this slot at the station.
-        await deleteOverlappingShifts(start, end);
-        await ApiService.post(`/tenant/${tenantId}/shift`, {
-          data: { startTime: start.toISOString(), endTime: end.toISOString(), station: stationId, guard: shiftGuard, postSiteId },
-        });
-        toast.success('Turno creado');
-        setShowForm(false);
-        await loadShifts();
-        // Jump the calendar to the new turno so it's immediately visible
-        // (it may be on a different week/month than the one being viewed).
-        setCurrentDate(new Date(start));
-        setSelectedDate(dateKey(start));
-      } catch (e: any) { toast.error(e?.data?.message || e?.message || 'Error al crear turno'); }
-      finally { setSaving(false); }
-      return;
-    }
-
-    // ── Rotation assignment → the scheduling ENGINE (assign to a position) ──────
-    // The guard is assigned to a station POSITION (Vigilante 1/2). The engine
-    // generates the staggered rotation from the station's inherited patrón de
-    // rotación (one starts day, the other night, swapping each cycle) — no
-    // per-guard jornada or pattern. Same path as Programador › Horario.
-    if (!selectedPositionId) { toast.error('Seleccione el puesto (Vigilante)'); return; }
-    if (!rotationStartDate) { toast.error('Seleccione fecha de inicio'); return; }
-    const pos = positions.find((p: any) => p.id === selectedPositionId);
-    setSaving(true);
-    try {
-      await ApiService.post(`/tenant/${tenantId}/guard-assignment`, {
-        data: {
-          guardId: shiftGuard,
-          stationId,
-          positionId: selectedPositionId,
-          startDate: rotationStartDate,
-          isRelief: (pos?.type || 'fijo') === 'sacafranco',
-        },
-      });
-      toast.success('Vigilante asignado · la rotación se genera automáticamente');
-      setShowForm(false);
-      await loadShifts();
-      setCurrentDate(new Date(rotationStartDate + 'T12:00:00'));
-      setSelectedDate(rotationStartDate);
-    } catch (e: any) {
-      toast.error(e?.data?.message || e?.message || 'Error al asignar');
-    } finally { setSaving(false); }
-  };
 
   const title = useMemo(() => {
     if (viewMode === 'month') return `${MONTHS_ES[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
@@ -750,110 +590,15 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
         )}
 
         {/* Create Form Modal */}
-        {showForm && createPortal(
-          <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => setShowForm(false)}>
-            <div
-              className="flex w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-border/30 bg-card shadow-2xl max-h-[92vh] animate-in fade-in slide-in-from-bottom-4 duration-200 sm:max-h-[88vh] sm:rounded-2xl sm:zoom-in-95"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between gap-3 border-b border-border/20 px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C8860A]/12 text-[#C8860A]">
-                    <UserPlus size={18} />
-                  </div>
-                  <div>
-                    <h4 className="text-base font-semibold text-foreground">Asignar vigilante</h4>
-                    <p className="text-xs text-muted-foreground">Programa la cobertura del turno de este puesto</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowForm(false)} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"><X size={16} /></button>
-              </div>
-              <div className="flex-1 space-y-4 overflow-y-auto p-5">
-                {/* Mode toggle */}
-                <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-muted/20 p-1">
-                  <button
-                    onClick={() => setAssignMode('rotation')}
-                    className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${assignMode === 'rotation' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                  ><Repeat size={14} /> Rotación</button>
-                  <button
-                    onClick={() => setAssignMode('single')}
-                    className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${assignMode === 'single' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                  ><CalendarRange size={14} /> Turno único</button>
-                </div>
-
-                {/* Guard selection */}
-                <div>
-                  <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Vigilante</label>
-                  {loadingGuards ? (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground py-3"><Loader2 size={12} className="animate-spin" /> Cargando...</div>
-                  ) : (
-                    <select value={shiftGuard} onChange={(e) => setShiftGuard(e.target.value)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none">
-                      <option value="">Seleccionar vigilante...</option>
-                      {guardsOptions.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
-                    </select>
-                  )}
-                </div>
-
-                {assignMode === 'rotation' ? (
-                  <>
-                    {/* Puesto (Vigilante): assign to a position — the engine staggers
-                        the rotation (one day / one night, swapping each cycle). */}
-                    <div>
-                      <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Puesto</label>
-                      {positionOptions.length === 0 ? (
-                        <div className="px-3 py-2 bg-amber-500/10 rounded-xl text-xs text-amber-600">Configura primero el horario de la estación (Vista general › Horario del turno) para crear los puestos.</div>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                          {positionOptions.map((p) => (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => setSelectedPositionId(p.id)}
-                              className={`rounded-xl border px-3 py-2 text-sm font-medium transition-all ${selectedPositionId === p.id ? 'border-[#C8860A] bg-[#C8860A]/10 text-[#C8860A]' : 'border-border/40 text-muted-foreground hover:border-[#C8860A]/40'}`}
-                            >{p.label}</button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Patrón de rotación — inherited from the station */}
-                    <div className="rounded-lg border border-border/40 bg-muted/10 px-3 py-2">
-                      <p className="text-[11px] text-muted-foreground">
-                        Patrón de rotación: <span className="font-semibold text-foreground">{stationRotName || '—'}</span> · se hereda de la estación. Los vigilantes rotan día y noche de forma escalonada.
-                      </p>
-                    </div>
-
-                    {/* Start date */}
-                    <div>
-                      <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Fecha inicio</label>
-                      <input type="date" value={rotationStartDate} onChange={(e) => setRotationStartDate(e.target.value)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none" />
-                    </div>
-                  </>
-                ) : (
-                  /* Single shift mode */
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Inicio</label>
-                      <input type="datetime-local" value={shiftStart} onChange={(e) => setShiftStart(e.target.value)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Fin</label>
-                      <input type="datetime-local" value={shiftEnd} onChange={(e) => setShiftEnd(e.target.value)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none" />
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center justify-end gap-2 border-t border-border/20 bg-card px-5 py-3">
-                <button onClick={() => setShowForm(false)} className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted/20 hover:text-foreground">Cancelar</button>
-                <button onClick={saveShift} disabled={saving || !shiftGuard || (assignMode === 'rotation' && !selectedPositionId)} className="inline-flex items-center gap-1.5 rounded-xl bg-[#C8860A] px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#B37809] active:scale-95 disabled:opacity-40">
-                  {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
-                  {assignMode === 'rotation' ? 'Asignar rotación' : 'Crear turno'}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
+        <ShiftAssignModal
+          open={showForm}
+          onClose={() => setShowForm(false)}
+          onSaved={(d) => { setShowForm(false); loadShifts(); if (d) { setCurrentDate(new Date(d)); setSelectedDate(dateKey(d)); } }}
+          station={station}
+          stationId={stationId}
+          postSiteId={postSiteId}
+          presetGuardId={stationGuardId}
+        />
       </div>
     </div>
   );
