@@ -207,6 +207,25 @@ export default function AssignGuards({ site }: { site?: any }) {
         setOpenDeleteDialog(true);
     };
 
+    // End the guard's active rotation assignment at this station — the backend
+    // then removes ALL its generated shifts (so they don't regenerate). Precise:
+    // only acts when we know the station and the guard matches. Best-effort.
+    const endGuardAssignments = async (g: any) => {
+        const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
+        const stationId = g.stationId || g.station?.id || null;
+        if (!tenantId || !stationId) return;
+        const candidates = new Set([g.guardUserId, g.guardId, g.userId, g.securityGuardId, g.guard?.id].filter(Boolean).map(String));
+        if (!candidates.size) return;
+        try {
+            const r: any = await ApiService.get(`/tenant/${tenantId}/guard-assignments?stationId=${encodeURIComponent(stationId)}&status=active`);
+            const rows = Array.isArray(r) ? r : (r?.rows ?? []);
+            for (const a of rows) {
+                const gid = String(a.guardId || a.guard?.id || '');
+                if (gid && candidates.has(gid)) await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${a.id}`).catch(() => {});
+            }
+        } catch { /* best effort */ }
+    };
+
     const confirmDelete = async () => {
         const g = pendingDeleteAssignment;
         if (!g) {
@@ -217,11 +236,13 @@ export default function AssignGuards({ site }: { site?: any }) {
             const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
             const postSiteId = site?.id || '';
             if (!tenantId || !postSiteId) throw new Error('Missing tenant or post site id');
-            // Support deleting assignments from different sources
+            // First end any rotation assignment → removes ALL its generated shifts.
+            await endGuardAssignments(g);
+            // Then remove any remaining raw record (idempotent on the backend).
             if (g.source === 'shift') {
-                await ApiService.delete(`/tenant/${tenantId}/shift/${g.id}`);
+                await ApiService.delete(`/tenant/${tenantId}/shift/${g.id}`).catch(() => {});
             } else if (g.source === 'guardShift') {
-                await ApiService.delete(`/tenant/${tenantId}/guard-shift/${g.id}`);
+                await ApiService.delete(`/tenant/${tenantId}/guard-shift/${g.id}`).catch(() => {});
             } else {
                 await ApiService.delete(`/tenant/${tenantId}/post-site/${postSiteId}/guards/${g.id}`);
             }
@@ -272,9 +293,11 @@ export default function AssignGuards({ site }: { site?: any }) {
             const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
             const postSiteId = site?.id || '';
             const toDelete = assignedGuards.filter(a => selectedGuards.includes(a.id));
-            const promises = toDelete.map((g) => {
-                if (g.source === 'shift') return ApiService.delete(`/tenant/${tenantId}/shift/${g.id}`);
-                if (g.source === 'guardShift') return ApiService.delete(`/tenant/${tenantId}/guard-shift/${g.id}`);
+            const promises = toDelete.map(async (g) => {
+                // End any rotation assignment first → backend removes ALL its shifts.
+                await endGuardAssignments(g);
+                if (g.source === 'shift') return ApiService.delete(`/tenant/${tenantId}/shift/${g.id}`).catch(() => {});
+                if (g.source === 'guardShift') return ApiService.delete(`/tenant/${tenantId}/guard-shift/${g.id}`).catch(() => {});
                 return ApiService.delete(`/tenant/${tenantId}/post-site/${postSiteId}/guards/${g.id}`);
             });
             await Promise.all(promises);
