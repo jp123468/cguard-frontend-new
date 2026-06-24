@@ -108,7 +108,17 @@ export const clientSchema = z
         .max(50, "Máximo 50 caracteres")
         .optional()
         .or(z.literal("")),
-    categoryIds: z.array(z.string()).optional(),
+    // Coerce ANY incoming shape (a single string, category objects, or an array
+    // with stray nullish entries) into a clean string[] before validating, so a
+    // selected sector can never trip "Invalid input".
+    categoryIds: z.preprocess((v) => {
+        if (v == null || v === '') return undefined;
+        const arr = Array.isArray(v) ? v : [v];
+        const ids = arr
+            .map((x: any) => (typeof x === 'string' ? x : (x && (x.id ?? x.value ?? x._id))))
+            .filter((x: any) => typeof x === 'string' && x.length > 0);
+        return ids.length ? ids : undefined;
+    }, z.array(z.string()).optional()),
 })
 .superRefine((data, ctx) => {
     const personType = data.personType || 'PN';
