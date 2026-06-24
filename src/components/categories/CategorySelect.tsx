@@ -119,7 +119,17 @@ export function CategorySelect({
             });
 
             setItems((prev) => [...prev, { id: created.id, name: created.name }]);
-            onChange(created.id);
+            // Respect multi-select: APPEND the new sector to the current array
+            // instead of replacing the whole value with a single string. The old
+            // `onChange(created.id)` turned `categoryIds` into a string, so on save
+            // `Array.isArray(...)` dropped it (sector lost / "save twice") and it
+            // never showed as selected.
+            if (multiple) {
+                const cur = Array.isArray(value) ? value : (value ? [value as string] : []);
+                onChange(cur.includes(created.id) ? cur : [...cur, created.id]);
+            } else {
+                onChange(created.id);
+            }
             setNewName("");
             setNewDescription("");
             setOpenCreate(false);
