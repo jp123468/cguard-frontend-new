@@ -38,17 +38,28 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   const [shiftStart, setShiftStart] = useState('');
   const [shiftEnd, setShiftEnd] = useState('');
   const [positions, setPositions] = useState<any[]>([]);
+  // Occupancy (tenant-wide active rotations) so we never offer a vigilante who
+  // already has an assignment, nor a puesto that's already taken.
+  const [occupiedGuardIds, setOccupiedGuardIds] = useState<Set<string>>(new Set());
+  const [occupiedPositionIds, setOccupiedPositionIds] = useState<Set<string>>(new Set());
 
   // Assignable positions (puestos). Fijos shown as "Vigilante 1/2…" (they rotate
   // through day AND night, staggered by the engine); sacafranco shown separately.
+  // A puesto already taken is flagged `occupied` (disabled in the UI).
   const positionOptions = useMemo(() => {
     const fijos = positions.filter((p: any) => (p.type || 'fijo') !== 'sacafranco');
     const sacas = positions.filter((p: any) => (p.type || 'fijo') === 'sacafranco');
     return [
-      ...fijos.map((p: any, i: number) => ({ id: p.id, label: `Vigilante ${i + 1}`, type: 'fijo' as const })),
-      ...sacas.map((p: any, i: number) => ({ id: p.id, label: sacas.length > 1 ? `Sacafranco ${i + 1}` : 'Sacafranco', type: 'sacafranco' as const })),
+      ...fijos.map((p: any, i: number) => ({ id: p.id, label: `Vigilante ${i + 1}`, type: 'fijo' as const, occupied: occupiedPositionIds.has(String(p.id)) })),
+      ...sacas.map((p: any, i: number) => ({ id: p.id, label: sacas.length > 1 ? `Sacafranco ${i + 1}` : 'Sacafranco', type: 'sacafranco' as const, occupied: occupiedPositionIds.has(String(p.id)) })),
     ];
-  }, [positions]);
+  }, [positions, occupiedPositionIds]);
+
+  // Vigilantes free to assign (drop anyone with an active rotation anywhere).
+  const availableGuards = useMemo(
+    () => guardsOptions.filter((g) => !occupiedGuardIds.has(String(g.id))),
+    [guardsOptions, occupiedGuardIds],
+  );
 
   // Initialize + load data each time the modal opens.
   useEffect(() => {
@@ -72,12 +83,29 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
       } catch { setGuardsOptions([]); } finally { setLoadingGuards(false); }
     })();
     ApiService.get(`/tenant/${tenantId}/station/${stationId}/positions`).then((r: any) => setPositions(Array.isArray(r) ? r : (r?.rows ?? []))).catch(() => {});
+    // Tenant-wide active assignments → occupied vigilantes + occupied puestos.
+    ApiService.get(`/tenant/${tenantId}/guard-assignments?status=active`).then((r: any) => {
+      const rows = Array.isArray(r) ? r : (r?.rows ?? []);
+      const og = new Set<string>(); const op = new Set<string>();
+      for (const a of rows) {
+        const isRotation = a.kind ? a.kind === 'rotation' : (!!a.positionId || !!a.isRelief);
+        if (!isRotation) continue;
+        const gid = String(a.guardId || a.guard?.id || '');
+        if (gid) og.add(gid);
+        if (String(a.stationId) === String(stationId) && a.positionId) op.add(String(a.positionId));
+      }
+      setOccupiedGuardIds(og); setOccupiedPositionIds(op);
+    }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Default the puesto to the first available once positions load.
+  // Default the puesto to the first FREE one once positions/occupancy load.
   useEffect(() => {
-    if (open && !selectedPositionId && positionOptions.length) setSelectedPositionId(positionOptions[0].id);
+    if (!open) return;
+    const free = positionOptions.find((p) => !p.occupied);
+    if (free && (!selectedPositionId || positionOptions.find((p) => p.id === selectedPositionId)?.occupied)) {
+      setSelectedPositionId(free.id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, positionOptions]);
 
@@ -190,8 +218,11 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
             ) : (
               <select value={shiftGuard} onChange={(e) => setShiftGuard(e.target.value)} className={inputCls}>
                 <option value="">Seleccionar vigilante…</option>
-                {guardsOptions.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
+                {availableGuards.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
               </select>
+            )}
+            {!loadingGuards && availableGuards.length === 0 && (
+              <p className="mt-1.5 text-[11px] text-amber-600">Todos los vigilantes ya tienen una asignación activa. Libera uno o crea un nuevo vigilante.</p>
             )}
           </div>
 
@@ -205,7 +236,14 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
                 ) : (
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {positionOptions.map((p) => (
-                      <button key={p.id} type="button" onClick={() => setSelectedPositionId(p.id)} className={`rounded-xl border px-3 py-2 text-sm font-medium transition-all ${selectedPositionId === p.id ? 'border-[#C8860A] bg-[#C8860A]/10 text-[#C8860A]' : 'border-border/40 text-muted-foreground hover:border-[#C8860A]/40'}`}>{p.label}</button>
+                      <button
+                        key={p.id}
+                        type="button"
+                        disabled={p.occupied}
+                        onClick={() => setSelectedPositionId(p.id)}
+                        title={p.occupied ? 'Puesto ocupado' : undefined}
+                        className={`rounded-xl border px-3 py-2 text-sm font-medium transition-all ${p.occupied ? 'cursor-not-allowed border-border/30 text-muted-foreground/40 line-through' : selectedPositionId === p.id ? 'border-[#C8860A] bg-[#C8860A]/10 text-[#C8860A]' : 'border-border/40 text-muted-foreground hover:border-[#C8860A]/40'}`}
+                      >{p.label}{p.occupied ? ' · ocupado' : ''}</button>
                     ))}
                   </div>
                 )}

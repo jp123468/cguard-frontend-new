@@ -67,6 +67,9 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
   const [rows, setRows] = useState<Assignment[]>([]);
   const [positions, setPositions] = useState<any[]>([]);
   const [guards, setGuards] = useState<{ id: string; label: string }[]>([]);
+  // Vigilantes with an active rotation ANYWHERE — excluded from the picker so an
+  // occupied vigilante can never be chosen.
+  const [occupiedGuardIds, setOccupiedGuardIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,11 +85,12 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
     setError(null);
     try {
       const ts = Date.now();
-      const [aRes, pRes, gRes, sRes]: any[] = await Promise.all([
+      const [aRes, pRes, gRes, sRes, allARes]: any[] = await Promise.all([
         ApiService.get(`/tenant/${tenantId}/guard-assignments?stationId=${encodeURIComponent(stationId)}&status=active&_=${ts}`).catch(() => []),
         ApiService.get(`/tenant/${tenantId}/station/${encodeURIComponent(stationId)}/positions?_=${ts}`).catch(() => []),
         ApiService.get(`/tenant/${tenantId}/security-guard?limit=999&_=${ts}`).catch(() => []),
         ApiService.get(`/tenant/${tenantId}/shift?filter[station]=${encodeURIComponent(stationId)}&limit=999&_=${ts}`).catch(() => []),
+        ApiService.get(`/tenant/${tenantId}/guard-assignments?status=active&_=${ts}`).catch(() => []),
       ]);
 
       // Alias map: any guard id (securityGuard id, user id) -> canonical user id.
@@ -108,6 +112,17 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
         guardOptions.push({ id: userId, label });
       }
       setGuards(guardOptions.filter((x) => x.id && x.label));
+
+      // Occupied vigilantes = anyone with an active ROTATION assignment anywhere.
+      const allA = Array.isArray(allARes) ? allARes : (allARes?.rows ?? []);
+      const occ = new Set<string>();
+      for (const a of allA) {
+        const isRot = a.kind ? a.kind === 'rotation' : (!!a.positionId || !!a.isRelief);
+        if (!isRot) continue;
+        const gid = String(a.guardId || a.guard?.id || '');
+        if (gid) occ.add(aliasToUser[gid] || gid);
+      }
+      setOccupiedGuardIds(occ);
 
       // Per-guard work-days + shift ids from generated shifts (source of truth —
       // the Turnos tab writes raw shifts), canonicalized to the user id.
@@ -169,8 +184,11 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
 
   // Find a position of the given type, creating one if the station has none.
   const ensurePosition = async (type: PosType): Promise<string | null> => {
-    const existing = positions.find((p) => (p.type || 'fijo') === type);
-    if (existing) return existing.id;
+    // Reuse a FREE position of this type (never one already occupied by an active
+    // assignment) — so we never put two vigilantes on the same puesto.
+    const occupiedPos = new Set(rows.filter((r) => r.positionId).map((r) => String(r.positionId)));
+    const free = positions.find((p) => (p.type || 'fijo') === type && !occupiedPos.has(String(p.id)));
+    if (free) return free.id;
     try {
       const created: any = await ApiService.post(`/tenant/${tenantId}/station/${encodeURIComponent(stationId)}/positions`, {
         name: type === 'sacafranco' ? 'Sacafranco' : 'Fijo 1',
@@ -358,8 +376,11 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
                 <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t('station.guards.guard', 'Vigilante')}</label>
                 <select value={pickGuard} onChange={(e) => setPickGuard(e.target.value)} className={selectCls} autoFocus>
                   <option value="">{t('station.guards.selectGuard', 'Seleccionar vigilante…')}</option>
-                  {guards.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
+                  {guards.filter((g) => !occupiedGuardIds.has(g.id)).map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
                 </select>
+                {guards.filter((g) => !occupiedGuardIds.has(g.id)).length === 0 && (
+                  <p className="mt-1.5 text-[11px] text-amber-600">{t('station.guards.allBusy', 'Todos los vigilantes ya tienen una asignación activa.')}</p>
+                )}
               </div>
             </div>
 

@@ -1718,29 +1718,17 @@ export default function Schedule() {
               <div>
                 <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Vigilante</label>
                 {(() => {
-                  const targetPos = positions.find(p => p.id === assignTarget?.positionId);
-                  const isSacafranco = targetPos?.type === 'sacafranco';
-                  // Fijo: filter out guards already assigned as fijo anywhere
-                  // Sacafranco: show all guards (they float across stations)
-                  const fijoAssignedIds = new Set(
-                    assignments
-                      .filter(a => !a.isRelief && positions.find(p => p.id === a.positionId)?.type === 'fijo')
-                      .map(a => a.guardId)
-                  );
-                  const availableGuards = isSacafranco
-                    ? guardsPool
-                    : guardsPool.filter(g => !fijoAssignedIds.has(g.id));
+                  // A vigilante can hold only ONE active rotation (fijo OR sacafranco).
+                  // Drop everyone already assigned from the options so it's impossible
+                  // to pick an occupied vigilante.
+                  const occupiedIds = new Set(assignments.map(a => a.guardId));
+                  const availableGuards = guardsPool.filter(g => !occupiedIds.has(g.id));
 
                   return (
                     <select value={assignGuard} onChange={e => setAssignGuard(e.target.value)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none">
                       <option value="">Seleccionar vigilante...</option>
                       {availableGuards.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
-                      {!isSacafranco && fijoAssignedIds.size > 0 && (
-                        <option disabled>── Ya asignados como Fijo ──</option>
-                      )}
-                      {!isSacafranco && guardsPool.filter(g => fijoAssignedIds.has(g.id)).map(g => (
-                        <option key={g.id} value="" disabled>{g.label}</option>
-                      ))}
+                      {availableGuards.length === 0 && <option value="" disabled>Todos los vigilantes ya están asignados</option>}
                     </select>
                   );
                 })()}
