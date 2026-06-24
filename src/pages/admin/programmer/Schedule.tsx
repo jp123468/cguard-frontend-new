@@ -353,7 +353,11 @@ export default function Schedule() {
   // useCallback so dependent memos (sfStationCoverage, localStationAlerts) keep a stable
   // identity and only recompute when their real inputs change.
   const isWorkDay = useCallback((assignment: GuardAssignment, date: Date): 'day' | 'night' | 'rest' => {
-    const rot = assignment.rotationStyle;
+    // The patrón de rotación lives on the STATION now (assignment.rotationStyleId
+    // is null), so resolve it from the station; fall back to any legacy embedded
+    // style. (Reading assignment.rotationStyle made every day show "L".)
+    const station = stationsById.get(assignment.stationId);
+    const rot = (station?.rotationStyleId ? rotationStylesById.get(station.rotationStyleId) : null) || assignment.rotationStyle;
     if (!rot) return 'rest';
 
     // For sacafranco positions, check if any fijo guard at the same station is resting
@@ -384,12 +388,11 @@ export default function Schedule() {
 
     // For 24H positions: distinguish day/night phases
     // For 12H positions: both day and night rotation phases are just "work" days
-    const assignStation = stationsById.get(assignment.stationId);
-    const is24h = assignStation?.scheduleType === '24h';
+    const is24h = station?.scheduleType === '24h';
     if (adjustedDay < rot.dayShifts) return 'day';
     if (adjustedDay < rot.dayShifts + rot.nightShifts) return is24h ? 'night' : 'day';
     return 'rest';
-  }, [positionsById, stationsById]);
+  }, [positionsById, stationsById, rotationStylesById]);
 
   // Compute the rotation slot status for a position (no guard needed)
   // Uses the station's rotation style and position offset
