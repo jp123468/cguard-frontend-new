@@ -994,7 +994,12 @@ export default function App() {
                 path="/messenger/operativos"
                 element={
                   <ProtectedRoute>
-                    <MessengerPage scope="operational" />
+                    {/* key per scope: both routes render the same MessengerPage
+                        type at the same tree position, so without a distinct key
+                        React reuses the instance and just swaps the prop —
+                        leaving the previously selected (client) thread on screen.
+                        The key forces a fresh remount when switching scopes. */}
+                    <MessengerPage key="messenger-operational" scope="operational" />
                   </ProtectedRoute>
                 }
               />
@@ -1002,7 +1007,7 @@ export default function App() {
                 path="/messenger/clientes"
                 element={
                   <ProtectedRoute>
-                    <MessengerPage scope="client" />
+                    <MessengerPage key="messenger-client" scope="client" />
                   </ProtectedRoute>
                 }
               />
