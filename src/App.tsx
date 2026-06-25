@@ -988,11 +988,21 @@ export default function App() {
               />
 
 
+              {/* Keep any ?conversation=… so notification deep-links still open the thread. */}
+              <Route path="/messenger" element={<Navigate to={`/messenger/operativos${window.location.search}`} replace />} />
               <Route
-                path="/messenger"
+                path="/messenger/operativos"
                 element={
                   <ProtectedRoute>
-                    <MessengerPage />
+                    <MessengerPage scope="operational" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/messenger/clientes"
+                element={
+                  <ProtectedRoute>
+                    <MessengerPage scope="client" />
                   </ProtectedRoute>
                 }
               />

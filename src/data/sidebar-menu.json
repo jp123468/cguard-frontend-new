@@ -189,10 +189,14 @@
     "path": "/vehicle-patrol"
   },
   {
-    "id": "mensajero",
-    "name": "Mensajero",
+    "id": "mensajeria",
+    "name": "Mensajería",
     "icon": "MessageSquare",
-    "path": "/messenger"
+    "expandable": true,
+    "subItems": [
+      { "id": "msg-operativos", "name": "Mensajes Operativos", "path": "/messenger/operativos" },
+      { "id": "msg-clientes", "name": "Mensajes de Clientes", "path": "/messenger/clientes" }
+    ]
   },
   {
     "id": "radio",

@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { MessageSquareText, Send, Plus, Search, Loader2, X, Check, CheckCheck, Paperclip, Play, Trash2, Users, Mic, UserPlus, RefreshCw, UserCircle2 } from "lucide-react";
 import { messageService, type MessageAttachment, type GroupMember } from "@/lib/api/messageService";
 import securityGuardService from "@/lib/api/securityGuardService";
 import { postSiteService } from "@/lib/api/postSiteService";
+import { clientService } from "@/lib/api/clientService";
 import { useFileUrl } from "@/lib/fileUrl";
 import { useAudioRecorder } from "@/lib/useAudioRecorder";
 import { toast } from "sonner";
@@ -51,7 +52,9 @@ type Message = {
 
 const fmtTime = (d?: string | null) => { try { return new Date(d as string).toLocaleString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } };
 
-export default function MessengerPage() {
+export default function MessengerPage({ scope = "operational" }: { scope?: "operational" | "client" }) {
+  const isClient = scope === "client";
+  const pageTitle = isClient ? "Mensajes de Clientes" : "Mensajes Operativos";
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selected, setSelected] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -96,6 +99,13 @@ export default function MessengerPage() {
     const id = setInterval(() => { loadConversations(); if (selected) loadThread(selected); }, 12000);
     return () => clearInterval(id);
   }, [loadConversations, loadThread, selected]);
+
+  // Operativos = chats with vigilantes/supervisores + grupos (recipientType !== "client").
+  // Clientes = chats with customers (recipientType === "client").
+  const visibleConversations = useMemo(
+    () => conversations.filter((c) => (isClient ? c.recipientType === "client" : c.recipientType !== "client")),
+    [conversations, isClient],
+  );
 
   const onSelect = (c: Conversation) => { setSelected(c); setMessages([]); setMembersOpen(false); loadThread(c, true); };
 
@@ -183,13 +193,13 @@ export default function MessengerPage() {
 
   return (
     <AppLayout>
-      <Breadcrumb items={[{ label: "Panel de control", path: "/dashboard" }, { label: "Mensajes" }]} />
+      <Breadcrumb items={[{ label: "Panel de control", path: "/dashboard" }, { label: "Mensajería" }, { label: pageTitle }]} />
       <div className="p-4 lg:p-6">
         <div className="flex h-[calc(100vh-180px)] overflow-hidden rounded-2xl border border-border bg-card">
           {/* Conversation list */}
           <aside className="flex w-full max-w-xs flex-col border-r border-border">
             <div className="flex items-center justify-between gap-2 border-b border-border p-3">
-              <h2 className="text-sm font-bold text-foreground">Mensajes</h2>
+              <h2 className="text-sm font-bold text-foreground">{pageTitle}</h2>
               <button onClick={() => setComposeOpen(true)} className="flex items-center gap-1.5 rounded-lg bg-[#C8860A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#B37809]">
                 <Plus size={14} /> Nuevo
               </button>
@@ -197,10 +207,10 @@ export default function MessengerPage() {
             <div className="flex-1 overflow-auto">
               {loadingList ? (
                 <div className="flex justify-center py-10"><Loader2 className="animate-spin text-muted-foreground" /></div>
-              ) : conversations.length === 0 ? (
-                <p className="px-4 py-10 text-center text-xs text-muted-foreground">Sin conversaciones. Crea una con "Nuevo".</p>
+              ) : visibleConversations.length === 0 ? (
+                <p className="px-4 py-10 text-center text-xs text-muted-foreground">{isClient ? "Sin mensajes de clientes todavía." : "Sin conversaciones. Crea una con \"Nuevo\"."}</p>
               ) : (
-                conversations.map((c) => (
+                visibleConversations.map((c) => (
                   <button key={c.id} onClick={() => onSelect(c)} className={`flex w-full items-start gap-3 border-b border-border/40 px-3 py-3 text-left hover:bg-muted/40 ${selected?.id === c.id ? "bg-muted/60" : ""}`}>
                     <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#C8860A]/15 text-xs font-bold text-[#C8860A]">
                       {c.isGroup ? <Users size={16} /> : (c.recipientName || "?").slice(0, 2).toUpperCase()}
@@ -341,6 +351,7 @@ export default function MessengerPage() {
 
       {composeOpen && (
         <ComposeDialog
+          scope={scope}
           onClose={() => setComposeOpen(false)}
           onSent={(conv) => { setComposeOpen(false); loadConversations(); const c = conv as Conversation; setSelected(c); loadThread(c, true); }}
         />
@@ -357,7 +368,8 @@ export default function MessengerPage() {
   );
 }
 
-function ComposeDialog({ onClose, onSent }: { onClose: () => void; onSent: (conv: any) => void }) {
+function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "client"; onClose: () => void; onSent: (conv: any) => void }) {
+  const isClient = scope === "client";
   const [mode, setMode] = useState<"direct" | "group">("direct");
   // Direct mode
   const [q, setQ] = useState("");
@@ -378,9 +390,15 @@ function ComposeDialog({ onClose, onSent }: { onClose: () => void; onSent: (conv
     const t = setTimeout(async () => {
       if (!q.trim()) { setResults([]); return; }
       try {
-        const res = await securityGuardService.autocomplete(q.trim(), 15);
-        const rows = Array.isArray(res) ? res : (res?.rows || []);
-        if (active) setResults(rows.filter((r: any) => r && r.id && !String(r.id).startsWith("sg:")).map((r: any) => ({ id: r.id, label: r.label || r.name || "Vigilante" })));
+        if (isClient) {
+          const res: any = await clientService.autocomplete(q.trim(), 15);
+          const rows = Array.isArray(res) ? res : (res?.rows || []);
+          if (active) setResults(rows.filter((r: any) => r && r.id).map((r: any) => ({ id: r.id, label: r.label || r.name || "Cliente" })));
+        } else {
+          const res = await securityGuardService.autocomplete(q.trim(), 15);
+          const rows = Array.isArray(res) ? res : (res?.rows || []);
+          if (active) setResults(rows.filter((r: any) => r && r.id && !String(r.id).startsWith("sg:")).map((r: any) => ({ id: r.id, label: r.label || r.name || "Vigilante" })));
+        }
       } catch { /* ignore */ }
     }, 300);
     return () => { active = false; clearTimeout(t); };
@@ -404,7 +422,7 @@ function ComposeDialog({ onClose, onSent }: { onClose: () => void; onSent: (conv
     if (!picked || !body.trim() || sending) return;
     setSending(true);
     try {
-      const res = await messageService.createConversation({ recipientType: "guard", recipientId: picked.id, body: body.trim() });
+      const res = await messageService.createConversation({ recipientType: isClient ? "client" : "guard", recipientId: picked.id, body: body.trim() });
       onSent(res?.conversation || res);
     } catch (e: any) {
       toast.error(e?.data?.message || e?.message || "No se pudo enviar");
@@ -445,10 +463,13 @@ function ComposeDialog({ onClose, onSent }: { onClose: () => void; onSent: (conv
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
         </div>
         <div className="space-y-3 p-4">
-          <div className="flex gap-1 rounded-xl bg-muted/50 p-1">
-            <Tab id="direct" icon={<UserCircle2 size={14} />} label="Directo" />
-            <Tab id="group" icon={<Users size={14} />} label="Grupo" />
-          </div>
+          {/* Groups are an operational feature (vigilantes by puesto); clients only get direct chats. */}
+          {!isClient && (
+            <div className="flex gap-1 rounded-xl bg-muted/50 p-1">
+              <Tab id="direct" icon={<UserCircle2 size={14} />} label="Directo" />
+              <Tab id="group" icon={<Users size={14} />} label="Grupo" />
+            </div>
+          )}
 
           {mode === "direct" ? (
             <>
@@ -461,7 +482,7 @@ function ComposeDialog({ onClose, onSent }: { onClose: () => void; onSent: (conv
                 <div>
                   <div className="relative">
                     <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar vigilante…" className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
+                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={isClient ? "Buscar cliente…" : "Buscar vigilante…"} className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
                   </div>
                   {results.length > 0 && (
                     <div className="mt-2 max-h-44 overflow-auto rounded-xl border border-border">
