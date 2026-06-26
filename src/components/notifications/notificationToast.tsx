@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { LogIn, LogOut, AlertTriangle, Route, CalendarClock, UserCheck, Siren, Bell, X, MessageSquare } from 'lucide-react';
+import { LogIn, LogOut, AlertTriangle, Route, CalendarClock, UserCheck, Siren, Bell, X, MessageSquare, ClipboardList } from 'lucide-react';
 import { fileUrlFromPrivate } from '@/lib/fileUrl';
 import type { PlatformNotification } from '@/hooks/useNotificationStream';
 
@@ -14,6 +14,7 @@ function iconFor(eventType: string): { Icon: typeof Bell; color: string } {
   if (t.startsWith('visitor')) return { Icon: UserCheck, color: '#38bdf8' };
   if (t.startsWith('dispatch')) return { Icon: Siren, color: '#e11d48' };
   if (t.startsWith('message')) return { Icon: MessageSquare, color: '#C8860A' };
+  if (t.startsWith('task')) return { Icon: ClipboardList, color: '#f59e0b' };
   return { Icon: Bell, color: '#0ea5e9' };
 }
 
@@ -64,6 +65,12 @@ export function targetForNotification(n: PlatformNotification): string {
   if (type.startsWith('visitor')) return '/visitors';
   if (type.startsWith('patrol')) return '/vehicle-patrol';
   if (type.startsWith('device')) return '/security-guards';
+  // Client tasks: a pending one needs a DECISION → the approvals queue; the rest →
+  // the tracking list. Focused on the task.
+  if (type === 'task.pending_approval') {
+    return id ? `/tasks/approvals?focus=${id}` : '/tasks/approvals';
+  }
+  if (type.startsWith('task')) return id ? `/tasks?focus=${id}` : '/tasks';
 
   // Everything else → the Actividad feed, focused on this event.
   const params = new URLSearchParams();
