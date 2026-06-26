@@ -83,6 +83,16 @@ const InfoCard = ({
   );
 };
 
+// Constrained profile fields render a dropdown (matching the backend isIn
+// validators) instead of free text, so the tenant picks valid values instead
+// of leaving/typing stray data.
+const FIELD_OPTIONS: Record<string, string[]> = {
+  gender: ["Masculino", "Femenino"],
+  bloodType: ["A+", "A-", "AB+", "AB-", "O+", "O-", "B+", "B-"],
+  maritalStatus: ["Soltero", "Casado", "Unión libre", "Divorciado"],
+  academicInstruction: ["Secundaria", "Universitaria", "Universidad", "Especial", "Primaria"],
+};
+
 const InfoField = ({
   label,
   value,
@@ -103,11 +113,24 @@ const InfoField = ({
   <div>
     <div className="text-xs text-muted-foreground mb-1">{t(label)}</div>
     {isEditing && field ? (
-      <Input
-        value={editedGuard?.[field] || ''}
-        onChange={(e) => setEditedGuard({ ...editedGuard, [field]: e.target.value })}
-        className="h-8 text-sm"
-      />
+      FIELD_OPTIONS[field] ? (
+        <select
+          value={editedGuard?.[field] || ''}
+          onChange={(e) => setEditedGuard({ ...editedGuard, [field]: e.target.value })}
+          className="h-8 text-sm flex w-full rounded-md border border-input bg-background px-2"
+        >
+          <option value="">Seleccionar…</option>
+          {FIELD_OPTIONS[field].map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
+      ) : (
+        <Input
+          value={editedGuard?.[field] || ''}
+          onChange={(e) => setEditedGuard({ ...editedGuard, [field]: e.target.value })}
+          className="h-8 text-sm"
+        />
+      )
     ) : (
       <div className="font-medium text-sm">{value || '--'}</div>
     )}

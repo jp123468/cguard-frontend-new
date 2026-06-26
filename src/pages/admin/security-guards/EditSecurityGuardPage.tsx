@@ -134,9 +134,17 @@ export default function EditSecurityGuardPage() {
     };
   }, [id]);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   }
+
+  // Constrained fields carry notEmpty/isIn validators on the backend, so send
+  // null (not "") when the user hasn't picked a value for a not-yet-filled draft.
+  const orNull = (v: string) => (v && String(v).trim() ? v : null);
+
+  // Match the shadcn Input look so the native selects blend in.
+  const selectClass =
+    "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -152,12 +160,12 @@ export default function EditSecurityGuardPage() {
         base.address = form.address ?? base.address;
         base.birthDate = form.birthDate ?? base.birthDate;
         base.birthPlace = form.birthPlace ?? base.birthPlace;
-        base.maritalStatus = form.maritalStatus ?? base.maritalStatus;
-        base.bloodType = form.bloodType ?? base.bloodType;
-        base.academicInstruction = form.academicInstruction ?? base.academicInstruction;
+        base.maritalStatus = orNull(form.maritalStatus);
+        base.bloodType = orNull(form.bloodType);
+        base.academicInstruction = orNull(form.academicInstruction);
         base.hiringContractDate = form.hiringContractDate ?? base.hiringContractDate;
-        base.gender = form.gender ?? base.gender;
-        base.governmentId = form.governmentId ?? base.governmentId;
+        base.gender = orNull(form.gender);
+        base.governmentId = orNull(form.governmentId);
         base.guardCredentials = form.guardCredentials ?? base.guardCredentials;
 
         // Ensure nested guard object exists and update its fields
@@ -227,15 +235,30 @@ export default function EditSecurityGuardPage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Estado civil</label>
-            <Input name="maritalStatus" value={form.maritalStatus} onChange={handleChange} />
+            <select name="maritalStatus" value={form.maritalStatus} onChange={handleChange} className={selectClass}>
+              <option value="">Seleccionar…</option>
+              {["Soltero", "Casado", "Unión libre", "Divorciado"].map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Tipo de sangre</label>
-            <Input name="bloodType" value={form.bloodType} onChange={handleChange} />
+            <select name="bloodType" value={form.bloodType} onChange={handleChange} className={selectClass}>
+              <option value="">Seleccionar…</option>
+              {["A+", "A-", "AB+", "AB-", "O+", "O-", "B+", "B-"].map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Instrucción académica</label>
-            <Input name="academicInstruction" value={form.academicInstruction} onChange={handleChange} />
+            <select name="academicInstruction" value={form.academicInstruction} onChange={handleChange} className={selectClass}>
+              <option value="">Seleccionar…</option>
+              {["Secundaria", "Universitaria", "Universidad", "Especial", "Primaria"].map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Contrato</label>
@@ -243,7 +266,12 @@ export default function EditSecurityGuardPage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Género</label>
-            <Input name="gender" value={form.gender} onChange={handleChange} />
+            <select name="gender" value={form.gender} onChange={handleChange} className={selectClass}>
+              <option value="">Seleccionar…</option>
+              {["Masculino", "Femenino"].map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Cédula</label>
