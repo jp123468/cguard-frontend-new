@@ -476,7 +476,7 @@ export default function TimeOff() {
                   <TableRow key={rec.id}>
                     <TableCell><Checkbox /></TableCell>
                     <TableCell>{formatDate(rec.requestDate)}</TableCell>
-                    <TableCell>{rec.guard?.fullName ?? "—"}</TableCell>
+                    <TableCell>{rec.guard?.fullName ?? rec.guardName ?? "—"}</TableCell>
                     <TableCell className="capitalize">{rec.type ?? "—"}</TableCell>
                     <TableCell>
                       {rec.startDate ? `${rec.startDate}${rec.startTime ? " " + rec.startTime : ""}` : "—"}

@@ -160,7 +160,9 @@ export default function Incidents({ site }: { site?: any }) {
         const postSiteId = site?.id || '';
         if (!postSiteId || !tenantId) return;
         setLoading(true);
-        const res = await ApiService.get(`/tenant/${tenantId}/incident?postSiteId=${encodeURIComponent(postSiteId)}&limit=50`);
+        // Use the nested filter[] the backend actually reads — a bare ?postSiteId=
+        // was ignored, so every site showed the tenant's incidents from ALL sites.
+        const res = await ApiService.get(`/tenant/${tenantId}/incident?filter[postSiteId]=${encodeURIComponent(postSiteId)}&limit=50`);
         const rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
         if (mounted) setIncidents(rows);
       } catch (err) {

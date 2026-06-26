@@ -38,6 +38,7 @@ export interface TimeOffRecord {
   isPaid: boolean;
   guardId: string | null;
   guard: { id: string; fullName?: string; email?: string } | null;
+  guardName?: string | null; // denormalized snapshot — fallback when guard join is null
 }
 
 export interface TimeOffCreateInput {
