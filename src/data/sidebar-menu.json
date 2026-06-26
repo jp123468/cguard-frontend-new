@@ -304,6 +304,24 @@
     ]
   },
   {
+    "id": "tareas",
+    "name": "Tareas",
+    "icon": "FileText",
+    "expandable": true,
+    "subItems": [
+      {
+        "id": "tareas-seguimiento",
+        "name": "Seguimiento",
+        "path": "/tasks"
+      },
+      {
+        "id": "tareas-aprobaciones",
+        "name": "Aprobaciones",
+        "path": "/tasks/approvals"
+      }
+    ]
+  },
+  {
     "id": "despachador",
     "name": "Despachador",
     "icon": "MessageSquare",
