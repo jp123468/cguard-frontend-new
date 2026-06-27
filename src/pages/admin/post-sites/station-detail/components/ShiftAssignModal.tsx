@@ -36,6 +36,9 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   // The rotation PHASE comes from the station position (staggered), not a date —
   // so we don't ask for one (no date input). Shifts simply begin today.
   const [rotationStartDate, setRotationStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  // Optional end date: assign the guard to the station only until this date (e.g.
+  // temporary cover). Empty ⇒ indefinite. Backend already supports endDate.
+  const [rotationEndDate, setRotationEndDate] = useState('');
   const [selectedPositionId, setSelectedPositionId] = useState('');
   const [shiftStart, setShiftStart] = useState('');
   const [shiftEnd, setShiftEnd] = useState('');
@@ -178,6 +181,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
           stationId,
           positionId: selectedPositionId,
           startDate: rotationStartDate,
+          endDate: rotationEndDate || null,
           isRelief: (pos?.type || 'fijo') === 'sacafranco',
         },
       });
@@ -249,6 +253,12 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
                   </div>
                 )}
                 <p className="mt-1.5 text-[11px] text-muted-foreground">Rotación automática: los vigilantes alternan día y noche de forma escalonada según el horario de la estación. No requiere fecha de inicio.</p>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Hasta (opcional)</label>
+                <input type="date" value={rotationEndDate} min={rotationStartDate} onChange={(e) => setRotationEndDate(e.target.value)} className={inputCls} />
+                <p className="mt-1 text-[10px] text-muted-foreground/70">Déjalo vacío para una asignación indefinida; pon una fecha para una cobertura temporal.</p>
               </div>
             </>
           ) : (
