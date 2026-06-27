@@ -4,6 +4,7 @@ import {
   Loader2, Settings, X, Plus, Trash2, ChevronDown, ChevronRight, MapPin, QrCode, Crosshair,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { confirmDialog } from '@/components/ui/confirmDialog';
 import { ApiService } from '@/services/api/apiService';
 import RondaSettingsForm from '@/pages/admin/Configuration/rondas-settings/RondaSettingsForm';
 import CheckpointLocationPicker from '@/components/maps/CheckpointLocationPicker';
@@ -107,7 +108,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
   };
 
   const deleteTour = async (tourId: string) => {
-    if (!window.confirm(t('station.siteTours.confirmDelete', '¿Eliminar esta ronda y sus puntos de control?'))) return;
+    if (!(await confirmDialog({ title: 'Eliminar ronda', message: t('station.siteTours.confirmDelete', '¿Eliminar esta ronda y sus puntos de control?'), confirmText: 'Eliminar', tone: 'danger' }))) return;
     try {
       await ApiService.delete(`/tenant/${tenantId}/site-tour/${encodeURIComponent(tourId)}`);
       toast.success(t('station.siteTours.deleted', 'Ronda eliminada'));
@@ -143,7 +144,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
   };
 
   const deleteCheckpoint = async (tourId: string, tagId: string) => {
-    if (!window.confirm(t('station.siteTours.confirmDeleteCp', '¿Eliminar este punto de control?'))) return;
+    if (!(await confirmDialog({ title: 'Eliminar punto de control', message: t('station.siteTours.confirmDeleteCp', '¿Eliminar este punto de control?'), confirmText: 'Eliminar', tone: 'danger' }))) return;
     try {
       await ApiService.delete(`/tenant/${tenantId}/site-tour/${encodeURIComponent(tourId)}/tag/${encodeURIComponent(tagId)}`);
       setCps((m) => ({ ...m, [tourId]: (m[tourId] || []).filter((c) => c.id !== tagId) }));

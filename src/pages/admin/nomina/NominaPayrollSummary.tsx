@@ -3,6 +3,7 @@ import AppLayout from "@/layouts/app-layout";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirmDialog";
 import { FileDown, Printer, Lock, FileSpreadsheet, Save } from "lucide-react";
 import * as XLSX from "xlsx";
 import attendanceService from "@/lib/api/attendanceService";
@@ -63,7 +64,7 @@ export default function NominaPayrollSummary() {
     n == null ? "—" : `${currency} ${Number(n).toFixed(2)}`;
 
   const closePeriod = async () => {
-    if (!window.confirm(`Cerrar el periodo hasta ${to}? Los registros quedarán bloqueados (solo lectura).`)) return;
+    if (!(await confirmDialog({ title: 'Cerrar periodo', message: `Cerrar el periodo hasta ${to}? Los registros quedarán bloqueados (solo lectura).`, confirmText: 'Cerrar periodo', tone: 'danger' }))) return;
     setClosing(true);
     try {
       const r = await attendanceService.closePeriod(`${to}T23:59:59`);

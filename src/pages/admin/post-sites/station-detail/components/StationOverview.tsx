@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { MapPin, Clock, Users, Pencil, Check, Loader2 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
+import { confirmDialog } from '@/components/ui/confirmDialog';
 import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
 import RotationStyleSelect from '@/components/schedule/RotationStyleSelect';
 import { reverseGeocode } from '@/lib/geocodeClient';
@@ -160,7 +161,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
       || (customStart === (station.startingTimeInDay || '') && customEnd === (station.finishTimeInDay || ''));
     const unchangedRotation = (rotationStyleId || '') === (station.rotationStyleId || '');
     if (unchangedType && unchangedCustom && unchangedRotation) { toast.info('El horario no cambió'); return; }
-    if (!window.confirm('Cambiar el horario reconfigura los puestos del turno. Si hay vigilantes asignados a esta estación, deberán reasignarse. ¿Continuar?')) return;
+    if (!(await confirmDialog({ message: 'Cambiar el horario reconfigura los puestos del turno. Si hay vigilantes asignados a esta estación, deberán reasignarse. ¿Continuar?', confirmText: 'Continuar' }))) return;
     setSavingHorario(true);
     try {
       const tenantId = localStorage.getItem('tenantId') || '';

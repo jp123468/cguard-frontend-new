@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Loader2, UserPlus, Users, X, Repeat, Shield, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { confirmDialog } from '@/components/ui/confirmDialog';
 import { ApiService } from '@/services/api/apiService';
 import ShiftAssignModal from './ShiftAssignModal';
 
@@ -251,7 +252,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
   };
 
   const removeGuard = async (a: Assignment) => {
-    if (!window.confirm(`¿Quitar a ${a.guardName} de este puesto? Se eliminarán sus turnos en este sitio.`)) return;
+    if (!(await confirmDialog({ title: 'Quitar vigilante', message: `¿Quitar a ${a.guardName} de este puesto? Se eliminarán sus turnos en este sitio.`, confirmText: 'Quitar', tone: 'danger' }))) return;
     try {
       if (a.assignmentId) {
         await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${encodeURIComponent(a.assignmentId)}`);

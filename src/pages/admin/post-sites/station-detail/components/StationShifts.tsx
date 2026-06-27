@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import ShiftAssignModal from './ShiftAssignModal';
 import SacafrancoAssignModal from './SacafrancoAssignModal';
 import StationRoster from './StationRoster';
+import { confirmDialog } from '@/components/ui/confirmDialog';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Plus, ChevronLeft, ChevronRight, User, Calendar, AlertTriangle, CheckCircle2, Sun, Moon, Trash2 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
@@ -386,7 +387,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   // backend cascades and deletes future shifts). Falls back to deleting the single
   // shift for legacy shift-only rows that have no assignment.
   const removeGuard = async (ev: any) => {
-    if (!window.confirm(`¿Quitar a ${ev.guardName} de este puesto? Se eliminarán sus turnos en este sitio.`)) return;
+    if (!(await confirmDialog({ title: 'Quitar vigilante', message: `¿Quitar a ${ev.guardName} de este puesto? Se eliminarán sus turnos en este sitio.`, confirmText: 'Quitar', tone: 'danger' }))) return;
     try {
       let assignmentId: string | null = ev.raw?.guardAssignmentId || null;
       if (!assignmentId) {

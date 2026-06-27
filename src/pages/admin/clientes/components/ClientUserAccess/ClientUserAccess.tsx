@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, Plus, X, ChevronDown } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
@@ -42,14 +43,12 @@ export default function ClientUserAccess({ client }: Props) {
     if (selectedExisting) {
       const existing = users.find((u) => u.id === selectedExisting);
       if (existing) {
-        // eslint-disable-next-line no-alert
-        alert(`Invited existing ${existing.name}`);
+        toast.success(`Invited existing ${existing.name}`);
       }
     } else {
       const newUser = { id: String(Date.now()), name: form.name, email: form.email, role: form.accessLevel, status: 'Invited' };
       setUsers((prev) => [newUser, ...prev]);
-      // eslint-disable-next-line no-alert
-      alert(`Invited ${newUser.name}`);
+      toast.success(`Invited ${newUser.name}`);
     }
     setShowInvite(false);
   }

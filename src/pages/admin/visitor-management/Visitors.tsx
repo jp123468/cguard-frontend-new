@@ -46,6 +46,7 @@ import { postSiteService } from '@/lib/api/postSiteService';
 import { stationService } from '@/lib/api/stationService';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from "sonner";
+import { confirmDialog } from '@/components/ui/confirmDialog';
 
 type VisitorFilters = {
     client: string;
@@ -243,7 +244,7 @@ export default function Visitors() {
     };
 
     const archiveLog = async (id: string) => {
-        if (!confirm(t('visitantes.confirmArchive') || 'Archivar este registro?')) return;
+        if (!(await confirmDialog({ message: t('visitantes.confirmArchive') || 'Archivar este registro?', confirmText: 'Archivar' }))) return;
         try {
             await visitorLogService.update(id, { archived: true });
             toast.success(t('visitantes.archived') || 'Registro archivado');

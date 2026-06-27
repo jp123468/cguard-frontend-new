@@ -28,6 +28,7 @@ import {
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { ApiService } from "@/services/api/apiService";
 import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirmDialog";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -675,7 +676,7 @@ export default function Schedule() {
   };
 
   const removeAssignment = async (assignmentId: string) => {
-    if (!confirm('¿Remover esta asignación? Se eliminarán los turnos futuros generados.')) return;
+    if (!(await confirmDialog({ title: 'Remover asignación', message: '¿Remover esta asignación? Se eliminarán los turnos futuros generados.', confirmText: 'Remover', tone: 'danger' }))) return;
     try {
       await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${assignmentId}`);
       toast.success('Asignación removida');
@@ -755,7 +756,7 @@ export default function Schedule() {
   };
 
   const deletePosition = async (stationId: string, positionId: string) => {
-    if (!confirm('¿Eliminar esta posición?')) return;
+    if (!(await confirmDialog({ title: 'Eliminar posición', message: '¿Eliminar esta posición?', confirmText: 'Eliminar', tone: 'danger' }))) return;
     try {
       await ApiService.delete(`/tenant/${tenantId}/station/${stationId}/positions/${positionId}`);
       toast.success('Posición eliminada');
@@ -855,7 +856,7 @@ export default function Schedule() {
   };
 
   const runAutoAssign = async () => {
-    if (!confirm('¿Asignar automáticamente vigilantes a todas las estaciones sin cubrir?\n\nSolo se cubren los puestos VACÍOS con vigilantes sin asignar (por cercanía, configurando rotaciones y sacafrancos). NO se moverá ni reasignará ningún vigilante que ya esté asignado a un puesto.')) return;
+    if (!(await confirmDialog({ message: '¿Asignar automáticamente vigilantes a todas las estaciones sin cubrir?\n\nSolo se cubren los puestos VACÍOS con vigilantes sin asignar (por cercanía, configurando rotaciones y sacafrancos). NO se moverá ni reasignará ningún vigilante que ya esté asignado a un puesto.', confirmText: 'Asignar' }))) return;
     setAutoAssigning(true);
     setAutoResult(null);
     try {
@@ -871,7 +872,7 @@ export default function Schedule() {
   };
 
   const runOptimizeSacafrancos = async () => {
-    if (!confirm('¿Optimizar la rotación de sacafrancos?\n\nATENCIÓN: esto MOVERÁ vigilantes sacafranco ya asignados a otros puestos/estaciones y regenerará sus turnos para maximizar cobertura. Los vigilantes fijos NO se tocan.')) return;
+    if (!(await confirmDialog({ message: '¿Optimizar la rotación de sacafrancos?\n\nATENCIÓN: esto MOVERÁ vigilantes sacafranco ya asignados a otros puestos/estaciones y regenerará sus turnos para maximizar cobertura. Los vigilantes fijos NO se tocan.', confirmText: 'Optimizar' }))) return;
     setAutoAssigning(true);
     try {
       const res = await ApiService.post(`/tenant/${tenantId}/scheduler/optimize-sacafrancos`, { data: {} });

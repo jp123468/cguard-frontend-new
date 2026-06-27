@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 import { Button } from '@/components/ui/button';
 import { Loader2, MapPin, AlertCircle, Search } from 'lucide-react';
@@ -193,7 +194,7 @@ export default function AddressAutocomplete({
   // ── Geolocation (no reverse-geocoding — just move the pin) ─────────────────
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert('La geolocalización no está soportada en este navegador');
+      toast.error('La geolocalización no está soportada en este navegador');
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -220,7 +221,7 @@ export default function AddressAutocomplete({
       },
       (error) => {
         console.error('[AddressAutocomplete] Geolocation error:', error);
-        alert('No se pudo obtener la ubicación actual');
+        toast.error('No se pudo obtener la ubicación actual');
       },
       { enableHighAccuracy: true, timeout: 10000 },
     );

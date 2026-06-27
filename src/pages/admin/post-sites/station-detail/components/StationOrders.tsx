@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { confirmDialog } from '@/components/ui/confirmDialog';
 import {
   Plus, Clock, Pencil, Trash2, X, ClipboardList, Loader2, Repeat, CalendarDays, AlertCircle,
   Bell, Image as ImageIcon, Video, Mic, User, CheckCircle2, FileText,
@@ -82,7 +83,7 @@ export default function StationOrders({ stationId }: Props) {
 
   const remove = async (o: Order) => {
     if (!o.id) return;
-    if (!window.confirm(t('station.orders.confirmDelete', '¿Eliminar esta consigna?'))) return;
+    if (!(await confirmDialog({ title: 'Eliminar consigna', message: t('station.orders.confirmDelete', '¿Eliminar esta consigna?'), confirmText: 'Eliminar', tone: 'danger' }))) return;
     try {
       await stationOrderService.remove(stationId, o.id);
       setRows((r) => r.filter((x) => x.id !== o.id));

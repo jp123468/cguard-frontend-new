@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, Plus, X, ChevronDown } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
@@ -51,8 +52,7 @@ export default function ClientEmailReports({ client }: { client: any }) {
     if (!form.postSite || !form.email.trim() || !form.frequency) return;
     const newEmail = { id: String(Date.now()), email: form.email, frequency: form.frequency, postSite: form.postSite, reports: selectedReports, date: new Date().toISOString(), status: 'Active' };
     setUsers((prev) => [newEmail as any, ...prev]);
-    // eslint-disable-next-line no-alert
-    alert(`Saved ${form.email}`);
+    toast.success(`Saved ${form.email}`);
     setShowInvite(false);
   }
 

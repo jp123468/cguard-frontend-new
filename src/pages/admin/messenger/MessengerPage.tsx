@@ -9,6 +9,7 @@ import { clientService } from "@/lib/api/clientService";
 import { useFileUrl } from "@/lib/fileUrl";
 import { useAudioRecorder } from "@/lib/useAudioRecorder";
 import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirmDialog";
 
 /**
  * Renders one message attachment (image/video). The attachment `url` is a raw
@@ -139,7 +140,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
 
   const onDeleteConversation = async () => {
     if (!selected) return;
-    if (!window.confirm(`¿Eliminar la conversación con ${selected.recipientName}? Esta acción no se puede deshacer.`)) return;
+    if (!(await confirmDialog({ title: 'Eliminar conversación', message: `¿Eliminar la conversación con ${selected.recipientName}? Esta acción no se puede deshacer.`, confirmText: 'Eliminar', tone: 'danger' }))) return;
     const id = selected.id;
     try {
       await messageService.deleteConversation(id);

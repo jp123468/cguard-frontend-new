@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { toast } from "sonner";
 import { Upload, X, FileText, Image as ImageIcon, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -49,7 +50,7 @@ export default function DocumentUpload({
     if (!file) return;
 
     if (file.size > MAX_MB * 1024 * 1024) {
-      alert(`El archivo "${file.name}" excede el tamaño máximo de ${MAX_MB} MB.`);
+      toast.error(`El archivo "${file.name}" excede el tamaño máximo de ${MAX_MB} MB.`);
       return;
     }
 
@@ -62,7 +63,7 @@ export default function DocumentUpload({
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
     if (file.size > MAX_MB * 1024 * 1024) {
-      alert(`El archivo excede el tamaño máximo de ${MAX_MB} MB.`);
+      toast.error(`El archivo excede el tamaño máximo de ${MAX_MB} MB.`);
       return;
     }
     const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : null;

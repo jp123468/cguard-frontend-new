@@ -5,6 +5,7 @@ import {
   Plus, ScanLine, Trash2, Upload, UserCheck, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { confirmDialog } from '@/components/ui/confirmDialog';
 import { visitorLogService } from '@/lib/api/visitorLogService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -344,7 +345,7 @@ export default function StationVisitors({ stationId }: Props) {
   useEffect(() => { load(); }, [load]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar este registro?')) return;
+    if (!(await confirmDialog({ title: 'Eliminar registro', message: '¿Eliminar este registro?', confirmText: 'Eliminar', tone: 'danger' }))) return;
     setDeleting(id);
     try { await visitorLogService.delete([id]); toast.success('Eliminado.'); load(); }
     catch (e: any) { toast.error(e?.message || 'Error al eliminar.'); }

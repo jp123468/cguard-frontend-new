@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirmDialog";
 import { ApiService, ApiError } from "@/services/api/apiService";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
@@ -317,7 +318,7 @@ export default function MemosPage() {
       return;
     }
 
-    if (!window.confirm(`¿Eliminar ${selectedIds.length} memo(s)?`)) return;
+    if (!(await confirmDialog({ title: 'Eliminar memos', message: `¿Eliminar ${selectedIds.length} memo(s)?`, confirmText: 'Eliminar', tone: 'danger' }))) return;
     try {
       const tenantId = localStorage.getItem("tenantId") || "";
       if (!tenantId) throw new Error("Tenant no configurado");

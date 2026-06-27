@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirmDialog";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -155,7 +157,7 @@ export default function TimeOff() {
 
   const handleCreate = async () => {
     if (!form.type || !form.startDate || !form.endDate || !form.reason) {
-      alert("Por favor complete los campos requeridos: Tipo, Desde, Hasta y Razón");
+      toast.error("Por favor complete los campos requeridos: Tipo, Desde, Hasta y Razón");
       return;
     }
     setSaving(true);
@@ -175,7 +177,7 @@ export default function TimeOff() {
       resetForm();
     } catch (err) {
       console.error("Failed to create time-off request", err);
-      alert("Error al crear la solicitud. Inténtelo de nuevo.");
+      toast.error("Error al crear la solicitud. Inténtelo de nuevo.");
     } finally {
       setSaving(false);
     }
@@ -200,7 +202,7 @@ export default function TimeOff() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Eliminar esta solicitud?")) return;
+    if (!(await confirmDialog({ title: 'Eliminar solicitud', message: "¿Eliminar esta solicitud?", confirmText: 'Eliminar', tone: 'danger' }))) return;
     try {
       await timeOffRequestService.destroy(id);
       setRecords((prev) => prev.filter((r) => r.id !== id));
