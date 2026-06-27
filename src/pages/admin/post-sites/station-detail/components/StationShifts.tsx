@@ -661,6 +661,10 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
   // (a 19:00→07:00 night shift can't be matched by hour overlap — only by class).
   const coveringGuards = (key: string, isNight: boolean) =>
     (eventsByDate[key] || []).filter((ev: any) => {
+      // Attribute a shift to the day it STARTS (a 19:00→07:00 night shift spans two
+      // days; without this it would also show on the morning of the NEXT day —
+      // making it look like two night guards). Mirrors the coverage count.
+      if (toDateKey(ev.start) !== key) return false;
       const startMin = minutesInTenantTz(ev.start);
       const evNight = startMin >= 18 * 60 || startMin < 6 * 60;
       return isNight ? evNight : !evNight;
