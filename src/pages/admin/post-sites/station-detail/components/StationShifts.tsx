@@ -521,7 +521,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
                 <DayView
                   date={currentDate}
                   coverage={coverageByDate[dateKey(currentDate)]}
-                  dayEvents={(eventsByDate[dateKey(currentDate)] || []).filter((ev: any) => dateKey(ev.start) === dateKey(currentDate))}
+                  dayEvents={eventsByDate[dateKey(currentDate)] || []}
                   guardColorMap={guardColorMap}
                   onAssign={(d) => { setSelectedDate(d); setSelectedShift(null); openForm(d); }}
                 />
@@ -871,91 +871,141 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
 
 // ── MONTH VIEW ───────────────────────────────────────────────────────────────
 
-// ── Day view: one day in full detail (turno cards + assigned guards) ──────────
+// ── Day view: a 24-hour vertical timeline of the day's coverage ───────────────
 function DayView({ date, coverage, dayEvents, guardColorMap, onAssign }: {
   date: Date;
   coverage: any;
-  dayEvents: any[];
+  dayEvents: any[]; // events OVERLAPPING this day (incl. a night shift from the day before)
   guardColorMap: Record<string, any>;
   onAssign: (d: string) => void;
 }) {
+  const ROW = 30;          // px per hour
+  const H = 24 * ROW;      // full-day height
+  const dayK = dateKey(date);
   const slots: ScheduleSlot[] = coverage?.slots || [];
-  const fmtT = (d: Date) => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: getTenantTimezone() });
-  const covering = (isNight: boolean) => dayEvents.filter((ev: any) => {
-    const m = minutesInTenantTz(ev.start);
-    const evNight = m >= 18 * 60 || m < 6 * 60;
-    return isNight ? evNight : !evNight;
-  });
   const covered = slots.filter((s) => s.isCovered).length;
+  const fmtT = (d: Date) => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: getTenantTimezone() });
+
+  // An event's [startH,endH] on THIS day's 0–24 axis (clamped across midnight).
+  const eventSeg = (ev: any) => {
+    const startBefore = dateKey(ev.start) < dayK;
+    const endAfter = dateKey(ev.end) > dayK;
+    const startH = startBefore ? 0 : minutesInTenantTz(ev.start) / 60;
+    let endH = endAfter ? 24 : minutesInTenantTz(ev.end) / 60;
+    if (endH <= startH) endH = 24;
+    return { startH, endH, startBefore, endAfter };
+  };
+
+  const hours = [0, 3, 6, 9, 12, 15, 18, 21, 24];
+  const now = new Date();
+  const isToday = dateKey(now) === dayK;
+  const nowH = minutesInTenantTz(now) / 60;
 
   return (
-    <div className="mx-auto max-w-2xl p-4 lg:p-6">
+    <div className="p-4 lg:p-5">
+      {/* Summary */}
       {slots.length > 0 && (
         <div className="mb-4 flex items-center gap-3">
           <div className={`grid h-11 w-11 place-items-center rounded-2xl text-base font-bold ${covered === slots.length ? 'bg-emerald-500/15 text-emerald-500' : 'bg-red-500/15 text-red-500'}`}>
             {covered}/{slots.length}
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">{covered === slots.length ? 'Cobertura completa' : `${slots.length - covered} turno(s) sin cubrir`}</p>
-            <p className="text-[11px] text-muted-foreground">Turnos del día</p>
+            <p className="text-[11px] text-muted-foreground">Línea de tiempo · 24 h</p>
+          </div>
+          <div className="hidden items-center gap-3 text-[10px] text-muted-foreground sm:flex">
+            <span className="inline-flex items-center gap-1"><Sun size={11} className="text-amber-400" /> Día</span>
+            <span className="inline-flex items-center gap-1"><Moon size={11} className="text-indigo-400" /> Noche</span>
           </div>
         </div>
       )}
 
-      {slots.length === 0 ? (
+      {slots.length === 0 && dayEvents.length === 0 ? (
         <div className="py-20 text-center">
           <Calendar size={28} className="mx-auto mb-3 text-muted-foreground/30" />
           <p className="text-sm text-muted-foreground/60">Día libre — sin horario programado</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {slots.map((slot, si) => {
-            const isNight = String(slot.jornada.tipo || '').toLowerCase().includes('noct');
-            const guards = covering(isNight);
-            return (
-              <div key={si} className={`rounded-2xl border p-4 transition-all ${slot.isCovered ? 'border-emerald-500/25 bg-emerald-500/[0.04]' : 'border-red-500/30 bg-red-500/[0.05]'}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`grid h-11 w-11 place-items-center rounded-xl ${isNight ? 'bg-indigo-500/15 text-indigo-400' : 'bg-amber-500/15 text-amber-500'}`}>
-                      {isNight ? <Moon size={20} /> : <Sun size={20} />}
-                    </div>
-                    <div>
-                      <p className="text-base font-bold text-foreground">{slot.jornada.tipo}</p>
-                      <p className="font-mono text-xs text-muted-foreground">{slot.startTime} – {slot.endTime}</p>
-                    </div>
-                  </div>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${slot.isCovered ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
-                    {slot.guardsAssigned}/{slot.guardsNeeded}
-                  </span>
+        <div className="max-h-[600px] overflow-y-auto pr-1">
+          <div className="relative flex" style={{ height: H }}>
+            {/* Hour axis */}
+            <div className="relative w-12 shrink-0">
+              {hours.map((h) => (
+                <div key={h} className="absolute right-2 -translate-y-1/2 text-[10px] font-medium tabular-nums text-muted-foreground/50" style={{ top: (h / 24) * H }}>
+                  {String(h % 24).padStart(2, '0')}:00
                 </div>
-                <div className="mt-3 space-y-2">
-                  {guards.length > 0 ? guards.map((ev: any, i: number) => {
-                    const color = guardColorMap[ev.guardId] || GUARD_COLORS[0];
-                    return (
-                      <div key={ev.id || i} className="flex items-center gap-3 rounded-xl p-2.5" style={{ backgroundColor: color.bg }}>
-                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold text-white" style={{ background: color.accent }}>
-                          {ev.guardName.split(' ').map((w: string) => w[0]).slice(0, 2).join('')}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-foreground">{ev.guardName}</p>
-                          <p className="text-[11px] text-muted-foreground">{fmtT(ev.start)} – {fmtT(ev.end)}</p>
-                        </div>
-                        {ev.status === 'active' && (
-                          <span className="flex shrink-0 items-center gap-1 text-[10px] font-bold text-green-500">
-                            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" /> EN SERVICIO
-                          </span>
-                        )}
+              ))}
+            </div>
+
+            {/* Lane */}
+            <div className="relative flex-1 overflow-hidden rounded-xl border border-border/20 bg-muted/[0.015]">
+              {/* gridlines */}
+              {hours.map((h) => (
+                <div key={h} className="absolute inset-x-0 border-t border-border/10" style={{ top: (h / 24) * H }} />
+              ))}
+
+              {/* now indicator */}
+              {isToday && nowH > 0 && nowH < 24 && (
+                <div className="absolute inset-x-0 z-30 flex items-center" style={{ top: (nowH / 24) * H }}>
+                  <div className="-ml-[3px] h-2 w-2 rounded-full bg-red-500 shadow-sm shadow-red-500/50" />
+                  <div className="h-px flex-1 bg-red-500/60" />
+                </div>
+              )}
+
+              {/* Uncovered turno blocks (anchored at the turno's start on this day) */}
+              {slots.filter((s) => !s.isCovered).map((slot, si) => {
+                const isNight = String(slot.jornada.tipo || '').toLowerCase().includes('noct');
+                const [sH, sM] = slot.startTime.split(':').map(Number);
+                const [eH, eM] = slot.endTime.split(':').map(Number);
+                const s = sH + (sM || 0) / 60;
+                const e = eH + (eM || 0) / 60;
+                const endH = e > s ? e : 24; // night wraps → show the part on this day
+                const top = (s / 24) * H;
+                const height = ((endH - s) / 24) * H;
+                return (
+                  <button
+                    key={`u-${si}`}
+                    onClick={() => onAssign(dayK)}
+                    className="absolute inset-x-1 z-10 flex flex-col justify-center gap-0.5 rounded-lg border border-dashed border-red-500/40 bg-red-500/[0.07] px-2 text-left transition-colors hover:bg-red-500/[0.12]"
+                    style={{ top, height }}
+                  >
+                    <span className="flex items-center gap-1 text-[11px] font-semibold text-red-400">
+                      {isNight ? <Moon size={11} /> : <Sun size={11} />} {slot.jornada.tipo} · sin asignar
+                    </span>
+                    {height > 36 && <span className="inline-flex items-center gap-1 text-[10px] font-medium text-red-400/80"><Plus size={10} /> Asignar vigilante</span>}
+                  </button>
+                );
+              })}
+
+              {/* Covering guard blocks (actual shifts, clamped to the day) */}
+              {dayEvents.map((ev: any, i: number) => {
+                const { startH, endH, startBefore, endAfter } = eventSeg(ev);
+                const top = (startH / 24) * H;
+                const height = Math.max(((endH - startH) / 24) * H, 24);
+                const color = guardColorMap[ev.guardId] || GUARD_COLORS[0];
+                return (
+                  <div
+                    key={ev.id || i}
+                    className="absolute inset-x-1 z-20 overflow-hidden rounded-lg px-2 py-1 shadow-sm"
+                    style={{ top, height, backgroundColor: color.bg, borderLeft: `3px solid ${color.accent}` }}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <div className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[8px] font-bold text-white" style={{ background: color.accent }}>
+                        {ev.guardName.split(' ').map((w: string) => w[0]).slice(0, 2).join('')}
                       </div>
-                    );
-                  }) : (
-                    <button onClick={() => onAssign(dateKey(date))} className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-red-500/30 bg-red-500/5 py-3 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/10">
-                      <Plus size={14} /> Asignar vigilante a este turno
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                      <span className="truncate text-[11px] font-semibold" style={{ color: color.text }}>{ev.guardName}</span>
+                      {ev.status === 'active' && <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-green-500 animate-pulse" />}
+                    </div>
+                    {height > 36 && (
+                      <p className="mt-0.5 truncate text-[9px] text-muted-foreground/80">
+                        {startBefore ? '↑ ' : ''}{fmtT(ev.start)} – {fmtT(ev.end)}{endAfter ? ' ↓' : ''}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>
