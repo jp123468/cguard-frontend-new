@@ -334,7 +334,11 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
     return days;
   }, [currentDate]);
 
-  const selectedDayEvents = selectedDate ? (eventsByDate[selectedDate] || []) : [];
+  // Only shifts that START on the selected day — a night shift (19:00→07:00) spans
+  // two days and eventsByDate lists it on both, which double-listed the night guard.
+  const selectedDayEvents = selectedDate
+    ? (eventsByDate[selectedDate] || []).filter((ev: any) => dateKey(ev.start) === selectedDate)
+    : [];
   const selectedDayCoverage = selectedDate ? coverageByDate[selectedDate] : null;
 
   const fmtTime = (d: Date) => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: getTenantTimezone() });
