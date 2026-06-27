@@ -49,6 +49,7 @@ export default function NominaRecords() {
     const match = rows.find((r) => r.id === focusId);
     if (match) {
       setSelected(match);
+      attendanceService.find(match.id).then(setSelected).catch(() => {});
       setFocusHandled(true);
     }
   }, [focusId, focusHandled, loading, rows]);
@@ -146,7 +147,12 @@ export default function NominaRecords() {
           <DataTable
             columns={columns}
             data={rows}
-            onRowClick={(r) => setSelected(r)}
+            onRowClick={(r) => {
+              // Open immediately with the lean list row, then hydrate the full
+              // record (selfie/photos/device) — the list no longer ships those blobs.
+              setSelected(r);
+              attendanceService.find(r.id).then(setSelected).catch(() => {});
+            }}
             emptyState={<div className="py-12 text-center text-sm text-muted-foreground">Sin registros</div>}
           />
         )}
