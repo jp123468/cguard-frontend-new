@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import ShiftAssignModal from './ShiftAssignModal';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Plus, ChevronLeft, ChevronRight, User, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Loader2, Plus, ChevronLeft, ChevronRight, User, Calendar, AlertTriangle, CheckCircle2, Sun, Moon } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { getTenantTimezone } from '@/utils/tenantLocation';
@@ -452,6 +452,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
                   guardColorMap={guardColorMap}
                   selectedDate={selectedDate}
                   onSelectDate={(d) => { setSelectedDate(d); setSelectedShift(null); }}
+                  onAssign={(d) => { setSelectedDate(d); setSelectedShift(null); openForm(d); }}
                   station={station}
                   jornadas={jornadas}
                 />
@@ -606,22 +607,28 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
 
 // ── WEEK VIEW ────────────────────────────────────────────────────────────────
 
-function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedDate, onSelectDate, station, jornadas }: {
+function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedDate, onSelectDate, onAssign, station, jornadas }: {
   days: Date[];
   eventsByDate: Record<string, any[]>;
   coverageByDate: Record<string, any>;
   guardColorMap: Record<string, any>;
   selectedDate: string | null;
   onSelectDate: (d: string) => void;
+  onAssign: (d: string) => void;
   station: any;
   jornadas: Jornada[];
 }) {
-  const startHour = parseInt(station?.startingTimeInDay?.split(':')[0]) || 6;
-  const endHour = Math.min((parseInt(station?.finishTimeInDay?.split(':')[0]) || 20) + 2, 24);
-  const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
+  void station; void jornadas;
   const toDateKey = dateKey;
   const isToday = (d: Date) => toDateKey(d) === toDateKey(new Date());
-  const nowHour = new Date().getHours() + new Date().getMinutes() / 60;
+  // Guards covering a slot, matched by the day/night class of the shift's start
+  // (a 19:00→07:00 night shift can't be matched by hour overlap — only by class).
+  const coveringGuards = (key: string, isNight: boolean) =>
+    (eventsByDate[key] || []).filter((ev: any) => {
+      const startMin = minutesInTenantTz(ev.start);
+      const evNight = startMin >= 18 * 60 || startMin < 6 * 60;
+      return isNight ? evNight : !evNight;
+    });
 
   return (
     <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
@@ -667,101 +674,83 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
           })}
         </div>
 
-        {/* Time grid */}
-        <div className="grid grid-cols-[48px_repeat(7,1fr)] relative" style={{ height: `${hours.length * 52}px` }}>
-          {/* Time labels */}
-          <div className="relative">
-            {hours.map((h, i) => (
-              <div key={h} className="absolute right-3 text-[10px] text-muted-foreground/40 font-medium tabular-nums" style={{ top: `${i * 52 - 6}px` }}>
-                {String(h).padStart(2, '0')}:00
-              </div>
-            ))}
-          </div>
-
-          {/* Day columns */}
+        {/* Day/night turno blocks — NO hourly axis, so night shifts (19:00→07:00)
+            and everything after 7pm are fully visible and assignable. */}
+        <div className="grid grid-cols-[48px_repeat(7,1fr)]">
+          {/* spacer aligning with the header's time-label column */}
+          <div />
           {days.map((day, dayIdx) => {
             const key = toDateKey(day);
-            const dayEvents = eventsByDate[key] || [];
             const coverage = coverageByDate[key];
-            const isScheduledDay = coverage && coverage.slots.length > 0;
-
+            const slots: ScheduleSlot[] = coverage?.slots || [];
             return (
               <div
                 key={dayIdx}
-                onClick={() => onSelectDate(key)}
-                className={`relative border-l border-border/8 cursor-pointer transition-colors duration-150 ${
-                  selectedDate === key ? 'bg-[#C8860A]/[0.02]' : 'hover:bg-muted/[0.03]'
+                className={`flex flex-col gap-1.5 border-l border-border/8 p-1.5 min-h-[220px] transition-colors ${
+                  selectedDate === key ? 'bg-[#C8860A]/[0.03]' : ''
                 }`}
               >
-                {/* Hour lines */}
-                {hours.map((_, i) => (
-                  <div key={i} className="absolute w-full border-t border-border/8" style={{ top: `${i * 52}px` }} />
-                ))}
-
-                {/* Schedule requirement background blocks */}
-                {isScheduledDay && coverage.slots.map((slot: ScheduleSlot, si: number) => {
-                  const [sH, sM] = slot.startTime.split(':').map(Number);
-                  const [eH, eM] = slot.endTime.split(':').map(Number);
-                  const slotStartH = sH + (sM || 0) / 60;
-                  const slotEndH = eH + (eM || 0) / 60;
-                  const top = Math.max((slotStartH - startHour) * 52, 0);
-                  const height = Math.max((slotEndH - slotStartH) * 52, 20);
+                {slots.length === 0 ? (
+                  <button
+                    onClick={() => onSelectDate(key)}
+                    className="flex-1 flex items-center justify-center text-[10px] text-muted-foreground/40"
+                  >
+                    Sin turnos
+                  </button>
+                ) : slots.map((slot, si) => {
+                  const isNight = String(slot.jornada.tipo || '').toLowerCase().includes('noct');
+                  const guards = coveringGuards(key, isNight);
                   return (
                     <div
-                      key={`req-${si}`}
-                      className={`absolute left-0 right-0 z-0 pointer-events-none transition-colors ${
-                        slot.isCovered ? 'bg-emerald-500/[0.04]' : 'bg-red-500/[0.06]'
+                      key={si}
+                      onClick={() => onSelectDate(key)}
+                      className={`rounded-lg border p-2 cursor-pointer transition-all hover:brightness-110 ${
+                        slot.isCovered ? 'border-emerald-500/20 bg-emerald-500/[0.05]' : 'border-red-500/25 bg-red-500/[0.06]'
                       }`}
-                      style={{ top: `${top}px`, height: `${height}px` }}
                     >
-                      {/* Dashed border for required slot */}
-                      <div className={`absolute inset-x-1 inset-y-0 border border-dashed rounded-md ${
-                        slot.isCovered ? 'border-emerald-500/20' : 'border-red-500/30'
-                      }`} />
-                    </div>
-                  );
-                })}
-
-                {/* Now indicator */}
-                {isToday(day) && nowHour >= startHour && nowHour <= endHour && (
-                  <div className="absolute w-full z-30 pointer-events-none" style={{ top: `${(nowHour - startHour) * 52}px` }}>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 shadow-sm shadow-red-500/50" />
-                      <div className="flex-1 h-[1px] bg-red-500/70" />
-                    </div>
-                  </div>
-                )}
-
-                {/* Events */}
-                {dayEvents.map((ev, evIdx) => {
-                  const evStartH = ev.start.getHours() + ev.start.getMinutes() / 60;
-                  const evEndH = ev.end.getHours() + ev.end.getMinutes() / 60;
-                  const top = Math.max((evStartH - startHour) * 52, 0);
-                  const height = Math.max((evEndH - evStartH) * 52, 22);
-                  const color = guardColorMap[ev.guardId] || GUARD_COLORS[0];
-                  return (
-                    <div
-                      key={ev.id || evIdx}
-                      className="absolute left-1 right-1 rounded-lg overflow-hidden transition-all duration-150 hover:brightness-110 hover:shadow-md z-20 cursor-pointer"
-                      style={{ top: `${top}px`, height: `${height}px`, backgroundColor: color.bg, borderLeft: `3px solid ${color.accent}` }}
-                      onClick={(e) => { e.stopPropagation(); onSelectDate(key); }}
-                    >
-                      <div className="px-1.5 py-1 h-full flex flex-col">
-                        <span className="text-[10px] font-semibold truncate leading-tight" style={{ color: color.text }}>
-                          {ev.guardName.split(' ').slice(0, 2).join(' ')}
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="flex items-center gap-1 text-[11px] font-semibold text-foreground">
+                          {isNight ? <Moon size={11} className="text-indigo-400" /> : <Sun size={11} className="text-amber-400" />}
+                          {slot.jornada.tipo}
                         </span>
-                        {height > 30 && (
-                          <span className="text-[9px] text-muted-foreground/70 mt-0.5">
-                            {ev.start.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: getTenantTimezone() })}
-                          </span>
-                        )}
-                        {ev.status === 'active' && height > 40 && (
-                          <div className="mt-auto flex items-center gap-0.5">
-                            <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-[8px] font-bold text-green-500">ACTIVO</span>
-                          </div>
-                        )}
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                          slot.isCovered ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+                        }`}>
+                          {slot.guardsAssigned}/{slot.guardsNeeded}
+                        </span>
                       </div>
+                      <div className="mt-0.5 font-mono text-[9px] text-muted-foreground/70">
+                        {slot.startTime} – {slot.endTime}
+                      </div>
+
+                      {guards.length > 0 && (
+                        <div className="mt-1 space-y-0.5">
+                          {guards.slice(0, 3).map((ev: any, gi: number) => {
+                            const color = guardColorMap[ev.guardId] || GUARD_COLORS[0];
+                            return (
+                              <div key={ev.id || gi} className="flex items-center gap-1 rounded px-1 py-0.5" style={{ backgroundColor: color.bg }}>
+                                <div className="h-3 w-[3px] flex-shrink-0 rounded-full" style={{ backgroundColor: color.accent }} />
+                                <span className="truncate text-[10px] font-medium" style={{ color: color.text }}>
+                                  {ev.guardName.split(' ').slice(0, 2).join(' ')}
+                                </span>
+                                {ev.status === 'active' && <div className="ml-auto h-1.5 w-1.5 flex-shrink-0 rounded-full bg-green-500 animate-pulse" />}
+                              </div>
+                            );
+                          })}
+                          {guards.length > 3 && (
+                            <div className="text-[9px] text-muted-foreground/60">+{guards.length - 3} más</div>
+                          )}
+                        </div>
+                      )}
+
+                      {!slot.isCovered && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onAssign(key); }}
+                          className="mt-1 flex w-full items-center justify-center gap-1 rounded-md border border-red-500/20 bg-red-500/5 py-1 text-[10px] font-semibold text-red-400 transition-colors hover:bg-red-500/10"
+                        >
+                          <Plus size={10} /> Asignar
+                        </button>
+                      )}
                     </div>
                   );
                 })}
