@@ -451,7 +451,11 @@ export default function Schedule() {
     // For each sacafranco, compute daily status using their OWN rotation
     byGuard.forEach((data) => {
       const primaryAssignment = data.assignments[0]; // Use first assignment for rotation info
-      const rot = primaryAssignment?.rotationStyle;
+      // The patrón de rotación lives on the STATION (assignment.rotationStyle is
+      // null by design), so resolve it from the station — reading the assignment
+      // relation skipped every sacafranco, so none rendered in the Programador.
+      const sfStation = stationsById.get(primaryAssignment?.stationId);
+      const rot = (sfStation?.rotationStyleId ? rotationStylesById.get(sfStation.rotationStyleId) : null) || primaryAssignment?.rotationStyle;
       if (!rot) return;
 
       const sfCycle = rot.dayShifts + rot.nightShifts + rot.restDays;
@@ -478,7 +482,7 @@ export default function Schedule() {
               positionsById.get(ma.positionId)?.type === 'fijo'
             );
             for (const mainA of stationFijos) {
-              const mainRot = mainA.rotationStyle;
+              const mainRot = (station?.rotationStyleId ? rotationStylesById.get(station.rotationStyleId) : null) || mainA.rotationStyle;
               if (!mainRot) continue;
               const mainCycle = mainRot.dayShifts + mainRot.nightShifts + mainRot.restDays;
               const daysSince = Math.floor((target.getTime() - epoch.getTime()) / (24 * 60 * 60 * 1000));
@@ -496,7 +500,7 @@ export default function Schedule() {
     });
 
     return Array.from(byGuard.values());
-  }, [assignments, positionsById, stationsById, monthDays]);
+  }, [assignments, positionsById, stationsById, rotationStylesById, monthDays]);
 
   // Map: `${stationId}-${dateStr}` → covering SF guard name(s)
   // Algorithm: on each day, match working SFs to stations that have fijos resting

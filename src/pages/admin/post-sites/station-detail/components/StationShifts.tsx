@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import ShiftAssignModal from './ShiftAssignModal';
 import SacafrancoAssignModal from './SacafrancoAssignModal';
+import StationRoster from './StationRoster';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Plus, ChevronLeft, ChevronRight, User, Calendar, AlertTriangle, CheckCircle2, Sun, Moon, Trash2 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
@@ -500,6 +501,10 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
         ) : error ? (
           <div className="p-6 text-sm text-red-500">{error}</div>
         ) : (
+          <div className="flex flex-col">
+          <div className="px-3 pt-3">
+            <StationRoster stationId={stationId} tenantId={tenantId} events={events} guardColorMap={guardColorMap} />
+          </div>
           <div className="flex flex-col lg:flex-row min-h-[420px]">
             {/* Calendar grid */}
             <div className="flex-1 min-w-0 overflow-hidden">
@@ -654,6 +659,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
                 </div>
               )}
             </div>
+          </div>
           </div>
         )}
 
