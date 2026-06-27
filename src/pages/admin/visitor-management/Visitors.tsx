@@ -1012,8 +1012,8 @@ export default function Visitors() {
                                         </tr>
                                     ) : (
                                         logs.map((r) => (
-                                            <tr key={r.id} className="text-sm">
-                                                <td className="px-4 py-3">
+                                            <tr key={r.id} className="text-sm cursor-pointer hover:bg-muted/50" onClick={() => viewLog(r.id)}>
+                                                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                                                     <input type="checkbox" checked={!!selectedLogs[r.id]} onChange={() => toggleSelectLog(r.id)} />
                                                 </td>
                                                 <td className="px-4 py-3">{r.firstName}</td>
@@ -1023,7 +1023,7 @@ export default function Visitors() {
                                                 <td className="px-4 py-3">{r.postSite?.companyName || r.postSite?.name || r.postSiteName || '-'}</td>
                                                 <td className="px-4 py-3">{r.station?.stationName || r.station?.name || r.stationName || '-'}</td>
                                                 <td className="px-4 py-3">{formatDateTime(r.visitDate)}</td>
-                                                <td className="px-2 py-3 text-right">
+                                                <td className="px-2 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
                                                             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -1053,7 +1053,7 @@ export default function Visitors() {
                             <div className="p-4 bg-card rounded text-center text-muted-foreground">{t('visitantes.noLogs') || 'No se encontraron registros de bitácoras'}</div>
                         ) : (
                             logs.map((r) => (
-                                <div key={r.id} className="bg-card rounded-lg border p-3 flex flex-col gap-2">
+                                <div key={r.id} className="bg-card rounded-lg border p-3 flex flex-col gap-2 cursor-pointer" onClick={() => viewLog(r.id)}>
                                     <div className="flex items-center justify-between">
                                         <div className="text-base font-medium">{r.firstName} {r.lastName}</div>
                                         <div className="text-sm text-muted-foreground">{formatDateTime(r.visitDate)}</div>
@@ -1062,7 +1062,7 @@ export default function Visitors() {
                                     <div className="text-sm text-foreground/70">{t('visitantes.logTable.client') || 'Cliente'}: {getClientLabelFromRecord(r)}</div>
                                     <div className="text-sm text-foreground/70">{t('visitantes.logTable.postSite') || 'Post Site'}: {r.postSite?.companyName || r.postSite?.name || r.postSiteName || '-'}</div>
                                     <div className="text-sm text-foreground/70">{t('visitantes.logTable.station') || 'Estación'}: {r.station?.stationName || r.station?.name || r.stationName || '-'}</div>
-                                    <div className="flex items-center justify-end mt-2 space-x-2">
+                                    <div className="flex items-center justify-end mt-2 space-x-2" onClick={(e) => e.stopPropagation()}>
                                         <Button size="sm" variant="ghost" onClick={() => viewLog(r.id)}>{t('actions.viewDetails') || 'Ver'}</Button>
                                         <Button size="sm" variant="ghost" onClick={() => markExit(r.id)} disabled={!!r.exitTime}>{t('visitantes.markExit') || 'Salida'}</Button>
                                         <Button size="sm" className="bg-red-600 text-white" onClick={() => deleteLog(r.id)}>{t('actions.delete') || 'Eliminar'}</Button>
