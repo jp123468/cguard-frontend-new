@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import ShiftAssignModal from './ShiftAssignModal';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Plus, ChevronLeft, ChevronRight, User, Calendar, AlertTriangle, CheckCircle2, Sun, Moon } from 'lucide-react';
+import { Loader2, Plus, ChevronLeft, ChevronRight, User, Calendar, AlertTriangle, CheckCircle2, Sun, Moon, Trash2 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { getTenantTimezone } from '@/utils/tenantLocation';
@@ -358,6 +358,34 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   // The assign modal (ShiftAssignModal) initializes itself on open.
   const openForm = (_dateStr?: string) => { setShowForm(true); };
 
+  // Remove a guard from this station: end their ACTIVE rotation assignment (the
+  // backend cascades and deletes future shifts). Falls back to deleting the single
+  // shift for legacy shift-only rows that have no assignment.
+  const removeGuard = async (ev: any) => {
+    if (!window.confirm(`¿Quitar a ${ev.guardName} de este puesto? Se eliminarán sus turnos en este sitio.`)) return;
+    try {
+      let assignmentId: string | null = ev.raw?.guardAssignmentId || null;
+      if (!assignmentId) {
+        const res: any = await ApiService.get(
+          `/tenant/${tenantId}/guard-assignments?stationId=${encodeURIComponent(stationId)}&status=active`,
+        );
+        const list = Array.isArray(res) ? res : (res?.rows || res?.data || []);
+        const match = list.find((a: any) => String(a.guardId) === String(ev.guardId));
+        assignmentId = match?.id || null;
+      }
+      if (assignmentId) {
+        await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${encodeURIComponent(assignmentId)}`);
+      } else if (ev.id) {
+        await ApiService.delete(`/tenant/${tenantId}/shift?ids=${encodeURIComponent(ev.id)}`);
+      }
+      toast.success('Vigilante removido del puesto');
+      setSelectedShift(null);
+      loadShifts();
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo quitar al vigilante');
+    }
+  };
+
 
   const title = useMemo(() => {
     if (viewMode === 'month') return `${MONTHS_ES[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
@@ -563,6 +591,14 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
                                 <span className="text-[9px] text-muted-foreground">
                                   {Math.round((ev.end.getTime() - ev.start.getTime()) / (1000 * 60 * 60))}h
                                 </span>
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={(e) => { e.stopPropagation(); removeGuard(ev); }}
+                                  className="ml-auto inline-flex items-center gap-1 rounded-md border border-red-500/25 bg-red-500/10 px-2 py-0.5 text-[9px] font-semibold text-red-400 hover:bg-red-500/20 cursor-pointer transition-colors"
+                                >
+                                  <Trash2 size={10} /> Quitar del puesto
+                                </div>
                               </div>
                             )}
                           </button>
