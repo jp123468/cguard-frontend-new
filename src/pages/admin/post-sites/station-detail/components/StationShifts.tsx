@@ -57,7 +57,7 @@ const dateKey = (d: Date) => {
   return `${y}-${m}-${day}`;
 };
 
-type ViewMode = 'week' | 'month';
+type ViewMode = 'day' | 'week' | 'month';
 
 interface Jornada {
   tipo: string;
@@ -318,7 +318,8 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   const navigate = useCallback((dir: number) => {
     setCurrentDate(prev => {
       const d = new Date(prev);
-      if (viewMode === 'week') d.setDate(d.getDate() + dir * 7);
+      if (viewMode === 'day') d.setDate(d.getDate() + dir);
+      else if (viewMode === 'week') d.setDate(d.getDate() + dir * 7);
       else d.setMonth(d.getMonth() + dir);
       return d;
     });
@@ -413,6 +414,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
 
 
   const title = useMemo(() => {
+    if (viewMode === 'day') return currentDate.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     if (viewMode === 'month') return `${MONTHS_ES[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
     const days = getWeekDays();
     const first = days[0], last = days[6];
@@ -458,6 +460,12 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
         <div className="px-5 py-3 flex items-center justify-between border-b border-border/20">
           <div className="flex items-center gap-2">
             <div className="flex items-center bg-muted/20 rounded-lg p-[3px]">
+              <button
+                onClick={() => setViewMode('day')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${viewMode === 'day' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Día
+              </button>
               <button
                 onClick={() => setViewMode('week')}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${viewMode === 'week' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
@@ -509,7 +517,15 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
           <div className="flex flex-col lg:flex-row min-h-[420px]">
             {/* Calendar grid */}
             <div className="flex-1 min-w-0 overflow-hidden">
-              {viewMode === 'week' ? (
+              {viewMode === 'day' ? (
+                <DayView
+                  date={currentDate}
+                  coverage={coverageByDate[dateKey(currentDate)]}
+                  dayEvents={(eventsByDate[dateKey(currentDate)] || []).filter((ev: any) => dateKey(ev.start) === dateKey(currentDate))}
+                  guardColorMap={guardColorMap}
+                  onAssign={(d) => { setSelectedDate(d); setSelectedShift(null); openForm(d); }}
+                />
+              ) : viewMode === 'week' ? (
                 <WeekView
                   days={getWeekDays()}
                   eventsByDate={eventsByDate}
@@ -534,7 +550,8 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
               )}
             </div>
 
-            {/* Side detail panel */}
+            {/* Side detail panel — hidden in Día view (DayView is self-contained) */}
+            {viewMode !== 'day' && (
             <div className="lg:w-[300px] border-t lg:border-t-0 lg:border-l border-border/20 bg-muted/[0.02]">
               {selectedDate ? (
                 <div className="p-4 space-y-3">
@@ -660,6 +677,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
                 </div>
               )}
             </div>
+            )}
           </div>
           </div>
         )}
@@ -853,6 +871,97 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
 
 // ── MONTH VIEW ───────────────────────────────────────────────────────────────
 
+// ── Day view: one day in full detail (turno cards + assigned guards) ──────────
+function DayView({ date, coverage, dayEvents, guardColorMap, onAssign }: {
+  date: Date;
+  coverage: any;
+  dayEvents: any[];
+  guardColorMap: Record<string, any>;
+  onAssign: (d: string) => void;
+}) {
+  const slots: ScheduleSlot[] = coverage?.slots || [];
+  const fmtT = (d: Date) => d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: getTenantTimezone() });
+  const covering = (isNight: boolean) => dayEvents.filter((ev: any) => {
+    const m = minutesInTenantTz(ev.start);
+    const evNight = m >= 18 * 60 || m < 6 * 60;
+    return isNight ? evNight : !evNight;
+  });
+  const covered = slots.filter((s) => s.isCovered).length;
+
+  return (
+    <div className="mx-auto max-w-2xl p-4 lg:p-6">
+      {slots.length > 0 && (
+        <div className="mb-4 flex items-center gap-3">
+          <div className={`grid h-11 w-11 place-items-center rounded-2xl text-base font-bold ${covered === slots.length ? 'bg-emerald-500/15 text-emerald-500' : 'bg-red-500/15 text-red-500'}`}>
+            {covered}/{slots.length}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">{covered === slots.length ? 'Cobertura completa' : `${slots.length - covered} turno(s) sin cubrir`}</p>
+            <p className="text-[11px] text-muted-foreground">Turnos del día</p>
+          </div>
+        </div>
+      )}
+
+      {slots.length === 0 ? (
+        <div className="py-20 text-center">
+          <Calendar size={28} className="mx-auto mb-3 text-muted-foreground/30" />
+          <p className="text-sm text-muted-foreground/60">Día libre — sin horario programado</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {slots.map((slot, si) => {
+            const isNight = String(slot.jornada.tipo || '').toLowerCase().includes('noct');
+            const guards = covering(isNight);
+            return (
+              <div key={si} className={`rounded-2xl border p-4 transition-all ${slot.isCovered ? 'border-emerald-500/25 bg-emerald-500/[0.04]' : 'border-red-500/30 bg-red-500/[0.05]'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`grid h-11 w-11 place-items-center rounded-xl ${isNight ? 'bg-indigo-500/15 text-indigo-400' : 'bg-amber-500/15 text-amber-500'}`}>
+                      {isNight ? <Moon size={20} /> : <Sun size={20} />}
+                    </div>
+                    <div>
+                      <p className="text-base font-bold text-foreground">{slot.jornada.tipo}</p>
+                      <p className="font-mono text-xs text-muted-foreground">{slot.startTime} – {slot.endTime}</p>
+                    </div>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${slot.isCovered ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+                    {slot.guardsAssigned}/{slot.guardsNeeded}
+                  </span>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {guards.length > 0 ? guards.map((ev: any, i: number) => {
+                    const color = guardColorMap[ev.guardId] || GUARD_COLORS[0];
+                    return (
+                      <div key={ev.id || i} className="flex items-center gap-3 rounded-xl p-2.5" style={{ backgroundColor: color.bg }}>
+                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold text-white" style={{ background: color.accent }}>
+                          {ev.guardName.split(' ').map((w: string) => w[0]).slice(0, 2).join('')}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">{ev.guardName}</p>
+                          <p className="text-[11px] text-muted-foreground">{fmtT(ev.start)} – {fmtT(ev.end)}</p>
+                        </div>
+                        {ev.status === 'active' && (
+                          <span className="flex shrink-0 items-center gap-1 text-[10px] font-bold text-green-500">
+                            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" /> EN SERVICIO
+                          </span>
+                        )}
+                      </div>
+                    );
+                  }) : (
+                    <button onClick={() => onAssign(dateKey(date))} className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-red-500/30 bg-red-500/5 py-3 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/10">
+                      <Plus size={14} /> Asignar vigilante a este turno
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MonthView({ days, eventsByDate, coverageByDate, guardColorMap, selectedDate, onSelectDate, currentMonth }: {
   days: (Date | null)[];
   eventsByDate: Record<string, any[]>;
@@ -878,18 +987,17 @@ function MonthView({ days, eventsByDate, coverageByDate, guardColorMap, selected
         {weeks.map((week, wi) => (
           <div key={wi} className="grid grid-cols-7 gap-1">
             {week.map((day, di) => {
-              if (!day) return <div key={di} className="aspect-square" />;
+              if (!day) return <div key={di} className="min-h-[62px]" />;
               const key = toDateKey(day);
               const dayEvents = eventsByDate[key] || [];
               const coverage = coverageByDate[key];
               const isScheduledDay = coverage && coverage.slots.length > 0;
-              const allCovered = coverage?.allCovered;
               const isCurrentMonth = day.getMonth() === currentMonth;
               return (
                 <button
                   key={di}
                   onClick={() => onSelectDate(key)}
-                  className={`relative aspect-square rounded-xl p-1 flex flex-col items-center transition-all duration-150 group ${
+                  className={`relative min-h-[62px] rounded-xl p-1 flex flex-col items-center transition-all duration-150 group ${
                     selectedDate === key ? 'bg-[#C8860A]/10 ring-1 ring-[#C8860A]/25 shadow-sm' : 'hover:bg-muted/15'
                   } ${!isCurrentMonth ? 'opacity-25' : ''}`}
                 >
@@ -900,11 +1008,24 @@ function MonthView({ days, eventsByDate, coverageByDate, guardColorMap, selected
                   }`}>
                     {day.getDate()}
                   </span>
-                  {/* Coverage status */}
+                  {/* Coverage per turno: día (amber) / noche (indigo); red = sin cubrir */}
                   {isScheduledDay ? (
-                    <div className={`mt-auto mb-0.5 w-4 h-1 rounded-full ${
-                      allCovered ? 'bg-emerald-500/60' : 'bg-red-500/70'
-                    }`} />
+                    <div className="mt-auto w-full space-y-[2px] px-0.5 pb-0.5">
+                      {coverage.slots.map((slot: ScheduleSlot, i: number) => {
+                        const isNight = String(slot.jornada.tipo || '').toLowerCase().includes('noct');
+                        return (
+                          <div
+                            key={i}
+                            title={`${slot.jornada.tipo}: ${slot.guardsAssigned}/${slot.guardsNeeded}`}
+                            className={`flex h-[8px] items-center justify-center rounded-full text-[6px] font-bold leading-none text-white/95 ${
+                              slot.isCovered ? (isNight ? 'bg-indigo-500/70' : 'bg-amber-500/75') : 'bg-red-500/70'
+                            }`}
+                          >
+                            {isNight ? 'N' : 'D'}
+                          </div>
+                        );
+                      })}
+                    </div>
                   ) : dayEvents.length > 0 ? (
                     <div className="flex items-center gap-[3px] mt-auto mb-0.5">
                       {dayEvents.slice(0, 3).map((ev, i) => {
