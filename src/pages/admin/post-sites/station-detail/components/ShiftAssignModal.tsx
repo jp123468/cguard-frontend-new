@@ -33,7 +33,9 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   const [guardsOptions, setGuardsOptions] = useState<{ id: string; label: string }[]>([]);
   const [loadingGuards, setLoadingGuards] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [rotationStartDate, setRotationStartDate] = useState('');
+  // The rotation PHASE comes from the station position (staggered), not a date —
+  // so we don't ask for one (no date input). Shifts simply begin today.
+  const [rotationStartDate, setRotationStartDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [selectedPositionId, setSelectedPositionId] = useState('');
   const [shiftStart, setShiftStart] = useState('');
   const [shiftEnd, setShiftEnd] = useState('');
@@ -167,7 +169,6 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
     // generates the staggered rotation (one starts day, the other night, swapping
     // each cycle) from the station's patrón de rotación. Same path as Programador.
     if (!selectedPositionId) { toast.error('Seleccione el puesto (Vigilante)'); return; }
-    if (!rotationStartDate) { toast.error('Seleccione fecha de inicio'); return; }
     const pos = positions.find((p: any) => p.id === selectedPositionId);
     setSaving(true);
     try {
@@ -247,12 +248,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
                     ))}
                   </div>
                 )}
-                <p className="mt-1.5 text-[11px] text-muted-foreground">Rotación automática: los vigilantes alternan día y noche de forma escalonada.</p>
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Fecha inicio</label>
-                <input type="date" value={rotationStartDate} onChange={(e) => setRotationStartDate(e.target.value)} className={inputCls} />
+                <p className="mt-1.5 text-[11px] text-muted-foreground">Rotación automática: los vigilantes alternan día y noche de forma escalonada según el horario de la estación. No requiere fecha de inicio.</p>
               </div>
             </>
           ) : (

@@ -149,7 +149,9 @@ export default function Schedule() {
   const [showAssignForm, setShowAssignForm] = useState(false);
   const [assignTarget, setAssignTarget] = useState<{ stationId: string; positionId: string } | null>(null);
   const [assignGuard, setAssignGuard] = useState('');
-  const [assignStartDate, setAssignStartDate] = useState('');
+  // Rotation phase comes from the station position, not a date — default to today
+  // (no date input shown; reset to today on modal open).
+  const [assignStartDate, setAssignStartDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [assignOffset, setAssignOffset] = useState(0);
   const [assignSaving, setAssignSaving] = useState(false);
   const [coverage, setCoverage] = useState<any>(null); // real coverage of live schedule
@@ -639,7 +641,7 @@ export default function Schedule() {
   };
 
   const saveAssignment = async () => {
-    if (!assignTarget || !assignGuard || !assignStartDate) {
+    if (!assignTarget || !assignGuard) {
       toast.error('Complete todos los campos');
       return;
     }
@@ -1757,13 +1759,8 @@ export default function Schedule() {
                 );
               })()}
 
-              {/* Start date */}
-              <div>
-                <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Fecha inicio rotación</label>
-                <input type="date" value={assignStartDate} onChange={e => setAssignStartDate(e.target.value)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none" />
-              </div>
-
-              {/* Offset is now auto-calculated from station position */}
+              {/* No start date: the rotation phase comes from the station position
+                  (staggered day/night), not a date. Shifts begin today. */}
             </div>
             <div className="px-5 py-3 border-t border-border/20 flex items-center justify-end gap-2">
               <button onClick={() => setShowAssignForm(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-all">Cancelar</button>
