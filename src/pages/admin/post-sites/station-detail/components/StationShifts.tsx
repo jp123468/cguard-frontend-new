@@ -284,11 +284,16 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   }, [jornadas, eventsByDate]);
 
   // Count total uncovered future slots for alert banner
+  // Count uncovered turnos over a NEAR-TERM horizon (14 days), not the whole 60-day
+  // generation window — counting two months of the fijos' inherent rest-day gaps
+  // inflated this to an alarming, non-actionable number.
   const futureUncovered = useMemo(() => {
     const today = toDateKey(new Date());
+    const h = new Date(); h.setDate(h.getDate() + 14);
+    const horizonKey = toDateKey(h);
     let count = 0;
     Object.entries(coverageByDate).forEach(([dateStr, cov]) => {
-      if (dateStr >= today) count += cov.uncoveredCount;
+      if (dateStr >= today && dateStr <= horizonKey) count += cov.uncoveredCount;
     });
     return count;
   }, [coverageByDate]);
@@ -409,10 +414,10 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-red-400">
-              {futureUncovered} turno{futureUncovered > 1 ? 's' : ''} sin vigilante asignado
+              {futureUncovered} turno{futureUncovered > 1 ? 's' : ''} por cubrir (próximos 14 días)
             </p>
             <p className="text-xs text-red-400/70 mt-0.5">
-              Hay horarios programados sin cobertura completa. Asigna vigilantes para cubrir los turnos.
+              Completa los fijos del puesto y asigna un <strong>sacafranco</strong> (relevo) para cubrir sus días de descanso — 2 fijos no alcanzan a cubrir 24/7.
             </p>
           </div>
           <button
