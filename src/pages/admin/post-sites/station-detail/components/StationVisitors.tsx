@@ -334,7 +334,7 @@ export default function StationVisitors({ stationId }: Props) {
     if (!stationId) return;
     setLoading(true); setError(null);
     try {
-      const res = await visitorLogService.list({ stationId } as any, { limit: LIMIT, offset: page * LIMIT });
+      const res = await visitorLogService.list({ stationId, withPhotos: true } as any, { limit: LIMIT, offset: page * LIMIT });
       const list = Array.isArray(res) ? res : (res?.rows ?? []);
       setRows(list); setTotal(typeof res?.count === 'number' ? res.count : list.length);
     } catch (e: any) { setError(e?.message || 'Error al cargar visitantes'); }

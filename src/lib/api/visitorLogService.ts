@@ -19,6 +19,12 @@ export interface VisitorLogFilters {
   placeType?: string;
   tag?: string;
   archived?: boolean;
+  /**
+   * Opt-in for signed idPhoto/facePhoto thumbnails on list rows. The list is lean by
+   * default (no photos); set this only on surfaces that render the thumbnail
+   * (StationVisitors). Backend signs them in ONE batched query when present.
+   */
+  withPhotos?: boolean;
 }
 
 export interface PaginationOptions {
@@ -44,6 +50,7 @@ export const visitorLogService = {
     if ((filters as any).stationId) params.append('filter[stationId]', (filters as any).stationId);
     if ((filters as any).tag) params.append('filter[tag]', (filters as any).tag);
     if (typeof (filters as any).archived === 'boolean') params.append('filter[archived]', (filters as any).archived ? 'true' : 'false');
+    if ((filters as any).withPhotos) params.append('withPhotos', '1');
 
     if (filters.visitDateRange) {
       const [start, end] = filters.visitDateRange;
