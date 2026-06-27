@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import ShiftAssignModal from './ShiftAssignModal';
+import SacafrancoAssignModal from './SacafrancoAssignModal';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Plus, ChevronLeft, ChevronRight, User, Calendar, AlertTriangle, CheckCircle2, Sun, Moon, Trash2 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
@@ -86,6 +87,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
 
   // Assignment is handled entirely by <ShiftAssignModal/> (self-contained).
   const [showForm, setShowForm] = useState(false);
+  const [showSacafranco, setShowSacafranco] = useState(false);
 
   const tenantId = localStorage.getItem('tenantId') || '';
 
@@ -298,6 +300,18 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
     return count;
   }, [coverageByDate]);
 
+  // Dates (next 14 days) that have at least one uncovered turno — the days a
+  // sacafranco needs to cover. Fed to the sacafranco card to match availability.
+  const gapDates = useMemo(() => {
+    const today = toDateKey(new Date());
+    const h = new Date(); h.setDate(h.getDate() + 14);
+    const horizonKey = toDateKey(h);
+    return Object.entries(coverageByDate)
+      .filter(([dateStr, cov]) => dateStr >= today && dateStr <= horizonKey && cov.uncoveredCount > 0)
+      .map(([dateStr]) => dateStr)
+      .sort();
+  }, [coverageByDate]);
+
   // Navigation
   const navigate = useCallback((dir: number) => {
     setCurrentDate(prev => {
@@ -420,12 +434,20 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
               Completa los fijos del puesto y asigna un <strong>sacafranco</strong> (relevo) para cubrir sus días de descanso — 2 fijos no alcanzan a cubrir 24/7.
             </p>
           </div>
-          <button
-            onClick={() => openForm()}
-            className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-all flex-shrink-0"
-          >
-            Asignar
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => setShowSacafranco(true)}
+              className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700 transition-all"
+            >
+              Asignar sacafranco
+            </button>
+            <button
+              onClick={() => openForm()}
+              className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-all"
+            >
+              Asignar fijo
+            </button>
+          </div>
         </div>
       )}
 
@@ -644,6 +666,16 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
           stationId={stationId}
           postSiteId={postSiteId}
           presetGuardId={stationGuardId}
+        />
+
+        {/* Sacafranco (relief) availability + assign */}
+        <SacafrancoAssignModal
+          open={showSacafranco}
+          onClose={() => setShowSacafranco(false)}
+          stationId={stationId}
+          tenantId={tenantId}
+          gapDates={gapDates}
+          onAssigned={() => loadShifts()}
         />
       </div>
     </div>
