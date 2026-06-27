@@ -47,7 +47,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
     let alive = true;
     (async () => {
       const gaps: string[] = [];
-      const [stats, active, stationsR, postsR, clientsR, guardsR, incidentsR, usersR, tenantR] = await Promise.all([
+      const [stats, active, stationsR, postsR, clientsR, guardsR, incidentsR, usersR, tenantR, eventsR] = await Promise.all([
         safe<DashboardStats>(get("/dashboard/stats"), {}),
         safe(securityGuardService.activeLocations(), null as any),
         safe(get("/station?limit=500"), null),
@@ -57,6 +57,10 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
         safe(get("/incident?limit=50&orderBy=createdAt_DESC"), null),
         safe(get("/user"), null),
         safe(tenantService.findById(tenantId()), null as any),
+        // Recent platform events (clock-ins, visitors, patrols, incidents, memos…) —
+        // this is the real "Actividad reciente". NOTE: the events route is
+        // /:tenantId/events (no /tenant/ prefix), so it bypasses the get() helper.
+        safe(api.get(`/${tenantId()}/events?limit=40`).then((r) => r.data), null),
       ]);
       if (!alive) return;
 
@@ -133,7 +137,23 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
         kpi("compliance", "Cumplimiento de turnos", "—", { unit: "%", fallback: true, hint: "Requiere agregación de turnos vs. fichajes." }),
       ];
 
-      const activity: ActivityItem[] = incidentRows.slice(0, 8).map((i: any) => ({
+      // Primary feed: recent platform events (the rich activity stream). Falls back
+      // to incidents only when there are no events yet.
+      const eventRows = rows(eventsR);
+      const eventActivity: ActivityItem[] = eventRows.map((e: any) => {
+        const type = String(e.eventType || e.type || "");
+        const p = e.payload || {};
+        return {
+          id: `ev-${e.id}`,
+          kind: mapEventKind(type),
+          title: e.title || e.body || type || "Evento",
+          sub: e.body || p.stationName || p.siteName || p.guardName || p.visitorName || "",
+          at: e.createdAt || new Date().toISOString(),
+          status: (e.severity === "critical" || type.toLowerCase().includes("panic")) ? "emergency" : "online",
+          to: e.sourceEntityType === "incident" && e.sourceEntityId ? `/reports/incident/${e.sourceEntityId}` : undefined,
+        } as ActivityItem;
+      });
+      const incidentActivity: ActivityItem[] = incidentRows.slice(0, 8).map((i: any) => ({
         id: `inc-${i.id}`, kind: "incident",
         title: i.title || i.subject || "Incidente",
         sub: i.location || i.stationName || "",
@@ -141,6 +161,9 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
         status: (i.status || "").toLowerCase() === "abierto" ? "incident" : "online",
         to: i.id ? `/reports/incident/${i.id}` : undefined,
       }));
+      const activity: ActivityItem[] = (eventActivity.length ? eventActivity : incidentActivity)
+        .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+        .slice(0, 30);
 
       setState((s) => ({
         ...s, kpis, entities, revenue, incidentsTrend, responseTrend, acquisitionTrend,
@@ -258,10 +281,10 @@ function trendOf(points: MonthPoint[], inverse = false): number | null {
 function mapEventKind(type?: string): ActivityItem["kind"] {
   const t = (type || "").toLowerCase();
   if (t.includes("incident")) return "incident";
-  if (t.includes("clock") || t.includes("checkin")) return "checkin";
-  if (t.includes("tour") || t.includes("patrol") || t.includes("ronda")) return "patrol";
   if (t.includes("alert") || t.includes("panic") || t.includes("emergency")) return "alert";
-  return "event";
+  if (t.includes("tour") || t.includes("patrol") || t.includes("ronda")) return "patrol";
+  if (t.includes("clock") || t.includes("check") || t.includes("attendance") || t.includes("guard.")) return "checkin";
+  return "event"; // visitors, memos, tasks, etc.
 }
 function emptyRevenue(): RevenueSeries { return { points: [], total: 0, paid: 0, pending: 0, currency: "USD", hasData: false }; }
 function dedupe(a: string[]) { return Array.from(new Set(a)); }
