@@ -10,31 +10,10 @@ import { videoService, type Camera, type StreamInfo } from "@/lib/api/videoServi
 const GOLD = "#C8860A";
 
 /* ------------------------------------------------------------------ */
-/* go2rtc player engine (WebRTC → MSE → HLS → MJPEG) — loaded once     */
-/* from our own gateway as an ES module that defines <video-stream>.   */
-/* ------------------------------------------------------------------ */
-let go2rtcLoader: Promise<void> | null = null;
-function loadGo2rtcPlayer(gateway: string): Promise<void> {
-  if (typeof window === "undefined") return Promise.reject(new Error("no window"));
-  if (customElements.get("video-stream")) return Promise.resolve();
-  if (go2rtcLoader) return go2rtcLoader;
-  go2rtcLoader = new Promise<void>((resolve, reject) => {
-    const done = () => customElements.whenDefined("video-stream").then(() => resolve());
-    const existing = document.querySelector<HTMLScriptElement>("script[data-go2rtc-player]");
-    if (existing) { existing.addEventListener("load", done); existing.addEventListener("error", () => reject(new Error("load failed"))); if (customElements.get("video-stream")) resolve(); return; }
-    const s = document.createElement("script");
-    s.type = "module";
-    s.src = `${gateway.replace(/\/+$/, "")}/video-stream.js`;
-    s.dataset.go2rtcPlayer = "true";
-    s.onload = done;
-    s.onerror = () => { go2rtcLoader = null; reject(new Error("go2rtc player failed to load")); };
-    document.head.appendChild(s);
-  });
-  return go2rtcLoader;
-}
-
-/* ------------------------------------------------------------------ */
-/* hls.js (fallback for non-go2rtc / manual streamUrl)                 */
+/* hls.js — the player engine. We deliberately run it BUFFERED (not    */
+/* low-latency): a few seconds of buffer-ahead absorbs network jitter  */
+/* so the picture never shows the "loading" spinner, the same way      */
+/* YouTube/Twitch live do. (go2rtc MSE ran ~0 buffer → constant rebuf.)*/
 /* ------------------------------------------------------------------ */
 const HLS_CDN = "https://cdn.jsdelivr.net/npm/hls.js@1.5.18/dist/hls.min.js";
 const HLS_SRI = "sha384-R2JqybiEexSXz60H6Zz28MdsqWWnMQlP+NDb7nIhDHWxx6sM7Otw7OWCq9EBCPsz";
@@ -43,8 +22,10 @@ function loadHlsJs(): Promise<any> {
   if (typeof window !== "undefined" && (window as any).Hls) return Promise.resolve((window as any).Hls);
   if (hlsLoaderPromise) return hlsLoaderPromise;
   hlsLoaderPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>("script[data-hls-loader]");
+    if (existing) { existing.addEventListener("load", () => resolve((window as any).Hls)); existing.addEventListener("error", () => reject(new Error("hls.js failed"))); if ((window as any).Hls) resolve((window as any).Hls); return; }
     const s = document.createElement("script");
-    s.src = HLS_CDN; s.async = true; s.integrity = HLS_SRI; s.crossOrigin = "anonymous"; s.referrerPolicy = "no-referrer";
+    s.src = HLS_CDN; s.async = true; s.integrity = HLS_SRI; s.crossOrigin = "anonymous"; s.referrerPolicy = "no-referrer"; s.dataset.hlsLoader = "true";
     s.onload = () => ((window as any).Hls ? resolve((window as any).Hls) : reject(new Error("Hls missing")));
     s.onerror = () => { hlsLoaderPromise = null; reject(new Error("hls.js failed")); };
     document.head.appendChild(s);
@@ -52,13 +33,28 @@ function loadHlsJs(): Promise<any> {
   return hlsLoaderPromise;
 }
 
+// Buffered live tuning — the heart of "no spinner". ~6–8s of buffer-ahead.
+const hlsConfig = (Hls: any) => ({
+  enableWorker: true,
+  lowLatencyMode: false,
+  liveSyncDurationCount: 3,        // stay ~3 segments behind the live edge
+  liveMaxLatencyDurationCount: 12, // tolerate drift before seeking forward
+  maxBufferLength: 20,             // buffer up to 20s ahead
+  maxMaxBufferLength: 40,
+  backBufferLength: 15,
+  // Be patient + persistent on a flaky/remote link instead of erroring out.
+  manifestLoadingMaxRetry: 8, manifestLoadingRetryDelay: 800, manifestLoadingMaxRetryTimeout: 16000,
+  levelLoadingMaxRetry: 8, levelLoadingRetryDelay: 800,
+  fragLoadingMaxRetry: 12, fragLoadingRetryDelay: 800, fragLoadingMaxRetryTimeout: 16000,
+  ...(Hls ? {} : {}),
+});
+
 type PlayerState = "loading" | "ready" | "none" | "offline" | "error";
 
 export type VideoPlayerProps = {
   camera: Camera;
   className?: string;
   autoPlay?: boolean;
-  /** show the PTZ joystick overlay (default true). */
   ptz?: boolean;
   videoRef?: React.MutableRefObject<HTMLVideoElement | null>;
   onStream?: (info: StreamInfo | null) => void;
@@ -66,8 +62,8 @@ export type VideoPlayerProps = {
 
 export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, videoRef, onStream }: VideoPlayerProps) {
   const videoElRef = React.useRef<HTMLVideoElement | null>(null);
-  const streamElRef = React.useRef<any>(null);
   const hlsRef = React.useRef<any>(null);
+  const recoverRef = React.useRef(0);
 
   const [state, setState] = React.useState<PlayerState>("loading");
   const [stream, setStream] = React.useState<StreamInfo | null>(null);
@@ -81,7 +77,7 @@ export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, vi
 
   const cameraOffline = camera.status === "offline";
 
-  // 1) Resolve stream info.
+  // 1) Resolve stream info → an HLS url (go2rtc serves go2rtc HLS; manual streamUrl works too).
   React.useEffect(() => {
     let cancelled = false;
     if (cameraOffline) { setState("offline"); setStream(null); onStream?.(null); return; }
@@ -90,14 +86,11 @@ export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, vi
       .then((info) => {
         if (cancelled) return;
         setStream(info); onStream?.(info);
-        setState(!info || info.type === "none" || (!info.ws && !info.url) ? "none" : "ready");
+        setState(!info || info.type === "none" || !info.url ? "none" : "ready");
       })
       .catch((e: any) => {
         if (cancelled) return;
-        if (camera.streamUrl) {
-          const fb: StreamInfo = { type: "hls", url: camera.streamUrl, snapshotUrl: camera.snapshotUrl || undefined };
-          setStream(fb); onStream?.(fb); setState("ready"); return;
-        }
+        if (camera.streamUrl) { const fb: StreamInfo = { type: "hls", url: camera.streamUrl }; setStream(fb); onStream?.(fb); setState("ready"); return; }
         setStream(null); onStream?.(null);
         setErrorMsg(e?.data?.message || e?.message || "No se pudo obtener la transmisión"); setState("error");
       });
@@ -105,72 +98,57 @@ export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, vi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [camera.id, camera.status, reloadKey]);
 
-  // 2) Attach the player when ready.
+  // 2) Attach hls.js (buffered) to the <video>.
   React.useEffect(() => {
-    if (state !== "ready" || !stream) return;
-    let cancelled = false;
-    const onErr = (m: string) => { if (!cancelled) { setErrorMsg(m); setState("error"); } };
-
-    // ---- go2rtc engine (MSE over WS through the proxy) ----
-    if (stream.type === "go2rtc" && stream.ws) {
-      loadGo2rtcPlayer(stream.gateway || "")
-        .then(() => {
-          if (cancelled) return;
-          const el = streamElRef.current;
-          if (!el) return;
-          // Order matters: set transports BEFORE src (src triggers the connection).
-          el.background = true;              // keep streaming even when off-screen
-          el.mode = stream.mode || "mse,mp4";
-          if (el.src !== stream.ws) el.src = stream.ws;
-        })
-        .catch(() => onErr("No se pudo cargar el reproductor de video"));
-      // Do NOT clear el.src here — React unmounting <video-stream> runs the component's
-      // own disconnectedCallback. Clearing on every re-render tore the pipeline down
-      // mid-connect and left the <video> with an empty src.
-      return () => { cancelled = true; };
-    }
-
-    // ---- HLS fallback (manual streamUrl / no gateway) ----
+    if (state !== "ready" || !stream?.url) return;
     const url = stream.url;
     const video = videoElRef.current;
-    if (!url || !video) return;
+    if (!video) return;
+    let cancelled = false;
+    recoverRef.current = 0;
+    const onErr = (m: string) => { if (!cancelled) { setErrorMsg(m); setState("error"); } };
     const destroyHls = () => { if (hlsRef.current) { try { hlsRef.current.destroy(); } catch { /* */ } hlsRef.current = null; } };
     destroyHls();
+
+    // Safari / iOS — native buffered HLS.
     if (video.canPlayType("application/vnd.apple.mpegurl") !== "") {
       video.src = url; if (autoPlay) video.play().catch(() => {});
       return () => { cancelled = true; video.removeAttribute("src"); video.load(); };
     }
+
     loadHlsJs().then((Hls) => {
       if (cancelled || videoElRef.current !== video) return;
-      if (!Hls.isSupported()) return onErr("Tu navegador no soporta HLS");
-      const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-      hlsRef.current = hls; hls.loadSource(url); hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => { if (autoPlay) video.play().catch(() => {}); });
-      hls.on(Hls.Events.ERROR, (_e: any, d: any) => {
-        if (!d?.fatal) return;
-        if (d.type === Hls.ErrorTypes.NETWORK_ERROR) { try { hls.startLoad(); } catch { onErr("Error de red"); } }
-        else if (d.type === Hls.ErrorTypes.MEDIA_ERROR) { try { hls.recoverMediaError(); } catch { onErr("Error de medios"); } }
-        else onErr("No se pudo reproducir la transmisión");
-      });
+      if (!Hls.isSupported()) { onErr("Tu navegador no soporta HLS"); return; }
+      const attach = () => {
+        const hls = new Hls(hlsConfig(Hls));
+        hlsRef.current = hls;
+        hls.loadSource(url); hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => { if (autoPlay) video.play().catch(() => {}); });
+        hls.on(Hls.Events.ERROR, (_e: any, d: any) => {
+          if (!d?.fatal) return; // non-fatal: hls.js self-heals (this is the key to no-spinner)
+          if (d.type === Hls.ErrorTypes.NETWORK_ERROR) { try { hls.startLoad(); } catch { /* */ } return; }
+          if (d.type === Hls.ErrorTypes.MEDIA_ERROR) { try { hls.recoverMediaError(); } catch { /* */ } return; }
+          // Last resort: tear down + rebuild a few times before surfacing an error.
+          if (recoverRef.current < 4) { recoverRef.current++; destroyHls(); setTimeout(() => { if (!cancelled) attach(); }, 1500); }
+          else onErr("No se pudo reproducir la transmisión");
+        });
+      };
+      attach();
     }).catch(() => onErr("No se pudo cargar el reproductor de video"));
+
     return () => { cancelled = true; destroyHls(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, stream?.type, stream?.ws, stream?.url, autoPlay]);
+  }, [state, stream?.url, autoPlay]);
 
   React.useEffect(() => () => { if (hlsRef.current) { try { hlsRef.current.destroy(); } catch { /* */ } } }, []);
 
   const reload = () => setReloadKey((k) => k + 1);
   const snapshot = stream?.snapshotUrl || camera.snapshotUrl || undefined;
-  const isGo2rtc = stream?.type === "go2rtc" && !!stream.ws;
 
   return (
     <div className={cn("group relative aspect-video w-full overflow-hidden rounded-lg bg-black", className)}>
       {state === "ready" ? (
-        isGo2rtc ? (
-          React.createElement("video-stream", { ref: streamElRef, class: "h-full w-full", style: { width: "100%", height: "100%" } })
-        ) : (
-          <video ref={setVideoEl} className="h-full w-full bg-black object-contain" playsInline muted autoPlay={autoPlay} controls poster={snapshot} />
-        )
+        <video ref={setVideoEl} className="h-full w-full bg-black object-contain" playsInline muted autoPlay={autoPlay} controls poster={snapshot} />
       ) : null}
 
       {state === "ready" && ptz ? <PtzPad cameraId={camera.id} /> : null}
@@ -205,7 +183,6 @@ function PtzPad({ cameraId }: { cameraId: string }) {
     <button onPointerDown={start(v)} onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop}
       className={cn("grid place-items-center rounded-md bg-black/55 text-white/90 backdrop-blur transition-colors hover:bg-[#C8860A] active:bg-[#C8860A]", cls)}>{icon}</button>
   );
-
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} title="Control PTZ"
@@ -216,12 +193,10 @@ function PtzPad({ cameraId }: { cameraId: string }) {
   }
   return (
     <div className="absolute bottom-2 right-2 z-20 flex items-end gap-2" onPointerLeave={stop}>
-      {/* zoom */}
       <div className="flex flex-col gap-1">
         {dirBtn(<Plus size={14} />, { zoom: S }, "h-7 w-7")}
         {dirBtn(<Minus size={14} />, { zoom: -S }, "h-7 w-7")}
       </div>
-      {/* d-pad */}
       <div className="grid grid-cols-3 grid-rows-3 gap-1">
         <span />{dirBtn(<ChevronUp size={16} />, { tilt: S }, "h-7 w-7")}<span />
         {dirBtn(<ChevronLeft size={16} />, { pan: -S }, "h-7 w-7")}
