@@ -33,22 +33,17 @@ function localDay(dateStr: string): string {
 export function targetForNotification(n: PlatformNotification): string {
   const type = (n.eventType || '').toLowerCase();
   const id = n.sourceEntityId;
+  const p: any = n.payload || {};
 
-  // SOS / panic / alarm-case events → the alarm case in the Centro de Alarmas, where
-  // the operator can acknowledge, run the action plan, dispatch and resolve. Falls
-  // back to the linked incident, then the queue. (Must precede the incident rule —
-  // a panic carries an incidentId but belongs in the alarm case, not the report.)
+  // ── SOS / panic / alarm-case → the alarm case (acknowledge / action plan /
+  // dispatch / resolve). Falls back to the linked incident, then the queue.
   if (type === 'panic.alert' || type.startsWith('alarm')) {
-    const caseId = (n.payload as any)?.caseId;
-    if (caseId) return `/alarm/case/${caseId}`;
+    if (p.caseId) return `/alarm/case/${p.caseId}`;
     if (id) return `/reports/incident/${id}`;
     return '/alarm/queue';
   }
 
-  // Requests that need a supervisor DECISION → the Nómina approvals queue,
-  // focused on the specific request. Includes LATE clock-in requests
-  // (attendance.clockin_requested) and early clock-out requests. Must precede
-  // the generic attendance rule below (which otherwise sends them to records).
+  // ── Things that need a supervisor DECISION → the right approvals queue, focused.
   if (
     type === 'attendance.clockin_requested' ||
     type === 'attendance.clockout_requested' ||
@@ -57,33 +52,64 @@ export function targetForNotification(n: PlatformNotification): string {
   ) {
     return id ? `/nomina/approvals?focus=${id}` : '/nomina/approvals';
   }
+  if (type === 'task.pending_approval') {
+    return id ? `/tasks/approvals?focus=${id}` : '/tasks/approvals';
+  }
 
-  // Clock-in/out + attendance exceptions → the Nómina attendance records, focused.
+  // ── Incidents → the incident report detail.
+  if (type.startsWith('incident')) return id ? `/reports/incident/${id}` : '/activities';
+
+  // ── Clock-in/out + every attendance event (late, no-show, geofence, etc.) → the
+  // Nómina attendance records, focused on that day's row.
   if (
     type === 'guard.checkin' ||
     type === 'guard.checkout' ||
+    type === 'guard.late' ||
     type.startsWith('attendance')
   ) {
     const params = new URLSearchParams({ date: localDay(n.createdAt) });
     if (id) params.set('focus', id);
     return `/nomina/records?${params.toString()}`;
   }
-  if (type.startsWith('incident')) return id ? `/reports/incident/${id}` : '/activities';
+
+  // ── Messages → the conversation.
   if (type.startsWith('message')) {
-    const cid = n.payload?.conversationId;
-    return cid ? `/messenger?conversation=${cid}` : '/messenger';
+    return p.conversationId ? `/messenger?conversation=${p.conversationId}` : '/messenger';
   }
+
+  // ── Guard-centric (ratings, device mismatch, profile) → the guard's profile.
+  // These carry the guard id in the payload (sourceEntityId is the rating/device id).
+  if (type === 'guard.rated' || type.startsWith('device') || type === 'profile.updated') {
+    const gid = p.guardId || p.securityGuardId;
+    return gid ? `/guards/${gid}/perfil` : '/security-guards';
+  }
+  if (type.startsWith('guard')) return '/security-guards';
+
+  // ── Visitors.
   if (type.startsWith('visitor')) return '/visitors';
+
+  // ── Patrols / rounds.
   if (type.startsWith('patrol')) return '/vehicle-patrol';
-  if (type.startsWith('device')) return '/security-guards';
-  // Client tasks: a pending one needs a DECISION → the approvals queue; the rest →
-  // the tracking list. Focused on the task.
-  if (type === 'task.pending_approval') {
-    return id ? `/tasks/approvals?focus=${id}` : '/tasks/approvals';
-  }
+
+  // ── Shifts / scheduling. Exchange requests → the exchange board; unassigned/open
+  // shifts → the open-shifts board; anything else → the schedule.
+  if (type.startsWith('shift.exchange')) return '/shift-exchange';
+  if (type === 'shift.unassigned') return '/open-shifts';
+  if (type.startsWith('shift')) return '/schedule';
+
+  // ── Time-off (requests + decisions) → the time-off board.
+  if (type.startsWith('timeoff')) return '/time-off';
+
+  // ── Memos → the memos board.
+  if (type.startsWith('memo')) return '/memos';
+
+  // ── Dispatch tickets → the ticket detail.
+  if (type.startsWith('dispatch')) return id ? `/dispatch-tickets/${id}` : '/dispatch-tickets';
+
+  // ── Tasks (non-approval) → the tracking list, focused.
   if (type.startsWith('task')) return id ? `/tasks?focus=${id}` : '/tasks';
 
-  // Everything else → the Actividad feed, focused on this event.
+  // ── Fallback → the Actividad feed, focused on this event.
   const params = new URLSearchParams();
   if (id) params.set('focus', id);
   const qs = params.toString();
