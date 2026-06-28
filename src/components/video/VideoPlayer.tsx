@@ -111,19 +111,23 @@ export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, vi
     let cancelled = false;
     const onErr = (m: string) => { if (!cancelled) { setErrorMsg(m); setState("error"); } };
 
-    // ---- go2rtc engine (preferred): WebRTC → MSE → HLS over one connection ----
+    // ---- go2rtc engine (MSE over WS through the proxy) ----
     if (stream.type === "go2rtc" && stream.ws) {
       loadGo2rtcPlayer(stream.gateway || "")
         .then(() => {
           if (cancelled) return;
           const el = streamElRef.current;
           if (!el) return;
-          el.mode = stream.mode || "webrtc,mse,hls";
-          el.background = false;
-          el.src = stream.ws; // triggers connection
+          // Order matters: set transports BEFORE src (src triggers the connection).
+          el.background = true;              // keep streaming even when off-screen
+          el.mode = stream.mode || "mse,mp4";
+          if (el.src !== stream.ws) el.src = stream.ws;
         })
         .catch(() => onErr("No se pudo cargar el reproductor de video"));
-      return () => { cancelled = true; try { if (streamElRef.current) streamElRef.current.src = ""; } catch { /* */ } };
+      // Do NOT clear el.src here — React unmounting <video-stream> runs the component's
+      // own disconnectedCallback. Clearing on every re-render tore the pipeline down
+      // mid-connect and left the <video> with an empty src.
+      return () => { cancelled = true; };
     }
 
     // ---- HLS fallback (manual streamUrl / no gateway) ----
