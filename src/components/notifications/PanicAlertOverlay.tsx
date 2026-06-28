@@ -34,6 +34,9 @@ export function PanicAlertOverlay({
 
   const latest = alerts[0];
   const p: any = latest.payload || {};
+  // A client (Mi Seguridad app) SOS reuses this same alarm overlay; relabel the
+  // actor copy so operators know it's the client, not a guard.
+  const isClient = p.source === "client";
   // Only trust http(s)/geo map links from the alert payload; never allow
   // javascript:/data: schemes to reach the href on this high-trust overlay.
   const safeMapsUrl = typeof p.mapsUrl === "string" && /^(https?:|geo:)/i.test(p.mapsUrl)
@@ -72,8 +75,8 @@ export function PanicAlertOverlay({
         <div className="flex items-center gap-3 px-6 py-5 bg-red-700">
           <Siren size={40} className="text-white animate-pulse shrink-0" />
           <div className="min-w-0">
-            <div className="text-2xl font-black tracking-tight text-white leading-none">ALERTA DE PÁNICO</div>
-            <div className="text-sm text-red-100 mt-1">Un vigilante activó el botón de emergencia</div>
+            <div className="text-2xl font-black tracking-tight text-white leading-none">{isClient ? "ALERTA SOS — CLIENTE" : "ALERTA DE PÁNICO"}</div>
+            <div className="text-sm text-red-100 mt-1">{isClient ? "Un cliente activó el botón de SOS" : "Un vigilante activó el botón de emergencia"}</div>
           </div>
           {alerts.length > 1 && (
             <span className="ml-auto shrink-0 rounded-full bg-white text-red-700 text-sm font-bold px-3 py-1">
@@ -85,7 +88,7 @@ export function PanicAlertOverlay({
         <div className="px-6 py-5 space-y-4">
           <Row icon={<Building2 size={20} />} label="Puesto" value={p.stationName || p.siteName} />
           <Row icon={<MapPin size={20} />} label="Ubicación" value={p.address || p.location} />
-          <Row icon={<User size={20} />} label="Vigilante" value={p.guardName} />
+          <Row icon={<User size={20} />} label={isClient ? "Cliente" : "Vigilante"} value={isClient ? (p.clientName || p.guardName) : p.guardName} />
           <Row icon={<Phone size={20} />} label="Teléfono del sitio" value={p.phone} />
           <Row icon={<Clock size={20} />} label="Hora" value={when} />
 
