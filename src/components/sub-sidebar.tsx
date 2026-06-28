@@ -57,7 +57,7 @@ export default function SubSidebar({
       {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-border/60">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFF3D6] text-primary">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg cg-gradient-brand text-primary-foreground shadow-sm">
             <Settings className="h-4 w-4" />
           </div>
           <div className="min-w-0">
@@ -110,10 +110,10 @@ export default function SubSidebar({
                           to={item.path}
                           className={({ isActive }) =>
                             [
-                              "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all",
+                              "group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200",
                               isActive
-                                ? "bg-[#FFF8E6] text-[#A6700A] shadow-sm ring-1 ring-[#F0D9A0]"
-                                : "text-foreground/80 hover:bg-muted/60 hover:text-foreground",
+                                ? "bg-gradient-to-r from-primary/15 to-primary/5 text-primary font-semibold shadow-sm ring-1 ring-primary/15 before:absolute before:-left-0.5 before:top-1/2 before:h-1/2 before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-primary"
+                                : "text-foreground/75 hover:bg-primary/8 hover:text-foreground hover:translate-x-0.5",
                             ].join(" ")
                           }
                         >

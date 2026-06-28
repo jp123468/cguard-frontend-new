@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { PageHeader, StatCard, Stagger } from '@/components/kit';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import AppLayout from "@/layouts/app-layout";
 
@@ -518,26 +519,27 @@ export default function SecurityGuardsPage() {
   return (
     <AppLayout>
       {/* Page Header */}
-      <div className="border-b bg-card px-6 py-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <Breadcrumb
-              items={[
-                { label: t('sidebar.panel', 'Panel de control'), path: "/dashboard" },
-                { label: t('guards.list.pageTitle', 'Vigilantes') },
-              ]}
-            />
-            <h1 className="mt-1 text-xl font-bold text-foreground">Vigilantes de Seguridad</h1>
-          </div>
-          {hasPermission('securityGuardCreate') && (
-            <Button className="shrink-0 bg-primary hover:bg-primary/90 text-white" asChild>
+      <div className="px-6 pt-5">
+        <Breadcrumb
+          items={[
+            { label: t('sidebar.panel', 'Panel de control'), path: "/dashboard" },
+            { label: t('guards.list.pageTitle', 'Vigilantes') },
+          ]}
+        />
+        <PageHeader
+          className="mt-2"
+          icon={<ShieldCheck />}
+          title="Vigilantes de Seguridad"
+          subtitle={t('guards.list.subtitle', 'Gestiona el personal de seguridad de tu organización')}
+          actions={hasPermission('securityGuardCreate') ? (
+            <Button variant="brand" asChild>
               <Link to="/security-guards/new">
                 <UserPlus className="mr-2 h-4 w-4" />
                 {t('guards.list.newGuard', 'Nuevo Vigilante')}
               </Link>
             </Button>
-          )}
-        </div>
+          ) : undefined}
+        />
       </div>
 
       {error && (
@@ -547,23 +549,13 @@ export default function SecurityGuardsPage() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 px-6 pb-2 pt-5 sm:grid-cols-4">
-        <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
-          <div className="rounded-full bg-blue-500/10 p-2"><Users className="h-4 w-4 text-blue-500" /></div>
-          <div><p className="mb-1 text-xs leading-none text-muted-foreground">Total</p><p className="text-2xl font-bold text-foreground">{guards.length}</p></div>
-        </div>
-        <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
-          <div className="rounded-full bg-green-500/10 p-2"><ShieldCheck className="h-4 w-4 text-green-500" /></div>
-          <div><p className="mb-1 text-xs leading-none text-muted-foreground">Activos</p><p className="text-2xl font-bold text-green-700">{activeCount}</p></div>
-        </div>
-        <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
-          <div className="rounded-full bg-amber-500/10 p-2"><Clock className="h-4 w-4 text-amber-500" /></div>
-          <div><p className="mb-1 text-xs leading-none text-muted-foreground">Pendientes</p><p className="text-2xl font-bold text-amber-700">{pendingCount}</p></div>
-        </div>
-        <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
-          <div className="rounded-full bg-muted p-2"><Archive className="h-4 w-4 text-muted-foreground" /></div>
-          <div><p className="mb-1 text-xs leading-none text-muted-foreground">Archivados</p><p className="text-2xl font-bold text-foreground/70">{archivedCount}</p></div>
-        </div>
+      <div className="px-6 pb-2 pt-5">
+        <Stagger className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <StatCard icon={<Users />} accent="blue" label="Total" value={guards.length} />
+          <StatCard icon={<ShieldCheck />} accent="green" label="Activos" value={activeCount} />
+          <StatCard icon={<Clock />} accent="orange" label="Pendientes" value={pendingCount} />
+          <StatCard icon={<Archive />} accent="slate" label="Archivados" value={archivedCount} />
+        </Stagger>
       </div>
 
       <div className="px-6 pb-6 pt-2">
