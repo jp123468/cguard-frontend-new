@@ -373,16 +373,33 @@ export default function AlarmQueue() {
                       </div>
                     </div>
 
-                    {/* SLA timer */}
-                    <div className="hidden shrink-0 flex-col items-end gap-1 sm:flex">
-                      <Badge className={slaClass(caseTime(c), live, now)}>
-                        <Clock className="size-3.5" />
-                        {elapsedSince(caseTime(c), now)}
-                      </Badge>
-                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                        en cola
-                      </span>
-                    </div>
+                    {/* SLA timer — LIVE only while the case is open. Once resolved/
+                        closed the clock stops: we show the FINAL handling duration
+                        (frozen to closedAt/resolvedAt), never a ticking counter. */}
+                    {live ? (
+                      <div className="hidden shrink-0 flex-col items-end gap-1 sm:flex">
+                        <Badge className={slaClass(caseTime(c), live, now)}>
+                          <Clock className="size-3.5" />
+                          {elapsedSince(caseTime(c), now)}
+                        </Badge>
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          en cola
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="hidden shrink-0 flex-col items-end gap-1 sm:flex">
+                        <Badge className="border-transparent bg-muted text-muted-foreground">
+                          <Clock className="size-3.5" />
+                          {elapsedSince(
+                            caseTime(c),
+                            new Date(c.closedAt || c.resolvedAt || c.updatedAt || caseTime(c)).getTime(),
+                          )}
+                        </Badge>
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          {(c.status || "") === "closed" ? "duración" : "resuelta en"}
+                        </span>
+                      </div>
+                    )}
 
                     <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
                   </div>
