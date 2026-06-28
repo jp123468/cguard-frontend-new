@@ -3,6 +3,8 @@ import AppLayout from "@/layouts/app-layout";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ClipboardCheck, Inbox } from "lucide-react";
+import { PageContainer, PageHeader, Section, StatusBadge, SkeletonCards, EmptyState } from "@/components/kit";
 import taskService, { type TaskRow } from "@/lib/api/taskService";
 
 function fmtDate(s?: string | null): string {
@@ -83,25 +85,33 @@ export default function TaskApprovals() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 space-y-4">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">
-            Tareas por aprobar
-            {rows.length > 0 && (
-              <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-600">{rows.length}</span>
-            )}
-          </h1>
-          <p className="text-sm text-muted-foreground">Tareas creadas por los clientes para sus puestos. Apruébalas para enviarlas a los vigilantes.</p>
-        </div>
-        {loading ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">Cargando…</div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={rows}
-            emptyState={<div className="py-10 text-center text-sm text-muted-foreground">No hay tareas pendientes de aprobación</div>}
+      <div className="p-4 sm:p-6">
+        <PageContainer width="wide">
+          <PageHeader
+            icon={<ClipboardCheck />}
+            title="Tareas por aprobar"
+            subtitle="Tareas creadas por los clientes para sus puestos. Apruébalas para enviarlas a los vigilantes."
+            badges={rows.length > 0 ? <StatusBadge tone="orange">{rows.length} pendientes</StatusBadge> : undefined}
           />
-        )}
+
+          <Section title="Pendientes de aprobación" icon={<ClipboardCheck />}>
+            {loading ? (
+              <SkeletonCards count={4} />
+            ) : rows.length === 0 ? (
+              <EmptyState
+                icon={<Inbox />}
+                title="No hay tareas pendientes de aprobación"
+                description="Las tareas que los clientes creen para sus puestos aparecerán aquí."
+              />
+            ) : (
+              <DataTable
+                columns={columns}
+                data={rows}
+                emptyState={<div className="py-10 text-center text-sm text-muted-foreground">No hay tareas pendientes de aprobación</div>}
+              />
+            )}
+          </Section>
+        </PageContainer>
       </div>
     </AppLayout>
   );

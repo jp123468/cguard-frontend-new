@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-import { Search, Filter as FilterIcon, MoreVertical, FileDown, FileSpreadsheet, Printer, Mail } from "lucide-react";
+import { Search, Filter as FilterIcon, MoreVertical, FileDown, FileSpreadsheet, Printer, Mail, ClipboardList } from "lucide-react";
+import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
@@ -87,23 +88,32 @@ export default function Visits() {
             />
 
             <section className="p-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2">
+              <PageContainer width="wide">
+                <PageHeader
+                    icon={<ClipboardList />}
+                    title="Visitas"
+                    subtitle="Registro de entradas y salidas de visitantes"
+                    actions={
                         <Select onValueChange={(v) => console.log("Acción:", v)}>
-                            <SelectTrigger className="w-40">
+                            <SelectTrigger className="w-36">
                                 <SelectValue placeholder="Acción" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="eliminar">Eliminar</SelectItem>
                             </SelectContent>
                         </Select>
-                    </div>
+                    }
+                />
 
+                <Section
+                    title="Registro de visitas"
+                    icon={<ClipboardList />}
+                    action={
                     <div className="flex items-center gap-2">
                         <div className="relative">
                             <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
-                                className="w-72 pl-9"
+                                className="w-64 pl-9"
                                 placeholder="Buscar registro de visitas"
                                 onChange={(e) => console.log("buscar:", e.target.value)}
                             />
@@ -247,7 +257,8 @@ export default function Visits() {
                                     </div>
 
                                     <Button
-                                        className="w-full bg-[#C8860A] text-white hover:bg-[#B37809]"
+                                        variant="brand"
+                                        className="w-full"
                                         onClick={aplicarFiltros}
                                     >
                                         Filtro
@@ -286,9 +297,9 @@ export default function Visits() {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
-                </div>
-
-                <div className="mt-4 overflow-hidden rounded-lg border">
+                    }
+                >
+                <div className="overflow-hidden rounded-xl border">
                     <table className="min-w-full border-collapse text-left text-sm">
                         <thead className="bg-muted/30">
                             <tr className="border-b">
@@ -308,21 +319,13 @@ export default function Visits() {
                         <tbody>
                             {rows.length === 0 && (
                                 <tr>
-                                    <td colSpan={8} className="py-20">
-                                        <div className="flex flex-col items-center justify-center text-center">
-                                            <img
-                                                src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
-                                                alt="Sin datos"
-                                                className="mb-4 h-36"
-                                            />
-                                            <h3 className="text-lg font-semibold">
-                                                No se encontraron resultados
-                                            </h3>
-                                            <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-                                                No pudimos encontrar ningún elemento que coincida con su
-                                                búsqueda
-                                            </p>
-                                        </div>
+                                    <td colSpan={8} className="py-8">
+                                        <EmptyState
+                                            icon={<ClipboardList />}
+                                            title="No se encontraron resultados"
+                                            description="No pudimos encontrar ningún elemento que coincida con su búsqueda"
+                                            className="border-0"
+                                        />
                                     </td>
                                 </tr>
                             )}
@@ -351,6 +354,8 @@ export default function Visits() {
                         <div>0 of 0</div>
                     </div>
                 </div>
+                </Section>
+              </PageContainer>
             </section>
         </AppLayout>
     );

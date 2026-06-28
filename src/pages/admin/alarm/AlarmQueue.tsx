@@ -22,6 +22,7 @@ import {
 import AppLayout from "@/layouts/app-layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader, Section, Stagger, StatCard, EmptyState } from "@/components/kit";
 import {
   alarmService,
   type AlarmCase,
@@ -231,43 +232,36 @@ export default function AlarmQueue() {
 
   return (
     <AppLayout>
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span
-              className="flex size-11 items-center justify-center rounded-xl"
-              style={{ backgroundColor: `${GOLD}1A`, color: GOLD }}
+      <PageContainer width="wide" className="px-4 py-6 sm:px-6 lg:px-8">
+        <PageHeader
+          icon={<Siren />}
+          title="Cola de alarmas"
+          subtitle="Casos de la central receptora ordenados por prioridad"
+          actions={(
+            <Button
+              variant="outline"
+              onClick={() => load()}
+              disabled={loading}
             >
-              <Siren className="size-6" />
-            </span>
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight">
-                Cola de alarmas
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Casos de la central receptora ordenados por prioridad
-              </p>
-            </div>
-          </div>
+              {loading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RefreshCw className="size-4" />
+              )}
+              Actualizar
+            </Button>
+          )}
+        />
 
-          <Button
-            variant="outline"
-            onClick={() => load()}
-            disabled={loading}
-            className="self-start sm:self-auto"
-          >
-            {loading ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RefreshCw className="size-4" />
-            )}
-            Actualizar
-          </Button>
-        </div>
+        <Stagger className="grid gap-4 grid-cols-2 sm:grid-cols-4">
+          <StatCard label="Total" value={cases.length} icon={<Siren />} accent="primary" />
+          <StatCard label="En cola" value={counts['queued'] || 0} icon={<Clock />} accent="red" />
+          <StatCard label="Verificando" value={counts['verifying'] || 0} icon={<ShieldAlert />} accent="blue" />
+          <StatCard label="Resueltas" value={counts['resolved'] || 0} icon={<Activity />} accent="green" />
+        </Stagger>
 
         {/* Filters */}
-        <div className="mb-5 flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="mr-1 flex items-center gap-1.5 text-sm text-muted-foreground">
             <Filter className="size-4" />
             Estado:
@@ -302,28 +296,20 @@ export default function AlarmQueue() {
         </div>
 
         {/* List */}
+        <Section title="Casos de alarma" icon={<Siren />}>
         {loading ? (
           <div className="flex items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="mr-2 size-5 animate-spin" />
             Cargando alarmas…
           </div>
         ) : sorted.length === 0 ? (
-          <Card className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <span
-              className="flex size-12 items-center justify-center rounded-full"
-              style={{ backgroundColor: `${GOLD}14`, color: GOLD }}
-            >
-              <Siren className="size-6" />
-            </span>
-            <div>
-              <p className="font-medium">Sin alarmas</p>
-              <p className="text-sm text-muted-foreground">
-                {status === "all"
-                  ? "No hay casos de alarma en este momento."
-                  : "No hay casos con este estado."}
-              </p>
-            </div>
-          </Card>
+          <EmptyState
+            icon={<Siren />}
+            title="Sin alarmas"
+            description={status === "all"
+              ? "No hay casos de alarma en este momento."
+              : "No hay casos con este estado."}
+          />
         ) : (
           <div className="space-y-3">
             {sorted.map((c) => {
@@ -400,7 +386,8 @@ export default function AlarmQueue() {
             })}
           </div>
         )}
-      </div>
+        </Section>
+      </PageContainer>
     </AppLayout>
   );
 }

@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { clientService } from '@/lib/api/clientService';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { Section, StatCard, Field, Stagger, FadeIn } from '@/components/kit';
+import { MapPin, Users, Route, ClipboardCheck, AlertTriangle, Clock, Building2, Phone } from 'lucide-react';
 
 export default function ClientOverview({ client }: { client: any }) {
   const { t } = useTranslation();
@@ -95,93 +97,54 @@ export default function ClientOverview({ client }: { client: any }) {
           )}
         />
       </div>
-      <div className="bg-card border rounded-md p-4">
-        <h3 className="text-lg font-semibold mb-4">{t('clients.nav.overview') || 'Resumen'}</h3>
+      <Section title={t('clients.nav.overview') || 'Resumen'} icon={<MapPin />} className="hidden md:block">
         <div className="mb-6">
           {hasCoords ? (
-            <IncidentMap lat={lat} lng={lng} label={client?.name || 'Client location'} />
+            <div className="overflow-hidden rounded-2xl border">
+              <IncidentMap lat={lat} lng={lng} label={client?.name || 'Client location'} />
+            </div>
           ) : (
-            <div className="w-full h-64 flex items-center justify-center bg-muted/30 border border-dashed rounded-md text-muted-foreground">
+            <div className="w-full h-64 flex items-center justify-center bg-muted/30 border border-dashed rounded-2xl text-muted-foreground">
               No location data available
             </div>
           )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 border rounded-md bg-card text-center">
-            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.postSites')}</div>
-            <div className="text-2xl font-bold text-[#C8860A]">{postSitesCount}</div>
-          </div>
-          <div className="p-4 border rounded-md bg-card text-center">
-            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.guardsAssigned')}</div>
-            <div className="text-2xl font-bold text-blue-600">{guardsAssigned}</div>
-          </div>
-          <div className="p-4 border rounded-md bg-card text-center">
-            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.toursCompleted')}</div>
-            <div className="text-2xl font-bold text-foreground">{toursCompleted}</div>
-          </div>
-          <div className="p-4 border rounded-md bg-card text-center">
-            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.tasksCompleted')}</div>
-            <div className="text-2xl font-bold text-blue-600">{tasksCompleted}</div>
-          </div>
-          <div className="p-4 border rounded-md bg-card text-center">
-            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.incidents')}</div>
-            <div className="text-2xl font-bold text-[#C8860A]">{incidents}</div>
-          </div>
-          <div className="p-4 border rounded-md bg-card text-center">
-            <div className="text-sm text-muted-foreground">{t('clients.overview.cards.hoursWorked')}</div>
-            <div className="text-2xl font-bold text-red-500">{hoursWorked}</div>
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-card border rounded-md p-4">
-          <h4 className="text-sm font-semibold mb-3">{t('clients.overview.generalInfo.title')}</h4>
-          <div className="text-sm text-foreground/70">
-            <div className="mb-3">
-              <div className="text-xs text-muted-foreground">{t('clients.overview.generalInfo.clientName')}</div>
-              <div className="font-medium">{client?.name || '-'} {client?.lastName || ''}</div>
-            </div>
-            <div className="mb-3">
-              <div className="text-xs text-muted-foreground">{t('clients.form.personType', 'Tipo de persona')}</div>
-              <div className="font-medium">{client?.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}</div>
-            </div>
-            <div className="mb-3">
-              <div className="text-xs text-muted-foreground">{client?.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</div>
-              <div className="font-medium">{client?.documentNumber || '-'}</div>
-            </div>
-            <div className="mb-3">
-              <div className="text-xs text-muted-foreground">{t('clients.overview.generalInfo.address')}</div>
-              <div className="font-medium">{client?.address || '-'}</div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">{t('clients.overview.generalInfo.addedOn')}</div>
-              <div className="font-medium">{addedOn}</div>
-            </div>
-          </div>
-        </div>
+        <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <StatCard label={t('clients.overview.cards.postSites')} value={postSitesCount} icon={<Building2 />} accent="primary" />
+          <StatCard label={t('clients.overview.cards.guardsAssigned')} value={guardsAssigned} icon={<Users />} accent="blue" />
+          <StatCard label={t('clients.overview.cards.toursCompleted')} value={toursCompleted} icon={<Route />} accent="slate" />
+          <StatCard label={t('clients.overview.cards.tasksCompleted')} value={tasksCompleted} icon={<ClipboardCheck />} accent="blue" />
+          <StatCard label={t('clients.overview.cards.incidents')} value={incidents} icon={<AlertTriangle />} accent="orange" />
+          <StatCard label={t('clients.overview.cards.hoursWorked')} value={hoursWorked} icon={<Clock />} accent="red" />
+        </Stagger>
+      </Section>
 
-        <div className="bg-card border rounded-md p-4">
-          <h4 className="text-sm font-semibold mb-3">{t('clients.overview.contactDetails.title')}</h4>
-          <div className="text-sm text-foreground/70">
-            <div className="mb-3">
-              <div className="text-xs text-muted-foreground">{t('clients.overview.contactDetails.phoneNumber')}</div>
-              <div className="font-medium">{client?.phoneNumber || '--'}</div>
-            </div>
-            <div className="mb-3">
-              <div className="text-xs text-muted-foreground">{t('clients.overview.contactDetails.fax')}</div>
-              <div className="font-medium">{client?.landline || client?.faxNumber || client?.fax || '--'}</div>
-            </div>
-            <div className="mb-3">
-              <div className="text-xs text-muted-foreground">{t('clients.overview.contactDetails.email')}</div>
-              <div className="font-medium">{client?.email || '--'}</div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">{t('clients.overview.contactDetails.website')}</div>
-              <div className="font-medium">{client?.website || '--'}</div>
-            </div>
+      <FadeIn className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Section title={t('clients.overview.generalInfo.title')} icon={<Building2 />}>
+          <div className="space-y-3">
+            <Field label={t('clients.overview.generalInfo.clientName')} value={`${client?.name || '-'} ${client?.lastName || ''}`.trim()} />
+            <Field
+              label={t('clients.form.personType', 'Tipo de persona')}
+              value={client?.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}
+            />
+            <Field
+              label={client?.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}
+              value={client?.documentNumber}
+            />
+            <Field label={t('clients.overview.generalInfo.address')} value={client?.address} />
+            <Field label={t('clients.overview.generalInfo.addedOn')} value={addedOn} />
           </div>
-        </div>
-      </div>
+        </Section>
+
+        <Section title={t('clients.overview.contactDetails.title')} icon={<Phone />}>
+          <div className="space-y-3">
+            <Field label={t('clients.overview.contactDetails.phoneNumber')} value={client?.phoneNumber} />
+            <Field label={t('clients.overview.contactDetails.fax')} value={client?.landline || client?.faxNumber || client?.fax} />
+            <Field label={t('clients.overview.contactDetails.email')} value={client?.email} />
+            <Field label={t('clients.overview.contactDetails.website')} value={client?.website} />
+          </div>
+        </Section>
+      </FadeIn>
     </div>
   );
 }

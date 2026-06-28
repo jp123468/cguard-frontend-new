@@ -13,11 +13,11 @@ import {
 
 import AppLayout from "@/layouts/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageContainer, PageHeader, StatCard, StatusBadge, EmptyState, SkeletonCards, Stagger } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -83,11 +83,11 @@ const emptyForm: FormState = {
   active: true,
 };
 
-const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  registered: { label: "Registrado", cls: "bg-green-500/15 text-green-600 border-green-500/30" },
-  offline: { label: "Sin conexión", cls: "bg-zinc-500/15 text-zinc-500 border-zinc-500/30" },
-  error: { label: "Error", cls: "bg-red-500/15 text-red-600 border-red-500/30" },
-  unknown: { label: "Sin probar", cls: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
+const STATUS_BADGE: Record<string, { label: string; tone: 'green' | 'slate' | 'red' | 'orange' }> = {
+  registered: { label: "Registrado", tone: "green" },
+  offline: { label: "Sin conexión", tone: "slate" },
+  error: { label: "Error", tone: "red" },
+  unknown: { label: "Sin probar", tone: "orange" },
 };
 
 export default function RadioDevices() {
@@ -229,55 +229,44 @@ export default function RadioDevices() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 space-y-5">
-        {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Radios IP</h1>
-            <p className="text-sm text-muted-foreground">
-              Conecta una pasarela RoIP / SIP para enlazar los radios físicos con el canal de la app.
-            </p>
-          </div>
-          <Button onClick={openNew} style={{ backgroundColor: GOLD }} className="text-white">
-            <Plus className="mr-2 h-4 w-4" /> Agregar radio IP
-          </Button>
-        </div>
+      <PageContainer width="wide" className="px-4 sm:px-6">
+        <PageHeader
+          icon={<Radio />}
+          title="Radios IP"
+          subtitle="Conecta una pasarela RoIP / SIP para enlazar los radios físicos con el canal de la app."
+          actions={(
+            <Button variant="brand" onClick={openNew}>
+              <Plus className="mr-2 h-4 w-4" /> Agregar radio IP
+            </Button>
+          )}
+        />
 
         {/* Summary */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: "Total", value: counts.total },
-            { label: "Registrados", value: counts.registered },
-            { label: "Sin conexión", value: counts.offline },
-          ].map((s) => (
-            <Card key={s.label}><CardContent className="p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</p>
-              <p className="mt-1 text-2xl font-bold text-foreground">{s.value}</p>
-            </CardContent></Card>
-          ))}
-        </div>
+        <Stagger className="grid grid-cols-3 gap-3">
+          <StatCard label="Total" value={counts.total} icon={<Radio />} accent="primary" />
+          <StatCard label="Registrados" value={counts.registered} icon={<Wifi />} accent="green" />
+          <StatCard label="Sin conexión" value={counts.offline} icon={<WifiOff />} accent="slate" />
+        </Stagger>
 
         {/* List */}
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-muted-foreground">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Cargando…
-          </div>
+          <SkeletonCards count={4} className="lg:grid-cols-2" />
         ) : error ? (
           <Card><CardContent className="flex flex-col items-center gap-3 py-12 text-center">
             <p className="text-sm text-muted-foreground">{error}</p>
             <Button variant="outline" onClick={load}><RefreshCw className="mr-2 h-4 w-4" />Reintentar</Button>
           </CardContent></Card>
         ) : devices.length === 0 ? (
-          <Card><CardContent className="flex flex-col items-center gap-2 py-14 text-center">
-            <div className="rounded-full bg-amber-500/10 p-5"><Radio className="h-10 w-10" style={{ color: GOLD }} /></div>
-            <h3 className="text-lg font-medium text-foreground">Aún no hay radios IP</h3>
-            <p className="max-w-xs text-sm text-muted-foreground">
-              Agrega la pasarela RoIP/SIP del cliente con su IP y credenciales SIP.
-            </p>
-            <Button onClick={openNew} className="mt-2" style={{ backgroundColor: GOLD }}>
-              <Plus className="mr-2 h-4 w-4" />Agregar radio IP
-            </Button>
-          </CardContent></Card>
+          <EmptyState
+            icon={<Radio />}
+            title="Aún no hay radios IP"
+            description="Agrega la pasarela RoIP/SIP del cliente con su IP y credenciales SIP."
+            action={(
+              <Button variant="brand" onClick={openNew}>
+                <Plus className="mr-2 h-4 w-4" />Agregar radio IP
+              </Button>
+            )}
+          />
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
             {devices.map((d) => {
@@ -296,8 +285,8 @@ export default function RadioDevices() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="truncate font-semibold text-foreground">{d.name}</p>
-                      <Badge variant="outline" className={badge.cls}>{badge.label}</Badge>
-                      {!d.active && <Badge variant="outline" className="text-muted-foreground">Inactivo</Badge>}
+                      <StatusBadge tone={badge.tone}>{badge.label}</StatusBadge>
+                      {!d.active && <StatusBadge tone="slate" dot={false}>Inactivo</StatusBadge>}
                     </div>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       {d.host || "—"}:{d.sipPort ?? 5060} · {String(d.transport || "udp").toUpperCase()}
@@ -323,7 +312,7 @@ export default function RadioDevices() {
             })}
           </div>
         )}
-      </div>
+      </PageContainer>
 
       {/* Create / edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={(o) => { if (!saving) { setDialogOpen(o); if (!o) { setEditing(null); setForm({ ...emptyForm }); } } }}>
@@ -414,7 +403,7 @@ export default function RadioDevices() {
 
           <DialogFooter>
             <Button variant="outline" disabled={saving} onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button disabled={saving} onClick={save} style={{ backgroundColor: GOLD }} className="text-white">
+            <Button variant="brand" disabled={saving} onClick={save}>
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editing ? "Guardar" : "Agregar"}
             </Button>

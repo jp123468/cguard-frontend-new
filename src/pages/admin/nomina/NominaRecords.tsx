@@ -9,7 +9,8 @@ import attendanceService, { type AttendanceRecord } from "@/lib/api/attendanceSe
 import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
 import { useFileUrl } from "@/lib/fileUrl";
 import { StatusBadge, fmtDateTime, fmtTime, fmtHours } from "./shared";
-import { MapPin, ImageOff } from "lucide-react";
+import { PageContainer, PageHeader, Section, EmptyState, SkeletonCards } from "@/components/kit";
+import { MapPin, ImageOff, ClipboardCheck, ClipboardList, Filter } from "lucide-react";
 
 const STATUS_OPTIONS = [
   "", "on_time", "late", "early_departure", "missed_clockout",
@@ -124,39 +125,51 @@ export default function NominaRecords() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Registros de Asistencia</h1>
-            <p className="text-sm text-muted-foreground">Marcaciones de entrada / salida</p>
-          </div>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>{s === "" ? "Todos los estados" : s}</option>
-            ))}
-          </select>
-        </div>
+      <PageContainer width="wide" className="p-4 sm:p-6">
+        <PageHeader
+          icon={<ClipboardCheck />}
+          title="Registros de Asistencia"
+          subtitle="Marcaciones de entrada / salida"
+          actions={
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5">
+              <Filter className="size-4 text-muted-foreground" />
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="bg-transparent text-sm outline-none"
+              >
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>{s === "" ? "Todos los estados" : s}</option>
+                ))}
+              </select>
+            </div>
+          }
+        />
 
-        {loading ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">Cargando…</div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={rows}
-            onRowClick={(r) => {
-              // Open immediately with the lean list row, then hydrate the full
-              // record (selfie/photos/device) — the list no longer ships those blobs.
-              setSelected(r);
-              attendanceService.find(r.id).then(setSelected).catch(() => {});
-            }}
-            emptyState={<div className="py-12 text-center text-sm text-muted-foreground">Sin registros</div>}
-          />
-        )}
-      </div>
+        <Section title="Marcaciones" icon={<ClipboardList />}>
+          {loading ? (
+            <SkeletonCards count={4} />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={rows}
+              onRowClick={(r) => {
+                // Open immediately with the lean list row, then hydrate the full
+                // record (selfie/photos/device) — the list no longer ships those blobs.
+                setSelected(r);
+                attendanceService.find(r.id).then(setSelected).catch(() => {});
+              }}
+              emptyState={
+                <EmptyState
+                  icon={<ClipboardList />}
+                  title="Sin registros"
+                  description="No hay marcaciones para los filtros seleccionados."
+                />
+              }
+            />
+          )}
+        </Section>
+      </PageContainer>
 
       <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">

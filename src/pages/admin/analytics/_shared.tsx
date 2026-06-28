@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, RefreshCw } from "lucide-react";
+import { RefreshCw, BarChart3 } from "lucide-react";
 import { analyticsService, OpsAnalytics } from "@/lib/api/analyticsService";
+import { PageContainer, PageHeader, SkeletonCards } from "@/components/kit";
 
 /** Link a site name to its post-site detail page. */
 export function SiteLink({ id, name }: { id?: string; name: string }) {
@@ -59,35 +60,36 @@ export function AnalyticsShell({
 }) {
   return (
     <AppLayout>
-      <div className="mx-auto max-w-7xl space-y-5 p-4 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex rounded-lg border border-border bg-card p-0.5">
-              {PRESETS.map((p) => (
-                <button key={p.days} onClick={() => setDays(p.days)}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all ${days === p.days ? "bg-[#C8860A] text-white" : "text-muted-foreground hover:text-foreground"}`}>
-                  {p.label}
-                </button>
-              ))}
-            </div>
-            <button onClick={reload} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted/30" title="Actualizar">
-              <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-            </button>
-          </div>
-        </div>
+      <PageContainer width="wide" className="p-4 sm:p-6">
+        <PageHeader
+          icon={<BarChart3 />}
+          title={title}
+          subtitle={subtitle}
+          actions={
+            <>
+              <div className="flex rounded-lg border border-border bg-card p-0.5">
+                {PRESETS.map((p) => (
+                  <button key={p.days} onClick={() => setDays(p.days)}
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all ${days === p.days ? "bg-[#C8860A] text-white" : "text-muted-foreground hover:text-foreground"}`}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <button onClick={reload} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted/30" title="Actualizar">
+                <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+              </button>
+            </>
+          }
+        />
 
         {loading ? (
-          <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-[#C8860A]" /></div>
+          <SkeletonCards count={6} className="sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" />
         ) : error ? (
           <Card className="rounded-2xl border bg-card"><CardContent className="p-6 text-sm text-red-600">{error}</CardContent></Card>
         ) : (
           children
         )}
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

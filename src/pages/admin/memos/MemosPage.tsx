@@ -14,7 +14,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { DataTable, type Column } from "@/components/table/DataTable";
 import { RowActionsMenu, type RowAction } from "@/components/table/RowActionsMenu";
 import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActionsSelect";
-import { Plus, Search, Eye, Trash, Filter, EllipsisVertical, FileDown, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, Eye, Trash, Filter, EllipsisVertical, FileDown, FileSpreadsheet, Megaphone, FileText } from "lucide-react";
+import { PageContainer, PageHeader, Section } from "@/components/kit";
 import { userService } from "@/lib/api/userService";
 
 type MemoItem = {
@@ -377,19 +378,19 @@ export default function MemosPage() {
   return (
     <AppLayout>
       <div className="px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Memos</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Lista de memos del equipo de seguridad.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={() => setCreateOpen(true)}>
+        <PageContainer width="wide">
+        <PageHeader
+          icon={<Megaphone />}
+          title="Memos"
+          subtitle="Lista de memos del equipo de seguridad."
+          actions={
+            <Button variant="brand" onClick={() => setCreateOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Nuevo Memo
             </Button>
-          </div>
-        </div>
+          }
+        />
 
-        <div className="mb-4 rounded-lg border border-slate-200 bg-card p-4">
+        <Section className="!p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="flex items-center gap-2">
               <BulkActionsSelect key={bulkKey} actions={bulkActions} onChange={handleBulkAction} />
@@ -475,7 +476,8 @@ export default function MemosPage() {
                       </Select>
                     </div>
                     <Button
-                      className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
+                      variant="brand"
+                      className="w-full"
                       onClick={() => setOpenFilter(false)}
                     >
                       Aplicar filtros
@@ -511,9 +513,9 @@ export default function MemosPage() {
               </DropdownMenu>
             </div>
           </div>
-        </div>
+        </Section>
 
-        <div className="rounded-lg border border-slate-200 bg-card">
+        <Section title="Memos" icon={<FileText />} contentClassName="-mx-5 -mb-5">
           <DataTable<MemoItem>
             columns={columns}
             data={sortedMemos}
@@ -535,7 +537,8 @@ export default function MemosPage() {
               </div>
             }
           />
-        </div>
+        </Section>
+        </PageContainer>
 
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogContent className="sm:max-w-xl">
@@ -586,7 +589,7 @@ export default function MemosPage() {
               <DialogClose asChild>
                 <Button variant="outline">Cancelar</Button>
               </DialogClose>
-              <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={handleCreate} disabled={saving}>
+              <Button variant="brand" onClick={handleCreate} disabled={saving}>
                 {saving ? 'Guardando...' : 'Guardar Memo'}
               </Button>
             </DialogFooter>

@@ -37,8 +37,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { GraduationCap, Plus, Search, EllipsisVertical, Pencil, Trash2, Users, Award, Lock } from 'lucide-react';
+import { GraduationCap, Plus, Search, EllipsisVertical, Pencil, Trash2, Users, Award, Lock, BookOpen, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { PageContainer, PageHeader, Section, EmptyState, SkeletonCards, Stagger, StatCard, StatusBadge } from '@/components/kit';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
   trainingCourseService,
@@ -101,6 +102,9 @@ export default function TrainingCoursesPage() {
     !search || c.title.toLowerCase().includes(search.toLowerCase()),
   );
 
+  const publishedCount = courses.filter((c) => c.published).length;
+  const draftCount = courses.length - publishedCount;
+
   const handleCreate = async () => {
     if (!form.title.trim()) {
       toast.error('El título es obligatorio.');
@@ -155,16 +159,29 @@ export default function TrainingCoursesPage() {
         ]}
       />
 
-      <section className="p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <GraduationCap className="h-6 w-6" style={{ color: GOLD }} />
-          <h1 className="text-xl font-semibold">Cursos de Entrenamiento</h1>
-        </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          Crea cursos profesionales, agrega lecciones y cuestionarios, y asígnalos a tus vigilantes.
-        </p>
+      <PageContainer width="wide" className="px-4">
+        <PageHeader
+          icon={<GraduationCap />}
+          title="Cursos de Entrenamiento"
+          subtitle="Crea cursos profesionales, agrega lecciones y cuestionarios, y asígnalos a tus vigilantes."
+          actions={canCreate ? (
+            <Button
+              variant="brand"
+              onClick={() => { setForm(emptyForm); setOpenForm(true); }}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Nuevo curso
+            </Button>
+          ) : undefined}
+        />
 
-        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Stagger className="grid gap-4 sm:grid-cols-3">
+          <StatCard label="Cursos" value={courses.length} icon={<BookOpen />} accent="primary" />
+          <StatCard label="Publicados" value={publishedCount} icon={<CheckCircle2 />} accent="green" />
+          <StatCard label="Borradores" value={draftCount} icon={<Pencil />} accent="orange" />
+        </Stagger>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -187,21 +204,10 @@ export default function TrainingCoursesPage() {
                 ))}
               </SelectContent>
             </Select>
-
-            {canCreate && (
-              <Button
-                className="text-white w-full sm:w-auto"
-                style={{ backgroundColor: GOLD }}
-                onClick={() => { setForm(emptyForm); setOpenForm(true); }}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Nuevo curso
-              </Button>
-            )}
           </div>
         </div>
 
-        <div className="mt-4 border rounded-lg overflow-hidden">
+        <Section icon={<BookOpen />} title="Catálogo de cursos" contentClassName="overflow-hidden rounded-xl border">
           <table className="min-w-full text-sm text-left">
             <thead className="bg-muted/30">
               <tr className="border-b">
@@ -215,10 +221,21 @@ export default function TrainingCoursesPage() {
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={6} className="py-16 text-center text-muted-foreground">Cargando...</td></tr>
+                <tr><td colSpan={6} className="p-4"><SkeletonCards count={4} /></td></tr>
               )}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={6} className="py-20 text-center text-muted-foreground">No se encontraron cursos</td></tr>
+                <tr><td colSpan={6} className="py-10">
+                  <EmptyState
+                    icon={<GraduationCap />}
+                    title="No se encontraron cursos"
+                    description="Crea tu primer curso de entrenamiento para tus vigilantes."
+                    action={canCreate ? (
+                      <Button variant="brand" onClick={() => { setForm(emptyForm); setOpenForm(true); }}>
+                        <Plus className="h-4 w-4 mr-1" /> Nuevo curso
+                      </Button>
+                    ) : undefined}
+                  />
+                </td></tr>
               )}
               {!loading && filtered.map((c) => (
                 <tr
@@ -248,8 +265,8 @@ export default function TrainingCoursesPage() {
                   </td>
                   <td className="px-4 py-3">
                     {c.published
-                      ? <Badge variant="default">Publicado</Badge>
-                      : <Badge variant="secondary">Borrador</Badge>}
+                      ? <StatusBadge tone="green">Publicado</StatusBadge>
+                      : <StatusBadge tone="slate">Borrador</StatusBadge>}
                   </td>
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
@@ -277,8 +294,8 @@ export default function TrainingCoursesPage() {
               ))}
             </tbody>
           </table>
-        </div>
-      </section>
+        </Section>
+      </PageContainer>
 
       {/* Create dialog */}
       <Dialog open={openForm} onOpenChange={setOpenForm}>
@@ -328,7 +345,7 @@ export default function TrainingCoursesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenForm(false)}>Cancelar</Button>
-            <Button className="text-white" style={{ backgroundColor: GOLD }} disabled={saving} onClick={handleCreate}>
+            <Button variant="brand" disabled={saving} onClick={handleCreate}>
               {saving ? 'Creando...' : 'Crear curso'}
             </Button>
           </DialogFooter>

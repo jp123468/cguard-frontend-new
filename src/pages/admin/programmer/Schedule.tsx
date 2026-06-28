@@ -26,6 +26,8 @@ import {
   MapPin,
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import { PageContainer, PageHeader, StatusBadge } from "@/components/kit";
+import { CalendarDays } from "lucide-react";
 import { ApiService } from "@/services/api/apiService";
 import { toast } from "sonner";
 import { confirmDialog } from "@/components/ui/confirmDialog";
@@ -947,34 +949,33 @@ export default function Schedule() {
     <AppLayout>
       <Breadcrumb items={[{ label: "Panel de control", path: "/dashboard" }, { label: "Horario" }]} />
 
-      <div className="p-4 lg:p-6 space-y-4">
+      <PageContainer width="wide" className="px-4 lg:px-6">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-foreground">Programador de Horarios</h1>
-            {coverage && typeof coverage.coveredPct === 'number' && (
-              (() => {
-                const ok = (coverage.gapCount || 0) === 0;
-                return (
-                  <span
-                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${ok ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'}`}
-                    title="Cobertura real de los puestos en los próximos 14 días (lee turnos guardados, no el cálculo del grid)"
-                  >
-                    {ok ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
-                    Cobertura {coverage.coveredPct}%
-                    {(coverage.gapCount || 0) > 0 && <span>· {coverage.gapCount} sin cubrir</span>}
-                  </span>
-                );
-              })()
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => nav(-1)}><ChevronLeft size={16} /></Button>
-            <Button variant="outline" size="sm" onClick={goToday}>Hoy</Button>
-            <span className="text-sm font-medium text-foreground min-w-[150px] text-center">{monthLabel}</span>
-            <Button variant="outline" size="sm" onClick={() => nav(1)}><ChevronRight size={16} /></Button>
-          </div>
-        </div>
+        <PageHeader
+          icon={<CalendarDays />}
+          title="Programador de Horarios"
+          subtitle="Rotaciones, coberturas y asignación de vigilantes por puesto."
+          badges={coverage && typeof coverage.coveredPct === 'number' ? (
+            (() => {
+              const ok = (coverage.gapCount || 0) === 0;
+              return (
+                <StatusBadge tone={ok ? 'green' : 'red'} dot={false}>
+                  {ok ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
+                  Cobertura {coverage.coveredPct}%
+                  {(coverage.gapCount || 0) > 0 && <span>· {coverage.gapCount} sin cubrir</span>}
+                </StatusBadge>
+              );
+            })()
+          ) : undefined}
+          actions={(
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => nav(-1)}><ChevronLeft size={16} /></Button>
+              <Button variant="outline" size="sm" onClick={goToday}>Hoy</Button>
+              <span className="text-sm font-medium text-foreground min-w-[150px] text-center">{monthLabel}</span>
+              <Button variant="outline" size="sm" onClick={() => nav(1)}><ChevronRight size={16} /></Button>
+            </div>
+          )}
+        />
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -1699,7 +1700,7 @@ export default function Schedule() {
           </div>
           </>
         )}
-      </div>
+      </PageContainer>
 
       {/* ─── Assignment Modal ─────────────────────────────────────────────── */}
       {showAssignForm && (

@@ -18,8 +18,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Filter } from "lucide-react";
+import { Filter, MapPinned, MapPin } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
 
 interface LiveTrackingRow {
   id: string;
@@ -49,38 +50,12 @@ export default function LiveTrackingPage() {
         ]}
       />
 
-      <div className="p-4">
-        <section>
-          {/* Barra superior */}
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Tipo de mapa */}
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Tipo de Mapa</p>
-                <Select value={mapType} onValueChange={setMapType}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Hoja de Ruta" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="roadmap">Hoja de Ruta</SelectItem>
-                    <SelectItem value="satellite">Satélite</SelectItem>
-                    <SelectItem value="hybrid">Híbrido</SelectItem>
-                    <SelectItem value="terrain">Terreno</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Mostrar Geovalla */}
-              <label className="flex items-center gap-2 cursor-pointer mt-2 sm:mt-5">
-                <Checkbox
-                  checked={showGeofence}
-                  onCheckedChange={(v) => setShowGeofence(Boolean(v))}
-                />
-                <span className="text-sm text-foreground">Mostrar Geovalla</span>
-              </label>
-            </div>
-
-            {/* Botón Filtros (Sheet lateral) */}
+      <PageContainer width="wide" className="p-4">
+        <PageHeader
+          icon={<MapPinned />}
+          title="Seguimiento en vivo"
+          subtitle="Ubicación en tiempo real de tus vigilantes en servicio."
+          actions={
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
               <SheetTrigger asChild>
                 <Button
@@ -153,10 +128,40 @@ export default function LiveTrackingPage() {
                 </div>
               </SheetContent>
             </Sheet>
+          }
+        />
+
+        {/* Controles del mapa */}
+        <Section title="Mapa" icon={<MapPin />}>
+          <div className="flex flex-wrap items-end gap-4">
+            {/* Tipo de mapa */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Tipo de Mapa</p>
+              <Select value={mapType} onValueChange={setMapType}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Hoja de Ruta" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="roadmap">Hoja de Ruta</SelectItem>
+                  <SelectItem value="satellite">Satélite</SelectItem>
+                  <SelectItem value="hybrid">Híbrido</SelectItem>
+                  <SelectItem value="terrain">Terreno</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Mostrar Geovalla */}
+            <label className="flex items-center gap-2 cursor-pointer pb-2">
+              <Checkbox
+                checked={showGeofence}
+                onCheckedChange={(v) => setShowGeofence(Boolean(v))}
+              />
+              <span className="text-sm text-foreground">Mostrar Geovalla</span>
+            </label>
           </div>
 
           {/* Contenedor del mapa + tabla */}
-          <div className="mt-4 border rounded-lg overflow-hidden">
+          <div className="mt-4 border rounded-2xl overflow-hidden">
             {/* Mapa */}
             <div className="w-full h-[380px] bg-muted">
               {/* Aquí va tu componente de Google Maps */}
@@ -197,29 +202,21 @@ export default function LiveTrackingPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-20">
-                      <div className="flex flex-col items-center justify-center text-center">
-                        <img
-                          src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
-                          alt="Sin datos"
-                          className="h-36 mb-4"
-                        />
-                        <h3 className="text-lg font-semibold">
-                          No se encontraron resultados
-                        </h3>
-                        <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-                          No pudimos encontrar ningún elemento que coincida con
-                          su búsqueda
-                        </p>
-                      </div>
+                    <td colSpan={6} className="py-12">
+                      <EmptyState
+                        icon={<MapPin />}
+                        title="No se encontraron resultados"
+                        description="No pudimos encontrar ningún elemento que coincida con su búsqueda."
+                        className="border-0"
+                      />
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </section>
-      </div>
+        </Section>
+      </PageContainer>
     </AppLayout>
   );
 }

@@ -3,12 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import Breadcrumb from "@/components/ui/breadcrumb";
 import AppLayout from "@/layouts/app-layout";
-import WidgetsBoard from "./WidgetsBoard";
 import { clientService } from "@/lib/api/clientService";
 import { postSiteService } from "@/lib/api/postSiteService";
 import securityGuardService from "@/lib/api/securityGuardService";
 import userService from "@/lib/api/userService";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import GoogleMapEmbed from '@/components/GoogleMap/GoogleMapEmbed';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,6 +22,13 @@ import {
 import MobileCardList from '@/components/responsive/MobileCardList';
 import useActiveMarkers from '@/hooks/useActiveMarkers';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  PageContainer, PageHeader, Section, StatCard, Stagger, EmptyState as KitEmptyState,
+} from '@/components/kit';
+import {
+  LayoutDashboard, SlidersHorizontal, Map, Activity, Clock, LogIn, LogOut,
+  AlertTriangle, FileText, Route, QrCode, Users, MapPin, Shield, UserSquare2,
+} from 'lucide-react';
 
 // Empty state component
 function EmptyState({ title, description, alt }: { title: string; description: string; alt?: string }) {
@@ -164,25 +169,15 @@ export default function DashboardPage() {
 
   // User geolocation is intentionally disabled for the Live Tracker: only on-duty guards/supervisors are shown.
 
-  return (
-    <AppLayout>
-      <Breadcrumb
-        items={[
-          { label: t('dashboard.title'), path: "/dashboard" },
-          { label: t('activity.title') },
-        ]}
-      />
-
-      <div className="p-6 space-y-6">
-        {/* Widget Manager Button */}
-        <div className="flex justify-end">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A] hover:bg-[#C8860A]/10">
-                {t('dashboard.manageWidgets')}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 p-3">
+  const widgetManager = (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="gap-2">
+          <SlidersHorizontal className="size-4" />
+          {t('dashboard.manageWidgets')}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-3">
               <div className="space-y-2">
                 <label htmlFor="widget-stats" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted cursor-pointer">
                   <Checkbox
@@ -267,40 +262,76 @@ export default function DashboardPage() {
               </div>
             </PopoverContent>
           </Popover>
-        </div>
+  );
+
+  const statTiles = [
+    { id: 'clientes', label: t('dashboard.widgets.clientes.title', 'Clientes'), hint: t('dashboard.widgets.clientes.subtitle', 'Clientes activos'), icon: <Users />, accent: 'green' as const, value: data.clientes },
+    { id: 'sitios', label: t('dashboard.widgets.sitios.title', 'Puestos de Vigilancia'), hint: t('dashboard.widgets.sitios.subtitle', 'Puestos activos'), icon: <MapPin />, accent: 'blue' as const, value: data.sitios },
+    { id: 'vigilantes', label: t('dashboard.widgets.guardias.title', 'Vigilantes'), hint: t('dashboard.widgets.guardias.subtitle', 'Vigilantes activos'), icon: <Shield />, accent: 'primary' as const, value: data.vigilantes },
+    { id: 'equipo', label: t('dashboard.widgets.equipo.title', 'Equipo administrativo'), hint: t('dashboard.widgets.equipo.subtitle', 'Usuarios activos'), icon: <UserSquare2 />, accent: 'slate' as const, value: data.equipo },
+    { id: 'registros', label: t('dashboard.widgets.registros.title', 'Registros'), hint: t('dashboard.widgets.registros.subtitle', 'Hoy'), icon: <Route />, accent: 'orange' as const, value: data.registros },
+    { id: 'fichados', label: t('dashboard.widgets.fichados.title', 'Fichados'), hint: t('dashboard.widgets.fichados.subtitle', 'Hoy'), icon: <Activity />, accent: 'red' as const, value: data.fichados },
+  ];
+
+  return (
+    <AppLayout>
+      <Breadcrumb
+        items={[
+          { label: t('dashboard.title'), path: "/dashboard" },
+          { label: t('activity.title') },
+        ]}
+      />
+
+      <PageContainer width="wide" className="px-4 sm:px-6">
+        <PageHeader
+          icon={<LayoutDashboard />}
+          title={t('dashboard.title', 'Panel de control')}
+          subtitle={t('dashboard.page.subtitle', 'Operación en tiempo real de tu equipo de seguridad.')}
+          actions={widgetManager}
+        />
 
         {/* Stats Cards */}
         {visibleWidgets.stats && (
-          <WidgetsBoard data={data} />
+          <Stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
+            {statTiles.map((s) => (
+              <StatCard
+                key={s.id}
+                label={s.label}
+                value={loadingStats ? '—' : (s.value ?? 0)}
+                hint={s.hint}
+                icon={s.icon}
+                accent={s.accent}
+              />
+            ))}
+          </Stagger>
         )}
 
         {/* Live Tracker Map */}
         {visibleWidgets.tracker && (
-          <Card>
-            <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <CardTitle className="text-lg font-medium">{t('dashboard.page.liveTracker')}</CardTitle>
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
-                  <Button
-                    variant={showGeofence ? 'default' : 'outline'}
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    onClick={() => setShowGeofence((s) => !s)}
-                  >
-                    {showGeofence ? t('dashboard.page.hideGeofence') : t('dashboard.page.showGeofence')}
-                  </Button>
-                  <Button
-                    variant={mapType === 'satellite' ? 'default' : 'outline'}
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    onClick={() => setMapType((t) => (t === 'roadmap' ? 'satellite' : 'roadmap'))}
-                  >
-                    {mapType === 'satellite' ? t('dashboard.page.roadmap') : t('dashboard.page.satellite')}
-                  </Button>
-                </div>
-              </CardHeader>
-            <CardContent>
+          <Section
+            icon={<Map />}
+            title={t('dashboard.page.liveTracker')}
+            action={
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={showGeofence ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setShowGeofence((s) => !s)}
+                >
+                  {showGeofence ? t('dashboard.page.hideGeofence') : t('dashboard.page.showGeofence')}
+                </Button>
+                <Button
+                  variant={mapType === 'satellite' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setMapType((t) => (t === 'roadmap' ? 'satellite' : 'roadmap'))}
+                >
+                  {mapType === 'satellite' ? t('dashboard.page.roadmap') : t('dashboard.page.satellite')}
+                </Button>
+              </div>
+            }
+          >
               {/* Google Maps */}
-              <div className="w-full h-[400px] rounded-lg overflow-hidden relative">
+              <div className="w-full h-[400px] rounded-xl overflow-hidden relative">
                 <GoogleMapEmbed
                   className="w-full h-full"
                   mapType={mapType}
@@ -369,33 +400,35 @@ export default function DashboardPage() {
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+          </Section>
         )}
 
         {/* Last Activity */}
         {visibleWidgets.activity && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-medium">{t('dashboard.page.lastActivity')}</CardTitle>
-              <Button variant="link" className="text-[#C8860A] hover:text-[#B37809]">
+          <Section
+            icon={<Activity />}
+            title={t('dashboard.page.lastActivity')}
+            action={
+              <Button variant="link" className="text-primary">
                 {t('dashboard.page.viewAll')}
               </Button>
-            </CardHeader>
-            <CardContent>
-              <EmptyState title={t('dashboard.page.noData')} description={t('dashboard.page.noActivityData')} />
-            </CardContent>
-          </Card>
+            }
+          >
+            <KitEmptyState
+              icon={<Activity />}
+              title={t('dashboard.page.noData')}
+              description={t('dashboard.page.noActivityData')}
+            />
+          </Section>
         )}
 
         {/* Time Log */}
         {visibleWidgets.timeLog && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-medium">{t('dashboard.page.timeLog')}</CardTitle>
-              <span className="text-sm text-[#C8860A]">{t('dashboard.page.entriesCount', { count: 0 })}</span>
-            </CardHeader>
-            <CardContent>
+          <Section
+            icon={<Clock />}
+            title={t('dashboard.page.timeLog')}
+            action={<span className="text-sm font-semibold text-primary">{t('dashboard.page.entriesCount', { count: 0 })}</span>}
+          >
               <div>
                 <div className="md:block hidden">
                   <Table>
@@ -434,20 +467,18 @@ export default function DashboardPage() {
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+          </Section>
         )}
 
         {/* Check In / Check Out Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Registros */}
           {visibleWidgets.checkIn && (
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-medium">{t('dashboard.page.checkIns')}</CardTitle>
-                <span className="text-sm text-[#C8860A]">{t('dashboard.page.entriesCount', { count: 0 })}</span>
-              </CardHeader>
-              <CardContent>
+            <Section
+              icon={<LogIn />}
+              title={t('dashboard.page.checkIns')}
+              action={<span className="text-sm font-semibold text-primary">{t('dashboard.page.entriesCount', { count: 0 })}</span>}
+            >
                 <div className="md:block hidden">
                   <Table>
                     <TableHeader>
@@ -482,18 +513,16 @@ export default function DashboardPage() {
                     )}
                   />
                 </div>
-              </CardContent>
-            </Card>
+            </Section>
           )}
 
           {/* Salidas registradas */}
           {visibleWidgets.checkOut && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-medium">{t('dashboard.page.checkOuts')}</CardTitle>
-                <span className="text-sm text-[#C8860A]">{t('dashboard.page.entriesCount', { count: 0 })}</span>
-              </CardHeader>
-              <CardContent>
+            <Section
+              icon={<LogOut />}
+              title={t('dashboard.page.checkOuts')}
+              action={<span className="text-sm font-semibold text-primary">{t('dashboard.page.entriesCount', { count: 0 })}</span>}
+            >
                 <div className="md:block hidden">
                   <Table>
                     <TableHeader>
@@ -528,21 +557,21 @@ export default function DashboardPage() {
                     )}
                   />
                 </div>
-              </CardContent>
-            </Card>
+            </Section>
           )}
         </div>
 
         {/* Últimos Incidentes */}
         {visibleWidgets.incidents && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-medium">{t('dashboard.page.incidents')}</CardTitle>
-              <Button variant="link" className="text-[#C8860A] hover:text-[#B37809]">
+          <Section
+            icon={<AlertTriangle />}
+            title={t('dashboard.page.incidents')}
+            action={
+              <Button variant="link" className="text-primary">
                 {t('dashboard.page.viewAll')}
               </Button>
-            </CardHeader>
-            <CardContent>
+            }
+          >
               <div className="md:block hidden">
                 <Table>
                   <TableHeader>
@@ -574,20 +603,20 @@ export default function DashboardPage() {
                   </div>
                 )} />
               </div>
-            </CardContent>
-          </Card>
+          </Section>
         )}
 
         {/* Informes Estándar */}
         {visibleWidgets.reports && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-medium">{t('dashboard.page.reports')}</CardTitle>
-              <Button variant="link" className="text-[#C8860A] hover:text-[#B37809]">
+          <Section
+            icon={<FileText />}
+            title={t('dashboard.page.reports')}
+            action={
+              <Button variant="link" className="text-primary">
                 {t('dashboard.page.viewAll')}
               </Button>
-            </CardHeader>
-            <CardContent>
+            }
+          >
               <div className="md:block hidden">
                 <Table>
                   <TableHeader>
@@ -619,20 +648,20 @@ export default function DashboardPage() {
                   </div>
                 )} />
               </div>
-            </CardContent>
-          </Card>
+          </Section>
         )}
 
         {/* Últimos Recorridos por el Sitio */}
         {visibleWidgets.tours && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-medium">{t('dashboard.page.tours')}</CardTitle>
-              <Button variant="link" className="text-[#C8860A] hover:text-[#B37809]">
+          <Section
+            icon={<Route />}
+            title={t('dashboard.page.tours')}
+            action={
+              <Button variant="link" className="text-primary">
                 {t('dashboard.page.viewAll')}
               </Button>
-            </CardHeader>
-            <CardContent>
+            }
+          >
               <div className="md:block hidden">
                 <Table>
                   <TableHeader>
@@ -665,20 +694,20 @@ export default function DashboardPage() {
                   </div>
                 )} />
               </div>
-            </CardContent>
-          </Card>
+          </Section>
         )}
 
         {/* Últimas etiquetas escaneadas */}
         {visibleWidgets.scans && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-medium">{t('dashboard.page.scans')}</CardTitle>
-              <Button variant="link" className="text-[#C8860A] hover:text-[#B37809]">
+          <Section
+            icon={<QrCode />}
+            title={t('dashboard.page.scans')}
+            action={
+              <Button variant="link" className="text-primary">
                 {t('dashboard.page.viewAll')}
               </Button>
-            </CardHeader>
-            <CardContent>
+            }
+          >
               <div className="md:block hidden">
                 <Table>
                   <TableHeader>
@@ -708,10 +737,9 @@ export default function DashboardPage() {
                   </div>
                 )} />
               </div>
-            </CardContent>
-          </Card>
+          </Section>
         )}
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

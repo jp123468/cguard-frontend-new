@@ -43,7 +43,10 @@ import {
   RotateCcw,
   Smartphone,
   Download,
+  Users,
+  Plus,
 } from "lucide-react";
+import { PageContainer, PageHeader, StatusBadge } from "@/components/kit";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -555,10 +558,9 @@ export default function ClientesPage() {
           // El backend puede enviar booleano o entero (0/1)
           const isActive = row.active === true;
           return (
-            <span className={`px-2 py-1 text-xs rounded-full ${isActive ? "bg-green-100 text-green-800" : "bg-red-500/15 text-red-700"
-              }`}>
+            <StatusBadge tone={isActive ? 'green' : 'red'}>
               {isActive ? t('clients.status.active') : t('clients.status.archived')}
-            </span>
+            </StatusBadge>
           );
         },
       },
@@ -567,17 +569,17 @@ export default function ClientesPage() {
         header: t('clients.columns.appAccess', 'App'),
         render: (_value: any, row: Client) => {
           const status = (row as any).onboardingStatus || 'not_invited';
-          const map: Record<string, { label: string; cls: string }> = {
-            not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), cls: 'bg-muted text-muted-foreground' },
-            invited:     { label: t('clients.onboarding.invited',     'Invitado'),   cls: 'bg-amber-500/15 text-amber-700' },
-            active:      { label: t('clients.onboarding.active',      'En app'),     cls: 'bg-green-100 text-green-800' },
-            suspended:   { label: t('clients.onboarding.suspended',   'Suspendido'), cls: 'bg-red-500/15 text-red-700' },
+          const map: Record<string, { label: string; tone: 'slate' | 'orange' | 'green' | 'red' }> = {
+            not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), tone: 'slate' },
+            invited:     { label: t('clients.onboarding.invited',     'Invitado'),   tone: 'orange' },
+            active:      { label: t('clients.onboarding.active',      'En app'),     tone: 'green' },
+            suspended:   { label: t('clients.onboarding.suspended',   'Suspendido'), tone: 'red' },
           };
           const badge = map[status] || map.not_invited;
           return (
-            <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${badge.cls}`}>
+            <StatusBadge tone={badge.tone} className="whitespace-nowrap">
               {badge.label}
-            </span>
+            </StatusBadge>
           );
         },
       },
@@ -715,6 +717,22 @@ export default function ClientesPage() {
       />
 
       <section className="p-4">
+        <PageContainer width="wide">
+          <PageHeader
+            icon={<Users />}
+            title={t('clients.breadcrumb.clients')}
+            subtitle={t('clients.header.subtitle', 'Gestiona tus clientes, su acceso a la app y su categorización.')}
+            actions={
+              hasPermission('clientAccountCreate') ? (
+                <Button variant="brand" asChild>
+                  <Link to="/clients/add-new">
+                    <Plus className="h-4 w-4" />
+                    {t('clients.newClient')}
+                  </Link>
+                </Button>
+              ) : undefined
+            }
+          />
           <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_320px] items-center gap-3">
             <div className="flex items-center gap-2">
               <BulkActionsSelect key={bulkKey} actions={bulkActions} onChange={handleBulkAction} />
@@ -818,17 +836,6 @@ export default function ClientesPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-
-              {hasPermission('clientAccountCreate') && (
-                <div className="w-full md:w-auto">
-                  <Button
-                    className="bg-[#C8860A] hover:bg-[#B37809] text-white w-full md:w-auto"
-                    asChild
-                  >
-                    <Link to="/clients/add-new">{t('clients.newClient')}</Link>
-                  </Button>
-                </div>
-              )}
             </div>
         </div>
 
@@ -926,21 +933,21 @@ export default function ClientesPage() {
                     <div className="text-xs text-muted-foreground truncate">{client.email || '-'}</div>
                   </div>
 
-                  <div className="flex-shrink-0 flex flex-col items-end ml-2">
-                    <span className={`px-2 py-1 text-xs rounded-full ${client.active ? 'bg-green-100 text-green-800' : 'bg-red-500/15 text-red-700'}`}>
+                  <div className="flex-shrink-0 flex flex-col items-end gap-1 ml-2">
+                    <StatusBadge tone={client.active ? 'green' : 'red'}>
                       {client.active ? t('clients.status.active') : t('clients.status.archived')}
-                    </span>
+                    </StatusBadge>
                     {(() => {
                       const s = (client as any).onboardingStatus || 'not_invited';
-                      const mobileMap: Record<string, { label: string; cls: string }> = {
-                        not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), cls: 'bg-muted text-muted-foreground' },
-                        invited:     { label: t('clients.onboarding.invited', 'Invitado'),      cls: 'bg-amber-500/15 text-amber-700' },
-                        active:      { label: t('clients.onboarding.active', 'En app'),         cls: 'bg-green-100 text-green-800' },
-                        suspended:   { label: t('clients.onboarding.suspended', 'Suspendido'),  cls: 'bg-red-500/15 text-red-700' },
+                      const mobileMap: Record<string, { label: string; tone: 'slate' | 'orange' | 'green' | 'red' }> = {
+                        not_invited: { label: t('clients.onboarding.not_invited', 'Sin acceso'), tone: 'slate' },
+                        invited:     { label: t('clients.onboarding.invited', 'Invitado'),      tone: 'orange' },
+                        active:      { label: t('clients.onboarding.active', 'En app'),         tone: 'green' },
+                        suspended:   { label: t('clients.onboarding.suspended', 'Suspendido'),  tone: 'red' },
                       };
                       const b = mobileMap[s] || mobileMap.not_invited;
                       return (
-                        <span className={`mt-1 px-2 py-0.5 text-xs rounded-full ${b.cls}`}>{b.label}</span>
+                        <StatusBadge tone={b.tone}>{b.label}</StatusBadge>
                       );
                     })()}
                     <div className="mt-2">
@@ -956,6 +963,7 @@ export default function ClientesPage() {
             )}
           />
         </div>
+        </PageContainer>
       </section>
 
       <ImportDialog open={openImport} onOpenChange={setOpenImport} onSuccess={loadClients} />

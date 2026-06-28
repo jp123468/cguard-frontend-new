@@ -64,7 +64,9 @@ import {
   Edit,
   X,
   Trash,
+  Siren,
 } from "lucide-react";
+import { PageContainer, PageHeader } from "@/components/kit";
 import { toast } from "sonner";
 
 // Validaciones (zod) y tipos
@@ -963,7 +965,12 @@ export default function DispatcherPage() {
         ]}
       />
 
-      <section className="p-6">
+      <PageContainer width="wide" className="p-6">
+        <PageHeader
+          icon={<Siren />}
+          title={t('dispatcher.breadcrumbList')}
+          subtitle={t('dispatcher.subtitle') || 'Gestiona y da seguimiento a los despachos de tu operación.'}
+        />
         {/* Acciones superiores */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {/* Acción (izquierda) */}
@@ -1091,10 +1098,7 @@ export default function DispatcherPage() {
             </div>
 
             {canCreate ? (
-              <Button
-                className="bg-[#C8860A] text-white hover:bg-[#B37809]"
-                asChild
-              >
+              <Button variant="brand" asChild>
                 <Link to="/dispatch-tickets/new">{t('dispatcher.newDispatch')}</Link>
               </Button>
             ) : (
@@ -1729,7 +1733,7 @@ export default function DispatcherPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </section>
+      </PageContainer>
     </AppLayout>
   );
 }

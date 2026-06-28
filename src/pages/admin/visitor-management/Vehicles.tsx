@@ -26,7 +26,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, MoreVertical, Upload, FileDown, FileSpreadsheet, Printer, Mail } from "lucide-react";
+import { Search, MoreVertical, Upload, FileDown, FileSpreadsheet, Printer, Mail, Car, Plus } from "lucide-react";
+import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
 
 export default function Vehicles() {
     const [perPage, setPerPage] = useState("25");
@@ -62,31 +63,46 @@ export default function Vehicles() {
             />
 
             <section className="p-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2">
-                        <Select onValueChange={(v) => console.log("Acción:", v)}>
-                            <SelectTrigger className="w-40">
-                                <SelectValue placeholder="Acción" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="eliminar">Eliminar</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+              <PageContainer width="wide">
+                <PageHeader
+                    icon={<Car />}
+                    title="Vehículos"
+                    subtitle="Registro de vehículos de visitantes y de la empresa"
+                    actions={
+                        <>
+                            <Select onValueChange={(v) => console.log("Acción:", v)}>
+                                <SelectTrigger className="w-36">
+                                    <SelectValue placeholder="Acción" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="eliminar">Eliminar</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Button variant="brand" onClick={() => setIsAddOpen(true)}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Añadir vehículo
+                            </Button>
+                        </>
+                    }
+                />
 
-                    <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                className="w-72 pl-9"
-                                placeholder="Buscar vehículo"
-                                onChange={(e) => console.log("buscar:", e.target.value)}
-                            />
-                        </div>
+                <Section
+                    title="Listado de vehículos"
+                    icon={<Car />}
+                    action={
+                        <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    className="w-64 pl-9"
+                                    placeholder="Buscar vehículo"
+                                    onChange={(e) => console.log("buscar:", e.target.value)}
+                                />
+                            </div>
 
                         <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
                             <SheetTrigger asChild>
-                                <Button className="bg-[#C8860A] text-white hover:bg-[#B37809]">
+                                <Button className="hidden">
                                     Añadir vehículo
                                 </Button>
                             </SheetTrigger>
@@ -196,7 +212,7 @@ export default function Vehicles() {
                                         </Button>
                                         <Button
                                             type="submit"
-                                            className="bg-[#C8860A] text-white hover:bg-[#B37809]"
+                                            variant="brand"
                                         >
                                             Enviar
                                         </Button>
@@ -237,10 +253,10 @@ export default function Vehicles() {
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                    </div>
-                </div>
-
-                <div className="mt-4 overflow-hidden rounded-lg border">
+                        </div>
+                    }
+                >
+                <div className="overflow-hidden rounded-xl border">
                     <table className="min-w-full border-collapse text-left text-sm">
                         <thead className="bg-muted/30">
                             <tr className="border-b">
@@ -258,20 +274,13 @@ export default function Vehicles() {
                         <tbody>
                             {rows.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="py-20">
-                                        <div className="flex flex-col items-center justify-center text-center">
-                                            <img
-                                                src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
-                                                alt="Sin datos"
-                                                className="mb-4 h-36"
-                                            />
-                                            <h3 className="text-lg font-semibold">
-                                                No se encontraron resultados
-                                            </h3>
-                                            <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-                                                No pudimos encontrar ningún elemento que coincida con su búsqueda
-                                            </p>
-                                        </div>
+                                    <td colSpan={6} className="py-8">
+                                        <EmptyState
+                                            icon={<Car />}
+                                            title="No se encontraron resultados"
+                                            description="No pudimos encontrar ningún elemento que coincida con su búsqueda"
+                                            className="border-0"
+                                        />
                                     </td>
                                 </tr>
                             )}
@@ -295,6 +304,8 @@ export default function Vehicles() {
                         <div>0 of 0</div>
                     </div>
                 </div>
+                </Section>
+              </PageContainer>
             </section>
         </AppLayout>
     );

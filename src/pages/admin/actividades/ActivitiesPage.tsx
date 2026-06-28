@@ -9,6 +9,7 @@ import {
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader, StatusBadge } from "@/components/kit";
 import api from "@/lib/api";
 import { fileUrlFromPrivate } from "@/lib/fileUrl";
 import { useNotificationStream } from "@/hooks/useNotificationStream";
@@ -190,49 +191,44 @@ export default function ActivitiesPage() {
       />
 
       <div className="p-4 sm:p-6">
+        <PageContainer width="wide">
         {/* ── Header ───────────────────────────────────────────────────────── */}
-        <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold text-foreground">{t("activity.title")}</h1>
-              <span
-                className={[
-                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium",
-                  connected
-                    ? "bg-emerald-500/12 text-emerald-500"
-                    : "bg-muted text-muted-foreground",
-                ].join(" ")}
-                title={connected ? t("activity.live") : t("activity.offline")}
-              >
+        <PageHeader
+          icon={<ActivityIcon />}
+          title={t("activity.title")}
+          subtitle={t("activity.subtitle")}
+          badges={
+            <>
+              <StatusBadge tone={connected ? "green" : "slate"}>
                 <Radio size={12} className={connected ? "animate-pulse" : ""} />
                 {connected ? t("activity.live") : t("activity.offline")}
-              </span>
+              </StatusBadge>
               {unreadCount > 0 && (
-                <span className="inline-flex items-center rounded-full bg-primary/15 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+                <StatusBadge tone="primary" dot={false}>
                   {t("activity.unreadCount", { count: unreadCount })}
-                </span>
+                </StatusBadge>
               )}
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">{t("activity.subtitle")}</p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-              <RefreshCw className={["mr-2 h-4 w-4", loading ? "animate-spin" : ""].join(" ")} />
-              {t("activity.refresh")}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-primary border-primary/30 hover:text-primary"
-              onClick={markAllRead}
-              disabled={unreadCount === 0}
-            >
-              <CheckCheck className="mr-2 h-4 w-4" />
-              {t("activity.markAllRead")}
-            </Button>
-          </div>
-        </div>
+            </>
+          }
+          actions={
+            <>
+              <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+                <RefreshCw className={["mr-2 h-4 w-4", loading ? "animate-spin" : ""].join(" ")} />
+                {t("activity.refresh")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-primary border-primary/30 hover:text-primary"
+                onClick={markAllRead}
+                disabled={unreadCount === 0}
+              >
+                <CheckCheck className="mr-2 h-4 w-4" />
+                {t("activity.markAllRead")}
+              </Button>
+            </>
+          }
+        />
 
         {/* ── Toolbar: search + category chips + unread toggle ─────────────── */}
         <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -351,6 +347,7 @@ export default function ActivitiesPage() {
             </div>
           )}
         </div>
+        </PageContainer>
       </div>
     </AppLayout>
   );

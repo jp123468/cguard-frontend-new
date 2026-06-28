@@ -11,7 +11,9 @@ import {
 import { toast } from 'sonner';
 import {
   Plus, Search, Pencil, Trash2, X, Package, ChevronDown, ChevronUp, ImagePlus, ZoomIn,
+  CheckCircle2, AlertTriangle,
 } from 'lucide-react';
+import { PageContainer, PageHeader, Section, Stagger, StatCard, StatusBadge, EmptyState } from '@/components/kit';
 import inventoryItemService, {
   InventoryItem, InventoryItemInput, InventoryItemPhoto, ItemType, ItemCondition, ItemStatus,
   ITEM_TYPE_LABELS, ITEM_STATUS_LABELS, ITEM_CONDITION_LABELS, ITEM_STATUS_COLORS,
@@ -212,7 +214,8 @@ export default function GlobalInventoryPage() {
 
   return (
     <AppLayout>
-      <div ref={containerRef} className="max-w-screen-xl mx-auto px-4 py-6 space-y-5">
+      <div ref={containerRef}>
+      <PageContainer width="wide" className="px-4 py-6">
         <Breadcrumb
           items={[
             { label: 'Panel de control', path: '/dashboard' },
@@ -220,24 +223,25 @@ export default function GlobalInventoryPage() {
           ]}
         />
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Package className="w-6 h-6 text-blue-600" />
-              Inventario Global
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Catálogo de equipos y recursos de la empresa
-            </p>
-          </div>
-          <Button onClick={openCreate} className="shrink-0">
-            <Plus className="w-4 h-4 mr-1" /> Nuevo artículo
-          </Button>
-        </div>
+        <PageHeader
+          icon={<Package />}
+          title="Inventario Global"
+          subtitle="Catálogo de equipos y recursos de la empresa"
+          actions={(
+            <Button variant="brand" onClick={openCreate} className="shrink-0">
+              <Plus className="w-4 h-4 mr-1" /> Nuevo artículo
+            </Button>
+          )}
+        />
+
+        <Stagger className="grid gap-4 sm:grid-cols-3">
+          <StatCard label="Artículos" value={total} icon={<Package />} accent="primary" />
+          <StatCard label="Disponibles" value={items.filter((i) => i.status === 'disponible').length} icon={<CheckCircle2 />} accent="green" />
+          <StatCard label="Dañados" value={items.filter((i) => i.condition === 'dañado').length} icon={<AlertTriangle />} accent="red" />
+        </Stagger>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 bg-card border border-border rounded-lg p-3">
+        <div className="flex flex-wrap gap-3 cg-card p-3">
           <div className="relative flex-1 min-w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -280,13 +284,13 @@ export default function GlobalInventoryPage() {
           )}
         </div>
 
-        {/* Summary bar */}
-        <div className="text-sm text-muted-foreground">
-          {loading ? 'Cargando...' : `${total} artículo${total !== 1 ? 's' : ''} encontrado${total !== 1 ? 's' : ''}`}
-        </div>
-
         {/* Table */}
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <Section
+          title="Catálogo de inventario"
+          icon={<Package />}
+          action={<span className="text-sm text-muted-foreground">{loading ? 'Cargando...' : `${total} artículo${total !== 1 ? 's' : ''}`}</span>}
+          contentClassName="-mx-5 -mb-5 overflow-hidden"
+        >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/30 border-b border-border">
@@ -309,14 +313,17 @@ export default function GlobalInventoryPage() {
                   </tr>
                 ) : items.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
-                      <div className="flex flex-col items-center gap-2">
-                        <Package className="w-10 h-10 text-muted-foreground/60" />
-                        <span>Sin artículos en el catálogo</span>
-                        <Button size="sm" variant="outline" onClick={openCreate}>
-                          <Plus className="w-3.5 h-3.5 mr-1" /> Agregar primer artículo
-                        </Button>
-                      </div>
+                    <td colSpan={7} className="px-4 py-6">
+                      <EmptyState
+                        icon={<Package />}
+                        title="Sin artículos en el catálogo"
+                        description="Agrega tu primer equipo o recurso para empezar a inventariar."
+                        action={(
+                          <Button size="sm" variant="brand" onClick={openCreate}>
+                            <Plus className="w-3.5 h-3.5 mr-1" /> Agregar primer artículo
+                          </Button>
+                        )}
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -474,13 +481,14 @@ export default function GlobalInventoryPage() {
               </div>
             </div>
           )}
-        </div>
+        </Section>
+      </PageContainer>
       </div>
 
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-card rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h2 className="text-lg font-semibold text-foreground">
@@ -694,7 +702,7 @@ export default function GlobalInventoryPage() {
       {/* Delete Confirmation */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-card rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
             <h2 className="text-lg font-semibold text-foreground">Eliminar artículo</h2>
             <p className="text-sm text-foreground/70">
               ¿Estás seguro de que quieres eliminar{' '}

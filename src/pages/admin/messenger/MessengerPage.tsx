@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } fro
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { MessageSquareText, Send, Plus, Search, Loader2, X, Check, CheckCheck, Paperclip, Play, Trash2, Users, Mic, UserPlus, RefreshCw, UserCircle2 } from "lucide-react";
+import { PageHeader } from "@/components/kit";
 import { messageService, type MessageAttachment, type GroupMember } from "@/lib/api/messageService";
 import securityGuardService from "@/lib/api/securityGuardService";
 import { postSiteService } from "@/lib/api/postSiteService";
@@ -195,8 +196,18 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
   return (
     <AppLayout>
       <Breadcrumb items={[{ label: "Panel de control", path: "/dashboard" }, { label: "Mensajería" }, { label: pageTitle }]} />
-      <div className="p-4 lg:p-6">
-        <div className="flex h-[calc(100vh-180px)] overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="p-4 lg:p-6 space-y-4">
+        <PageHeader
+          icon={<MessageSquareText />}
+          title={pageTitle}
+          subtitle={isClient ? "Conversaciones con tus clientes." : "Conversaciones con vigilantes, supervisores y grupos por puesto."}
+          actions={
+            <button onClick={() => setComposeOpen(true)} className="cg-gradient-brand inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:shadow-lg hover:brightness-[1.04]">
+              <Plus size={15} /> Nuevo
+            </button>
+          }
+        />
+        <div className="flex h-[calc(100vh-240px)] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           {/* Conversation list */}
           <aside className="flex w-full max-w-xs flex-col border-r border-border">
             <div className="flex items-center justify-between gap-2 border-b border-border p-3">

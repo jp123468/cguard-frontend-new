@@ -12,6 +12,8 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { CheckSquare, Plus, ListChecks } from "lucide-react";
+import { PageContainer, PageHeader, Section, SkeletonCards } from "@/components/kit";
 import taskService, { type TaskRow, type TaskStatus } from "@/lib/api/taskService";
 
 function fmtDate(s?: string | null): string {
@@ -107,32 +109,39 @@ export default function TaskTracking() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Tareas</h1>
-            <p className="text-sm text-muted-foreground">Seguimiento de tareas de los puestos: por aprobar, en curso y completadas.</p>
-          </div>
-          <Button onClick={openDialog}>Nueva tarea</Button>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
-            <Button key={f.key} size="sm" variant={filter === f.key ? "default" : "outline"} onClick={() => setFilter(f.key)}>
-              {f.label}
-            </Button>
-          ))}
-        </div>
-
-        {loading ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">Cargando…</div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={rows}
-            emptyState={<div className="py-10 text-center text-sm text-muted-foreground">No hay tareas</div>}
+      <div className="p-4 sm:p-6">
+        <PageContainer width="wide">
+          <PageHeader
+            icon={<CheckSquare />}
+            title="Tareas"
+            subtitle="Seguimiento de tareas de los puestos: por aprobar, en curso y completadas."
+            actions={
+              <Button variant="brand" onClick={openDialog}>
+                <Plus className="mr-2 h-4 w-4" /> Nueva tarea
+              </Button>
+            }
           />
-        )}
+
+          <Section title="Tareas" icon={<ListChecks />} action={
+            <div className="flex flex-wrap gap-2">
+              {FILTERS.map((f) => (
+                <Button key={f.key} size="sm" variant={filter === f.key ? "default" : "outline"} onClick={() => setFilter(f.key)}>
+                  {f.label}
+                </Button>
+              ))}
+            </div>
+          }>
+            {loading ? (
+              <SkeletonCards count={4} />
+            ) : (
+              <DataTable
+                columns={columns}
+                data={rows}
+                emptyState={<div className="py-10 text-center text-sm text-muted-foreground">No hay tareas</div>}
+              />
+            )}
+          </Section>
+        </PageContainer>
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>

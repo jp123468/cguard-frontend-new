@@ -37,7 +37,10 @@ import {
     Printer,
     Mail,
     UserPlus,
+    Users,
+    Plus,
 } from "lucide-react";
+import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
 import visitorLogService from "@/lib/api/visitorLogService";
 import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
@@ -788,37 +791,46 @@ export default function Visitors() {
             />
 
             <section className="p-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2">
-                        <Select value={action} onValueChange={(v) => { handleActionChange(v); setAction(''); }}>
-                            <SelectTrigger className="w-40">
-                                <SelectValue placeholder={t('actions.action') || 'Acción'} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {/* <SelectItem value="activar">{t('actions.activate') || 'Activar'}</SelectItem> */}
-                                {/* <SelectItem value="inactivar">{t('actions.desactivate') || 'Inactivar'}</SelectItem> */}
-                                <SelectItem value="eliminar">{t('actions.delete') || 'Eliminar'}</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+              <PageContainer width="wide">
+                <PageHeader
+                    icon={<Users />}
+                    title={t('visitantes.title') || 'Visitantes'}
+                    subtitle={t('visitantes.subtitle') || 'Bitácoras de visitantes registrados en sus puestos'}
+                    actions={
+                        <>
+                            <Select value={action} onValueChange={(v) => { handleActionChange(v); setAction(''); }}>
+                                <SelectTrigger className="w-36">
+                                    <SelectValue placeholder={t('actions.action') || 'Acción'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="eliminar">{t('actions.delete') || 'Eliminar'}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Button
+                                variant="brand"
+                                type="button"
+                                onClick={() => setOpenAddVisitor(true)}
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
+                                {t('visitantes.addVisitor') || 'Añadir visitante'}
+                            </Button>
+                        </>
+                    }
+                />
 
+                <Section
+                    title={t('visitantes.bitacoras') || 'Bitácoras'}
+                    icon={<Users />}
+                    action={
                     <div className="flex flex-wrap items-center gap-2">
                         <div className="relative">
                             <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
-                                className="w-72 pl-9"
+                                className="w-64 pl-9"
                                 placeholder={t('visitantes.searchVisitor') || 'Buscar visitante'}
                                 onChange={(e) => { setLogsSearch(e.target.value); setLogsOffset(0); }}
                             />
                         </div>
-
-                        <Button
-                            className="bg-[#C8860A] text-white hover:bg-[#B37809]"
-                            type="button"
-                            onClick={() => setOpenAddVisitor(true)}
-                        >
-                            {t('visitantes.addVisitor') || 'Añadir visitante'}
-                        </Button>
 
                         <Sheet open={openFilter} onOpenChange={setOpenFilter}>
                             <SheetTrigger asChild>
@@ -939,7 +951,8 @@ export default function Visitors() {
 
                                     <Button
                                         type="submit"
-                                        className="mt-4 w-full bg-[#C8860A] text-white hover:bg-[#B37809]"
+                                        variant="brand"
+                                        className="mt-4 w-full"
                                     >
                                         {t('visitantes.filterButton') || 'Filtro'}
                                     </Button>
@@ -979,9 +992,9 @@ export default function Visitors() {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
-                </div>
-
-                <div className="mt-4 overflow-hidden rounded-lg border">
+                    }
+                >
+                <div className="overflow-hidden rounded-xl border">
                     {/* Desktop table (hidden on small screens) */}
                     <div className="bg-card border rounded p-4 md:block hidden">
                         <div className="overflow-x-auto">
@@ -1008,7 +1021,13 @@ export default function Visitors() {
                                         </tr>
                                     ) : logs.length === 0 ? (
                                         <tr>
-                                            <td colSpan={12} className="p-6 text-center text-muted-foreground">{t('visitantes.noLogs') || 'No se encontraron registros de bitácoras'}</td>
+                                            <td colSpan={12} className="p-4">
+                                                <EmptyState
+                                                    icon={<Users />}
+                                                    title={t('visitantes.noLogs') || 'No se encontraron registros de bitácoras'}
+                                                    className="border-0"
+                                                />
+                                            </td>
                                         </tr>
                                     ) : (
                                         logs.map((r) => (
@@ -1121,6 +1140,8 @@ export default function Visitors() {
                         </div>
                     </div>
                 </div>
+                </Section>
+              </PageContainer>
         </section>
 
             {
@@ -1398,7 +1419,7 @@ export default function Visitors() {
                     <div className="flex justify-end pt-4">
                         <Button
                             type="submit"
-                            className="bg-[#C8860A] text-white hover:bg-[#B37809]"
+                            variant="brand"
                         >
                             {t('visitantes.save') || 'Guardar'}
                         </Button>

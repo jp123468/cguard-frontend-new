@@ -40,11 +40,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Filter, Plus, Search, EllipsisVertical, Pencil, Trash2, CheckCircle2 } from 'lucide-react';
+import { Filter, Plus, Search, EllipsisVertical, Pencil, Trash2, CheckCircle2, Briefcase, FolderKanban } from 'lucide-react';
 import { toast } from 'sonner';
 import { projectService, type ClientProject, type ProjectFilters } from '@/lib/api/projectService';
 import { PROJECT_TYPES, PROJECT_STATUS_LABELS, PROJECT_STATUS_COLORS } from '@/lib/projectTypes';
 import { ProjectTypeBadge, ProjectStatusBadge } from '@/components/projects/ProjectBadge';
+import { PageContainer, PageHeader, Section, EmptyState } from '@/components/kit';
 import ProjectForm from './ProjectForm';
 
 export default function ProjectsPage() {
@@ -122,9 +123,24 @@ export default function ProjectsPage() {
         ]}
       />
 
-      <section className="p-4">
+      <PageContainer width="wide" className="px-4">
+        <PageHeader
+          icon={<FolderKanban />}
+          title="Proyectos"
+          subtitle="Gestiona los proyectos de tus clientes, su estado y avance."
+          actions={(
+            <Button
+              variant="brand"
+              onClick={() => { setEditingId(undefined); setOpenForm(true); }}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Nuevo proyecto
+            </Button>
+          )}
+        />
+
         {/* Top bar */}
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
             {/* Search */}
             <div className="relative w-full sm:w-64">
@@ -136,15 +152,6 @@ export default function ProjectsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-
-            {/* New project */}
-            <Button
-              className="bg-[#C8860A] hover:bg-[#B37809] text-white w-full sm:w-auto"
-              onClick={() => { setEditingId(undefined); setOpenForm(true); }}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Nuevo proyecto
-            </Button>
 
             {/* Filters */}
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
@@ -211,7 +218,7 @@ export default function ProjectsPage() {
         </div>
 
         {/* Table */}
-        <div className="mt-4 border rounded-lg overflow-hidden">
+        <Section icon={<Briefcase />} title="Listado de proyectos" contentClassName="overflow-hidden rounded-xl border">
           <table className="min-w-full text-sm text-left">
             <thead className="bg-muted/30">
               <tr className="border-b">
@@ -227,8 +234,17 @@ export default function ProjectsPage() {
             <tbody>
               {!loading && projects.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-20 text-center text-muted-foreground">
-                    No se encontraron proyectos
+                  <td colSpan={7} className="py-10">
+                    <EmptyState
+                      icon={<FolderKanban />}
+                      title="No se encontraron proyectos"
+                      description="Crea tu primer proyecto para empezar a organizar el trabajo de tus clientes."
+                      action={(
+                        <Button variant="brand" onClick={() => { setEditingId(undefined); setOpenForm(true); }}>
+                          <Plus className="h-4 w-4 mr-1" /> Nuevo proyecto
+                        </Button>
+                      )}
+                    />
                   </td>
                 </tr>
               )}
@@ -284,11 +300,11 @@ export default function ProjectsPage() {
               })}
             </tbody>
           </table>
-        </div>
+        </Section>
 
         {/* Pagination */}
         {totalCount > 0 && (
-          <div className="mt-3 flex items-center justify-between text-sm text-foreground/70">
+          <div className="flex items-center justify-between text-sm text-foreground/70">
             <span>Mostrando {from}–{to} de {totalCount}</span>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
@@ -300,7 +316,7 @@ export default function ProjectsPage() {
             </div>
           </div>
         )}
-      </section>
+      </PageContainer>
 
       {/* Create / Edit Dialog */}
       <Dialog open={openForm} onOpenChange={setOpenForm}>

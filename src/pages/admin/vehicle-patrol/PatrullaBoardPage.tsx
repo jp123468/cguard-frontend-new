@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
-  Car, Plus, MapPin, Route as RouteIcon, CheckCircle2, Circle, Wand2, Clock, User,
+  Car, Plus, MapPin, Route as RouteIcon, CheckCircle2, Wand2, Clock, User,
   Loader2, Eye, ListChecks,
 } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import Breadcrumb from '@/components/ui/breadcrumb';
+import { Button } from '@/components/ui/button';
+import { PageContainer, PageHeader, Section, Stagger, StatCard, StatusBadge, EmptyState, SkeletonCards } from '@/components/kit';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import routeService from '@/lib/api/routeService';
 import RouteDetailModal from '../routes/RouteDetailModal';
@@ -152,50 +154,47 @@ export default function PatrullaBoardPage() {
   return (
     <AppLayout>
       <Breadcrumb items={[{ label: 'Patrulla vehicular' }]} />
-      <div className="cc-root p-4 sm:p-6" style={{ ['--cc-accent' as any]: 'var(--primary)' }}>
-        {/* header */}
-        <div className="glass mb-5 flex flex-wrap items-center justify-between gap-3 p-4">
-          <div className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-xl" style={{ background: 'color-mix(in oklab, var(--cc-accent) 16%, transparent)', color: 'var(--cc-accent)' }}><Car size={20} /></span>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-foreground">Patrulla vehicular</h1>
-              <p className="text-xs text-muted-foreground">Rutas que el supervisor debe recorrer y su estado del día.</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground" />
-            <button onClick={() => navigate('/vehicle-patrol/routes')}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:text-[color:var(--cc-accent)]">
-              <RouteIcon size={15} /> Gestionar rutas
-            </button>
-            <button onClick={goCreate} className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-black" style={{ background: 'var(--cc-accent)' }}>
-              <Plus size={16} /> Crear patrulla vehicular
-            </button>
-          </div>
-        </div>
+      <PageContainer width="wide" className="cc-root px-4 py-6 sm:px-6">
+        <PageHeader
+          icon={<Car />}
+          title="Patrulla vehicular"
+          subtitle="Rutas que el supervisor debe recorrer y su estado del día."
+          actions={(
+            <>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground" />
+              <Button variant="outline" onClick={() => navigate('/vehicle-patrol/routes')}>
+                <RouteIcon size={15} className="mr-1.5" /> Gestionar rutas
+              </Button>
+              <Button variant="brand" onClick={goCreate}>
+                <Plus size={16} className="mr-1.5" /> Crear patrulla vehicular
+              </Button>
+            </>
+          )}
+        />
 
-        {/* summary */}
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <span className="flex items-center gap-1.5 rounded-lg bg-white/[0.04] px-3 py-1.5 text-sm text-foreground">
-            <ListChecks size={15} className="text-[color:var(--cc-accent)]" /> {todays.length} programadas hoy
-          </span>
-          <span className="flex items-center gap-1.5 rounded-lg bg-online-soft px-3 py-1.5 text-sm text-online">
-            <CheckCircle2 size={15} /> {doneCount} completadas
-          </span>
-          <button onClick={() => setShowAll((s) => !s)} className="ml-auto text-sm text-muted-foreground hover:text-foreground">
-            {showAll ? 'Ver solo del día' : 'Ver todas las rutas'}
-          </button>
-        </div>
+        <Stagger className="grid gap-4 sm:grid-cols-2">
+          <StatCard label="Programadas hoy" value={todays.length} icon={<ListChecks />} accent="primary" />
+          <StatCard label="Completadas" value={doneCount} icon={<CheckCircle2 />} accent="green" />
+        </Stagger>
 
+        <Section
+          title="Rutas del día"
+          icon={<RouteIcon />}
+          action={(
+            <button onClick={() => setShowAll((s) => !s)} className="text-sm text-muted-foreground hover:text-foreground">
+              {showAll ? 'Ver solo del día' : 'Ver todas las rutas'}
+            </button>
+          )}
+        >
         {loading ? (
-          <div className="grid place-items-center py-20"><Loader2 className="animate-spin text-muted-foreground" /></div>
+          <SkeletonCards count={4} />
         ) : shown.length === 0 ? (
-          <div className="glass grid place-items-center py-16 text-center">
-            <RouteIcon className="mb-2 text-muted-foreground/40" size={32} />
-            <p className="text-sm font-medium text-foreground">{showAll ? 'No hay rutas creadas' : 'No hay rutas programadas para este día'}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Crea una patrulla vehicular con sus paradas (sitios de clientes) para empezar.</p>
-          </div>
+          <EmptyState
+            icon={<RouteIcon />}
+            title={showAll ? 'No hay rutas creadas' : 'No hay rutas programadas para este día'}
+            description="Crea una patrulla vehicular con sus paradas (sitios de clientes) para empezar."
+          />
         ) : (
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {shown.map((route) => {
@@ -208,11 +207,11 @@ export default function PatrullaBoardPage() {
                       <div className="flex items-center gap-2">
                         <h3 className="truncate text-sm font-semibold text-foreground">{route.name}</h3>
                         {done
-                          ? <span className="flex items-center gap-1 rounded-md bg-online-soft px-1.5 py-0.5 text-[10px] font-bold text-online"><CheckCircle2 size={11} />Completada</span>
-                          : <span className="flex items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-400"><Circle size={10} />Pendiente</span>}
+                          ? <StatusBadge tone="green">Completada</StatusBadge>
+                          : <StatusBadge tone="orange">Pendiente</StatusBadge>}
                       </div>
                       <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><MapPin size={12} className="text-[color:var(--cc-accent)]" />{stops} paradas</span>
+                        <span className="flex items-center gap-1"><MapPin size={12} className="text-[color:var(--primary)]" />{stops} paradas</span>
                         {route.vehicleName || route.vehicle?.name ? <span className="flex items-center gap-1"><Car size={12} />{route.vehicleName || route.vehicle?.name}</span> : null}
                         {route.assignedGuardName || route.guardName ? <span className="flex items-center gap-1"><User size={12} />{route.assignedGuardName || route.guardName}</span> : null}
                         {route.windowStart && <span className="flex items-center gap-1"><Clock size={12} />{new Date(route.windowStart).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })}</span>}
@@ -222,16 +221,16 @@ export default function PatrullaBoardPage() {
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button onClick={() => toggleDone(route)} disabled={busyId === route.id}
                       className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold disabled:opacity-50 ${done ? 'border border-border text-muted-foreground' : 'text-black'}`}
-                      style={done ? undefined : { background: 'var(--cc-accent)' }}>
+                      style={done ? undefined : { background: 'var(--primary)' }}>
                       {busyId === route.id ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
                       {done ? 'Deshacer' : 'Marcar completada'}
                     </button>
                     <button onClick={() => optimize(route)} disabled={busyId === route.id}
-                      className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:text-[color:var(--cc-accent)] disabled:opacity-50">
+                      className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:text-[color:var(--primary)] disabled:opacity-50">
                       <Wand2 size={13} /> Optimizar
                     </button>
                     <button onClick={() => setDetailId(route.id)}
-                      className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:text-[color:var(--cc-accent)]">
+                      className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:text-[color:var(--primary)]">
                       <Eye size={13} /> Ver ruta
                     </button>
                   </div>
@@ -240,9 +239,10 @@ export default function PatrullaBoardPage() {
             })}
           </div>
         )}
+        </Section>
 
         <RouteDetailModal open={!!detailId} onOpenChange={(v) => { if (!v) setDetailId(null); }} routeId={detailId} />
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

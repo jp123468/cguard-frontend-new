@@ -44,7 +44,12 @@ import {
   ChevronDown,
   Loader2,
   ChevronUp,
+  Building2,
+  CheckCircle2,
+  Archive as ArchiveIcon,
+  Layers,
 } from "lucide-react";
+import { PageContainer, PageHeader, Section, StatCard, StatusBadge, EmptyState, Stagger } from "@/components/kit";
 import PostSiteImportDialog from "@/components/post-sites/PostSiteImportDialog";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -420,6 +425,10 @@ export default function PostSitePage() {
     ];
   };
 
+  // KPI counts (presentation-only, derived from already-loaded rows/state)
+  const activeCount = (postSites ?? []).filter((s) => s.status === "active").length;
+  const archivedCount = (postSites ?? []).filter((s) => s.status !== "active").length;
+
   return (
     <AppLayout>
       <Breadcrumb
@@ -430,8 +439,44 @@ export default function PostSitePage() {
       />
 
       <section className="p-4">
+        <PageContainer width="wide">
+        <PageHeader
+          icon={<Building2 />}
+          title={t('postSites.postsite', 'Puestos de Vigilancia')}
+          subtitle={t('postSites.heroSubtitle', 'Gestiona tus sitios de vigilancia, estaciones y servicios.') as string}
+          actions={
+            hasPermission('postSiteCreate') ? (
+              <Button asChild variant="brand" className="w-full sm:w-auto">
+                <Link to="/post-sites/new">{t('postSites.newPostSite', 'Nuevo Puesto de seguridad')}</Link>
+              </Button>
+            ) : undefined
+          }
+        />
+
+        {/* KPIs */}
+        <Stagger className="grid gap-4 sm:grid-cols-3">
+          <StatCard
+            label={t('postSites.kpiTotal', 'Total mostrados') as string}
+            value={totalCount}
+            icon={<Layers />}
+            accent="primary"
+          />
+          <StatCard
+            label={t('postSites.filters.active', 'Activo') as string}
+            value={activeCount}
+            icon={<CheckCircle2 />}
+            accent="green"
+          />
+          <StatCard
+            label={t('postSites.filters.archived', 'Archivado') as string}
+            value={archivedCount}
+            icon={<ArchiveIcon />}
+            accent="slate"
+          />
+        </Stagger>
+
         {/* Acciones superiores */}
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <BulkActionsSelect
               key={bulkKey}
@@ -514,14 +559,6 @@ export default function PostSitePage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-
-            {hasPermission('postSiteCreate') && (
-              <Button
-                className="bg-[#C8860A] hover:bg-[#B37809] text-white w-full sm:w-auto"
-              >
-                <Link to="/post-sites/new">{t('postSites.newPostSite', 'Nuevo Puesto de seguridad')}</Link>
-              </Button>
-            )}
 
             {/* Filtros */}
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
@@ -648,7 +685,8 @@ export default function PostSitePage() {
                   </div>
 
                   <Button
-                    className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
+                    variant="brand"
+                    className="w-full"
                     onClick={() => {
                       const next = { ...tempFilters } as PostSiteFilters;
                       setFilters(next);
@@ -698,7 +736,12 @@ export default function PostSitePage() {
         </div>
 
         {/* Tabla */}
-        <div className="mt-4 md:block hidden border rounded-lg overflow-hidden">
+        <Section
+          title={t('postSites.listTitle', 'Listado de puestos') as string}
+          icon={<Building2 />}
+          className="hidden md:block"
+          contentClassName="border rounded-xl overflow-hidden"
+        >
           <table className="min-w-full text-sm text-left border-collapse">
             <thead className="bg-muted/30">
               <tr className="border-b">
@@ -758,17 +801,19 @@ export default function PostSitePage() {
               {/* sin filas por defecto */}
               {(postSites?.length ?? 0) === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-20">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <img
-                        src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
-                        alt="Sin datos"
-                        className="h-36 mb-4"
-                      />
-                      <p className="text-muted-foreground">
-                        {t('postSites.notsearch')}
-                      </p>
-                    </div>
+                  <td colSpan={6} className="p-6">
+                    <EmptyState
+                      icon={<Building2 />}
+                      title={t('postSites.notsearch') as string}
+                      description={t('postSites.emptyHint', 'Crea tu primer puesto de vigilancia para comenzar.') as string}
+                      action={
+                        hasPermission('postSiteCreate') ? (
+                          <Button asChild variant="brand">
+                            <Link to="/post-sites/new">{t('postSites.newPostSite', 'Nuevo Puesto de seguridad')}</Link>
+                          </Button>
+                        ) : undefined
+                      }
+                    />
                   </td>
                 </tr>
               )}
@@ -796,12 +841,9 @@ export default function PostSitePage() {
                     <ServiceTypeBadge value={(site as any).serviceType} />
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-xs rounded-full ${site.status === "active"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-500/15 text-red-700"
-                      }`}>
+                    <StatusBadge tone={site.status === "active" ? "green" : "slate"}>
                       {site.status === "active" ? t('postSites.filters.active', 'Activo') : t('postSites.filters.archived', 'Archivado')}
-                    </span>
+                    </StatusBadge>
                   </td>
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <RowActionsMenu actions={rowActions(site)} />
@@ -884,7 +926,7 @@ export default function PostSitePage() {
           </table>
 
           {/* Footer de tabla - Única sección de paginación */}
-          <div className="flex items-center justify-between px-4 py-3 text-sm text-foreground/70 bg-muted/30 border-x border-b rounded-b-lg">
+          <div className="flex items-center justify-between px-4 py-3 text-sm text-foreground/70 bg-muted/30 border-t">
             <div className="flex items-center gap-2">
               <span>{t('clients.pagination.itemsPerPage')}</span>
               <Select
@@ -928,10 +970,10 @@ export default function PostSitePage() {
               </Button>
             </div>
           </div>
-        </div>
+        </Section>
 
         {/* Mobile cards */}
-        <div className="mt-4 md:hidden">
+        <div className="md:hidden">
           <MobileCardList
             items={postSites}
             loading={loading}
@@ -945,9 +987,9 @@ export default function PostSitePage() {
                   </div>
                   <div className="text-right">
                     <div className="text-xs">
-                      <span className={`px-2 py-1 text-xs rounded-full ${site.status === "active" ? "bg-green-100 text-green-800" : "bg-red-500/15 text-red-700"}`}>
+                      <StatusBadge tone={site.status === "active" ? "green" : "slate"}>
                         {site.status === "active" ? t('postSites.filters.active', 'Activo') : t('postSites.filters.archived', 'Archivado')}
-                      </span>
+                      </StatusBadge>
                     </div>
                     <div className="mt-2">
                       <RowActionsMenu actions={rowActions(site)} />
@@ -1030,6 +1072,7 @@ export default function PostSitePage() {
           onSuccess={() => loadPostSites()}
         />
 
+        </PageContainer>
       </section>
     </AppLayout>
   );

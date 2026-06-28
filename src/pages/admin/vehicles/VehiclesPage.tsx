@@ -22,7 +22,8 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 
-import { Search, Filter as FilterIcon, MoreVertical, Eye, Edit, Archive } from "lucide-react";
+import { Search, Filter as FilterIcon, MoreVertical, Eye, Edit, Archive, Car, CheckCircle2, PauseCircle } from "lucide-react";
+import { PageContainer, PageHeader, Section, Stagger, StatCard, StatusBadge, EmptyState } from '@/components/kit';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import {
         DropdownMenu,
@@ -220,99 +221,113 @@ export default function VehiclesPage() {
                 ]}
             />
 
-            <section className="p-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2">
-                        <Select disabled={selectedIds.length === 0} value={selectedAction ?? undefined} onValueChange={(v) => handleBulkActionSelect(v)}>
-                            <SelectTrigger className="w-40">
-                                <SelectValue placeholder="Acciones" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {availableActions.map((a) => (
-                                    <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                className="w-72 pl-9"
-                                placeholder="Buscar vehículo"
-                                value={filters.search ?? ''}
-                                onChange={(e) => setFilters((s) => ({ ...s, search: e.target.value }))}
-                            />
-                        </div>
-
-                        <Button className="bg-[#C8860A] text-white hover:bg-[#B37809]" asChild>
-                            <Link to="/vehicle-patrol/vehicles/add-vehicle">Nuevo vehículo</Link>
-                        </Button>
-
-                        <Sheet open={openFilter} onOpenChange={setOpenFilter}>
-                            <SheetTrigger asChild>
-                                <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A]">
-                                    <FilterIcon className="mr-2 h-4 w-4" />
-                                    Filtros
-                                </Button>
-                            </SheetTrigger>
-
-                            <SheetContent side="right" className="w-[400px] sm:w-[460px]">
-                                <SheetHeader>
-                                    <SheetTitle>Filtros</SheetTitle>
-                                </SheetHeader>
-
-                                <div className="mt-6 space-y-5">
-                                    <div className="space-y-2">
-                                        <Label>Sectores</Label>
-                                        <Select
-                                            value={filters.categoryId ?? ""}
-                                            onValueChange={(v) => setFilters((s) => ({ ...s, categoryId: v }))}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Default" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="default">Default</SelectItem>
-                                                <SelectItem value="flota-a">Flota A</SelectItem>
-                                                <SelectItem value="flota-b">Flota B</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>Estado</Label>
-                                        <Select
-                                            value={filters.status}
-                                            onValueChange={(v) =>
-                                                setFilters((s) => ({ ...s, status: v as VehicleFilters["status"] }))
-                                            }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Activo" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="activo">Activo</SelectItem>
-                                                <SelectItem value="inactivo">Inactivo</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <Button
-                                        className="w-full bg-[#C8860A] text-white hover:bg-[#B37809]"
-                                        onClick={aplicarFiltros}
-                                    >
-                                        Filtro
+            <PageContainer width="wide" className="px-4 py-6 sm:px-6">
+                <PageHeader
+                    icon={<Car />}
+                    title="Vehículos"
+                    subtitle="Flota de la empresa y su estado operativo"
+                    actions={(
+                        <>
+                            <Button variant="brand" asChild>
+                                <Link to="/vehicle-patrol/vehicles/add-vehicle">Nuevo vehículo</Link>
+                            </Button>
+                            <Sheet open={openFilter} onOpenChange={setOpenFilter}>
+                                <SheetTrigger asChild>
+                                    <Button variant="outline">
+                                        <FilterIcon className="mr-2 h-4 w-4" />
+                                        Filtros
                                     </Button>
-                                </div>
-                            </SheetContent>
-                        </Sheet>
-                    </div>
-                </div>
+                                </SheetTrigger>
+                                <SheetContent side="right" className="w-[400px] sm:w-[460px]">
+                                    <SheetHeader>
+                                        <SheetTitle>Filtros</SheetTitle>
+                                    </SheetHeader>
 
-                <div className="mt-4 overflow-hidden rounded-lg">
-                    <div className="bg-card border rounded p-4 md:block hidden">
+                                    <div className="mt-6 space-y-5">
+                                        <div className="space-y-2">
+                                            <Label>Sectores</Label>
+                                            <Select
+                                                value={filters.categoryId ?? ""}
+                                                onValueChange={(v) => setFilters((s) => ({ ...s, categoryId: v }))}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Default" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="default">Default</SelectItem>
+                                                    <SelectItem value="flota-a">Flota A</SelectItem>
+                                                    <SelectItem value="flota-b">Flota B</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>Estado</Label>
+                                            <Select
+                                                value={filters.status}
+                                                onValueChange={(v) =>
+                                                    setFilters((s) => ({ ...s, status: v as VehicleFilters["status"] }))
+                                                }
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Activo" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="activo">Activo</SelectItem>
+                                                    <SelectItem value="inactivo">Inactivo</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <Button
+                                            variant="brand"
+                                            className="w-full"
+                                            onClick={aplicarFiltros}
+                                        >
+                                            Filtro
+                                        </Button>
+                                    </div>
+                                </SheetContent>
+                            </Sheet>
+                        </>
+                    )}
+                />
+
+                <Stagger className="grid gap-4 sm:grid-cols-3">
+                    <StatCard label="Total" value={count} icon={<Car />} accent="primary" />
+                    <StatCard label="Activos" value={rows.filter((r) => r.active).length} icon={<CheckCircle2 />} accent="green" />
+                    <StatCard label="Inactivos" value={rows.filter((r) => !r.active).length} icon={<PauseCircle />} accent="slate" />
+                </Stagger>
+
+                <Section
+                    title="Listado de vehículos"
+                    icon={<Car />}
+                    action={(
+                        <div className="flex items-center gap-2">
+                            <Select disabled={selectedIds.length === 0} value={selectedAction ?? undefined} onValueChange={(v) => handleBulkActionSelect(v)}>
+                                <SelectTrigger className="w-40">
+                                    <SelectValue placeholder="Acciones" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableActions.map((a) => (
+                                        <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <div className="relative">
+                                <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    className="w-56 pl-9"
+                                    placeholder="Buscar vehículo"
+                                    value={filters.search ?? ''}
+                                    onChange={(e) => setFilters((s) => ({ ...s, search: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+                    )}
+                    contentClassName="-mx-5 -mb-5"
+                >
+                    <div className="overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-border">
                                 <thead className="bg-muted/30 text-left text-sm text-foreground/70">
@@ -336,11 +351,13 @@ export default function VehiclesPage() {
                                 <tbody className="bg-card divide-y divide-border text-sm">
                                     {loading ? (
                                         <tr>
-                                            <td colSpan={7} className="p-6 text-center">Cargando...</td>
+                                            <td colSpan={7} className="p-6 text-center text-muted-foreground">Cargando...</td>
                                         </tr>
                                     ) : rows.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="p-6 text-center text-muted-foreground">No se encontraron resultados</td>
+                                            <td colSpan={7} className="p-6">
+                                                <EmptyState icon={<Car />} title="No se encontraron resultados" description="No hay vehículos que coincidan con los filtros." />
+                                            </td>
                                         </tr>
                                     ) : (
                                         rows.map((r) => (
@@ -356,7 +373,7 @@ export default function VehiclesPage() {
                                                 <td className="px-4 py-3">{r.make || '-'}</td>
                                                 <td className="px-4 py-3">{r.model || '-'}</td>
                                                 <td className="px-4 py-3">{r.licensePlate || '-'}</td>
-                                                <td className="px-4 py-3">{r.active ? <span className="inline-block rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">Activo</span> : 'Inactivo'}</td>
+                                                <td className="px-4 py-3"><StatusBadge tone={r.active ? 'green' : 'slate'}>{r.active ? 'Activo' : 'Inactivo'}</StatusBadge></td>
                                                 <td className="px-2 py-3">
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
@@ -548,8 +565,8 @@ export default function VehiclesPage() {
                             <Button variant="outline" size="sm" onClick={handleNextPage} disabled={page >= totalPages}>Siguiente</Button>
                         </div>
                     </div>
-                </div>
-            </section>
+                </Section>
+            </PageContainer>
         </AppLayout>
     );
 }
