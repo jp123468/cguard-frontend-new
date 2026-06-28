@@ -1295,7 +1295,7 @@ export default function DispatcherPage() {
                     {t('dispatcher.apply_filters')}
                   </Button>
                   <Button
-                    className="w-full bg-card text-black border hover:bg-muted"
+                    className="w-full bg-card text-foreground border hover:bg-muted"
                     onClick={clearFilters}
                   >
                     {t('dispatcher.clear_filters')}

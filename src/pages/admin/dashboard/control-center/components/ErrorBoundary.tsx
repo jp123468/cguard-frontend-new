@@ -16,7 +16,7 @@ export class DashboardErrorBoundary extends Component<
           <p className="font-display text-base font-semibold text-foreground">No se pudo cargar el panel de control</p>
           <p className="mt-1 text-sm text-muted-foreground">{this.state.error.message}</p>
           <button onClick={() => location.reload()}
-            className="mt-4 rounded-lg px-4 py-2 text-sm font-semibold text-black"
+            className="mt-4 rounded-lg px-4 py-2 text-sm font-semibold text-foreground"
             style={{ background: "var(--cc-accent)" }}>
             Reintentar
           </button>

@@ -802,7 +802,7 @@ export default function MobilPage() {
               </div>
             </div>
             <DialogFooter className="mt-6 flex justify-end gap-2">
-              <Button variant="outline" className="text-black border-black hover:bg-slate-100" onClick={() => setBannerDialogOpen(false)}>Cancelar</Button>
+              <Button variant="outline" className="text-foreground border-black hover:bg-slate-100" onClick={() => setBannerDialogOpen(false)}>Cancelar</Button>
               <Button variant="brand" onClick={handleSaveBanner} disabled={loading}>
                 Guardar
               </Button>
@@ -927,7 +927,7 @@ export default function MobilPage() {
               </div>
             </div>
             <DialogFooter className="mt-6 flex justify-end gap-2">
-              <Button variant="outline" className="text-black border-black hover:bg-slate-100" onClick={() => setCertDialogOpen(false)}>Cancelar</Button>
+              <Button variant="outline" className="text-foreground border-black hover:bg-slate-100" onClick={() => setCertDialogOpen(false)}>Cancelar</Button>
               <Button variant="brand" onClick={handleSaveCertification} disabled={loading}>
                 Guardar
               </Button>

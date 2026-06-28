@@ -220,7 +220,7 @@ export default function PatrullaBoardPage() {
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button onClick={() => toggleDone(route)} disabled={busyId === route.id}
-                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold disabled:opacity-50 ${done ? 'border border-border text-muted-foreground' : 'text-black'}`}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold disabled:opacity-50 ${done ? 'border border-border text-muted-foreground' : 'text-foreground'}`}
                       style={done ? undefined : { background: 'var(--primary)' }}>
                       {busyId === route.id ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
                       {done ? 'Deshacer' : 'Marcar completada'}

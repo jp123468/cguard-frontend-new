@@ -770,7 +770,7 @@ export default function SecurityGuardsPage() {
                       {t('guards.list.applyFilters', 'Filtro')}
                     </Button>
                     <Button
-                      className="w-full bg-card text-black border hover:bg-muted/30"
+                      className="w-full bg-card text-foreground border hover:bg-muted/30"
                       onClick={() => {
                         // Limpiar filtros: resetear filtros controlados y mantener la hoja abierta
                         setFilterCategory("todas");

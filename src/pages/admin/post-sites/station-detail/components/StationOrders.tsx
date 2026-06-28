@@ -221,7 +221,7 @@ function OrderModal({ value, onChange, onClose, onSave, saving, t }: any) {
               <div className="flex gap-1.5">
                 {DOW.map((d, i) => (
                   <button key={i} type="button" onClick={() => toggleDay(i)}
-                    className={`grid h-9 w-9 place-items-center rounded-lg border text-xs font-semibold transition-colors ${o.days?.includes(i) ? 'text-black' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                    className={`grid h-9 w-9 place-items-center rounded-lg border text-xs font-semibold transition-colors ${o.days?.includes(i) ? 'text-foreground' : 'border-border text-muted-foreground hover:text-foreground'}`}
                     style={o.days?.includes(i) ? { background: 'var(--cc-accent)', borderColor: 'var(--cc-accent)' } : undefined}>
                     {d}
                   </button>
@@ -261,7 +261,7 @@ function OrderModal({ value, onChange, onClose, onSave, saving, t }: any) {
 
         <div className="mt-5 flex justify-end gap-2">
           <button onClick={onClose} className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground">{t('common.cancel', 'Cancelar')}</button>
-          <button onClick={onSave} disabled={saving} className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-black disabled:opacity-50" style={{ background: 'var(--cc-accent)' }}>
+          <button onClick={onSave} disabled={saving} className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-foreground disabled:opacity-50" style={{ background: 'var(--cc-accent)' }}>
             {saving ? <Loader2 size={15} className="animate-spin" /> : null} {t('common.save', 'Guardar')}
           </button>
         </div>

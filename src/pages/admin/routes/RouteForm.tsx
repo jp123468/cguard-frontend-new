@@ -693,7 +693,7 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
                 </SelectContent>
               </Select>
               {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugSupervisor') === '1' && (
-                <pre className="mt-2 p-2 rounded bg-muted/30 text-xs text-black">
+                <pre className="mt-2 p-2 rounded bg-muted/30 text-xs text-foreground">
                   {JSON.stringify({
                     fieldValue: field.value,
                     supervisors,

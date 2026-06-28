@@ -108,7 +108,7 @@ export function CustomizePanel({
             <RotateCcw size={14} /> Restablecer
           </button>
           <button onClick={() => onSave(p)}
-            className="ml-auto flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-black"
+            className="ml-auto flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-foreground"
             style={{ background: "var(--cc-accent)" }}>
             <Save size={15} /> Guardar
           </button>
