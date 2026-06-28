@@ -1,17 +1,32 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, ChevronDown, Plus, X } from 'lucide-react';
+import { Search, Plus, X, StickyNote, Calendar, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
-import MobileCardList from '@/components/responsive/MobileCardList';
+import { Input } from '@/components/ui/input';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 
+const GOLD = '#C8860A';
 
 type Props = {
     guard?: any;
 };
+
+// ── Small presentational helper ─────────────────────────────────────────────
+const Section = ({ title, icon, action, children }: { title: string; icon?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode }) => (
+    <div className="bg-card border rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+                {icon && <span className="text-muted-foreground">{icon}</span>}
+                <h4 className="font-semibold text-sm tracking-tight">{title}</h4>
+            </div>
+            {action}
+        </div>
+        {children}
+    </div>
+);
 
 // Render a translation string that may contain <br /> markers as real JSX line
 // breaks, instead of feeding it through dangerouslySetInnerHTML (no HTML sink).
@@ -22,6 +37,18 @@ function renderWithLineBreaks(text: string): React.ReactNode {
             {idx < arr.length - 1 && <br />}
         </React.Fragment>
     ));
+}
+
+function fmtDate(v: any): string {
+    if (!v) return '';
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return String(v);
+    return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function initials(name: string): string {
+    if (!name) return '?';
+    return name.trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('') || '?';
 }
 
 export default function GuardNotes({ guard }: Props) {
@@ -191,214 +218,251 @@ export default function GuardNotes({ guard }: Props) {
         return name.slice(0, max) + '...';
     };
 
+    // ── Derived: filtered feed ──────────────────────────────────────────────
+    const q = searchQuery.trim().toLowerCase();
+    const filteredNotes = !q
+        ? notesData
+        : notesData.filter((n: any) => {
+            const hay = [n?.title, n?.description, n?.addedBy].filter(Boolean).join(' ').toLowerCase();
+            return hay.includes(q);
+        });
+
     return (
         <AppLayout>
             <GuardsLayout navKey="keep-safe" title="guards.nav.notas">
-                <div className="space-y-4">
-                    <div className="bg-card border rounded-lg p-6 shadow-sm">
-                        <div className="flex items-center justify-between gap-4 mb-6">
-                            {/* Left: Action Dropdown */}
-                            <div className="relative" ref={actionRef}>
-                                <button
-                                    onClick={() => setActionOpen(!actionOpen)}
-                                    className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
-                                >
-                                    {t(`guards.notes.actions.${actionSelection}`, { defaultValue: actionSelection === 'default' ? 'Action' : actionSelection })}
-                                    <ChevronDown size={16} />
-                                </button>
-                                {actionOpen && (
-                                    <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
-                                        <button
-                                            onClick={() => { setActionSelection('delete'); setActionOpen(false); }}
-                                            className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
-                                        >
-                                            {t('guards.notes.actions.delete', { defaultValue: 'Delete' })}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                <div className="mx-auto max-w-5xl space-y-6">
 
-                            {/* Center: Search */}
-                            <div className="flex-1 max-w-xs">
-                                <div className="relative">
-                                    <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
-                                        <input
-                                        type="text"
-                                        placeholder={t('guards.notes.searchPlaceholder', { defaultValue: 'Search note' })}
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Right: Add Button */}
-                            <button
-                                onClick={handleAddNote}
-                                className="px-6 py-2 bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors"
-                            >
-                                <Plus size={18} />
-                                {t('guards.notes.addButton', { defaultValue: 'New Note' })}
-                            </button>
-                        </div>
-
-                        {/* Table */}
-                        <div>
-                            <div className="md:block hidden overflow-x-auto">
-                                <table className="w-full">
-                                <thead>
-                                    <tr className="border-b bg-muted/30">
-                                        <th className="px-4 py-3 text-left">
-                                            <input type="checkbox" className="rounded" />
-                                        </th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.notes.table.title', { defaultValue: 'Title' })}</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.notes.table.date', { defaultValue: 'Date' })}</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.notes.table.addedBy', { defaultValue: 'Added By' })}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {notesData.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={6} className="px-4 py-12">
-                                                <div className="flex flex-col items-center justify-center gap-4">
-                                                    <div className="w-32 h-32">
-                                                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
-                                                            <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                                                            <circle cx="85" cy="100" r="8" fill="white" />
-                                                            <circle cx="115" cy="100" r="8" fill="white" />
-                                                            <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                                                            <path d="M 60 60 L 70 50 M 140 60 L 150 50 M 80 40 L 90 30 M 120 40 L 110 30" stroke="currentColor" strokeWidth="2" />
-                                                        </svg>
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <h3 className="text-lg font-semibold text-foreground">{t('guards.notes.empty.title', { defaultValue: 'No results found' })}</h3>
-                                                        <p className="text-sm text-muted-foreground mt-1">{renderWithLineBreaks(t('guards.notes.empty.message', { defaultValue: "We couldn't find<br />any items matching<br />your search" }))}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        notesData.map((note, idx) => (
-                                            <tr key={idx} className="border-b hover:bg-muted/30">
-                                                <td className="px-4 py-3 text-sm text-foreground">{note.title}</td>
-                                                <td className="px-4 py-3 text-sm text-foreground">{note.date}</td>
-                                                <td className="px-4 py-3 text-sm text-foreground">{note.addedBy}</td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                            </div>
-
-                            <div className="md:hidden">
-                                <MobileCardList
-                                    items={notesData || []}
-                                    loading={false}
-                                    emptyMessage={t('guards.notes.empty.title', { defaultValue: 'No results found' }) as string}
-                                    renderCard={(note: any) => (
-                                        <div className="p-4 bg-card border rounded-lg">
-                                            <div className="text-sm font-semibold">{note.title}</div>
-                                            <div className="text-xs text-muted-foreground">{note.date} • {note.addedBy}</div>
+                    <Section
+                        title={t('guards.notes.sectionTitle', { defaultValue: 'Notas' })}
+                        icon={<StickyNote size={16} />}
+                        action={
+                            <div className="flex items-center gap-2">
+                                {/* Action dropdown (preserved) */}
+                                <div className="relative" ref={actionRef}>
+                                    <button
+                                        onClick={() => setActionOpen(!actionOpen)}
+                                        className="hidden h-9 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted sm:flex"
+                                    >
+                                        {t(`guards.notes.actions.${actionSelection}`, { defaultValue: actionSelection === 'default' ? 'Acciones' : actionSelection })}
+                                    </button>
+                                    {actionOpen && (
+                                        <div className="absolute right-0 z-10 mt-1 w-40 overflow-hidden rounded-xl border bg-card shadow-lg">
+                                            <button
+                                                onClick={() => { setActionSelection('delete'); setActionOpen(false); }}
+                                                className="block w-full px-4 py-2 text-left text-sm transition-colors hover:bg-muted"
+                                            >
+                                                {t('guards.notes.actions.delete', { defaultValue: 'Eliminar' })}
+                                            </button>
                                         </div>
                                     )}
-                                />
+                                </div>
+                                {/* Add note */}
+                                <button
+                                    onClick={handleAddNote}
+                                    className="inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
+                                    style={{ background: GOLD }}
+                                >
+                                    <Plus size={16} />
+                                    {t('guards.notes.addButton', { defaultValue: 'Agregar nota' })}
+                                </button>
                             </div>
+                        }
+                    >
+                        {/* Search */}
+                        <div className="relative mb-5 max-w-sm">
+                            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder={t('guards.notes.searchPlaceholder', { defaultValue: 'Buscar nota' }) as string}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="h-9 pl-9 text-sm"
+                            />
                         </div>
-                    </div>
+
+                        {/* Notes feed */}
+                        {filteredNotes.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed py-14 text-center">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                                    <StickyNote size={26} className="text-muted-foreground" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-semibold text-foreground">
+                                        {q
+                                            ? t('guards.notes.empty.title', { defaultValue: 'Sin resultados' })
+                                            : t('guards.notes.empty.none', { defaultValue: 'Sin notas todavía' })}
+                                    </h3>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        {q
+                                            ? renderWithLineBreaks(t('guards.notes.empty.message', { defaultValue: 'No encontramos<br />notas que coincidan<br />con tu búsqueda' }))
+                                            : t('guards.notes.empty.hint', { defaultValue: 'Crea la primera nota para este vigilante.' })}
+                                    </p>
+                                </div>
+                                {!q && (
+                                    <button
+                                        onClick={handleAddNote}
+                                        className="mt-1 inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
+                                        style={{ background: GOLD }}
+                                    >
+                                        <Plus size={16} />
+                                        {t('guards.notes.addButton', { defaultValue: 'Agregar nota' })}
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <ul className="space-y-3">
+                                {filteredNotes.map((note: any, idx: number) => {
+                                    const author = note?.addedBy || note?.createdBy?.fullName || '';
+                                    const when = fmtDate(note?.noteDate ?? note?.date ?? note?.createdAt);
+                                    return (
+                                        <li
+                                            key={note?.id ?? idx}
+                                            className="group rounded-xl border bg-card p-4 shadow-sm transition hover:border-foreground/20 hover:shadow"
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                <div
+                                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                                                    style={{ background: GOLD }}
+                                                >
+                                                    {initials(author)}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <h5 className="truncate text-sm font-semibold tracking-tight text-foreground">
+                                                            {note?.title || t('guards.notes.untitled', { defaultValue: 'Sin título' })}
+                                                        </h5>
+                                                        {when && (
+                                                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                                                <Calendar size={11} />
+                                                                {when}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {note?.description && (
+                                                        <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-muted-foreground">
+                                                            {note.description}
+                                                        </p>
+                                                    )}
+                                                    {author && (
+                                                        <div className="mt-2 inline-flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                                                            <User size={11} />
+                                                            {author}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        )}
+                    </Section>
 
                     {/* Modal */}
                     {showModal && (
                         <div
-                            className="fixed inset-0 z-50"
+                            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
                             onClick={handleCloseModal}
                         >
                             <div
-                                className="fixed right-0 top-0 bottom-0 w-96 bg-card shadow-2xl overflow-y-auto"
+                                className="fixed right-0 top-0 bottom-0 flex w-full max-w-md flex-col bg-card shadow-2xl"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 {/* Header */}
-                                <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-card">
-                                    <h2 className="text-lg font-semibold text-foreground">{t('guards.notes.modal.title', { defaultValue: 'Add New Note' })}</h2>
+                                <div className="flex items-center justify-between border-b px-6 py-5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-muted-foreground"><StickyNote size={18} /></span>
+                                        <h2 className="text-base font-semibold tracking-tight text-foreground">{t('guards.notes.modal.title', { defaultValue: 'Agregar nota' })}</h2>
+                                    </div>
+                                    <button
+                                        onClick={handleCloseModal}
+                                        className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                        aria-label={t('guards.notes.modal.cancel', { defaultValue: 'Cancelar' }) as string}
+                                    >
+                                        <X size={18} />
+                                    </button>
                                 </div>
 
                                 {/* Body */}
-                                <div className="p-6 space-y-6">
+                                <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
                                     {/* Título */}
                                     <div>
-                                            <label className="block text-sm font-medium text-foreground mb-2">
-                                            {t('guards.notes.form.title.label', { defaultValue: 'Title' })} <span className="text-red-500">*</span>
+                                        <label className="mb-1 block text-[11px] uppercase tracking-wide text-muted-foreground">
+                                            {t('guards.notes.form.title.label', { defaultValue: 'Título' })} <span className="text-red-500">*</span>
                                         </label>
-                                        <input
+                                        <Input
                                             type="text"
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            placeholder={t('guards.notes.form.title.placeholder', { defaultValue: 'Enter note title' })}
-                                            className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
+                                            placeholder={t('guards.notes.form.title.placeholder', { defaultValue: 'Ingresa el título de la nota' }) as string}
+                                            className="h-9 text-sm"
                                         />
                                     </div>
 
                                     {/* Descripción */}
                                     <div>
-                                            <label className="block text-sm font-medium text-foreground mb-2">
-                                            {t('guards.notes.form.description.label', { defaultValue: 'Description' })} <span className="text-red-500">*</span>
+                                        <label className="mb-1 block text-[11px] uppercase tracking-wide text-muted-foreground">
+                                            {t('guards.notes.form.description.label', { defaultValue: 'Descripción' })} <span className="text-red-500">*</span>
                                         </label>
                                         <textarea
                                             value={formData.description}
                                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                            placeholder={t('guards.notes.form.description.placeholder', { defaultValue: 'Enter note description' })}
-                                            className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none"
+                                            placeholder={t('guards.notes.form.description.placeholder', { defaultValue: 'Ingresa la descripción de la nota' }) as string}
+                                            className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
                                             rows={6}
                                         />
                                     </div>
 
                                     {/* Fecha */}
                                     <div>
-                                            <label className="block text-sm font-medium text-foreground mb-2">
-                                            {t('guards.notes.form.date.label', { defaultValue: 'Date' })} <span className="text-red-500">*</span>
+                                        <label className="mb-1 block text-[11px] uppercase tracking-wide text-muted-foreground">
+                                            {t('guards.notes.form.date.label', { defaultValue: 'Fecha' })} <span className="text-red-500">*</span>
                                         </label>
-                                        <input
+                                        <Input
                                             type="date"
                                             value={formData.date}
                                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                            className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] cursor-pointer"
+                                            className="h-9 cursor-pointer text-sm"
                                         />
                                     </div>
 
                                     {/* Attachments */}
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground mb-2">{t('guards.notes.form.attachments.label', { defaultValue: 'Attachments' })}</label>
+                                        <label className="mb-1 block text-[11px] uppercase tracking-wide text-muted-foreground">{t('guards.notes.form.attachments.label', { defaultValue: 'Adjuntos' })}</label>
 
-                                        <label className="w-full border border-border rounded-md p-3 flex items-center justify-between gap-3 cursor-pointer hover:border-gray-400">
+                                        <label className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed p-3 transition-colors hover:border-foreground/30">
                                             <div className="flex-1">
                                                 <div className="text-sm text-foreground/70">
                                                     {formData.attachments && formData.attachments.length > 0 ? (
                                                         <div className="space-y-2">
                                                             {formData.attachments.map((f, i) => (
-                                                                <div key={i} className="flex flex-col gap-2 w-full">
+                                                                <div key={i} className="flex w-full flex-col gap-2">
                                                                     <div className="flex items-center justify-between gap-3">
                                                                         <div className="flex items-center gap-3 truncate">
-                                                                            <span className="text-sm text-foreground font-medium truncate" style={{maxWidth: 200}} title={f.name}>{shortName(f.name, 28)}</span>
+                                                                            <span className="truncate text-sm font-medium text-foreground" style={{maxWidth: 200}} title={f.name}>{shortName(f.name, 28)}</span>
                                                                         </div>
-                                                                        <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="text-muted-foreground hover:text-red-500 p-1 rounded" aria-label={`Remove ${f.name}`}>
+                                                                        <button onClick={(e) => { e.stopPropagation(); removeAttachment(i); }} className="rounded p-1 text-muted-foreground transition-colors hover:text-red-500" aria-label={`Remove ${f.name}`}>
                                                                             <X size={14} />
                                                                         </button>
                                                                     </div>
                                                                     {/* Progress Bar */}
                                                                     {typeof uploadProgress[i] !== 'undefined' && (
-                                                                        <div className="w-full bg-muted rounded h-2 overflow-hidden">
-                                                                            <div className="bg-[#C8860A] h-2" style={{ width: `${uploadProgress[i]}%` }} />
+                                                                        <div className="h-2 w-full overflow-hidden rounded bg-muted">
+                                                                            <div className="h-2" style={{ width: `${uploadProgress[i]}%`, background: GOLD }} />
                                                                         </div>
                                                                     )}
                                                                 </div>
                                                             ))}
                                                         </div>
                                                     ) : (
-                                                        <span className="text-sm text-muted-foreground">{t('guards.notes.form.attachments.noFiles', { defaultValue: 'No files selected' })}</span>
+                                                        <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                                                            <Plus size={14} />
+                                                            {t('guards.notes.form.attachments.noFiles', { defaultValue: 'Ningún archivo seleccionado' })}
+                                                        </span>
                                                     )}
                                                 </div>
                                             </div>
 
-                                           
                                             <input
                                                 type="file"
                                                 multiple
@@ -413,18 +477,19 @@ export default function GuardNotes({ guard }: Props) {
                                 </div>
 
                                 {/* Footer */}
-                                <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
+                                <div className="flex items-center justify-end gap-3 border-t px-6 py-5">
                                     <button
                                         onClick={handleCloseModal}
-                                        className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30"
+                                        className="h-9 rounded-lg border px-4 text-sm font-medium text-foreground transition hover:bg-muted"
                                     >
-                                        {t('guards.notes.modal.cancel', { defaultValue: 'Cancel' })}
+                                        {t('guards.notes.modal.cancel', { defaultValue: 'Cancelar' })}
                                     </button>
                                     <button
                                         onClick={handleSubmitNote}
-                                        className="px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809]"
+                                        className="h-9 rounded-lg px-5 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
+                                        style={{ background: GOLD }}
                                     >
-                                        {t('guards.notes.modal.save', { defaultValue: 'Save' })}
+                                        {t('guards.notes.modal.save', { defaultValue: 'Guardar' })}
                                     </button>
                                 </div>
                             </div>

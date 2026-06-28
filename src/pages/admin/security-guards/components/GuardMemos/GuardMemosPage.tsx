@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, Search, FileText, CheckCircle2, Clock, Trash2, X } from 'lucide-react';
+import { Plus, Search, FileText, CheckCircle2, Clock, Trash2, X, Send } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import securityGuardService from '@/lib/api/securityGuardService';
 import api from '@/lib/api';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+
+const GOLD = '#C8860A';
 
 type Memo = {
   id: string;
@@ -122,85 +125,147 @@ export default function GuardMemosPage() {
     return (m.subject || '').toLowerCase().includes(s) || (m.content || '').toLowerCase().includes(s);
   });
 
+  const acceptedCount = memos.filter((m) => m.wasAccepted).length;
+  const pendingCount = memos.length - acceptedCount;
+  const guardInitials = (guard?.fullName || '')
+    .split(' ')
+    .map((p: string) => p[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
   return (
     <AppLayout>
       <GuardsLayout navKey="keep-safe" title="guards.nav.memos">
-        <div className="space-y-4">
-          <div className="bg-card border rounded-lg p-6 shadow-sm">
-            {/* Toolbar */}
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">
-                  {t('guards.memos.title', { defaultValue: 'Memos' })}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {t('guards.memos.subtitle', { defaultValue: 'Comunicados dirigidos a este vigilante.' })}
-                </p>
+        <div className="mx-auto max-w-5xl space-y-6">
+
+          {/* ── HERO ─────────────────────────────────────────────────────────── */}
+          <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-muted/40 shadow-sm">
+            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-[#C8860A]/15 to-transparent" />
+            <div className="relative p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-[#C8860A]/10 ring-1 ring-[#C8860A]/20 flex items-center justify-center shrink-0">
+                {guardInitials ? (
+                  <span className="text-base font-bold" style={{ color: GOLD }}>{guardInitials}</span>
+                ) : (
+                  <FileText size={24} style={{ color: GOLD }} />
+                )}
               </div>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder={t('guards.memos.searchPlaceholder', { defaultValue: 'Buscar memo...' })}
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="w-56 pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
-                  />
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold tracking-tight truncate">
+                  {t('guards.memos.title', { defaultValue: 'Memos' })}
+                </h1>
+                <p className="text-sm text-muted-foreground truncate">
+                  {guard?.fullName
+                    ? `${t('guards.memos.subtitle', { defaultValue: 'Comunicados dirigidos a este vigilante.' })} · ${guard.fullName}`
+                    : t('guards.memos.subtitle', { defaultValue: 'Comunicados dirigidos a este vigilante.' })}
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-muted text-foreground/70">
+                    <FileText size={12} /> {memos.length} {t('guards.memos.total', { defaultValue: 'memos' })}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/15 text-green-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" /> {acceptedCount} {t('guards.memos.accepted', { defaultValue: 'Aceptado' })}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-500/15 text-orange-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500" /> {pendingCount} {t('guards.memos.pending', { defaultValue: 'Pendiente' })}
+                  </span>
                 </div>
-                <button
-                  onClick={() => { setForm({ subject: '', content: '' }); setShowModal(true); }}
-                  className="px-5 py-2 bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors whitespace-nowrap"
-                >
-                  <Plus size={18} />
-                  {t('guards.memos.addButton', { defaultValue: 'Nuevo memo' })}
-                </button>
+              </div>
+              <button
+                onClick={() => { setForm({ subject: '', content: '' }); setShowModal(true); }}
+                className="inline-flex items-center justify-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition whitespace-nowrap shrink-0"
+                style={{ background: GOLD }}
+              >
+                <Plus size={18} />
+                {t('guards.memos.addButton', { defaultValue: 'Nuevo memo' })}
+              </button>
+            </div>
+          </div>
+
+          {/* ── FEED ─────────────────────────────────────────────────────────── */}
+          <div className="bg-card border rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h4 className="font-semibold text-sm tracking-tight">
+                {t('guards.memos.feedTitle', { defaultValue: 'Historial de memos' })}
+              </h4>
+              <div className="relative">
+                <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder={t('guards.memos.searchPlaceholder', { defaultValue: 'Buscar memo...' })}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="h-9 text-sm w-56 pl-8"
+                />
               </div>
             </div>
 
             {/* List */}
             {loading ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                {t('common.loading', { defaultValue: 'Cargando...' })}
-              </p>
+              <div className="space-y-3">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="rounded-xl border p-4 animate-pulse">
+                    <div className="h-4 w-1/3 bg-muted rounded mb-3" />
+                    <div className="h-3 w-2/3 bg-muted rounded mb-2" />
+                    <div className="h-3 w-1/4 bg-muted rounded" />
+                  </div>
+                ))}
+              </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-                <FileText size={40} className="text-[#C8860A]/30" />
+              <div className="flex flex-col items-center justify-center gap-3 py-14 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-[#C8860A]/10 flex items-center justify-center">
+                  <FileText size={32} className="text-[#C8860A]/50" />
+                </div>
                 <div>
                   <h3 className="text-base font-semibold text-foreground">
-                    {t('guards.memos.empty.title', { defaultValue: 'Sin memos' })}
+                    {query.trim()
+                      ? t('guards.memos.noResults', { defaultValue: 'Sin resultados' })
+                      : t('guards.memos.empty.title', { defaultValue: 'Sin memos todavía' })}
                   </h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t('guards.memos.empty.message', { defaultValue: 'Este vigilante aún no tiene memos.' })}
+                  <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                    {query.trim()
+                      ? t('guards.memos.noResultsHint', { defaultValue: 'Ningún memo coincide con tu búsqueda.' })
+                      : t('guards.memos.empty.message', { defaultValue: 'Este vigilante aún no tiene memos.' })}
                   </p>
                 </div>
+                {!query.trim() && (
+                  <button
+                    onClick={() => { setForm({ subject: '', content: '' }); setShowModal(true); }}
+                    className="mt-1 inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition"
+                    style={{ background: GOLD }}
+                  >
+                    <Plus size={16} />
+                    {t('guards.memos.addButton', { defaultValue: 'Nuevo memo' })}
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-3">
                 {filtered.map((m) => (
-                  <div key={m.id} className="border rounded-lg p-4 hover:bg-muted/20 transition-colors">
+                  <div key={m.id} className="group rounded-xl border p-4 hover:bg-muted/30 hover:shadow-sm transition">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-foreground">{m.subject || '—'}</span>
+                          <span className="font-semibold text-sm text-foreground">{m.subject || '—'}</span>
                           {m.wasAccepted ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-500/15 text-green-700">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/15 text-green-700">
                               <CheckCircle2 size={12} /> {t('guards.memos.accepted', { defaultValue: 'Aceptado' })}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-yellow-500/15 text-yellow-800">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500/15 text-orange-700">
                               <Clock size={12} /> {t('guards.memos.pending', { defaultValue: 'Pendiente' })}
                             </span>
                           )}
                         </div>
-                        {m.content && <p className="text-sm text-foreground/80 mt-1 whitespace-pre-wrap">{m.content}</p>}
-                        <p className="text-xs text-muted-foreground mt-2">
+                        {m.content && <p className="text-sm text-foreground/80 mt-1.5 whitespace-pre-wrap leading-relaxed">{m.content}</p>}
+                        <p className="text-[11px] uppercase tracking-wide text-muted-foreground mt-2.5">
                           {fmt(m.dateTime || m.createdAt)} · {t('guards.memos.by', { defaultValue: 'por' })} {authorName(m)}
                         </p>
                       </div>
                       <button
                         onClick={() => handleDelete(m.id)}
-                        className="text-muted-foreground hover:text-red-500 p-1 rounded shrink-0"
+                        className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg shrink-0 transition opacity-60 group-hover:opacity-100"
                         aria-label="Delete memo"
                       >
                         <Trash2 size={16} />
@@ -215,41 +280,48 @@ export default function GuardMemosPage() {
 
         {/* Create modal */}
         {showModal && (
-          <div className="fixed inset-0 z-50 bg-black/30" onClick={() => setShowModal(false)}>
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowModal(false)}>
             <div
-              className="fixed right-0 top-0 bottom-0 w-96 bg-card shadow-2xl overflow-y-auto"
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-card shadow-2xl overflow-y-auto flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-card">
-                <h2 className="text-lg font-semibold text-foreground">
-                  {t('guards.memos.modal.title', { defaultValue: 'Nuevo memo' })}
-                </h2>
-                <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground">
+              <div className="flex items-center justify-between p-5 border-b sticky top-0 bg-card z-10">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#C8860A]/10 flex items-center justify-center">
+                    <Send size={16} style={{ color: GOLD }} />
+                  </div>
+                  <h2 className="font-semibold text-sm tracking-tight">
+                    {t('guards.memos.modal.title', { defaultValue: 'Nuevo memo' })}
+                  </h2>
+                </div>
+                <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition">
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="p-6 space-y-6">
+              <div className="p-5 space-y-5 flex-1">
                 {guard?.fullName && (
-                  <div className="text-sm text-muted-foreground">
-                    {t('guards.memos.modal.to', { defaultValue: 'Para' })}:{' '}
-                    <span className="font-medium text-foreground">{guard.fullName}</span>
+                  <div className="rounded-xl border bg-muted/30 px-3 py-2.5">
+                    <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      {t('guards.memos.modal.to', { defaultValue: 'Para' })}
+                    </div>
+                    <div className="font-medium text-sm text-foreground">{guard.fullName}</div>
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">
                     {t('guards.memos.form.subject', { defaultValue: 'Asunto' })} <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={form.subject}
                     onChange={(e) => setForm({ ...form, subject: e.target.value })}
                     placeholder={t('guards.memos.form.subjectPlaceholder', { defaultValue: 'Asunto del memo' })}
-                    className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
+                    className="h-9 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">
                     {t('guards.memos.form.content', { defaultValue: 'Contenido' })}
                   </label>
                   <textarea
@@ -257,20 +329,22 @@ export default function GuardMemosPage() {
                     onChange={(e) => setForm({ ...form, content: e.target.value })}
                     placeholder={t('guards.memos.form.contentPlaceholder', { defaultValue: 'Escribe el memo...' })}
                     rows={8}
-                    className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none"
+                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none leading-relaxed"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
-                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">
+              <div className="flex items-center justify-end gap-3 p-5 border-t sticky bottom-0 bg-card">
+                <button onClick={() => setShowModal(false)} className="text-sm px-4 py-2 rounded-lg border hover:bg-muted transition">
                   {t('common.cancel', { defaultValue: 'Cancelar' })}
                 </button>
                 <button
                   onClick={handleCreate}
                   disabled={saving}
-                  className="px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809] disabled:opacity-50"
+                  className="inline-flex items-center gap-2 text-sm font-medium px-5 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition disabled:opacity-50"
+                  style={{ background: GOLD }}
                 >
+                  {saving && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                   {saving ? t('common.saving', { defaultValue: 'Enviando...' }) : t('guards.memos.modal.send', { defaultValue: 'Enviar' })}
                 </button>
               </div>

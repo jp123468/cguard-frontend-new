@@ -4,13 +4,28 @@ import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, ChevronDown, Plus, X } from 'lucide-react';
+import { Search, Plus, X, Trash2, MapPin, Building2, Briefcase } from 'lucide-react';
 import securityGuardService from '@/lib/api/securityGuardService';
 import api from '@/lib/api';
 import { stationService } from '@/lib/api/stationService';
-import MobileCardList from '@/components/responsive/MobileCardList';
 import { toast } from 'sonner';
 import PostSiteMiniInfo from '@/components/post-sites/PostSiteMiniInfo';
+
+const GOLD = '#C8860A';
+
+// ── Small presentational helper (matches GuardProfile reference) ─────────────
+const Section = ({ title, icon, action, children }: { title: string; icon?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode }) => (
+  <div className="bg-card border rounded-2xl p-5 shadow-sm">
+    <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="flex items-center gap-2">
+        {icon && <span className="text-muted-foreground">{icon}</span>}
+        <h4 className="font-semibold text-sm tracking-tight">{title}</h4>
+      </div>
+      {action}
+    </div>
+    {children}
+  </div>
+);
 
 export default function GuardAsignarSitiosPage() {
   const { id } = useParams();
@@ -394,133 +409,199 @@ export default function GuardAsignarSitiosPage() {
     return () => { mounted = false; };
   }, [selectedPostSite]);
 
+  const guardName = guard?.fullName || [guard?.firstName, guard?.lastName].filter(Boolean).join(' ') || (t('guards.assignSites.guardFallback') || 'Vigilante');
+  const allSelected = mappings.length > 0 && selectedIds.length === mappings.length;
+
   return (
     <AppLayout>
       <GuardsLayout navKey="keep-safe" title="guards.nav.asignarSitios">
         {loading ? (
-          <div className="flex items-center justify-center h-32">
-              <div className="text-muted-foreground">{t('guards.assignSites.loading', { defaultValue: 'Loading...' })}</div>
+          <div className="mx-auto max-w-5xl space-y-6">
+            <div className="rounded-2xl border bg-card p-6 shadow-sm animate-pulse">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-muted" />
+                <div className="space-y-2">
+                  <div className="h-4 w-40 rounded bg-muted" />
+                  <div className="h-3 w-24 rounded bg-muted/70" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-card border rounded-2xl p-5 shadow-sm space-y-3">
+              {[0, 1, 2].map((i) => <div key={i} className="h-16 rounded-xl bg-muted/60 animate-pulse" />)}
+            </div>
           </div>
         ) : guard ? (
-          <div className="space-y-4">
-            <div className="bg-card border rounded-lg p-6 shadow-sm">
-              <div className="flex items-center justify-between gap-4 mb-6">
-                <div className="relative" ref={actionRef}>
-                  <button
-                    onClick={() => setActionOpen(!actionOpen)}
-                    className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
-                  >
-                    {actionSelection}
-                    <ChevronDown size={16} />
-                  </button>
-                  {actionOpen && (
-                    <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
-                      <button
-                        onClick={() => {
-                          setActionOpen(false);
-                          // require at least one selected mapping to delete
-                          if (!selectedIds || selectedIds.length === 0) {
-                            const msg = t('guards.assignSites.actions.selectPair', { defaultValue: 'Debe seleccionar al menos un par para eliminar' });
-                            setActionMessage(msg);
-                            try { toast.error(msg); } catch (e) {}
-                            return;
-                          }
-                          setActionSelection(t('guards.assignSites.actions.delete', { defaultValue: 'Delete' }));
-                          setShowDeleteConfirm(true);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
-                      >
-                        {t('guards.assignSites.actions.delete', { defaultValue: 'Delete' })}
-                      </button>
-                    </div>
-                  )}
-                </div>
+          <div className="mx-auto max-w-5xl space-y-6">
 
-                <div className="flex-1 max-w-md">
-                  <div className="relative">
-                    <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
+            {/* ── HERO ─────────────────────────────────────────────────────── */}
+            <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-muted/40 shadow-sm">
+              <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-r from-[#C8860A]/15 to-transparent" />
+              <div className="relative p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-md shrink-0" style={{ background: GOLD }}>
+                  <MapPin className="w-7 h-7" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t('guards.nav.asignarSitios') || 'Asignación de sitios'}</div>
+                  <h1 className="text-xl font-bold tracking-tight truncate">{guardName}</h1>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-muted text-xs font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: GOLD }} />
+                      {mappings.length} {t('guards.assignSites.assignedCount') || 'asignaciones'}
+                    </span>
+                  </div>
+                </div>
+                <button onClick={() => setAssignModalOpen(true)} className="inline-flex items-center justify-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition shrink-0" style={{ background: GOLD }}>
+                  <Plus size={16} />
+                  {t('guards.assignSites.assignButton', { defaultValue: 'Assign Post Sites' })}
+                </button>
+              </div>
+            </div>
+
+            {/* ── ASSIGNED SITES ───────────────────────────────────────────── */}
+            <Section
+              title={t('guards.assignSites.table.postSites', { defaultValue: 'Post Sites' })}
+              icon={<Building2 className="w-4 h-4" />}
+              action={
+                <div className="flex items-center gap-2">
+                  <div className="relative hidden sm:block">
+                    <Search size={15} className="absolute left-2.5 top-2.5 text-muted-foreground" />
                     <input
                       type="text"
                       placeholder={t('guards.assignSites.searchPlaceholder', { defaultValue: 'Search Post Sites' })}
                       value={''}
                       onChange={() => {}}
-                      className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
+                      className="h-9 w-48 pl-8 pr-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]/40"
                     />
                   </div>
+                  <div className="relative" ref={actionRef}>
+                    <button
+                      onClick={() => {
+                        // require at least one selected mapping to delete
+                        if (!selectedIds || selectedIds.length === 0) {
+                          const msg = t('guards.assignSites.actions.selectPair', { defaultValue: 'Debe seleccionar al menos un par para eliminar' });
+                          setActionMessage(msg);
+                          try { toast.error(msg); } catch (e) {}
+                          return;
+                        }
+                        setActionSelection(t('guards.assignSites.actions.delete', { defaultValue: 'Delete' }));
+                        setShowDeleteConfirm(true);
+                      }}
+                      disabled={selectedIds.length === 0}
+                      className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border text-sm font-medium text-red-600 hover:bg-red-500/10 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 size={15} />
+                      {t('guards.assignSites.actions.delete', { defaultValue: 'Delete' })}
+                      {selectedIds.length > 0 && <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-red-500/15 text-[11px]">{selectedIds.length}</span>}
+                    </button>
+                  </div>
                 </div>
-
-                <div className="flex items-center gap-3">
-                    <button onClick={() => setAssignModalOpen(true)} className="px-4 py-2 bg-[#C8860A] text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809]">
-                    <Plus size={14} />
+              }
+            >
+              {mappings.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center py-12 rounded-xl border border-dashed">
+                  <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mb-3">
+                    <MapPin className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <div className="text-sm font-medium">{t('guards.assignSites.empty') || 'Sin sitios asignados todavía'}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{t('guards.assignSites.emptyHint') || 'Asigna un puesto para empezar.'}</div>
+                  <button onClick={() => setAssignModalOpen(true)} className="mt-4 inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition" style={{ background: GOLD }}>
+                    <Plus size={16} />
                     {t('guards.assignSites.assignButton', { defaultValue: 'Assign Post Sites' })}
                   </button>
                 </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b bg-muted/30">
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+              ) : (
+                <div className="space-y-2.5">
+                  <label className="flex items-center gap-2 px-1 text-[11px] uppercase tracking-wide text-muted-foreground cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      aria-label="select all"
+                      checked={allSelected}
+                      onChange={(e) => toggleSelectAll(e.target.checked)}
+                      className="h-4 w-4 rounded accent-[#C8860A]"
+                    />
+                    {t('guards.assignSites.selectAll') || 'Seleccionar todo'}
+                  </label>
+                  {mappings.map((m) => {
+                    const checked = selectedIds.includes(m.id);
+                    return (
+                      <div
+                        key={m.id}
+                        className={`group flex items-center gap-3 rounded-xl border p-3.5 transition hover:shadow-sm ${checked ? 'border-[#C8860A]/60 bg-[#C8860A]/5' : 'hover:bg-muted/30'}`}
+                      >
                         <input
                           type="checkbox"
-                          aria-label="select all"
-                          checked={mappings.length > 0 && selectedIds.length === mappings.length}
-                          onChange={(e) => toggleSelectAll(e.target.checked)}
-                          className="h-4 w-4"
-                        />
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.assignSites.table.client', { defaultValue: 'Client' })}</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.assignSites.table.postSites', { defaultValue: 'Post Sites' })}</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('guards.assignSites.table.station', { defaultValue: 'Station' })}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mappings.map((m) => (
-                      <tr key={m.id} className="border-b hover:bg-muted/30">
-                        <td className="px-4 py-3">
-                          <input type="checkbox" checked={selectedIds.includes(m.id)} onChange={(e) => {
+                          checked={checked}
+                          onChange={(e) => {
                             if (e.target.checked) setSelectedIds((prev) => [...prev, m.id]); else setSelectedIds((prev) => prev.filter(id => id !== m.id));
-                          }} className="h-4 w-4" />
-                        </td>
-                        <td className="px-4 py-3 text-sm text-foreground">{m.client}</td>
-                        <td className="px-4 py-3 text-sm text-foreground">{m.postSite}</td>
-                        <td className="px-4 py-3 text-sm text-foreground">{m.station}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                          }}
+                          className="h-4 w-4 rounded accent-[#C8860A] shrink-0"
+                        />
+                        <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0 text-muted-foreground">
+                          <Building2 className="w-4.5 h-4.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{m.postSite || '—'}</div>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1 truncate"><Briefcase className="w-3 h-3 shrink-0" />{m.client || '—'}</span>
+                            {m.station && m.station !== '-' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-foreground/70 font-medium truncate"><MapPin className="w-3 h-3 shrink-0" />{m.station}</span>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedIds([m.id]);
+                            setActionSelection(t('guards.assignSites.actions.delete', { defaultValue: 'Delete' }));
+                            setShowDeleteConfirm(true);
+                          }}
+                          title={t('guards.assignSites.actions.delete', { defaultValue: 'Delete' })}
+                          className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-500/10 transition"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Section>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-muted-foreground">{t('guards.assignSites.loadError', { defaultValue: 'Could not load guard' })}</div>
+          <div className="mx-auto max-w-5xl">
+            <div className="flex flex-col items-center justify-center text-center py-16 rounded-2xl border border-dashed bg-card">
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mb-3">
+                <X className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <div className="text-sm font-medium text-muted-foreground">{t('guards.assignSites.loadError', { defaultValue: 'Could not load guard' })}</div>
+            </div>
           </div>
         )}
 
         {/* Assign Modal/Drawer */}
         {assignModalOpen && (
-          <div className="fixed inset-0 z-50" onClick={() => setAssignModalOpen(false)}>
-            <div className="fixed right-0 top-0 bottom-0 w-96 bg-card shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-10">
-                <h3 className="text-lg font-semibold">{t('guards.assignSites.modal.title', { defaultValue: 'Assign Sites' })}</h3>
-                <button onClick={() => setAssignModalOpen(false)} className="text-muted-foreground hover:text-foreground/70"><X /></button>
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[1px]" onClick={() => setAssignModalOpen(false)}>
+            <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-card shadow-2xl flex flex-col rounded-l-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-5 border-b sticky top-0 bg-card z-10">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: GOLD }}><MapPin className="w-4.5 h-4.5" /></span>
+                  <h3 className="text-base font-semibold tracking-tight">{t('guards.assignSites.modal.title', { defaultValue: 'Assign Sites' })}</h3>
+                </div>
+                <button onClick={() => setAssignModalOpen(false)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition"><X size={18} /></button>
               </div>
 
-              <div className="p-6 overflow-y-auto flex-1">
-                <div className="space-y-4">
+              <div className="p-5 overflow-y-auto flex-1">
+                <div className="space-y-5">
                   <div>
-                    <label className="text-sm text-foreground/70 block mb-2">{t('guards.assignSites.form.client', { defaultValue: 'Client' })}<span className="text-red-500">*</span></label>
-                    <select value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm">
+                    <label className="text-[11px] uppercase tracking-wide text-muted-foreground block mb-1.5">{t('guards.assignSites.form.client', { defaultValue: 'Client' })}<span className="text-red-500 ml-0.5">*</span></label>
+                    <select value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)} className="h-9 text-sm flex w-full rounded-md border border-input bg-background px-2">
                       <option value="">{t('guards.assignSites.form.selectClient', { defaultValue: 'Select client' })}</option>
                       {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
 
                   <div>
-                    <label className="text-sm text-foreground/70 block mb-2">{t('guards.assignSites.form.postSite', { defaultValue: 'Post Site' })}<span className="text-red-500">*</span></label>
-                    <select value={selectedPostSite} onChange={(e) => setSelectedPostSite(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm mb-2">
+                    <label className="text-[11px] uppercase tracking-wide text-muted-foreground block mb-1.5">{t('guards.assignSites.form.postSite', { defaultValue: 'Post Site' })}<span className="text-red-500 ml-0.5">*</span></label>
+                    <select value={selectedPostSite} onChange={(e) => setSelectedPostSite(e.target.value)} className="h-9 text-sm flex w-full rounded-md border border-input bg-background px-2 mb-2 disabled:opacity-60" disabled={!selectedClient}>
                       <option value="">{t('guards.assignSites.form.selectPostSite', { defaultValue: 'Select post site' })}</option>
                       {postSites.length === 0 && selectedClient && (
                         <option disabled value="">{t('guards.assignSites.noPostSites', { defaultValue: 'No post sites found' })}</option>
@@ -529,16 +610,18 @@ export default function GuardAsignarSitiosPage() {
                     </select>
                     {/* Mostrar info y mapa del puesto seleccionado */}
                     {selectedPostSite && (
-                      <React.Suspense fallback={<div className="text-xs text-muted-foreground">Cargando información del puesto...</div>}>
-                        <PostSiteMiniInfo postSiteId={selectedPostSite} />
-                      </React.Suspense>
+                      <div className="mt-2 rounded-xl border bg-muted/30 p-3">
+                        <React.Suspense fallback={<div className="text-xs text-muted-foreground">{t('guards.assignSites.loadingPostSite') || 'Cargando información del puesto…'}</div>}>
+                          <PostSiteMiniInfo postSiteId={selectedPostSite} />
+                        </React.Suspense>
+                      </div>
                     )}
                   </div>
 
                   {selectedPostSite && (
                     <div>
-                      <label className="text-sm text-foreground/70 block mb-2">{t('guards.assignSites.form.station', { defaultValue: 'Station' })}</label>
-                      <select value={selectedStationAssign} onChange={(e) => setSelectedStationAssign(e.target.value)} className="w-full border rounded-md px-3 py-2 text-sm">
+                      <label className="text-[11px] uppercase tracking-wide text-muted-foreground block mb-1.5">{t('guards.assignSites.form.station', { defaultValue: 'Station' })}</label>
+                      <select value={selectedStationAssign} onChange={(e) => setSelectedStationAssign(e.target.value)} className="h-9 text-sm flex w-full rounded-md border border-input bg-background px-2">
                         <option value="">{t('guards.assignSites.form.selectStation', { defaultValue: 'Select station' })}</option>
                         {stationsForPostSite.length === 0 && selectedPostSite && (
                           <option disabled value="">{t('guards.assignSites.noStations', { defaultValue: 'No stations found' })}</option>
@@ -550,26 +633,30 @@ export default function GuardAsignarSitiosPage() {
                 </div>
               </div>
 
-                <div className="flex items-center justify-end gap-3 p-4 border-t bg-card">
-                <button onClick={() => setAssignModalOpen(false)} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancel' })}</button>
-                <button onClick={assignSite} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('guards.assignSites.modal.assign', { defaultValue: 'Assign' })}</button>
+              <div className="flex items-center justify-end gap-2 p-4 border-t bg-card">
+                <button onClick={() => setAssignModalOpen(false)} className="text-sm px-4 py-2 rounded-lg border hover:bg-muted transition">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancel' })}</button>
+                <button onClick={assignSite} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition" style={{ background: GOLD }}>
+                  <Plus size={16} />
+                  {t('guards.assignSites.modal.assign', { defaultValue: 'Assign' })}
+                </button>
               </div>
             </div>
           </div>
         )}
         {/* Delete confirmation modal */}
         {showDeleteConfirm && (
-          <div className="fixed inset-0 z-50" onClick={() => setShowDeleteConfirm(false)}>
-            <div className="fixed inset-0 bg-black opacity-30" />
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-96 bg-card shadow-2xl rounded-md" onClick={(e) => e.stopPropagation()}>
-              <div className="p-4 border-b">
-                <h3 className="text-lg font-semibold">{t('guards.assignSites.actions.confirmDeleteTitle', { defaultValue: 'Confirmar eliminación' })}</h3>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-[1px]" />
+            <div className="relative w-full max-w-sm bg-card shadow-2xl rounded-2xl border" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-3 p-5 border-b">
+                <span className="w-10 h-10 rounded-xl bg-red-500/15 text-red-600 flex items-center justify-center shrink-0"><Trash2 size={18} /></span>
+                <h3 className="text-base font-semibold tracking-tight">{t('guards.assignSites.actions.confirmDeleteTitle', { defaultValue: 'Confirmar eliminación' })}</h3>
               </div>
-              <div className="p-4">
-                <p className="text-sm text-foreground">{t('guards.assignSites.actions.confirmDeleteMessage', { defaultValue: '¿Estás seguro? Se eliminarán las asignaciones seleccionadas.' })}</p>
+              <div className="p-5">
+                <p className="text-sm text-muted-foreground">{t('guards.assignSites.actions.confirmDeleteMessage', { defaultValue: '¿Estás seguro? Se eliminarán las asignaciones seleccionadas.' })}</p>
               </div>
-              <div className="flex items-center justify-end gap-3 p-4 border-t">
-                <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancel' })}</button>
+              <div className="flex items-center justify-end gap-2 p-4 border-t">
+                <button onClick={() => setShowDeleteConfirm(false)} className="text-sm px-4 py-2 rounded-lg border hover:bg-muted transition">{t('guards.assignSites.modal.cancel', { defaultValue: 'Cancel' })}</button>
                 <button onClick={async () => {
                   try { 
                     const tenantId = localStorage.getItem('tenantId');
@@ -597,7 +684,7 @@ export default function GuardAsignarSitiosPage() {
                     console.error('Delete failed', err);
                     toast.error(t('guards.assignSites.actions.deleteFailed', { defaultValue: 'Delete failed' }));
                   }
-                }} className="px-4 py-2 bg-red-600 text-white rounded-md">{t('guards.assignSites.actions.deleteConfirm', { defaultValue: 'Eliminar' })}</button>
+                }} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 bg-red-600 text-white rounded-lg shadow-sm hover:bg-red-700 transition"><Trash2 size={15} />{t('guards.assignSites.actions.deleteConfirm', { defaultValue: 'Eliminar' })}</button>
               </div>
             </div>
           </div>
