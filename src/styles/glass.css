@@ -128,25 +128,33 @@
   border-bottom: 1px solid color-mix(in oklab, var(--cc-accent) 16%, var(--border));
   backdrop-filter: blur(12px);
 }
-/* nav item */
+/* nav item — modern rounded pill with a soft accent bar on active */
 .app-nav-item {
+  position: relative;
   display: flex; width: 100%; align-items: center; justify-content: space-between;
-  gap: .75rem; padding: .6rem .75rem; border-radius: .6rem;
+  gap: .75rem; padding: .58rem .7rem; border-radius: .7rem;
   font-size: 13px; font-weight: 500; color: var(--sidebar-foreground);
-  opacity: .72; transition: all .18s ease; border-left: 3px solid transparent;
+  opacity: .72; transition: all .2s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.app-nav-item:hover { opacity: 1; background: color-mix(in oklab, var(--cc-accent) 9%, transparent); }
+.app-nav-item:hover {
+  opacity: 1; background: color-mix(in oklab, var(--cc-accent) 8%, transparent);
+  transform: translateX(2px);
+}
 .app-nav-item.is-active {
-  opacity: 1; color: var(--cc-accent);
-  background: color-mix(in oklab, var(--cc-accent) 14%, transparent);
-  border-left-color: var(--cc-accent);
+  opacity: 1; color: var(--cc-accent); font-weight: 600;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--cc-accent) 17%, transparent), color-mix(in oklab, var(--cc-accent) 6%, transparent));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cc-accent) 16%, transparent);
+}
+.app-nav-item.is-active::before {
+  content: ""; position: absolute; left: -.45rem; top: 50%; transform: translateY(-50%);
+  height: 55%; width: 3px; border-radius: 9999px; background: var(--cc-accent);
 }
 .app-subnav-item {
-  display: block; padding: .45rem .55rem; margin-bottom: 2px; border-radius: .4rem;
-  font-size: 12px; font-weight: 500; color: var(--sidebar-foreground); opacity: .65; transition: all .16s ease;
+  display: block; padding: .42rem .6rem; margin-bottom: 2px; border-radius: .55rem;
+  font-size: 12px; font-weight: 500; color: var(--sidebar-foreground); opacity: .62; transition: all .18s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.app-subnav-item:hover { opacity: 1; background: color-mix(in oklab, var(--cc-accent) 8%, transparent); }
-.app-subnav-item.is-active { opacity: 1; color: var(--cc-accent); background: color-mix(in oklab, var(--cc-accent) 13%, transparent); }
+.app-subnav-item:hover { opacity: 1; background: color-mix(in oklab, var(--cc-accent) 7%, transparent); transform: translateX(2px); }
+.app-subnav-item.is-active { opacity: 1; color: var(--cc-accent); font-weight: 600; background: color-mix(in oklab, var(--cc-accent) 13%, transparent); }
 
 /* ── glassy header ───────────────────────────────────────────────────────── */
 .app-header {
