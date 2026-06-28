@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
+import { Sparkles } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
+import { PageContainer, PageHeader, Section } from "@/components/kit";
 import SkillSetsTable, { SkillSetRow } from "./SkillSetsTable";
 import SkillSetDialog, { SkillSetDialogValues } from "./SkillSetDialog";
 
@@ -18,6 +20,13 @@ export default function SkillSetsPage() {
   return (
     <AppLayout>
       <SettingsLayout navKey="configuracion" title="Conjuntos de Habilidades">
+        <PageContainer width="wide">
+          <PageHeader
+            icon={<Sparkles />}
+            title="Conjuntos de Habilidades"
+            subtitle="Agrupa habilidades y asígnalas a tus vigilantes."
+          />
+          <Section>
         <SkillSetsTable
           rows={rows}
           total={total}
@@ -33,6 +42,7 @@ export default function SkillSetsPage() {
           onToggleStatus={() => {}}
           onBulkDelete={() => {}}
         />
+          </Section>
         <SkillSetDialog
           open={open}
           onOpenChange={setOpen}
@@ -46,6 +56,7 @@ export default function SkillSetsPage() {
             setEdit(null);
           }}
         />
+        </PageContainer>
       </SettingsLayout>
     </AppLayout>
   );

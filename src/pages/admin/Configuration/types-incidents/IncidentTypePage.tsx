@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
 import IncidentTypesTable, { IncidentTypeRow } from "./IncidentTypesTable";
@@ -6,8 +6,9 @@ import IncidentTypeDialog, { IncidentTypeDialogValues } from "./IncidentTypeDial
 import IncidentTypesService from "@/services/incident-types.service";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/kit";
+import { AlertTriangle } from "lucide-react";
 
 export default function IncidentTypePage() {
   const [open, setOpen] = useState(false);
@@ -91,15 +92,16 @@ export default function IncidentTypePage() {
             }
           }}
         />
-        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Confirmar eliminación</DialogTitle>
-            </DialogHeader>
-            <div className="py-2">¿Estás seguro que deseas eliminar {deleteIds.length} tipo(s) de incidente? Esta acción no se puede deshacer.</div>
-            <DialogFooter>
+        <Modal
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          size="sm"
+          icon={<AlertTriangle />}
+          title="Confirmar eliminación"
+          footer={
+            <>
               <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancelar</Button>
-              <Button className="bg-red-600 text-white" onClick={async () => {
+              <Button className="bg-red-600 text-white hover:bg-red-600/90" onClick={async () => {
                 try {
                   await IncidentTypesService.destroyAll(deleteIds);
                   toast.success('Tipos de incidente eliminados');
@@ -111,9 +113,11 @@ export default function IncidentTypePage() {
                   setDeleteIds([]);
                 }
               }}>Eliminar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </>
+          }
+        >
+          <p className="text-sm text-muted-foreground">¿Estás seguro que deseas eliminar {deleteIds.length} tipo(s) de incidente? Esta acción no se puede deshacer.</p>
+        </Modal>
       </SettingsLayout>
     </AppLayout>
   );

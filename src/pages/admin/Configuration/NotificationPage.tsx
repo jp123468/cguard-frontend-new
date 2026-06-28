@@ -5,8 +5,7 @@ import NotificationForm from './components/NotificationForm'
 const Notification = () => {
   return (
       <AppLayout>
-          <SettingsLayout navKey="configuracion" title="Configuración de Notificaciones
-">
+          <SettingsLayout navKey="configuracion" title="Configuración de Notificaciones">
                 <NotificationForm />
             </SettingsLayout>
     </AppLayout>

@@ -1,13 +1,8 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { DialogDescription } from "@/components/ui/dialog";
+import { ShieldCheck } from "lucide-react";
+import { Modal } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,15 +69,13 @@ export default function UserRoleDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader className="text-center">
-          <DialogTitle className="w-full text-center">{title}</DialogTitle>
-          <DialogDescription>
-            Proporcione un nombre y, opcionalmente, una breve descripción para el rol.
-          </DialogDescription>
-        </DialogHeader>
-
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description="Proporcione un nombre y, opcionalmente, una breve descripción para el rol."
+      icon={<ShieldCheck />}
+    >
         <Form {...form}>
           <form onSubmit={submit} className="grid gap-4">
             <FormField
@@ -125,7 +118,7 @@ export default function UserRoleDialog({
             />
             <div className="flex justify-end">
               <Button
-                className="bg-primary hover:bg-primary/90 text-white"
+                variant="brand"
                 type="submit"
                 disabled={submitting}
               >
@@ -134,7 +127,6 @@ export default function UserRoleDialog({
             </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+    </Modal>
   );
 }

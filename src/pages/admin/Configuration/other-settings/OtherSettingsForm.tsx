@@ -8,8 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Info } from "lucide-react";
+import { Info, Globe, Clock } from "lucide-react";
 import { useMemo } from "react";
+import { Section, Stagger } from "@/components/kit";
 
 /* ------------------------ Schema y tipos ------------------------ */
 const Schema = z.object({
@@ -49,7 +50,8 @@ function Fields() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="space-y-6">
+      <Stagger className="space-y-6">
+        <Section title="Regional y formato" icon={<Globe />} contentClassName="space-y-6">
         {/* Seleccionar Moneda */}
         <FormField
           control={control}
@@ -149,7 +151,9 @@ function Fields() {
             </FormItem>
           )}
         />
+        </Section>
 
+        <Section title="Asistencia y turnos" icon={<Clock />} contentClassName="space-y-6">
         {/* Período de gracia (píldoras) */}
         <div className="space-y-2">
           <label className="text-sm font-medium">
@@ -278,7 +282,8 @@ function Fields() {
             </FormItem>
           )}
         />
-      </div>
+        </Section>
+      </Stagger>
     </TooltipProvider>
   );
 }
@@ -309,7 +314,7 @@ export default function OtherSettingsForm({
         <form onSubmit={submit} className="space-y-6">
           <Fields />
           <div className="flex justify-end">
-            <Button type="submit">Guardar Configuración</Button>
+            <Button type="submit" variant="brand">Guardar Configuración</Button>
           </div>
         </form>
       </FormProvider>

@@ -1,5 +1,7 @@
+import { Puzzle } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
+import { PageContainer, PageHeader, Section, Stagger } from "@/components/kit";
 import IntegrationCard from "./IntegrationCard";
 
 const INTEGRATIONS = [
@@ -17,15 +19,23 @@ export default function IntegrationsList() {
     return (
         <AppLayout>
             <SettingsLayout navKey="configuracion" title="Integraciones">
-                <div className="space-y-6">
-                    <p className="text-sm font-light">
-                        Configure integraciones para ahorrar tiempo en la gestión de usuarios y exportación de
-                        nómina. Explore nuestras integraciones para ver lo que está disponible o gestione sus
-                        integraciones existentes a continuación. Siempre estamos trabajando en agregar nuevas
-                        integraciones, así que vuelva de vez en cuando.
-                    </p>
+                <PageContainer width="wide">
+                    <PageHeader
+                        icon={<Puzzle />}
+                        title="Integraciones"
+                        subtitle="Conecta C-Guard Pro con tus herramientas de nómina y contabilidad."
+                    />
 
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <Section>
+                        <p className="text-sm text-muted-foreground">
+                            Configure integraciones para ahorrar tiempo en la gestión de usuarios y exportación de
+                            nómina. Explore nuestras integraciones para ver lo que está disponible o gestione sus
+                            integraciones existentes a continuación. Siempre estamos trabajando en agregar nuevas
+                            integraciones, así que vuelva de vez en cuando.
+                        </p>
+                    </Section>
+
+                    <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {INTEGRATIONS.map((it) => (
                             <IntegrationCard
                                 key={`${it.title}-${it.subtitle}`}
@@ -36,8 +46,8 @@ export default function IntegrationsList() {
                                 href={`/setting/integracion/${it.slug}`}
                             />
                         ))}
-                    </div>
-                </div>
+                    </Stagger>
+                </PageContainer>
             </SettingsLayout>
         </AppLayout>
     );

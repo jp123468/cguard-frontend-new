@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StatusBadge, EmptyState, SkeletonBlock } from "@/components/kit";
 
 export type DepartmentRow = {
   id: string;
@@ -67,13 +68,13 @@ export default function DepartmentsTable({
             onChange={(e) => onQueryChange(e.target.value)}
           />
         </div>
-        <Button onClick={onCreate}>
+        <Button variant="brand" onClick={onCreate}>
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Departamento
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-2xl border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -89,14 +90,23 @@ export default function DepartmentsTable({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                  Cargando…
+                <TableCell colSpan={5} className="py-6">
+                  <div className="space-y-3">
+                    <SkeletonBlock className="h-4 w-1/3" />
+                    <SkeletonBlock className="h-4 w-1/2" />
+                    <SkeletonBlock className="h-4 w-2/5" />
+                  </div>
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-16 text-center text-muted-foreground">
-                  No se encontraron resultados
+                <TableCell colSpan={5}>
+                  <EmptyState
+                    icon={<Search />}
+                    title="No se encontraron resultados"
+                    description="Crea tu primer departamento para comenzar."
+                    className="border-0 py-12"
+                  />
                 </TableCell>
               </TableRow>
             ) : (
@@ -107,7 +117,11 @@ export default function DepartmentsTable({
                   </TableCell>
                   <TableCell className="font-medium">{r.name}</TableCell>
                   <TableCell>{r.guardName ?? "—"}</TableCell>
-                  <TableCell>{r.status === "inactive" ? "Inactivo" : "Activo"}</TableCell>
+                  <TableCell>
+                    <StatusBadge tone={r.status === "inactive" ? "slate" : "green"}>
+                      {r.status === "inactive" ? "Inactivo" : "Activo"}
+                    </StatusBadge>
+                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

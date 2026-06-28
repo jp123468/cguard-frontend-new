@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { X, Bold, Italic, Underline, Quote, List, ListOrdered, Type } from "lucide-react";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Command, CommandInput, CommandList, CommandGroup, CommandItem } from "@/components/ui/command";
+import { Modal } from "@/components/kit";
+import { FileText } from "lucide-react";
 
 type Guard = { id: string; name: string };
 type SkillSet = { id: string; name: string };
@@ -74,19 +75,35 @@ export default function PolicyDialog({
   const payload: PolicyForm = { title, content, departmentId: dept, skillSetId: skill, guards };
 
   return (
-    <Dialog
+    <Modal
       open={open}
       onOpenChange={(v) => {
         onOpenChange(v);
         if (!v) reset();
       }}
+      size="lg"
+      icon={<FileText />}
+      title="Agregar Política de Empresa"
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => onDraft(payload)}
+            className="bg-muted text-foreground"
+          >
+            Guardar como borrador
+          </Button>
+          <Button onClick={() => onSubmit(payload)} disabled={!title.trim()} variant="brand" className="px-8">
+            Guardar
+          </Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            <X className="mr-2 h-4 w-4" /> Cerrar
+          </Button>
+        </>
+      }
     >
-      <DialogContent className="max-w-3xl p-0">
-        <DialogHeader className="px-6 pt-6">
-          <DialogTitle>Agregar Política de Empresa</DialogTitle>
-        </DialogHeader>
-
-        <div className="px-6 pb-6 space-y-5">
+        <div className="space-y-5">
           <Input placeholder="Título*" value={title} onChange={(e) => setTitle(e.target.value)} />
 
           <div className="border rounded-md">
@@ -154,28 +171,8 @@ export default function PolicyDialog({
               )}
             </div>
           </div>
-
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => onDraft(payload)}
-              className="bg-muted text-foreground"
-            >
-              Guardar como borrador
-            </Button>
-            <Button onClick={() => onSubmit(payload)} disabled={!title.trim()}>
-              Guardar
-            </Button>
-            <DialogClose asChild>
-              <Button variant="ghost">
-                <X className="mr-2 h-4 w-4" /> Cerrar
-              </Button>
-            </DialogClose>
-          </div>
         </div>
-      </DialogContent>
-    </Dialog>
+    </Modal>
   );
 }
 

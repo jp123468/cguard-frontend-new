@@ -5,10 +5,10 @@ import { Loader2, Save, Mail, Lock } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader, Section, SkeletonCards } from "@/components/kit";
 import {
   emailPreferencesService,
   EmailCatalogItem,
@@ -103,29 +103,23 @@ export default function EmailPreferencesPage() {
   return (
     <AppLayout>
       <SettingsLayout navKey="configuracion" title={t("settings.configuracion.preferencias-correo", { defaultValue: "Preferencias de correo" })}>
-        <div className="mx-auto max-w-2xl">
+        <PageContainer width="narrow">
+          <PageHeader
+            icon={<Mail />}
+            title={t("settings.configuracion.preferencias-correo", { defaultValue: "Preferencias de correo" })}
+            subtitle={t("emailPreferences.intro", {
+              defaultValue:
+                "Activa o desactiva cada correo que envía la plataforma. Los correos marcados como \"Requerido\" no se pueden desactivar por seguridad.",
+            })}
+          />
+
           {loading ? (
-            <div className="flex min-h-[30vh] items-center justify-center">
-              <Loader2 className="animate-spin text-primary" size={28} />
-            </div>
+            <SkeletonCards count={4} />
           ) : (
             <div className="space-y-6">
-              <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-4">
-                <Mail size={18} className="mt-0.5 shrink-0 text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  {t("emailPreferences.intro", {
-                    defaultValue:
-                      "Activa o desactiva cada correo que envía la plataforma. Los correos marcados como \"Requerido\" no se pueden desactivar por seguridad.",
-                  })}
-                </p>
-              </div>
-
               {groups.map((group) => (
-                <Card key={group.category}>
-                  <CardHeader>
-                    <CardTitle className="text-base">{group.category}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="divide-y">
+                <Section key={group.category} title={group.category} icon={<Mail />}>
+                  <div className="divide-y">
                     {group.items.map((item) => (
                       <ToggleRow
                         key={item.key}
@@ -134,19 +128,19 @@ export default function EmailPreferencesPage() {
                         onCheckedChange={(b) => setPref(item.key, b)}
                       />
                     ))}
-                  </CardContent>
-                </Card>
+                  </div>
+                </Section>
               ))}
 
               <div className="flex justify-end">
-                <Button onClick={save} disabled={saving} className="bg-primary text-white hover:bg-primary/90">
+                <Button onClick={save} disabled={saving} variant="brand">
                   {saving ? <Loader2 className="mr-2 animate-spin" size={16} /> : <Save className="mr-2" size={16} />}
                   {t("emailPreferences.save", { defaultValue: "Guardar preferencias" })}
                 </Button>
               </div>
             </div>
           )}
-        </div>
+        </PageContainer>
       </SettingsLayout>
     </AppLayout>
   );

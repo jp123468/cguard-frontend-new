@@ -11,23 +11,15 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { X } from "lucide-react";
+import { Mail, Phone, Globe } from "lucide-react";
 import AccountService from "@/services/accountService";
 import { useAuth } from "@/contexts/AuthContext";
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import AvatarUploader from "./profile/AvatarUploader";
 import PhoneField from "./profile/PhoneField";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Section, Modal } from "@/components/kit";
 
 type MeTenantSetting = { theme?: string; logoUrl?: string | null };
 type MeTenant = { name?: string; settings?: MeTenantSetting[] };
@@ -392,8 +384,7 @@ export default function ProfileUserForm() {
           )}
         </div>
 
-        <Card>
-          <CardContent className="space-y-6 p-6">
+        <Section title={t('profile.name')} icon={<Globe />} contentClassName="space-y-6">
             {loading ? (
               <div className="space-y-4">
                 <Skeleton className="h-5 w-40" />
@@ -469,102 +460,84 @@ export default function ProfileUserForm() {
                 <div className="flex justify-end">
                   <Button
                     type="button"
+                    variant="brand"
                     disabled={saving}
                     onClick={handleSave}
-                    className="bg-[#f36a6d] hover:bg-[#e85b5f] text-white"
                   >
                     {saving ? t('profile.saving') : t('profile.save')}
                   </Button>
                 </div>
               </>
             )}
-          </CardContent>
-        </Card>
+        </Section>
       </div>
 
-      <Dialog open={showEmailModal} onOpenChange={setShowEmailModal}>
-        <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-            <DialogTitle className="text-lg font-medium">
-              {t('profile.changeEmailTitle')}
-            </DialogTitle>
-            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Cerrar</span>
-            </DialogClose>
-            <DialogDescription>{t('profile.changeEmailDesc')}</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">{t('profile.password')}</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="newEmail">{t('profile.newEmail')}</Label>
-              <Input
-                id="newEmail"
-                type="email"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                placeholder="nuevo@correo.com"
-              />
-            </div>
+      <Modal
+        open={showEmailModal}
+        onOpenChange={setShowEmailModal}
+        icon={<Mail />}
+        title={t('profile.changeEmailTitle')}
+        description={t('profile.changeEmailDesc')}
+        footer={
+          <Button variant="brand" onClick={handleChangeEmail}>
+            Guardar
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="password">{t('profile.password')}</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleChangeEmail}
-              className="bg-[#f36a6d] hover:bg-[#e85b5f] text-white"
-            >
-              Guardar
-            </Button>
+          <div className="space-y-2">
+            <Label htmlFor="newEmail">{t('profile.newEmail')}</Label>
+            <Input
+              id="newEmail"
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              placeholder="nuevo@correo.com"
+            />
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </Modal>
 
-      <Dialog open={showPhoneVerifyModal} onOpenChange={setShowPhoneVerifyModal}>
-        <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-            <DialogTitle className="text-lg font-medium">{t('profile.verifyNumberTitle')}</DialogTitle>
-            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Cerrar</span>
-            </DialogClose>
-            <DialogDescription>{t('profile.verifyNumberDesc')}</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="verificationCode">{t('profile.enterVerificationCode')}</Label>
-              <Input
-                id="verificationCode"
-                type="text"
-                placeholder="123456"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-              />
-            </div>
+      <Modal
+        open={showPhoneVerifyModal}
+        onOpenChange={setShowPhoneVerifyModal}
+        icon={<Phone />}
+        title={t('profile.verifyNumberTitle')}
+        description={t('profile.verifyNumberDesc')}
+        footer={
+          <Button
+            onClick={handleVerifyPhone}
+            className="text-muted-foreground hover:text-foreground/70"
+            variant="ghost"
+          >
+            {t('profile.send')}
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="verificationCode">{t('profile.enterVerificationCode')}</Label>
+            <Input
+              id="verificationCode"
+              type="text"
+              placeholder="123456"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
+            />
           </div>
-
-          <div className="flex justify-end">
-            <Button
-              onClick={handleVerifyPhone}
-              className="text-muted-foreground hover:text-foreground/70"
-              variant="ghost"
-            >
-              {t('profile.send')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </Modal>
     </>
   );
 }

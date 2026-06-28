@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
+import { Building2 } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
+import { PageContainer, PageHeader, Section } from "@/components/kit";
 import DepartmentsTable, { DepartmentRow } from "./DepartmentTable";
 import DepartmentDialog, { DepartmentDialogValues } from "./DepartmentDialog";
 
@@ -18,6 +20,13 @@ export default function DepartmentPage() {
   return (
     <AppLayout>
       <SettingsLayout navKey="configuracion" title="Departamentos">
+        <PageContainer width="wide">
+          <PageHeader
+            icon={<Building2 />}
+            title="Departamentos"
+            subtitle="Organiza tu operación en departamentos y asigna responsables."
+          />
+          <Section>
         <DepartmentsTable
           rows={rows}
           total={total}
@@ -33,6 +42,7 @@ export default function DepartmentPage() {
           onToggleStatus={() => {}}
           onBulkDelete={() => {}}
         />
+          </Section>
         <DepartmentDialog
           open={open}
           onOpenChange={setOpen}
@@ -46,6 +56,7 @@ export default function DepartmentPage() {
             setEdit(null);
           }}
         />
+        </PageContainer>
       </SettingsLayout>
     </AppLayout>
   );

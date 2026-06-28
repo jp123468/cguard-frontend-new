@@ -3,9 +3,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/kit";
+import { AlertTriangle } from "lucide-react";
 
 const schema = z.object({ name: z.string().min(2, "Ingresa un nombre válido") });
 export type IncidentTypeDialogValues = z.infer<typeof schema>;
@@ -24,32 +25,32 @@ export default function IncidentTypeDialog({ open, onOpenChange, title = "Nuevo 
   const submitting = form.formState.isSubmitting;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg ">
-        <DialogHeader className="text-center">
-          <DialogTitle className="text-center w-full">{title}</DialogTitle>
-          <DialogDescription className="text-center">Asigna un nombre para identificar el tipo de incidente.</DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre del Incidente</FormLabel>
-                  <FormControl><Input placeholder="p. ej. Theft, Injury, Fire Alarm…" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button type="submit" disabled={submitting} className="bg-primary hover:bg-primary/90 text-white px-8 min-w-28">{submitting ? "Guardando…" : "Guardar"}</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={<AlertTriangle />}
+      title={title}
+      description="Asigna un nombre para identificar el tipo de incidente."
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nombre del Incidente</FormLabel>
+                <FormControl><Input placeholder="p. ej. Theft, Injury, Fire Alarm…" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="flex items-center justify-end gap-2 border-t pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="submit" variant="brand" disabled={submitting} className="px-8 min-w-28">{submitting ? "Guardando…" : "Guardar"}</Button>
+          </div>
+        </form>
+      </Form>
+    </Modal>
   );
 }

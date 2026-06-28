@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Info, Loader2 } from "lucide-react";
+import { Info, Loader2, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { notificationSettingsService } from "@/lib/api/notificationSettingsService";
+import { Section } from "@/components/kit";
 
 type ChannelKey = "dashboard" | "email" | "sms";
 
@@ -160,11 +161,11 @@ export default function NotificationMatrix() {
   };
 
   return (
-    <div className="space-y-4">
+    <Section title="Preferencias de notificación" icon={<Bell />} contentClassName="space-y-4">
 
-      <div className="rounded-md border">
+      <div className="rounded-2xl border overflow-hidden">
         {/* Header */}
-        <div className="grid grid-cols-[1fr_repeat(3,160px)] items-center gap-2 px-4 py-3">
+        <div className="grid grid-cols-[1fr_repeat(3,160px)] items-center gap-2 px-4 py-3 bg-muted/30">
           <div className="text-[13px] font-medium text-muted-foreground">Tipo de Notificación</div>
           {columns.map((c) => {
             const all = allCheckedByColumn(c.key);
@@ -233,17 +234,17 @@ export default function NotificationMatrix() {
           </div>
         </ScrollArea>
 
-        <div className="flex py-2 px-2 justify-end">
+        <div className="flex py-3 px-3 justify-end border-t bg-muted/20">
           <Button
+              variant="brand"
               onClick={onSave}
               disabled={saving || loading}
-              className="bg-[#f36a6d] hover:bg-[#e85b5f] text-white"
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Guardar
             </Button>
         </div>
       </div>
-    </div>
+    </Section>
   );
 }

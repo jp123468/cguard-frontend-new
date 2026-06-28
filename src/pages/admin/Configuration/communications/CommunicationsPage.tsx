@@ -17,7 +17,6 @@ import {
 
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PageContainer, PageHeader, Section, StatCard, Stagger, StatusBadge } from "@/components/kit";
 import {
   communicationService,
   CommunicationSettings,
@@ -39,8 +39,6 @@ import {
   LogsFilters,
   LogsResult,
 } from "@/lib/api/communicationService";
-
-const GOLD = "#C8860A";
 
 const CHANNEL_OPTIONS = ["push", "whatsapp", "sms", "email"];
 const PROVIDER_OPTIONS = ["fcm", "meta", "twilio", "smtp"];
@@ -265,63 +263,55 @@ export default function CommunicationsPage() {
         navKey="configuracion"
         title={t("settings.configuracion.comunicaciones", { defaultValue: "Comunicaciones" })}
       >
-        <div className="mx-auto max-w-4xl">
+        <PageContainer width="wide">
+          <PageHeader
+            icon={<MessageCircle />}
+            title={t("settings.configuracion.comunicaciones", { defaultValue: "Comunicaciones" })}
+            subtitle={t("comms.walletHint", { defaultValue: "Saldo prepago para canales con costo (WhatsApp y SMS)." })}
+            actions={
+              !loading ? (
+                <Button variant="outline" size="sm" onClick={loadConfig}>
+                  <RefreshCw size={14} className="mr-1.5" />
+                  {t("comms.refresh", { defaultValue: "Actualizar" })}
+                </Button>
+              ) : undefined
+            }
+          />
           {loading ? (
             <div className="flex min-h-[30vh] items-center justify-center">
-              <Loader2 className="animate-spin" size={28} style={{ color: GOLD }} />
+              <Loader2 className="animate-spin text-primary" size={28} />
             </div>
           ) : (
             <div className="space-y-6">
               {/* Wallet */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Wallet size={18} style={{ color: GOLD }} />
-                    {t("comms.walletTitle", { defaultValue: "Saldo de comunicaciones" })}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap items-end justify-between gap-4">
-                    <div>
-                      <div className="text-3xl font-bold text-foreground">
-                        {money(wallet?.balanceCents || 0, currency)}
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {t("comms.walletHint", {
-                          defaultValue: "Saldo prepago para canales con costo (WhatsApp y SMS).",
-                        })}
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={loadConfig}>
-                      <RefreshCw size={14} className="mr-1.5" />
-                      {t("comms.refresh", { defaultValue: "Actualizar" })}
-                    </Button>
-                  </div>
-                  {wallet?.belowThreshold && (
-                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-500/10 p-3 text-xs text-amber-700">
-                      <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                      <span>
-                        {t("comms.lowBalance", {
-                          defaultValue:
-                            "Saldo bajo: por debajo del umbral configurado. Los canales con costo podrían bloquearse.",
-                        })}{" "}
-                        ({money(wallet.lowBalanceThresholdCents, currency)})
-                      </span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <Stagger className="grid grid-cols-1 gap-4">
+                <StatCard
+                  label={t("comms.walletTitle", { defaultValue: "Saldo de comunicaciones" })}
+                  value={money(wallet?.balanceCents || 0, currency)}
+                  icon={<Wallet />}
+                  accent={wallet?.belowThreshold ? "orange" : "primary"}
+                  hint={t("comms.walletHint", {
+                    defaultValue: "Saldo prepago para canales con costo (WhatsApp y SMS).",
+                  })}
+                />
+              </Stagger>
+              {wallet?.belowThreshold && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-500/10 p-3 text-xs text-amber-700">
+                  <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                  <span>
+                    {t("comms.lowBalance", {
+                      defaultValue:
+                        "Saldo bajo: por debajo del umbral configurado. Los canales con costo podrían bloquearse.",
+                    })}{" "}
+                    ({money(wallet.lowBalanceThresholdCents, currency)})
+                  </span>
+                </div>
+              )}
 
               {/* Channels & toggles */}
               {settings && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <MessageCircle size={18} style={{ color: GOLD }} />
-                      {t("comms.channelsTitle", { defaultValue: "Canales y alertas" })}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="divide-y">
+                <Section title={t("comms.channelsTitle", { defaultValue: "Canales y alertas" })} icon={<MessageCircle />}>
+                  <div className="divide-y">
                     <ToggleRow
                       title={t("comms.whatsappEnabled", { defaultValue: "Habilitar WhatsApp" })}
                       desc={t("comms.whatsappEnabledDesc", {
@@ -382,20 +372,14 @@ export default function CommunicationsPage() {
                       onChange={(v) => patch("critical_alert_sms_fallback", v)}
                       disabled={!settings.sms_enabled}
                     />
-                  </CardContent>
-                </Card>
+                  </div>
+                </Section>
               )}
 
               {/* OTP / routing preferences */}
               {settings && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <Smartphone size={18} style={{ color: GOLD }} />
-                      {t("comms.routingTitle", { defaultValue: "Preferencias de enrutamiento" })}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                <Section title={t("comms.routingTitle", { defaultValue: "Preferencias de enrutamiento" })} icon={<Smartphone />}>
+                  <div className="space-y-4">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <Label className="text-xs">
@@ -453,20 +437,24 @@ export default function CommunicationsPage() {
                       checked={!!settings.wallet_required_for_paid_channels}
                       onChange={(v) => patch("wallet_required_for_paid_channels", v)}
                     />
-                  </CardContent>
-                </Card>
+                  </div>
+                </Section>
               )}
 
               {/* Meta WhatsApp (non-secret) + webhook status */}
               {settings && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <Radio size={18} style={{ color: GOLD }} />
-                      {t("comms.metaTitle", { defaultValue: "WhatsApp (Meta Cloud API)" })}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                <Section
+                  title={t("comms.metaTitle", { defaultValue: "WhatsApp (Meta Cloud API)" })}
+                  icon={<Radio />}
+                  action={
+                    <StatusBadge tone={webhookReady ? "green" : "orange"}>
+                      {webhookReady
+                        ? t("comms.webhookReady", { defaultValue: "Configurado" })
+                        : t("comms.webhookPending", { defaultValue: "Pendiente" })}
+                    </StatusBadge>
+                  }
+                >
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 p-3">
                       <div className="flex items-center gap-2 text-sm">
                         {webhookReady ? (
@@ -478,18 +466,6 @@ export default function CommunicationsPage() {
                           {t("comms.webhookStatus", { defaultValue: "Estado del webhook" })}
                         </span>
                       </div>
-                      <Badge
-                        className={
-                          webhookReady
-                            ? "border-green-200 bg-green-500/15 text-green-700"
-                            : "border-amber-200 bg-amber-500/15 text-amber-700"
-                        }
-                        variant="outline"
-                      >
-                        {webhookReady
-                          ? t("comms.webhookReady", { defaultValue: "Configurado" })
-                          : t("comms.webhookPending", { defaultValue: "Pendiente" })}
-                      </Badge>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -522,8 +498,8 @@ export default function CommunicationsPage() {
                           "El token de acceso y el secreto de la app se configuran de forma segura en la plataforma y nunca se muestran aquí.",
                       })}
                     </p>
-                  </CardContent>
-                </Card>
+                  </div>
+                </Section>
               )}
 
               {/* Save bar */}
@@ -534,10 +510,9 @@ export default function CommunicationsPage() {
                   </span>
                 )}
                 <Button
+                  variant="brand"
                   onClick={onSave}
                   disabled={saving || !dirty}
-                  className="text-white"
-                  style={{ backgroundColor: GOLD }}
                 >
                   {saving ? (
                     <Loader2 className="mr-2 animate-spin" size={16} />
@@ -549,14 +524,8 @@ export default function CommunicationsPage() {
               </div>
 
               {/* Usage / logs */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <ListFilter size={18} style={{ color: GOLD }} />
-                    {t("comms.usageTitle", { defaultValue: "Historial de uso" })}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <Section title={t("comms.usageTitle", { defaultValue: "Historial de uso" })} icon={<ListFilter />}>
+                <div className="space-y-4">
                   {/* Cost summary */}
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="rounded-lg border border-border p-3">
@@ -668,7 +637,7 @@ export default function CommunicationsPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Button size="sm" onClick={applyFilters} className="text-white" style={{ backgroundColor: GOLD }}>
+                    <Button size="sm" variant="brand" onClick={applyFilters}>
                       <ListFilter size={14} className="mr-1.5" />
                       {t("comms.applyFilters", { defaultValue: "Filtrar" })}
                     </Button>
@@ -685,7 +654,7 @@ export default function CommunicationsPage() {
                   <div className="overflow-x-auto rounded-lg border">
                     {logsLoading ? (
                       <div className="flex min-h-[140px] items-center justify-center">
-                        <Loader2 className="animate-spin" size={22} style={{ color: GOLD }} />
+                        <Loader2 className="animate-spin text-primary" size={22} />
                       </div>
                     ) : !logsResult || logsResult.rows.length === 0 ? (
                       <p className="py-10 text-center text-sm text-muted-foreground">
@@ -773,11 +742,11 @@ export default function CommunicationsPage() {
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </Section>
             </div>
           )}
-        </div>
+        </PageContainer>
       </SettingsLayout>
     </AppLayout>
   );

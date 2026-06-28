@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, EllipsisVertical, Loader2, Search } from "lucide-react";
+import { ChevronDown, EllipsisVertical, Loader2, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { EmptyState, StatusBadge } from "@/components/kit";
 
 export type IncidentTypeRow = { id: string; name: string; status: "active" | "inactive" };
 
@@ -83,11 +83,13 @@ export default function IncidentTypesTable({
           <Input className="pl-9" placeholder="Buscar tipo de incidente" value={query} onChange={(e) => onQueryChange?.(e.target.value)} />
         </div>
 
-        <Button className="bg-primary hover:bg-primary/90 text-white px-8"
-          onClick={onCreate}>Nuevo Tipo de Incidente</Button>
+        <Button variant="brand" className="px-6" onClick={onCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nuevo Tipo de Incidente
+        </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="cg-card overflow-hidden p-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -111,8 +113,13 @@ export default function IncidentTypesTable({
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-40 text-center text-muted-foreground">
-                  No se encontraron resultados
+                <TableCell colSpan={4} className="p-0">
+                  <EmptyState
+                    icon={<Search />}
+                    title="No se encontraron resultados"
+                    description="No hay tipos de incidente que coincidan con tu búsqueda."
+                    className="border-0"
+                  />
                 </TableCell>
               </TableRow>
             ) : (
@@ -123,9 +130,9 @@ export default function IncidentTypesTable({
                   </TableCell>
                   <TableCell className="font-medium">{row.name}</TableCell>
                   <TableCell>
-                      <Badge variant="outline" className={row.status === "active" ? "bg-green-100 text-green-800" : "bg-red-500/15 text-red-700"}>
+                    <StatusBadge tone={row.status === "active" ? "green" : "red"}>
                       {row.status === "active" ? "Activo" : "Inactivo"}
-                    </Badge>
+                    </StatusBadge>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

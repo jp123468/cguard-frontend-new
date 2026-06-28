@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { EmptyState, StatusBadge } from "@/components/kit";
 
 export type ProfileFieldRow = {
   id: string;
@@ -69,13 +69,13 @@ export default function ProfileFieldsTable({
           <Input className="pl-9" placeholder="Buscar" value={query} onChange={(e) => onQueryChange(e.target.value)} />
         </div>
 
-        <Button onClick={onNew}>
+        <Button onClick={onNew} variant="brand" className="px-6">
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Campo
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="cg-card overflow-hidden p-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -92,11 +92,13 @@ export default function ProfileFieldsTable({
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5}>
-                  <div className="py-16 text-center text-muted-foreground">
-                    <div className="text-lg font-semibold">No se encontraron resultados</div>
-                    <div className="text-sm">No pudimos encontrar ningún elemento que coincida con su búsqueda</div>
-                  </div>
+                <TableCell colSpan={5} className="p-0">
+                  <EmptyState
+                    icon={<Search />}
+                    title="No se encontraron resultados"
+                    description="No pudimos encontrar ningún elemento que coincida con su búsqueda"
+                    className="border-0"
+                  />
                 </TableCell>
               </TableRow>
             ) : (
@@ -108,15 +110,9 @@ export default function ProfileFieldsTable({
                   <TableCell className="font-medium">{r.name}</TableCell>
                   <TableCell>{r.type}</TableCell>
                   <TableCell>
-                    {r.status === "active" ? (
-                      <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/15">
-                        Activo
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="bg-slate-100 text-foreground hover:bg-slate-100">
-                        Inactivo
-                      </Badge>
-                    )}
+                    <StatusBadge tone={r.status === "active" ? "green" : "slate"}>
+                      {r.status === "active" ? "Activo" : "Inactivo"}
+                    </StatusBadge>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

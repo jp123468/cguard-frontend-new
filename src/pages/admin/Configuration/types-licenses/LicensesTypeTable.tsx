@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { MoreVertical, Plus, Search } from "lucide-react";
+import { Loader2, MoreVertical, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EmptyState, StatusBadge } from "@/components/kit";
 
 export type LicenseTypeRow = {
   id: string;
@@ -67,13 +68,13 @@ export default function LicenseTypesTable({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder={t('licenseTypes.table.searchPlaceholder', { defaultValue: 'Buscar tipo de licencia' })} className="pl-9" value={query} onChange={(e) => onQueryChange(e.target.value)} />
         </div>
-        <Button onClick={onCreate} className="bg-primary text-white hover:bg-primary/90 px-4 py-2">
+        <Button onClick={onCreate} variant="brand" className="px-4 py-2">
           <Plus className="mr-2 h-4 w-4" />
           {t('licenseTypes.table.create', { defaultValue: 'Nuevo Tipo de Licencia' })}
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="cg-card overflow-hidden p-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -89,13 +90,20 @@ export default function LicenseTypesTable({
             {loading ? (
               <TableRow>
                 <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                  {t('licenseTypes.table.loading', { defaultValue: 'Cargando…' })}
+                  <div className="inline-flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t('licenseTypes.table.loading', { defaultValue: 'Cargando…' })}
+                  </div>
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-16 text-center text-muted-foreground">
-                  {t('licenseTypes.table.noResults', { defaultValue: 'No se encontraron resultados' })}
+                <TableCell colSpan={4} className="p-0">
+                  <EmptyState
+                    icon={<Search />}
+                    title={t('licenseTypes.table.noResults', { defaultValue: 'No se encontraron resultados' })}
+                    className="border-0"
+                  />
                 </TableCell>
               </TableRow>
             ) : (
@@ -105,7 +113,11 @@ export default function LicenseTypesTable({
                     <Checkbox checked={false} onCheckedChange={() => {}} />
                   </TableCell>
                   <TableCell className="font-medium">{r.name}</TableCell>
-                  <TableCell>{r.status === "active" ? t('licenseTypes.table.status.active', { defaultValue: 'Activo' }) : t('licenseTypes.table.status.inactive', { defaultValue: 'Inactivo' })}</TableCell>
+                  <TableCell>
+                    <StatusBadge tone={r.status === "active" ? "green" : "slate"}>
+                      {r.status === "active" ? t('licenseTypes.table.status.active', { defaultValue: 'Activo' }) : t('licenseTypes.table.status.inactive', { defaultValue: 'Inactivo' })}
+                    </StatusBadge>
+                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

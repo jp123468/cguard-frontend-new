@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Loader2, CreditCard, Users, CheckCircle2, Clock, AlertTriangle, Sparkles } from "lucide-react";
+import { Loader2, CreditCard, Users, CheckCircle2, Clock, AlertTriangle, Sparkles, Wallet } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader, Section, StatCard, Stagger, StatusBadge } from "@/components/kit";
 import { subscriptionBillingService, BillingSummary, BillableUser } from "@/lib/api/subscriptionBillingService";
 
 function money(cents: number, currency = "USD") {
@@ -13,12 +13,13 @@ function money(cents: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format((cents || 0) / 100);
 }
 
-const STATUS_META: Record<string, { label: string; cls: string }> = {
-  trialing: { label: "Prueba gratuita", cls: "bg-sky-500/15 text-sky-700" },
-  active: { label: "Activo", cls: "bg-green-500/15 text-green-700" },
-  past_due: { label: "Pago vencido", cls: "bg-red-500/15 text-red-700" },
-  trial_expired: { label: "Prueba expirada", cls: "bg-amber-500/15 text-amber-700" },
-  canceled: { label: "Cancelado", cls: "bg-muted text-muted-foreground" },
+type BadgeTone = "blue" | "green" | "red" | "orange" | "slate";
+const STATUS_META: Record<string, { label: string; tone: BadgeTone }> = {
+  trialing: { label: "Prueba gratuita", tone: "blue" },
+  active: { label: "Activo", tone: "green" },
+  past_due: { label: "Pago vencido", tone: "red" },
+  trial_expired: { label: "Prueba expirada", tone: "orange" },
+  canceled: { label: "Cancelado", tone: "slate" },
 };
 
 export default function BillingPage() {
@@ -93,32 +94,39 @@ export default function BillingPage() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6">
-        <div className="mx-auto max-w-2xl">
-          <div className="mb-5 flex items-center gap-2">
-            <CreditCard size={20} className="text-primary" />
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
-              {t("settings.configuracion.billing", { defaultValue: "Suscripción" })}
-            </h1>
+      <PageContainer width="narrow" className="p-4 sm:p-6">
+        <PageHeader
+          icon={<CreditCard />}
+          title={t("settings.configuracion.billing", { defaultValue: "Suscripción" })}
+          subtitle={t("billing.title", { defaultValue: "Estado de la suscripción" })}
+          badges={!loading && data ? <StatusBadge tone={meta.tone}>{meta.label}</StatusBadge> : undefined}
+        />
+        {loading || !data ? (
+          <div className="flex min-h-[30vh] items-center justify-center">
+            <Loader2 className="animate-spin text-primary" size={28} />
           </div>
-          {loading || !data ? (
-            <div className="flex min-h-[30vh] items-center justify-center">
-              <Loader2 className="animate-spin text-primary" size={28} />
-            </div>
-          ) : (
+        ) : (
             <div className="space-y-6">
+              {/* KPIs */}
+              <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <StatCard
+                  label={t("billing.seats", { defaultValue: "Usuarios facturables" })}
+                  value={data.seats}
+                  icon={<Users />}
+                  accent="primary"
+                />
+                <StatCard
+                  label={t("billing.monthly", { defaultValue: "Total mensual" })}
+                  value={`${money(q!.monthlyCents, currency)}`}
+                  icon={<Wallet />}
+                  accent="green"
+                  hint={t("billing.monthlyHint", { defaultValue: "Facturación mensual" })}
+                />
+              </Stagger>
+
               {/* Status */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-base">
-                    <span className="flex items-center gap-2">
-                      <CreditCard size={18} className="text-primary" />
-                      {t("billing.title", { defaultValue: "Estado de la suscripción" })}
-                    </span>
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${meta.cls}`}>{meta.label}</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
+              <Section title={t("billing.title", { defaultValue: "Estado de la suscripción" })} icon={<CreditCard />}>
+                <div className="space-y-3">
                   {status === "trialing" && (
                     <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-500/10 p-3 text-sm text-sky-800">
                       <Clock size={16} className="mt-0.5 shrink-0" />
@@ -202,15 +210,12 @@ export default function BillingPage() {
                       )}
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </Section>
 
               {/* Price breakdown */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">{t("billing.costTitle", { defaultValue: "Tu plan" })}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
+              <Section title={t("billing.costTitle", { defaultValue: "Tu plan" })} icon={<Wallet />}>
+                <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">
                       {money(q!.perUserCents, currency)} × {data.seats} {t("billing.users", { defaultValue: "usuarios" })}
@@ -248,8 +253,8 @@ export default function BillingPage() {
                   <p className="pt-1 text-xs text-muted-foreground">
                     {t("billing.feeNote", { defaultValue: "Los precios incluyen las comisiones de procesamiento de Stripe. Facturación mensual; el número de usuarios se ajusta automáticamente." })}
                   </p>
-                </CardContent>
-              </Card>
+                </div>
+              </Section>
 
               {/* CTA */}
               {!isActive ? (
@@ -282,8 +287,7 @@ export default function BillingPage() {
               )}
             </div>
           )}
-        </div>
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

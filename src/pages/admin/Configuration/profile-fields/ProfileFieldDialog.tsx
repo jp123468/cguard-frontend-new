@@ -1,15 +1,15 @@
 import { z } from "zod";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { ChevronsUpDown, Check } from "lucide-react";
+import { ChevronsUpDown, Check, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { Modal } from "@/components/kit";
 
 const TYPE_OPTIONS = [
   { id: "client", label: "Cliente" },
@@ -50,13 +50,13 @@ export default function ProfileFieldDialog({ open, onOpenChange, title, defaultV
   const selectedType = TYPE_OPTIONS.find((t) => t.id === form.watch("type"));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>Define campos personalizados para perfiles.</DialogDescription>
-        </DialogHeader>
-
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={<ListChecks />}
+      title={title}
+      description="Define campos personalizados para perfiles."
+    >
         <Form {...form}>
           <form onSubmit={handleSubmit} className="grid gap-4">
             <FormField
@@ -116,12 +116,11 @@ export default function ProfileFieldDialog({ open, onOpenChange, title, defaultV
               )}
             />
 
-            <div className="flex justify-end">
-              <Button type="submit">Guardar</Button>
+            <div className="flex justify-end border-t pt-4">
+              <Button type="submit" variant="brand" className="px-8">Guardar</Button>
             </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+    </Modal>
   );
 }

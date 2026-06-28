@@ -21,6 +21,7 @@ import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { DropdownMenuContent } from "@/components/ui/dropdown-menu";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { EmptyState } from "@/components/kit";
 import PolicyDialog, { PolicyForm } from "./PolicyDialog";
 
 
@@ -111,13 +112,13 @@ export default function CompanyPoliciesTable() {
             />
           </div>
 
-          <Button onClick={() => setOpenNew(true)} className="whitespace-nowrap">
+          <Button onClick={() => setOpenNew(true)} variant="brand" className="whitespace-nowrap px-6">
             <Plus className="mr-2 h-4 w-4" />
             Nueva Política de Empresa
           </Button>
         </div>
 
-        <div className="rounded-md border">
+        <div className="cg-card overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -132,13 +133,13 @@ export default function CompanyPoliciesTable() {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3}>
-                    <div className="py-16 text-center text-muted-foreground">
-                      <div className="text-lg font-semibold">No se encontraron resultados</div>
-                      <div className="text-sm">
-                        No pudimos encontrar ningún elemento que coincida con su búsqueda
-                      </div>
-                    </div>
+                  <TableCell colSpan={3} className="p-0">
+                    <EmptyState
+                      icon={<Search />}
+                      title="No se encontraron resultados"
+                      description="No pudimos encontrar ningún elemento que coincida con su búsqueda"
+                      className="border-0"
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

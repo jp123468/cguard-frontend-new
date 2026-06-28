@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, Terminal, FileSearch } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
+import { PageContainer, PageHeader, EmptyState } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -81,7 +82,12 @@ export default function DeveloperRequestsPage() {
         navKey="configuracion"
         title="Registros de solicitudes de desarrolladores"
       >
-        <div className="space-y-6">
+        <PageContainer width="wide">
+          <PageHeader
+            icon={<Terminal />}
+            title="Registros de solicitudes de desarrolladores"
+            subtitle="Inspecciona las solicitudes de la API por método, URL y código de estado."
+          />
           {/* Barra de búsqueda y filtros */}
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
@@ -174,7 +180,7 @@ export default function DeveloperRequestsPage() {
           </div>
 
           {/* Tabla */}
-          <div className="rounded-lg border bg-card">
+          <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30">
@@ -192,84 +198,12 @@ export default function DeveloperRequestsPage() {
                 {currentItems.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="h-96 text-center">
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <svg
-                          className="mb-4 h-32 w-32 text-blue-200"
-                          viewBox="0 0 200 200"
-                          fill="none"
-                        >
-                          <rect
-                            x="60"
-                            y="80"
-                            width="80"
-                            height="100"
-                            rx="4"
-                            fill="currentColor"
-                          />
-                          <circle cx="100" cy="50" r="25" fill="currentColor" />
-                          <line
-                            x1="85"
-                            y1="45"
-                            x2="95"
-                            y2="45"
-                            stroke="white"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                          />
-                          <line
-                            x1="105"
-                            y1="45"
-                            x2="115"
-                            y2="45"
-                            stroke="white"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                          />
-                          <path
-                            d="M 90 60 Q 100 55 110 60"
-                            stroke="white"
-                            strokeWidth="3"
-                            fill="none"
-                            strokeLinecap="round"
-                          />
-                          <line
-                            x1="170"
-                            y1="30"
-                            x2="175"
-                            y2="25"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          />
-                          <line
-                            x1="180"
-                            y1="40"
-                            x2="185"
-                            y2="35"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          />
-                          <line
-                            x1="160"
-                            y1="50"
-                            x2="165"
-                            y2="45"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          />
-                        </svg>
-                        <h3 className="mb-2 text-lg font-semibold text-foreground">
-                          No se encontraron resultados
-                        </h3>
-                        <p className="text-center text-sm text-muted-foreground">
-                          No pudimos encontrar
-                          <br />
-                          ningún elemento que
-                          <br />
-                          coincida con su
-                          <br />
-                          búsqueda
-                        </p>
-                      </div>
+                      <EmptyState
+                        className="border-0 py-6"
+                        icon={<FileSearch />}
+                        title="No se encontraron resultados"
+                        description="No pudimos encontrar ningún elemento que coincida con su búsqueda."
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -333,7 +267,7 @@ export default function DeveloperRequestsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </PageContainer>
       </SettingsLayout>
     </AppLayout>
   );

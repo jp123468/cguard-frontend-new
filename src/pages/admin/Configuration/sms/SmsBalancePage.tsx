@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Loader2, MessageSquare, Wallet, Plus, RefreshCw, AlertTriangle, CheckCircle2, Phone, Search, X } from "lucide-react";
+import { Loader2, MessageSquare, Wallet, Plus, RefreshCw, AlertTriangle, CheckCircle2, Phone, Search } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageContainer, PageHeader, Section, StatCard, Stagger, StatusBadge, EmptyState, Modal } from "@/components/kit";
 import { smsAccountService, SmsAccount, SmsTransaction, AvailableNumber } from "@/lib/api/smsAccountService";
 
 const COUNTRIES = [
@@ -151,7 +151,19 @@ export default function SmsBalancePage() {
   return (
     <AppLayout>
       <SettingsLayout navKey="configuracion" title={t("settings.configuracion.sms", { defaultValue: "Saldo SMS" })}>
-        <div className="mx-auto max-w-2xl">
+        <PageContainer width="narrow">
+          <PageHeader
+            icon={<MessageSquare />}
+            title={t("settings.configuracion.sms", { defaultValue: "Saldo SMS" })}
+            subtitle={t("sms.balanceTitle", { defaultValue: "Saldo de mensajería SMS" })}
+            actions={
+              !loading ? (
+                <Button variant="outline" size="sm" onClick={load}>
+                  <RefreshCw size={14} className="mr-1.5" /> {t("sms.refresh", { defaultValue: "Actualizar" })}
+                </Button>
+              ) : undefined
+            }
+          />
           {loading ? (
             <div className="flex min-h-[30vh] items-center justify-center">
               <Loader2 className="animate-spin text-primary" size={28} />
@@ -159,38 +171,25 @@ export default function SmsBalancePage() {
           ) : (
             <div className="space-y-6">
               {/* Balance */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Wallet size={18} className="text-primary" />
-                    {t("sms.balanceTitle", { defaultValue: "Saldo de mensajería SMS" })}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-end justify-between gap-4">
-                    <div>
-                      <div className="text-3xl font-bold text-foreground">{money(account?.balanceCents || 0, currency)}</div>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        ≈ {remainingSms.toLocaleString("es-ES")} {t("sms.messages", { defaultValue: "mensajes" })} ·{" "}
-                        {money(perSms, currency)} {t("sms.perSms", { defaultValue: "por SMS" })}
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={load}>
-                      <RefreshCw size={14} className="mr-1.5" /> {t("sms.refresh", { defaultValue: "Actualizar" })}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <StatCard
+                  label={t("sms.balanceTitle", { defaultValue: "Saldo de mensajería SMS" })}
+                  value={money(account?.balanceCents || 0, currency)}
+                  icon={<Wallet />}
+                  accent="primary"
+                  hint={`${money(perSms, currency)} ${t("sms.perSms", { defaultValue: "por SMS" })}`}
+                />
+                <StatCard
+                  label={t("sms.messages", { defaultValue: "mensajes" })}
+                  value={`≈ ${remainingSms.toLocaleString("es-ES")}`}
+                  icon={<MessageSquare />}
+                  accent="green"
+                />
+              </Stagger>
 
               {/* Subaccount status */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <MessageSquare size={18} className="text-primary" />
-                    {t("sms.accountTitle", { defaultValue: "Cuenta de envío (Twilio)" })}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
+              <Section title={t("sms.accountTitle", { defaultValue: "Cuenta de envío (Twilio)" })} icon={<MessageSquare />}>
+                <div className="space-y-3">
                   {!account?.platformConfigured && (
                     <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-500/10 p-3 text-xs text-amber-700">
                       <AlertTriangle size={14} className="mt-0.5 shrink-0" />
@@ -201,9 +200,9 @@ export default function SmsBalancePage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{t("sms.subaccount", { defaultValue: "Subcuenta dedicada" })}</span>
                     {account?.provisioned ? (
-                      <span className="inline-flex items-center gap-1 text-green-700">
-                        <CheckCircle2 size={14} /> {account.subaccountSid?.slice(0, 10)}…
-                      </span>
+                      <StatusBadge tone="green">
+                        <CheckCircle2 size={12} /> {account.subaccountSid?.slice(0, 10)}…
+                      </StatusBadge>
                     ) : (
                       <span className="text-muted-foreground">{t("sms.notProvisioned", { defaultValue: "No creada" })}</span>
                     )}
@@ -216,9 +215,9 @@ export default function SmsBalancePage() {
 
                   {!account?.provisioned && (
                     <Button
+                      variant="brand"
                       onClick={onProvision}
                       disabled={provisioning || !account?.platformConfigured}
-                      className="bg-primary text-white hover:bg-primary/90"
                     >
                       {provisioning ? <Loader2 className="mr-2 animate-spin" size={16} /> : <Plus className="mr-2" size={16} />}
                       {t("sms.createSubaccount", { defaultValue: "Crear subcuenta SMS" })}
@@ -227,23 +226,20 @@ export default function SmsBalancePage() {
 
                   {account?.provisioned && !account?.hasSender && (
                     <Button
+                      variant="brand"
                       onClick={openBuy}
                       disabled={!account?.platformConfigured}
-                      className="bg-primary text-white hover:bg-primary/90"
                     >
                       <Phone className="mr-2" size={16} />
                       {t("sms.buyNumber", { defaultValue: "Comprar número" })}
                     </Button>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </Section>
 
               {/* Recharge */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">{t("sms.rechargeTitle", { defaultValue: "Recargar saldo" })}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <Section title={t("sms.rechargeTitle", { defaultValue: "Recargar saldo" })} icon={<Wallet />}>
+                <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
                     {PRESETS.map((p) => (
                       <button
@@ -276,52 +272,43 @@ export default function SmsBalancePage() {
                   <p className="text-xs text-muted-foreground">
                     {t("sms.rechargeHint", { defaultValue: "Pago seguro con tarjeta vía Stripe. El saldo se acredita automáticamente al confirmarse el pago." })}
                   </p>
-                </CardContent>
-              </Card>
+                </div>
+              </Section>
 
               {/* Transactions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">{t("sms.history", { defaultValue: "Movimientos" })}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {transactions.length === 0 ? (
-                    <p className="py-6 text-center text-sm text-muted-foreground">{t("sms.noHistory", { defaultValue: "Sin movimientos todavía" })}</p>
-                  ) : (
-                    <div className="divide-y">
-                      {transactions.map((tx) => (
-                        <div key={tx.id} className="flex items-center justify-between gap-3 py-2.5">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm text-foreground">{tx.description || tx.type}</p>
-                            <p className="text-xs text-muted-foreground">{fmtDate(tx.createdAt)}</p>
-                          </div>
-                          <div className={`shrink-0 text-sm font-semibold ${tx.amountCents >= 0 ? "text-green-700" : "text-foreground"}`}>
-                            {tx.amountCents >= 0 ? "+" : "−"}{money(Math.abs(tx.amountCents), tx.currency || currency)}
-                          </div>
+              <Section title={t("sms.history", { defaultValue: "Movimientos" })} icon={<Wallet />}>
+                {transactions.length === 0 ? (
+                  <EmptyState
+                    icon={<Wallet />}
+                    title={t("sms.noHistory", { defaultValue: "Sin movimientos todavía" })}
+                  />
+                ) : (
+                  <div className="divide-y">
+                    {transactions.map((tx) => (
+                      <div key={tx.id} className="flex items-center justify-between gap-3 py-2.5">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm text-foreground">{tx.description || tx.type}</p>
+                          <p className="text-xs text-muted-foreground">{fmtDate(tx.createdAt)}</p>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        <div className={`shrink-0 text-sm font-semibold ${tx.amountCents >= 0 ? "text-green-700" : "text-foreground"}`}>
+                          {tx.amountCents >= 0 ? "+" : "−"}{money(Math.abs(tx.amountCents), tx.currency || currency)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Section>
             </div>
           )}
 
           {/* Buy-number modal */}
-          {buyOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => !buying && setBuyOpen(false)}>
-              <div className="w-full max-w-lg rounded-xl bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between border-b p-5">
-                  <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
-                    <Phone size={18} className="text-primary" />
-                    {t("sms.buyNumberTitle", { defaultValue: "Comprar número de envío" })}
-                  </h2>
-                  <button onClick={() => !buying && setBuyOpen(false)} className="text-muted-foreground hover:text-foreground">
-                    <X size={18} />
-                  </button>
-                </div>
-
-                <div className="space-y-4 p-5">
+          <Modal
+            open={buyOpen}
+            onOpenChange={(o) => { if (!buying) setBuyOpen(o); }}
+            icon={<Phone />}
+            title={t("sms.buyNumberTitle", { defaultValue: "Comprar número de envío" })}
+          >
+                <div className="space-y-4">
                   <div className="flex items-end gap-3">
                     <div className="flex-1">
                       <Label className="text-xs">{t("sms.country", { defaultValue: "País" })}</Label>
@@ -360,10 +347,10 @@ export default function SmsBalancePage() {
                               </p>
                             </div>
                             <Button
+                              variant="brand"
                               size="sm"
                               onClick={() => buyNumber(n.phoneNumber)}
                               disabled={!!buying}
-                              className="bg-primary text-white hover:bg-primary/90"
                             >
                               {buying === n.phoneNumber ? <Loader2 className="animate-spin" size={14} /> : t("sms.buy", { defaultValue: "Comprar" })}
                             </Button>
@@ -377,10 +364,8 @@ export default function SmsBalancePage() {
                     {t("sms.buyNumberHint", { defaultValue: "El número se adquiere dentro de tu subcuenta y queda como remitente para tus SMS. Algunos países requieren documentación regulatoria de Twilio." })}
                   </p>
                 </div>
-              </div>
-            </div>
-          )}
-        </div>
+          </Modal>
+        </PageContainer>
       </SettingsLayout>
     </AppLayout>
   );

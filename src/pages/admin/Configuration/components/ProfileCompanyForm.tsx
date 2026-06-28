@@ -38,7 +38,11 @@ import {
   Edit,
   Search,
   Building2,
+  MapPin,
+  Clock,
+  FileText,
 } from "lucide-react";
+import { Section } from "@/components/kit";
 import { useAuth } from "@/contexts/AuthContext";
 import tenantService from '@/services/tenant.service';
 import { invalidateTenantBranding } from '@/lib/tenantBranding';
@@ -367,11 +371,14 @@ export default function ProfileCompanyForm() {
     if (isAdmin) {
       return (
         <div className="p-6">
-          <div className="max-w-2xl mx-auto bg-card border rounded-md p-6 text-center">
+          <div className="max-w-2xl mx-auto cg-card p-6 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/12 text-primary [&_svg]:size-6">
+              <Building2 />
+            </div>
             <h3 className="text-lg font-medium mb-2">Debe crear una Empresa</h3>
             <p className="text-sm text-foreground/70 mb-4">Aún no tiene una empresa asignada. Cree una para continuar configurando la información.</p>
             <div className="flex justify-center">
-              <Button onClick={() => navigate('/tenant/create')} className="bg-[#f36a6d] hover:bg-[#e85b5f] text-white">
+              <Button variant="brand" onClick={() => navigate('/tenant/create')}>
                 Crear Empresa
               </Button>
             </div>
@@ -405,10 +412,12 @@ export default function ProfileCompanyForm() {
 
         <div className="grid grid-cols-1 gap-6">
           {!canEdit && (
-            <div className="p-3 rounded-md bg-yellow-50 border border-yellow-100 text-sm text-yellow-800">
+            <div className="p-3 rounded-xl bg-yellow-50 border border-yellow-100 text-sm text-yellow-800">
               Sólo los usuarios con el rol <strong>admin</strong> pueden editar la información de la empresa.
             </div>
           )}
+
+          <Section title="Datos de la empresa" icon={<Building2 />} contentClassName="grid grid-cols-1 gap-6">
           <div className="space-y-2">
             <Label>Nombre de la Empresa*</Label>
             <Input
@@ -461,7 +470,9 @@ export default function ProfileCompanyForm() {
               disabled={!canEdit}
             />
           </div>
+          </Section>
 
+          <Section title="Ubicación" icon={<MapPin />} contentClassName="grid grid-cols-1 gap-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between mb-2">
               <Label>Dirección de la Empresa*</Label>
@@ -675,7 +686,9 @@ export default function ProfileCompanyForm() {
               </div>
             </div>
           </div>
+          </Section>
 
+          <Section title="Contacto y registro" icon={<FileText />} contentClassName="grid grid-cols-1 gap-6">
           <div className="space-y-2">
             <Label>Correo Electrónico de la Empresa</Label>
             <Input
@@ -696,7 +709,9 @@ export default function ProfileCompanyForm() {
               disabled={!canEdit}
             />
           </div>
+          </Section>
 
+          <Section title="Zona horaria" icon={<Clock />} contentClassName="grid grid-cols-1 gap-6">
           <div className="space-y-2">
             <Label>Zona Horaria</Label>
             <Select
@@ -737,10 +752,11 @@ export default function ProfileCompanyForm() {
             )}
             <p className="text-xs text-muted-foreground">La zona horaria es la <strong>única fuente de verdad</strong> para los horarios: determina cómo se muestran y calculan turnos, registros y reportes — para todos (administradores y vigilantes), sin importar la zona del dispositivo.</p>
           </div>
+          </Section>
 
           <div className="flex justify-end">
             <Button
-              className="bg-[#f36a6d] hover:bg-[#e85b5f] text-white"
+              variant="brand"
               type="submit"
               disabled={!canEdit}
               title={!canEdit ? 'Solo admins pueden guardar cambios' : undefined}

@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Plus, Pencil, Trash2, FileImage } from 'lucide-react';
+import { Plus, Pencil, Trash2, Smartphone, Image as ImageIcon, Tag, BadgeCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { PageContainer, PageHeader, Section } from '@/components/kit';
 import {
   createBanner,
   createCertification,
@@ -402,13 +403,13 @@ export default function MobilPage() {
   return (
     <AppLayout>
       <SettingsLayout navKey="configuracion" title="MOBIL">
-        <div className="space-y-8">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-semibold">MOBIL</h1>
-              <p className="text-sm text-muted-foreground">Administra banners y certificaciones desde este módulo.</p>
-            </div>
-            <div className="flex items-center gap-2">
+        <PageContainer width="wide">
+          <PageHeader
+            icon={<Smartphone />}
+            title="MOBIL"
+            subtitle="Administra banners, servicios y certificaciones de la app móvil."
+          />
+          <div className="flex items-center justify-end gap-2">
               <Dialog>
  
                 <DialogContent className="w-[800px] max-w-full">
@@ -466,18 +467,18 @@ export default function MobilPage() {
                 </DialogContent>
               </Dialog>
             </div>
-          </div>
 
-          <section className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold">Banner Superior</h2>
-                <p className="text-sm text-muted-foreground">Crea, edita o elimina banners superiores.</p>
-              </div>
-              <Button onClick={openCreateBanner} className="inline-flex items-center gap-2 bg-primary text-white hover:bg-primary/90">
+          <Section
+            title="Banner Superior"
+            icon={<ImageIcon />}
+            contentClassName="space-y-4"
+            action={
+              <Button onClick={openCreateBanner} variant="brand" size="sm" className="inline-flex items-center gap-2">
                 <Plus className="h-4 w-4" /> Nuevo banner
               </Button>
-            </div>
+            }
+          >
+            <p className="text-sm text-muted-foreground">Crea, edita o elimina banners superiores.</p>
 
             <Table className="table-fixed">
               <colgroup>
@@ -537,18 +538,17 @@ export default function MobilPage() {
                   ))}
               </TableBody>
             </Table>
-          </section>
+          </Section>
 
-          <section className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold">Pricebook (Servicios)</h2>
-                <p className="text-sm text-muted-foreground">Lista de servicios del tenant. Estos son consumidos por la app móvil.</p>
-              </div>
+          <Section
+            title="Pricebook (Servicios)"
+            icon={<Tag />}
+            contentClassName="space-y-4"
+            action={
               <div>
                 <Dialog open={serviceDialogOpen} onOpenChange={setServiceDialogOpen}>
                     <DialogTrigger asChild>
-                    <Button onClick={() => { setEditingServiceId(null); setServiceForm(defaultServiceForm); setServiceDialogOpen(true); }} className="inline-flex items-center gap-2 bg-primary text-white hover:bg-primary/90">
+                    <Button onClick={() => { setEditingServiceId(null); setServiceForm(defaultServiceForm); setServiceDialogOpen(true); }} variant="brand" size="sm" className="inline-flex items-center gap-2">
                       <Plus className="h-4 w-4" /> Nuevo servicio
                     </Button>
                   </DialogTrigger>
@@ -577,7 +577,7 @@ export default function MobilPage() {
                     </div>
                     <DialogFooter className="mt-6 flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setServiceDialogOpen(false)}>Cancelar</Button>
-                      <Button className="bg-primary text-white hover:bg-primary/90" onClick={async () => {
+                      <Button variant="brand" onClick={async () => {
                         try {
                           const payload: any = {
                             title: serviceForm.title,
@@ -603,7 +603,9 @@ export default function MobilPage() {
                   </DialogContent>
                 </Dialog>
               </div>
-            </div>
+            }
+          >
+            <p className="text-sm text-muted-foreground">Lista de servicios del tenant. Estos son consumidos por la app móvil.</p>
 
             <div>
               <Table className="table-fixed">
@@ -640,18 +642,19 @@ export default function MobilPage() {
                 </TableBody>
               </Table>
             </div>
-          </section>
+          </Section>
 
-          <section className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold">Certificaciones</h2>
-                <p className="text-sm text-muted-foreground">Administra certificaciones con fechas, archivos e íconos.</p>
-              </div>
-              <Button onClick={openCreateCertification} className="inline-flex items-center gap-2 bg-primary text-white hover:bg-primary/90">
+          <Section
+            title="Certificaciones"
+            icon={<BadgeCheck />}
+            contentClassName="space-y-4"
+            action={
+              <Button onClick={openCreateCertification} variant="brand" size="sm" className="inline-flex items-center gap-2">
                 <Plus className="h-4 w-4" /> Nueva certificación
               </Button>
-            </div>
+            }
+          >
+            <p className="text-sm text-muted-foreground">Administra certificaciones con fechas, archivos e íconos.</p>
 
             <Table className="table-fixed">
               <colgroup>
@@ -738,8 +741,8 @@ export default function MobilPage() {
                 ))}
               </TableBody>
             </Table>
-          </section>
-        </div>
+          </Section>
+        </PageContainer>
 
         <Dialog open={bannerDialogOpen} onOpenChange={setBannerDialogOpen}>
           <DialogContent className="max-w-2xl">
@@ -800,7 +803,7 @@ export default function MobilPage() {
             </div>
             <DialogFooter className="mt-6 flex justify-end gap-2">
               <Button variant="outline" className="text-black border-black hover:bg-slate-100" onClick={() => setBannerDialogOpen(false)}>Cancelar</Button>
-              <Button className="bg-primary text-white hover:bg-primary/90" onClick={handleSaveBanner} disabled={loading}>
+              <Button variant="brand" onClick={handleSaveBanner} disabled={loading}>
                 Guardar
               </Button>
             </DialogFooter>
@@ -925,7 +928,7 @@ export default function MobilPage() {
             </div>
             <DialogFooter className="mt-6 flex justify-end gap-2">
               <Button variant="outline" className="text-black border-black hover:bg-slate-100" onClick={() => setCertDialogOpen(false)}>Cancelar</Button>
-              <Button className="bg-primary text-white hover:bg-primary/90" onClick={handleSaveCertification} disabled={loading}>
+              <Button variant="brand" onClick={handleSaveCertification} disabled={loading}>
                 Guardar
               </Button>
             </DialogFooter>

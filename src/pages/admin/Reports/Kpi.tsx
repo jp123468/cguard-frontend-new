@@ -1,10 +1,8 @@
-import AppLayout from '@/layouts/app-layout'
-import React from 'react'
+import ReportPageShell from "./ReportPageShell";
+import { BarChart3 } from "lucide-react";
 
 const Kpi = () => {
-  return (
-    <AppLayout>Kpi</AppLayout>
-  )
-}
+  return <ReportPageShell title="Informe de KPI" icon={BarChart3} accent="#8b5cf6" />;
+};
 
-export default Kpi
+export default Kpi;

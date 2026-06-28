@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Info } from "lucide-react";
+import { Info, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Section } from "@/components/kit";
 
 const schema = z.object({
   enforceClockInBeforeCheck: z.boolean().default(false),
@@ -73,8 +74,9 @@ export default function PostingGlobalForm({ defaultValues, onSubmit }: Props) {
 
   return (
     <Form {...form}>
-      <form onSubmit={submit} className="space-y-2">
-        <p className="mb-4 text-sm font-semibold text-red-600">
+      <form onSubmit={submit} className="space-y-6">
+        <Section title="Reglas globales" icon={<ShieldCheck />} contentClassName="divide-y divide-border/60">
+        <p className="mb-2 text-sm font-semibold text-red-600">
           Los cambios se reflejarán en todos los Puestos de Vigilancia
         </p>
 
@@ -324,8 +326,10 @@ export default function PostingGlobalForm({ defaultValues, onSubmit }: Props) {
           )}
         />
 
-        <div className="flex justify-end pt-4">
-          <Button type="submit" className="px-6">Guardar Configuración</Button>
+        </Section>
+
+        <div className="flex justify-end pt-2">
+          <Button type="submit" variant="brand" className="px-6">Guardar Configuración</Button>
         </div>
       </form>
     </Form>

@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, EmptyState } from "@/components/kit";
 
 export type UserRoleRow = {
   id: string;
@@ -109,10 +109,12 @@ export default function UserRolesTable({
           />
         </div>
 
-        <PermissionedButton permission="settingsEdit" className="bg-primary hover:bg-primary/90 text-white" onClick={onNew}> Nuevo Rol</PermissionedButton>
+        <PermissionedButton permission="settingsEdit" variant="brand" onClick={onNew}>
+          <Plus className="mr-2 h-4 w-4" />Nuevo Rol
+        </PermissionedButton>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-2xl border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -128,10 +130,12 @@ export default function UserRolesTable({
             {rows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4}>
-                  <div className="py-16 text-center text-muted-foreground">
-                    <div className="text-lg font-semibold">No se encontraron resultados</div>
-                    <div className="text-sm">Sin datos para mostrar</div>
-                  </div>
+                  <EmptyState
+                    icon={<Search />}
+                    title="No se encontraron resultados"
+                    description="Sin datos para mostrar"
+                    className="border-0 py-12"
+                  />
                 </TableCell>
               </TableRow>
             ) : (
@@ -155,7 +159,7 @@ export default function UserRolesTable({
                       }}
                     >
                       <span className="mr-2">{r.name}</span>
-                      {r.isDefault && <Badge variant="secondary">Predeterminado</Badge>}
+                      {r.isDefault && <StatusBadge tone="primary">Predeterminado</StatusBadge>}
                     </TableCell>
                     <TableCell className="text-muted-foreground">{r.description}</TableCell>
                     <TableCell className="text-right">

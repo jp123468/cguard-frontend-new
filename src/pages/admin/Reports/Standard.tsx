@@ -1,10 +1,8 @@
-import AppLayout from '@/layouts/app-layout'
-import React from 'react'
+import ReportPageShell from "./ReportPageShell";
+import { FileText } from "lucide-react";
 
 const Standard = () => {
-  return (
-    <AppLayout>Standard</AppLayout>
-  )
-}
+  return <ReportPageShell title="Informe Estándar" icon={FileText} />;
+};
 
-export default Standard
+export default Standard;

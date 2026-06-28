@@ -174,7 +174,7 @@ export default function ChangePasswordForm({ defaultValues, onSubmit, showOldFie
 
 
         <div className="flex justify-end">
-          <Button type="submit" className="bg-primary text-white hover:bg-primary/90 px-6">{t('auth.save_changes')}</Button>
+          <Button type="submit" variant="brand" className="px-6">{t('auth.save_changes')}</Button>
         </div>
       </form>
     </Form>

@@ -4,6 +4,8 @@
     import AccountService from "@/services/accountService";
     import { toast } from "sonner";
     import { useTranslation } from "react-i18next";
+    import { KeyRound } from "lucide-react";
+    import { PageContainer, PageHeader, Section } from "@/components/kit";
 
     export default function PasswordChangePage() {
       const { t } = useTranslation();
@@ -24,7 +26,16 @@
       return (
         <AppLayout>
           <SettingsLayout navKey="configuracion" title={t('auth.change_password_title', { defaultValue: 'Change password' })}>
-            <ChangePasswordForm onSubmit={handleSubmit} />
+            <PageContainer width="narrow">
+              <PageHeader
+                icon={<KeyRound />}
+                title={t('auth.change_password_title', { defaultValue: 'Change password' })}
+                subtitle={t('auth.change_password_subtitle', { defaultValue: 'Actualiza tu contraseña de acceso.' })}
+              />
+              <Section icon={<KeyRound />} title={t('auth.change_password_title', { defaultValue: 'Change password' })}>
+                <ChangePasswordForm onSubmit={handleSubmit} />
+              </Section>
+            </PageContainer>
           </SettingsLayout>
         </AppLayout>
       );

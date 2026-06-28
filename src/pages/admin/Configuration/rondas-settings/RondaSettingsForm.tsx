@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Save, Clock, ShieldCheck, Bell } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Section, Stagger, SkeletonCards } from "@/components/kit";
 import { rondaSettingsService, RondaSettings } from "@/lib/api/rondaSettingsService";
 
 const DEFAULTS: RondaSettings = {
@@ -106,11 +106,7 @@ export default function RondaSettingsForm({
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-[30vh] items-center justify-center">
-        <Loader2 className="animate-spin text-primary" size={28} />
-      </div>
-    );
+    return <SkeletonCards count={3} className="sm:grid-cols-1" />;
   }
 
   return (
@@ -121,51 +117,38 @@ export default function RondaSettingsForm({
         </p>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Clock size={18} className="text-primary" /> Cadencia de la ronda
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="divide-y">
-          <NumberRow label="Frecuencia" hint="Cada cuánto debe realizarse una ronda" value={s.frequencyMinutes} onChange={(v) => set("frequencyMinutes", (v ?? 0) as number)} min={1} suffix="min" />
-          <NumberRow label="Rondas por turno" hint="Número esperado de rondas por turno (opcional)" value={s.roundsPerShift} onChange={(v) => set("roundsPerShift", v)} min={1} suffix="rondas" />
-          <NumberRow label="Tolerancia (gracia)" hint="Minutos de tolerancia antes de marcar una ronda como tarde" value={s.graceMinutes} onChange={(v) => set("graceMinutes", (v ?? 0) as number)} suffix="min" />
-          <NumberRow label="Duración máxima" hint="Tiempo máximo para completar una ronda" value={s.maxDurationMinutes} onChange={(v) => set("maxDurationMinutes", (v ?? 0) as number)} min={1} suffix="min" />
-        </CardContent>
-      </Card>
+      <Stagger className="grid gap-6">
+        <Section title="Cadencia de la ronda" icon={<Clock />}>
+          <div className="divide-y">
+            <NumberRow label="Frecuencia" hint="Cada cuánto debe realizarse una ronda" value={s.frequencyMinutes} onChange={(v) => set("frequencyMinutes", (v ?? 0) as number)} min={1} suffix="min" />
+            <NumberRow label="Rondas por turno" hint="Número esperado de rondas por turno (opcional)" value={s.roundsPerShift} onChange={(v) => set("roundsPerShift", v)} min={1} suffix="rondas" />
+            <NumberRow label="Tolerancia (gracia)" hint="Minutos de tolerancia antes de marcar una ronda como tarde" value={s.graceMinutes} onChange={(v) => set("graceMinutes", (v ?? 0) as number)} suffix="min" />
+            <NumberRow label="Duración máxima" hint="Tiempo máximo para completar una ronda" value={s.maxDurationMinutes} onChange={(v) => set("maxDurationMinutes", (v ?? 0) as number)} min={1} suffix="min" />
+          </div>
+        </Section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ShieldCheck size={18} className="text-primary" /> Validación de puntos
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="divide-y">
-          <ToggleRow label="Requerir foto" hint="El vigilante debe tomar una foto con marca de tiempo en cada punto" checked={s.requirePhoto} onCheckedChange={(b) => set("requirePhoto", b)} />
-          <ToggleRow label="Requerir geolocalización" hint="Validar la ubicación del vigilante en cada punto" checked={s.requireGeofence} onCheckedChange={(b) => set("requireGeofence", b)} />
-          <NumberRow label="Radio de geocerca" hint="Distancia permitida desde el punto" value={s.geofenceRadius} onChange={(v) => set("geofenceRadius", (v ?? 0) as number)} suffix="m" />
-          <ToggleRow label="Requerir nota" hint="El vigilante debe dejar una observación en cada punto" checked={s.requireNote} onCheckedChange={(b) => set("requireNote", b)} />
-        </CardContent>
-      </Card>
+        <Section title="Validación de puntos" icon={<ShieldCheck />}>
+          <div className="divide-y">
+            <ToggleRow label="Requerir foto" hint="El vigilante debe tomar una foto con marca de tiempo en cada punto" checked={s.requirePhoto} onCheckedChange={(b) => set("requirePhoto", b)} />
+            <ToggleRow label="Requerir geolocalización" hint="Validar la ubicación del vigilante en cada punto" checked={s.requireGeofence} onCheckedChange={(b) => set("requireGeofence", b)} />
+            <NumberRow label="Radio de geocerca" hint="Distancia permitida desde el punto" value={s.geofenceRadius} onChange={(v) => set("geofenceRadius", (v ?? 0) as number)} suffix="m" />
+            <ToggleRow label="Requerir nota" hint="El vigilante debe dejar una observación en cada punto" checked={s.requireNote} onCheckedChange={(b) => set("requireNote", b)} />
+          </div>
+        </Section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Bell size={18} className="text-primary" /> Notificaciones
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="divide-y">
-          <ToggleRow label="Notificar al iniciar" hint="Avisar cuando un vigilante inicia una ronda" checked={s.notifyTenantOnStart} onCheckedChange={(b) => set("notifyTenantOnStart", b)} />
-          <ToggleRow label="Notificar al completar" hint="Avisar cuando una ronda se completa" checked={s.notifyTenantOnComplete} onCheckedChange={(b) => set("notifyTenantOnComplete", b)} />
-          <ToggleRow label="Enviar correo al completar" hint="Enviar un correo a los administradores/supervisores cuando una ronda se completa (requiere correo configurado)" checked={s.emailOnComplete} onCheckedChange={(b) => set("emailOnComplete", b)} />
-          <ToggleRow label="Notificar rondas perdidas/tarde" checked={s.notifyTenantOnMissed} onCheckedChange={(b) => set("notifyTenantOnMissed", b)} />
-          <ToggleRow label="Notificar al cliente" hint="Enviar notificaciones de ronda también al cliente del sitio" checked={s.notifyClient} onCheckedChange={(b) => set("notifyClient", b)} />
-        </CardContent>
-      </Card>
+        <Section title="Notificaciones" icon={<Bell />}>
+          <div className="divide-y">
+            <ToggleRow label="Notificar al iniciar" hint="Avisar cuando un vigilante inicia una ronda" checked={s.notifyTenantOnStart} onCheckedChange={(b) => set("notifyTenantOnStart", b)} />
+            <ToggleRow label="Notificar al completar" hint="Avisar cuando una ronda se completa" checked={s.notifyTenantOnComplete} onCheckedChange={(b) => set("notifyTenantOnComplete", b)} />
+            <ToggleRow label="Enviar correo al completar" hint="Enviar un correo a los administradores/supervisores cuando una ronda se completa (requiere correo configurado)" checked={s.emailOnComplete} onCheckedChange={(b) => set("emailOnComplete", b)} />
+            <ToggleRow label="Notificar rondas perdidas/tarde" checked={s.notifyTenantOnMissed} onCheckedChange={(b) => set("notifyTenantOnMissed", b)} />
+            <ToggleRow label="Notificar al cliente" hint="Enviar notificaciones de ronda también al cliente del sitio" checked={s.notifyClient} onCheckedChange={(b) => set("notifyClient", b)} />
+          </div>
+        </Section>
+      </Stagger>
 
       <div className="flex justify-end">
-        <Button onClick={save} disabled={saving} className="bg-primary text-white hover:bg-primary/90">
+        <Button variant="brand" onClick={save} disabled={saving}>
           {saving ? <Loader2 className="mr-2 animate-spin" size={16} /> : <Save className="mr-2" size={16} />}
           Guardar configuración
         </Button>

@@ -6,6 +6,7 @@ import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ShieldCheck, Search } from "lucide-react";
 
 import UserRolesTable, { UserRoleRow } from "./UserRolesTable";
 import UserRoleDialog, { UserRoleDialogValues } from "./UserRoleDialog";
@@ -13,6 +14,7 @@ import PermissionsEditor from "./PermissionsEditor";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ADMIN_FLOOR_PERMISSIONS } from "@/config/permissions";
+import { PageContainer, PageHeader, Section } from "@/components/kit";
 
 // Roles whose permissions are NEVER tenant-editable (global / external).
 const FULLY_LOCKED_ROLE_SLUGS = ['superadmin', 'customer'];
@@ -290,6 +292,13 @@ export default function UserRolesPage() {
   return (
     <AppLayout>
       <SettingsLayout navKey="configuracion" title="Roles de Usuario">
+        <PageContainer width="wide">
+          <PageHeader
+            icon={<ShieldCheck />}
+            title="Roles de Usuario"
+            subtitle="Define roles y administra los permisos de acceso para cada uno."
+          />
+          <Section>
         <UserRolesTable
           rows={paged}
           checked={checked}
@@ -305,12 +314,13 @@ export default function UserRolesPage() {
           expandedContent={
             expandedRoleId ? (
               <div>
-                <div className="mb-2">
-                  <input className="border p-2 rounded w-full" placeholder="Buscar permisos..." value={permQuery} onChange={(e) => setPermQuery(e.target.value)} />
+                <div className="relative mb-3">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input className="pl-9" placeholder="Buscar permisos..." value={permQuery} onChange={(e) => setPermQuery(e.target.value)} />
                 </div>
                 <PermissionsEditor value={expandedRolePerms} onChange={setExpandedRolePerms} query={permQuery} readOnly={expandedRoleIsLocked} lockedPermissions={expandedLockedPerms} />
                 {expandedRoleIsLocked ? (
-                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-900">
+                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
                     Este rol está bloqueado. No se pueden modificar los permisos predeterminados.
                   </div>
                 ) : (
@@ -321,7 +331,7 @@ export default function UserRolesPage() {
                       </Button>
                     )}
                     <Button variant="outline" onClick={() => { setExpandedRoleId(null); setExpandedRolePerms([]); setPermQuery(""); }}>Cancelar</Button>
-                    <Button className="bg-primary hover:bg-primary/90 text-white" onClick={() => saveExpandedPermissions(expandedRoleId as string, expandedRolePerms)}>Guardar</Button>
+                    <Button variant="brand" onClick={() => saveExpandedPermissions(expandedRoleId as string, expandedRolePerms)}>Guardar</Button>
                   </div>
                 )}
               </div>
@@ -331,6 +341,7 @@ export default function UserRolesPage() {
           onPageSize={setPageSize}
           pageLabel={pageLabel}
         />
+          </Section>
 
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
@@ -356,6 +367,7 @@ export default function UserRolesPage() {
           defaultValues={dialogDefaults}
           onSubmit={submit}
         />
+        </PageContainer>
       </SettingsLayout>
     </AppLayout>
   );

@@ -48,7 +48,7 @@ export default function PermissionsEditor({ value, onChange, query = "", readOnl
   return (
     <div className="space-y-4">
       {readOnly && (
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-900">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
           Este rol está bloqueado. No se pueden modificar los permisos predeterminados.
         </div>
       )}
@@ -61,7 +61,7 @@ export default function PermissionsEditor({ value, onChange, query = "", readOnl
           const items = filteredGrouped[group];
           const allSelected = items.every((p) => value.includes(p));
           return (
-            <div key={group} className="rounded-lg border bg-card dark:bg-slate-800 p-4 shadow-sm">
+            <div key={group} className="rounded-2xl border bg-card p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div
                   role="button"
@@ -102,7 +102,7 @@ export default function PermissionsEditor({ value, onChange, query = "", readOnl
                   {items.map((p) => (
                     <div
                       key={p}
-                      className={"flex items-start gap-3 p-2 rounded " + (readOnly ? "bg-slate-50 dark:bg-slate-800" : "hover:bg-slate-50 dark:hover:bg-slate-700")}
+                      className={"flex items-start gap-3 p-2 rounded-xl transition-colors " + (readOnly ? "bg-muted/40" : "hover:bg-muted/60")}
                       title={isLocked(p) ? "Requerido para el acceso de administrador" : undefined}
                     >
                       <Checkbox checked={value.includes(p) || isLocked(p)} disabled={readOnly || isLocked(p)} onCheckedChange={(v) => toggle(p, Boolean(v))} />

@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Building2 } from "lucide-react";
+import { Modal } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,12 +52,13 @@ export default function DepartmentDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>Formulario para crear o editar departamentos.</DialogDescription>
-        </DialogHeader>
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description="Formulario para crear o editar departamentos."
+      icon={<Building2 />}
+    >
         <Form {...form}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <FormField
@@ -112,12 +114,11 @@ export default function DepartmentDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter>
-              <Button type="submit">Guardar</Button>
-            </DialogFooter>
+            <div className="flex justify-end gap-2 border-t pt-4">
+              <Button type="submit" variant="brand">Guardar</Button>
+            </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+    </Modal>
   );
 }
