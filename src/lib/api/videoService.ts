@@ -132,6 +132,8 @@ export interface Clip {
 export interface StreamInfo {
   type: "hls" | "webrtc" | "go2rtc" | "none";
   url: string | null;
+  /** MediaMTX WHEP endpoint (same-origin) — sub-second WebRTC, tried before HLS. */
+  webrtcUrl?: string;
   /** go2rtc WebSocket url (MSE/WebRTC signaling) — same-origin through the proxy. */
   ws?: string;
   /** go2rtc player engine transport priority, e.g. "webrtc,mse,hls". */

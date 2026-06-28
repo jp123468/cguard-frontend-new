@@ -49,6 +49,45 @@ const hlsConfig = (Hls: any) => ({
   ...(Hls ? {} : {}),
 });
 
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/* ------------------------------------------------------------------ */
+/* WebRTC (WHEP) — sub-second latency on the LAN. We POST an SDP offer  */
+/* to MediaMTX's WHEP endpoint and pipe the returned track into the     */
+/* <video>. If it can't establish (remote / cold stream), the caller    */
+/* falls back to buffered HLS.                                          */
+/* ------------------------------------------------------------------ */
+async function whepConnect(whepUrl: string, video: HTMLVideoElement): Promise<RTCPeerConnection | null> {
+  const pc = new RTCPeerConnection({ iceServers: [] }); // LAN: host candidates, no STUN/TURN
+  pc.addTransceiver("video", { direction: "recvonly" });
+  pc.addTransceiver("audio", { direction: "recvonly" });
+  const ms = new MediaStream();
+  pc.ontrack = (e) => { ms.addTrack(e.track); video.srcObject = ms; video.play().catch(() => {}); };
+  await pc.setLocalDescription(await pc.createOffer());
+  // non-trickle: wait for ICE gathering (LAN host candidates are near-instant)
+  await new Promise<void>((res) => {
+    if (pc.iceGatheringState === "complete") return res();
+    const t = setTimeout(res, 1200);
+    pc.addEventListener("icegatheringstatechange", () => {
+      if (pc.iceGatheringState === "complete") { clearTimeout(t); res(); }
+    });
+  });
+  const r = await fetch(whepUrl, { method: "POST", headers: { "Content-Type": "application/sdp" }, body: pc.localDescription?.sdp || "" });
+  if (!r.ok) { pc.close(); return null; }
+  await pc.setRemoteDescription({ type: "answer", sdp: await r.text() });
+  return pc;
+}
+function waitConnected(pc: RTCPeerConnection, timeoutMs: number): Promise<boolean> {
+  return new Promise((res) => {
+    if (pc.connectionState === "connected") return res(true);
+    const t = setTimeout(() => res(false), timeoutMs);
+    pc.addEventListener("connectionstatechange", () => {
+      if (pc.connectionState === "connected") { clearTimeout(t); res(true); }
+      else if (pc.connectionState === "failed" || pc.connectionState === "closed") { clearTimeout(t); res(false); }
+    });
+  });
+}
+
 type PlayerState = "loading" | "ready" | "none" | "offline" | "error";
 
 export type VideoPlayerProps = {
@@ -63,7 +102,9 @@ export type VideoPlayerProps = {
 export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, videoRef, onStream }: VideoPlayerProps) {
   const videoElRef = React.useRef<HTMLVideoElement | null>(null);
   const hlsRef = React.useRef<any>(null);
+  const pcRef = React.useRef<RTCPeerConnection | null>(null);
   const recoverRef = React.useRef(0);
+  const [transport, setTransport] = React.useState<"webrtc" | "hls" | null>(null);
 
   const [state, setState] = React.useState<PlayerState>("loading");
   const [stream, setStream] = React.useState<StreamInfo | null>(null);
@@ -98,7 +139,7 @@ export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, vi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [camera.id, camera.status, reloadKey]);
 
-  // 2) Attach hls.js (buffered) to the <video>.
+  // 2) Play: try WebRTC (sub-second on LAN) first, fall back to buffered HLS.
   React.useEffect(() => {
     if (state !== "ready" || !stream?.url) return;
     const url = stream.url;
@@ -108,39 +149,74 @@ export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, vi
     recoverRef.current = 0;
     const onErr = (m: string) => { if (!cancelled) { setErrorMsg(m); setState("error"); } };
     const destroyHls = () => { if (hlsRef.current) { try { hlsRef.current.destroy(); } catch { /* */ } hlsRef.current = null; } };
-    destroyHls();
+    const destroyPc = () => { if (pcRef.current) { try { pcRef.current.close(); } catch { /* */ } pcRef.current = null; } };
+    destroyHls(); destroyPc();
 
-    // Safari / iOS — native buffered HLS.
-    if (video.canPlayType("application/vnd.apple.mpegurl") !== "") {
-      video.src = url; if (autoPlay) video.play().catch(() => {});
-      return () => { cancelled = true; video.removeAttribute("src"); video.load(); };
-    }
+    const startHls = () => {
+      if (cancelled) return;
+      setTransport("hls");
+      try { video.srcObject = null; } catch { /* */ }
+      // Safari / iOS — native buffered HLS.
+      if (video.canPlayType("application/vnd.apple.mpegurl") !== "") {
+        video.src = url; if (autoPlay) video.play().catch(() => {});
+        return;
+      }
+      loadHlsJs().then((Hls) => {
+        if (cancelled || videoElRef.current !== video) return;
+        if (!Hls.isSupported()) { onErr("Tu navegador no soporta HLS"); return; }
+        const attach = () => {
+          const hls = new Hls(hlsConfig(Hls));
+          hlsRef.current = hls;
+          hls.loadSource(url); hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => { if (autoPlay) video.play().catch(() => {}); });
+          hls.on(Hls.Events.ERROR, (_e: any, d: any) => {
+            if (!d?.fatal) return; // non-fatal: hls.js self-heals (key to no-spinner)
+            if (d.type === Hls.ErrorTypes.NETWORK_ERROR) { try { hls.startLoad(); } catch { /* */ } return; }
+            if (d.type === Hls.ErrorTypes.MEDIA_ERROR) { try { hls.recoverMediaError(); } catch { /* */ } return; }
+            if (recoverRef.current < 4) { recoverRef.current++; destroyHls(); setTimeout(() => { if (!cancelled) attach(); }, 1500); }
+            else onErr("No se pudo reproducir la transmisión");
+          });
+        };
+        attach();
+      }).catch(() => onErr("No se pudo cargar el reproductor de video"));
+    };
 
-    loadHlsJs().then((Hls) => {
-      if (cancelled || videoElRef.current !== video) return;
-      if (!Hls.isSupported()) { onErr("Tu navegador no soporta HLS"); return; }
-      const attach = () => {
-        const hls = new Hls(hlsConfig(Hls));
-        hlsRef.current = hls;
-        hls.loadSource(url); hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => { if (autoPlay) video.play().catch(() => {}); });
-        hls.on(Hls.Events.ERROR, (_e: any, d: any) => {
-          if (!d?.fatal) return; // non-fatal: hls.js self-heals (this is the key to no-spinner)
-          if (d.type === Hls.ErrorTypes.NETWORK_ERROR) { try { hls.startLoad(); } catch { /* */ } return; }
-          if (d.type === Hls.ErrorTypes.MEDIA_ERROR) { try { hls.recoverMediaError(); } catch { /* */ } return; }
-          // Last resort: tear down + rebuild a few times before surfacing an error.
-          if (recoverRef.current < 4) { recoverRef.current++; destroyHls(); setTimeout(() => { if (!cancelled) attach(); }, 1500); }
-          else onErr("No se pudo reproducir la transmisión");
-        });
-      };
-      attach();
-    }).catch(() => onErr("No se pudo cargar el reproductor de video"));
+    const tryWebRTC = async () => {
+      if (!stream?.webrtcUrl || typeof RTCPeerConnection === "undefined") { startHls(); return; }
+      // The first offer also wakes MediaMTX's on-demand stream; retry a few times while it warms.
+      for (let attempt = 0; attempt < 4 && !cancelled; attempt++) {
+        try {
+          const pc = await whepConnect(stream.webrtcUrl, video);
+          if (cancelled) { pc?.close(); return; }
+          if (pc) {
+            pcRef.current = pc;
+            if (await waitConnected(pc, 6000)) {
+              if (cancelled) { destroyPc(); return; }
+              setTransport("webrtc");
+              pc.addEventListener("connectionstatechange", () => {
+                if (!cancelled && (pc.connectionState === "failed" || pc.connectionState === "disconnected")) {
+                  destroyPc(); startHls(); // lost WebRTC → fall back
+                }
+              });
+              return; // WebRTC live
+            }
+            destroyPc();
+          }
+        } catch { destroyPc(); }
+        await delay(1500);
+      }
+      if (!cancelled) startHls(); // WebRTC never established → HLS
+    };
 
-    return () => { cancelled = true; destroyHls(); };
+    tryWebRTC();
+    return () => { cancelled = true; destroyHls(); destroyPc(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, stream?.url, autoPlay]);
+  }, [state, stream?.url, stream?.webrtcUrl, autoPlay]);
 
-  React.useEffect(() => () => { if (hlsRef.current) { try { hlsRef.current.destroy(); } catch { /* */ } } }, []);
+  React.useEffect(() => () => {
+    if (hlsRef.current) { try { hlsRef.current.destroy(); } catch { /* */ } }
+    if (pcRef.current) { try { pcRef.current.close(); } catch { /* */ } }
+  }, []);
 
   const reload = () => setReloadKey((k) => k + 1);
   const snapshot = stream?.snapshotUrl || camera.snapshotUrl || undefined;
@@ -149,6 +225,13 @@ export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, vi
     <div className={cn("group relative aspect-video w-full overflow-hidden rounded-lg bg-black", className)}>
       {state === "ready" ? (
         <video ref={setVideoEl} className="h-full w-full bg-black object-contain" playsInline muted autoPlay={autoPlay} controls poster={snapshot} />
+      ) : null}
+
+      {state === "ready" && transport ? (
+        <div className="absolute left-2 top-2 z-20 flex items-center gap-1 rounded bg-black/55 px-1.5 py-0.5 text-[10px] font-semibold text-white/90 backdrop-blur">
+          <span className={cn("h-1.5 w-1.5 rounded-full", transport === "webrtc" ? "bg-emerald-400" : "bg-amber-400")} />
+          {transport === "webrtc" ? "EN VIVO" : "HLS"}
+        </div>
       ) : null}
 
       {state === "ready" && ptz ? <PtzPad cameraId={camera.id} /> : null}
