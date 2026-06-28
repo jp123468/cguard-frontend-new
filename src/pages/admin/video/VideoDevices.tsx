@@ -143,6 +143,20 @@ function StatusBadge({ status }: { status?: DeviceStatus }) {
       </Badge>
     );
   }
+  if (s === "auth_failed") {
+    return (
+      <Badge className="gap-1 border-transparent bg-amber-100 text-amber-700 hover:bg-amber-100">
+        <WifiOff className="h-3 w-3" /> Credenciales
+      </Badge>
+    );
+  }
+  if (s === "unreachable") {
+    return (
+      <Badge className="gap-1 border-transparent bg-amber-100 text-amber-700 hover:bg-amber-100">
+        <WifiOff className="h-3 w-3" /> Sin stream
+      </Badge>
+    );
+  }
   return (
     <Badge variant="secondary" className="gap-1">
       <WifiOff className="h-3 w-3" /> Desconocido
@@ -318,7 +332,8 @@ export default function VideoDevices() {
     const c = { online: 0, offline: 0, unknown: 0 };
     for (const d of devices) {
       const s = (d.status as DeviceStatus) ?? "unknown";
-      c[s] = (c[s] ?? 0) + 1;
+      const key = s === "online" ? "online" : s === "offline" ? "offline" : "unknown";
+      c[key] += 1;
     }
     return c;
   }, [devices]);
