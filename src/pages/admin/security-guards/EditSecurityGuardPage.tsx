@@ -1,12 +1,14 @@
 import { toast } from "sonner";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { UserCog, User, Phone, MapPin, FileText } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import securityGuardService from "@/lib/api/securityGuardService";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { usePermissions } from '@/hooks/usePermissions';
+import { PageContainer, PageHeader, Section, SkeletonCards } from '@/components/kit';
 
 export default function EditSecurityGuardPage() {
   // Deduplicate toasts across component remounts (React StrictMode may mount twice)
@@ -191,107 +193,136 @@ export default function EditSecurityGuardPage() {
 
   return (
     <AppLayout>
-      <div className="p-6 w-full">
+      <PageContainer>
         <Breadcrumb
           items={[
             { label: "Panel de control", path: "/dashboard" },
             { label: "Editar vigilante" },
           ]}
-          className="mb-4"
         />
+
+        <PageHeader
+          icon={<UserCog />}
+          title="Editar vigilante"
+          subtitle="Actualiza los datos personales, de contacto e identificación del vigilante."
+        />
+
         {error && (
-          <div className="mb-4 p-3 rounded bg-red-500/15 text-red-700 border border-red-200">
+          <div className="p-3 rounded-2xl bg-red-500/15 text-red-700 border border-red-200">
             {error}
           </div>
         )}
-        <form onSubmit={handleSubmit} className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 bg-card p-6 rounded-xl border">
-          <div>
-            <label className="block text-sm font-medium mb-1">Nombre *</label>
-            <Input name="firstName" value={form.firstName} onChange={handleChange} required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Apellidos *</label>
-            <Input name="lastName" value={form.lastName} onChange={handleChange} required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Correo Electrónico *</label>
-            <Input name="email" value={form.email} onChange={handleChange} required type="email" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Teléfono *</label>
-            <Input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} required />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">Dirección</label>
-            <Input name="address" value={form.address} onChange={handleChange} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Fecha de nacimiento</label>
-            <Input name="birthDate" value={form.birthDate} onChange={handleChange} type="date" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Lugar de nacimiento</label>
-            <Input name="birthPlace" value={form.birthPlace} onChange={handleChange} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Estado civil</label>
-            <select name="maritalStatus" value={form.maritalStatus} onChange={handleChange} className={selectClass}>
-              <option value="">Seleccionar…</option>
-              {["Soltero", "Casado", "Unión libre", "Divorciado"].map((o) => (
-                <option key={o} value={o}>{o}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Tipo de sangre</label>
-            <select name="bloodType" value={form.bloodType} onChange={handleChange} className={selectClass}>
-              <option value="">Seleccionar…</option>
-              {["A+", "A-", "AB+", "AB-", "O+", "O-", "B+", "B-"].map((o) => (
-                <option key={o} value={o}>{o}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Instrucción académica</label>
-            <select name="academicInstruction" value={form.academicInstruction} onChange={handleChange} className={selectClass}>
-              <option value="">Seleccionar…</option>
-              {["Secundaria", "Universitaria", "Universidad", "Especial", "Primaria"].map((o) => (
-                <option key={o} value={o}>{o}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Contrato</label>
-            <Input name="hiringContractDate" value={form.hiringContractDate} onChange={handleChange} type="date" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Género</label>
-            <select name="gender" value={form.gender} onChange={handleChange} className={selectClass}>
-              <option value="">Seleccionar…</option>
-              {["Masculino", "Femenino"].map((o) => (
-                <option key={o} value={o}>{o}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Cédula</label>
-            <Input name="governmentId" value={form.governmentId} onChange={handleChange} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Guard Credentials</label>
-            <Input name="guardCredentials" value={form.guardCredentials} onChange={handleChange} />
-          </div>
-          <div className="md:col-span-2 flex justify-end gap-2 mt-4">
-            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90 text-white">
-              Guardar cambios
-            </Button>
-          </div>
-          {/* error display removed per UX request; errors now shown via toast */}
-        </form>
-      </div>
+
+        {loading && !fetchedData ? (
+          <SkeletonCards count={4} />
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* ── Datos personales ─────────────────────────────────── */}
+            <Section title="Datos personales" icon={<User />}>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Nombre *</label>
+                  <Input name="firstName" value={form.firstName} onChange={handleChange} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Apellidos *</label>
+                  <Input name="lastName" value={form.lastName} onChange={handleChange} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Fecha de nacimiento</label>
+                  <Input name="birthDate" value={form.birthDate} onChange={handleChange} type="date" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Lugar de nacimiento</label>
+                  <Input name="birthPlace" value={form.birthPlace} onChange={handleChange} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Estado civil</label>
+                  <select name="maritalStatus" value={form.maritalStatus} onChange={handleChange} className={selectClass}>
+                    <option value="">Seleccionar…</option>
+                    {["Soltero", "Casado", "Unión libre", "Divorciado"].map((o) => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Tipo de sangre</label>
+                  <select name="bloodType" value={form.bloodType} onChange={handleChange} className={selectClass}>
+                    <option value="">Seleccionar…</option>
+                    {["A+", "A-", "AB+", "AB-", "O+", "O-", "B+", "B-"].map((o) => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Instrucción académica</label>
+                  <select name="academicInstruction" value={form.academicInstruction} onChange={handleChange} className={selectClass}>
+                    <option value="">Seleccionar…</option>
+                    {["Secundaria", "Universitaria", "Universidad", "Especial", "Primaria"].map((o) => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Género</label>
+                  <select name="gender" value={form.gender} onChange={handleChange} className={selectClass}>
+                    <option value="">Seleccionar…</option>
+                    {["Masculino", "Femenino"].map((o) => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </Section>
+
+            {/* ── Contacto y domicilio ─────────────────────────────── */}
+            <Section title="Contacto y domicilio" icon={<Phone />}>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Correo Electrónico *</label>
+                  <Input name="email" value={form.email} onChange={handleChange} required type="email" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Teléfono *</label>
+                  <Input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} required />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1">Dirección</label>
+                  <Input name="address" value={form.address} onChange={handleChange} />
+                </div>
+              </div>
+            </Section>
+
+            {/* ── Identificación y contrato ────────────────────────── */}
+            <Section title="Identificación y contrato" icon={<FileText />}>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Cédula</label>
+                  <Input name="governmentId" value={form.governmentId} onChange={handleChange} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Contrato</label>
+                  <Input name="hiringContractDate" value={form.hiringContractDate} onChange={handleChange} type="date" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1">Guard Credentials</label>
+                  <Input name="guardCredentials" value={form.guardCredentials} onChange={handleChange} />
+                </div>
+              </div>
+            </Section>
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+                Cancelar
+              </Button>
+              <Button type="submit" variant="brand" disabled={loading}>
+                Guardar cambios
+              </Button>
+            </div>
+            {/* error display removed per UX request; errors now shown via toast */}
+          </form>
+        )}
+      </PageContainer>
     </AppLayout>
   );
 }

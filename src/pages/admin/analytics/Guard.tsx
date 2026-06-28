@@ -4,6 +4,7 @@ import {
   useOpsAnalytics, AnalyticsShell, MetricCard, Section, GOLD, pctClass, RangeFooter, GuardLink,
 } from "./_shared";
 import { analyticsService, PerfLeaderboard, GuardPerformance } from "@/lib/api/analyticsService";
+import { Stagger, StatCard, EmptyState } from "@/components/kit";
 
 const TIER: Record<string, { label: string; color: string; bg: string }> = {
   excellent: { label: "Excelente", color: "#059669", bg: "rgba(5,150,105,0.12)" },
@@ -72,12 +73,12 @@ export default function Guard() {
       {ops.data && k && (
         <>
           {/* KPIs */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard icon={<Award size={16} />} accent={GOLD} value={lb?.averageScore ?? "—"} label="Puntuación promedio" sub={`${counts?.scored ?? 0} vigilantes evaluados`} pct={lb?.averageScore ?? undefined} />
             <MetricCard icon={<Shield size={16} />} accent="#059669" value={counts?.excellent ?? 0} label="Excelentes" sub={`${counts?.good ?? 0} buenos · ${counts?.poor ?? 0} bajos`} />
             <MetricCard icon={<Shield size={16} />} accent="#0ea5e9" value={k.guardsOnDuty} label="En servicio" sub="ahora mismo" />
             <MetricCard icon={<Clock size={16} />} accent="#f59e0b" value={`${k.punctualityPct}%`} label="Puntualidad" sub={`${k.clockinsOnTime}/${k.clockinsTotal} a tiempo`} pct={k.punctualityPct} />
-          </div>
+          </Stagger>
 
           {/* Tier distribution */}
           {!!tierTotal && (
@@ -101,7 +102,7 @@ export default function Guard() {
             {lbLoading ? (
               <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-primary" size={18} /></div>
             ) : !lb || lb.guards.length === 0 ? (
-              <p className="py-4 text-sm text-muted-foreground">No hay vigilantes para evaluar.</p>
+              <EmptyState icon={<Award />} title="Sin evaluaciones" description="No hay vigilantes para evaluar." />
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
@@ -151,19 +152,16 @@ export default function Guard() {
 
           {/* Attendance summary (raw) */}
           <Section title="Asistencia (registros de la app)" icon={<Timer size={16} className="text-sky-500" />}>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
-                { label: "Horas trabajadas", value: ops.data.attendance.hoursWorked, accent: "#0ea5e9" },
-                { label: "Tardanzas", value: ops.data.attendance.late, accent: "#f59e0b" },
-                { label: "Salidas tempranas", value: ops.data.attendance.earlyDeparture, accent: "#8b5cf6" },
-                { label: "Fuera de geocerca", value: ops.data.attendance.geofenceViolations, accent: "#ef4444" },
+                { label: "Horas trabajadas", value: ops.data.attendance.hoursWorked, accent: "blue" as const },
+                { label: "Tardanzas", value: ops.data.attendance.late, accent: "orange" as const },
+                { label: "Salidas tempranas", value: ops.data.attendance.earlyDeparture, accent: "primary" as const },
+                { label: "Fuera de geocerca", value: ops.data.attendance.geofenceViolations, accent: "red" as const },
               ].map((c) => (
-                <div key={c.label} className="rounded-xl border border-border bg-muted/10 p-3">
-                  <p className="text-2xl font-semibold" style={{ color: c.accent }}>{c.value}</p>
-                  <p className="text-xs text-muted-foreground">{c.label}</p>
-                </div>
+                <StatCard key={c.label} accent={c.accent} label={c.label} value={c.value} />
               ))}
-            </div>
+            </Stagger>
           </Section>
 
           <RangeFooter data={ops.data} />

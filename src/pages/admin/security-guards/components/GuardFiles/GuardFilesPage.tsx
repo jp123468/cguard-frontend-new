@@ -3,10 +3,12 @@ import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import { useEffect, useState, useRef } from 'react';
 import MobileCardList from '@/components/responsive/MobileCardList';
-import { Search, ChevronDown, Plus, X, Paperclip } from 'lucide-react';
+import { Search, ChevronDown, X, Paperclip, FolderOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
+import { PageContainer, PageHeader, Section, EmptyState, SkeletonCards } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 export default function GuardFilesPage() {
   const { id } = useParams();
@@ -49,24 +51,38 @@ export default function GuardFilesPage() {
   return (
     <AppLayout>
       <GuardsLayout navKey="keep-safe" title="guards.nav.archivos">
-        {loading ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-muted-foreground">Cargando...</div>
-          </div>
-        ) : guard ? (
-          <div className="space-y-4">
-            <div className="bg-card border rounded-lg p-6 shadow-sm">
-              <div className="flex items-center justify-between gap-4 mb-6">
-                <div className="relative" ref={actionRef}>
+        <PageContainer>
+          <PageHeader
+            icon={<FolderOpen />}
+            title={t('guards.files.title', { defaultValue: 'Archivos' })}
+            subtitle={guard?.fullName
+              ? `${t('guards.files.subtitle', { defaultValue: 'Documentos y archivos del vigilante.' })} · ${guard.fullName}`
+              : t('guards.files.subtitle', { defaultValue: 'Documentos y archivos del vigilante.' })}
+            actions={
+              <Button variant="brand" onClick={() => setShowUploadModal(true)} disabled={!guard}>
+                {t('guards.files.uploadButton', { defaultValue: 'Upload' })}
+              </Button>
+            }
+          />
+
+          {loading ? (
+            <SkeletonCards count={4} />
+          ) : guard ? (
+            <Section
+              title={t('guards.files.feedTitle', { defaultValue: 'Archivos del vigilante' })}
+              icon={<FolderOpen />}
+              action={
+                <div className="flex items-center gap-2">
+                  <div className="relative" ref={actionRef}>
                     <button
                       onClick={() => setActionOpen(!actionOpen)}
-                      className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
+                      className="px-3 py-2 border rounded-xl bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
                     >
                       {actionSelection}
                       <ChevronDown size={16} />
                     </button>
                     {actionOpen && (
-                      <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
+                      <div className="absolute left-0 mt-1 bg-card border rounded-xl shadow-lg z-10 w-full overflow-hidden">
                         <button
                           onClick={() => { setActionSelection(t('guards.files.actions.delete', { defaultValue: 'Delete' })); setActionOpen(false); }}
                           className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
@@ -75,26 +91,20 @@ export default function GuardFilesPage() {
                         </button>
                       </div>
                     )}
-                </div>
-
-                <div className="flex-1 max-w-md">
+                  </div>
                   <div className="relative">
-                    <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={t('guards.files.searchPlaceholder', { defaultValue: 'Search files...' })}
-                        className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none"
-                      />
+                    <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={t('guards.files.searchPlaceholder', { defaultValue: 'Search files...' })}
+                      className="w-56 pl-8 pr-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3">
-                    <button onClick={() => setShowUploadModal(true)} className="px-4 py-2 bg-primary text-white rounded-md">{t('guards.files.uploadButton', { defaultValue: 'Upload' })}</button>
-                </div>
-              </div>
-
+              }
+            >
               <div className="overflow-x-auto">
                 <div>
                   <div className="md:block hidden">
@@ -118,21 +128,12 @@ export default function GuardFilesPage() {
                   <tbody>
                     {filesData.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-4 py-12">
-                          <div className="flex flex-col items-center justify-center gap-4">
-                            <div className="w-32 h-32">
-                              <svg viewBox="0 0 200 200" className="w-full h-full text-gray-100">
-                                <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                                <circle cx="85" cy="100" r="8" fill="white" />
-                                <circle cx="115" cy="100" r="8" fill="white" />
-                                <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                              </svg>
-                            </div>
-                            <div className="text-center">
-                              <h3 className="text-lg font-semibold text-foreground">{t('guards.files.empty.title', { defaultValue: 'No Files Found' })}</h3>
-                              <p className="text-sm text-muted-foreground mt-1">{t('guards.files.empty.description', { defaultValue: 'Upload files using the button on the right' })}</p>
-                            </div>
-                          </div>
+                        <td colSpan={4} className="px-4 py-6">
+                          <EmptyState
+                            icon={<FolderOpen />}
+                            title={t('guards.files.empty.title', { defaultValue: 'No Files Found' })}
+                            description={t('guards.files.empty.description', { defaultValue: 'Upload files using the button on the right' })}
+                          />
                         </td>
                       </tr>
                     ) : (
@@ -160,7 +161,7 @@ export default function GuardFilesPage() {
                     loading={false}
                     emptyMessage={t('guards.files.empty.title', { defaultValue: 'No Files Found' }) as string}
                     renderCard={(f: any) => (
-                      <div className="p-4 bg-card border rounded-lg">
+                      <div className="p-4 bg-card border rounded-xl">
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="text-sm font-semibold">{f.name}</div>
@@ -173,19 +174,23 @@ export default function GuardFilesPage() {
                   />
                 </div>
               </div>
-              </div>
-            </div>
-        ) : (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-muted-foreground">{t('guards.files.loadError', { defaultValue: 'Could not load guard' })}</div>
-          </div>
-        )}
+            </Section>
+          ) : (
+            <EmptyState
+              icon={<FolderOpen />}
+              title={t('guards.files.loadError', { defaultValue: 'Could not load guard' })}
+            />
+          )}
+        </PageContainer>
           {/* Upload Files Modal */}
           {showUploadModal && (
-            <div className="fixed inset-0 z-50" onClick={() => setShowUploadModal(false)}>
+            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowUploadModal(false)}>
               <div className="fixed right-0 top-0 bottom-0 w-96 bg-card shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-10">
-                  <h3 className="text-lg font-semibold">{t('guards.files.modal.title', { defaultValue: 'Upload Files' })}</h3>
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary [&_svg]:size-5"><FolderOpen /></div>
+                    <h3 className="text-base font-semibold">{t('guards.files.modal.title', { defaultValue: 'Upload Files' })}</h3>
+                  </div>
                   <button onClick={() => setShowUploadModal(false)} className="text-muted-foreground hover:text-foreground/70"><X /></button>
                 </div>
 
@@ -244,14 +249,14 @@ export default function GuardFilesPage() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-end gap-3 p-4 border-t bg-card">
-                  <button onClick={() => {
+                <div className="flex items-center justify-end gap-3 p-4 border-t bg-muted/30">
+                  <Button variant="brand" onClick={() => {
                     if (uploadFiles.length === 0) { setShowUploadModal(false); return; }
                     const newFiles = uploadFiles.map((f) => ({ id: Date.now().toString() + Math.random().toString(36).slice(2,7), name: f.name, date: new Date().toISOString().slice(0,10), addedBy: 'You' }));
                     setFilesData((prev) => [...newFiles, ...prev]);
                     setUploadFiles([]);
                     setShowUploadModal(false);
-                  }} className="px-4 py-2 bg-primary text-white rounded-md">{t('guards.files.modal.upload', { defaultValue: 'Upload' })}</button>
+                  }}>{t('guards.files.modal.upload', { defaultValue: 'Upload' })}</Button>
                 </div>
               </div>
             </div>

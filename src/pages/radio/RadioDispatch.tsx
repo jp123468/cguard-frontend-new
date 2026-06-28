@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Radio, Play, Square, Loader2, Settings2, AlertTriangle, RefreshCw, FileText } from "lucide-react";
 import { toast } from "sonner";
 import AppLayout from "@/layouts/app-layout";
+import { PageContainer, PageHeader, Section, EmptyState, StatusBadge } from "@/components/kit";
+import { Button } from "@/components/ui/button";
 import { radioCheckService } from "@/lib/api/radioCheckService";
 import { useFileUrl } from "@/lib/fileUrl";
 import { useRadioRealtime } from "@/components/radio/RadioRealtimeProvider";
@@ -99,32 +101,39 @@ export default function RadioDispatch() {
 
   return (
     <AppLayout>
-    <div className="mx-auto max-w-5xl p-4 sm:p-6">
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/15 text-amber-600"><Radio size={20} /></span>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold">Radio · Pase de novedades</h1>
-          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-            <span className={`h-2 w-2 rounded-full ${connected ? "bg-emerald-500" : "bg-zinc-400"}`} />
+    <PageContainer>
+      <PageHeader
+        icon={<Radio />}
+        title="Radio · Pase de novedades"
+        subtitle="Coordina el pase de novedades por puesto en tiempo real."
+        badges={
+          <StatusBadge tone={connected ? "green" : "slate"}>
             {connected ? "En tiempo real" : "Reconectando…"}
-          </p>
-        </div>
-        <button onClick={refresh} className="rounded-lg border border-border p-2 hover:bg-muted" title="Actualizar"><RefreshCw size={16} /></button>
-        <button onClick={() => setShowSettings((v) => !v)} className="rounded-lg border border-border p-2 hover:bg-muted" title="Configuración"><Settings2 size={16} /></button>
-        {running ? (
-          <button onClick={cancel} disabled={busy} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50">
-            {busy ? <Loader2 size={15} className="animate-spin" /> : <Square size={14} />} Cancelar
-          </button>
-        ) : (
-          <button onClick={() => start("all")} disabled={busy || !stations.length} className="flex items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50">
-            {busy ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />} Iniciar pase
-          </button>
-        )}
-      </div>
+          </StatusBadge>
+        }
+        actions={
+          <>
+            <Button variant="outline" size="icon" onClick={refresh} title="Actualizar">
+              <RefreshCw size={16} />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => setShowSettings((v) => !v)} title="Configuración">
+              <Settings2 size={16} />
+            </Button>
+            {running ? (
+              <Button variant="outline" onClick={cancel} disabled={busy}>
+                {busy ? <Loader2 size={15} className="animate-spin" /> : <Square size={14} />} Cancelar
+              </Button>
+            ) : (
+              <Button variant="brand" onClick={() => start("all")} disabled={busy || !stations.length}>
+                {busy ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />} Iniciar pase
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {showSettings && settings && (
-        <div className="mb-5 rounded-xl border border-border bg-card p-4">
-          <h2 className="mb-3 text-sm font-semibold">Pase automático</h2>
+        <Section title="Pase automático" icon={<Settings2 />}>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!settings.enabled} onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })} /> Activado</label>
             <label className="text-sm">Intervalo (min)<input type="number" min={1} value={settings.intervalMinutes ?? 35} onChange={(e) => setSettings({ ...settings, intervalMinutes: +e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1.5" /></label>
@@ -133,8 +142,8 @@ export default function RadioDispatch() {
             <label className="text-sm">Hora fin<input type="time" value={settings.activeHoursEnd ?? ""} onChange={(e) => setSettings({ ...settings, activeHoursEnd: e.target.value || null })} className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1.5" /></label>
           </div>
           <label className="mt-3 block text-sm">Mensaje al puesto<textarea rows={2} value={settings.promptText ?? ""} onChange={(e) => setSettings({ ...settings, promptText: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm" /></label>
-          <button onClick={saveSettings} className="mt-3 rounded-lg bg-foreground px-3 py-1.5 text-sm font-medium text-background">Guardar</button>
-        </div>
+          <Button variant="brand" size="sm" onClick={saveSettings} className="mt-3">Guardar</Button>
+        </Section>
       )}
 
       {running && (
@@ -175,7 +184,7 @@ export default function RadioDispatch() {
             const badge = st ? statusBadge[st] : null;
             const cc = e?.classification ? classChip[e.classification] : null;
             return (
-              <div key={s.stationId} className="rounded-xl border border-border bg-card p-3.5">
+              <div key={s.stationId} className="cg-card cg-card-hover p-3.5">
                 <div className="flex items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{s.stationName}</p>
@@ -183,7 +192,7 @@ export default function RadioDispatch() {
                   </div>
                   {cc && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${cc.cls}`}>{cc.label}</span>}
                   {badge && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.cls}`}>{badge.label}</span>}
-                  <button onClick={() => start("station", s.stationId)} disabled={busy || !!running} className="rounded-lg border border-border px-2 py-1 text-xs hover:bg-muted disabled:opacity-40" title="Llamar a este puesto"><Play size={13} /></button>
+                  <Button variant="outline" size="icon" onClick={() => start("station", s.stationId)} disabled={busy || !!running} title="Llamar a este puesto"><Play size={13} /></Button>
                 </div>
                 {e && (e.transcript || e.transcriptStatus === "pending" || e.hasAudio) && (
                   <div className="mt-2 space-y-1.5 border-t border-border pt-2">
@@ -199,12 +208,14 @@ export default function RadioDispatch() {
               </div>
             );
           })}
-          {!stations.length && <p className="py-10 text-center text-sm text-muted-foreground">No hay puestos configurados.</p>}
+          {!stations.length && (
+            <EmptyState icon={<Radio />} title="No hay puestos configurados." />
+          )}
         </div>
       )}
 
       <RecentSessions />
-    </div>
+    </PageContainer>
     </AppLayout>
   );
 }
@@ -229,7 +240,7 @@ function RecentSessions() {
       <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground"><FileText size={15} /> Pases recientes</h2>
       <div className="space-y-2">
         {rows.map((s) => (
-          <div key={s.id} className="rounded-xl border border-border bg-card">
+          <div key={s.id} className="cg-card cg-card-hover">
             <button onClick={() => open(s.id)} className="flex w-full items-center gap-3 p-3 text-left">
               <span className="text-xs text-muted-foreground">{new Date(s.startedAt).toLocaleString()}</span>
               <span className="text-xs">{s.mode === "auto" ? "Automático" : "Manual"}</span>

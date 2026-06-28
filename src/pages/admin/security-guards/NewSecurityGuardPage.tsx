@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { RefreshCcw, Eye, EyeOff, User, Phone, MapPin, FileCheck, ShieldCheck, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { RefreshCcw, User, Phone, FileCheck, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader, Section } from "@/components/kit";
+import { UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import {
@@ -390,9 +392,15 @@ export default function NewSecurityGuardPage() {
 
   return (
     <AppLayout>
-      <Breadcrumb items={[{ label: t('guards.new.breadcrumb.dashboard'), path: "/dashboard" }, { label: t('guards.new.title') }]} />
+      <PageContainer width="wide">
+        <Breadcrumb items={[{ label: t('guards.new.breadcrumb.dashboard'), path: "/dashboard" }, { label: t('guards.new.title') }]} />
 
-      <div className="p-4">
+        <PageHeader
+          icon={<UserPlus />}
+          title={t('guards.new.title')}
+          subtitle={t('guards.new.invite.description')}
+        />
+
         <GuardTabsHeader value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)}>
           {/* ------- TAB 1 ------- */}
           {activeTab === "invite" && (
@@ -547,10 +555,7 @@ export default function NewSecurityGuardPage() {
                 <form className="mt-6 space-y-6" onSubmit={submitCreate(onSubmitCreate)}>
 
                   {/* ── Section 1: Personal Information ─────────────────────── */}
-                  <div className="rounded-xl border bg-card p-6 shadow-sm">
-                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                      Información Personal
-                    </h3>
+                  <Section title="Información Personal" icon={<User />}>
 
                     {/* Profile photo centred at top */}
                     <div className="mb-6 flex justify-center">
@@ -676,13 +681,10 @@ export default function NewSecurityGuardPage() {
                         </FormItem>
                       )} />
                     </div>
-                  </div>
+                  </Section>
 
                   {/* ── Section 2: Contact & Address ─────────────────────────── */}
-                  <div className="rounded-xl border bg-card p-6 shadow-sm">
-                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                      Contacto y Domicilio
-                    </h3>
+                  <Section title="Contacto y Domicilio" icon={<Phone />}>
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <FormField control={createCtrl} name="email" render={({ field }) => (
@@ -728,13 +730,10 @@ export default function NewSecurityGuardPage() {
                         </FormItem>
                       )} />
                     </div>
-                  </div>
+                  </Section>
 
                   {/* ── Section 3: Identification ─────────────────────────────── */}
-                  <div className="rounded-xl border bg-card p-6 shadow-sm">
-                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                      Identificación y Contrato
-                    </h3>
+                  <Section title="Identificación y Contrato" icon={<FileCheck />}>
 
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <FormField control={createCtrl} name="identificationNumber" render={({ field }) => (
@@ -771,13 +770,10 @@ export default function NewSecurityGuardPage() {
                         </FormItem>
                       )} />
                     </div>
-                  </div>
+                  </Section>
 
                   {/* ── Section 4: Certifications ─────────────────────────────── */}
-                  <div className="rounded-xl border bg-card p-6 shadow-sm">
-                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                      Certificaciones y Documentos Profesionales
-                    </h3>
+                  <Section title="Certificaciones y Documentos Profesionales" icon={<ShieldCheck />}>
 
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                       <DocumentUpload
@@ -823,10 +819,10 @@ export default function NewSecurityGuardPage() {
                         onChange={setDoc("familyViolenceCertificate") as (f: any) => void}
                       />
                     </div>
-                  </div>
+                  </Section>
 
                   {/* ── Submit Bar ───────────────────────────────────────────── */}
-                  <div className="flex items-center justify-end gap-3 rounded-xl border bg-card px-6 py-4 shadow-sm">
+                  <div className="cg-card flex items-center justify-end gap-3 px-6 py-4">
                     {uploading && (
                       <span className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -846,7 +842,7 @@ export default function NewSecurityGuardPage() {
             </>
           )}
         </GuardTabsHeader>
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

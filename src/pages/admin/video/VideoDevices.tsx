@@ -17,7 +17,16 @@ import {
 import VideoGatewayModal from "@/components/video/VideoGatewayModal";
 
 import AppLayout from "@/layouts/app-layout";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  PageContainer,
+  PageHeader,
+  Section,
+  StatCard,
+  Stagger,
+  StatusBadge as KitStatusBadge,
+  EmptyState,
+  SkeletonCards,
+} from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,8 +66,6 @@ import {
   type DeviceType,
   type RelaySite,
 } from "@/lib/api/videoService";
-
-const GOLD = "#C8860A";
 
 const TYPE_LABELS: Record<DeviceType, string> = {
   dvr: "DVR",
@@ -131,49 +138,49 @@ function StatusBadge({ status }: { status?: DeviceStatus }) {
   const s = status ?? "unknown";
   if (s === "online") {
     return (
-      <Badge className="gap-1 border-transparent bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+      <KitStatusBadge tone="green" dot={false}>
         <Wifi className="h-3 w-3" /> En línea
-      </Badge>
+      </KitStatusBadge>
     );
   }
   if (s === "offline") {
     return (
-      <Badge className="gap-1 border-transparent bg-red-100 text-red-700 hover:bg-red-100">
+      <KitStatusBadge tone="red" dot={false}>
         <WifiOff className="h-3 w-3" /> Sin conexión
-      </Badge>
+      </KitStatusBadge>
     );
   }
   if (s === "auth_failed") {
     return (
-      <Badge className="gap-1 border-transparent bg-amber-100 text-amber-700 hover:bg-amber-100">
+      <KitStatusBadge tone="orange" dot={false}>
         <WifiOff className="h-3 w-3" /> Credenciales
-      </Badge>
+      </KitStatusBadge>
     );
   }
   if (s === "unreachable") {
     return (
-      <Badge className="gap-1 border-transparent bg-amber-100 text-amber-700 hover:bg-amber-100">
+      <KitStatusBadge tone="orange" dot={false}>
         <WifiOff className="h-3 w-3" /> Sin stream
-      </Badge>
+      </KitStatusBadge>
     );
   }
   return (
-    <Badge variant="secondary" className="gap-1">
+    <KitStatusBadge tone="slate" dot={false}>
       <WifiOff className="h-3 w-3" /> Desconocido
-    </Badge>
+    </KitStatusBadge>
   );
 }
 
 function TypeIcon({ type }: { type?: DeviceType }) {
   switch (type) {
     case "nvr":
-      return <Server className="h-5 w-5" style={{ color: GOLD }} />;
+      return <Server className="h-5 w-5" />;
     case "camera":
-      return <CameraIcon className="h-5 w-5" style={{ color: GOLD }} />;
+      return <CameraIcon className="h-5 w-5" />;
     case "cloud":
-      return <HardDrive className="h-5 w-5" style={{ color: GOLD }} />;
+      return <HardDrive className="h-5 w-5" />;
     default:
-      return <Video className="h-5 w-5" style={{ color: GOLD }} />;
+      return <Video className="h-5 w-5" />;
   }
 }
 
@@ -340,175 +347,137 @@ export default function VideoDevices() {
 
   return (
     <AppLayout>
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">
+      <PageContainer width="wide">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-              <Video className="h-6 w-6" style={{ color: GOLD }} />
-              Dispositivos de video
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Conecta y administra tus DVR, NVR y cámaras de videovigilancia.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline">
-              <Link to="/video/monitoring">Monitoreo</Link>
-            </Button>
-            <Button
-              onClick={openCreate}
-              style={{ backgroundColor: GOLD }}
-              className="text-white hover:opacity-90"
-            >
-              <Plus className="mr-1.5 h-4 w-4" />
-              Agregar dispositivo
-            </Button>
-          </div>
-        </div>
-
-        {/* Summary */}
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Total</div>
-              <div className="text-2xl font-bold">{devices.length}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">En línea</div>
-              <div className="text-2xl font-bold text-emerald-600">{counts.online}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Sin conexión</div>
-              <div className="text-2xl font-bold text-red-600">{counts.offline}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Desconocido</div>
-              <div className="text-2xl font-bold text-muted-foreground">{counts.unknown}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* List */}
-        {loading ? (
-          <div className="flex items-center justify-center py-24 text-muted-foreground">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Cargando dispositivos...
-          </div>
-        ) : devices.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-              <Video className="h-10 w-10 text-muted-foreground" />
-              <div className="text-lg font-medium">No hay dispositivos</div>
-              <p className="max-w-sm text-sm text-muted-foreground">
-                Agrega tu primer DVR, NVR o cámara para comenzar la videovigilancia.
-              </p>
-              <Button
-                onClick={openCreate}
-                style={{ backgroundColor: GOLD }}
-                className="mt-2 text-white hover:opacity-90"
-              >
+        <PageHeader
+          icon={<Video />}
+          title="Dispositivos de video"
+          subtitle="Conecta y administra tus DVR, NVR y cámaras de videovigilancia."
+          actions={
+            <>
+              <Button asChild variant="outline">
+                <Link to="/video/monitoring">Monitoreo</Link>
+              </Button>
+              <Button variant="brand" onClick={openCreate}>
                 <Plus className="mr-1.5 h-4 w-4" />
                 Agregar dispositivo
               </Button>
-            </CardContent>
-          </Card>
+            </>
+          }
+        />
+
+        {/* Summary */}
+        <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard label="Total" value={devices.length} icon={<Video />} accent="primary" />
+          <StatCard label="En línea" value={counts.online} icon={<Wifi />} accent="green" />
+          <StatCard label="Sin conexión" value={counts.offline} icon={<WifiOff />} accent="red" />
+          <StatCard label="Desconocido" value={counts.unknown} icon={<Server />} accent="slate" />
+        </Stagger>
+
+        {/* List */}
+        {loading ? (
+          <SkeletonCards count={4} />
+        ) : devices.length === 0 ? (
+          <EmptyState
+            icon={<Video />}
+            title="No hay dispositivos"
+            description="Agrega tu primer DVR, NVR o cámara para comenzar la videovigilancia."
+            action={
+              <Button variant="brand" onClick={openCreate}>
+                <Plus className="mr-1.5 h-4 w-4" />
+                Agregar dispositivo
+              </Button>
+            }
+          />
         ) : (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Stagger className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {devices.map((d) => {
               const b = busy[d.id];
               return (
-                <Card key={d.id} className="overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <div className="mt-0.5 rounded-md bg-amber-50 p-2">
-                          <TypeIcon type={d.type as DeviceType} />
+                <Section key={d.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary [&_svg]:size-5">
+                        <TypeIcon type={d.type as DeviceType} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="truncate font-semibold">{d.name}</span>
+                          <Badge variant="outline" className="text-[10px] uppercase">
+                            {TYPE_LABELS[(d.type as DeviceType) ?? "dvr"]}
+                          </Badge>
                         </div>
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="truncate font-semibold">{d.name}</span>
-                            <Badge variant="outline" className="text-[10px] uppercase">
-                              {TYPE_LABELS[(d.type as DeviceType) ?? "dvr"]}
-                            </Badge>
-                          </div>
-                          <div className="mt-0.5 truncate text-sm text-muted-foreground">
-                            {[d.brand, d.model].filter(Boolean).join(" · ") || "Sin marca/modelo"}
-                          </div>
-                          <div className="mt-1 truncate font-mono text-xs text-muted-foreground">
-                            {d.host || "—"}
-                            {d.host ? `:${d.port ?? 554}` : ""}
-                            {d.protocol ? ` · ${d.protocol.toUpperCase()}` : ""}
-                            {d.channels != null ? ` · ${d.channels} canal(es)` : ""}
-                          </div>
+                        <div className="mt-0.5 truncate text-sm text-muted-foreground">
+                          {[d.brand, d.model].filter(Boolean).join(" · ") || "Sin marca/modelo"}
+                        </div>
+                        <div className="mt-1 truncate font-mono text-xs text-muted-foreground">
+                          {d.host || "—"}
+                          {d.host ? `:${d.port ?? 554}` : ""}
+                          {d.protocol ? ` · ${d.protocol.toUpperCase()}` : ""}
+                          {d.channels != null ? ` · ${d.channels} canal(es)` : ""}
                         </div>
                       </div>
-                      <StatusBadge status={d.status as DeviceStatus} />
                     </div>
+                    <StatusBadge status={d.status as DeviceStatus} />
+                  </div>
 
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={!!b}
+                      onClick={() => onTest(d)}
+                    >
+                      {b === "test" ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Wifi className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      Probar conexión
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={!!b}
+                      onClick={() => onSync(d)}
+                    >
+                      {b === "sync" ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      Sincronizar cámaras
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setGatewayTarget(d)}>
+                      <Server className="mr-1.5 h-3.5 w-3.5" />
+                      Gateway
+                    </Button>
+                    <div className="ml-auto flex items-center gap-1">
                       <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!!b}
-                        onClick={() => onTest(d)}
+                        size="icon"
+                        variant="ghost"
+                        title="Editar"
+                        onClick={() => openEdit(d)}
                       >
-                        {b === "test" ? (
-                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Wifi className="mr-1.5 h-3.5 w-3.5" />
-                        )}
-                        Probar conexión
+                        <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!!b}
-                        onClick={() => onSync(d)}
+                        size="icon"
+                        variant="ghost"
+                        title="Eliminar"
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => setDeleteTarget(d)}
                       >
-                        {b === "sync" ? (
-                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                        )}
-                        Sincronizar cámaras
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => setGatewayTarget(d)}>
-                        <Server className="mr-1.5 h-3.5 w-3.5" />
-                        Gateway
-                      </Button>
-                      <div className="ml-auto flex items-center gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Editar"
-                          onClick={() => openEdit(d)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Eliminar"
-                          className="text-red-600 hover:text-red-700"
-                          onClick={() => setDeleteTarget(d)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </Section>
               );
             })}
-          </div>
+          </Stagger>
         )}
-      </div>
+      </PageContainer>
 
       {/* Create / Edit modal (portaled via DialogContent) */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -731,12 +700,7 @@ export default function VideoDevices() {
               >
                 Cancelar
               </Button>
-              <Button
-                type="submit"
-                disabled={saving}
-                style={{ backgroundColor: GOLD }}
-                className="text-white hover:opacity-90"
-              >
+              <Button type="submit" variant="brand" disabled={saving}>
                 {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
                 {editing ? "Guardar cambios" : "Agregar dispositivo"}
               </Button>

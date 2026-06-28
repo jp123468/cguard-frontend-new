@@ -16,6 +16,8 @@ import {
   Upload,
   MoreVertical,
   ArrowUpDown,
+  BarChart3,
+  MapPin,
 } from "lucide-react";
 import MobileCardList from '@/components/responsive/MobileCardList';
 import AppLayout from '@/layouts/app-layout';
@@ -27,6 +29,8 @@ import KpiService from '@/services/kpi.service';
 import { ApiService } from '@/services/api/apiService';
 import api from '@/lib/api';
 import { useTranslation } from 'react-i18next';
+import { PageContainer, PageHeader, Section, StatCard, Stagger, EmptyState } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 
 type Props = {
@@ -464,68 +468,85 @@ export default function GuardIndicators({ guard }: Props) {
   return (
     <AppLayout>
       <GuardsLayout navKey="keep-safe" title="guards.nav.indicadores">
-        <div className="space-y-4">
+        <PageContainer width="wide">
+          <PageHeader
+            icon={<BarChart3 />}
+            title={t('guards.KPI.title', { defaultValue: 'Indicadores de rendimiento' })}
+            subtitle={t('guards.KPI.subtitle', { defaultValue: 'KPIs y desempeño del vigilante.' })}
+            actions={
+              <Button variant="brand" onClick={handleAddKPI}>
+                <Plus size={16} />
+                {t('guards.KPI.kpiadded', 'Añadir Nuevo KPI')}
+              </Button>
+            }
+          />
+
+          <Stagger className="grid gap-4 sm:grid-cols-2">
+            <StatCard
+              label={t('guards.assignSites.assignedCount', { defaultValue: 'Assigned Sites' })}
+              value={assignedSitesCount}
+              icon={<MapPin />}
+              accent="blue"
+            />
+            <StatCard
+              label={t('guards.KPI.totalKpis', { defaultValue: 'KPIs' })}
+              value={kpiData.length}
+              icon={<BarChart3 />}
+              accent="primary"
+            />
+          </Stagger>
 
           {/* 8-factor performance score (read-only, additive to KPI tooling) */}
           <GuardPerformancePanel securityGuardId={guard?.id} />
 
-          <div className="bg-card border rounded-lg p-6 shadow-sm min-h-[560px]">
-            <div className="flex items-center justify-between gap-4 mb-6">
-              {/* Left: Action Dropdown */}
-              <div className="relative inline-block">
-                <button
-                  onClick={() => setActionOpen(!actionOpen)}
-                  className="ml-2 px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30"
-                >
-                  {actionSelection}
-                  <ChevronDown size={16} />
-                </button>
-                {actionOpen && (
-                  <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
-                    <button
-                      onClick={() => {
-                        setActionOpen(false);
-                        if (!selectedIds || selectedIds.length === 0) {
-                          toast.error(t('guards.KPI.toasts.selectAtLeastOne', 'Debes seleccionar al menos un KPI'));
-                          return;
-                        }
-                        setDeleteModalOpen(true);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                )}
-              </div>
+          <Section
+            title={t('guards.KPI.feedTitle', { defaultValue: 'Indicadores clave (KPIs)' })}
+            icon={<BarChart3 />}
+            className="min-h-[560px]"
+            action={
+              <div className="flex items-center gap-2">
+                {/* Left: Action Dropdown */}
+                <div className="relative inline-block">
+                  <button
+                    onClick={() => setActionOpen(!actionOpen)}
+                    className="px-3 py-2 border rounded-xl bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30"
+                  >
+                    {actionSelection}
+                    <ChevronDown size={16} />
+                  </button>
+                  {actionOpen && (
+                    <div className="absolute left-0 mt-1 bg-card border rounded-xl shadow-lg z-10 w-full overflow-hidden">
+                      <button
+                        onClick={() => {
+                          setActionOpen(false);
+                          if (!selectedIds || selectedIds.length === 0) {
+                            toast.error(t('guards.KPI.toasts.selectAtLeastOne', 'Debes seleccionar al menos un KPI'));
+                            return;
+                          }
+                          setDeleteModalOpen(true);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-              {/* Center: Search */}
-              <div className="flex-1 max-w-xs">
+                {/* Center: Search */}
                 <div className="relative">
-                  <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
+                  <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="text"
                     placeholder={t('guards.KPI.kpisearch', 'Buscar KPI')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-48 pl-8 pr-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
-
-              <div className="flex items-center gap-3">
-                <div className="px-2 py-1 text-sm rounded-full bg-blue-500/10 text-blue-600">{t('guards.assignSites.assignedCount', { defaultValue: 'Assigned Sites' })}: {assignedSitesCount}</div>
-              </div>
-
-              {/* Right: Add Button */}
-              <button
-                onClick={handleAddKPI}
-                className="ml-2 px-3 py-2 bg-primary text-white rounded-md text-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
-              >
-                <Plus size={16} />
-                {t('guards.KPI.kpiadded', 'Añadir Nuevo KPI')}
-              </button>
-            </div>
+            }
+          >
 
             {/* Table */}
             <div className="overflow-x-auto min-h-[520px] pb-12">
@@ -556,22 +577,12 @@ export default function GuardIndicators({ guard }: Props) {
                     <tbody>
                       {kpiData.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="px-4 py-12">
-                            <div className="flex flex-col items-center justify-center gap-4">
-                              <div className="w-32 h-32">
-                                <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                                  <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                                  <circle cx="85" cy="100" r="8" fill="white" />
-                                  <circle cx="115" cy="100" r="8" fill="white" />
-                                  <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                                  <path d="M 60 60 L 70 50 M 140 60 L 150 50 M 80 40 L 90 30 M 120 40 L 110 30" stroke="currentColor" strokeWidth="2" />
-                                </svg>
-                              </div>
-                              <div className="text-center">
-                                <h3 className="text-lg font-semibold text-foreground">{t('clients.empty.title', 'No se encontraron resultados')}</h3>
-                                <p className="text-sm text-muted-foreground mt-1">{t('clients.empty.description', 'No pudimos encontrar ningún elemento que coincida con su búsqueda')}</p>
-                              </div>
-                            </div>
+                          <td colSpan={5} className="px-4 py-6">
+                            <EmptyState
+                              icon={<BarChart3 />}
+                              title={t('clients.empty.title', 'No se encontraron resultados')}
+                              description={t('clients.empty.description', 'No pudimos encontrar ningún elemento que coincida con su búsqueda')}
+                            />
                           </td>
                         </tr>
                       ) : (
@@ -723,7 +734,7 @@ export default function GuardIndicators({ guard }: Props) {
                                                 loading={false}
                                                 emptyMessage={t('guards.KPI.empty', { defaultValue: 'No KPI data' }) as string}
                                                 renderCard={(k: any) => (
-                                                  <div className="p-4 bg-card border rounded-lg">
+                                                  <div className="p-4 bg-card border rounded-xl">
                                                     <div className="text-sm font-semibold">{k.type}</div>
                                                     <div className="text-xs text-muted-foreground">{k.date} • {k.createdBy}</div>
                                                   </div>
@@ -753,7 +764,7 @@ export default function GuardIndicators({ guard }: Props) {
               {/* Modal */}
               {showModal && (
                 <div
-                  className="fixed inset-0 z-50"
+                  className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
                   onClick={handleCloseModal}
                 >
                   <div
@@ -761,8 +772,9 @@ export default function GuardIndicators({ guard }: Props) {
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-card">
-                      <h2 className="text-lg font-semibold text-foreground">{t('guards.KPI.modal.title', 'Añadir Nuevos KPIs (Indicadores Clave de Rendimiento)')}</h2>
+                    <div className="flex items-center gap-2.5 p-6 border-b sticky top-0 bg-card">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary [&_svg]:size-5"><BarChart3 /></div>
+                      <h2 className="text-base font-semibold text-foreground">{t('guards.KPI.modal.title', 'Añadir Nuevos KPIs (Indicadores Clave de Rendimiento)')}</h2>
                     </div>
 
                     {/* Body */}
@@ -995,34 +1007,28 @@ export default function GuardIndicators({ guard }: Props) {
 
                     {/* Footer */}
                     <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
-                      <button
-                        onClick={handleCloseModal}
-                        className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30"
-                      >
+                      <Button variant="outline" onClick={handleCloseModal}>
                         {t('actions.cancel', 'Cancelar')}
-                      </button>
-                      <button
-                        onClick={handleSubmitKPI}
-                        className="px-6 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary/90"
-                      >
+                      </Button>
+                      <Button variant="brand" onClick={handleSubmitKPI}>
                         {t('guards.KPI.modal.addButton', 'AÑADIR')}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
               )}
               {deleteModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }}>
-                  <div className="absolute inset-0 bg-black opacity-30" />
-                  <div className="relative w-96 bg-card rounded shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                  <div className="relative w-96 bg-card rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
                     <div className="p-6 border-b">
                       <h3 className="text-lg font-semibold">{t('guards.KPI.modal.confirmDeleteTitle', 'Confirmar eliminación')}</h3>
                     </div>
                     <div className="p-6">
                       <p className="text-sm text-foreground">{t('guards.KPI.modal.confirmDeleteMessage', '¿Estás seguro de que deseas eliminar {toDeleteId ? "este KPI" : `${selectedIds.length} KPI(s)`}? Esta acción no se puede deshacer.')}</p>
                     </div>
-                    <div className="flex items-center justify-end gap-3 p-6 border-t bg-card">
-                      <button onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }} className="px-4 py-2 border rounded-md text-foreground hover:bg-muted/30">{t('actions.cancel', 'Cancelar')}</button>
+                    <div className="flex items-center justify-end gap-3 p-6 border-t bg-muted/30">
+                      <Button variant="outline" onClick={() => { setDeleteModalOpen(false); setToDeleteId(null); }}>{t('actions.cancel', 'Cancelar')}</Button>
                       <button onClick={async () => {
                         try {
                           if (toDeleteId) {
@@ -1050,8 +1056,8 @@ export default function GuardIndicators({ guard }: Props) {
                 </div>
               )}
             </div>
-          </div>
-          </div>
+          </Section>
+        </PageContainer>
 
       </GuardsLayout>
 

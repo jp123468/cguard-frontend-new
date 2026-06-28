@@ -264,7 +264,7 @@ export default function SmsBalancePage() {
                         onChange={(e) => setAmount(Number(e.target.value))}
                       />
                     </div>
-                    <Button onClick={onRecharge} disabled={recharging} className="bg-[#f36a6d] text-white hover:bg-[#e85b5f]">
+                    <Button variant="brand" onClick={onRecharge} disabled={recharging}>
                       {recharging ? <Loader2 className="mr-2 animate-spin" size={16} /> : <Plus className="mr-2" size={16} />}
                       {t("sms.recharge", { defaultValue: "Recargar" })}
                     </Button>

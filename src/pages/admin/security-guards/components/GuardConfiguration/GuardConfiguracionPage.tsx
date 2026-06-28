@@ -4,6 +4,7 @@ import GuardsLayout from '@/layouts/GuardsLayout';
 import { useEffect, useState } from 'react';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
+import { Settings, Clock, CalendarDays, Bell, Save } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -14,6 +15,8 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
+import { PageContainer, PageHeader, Section, SkeletonCards, EmptyState } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 export default function GuardConfiguracionPage() {
   const { id } = useParams();
@@ -72,25 +75,52 @@ export default function GuardConfiguracionPage() {
   return (
     <AppLayout>
       <GuardsLayout navKey="keep-safe" title="guards.nav.configuracion">
-        {loading ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-muted-foreground">Cargando...</div>
-          </div>
-        ) : guard ? (
-          <div className="bg-card rounded-lg shadow p-6 min-h-[480px] relative">
-            <h2 className="text-xl font-semibold mb-4">Configuración de {guard.fullName}</h2>
+        <PageContainer>
+          <PageHeader
+            icon={<Settings />}
+            title={'Configuración'}
+            subtitle={guard?.fullName
+              ? `Ajustes operativos del vigilante · ${guard.fullName}`
+              : 'Ajustes operativos del vigilante.'}
+            actions={
+              <Button variant="brand" disabled={!id || saving} onClick={() => setConfirmOpen(true)}>
+                <Save size={16} />
+                Save Settings
+              </Button>
+            }
+          />
 
-            {/* Tabs */}
-            <div className="border-b">
-              <nav className="grid grid-cols-4 text-sm">
-                <button onClick={() => setActiveTab('general')} className={`py-3 text-center ${activeTab === 'general' ? 'border-b-2 border-primary text-primary' : 'text-foreground/70'}`}>General</button>
-                <button onClick={() => setActiveTab('time')} className={`py-3 text-center ${activeTab === 'time' ? 'border-b-2 border-primary text-primary' : 'text-foreground/70'}`}>Time Clock</button>
-                <button onClick={() => setActiveTab('scheduler')} className={`py-3 text-center ${activeTab === 'scheduler' ? 'border-b-2 border-primary text-primary' : 'text-foreground/70'}`}>Scheduler</button>
-                <button onClick={() => setActiveTab('notifications')} className={`py-3 text-center ${activeTab === 'notifications' ? 'border-b-2 border-primary text-primary' : 'text-foreground/70'}`}>Notifications</button>
-              </nav>
-            </div>
+          {loading ? (
+            <SkeletonCards count={4} />
+          ) : guard ? (
+            <Section className="relative">
+              {/* Tabs */}
+              <div className="border-b">
+                {(() => {
+                  const tabs = [
+                    { key: 'general' as const, label: 'General', icon: <Settings size={15} /> },
+                    { key: 'time' as const, label: 'Time Clock', icon: <Clock size={15} /> },
+                    { key: 'scheduler' as const, label: 'Scheduler', icon: <CalendarDays size={15} /> },
+                    { key: 'notifications' as const, label: 'Notifications', icon: <Bell size={15} /> },
+                  ];
+                  return (
+                    <nav className="grid grid-cols-4 text-sm">
+                      {tabs.map((tab) => (
+                        <button
+                          key={tab.key}
+                          onClick={() => setActiveTab(tab.key)}
+                          className={`flex items-center justify-center gap-2 py-3 font-medium transition-colors ${activeTab === tab.key ? 'border-b-2 border-primary text-primary' : 'text-foreground/60 hover:text-foreground'}`}
+                        >
+                          {tab.icon}
+                          {tab.label}
+                        </button>
+                      ))}
+                    </nav>
+                  );
+                })()}
+              </div>
 
-            <div className="py-6">
+              <div className="py-6">
               {activeTab === 'general' && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -438,34 +468,31 @@ export default function GuardConfiguracionPage() {
                   </div>
                 </div>
               )}
-            </div>
+              </div>
 
-            {/* Save Button pinned bottom-right */}
-            <div className="fixed right-6 bottom-6 z-40">
-              <button disabled={!id || saving} onClick={() => setConfirmOpen(true)} className="px-4 py-2 bg-primary text-white rounded-full shadow hover:bg-primary/90 disabled:opacity-50">Save Settings</button>
-            </div>
-
-            {/* Confirm dialog */}
-            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirmar cambios</AlertDialogTitle>
-                  <AlertDialogDescription>¿Desea guardar estos ajustes para {guard.fullName}?</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleSaveConfirmed}>
-                    {saving ? 'Guardando...' : 'Sí, guardar'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-muted-foreground">No se pudo cargar el vigilante</div>
-          </div>
-        )}
+              {/* Confirm dialog */}
+              <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar cambios</AlertDialogTitle>
+                    <AlertDialogDescription>¿Desea guardar estos ajustes para {guard.fullName}?</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleSaveConfirmed}>
+                      {saving ? 'Guardando...' : 'Sí, guardar'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </Section>
+          ) : (
+            <EmptyState
+              icon={<Settings />}
+              title="No se pudo cargar el vigilante"
+            />
+          )}
+        </PageContainer>
       </GuardsLayout>
     </AppLayout>
   );

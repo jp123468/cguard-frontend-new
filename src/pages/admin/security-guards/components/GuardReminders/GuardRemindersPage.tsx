@@ -5,10 +5,12 @@ import { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { toast } from 'sonner';
-import { Search, ChevronDown, Plus, X, Paperclip, Filter } from 'lucide-react';
+import { Search, ChevronDown, Plus, X, Paperclip, Filter, BellRing } from 'lucide-react';
 import TimeInput from '@/components/TimeInput';
 import MultiCombobox from '@/components/app/multicombobox';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { PageContainer, PageHeader, Section, EmptyState } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 
 export default function GuardRemindersPage() {
@@ -144,61 +146,64 @@ export default function GuardRemindersPage() {
   return (
     <AppLayout>
       <GuardsLayout navKey="keep-safe" title="guards.nav.recordatorios">
-        <div className="space-y-4">
-          <div className="bg-card border rounded-lg p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-4 mb-6">
-              {/* Left: Action Dropdown */}
-              <div className="relative" ref={actionRef}>
-                <button
-                  onClick={() => setActionOpen(!actionOpen)}
-                  className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
-                >
-                  {actionSelection}
-                  <ChevronDown size={16} />
-                </button>
-                {actionOpen && (
-                  <div className="absolute left-0 mt-1 bg-card border rounded-md shadow-lg z-10 w-full">
-                    <button
-                      onClick={() => { setActionSelection(t('guards.reminders.actions.archive', { defaultValue: 'Archive' })); setActionOpen(false); }}
-                      className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
-                    >
-                      {t('guards.reminders.actions.archive', { defaultValue: 'Archive' })}
-                    </button>
-                  </div>
-                )}
-              </div>
+        <PageContainer>
+          <PageHeader
+            icon={<BellRing />}
+            title={t('guards.reminders.title', { defaultValue: 'Recordatorios' })}
+            subtitle={guard?.fullName
+              ? `${t('guards.reminders.subtitle', { defaultValue: 'Recordatorios programados para el vigilante.' })} · ${guard.fullName}`
+              : t('guards.reminders.subtitle', { defaultValue: 'Recordatorios programados para el vigilante.' })}
+            actions={
+              <>
+                <Button variant="outline" onClick={() => setShowFilters(true)}>
+                  <Filter className="h-4 w-4 text-foreground/70" />
+                  {t('guards.reminders.filters.button', { defaultValue: 'Filters' })}
+                </Button>
+                <Button variant="brand" onClick={handleAddReminder}>
+                  <Plus size={16} />
+                  {t('guards.reminders.addReminder', { defaultValue: 'Add Reminder' })}
+                </Button>
+              </>
+            }
+          />
 
-              {/* Center: Search */}
-              <div className="flex-1 max-w-md">
+          <Section
+            title={t('guards.reminders.feedTitle', { defaultValue: 'Historial de recordatorios' })}
+            icon={<BellRing />}
+            action={
+              <div className="flex items-center gap-2">
+                <div className="relative" ref={actionRef}>
+                  <button
+                    onClick={() => setActionOpen(!actionOpen)}
+                    className="px-3 py-2 border rounded-xl bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]"
+                  >
+                    {actionSelection}
+                    <ChevronDown size={16} />
+                  </button>
+                  {actionOpen && (
+                    <div className="absolute left-0 mt-1 bg-card border rounded-xl shadow-lg z-10 w-full overflow-hidden">
+                      <button
+                        onClick={() => { setActionSelection(t('guards.reminders.actions.archive', { defaultValue: 'Archive' })); setActionOpen(false); }}
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-muted"
+                      >
+                        {t('guards.reminders.actions.archive', { defaultValue: 'Archive' })}
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <div className="relative">
-                  <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
+                  <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="text"
                     placeholder={t('guards.reminders.searchPlaceholder', { defaultValue: 'Search reminders' })}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-56 pl-8 pr-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
-
-              {/* Right: Add Button */}
-              <div className="flex items-center gap-3">
-                
-                <button onClick={() => setShowFilters(true)} className="px-3 py-2 bg-card text-foreground border rounded-md text-sm font-medium hover:bg-muted/30 flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-foreground/70" />
-                  <span>{t('guards.reminders.filters.button', { defaultValue: 'Filters' })}</span>
-                </button>
-                <button
-                  onClick={handleAddReminder}
-                  className="px-4 py-2 bg-primary text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors"
-                >
-                  <Plus size={16} />
-                  {t('guards.reminders.addReminder', { defaultValue: 'Add Reminder' })}
-                </button>
-              </div>
-            </div>
-
+            }
+          >
             {/* Table */}
             <div>
               <div className="md:block hidden overflow-x-auto">
@@ -227,21 +232,12 @@ export default function GuardRemindersPage() {
                 <tbody>
                   {remindersData.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-12">
-                        <div className="flex flex-col items-center justify-center gap-4">
-                          <div className="w-32 h-32">
-                            <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                              <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                              <circle cx="85" cy="100" r="8" fill="white" />
-                              <circle cx="115" cy="100" r="8" fill="white" />
-                              <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                            </svg>
-                          </div>
-                          <div className="text-center">
-                            <h3 className="text-lg font-semibold text-foreground">{t('guards.reminders.empty.title', { defaultValue: 'No Result Found' })}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">{t('guards.reminders.empty.description', { defaultValue: "We can't find any item matching your search" })}</p>
-                          </div>
-                        </div>
+                      <td colSpan={6} className="px-4 py-6">
+                        <EmptyState
+                          icon={<BellRing />}
+                          title={t('guards.reminders.empty.title', { defaultValue: 'No Result Found' })}
+                          description={t('guards.reminders.empty.description', { defaultValue: "We can't find any item matching your search" })}
+                        />
                       </td>
                     </tr>
                   ) : (
@@ -276,7 +272,7 @@ export default function GuardRemindersPage() {
                   loading={false}
                   emptyMessage={t('guards.reminders.empty.title', { defaultValue: 'No Result Found' }) as string}
                   renderCard={(r: any) => (
-                    <div className="p-4 bg-card border rounded-lg">
+                    <div className="p-4 bg-card border rounded-xl">
                       <div className="text-sm font-semibold">{r.title}</div>
                       <div className="text-xs text-muted-foreground">{r.datetime} • {r.createdBy}</div>
                     </div>
@@ -284,14 +280,17 @@ export default function GuardRemindersPage() {
                 />
               </div>
             </div>
-          </div>
+          </Section>
 
           {/* Modal */}
           {showModal && (
-            <div className="fixed inset-0 z-50" onClick={handleCloseModal}>
+            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={handleCloseModal}>
               <div className="fixed right-0 top-0 bottom-0 w-96 bg-card shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-card">
-                  <h2 className="text-lg font-semibold text-foreground">{t('guards.reminders.modal.title', { defaultValue: 'Add Reminder' })}</h2>
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary [&_svg]:size-5"><BellRing /></div>
+                    <h2 className="text-base font-semibold text-foreground">{t('guards.reminders.modal.title', { defaultValue: 'Add Reminder' })}</h2>
+                  </div>
                   <button onClick={handleCloseModal} className="text-muted-foreground hover:text-foreground/70"><X /></button>
                 </div>
 
@@ -401,7 +400,7 @@ export default function GuardRemindersPage() {
                 </div>
 
                 <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
-                  <button onClick={handleSubmitReminder} className="px-6 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary/90">{t('guards.reminders.modal.save', { defaultValue: 'Save' })}</button>
+                  <Button variant="brand" onClick={handleSubmitReminder}>{t('guards.reminders.modal.save', { defaultValue: 'Save' })}</Button>
                 </div>
               </div>
             </div>
@@ -409,10 +408,13 @@ export default function GuardRemindersPage() {
 
           {/* Filters Modal */}
           {showFilters && (
-            <div className="fixed inset-0 z-50" onClick={() => setShowFilters(false)}>
+            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowFilters(false)}>
               <div className="fixed right-0 top-0 bottom-0 w-80 bg-card shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-card">
-                  <h2 className="text-lg font-semibold text-foreground">{t('guards.reminders.filters.title', { defaultValue: 'Filters' })}</h2>
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary [&_svg]:size-5"><Filter /></div>
+                    <h2 className="text-base font-semibold text-foreground">{t('guards.reminders.filters.title', { defaultValue: 'Filters' })}</h2>
+                  </div>
                   <button onClick={() => setShowFilters(false)} className="text-muted-foreground hover:text-foreground/70"><X /></button>
                 </div>
 
@@ -429,13 +431,13 @@ export default function GuardRemindersPage() {
                 </div>
 
                 <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
-                  <button onClick={() => setShowFilters(false)} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">{t('guards.reminders.filters.cancel', { defaultValue: 'Cancel' })}</button>
-                  <button onClick={() => { /* TODO: apply filters */ setShowFilters(false); }} className="px-4 py-2 bg-primary text-white rounded-md">{t('guards.reminders.filters.apply', { defaultValue: 'Apply' })}</button>
+                  <Button variant="outline" onClick={() => setShowFilters(false)}>{t('guards.reminders.filters.cancel', { defaultValue: 'Cancel' })}</Button>
+                  <Button variant="brand" onClick={() => { /* TODO: apply filters */ setShowFilters(false); }}>{t('guards.reminders.filters.apply', { defaultValue: 'Apply' })}</Button>
                 </div>
               </div>
             </div>
           )}
-        </div>
+        </PageContainer>
       </GuardsLayout>
     </AppLayout>
   );

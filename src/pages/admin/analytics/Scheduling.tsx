@@ -1,8 +1,8 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { ClipboardCheck, CheckCircle2, AlertCircle, CalendarClock, Building2 } from "lucide-react";
 import {
   useOpsAnalytics, AnalyticsShell, MetricCard, HBars, Section, GOLD, pctClass, RangeFooter, SiteLink,
 } from "./_shared";
+import { Stagger, EmptyState } from "@/components/kit";
 
 // Per-day stacked coverage: muted = scheduled, green overlay = covered.
 function CoverageBars({ data }: { data: { date: string; scheduled: number; covered: number }[] }) {
@@ -42,16 +42,16 @@ export default function Scheduling() {
     >
       {data && k && (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard icon={<ClipboardCheck size={16} />} accent="#0ea5e9" value={`${k.coveragePct}%`} label="Cobertura de turnos" sub={`${k.shiftsCovered}/${k.shiftsTotal}`} pct={k.coveragePct} />
             <MetricCard icon={<CheckCircle2 size={16} />} accent="#22c55e" value={k.shiftsCovered} label="Turnos cubiertos" sub="en el período" />
             <MetricCard icon={<AlertCircle size={16} />} accent="#ef4444" value={k.shiftsOpen ?? (k.shiftsTotal - k.shiftsCovered)} label="Turnos sin cubrir" sub="en el período" />
             <MetricCard icon={<CalendarClock size={16} />} accent={GOLD} value={data.upcomingUncoveredTotal} label="Próximos sin cubrir" sub="próximos 7 días" />
-          </div>
+          </Stagger>
 
           <Section title="Cobertura diaria (programados vs cubiertos)" icon={<ClipboardCheck size={16} className="text-sky-500" />}>
             {data.coverageTrend.every((d) => d.scheduled === 0) ? (
-              <p className="py-4 text-sm text-muted-foreground">No hay turnos programados en el período.</p>
+              <EmptyState icon={<CalendarClock />} title="Sin turnos programados" description="No hay turnos programados en el período." />
             ) : (
               <CoverageBars data={data.coverageTrend} />
             )}
@@ -63,7 +63,7 @@ export default function Scheduling() {
             </Section>
             <Section title="Cobertura por sitio" icon={<Building2 size={16} className="text-primary" />}>
               {data.perSite.length === 0 ? (
-                <p className="py-4 text-sm text-muted-foreground">Sin turnos en el período.</p>
+                <EmptyState icon={<Building2 />} title="Sin turnos" description="Sin turnos en el período." />
               ) : (
                 <div className="space-y-2.5">
                   {data.perSite.filter((s) => s.shiftsTotal > 0).slice(0, 8).map((s, i) => (

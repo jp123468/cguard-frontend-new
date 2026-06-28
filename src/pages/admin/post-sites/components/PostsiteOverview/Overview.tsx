@@ -6,11 +6,10 @@ import { useState } from 'react';
 import { ApiService } from '@/services/api/apiService';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ServiceTypeBadge } from "@/components/post-sites/ServiceTypeBadge";
-import { StatCard, EmptyState, Stagger } from '@/components/kit';
+import { StatCard, EmptyState, Stagger, Section } from '@/components/kit';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import {
   Users, ShieldCheck, Route, ClipboardCheck, AlertTriangle, Clock,
@@ -198,11 +197,10 @@ export default function PostSiteOverview({ site }: { site?: any }) {
   return (
     <div ref={containerRef} className="space-y-6 animate-fade-up">
       {/* ── Site identity header ─────────────────────────────────────────── */}
-      <Card className="overflow-hidden">
-        <CardContent className="p-6">
+      <Section className="overflow-hidden">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-4 min-w-0">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl cg-gradient-brand text-primary-foreground shadow-md">
                 <Building2 className="h-7 w-7" />
               </div>
               <div className="min-w-0">
@@ -238,8 +236,7 @@ export default function PostSiteOverview({ site }: { site?: any }) {
               </Link>
             ) : null}
           </div>
-        </CardContent>
-      </Card>
+      </Section>
 
       {/* ── Stats ────────────────────────────────────────────────────────── */}
       <div>
@@ -260,22 +257,17 @@ export default function PostSiteOverview({ site }: { site?: any }) {
       </div>
 
       {/* ── Location map ─────────────────────────────────────────────────── */}
-      <Card>
-        <CardContent className="p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
-              <MapIcon className="h-4.5 w-4.5 text-muted-foreground" style={{ width: 18, height: 18 }} />
-              {t('postSites.overview.Map.title')}
-            </h3>
-            {address ? (
-              <a href={mapsUrl} target="_blank" rel="noreferrer"
-                 className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-                {t('postSites.overview.Map.openInMaps', 'Abrir en Google Maps')}
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            ) : null}
-          </div>
-
+      <Section
+        title={t('postSites.overview.Map.title')}
+        icon={<MapIcon />}
+        action={address ? (
+          <a href={mapsUrl} target="_blank" rel="noreferrer"
+             className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+            {t('postSites.overview.Map.openInMaps', 'Abrir en Google Maps')}
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        ) : undefined}
+      >
           {hasCoords ? (
             <div className="h-80 overflow-hidden rounded-xl border border-border">
               <IncidentMap lat={latNum} lng={lngNum} label={siteName} />
@@ -291,17 +283,13 @@ export default function PostSiteOverview({ site }: { site?: any }) {
               ) : null}
             </div>
           )}
-        </CardContent>
-      </Card>
+      </Section>
 
       {/* ── Latest activity ──────────────────────────────────────────────── */}
-      <Card>
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
-              <Activity className="h-4.5 w-4.5 text-muted-foreground" style={{ width: 18, height: 18 }} />
-              {t('postSites.overview.LatestActivity')}
-            </h3>
+      <Section
+        title={t('postSites.overview.LatestActivity')}
+        icon={<Activity />}
+        action={
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5">
@@ -349,23 +337,22 @@ export default function PostSiteOverview({ site }: { site?: any }) {
                         {t('common.clear', 'Limpiar')}
                       </Button>
                     ) : null}
-                    <Button size="sm" className="bg-primary text-white hover:bg-[#b3780a]" onClick={() => setOpenFilter(false)}>
+                    <Button variant="brand" size="sm" onClick={() => setOpenFilter(false)}>
                       {t('common.apply', 'Filtrar')}
                     </Button>
                   </div>
                 </div>
               </SheetContent>
             </Sheet>
-          </div>
-
-          <div className="mt-6">
+        }
+      >
+          <div className="mt-2">
             <EmptyState
               icon={<Activity />}
               title={t('postSites.overview.noActivity', 'Sin actividad por ahora.')}
             />
           </div>
-        </CardContent>
-      </Card>
+      </Section>
     </div>
   );
 }

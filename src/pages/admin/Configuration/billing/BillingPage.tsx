@@ -264,7 +264,7 @@ export default function BillingPage() {
                       {portalLoading ? <Loader2 className="mr-2 animate-spin" size={16} /> : <CreditCard className="mr-2" size={16} />}
                       {t("billing.manageCard", { defaultValue: "Agregar / administrar tarjeta" })}
                     </Button>
-                    <Button onClick={activate} disabled={activating} className="bg-[#f36a6d] text-white hover:bg-[#e85b5f]">
+                    <Button variant="brand" onClick={activate} disabled={activating}>
                       {activating ? <Loader2 className="mr-2 animate-spin" size={16} /> : <CreditCard className="mr-2" size={16} />}
                       {t("billing.activate", { defaultValue: "Activar suscripción" })}
                     </Button>
