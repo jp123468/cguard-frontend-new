@@ -408,7 +408,7 @@ export default function GuardNotes({ guard }: Props) {
                                             value={formData.description}
                                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                             placeholder={t('guards.notes.form.description.placeholder', { defaultValue: 'Ingresa la descripción de la nota' }) as string}
-                                            className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
+                                            className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                             rows={6}
                                         />
                                     </div>

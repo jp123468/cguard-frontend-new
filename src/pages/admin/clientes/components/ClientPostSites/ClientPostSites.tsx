@@ -89,7 +89,7 @@ export default function ClientPostSites({ client }: { client: any }) {
                 placeholder={t('clientPostSites.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
+                className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function ClientPostSites({ client }: { client: any }) {
           <div className="w-full sm:w-auto">
             <button
               onClick={() => { setSelectedClient(client); navigate('/post-sites/new'); }}
-              className="px-6 py-2 bg-[#C8860A] text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors w-full justify-center">
+              className="px-6 py-2 bg-primary text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors w-full justify-center">
             
             
               {t('clientPostSites.newPostSite')}
@@ -143,7 +143,7 @@ export default function ClientPostSites({ client }: { client: any }) {
                   <td colSpan={7} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-40 h-40">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
+                        <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
                           <rect x="30" y="60" width="140" height="100" fill="currentColor" rx="12" />
                           <circle cx="80" cy="95" r="8" fill="white" />
                           <circle cx="120" cy="95" r="8" fill="white" />

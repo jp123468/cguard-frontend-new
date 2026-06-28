@@ -210,7 +210,7 @@ export default function ClientRegistration() {
           }}
         />
         {/* Decorative orbs */}
-        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#C8860A] opacity-10 blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary opacity-10 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 -left-32 h-[32rem] w-[32rem] rounded-full bg-[#F5C300] opacity-5 blur-3xl pointer-events-none" />
 
         {/* Tenant logo or name */}
@@ -223,7 +223,7 @@ export default function ClientRegistration() {
             />
           ) : fetched?.tenant?.name ? (
             <div className="flex items-center gap-3">
-              <Building2 className="h-10 w-10 text-[#C8860A]" />
+              <Building2 className="h-10 w-10 text-primary" />
               <span className="text-2xl font-bold text-white">{fetched.tenant.name}</span>
             </div>
           ) : (
@@ -269,7 +269,7 @@ export default function ClientRegistration() {
             <img src={fetched.tenant.logoUrl} alt={fetched?.tenant?.name || 'Logo'} className="h-12 object-contain mx-auto" />
           ) : fetched?.tenant?.name ? (
             <div className="flex items-center justify-center gap-2">
-              <Building2 className="h-8 w-8 text-[#C8860A]" />
+              <Building2 className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold text-foreground">{fetched.tenant.name}</span>
             </div>
           ) : null}
@@ -287,8 +287,8 @@ export default function ClientRegistration() {
           {/* Finish: Mi Seguridad app + download links (clients don't use the web login) */}
           {done ? (
             <div className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5 text-center">
-              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#C8860A]/12">
-                <CheckCircle2 className="h-9 w-9 text-[#C8860A]" />
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary/12">
+                <CheckCircle2 className="h-9 w-9 text-primary" />
               </div>
               <p className="text-sm leading-relaxed text-muted-foreground">
                 Tu cuenta con <strong className="text-foreground">{fetched?.tenant?.name || 'tu proveedor de seguridad'}</strong> está lista.
@@ -360,7 +360,7 @@ export default function ClientRegistration() {
                 </div>
               </div>
               <div className="flex justify-end mt-4">
-                <button type="submit" className="bg-[#C8860A] hover:bg-[#B37809] text-white px-8 py-2 rounded" disabled={isLoading}>{isLoading ? t('client.registering', { defaultValue: 'Registrando...' }) : t('client.register', { defaultValue: 'Registrar' })}</button>
+                <button type="submit" className="bg-primary hover:bg-primary/90 text-white px-8 py-2 rounded" disabled={isLoading}>{isLoading ? t('client.registering', { defaultValue: 'Registrando...' }) : t('client.register', { defaultValue: 'Registrar' })}</button>
               </div>
             </form>
           </div>

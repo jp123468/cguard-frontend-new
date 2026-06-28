@@ -1677,7 +1677,7 @@ export default function NewDispatchPage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-[#C8860A] text-white hover:bg-[#B37809]"
+                className="bg-primary text-white hover:bg-primary/90"
                 disabled={form.formState.isSubmitting}
               >
                 Enviar

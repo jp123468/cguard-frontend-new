@@ -84,12 +84,12 @@ export default function ClientOverview({ client }: { client: any }) {
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-muted-foreground">{t('clients.overview.cards.postSites')}</div>
-                  <div className="font-semibold text-[#C8860A]">{postSitesCount}</div>
+                  <div className="font-semibold text-primary">{postSitesCount}</div>
                 </div>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                 <div>{t('clients.overview.cards.guardsAssigned')}: <span className="font-medium text-blue-600">{guardsAssigned}</span></div>
-                <div>{t('clients.overview.cards.incidents')}: <span className="font-medium text-[#C8860A]">{incidents}</span></div>
+                <div>{t('clients.overview.cards.incidents')}: <span className="font-medium text-primary">{incidents}</span></div>
                 <div>{t('clients.overview.cards.toursCompleted')}: <span className="font-medium">{toursCompleted}</span></div>
                 <div>{t('clients.overview.cards.hoursWorked')}: <span className="font-medium text-red-500">{hoursWorked}</span></div>
               </div>

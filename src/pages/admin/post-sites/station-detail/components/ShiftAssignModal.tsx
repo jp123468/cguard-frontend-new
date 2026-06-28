@@ -194,14 +194,14 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
 
   if (!open) return null;
 
-  const inputCls = 'w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm outline-none transition-all focus:border-[#C8860A] focus:ring-2 focus:ring-[#C8860A]/20';
+  const inputCls = 'w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20';
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
       <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-border/30 bg-card shadow-2xl max-h-[92vh] animate-in fade-in slide-in-from-bottom-4 duration-200 sm:max-h-[88vh] sm:rounded-2xl sm:zoom-in-95" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-3 border-b border-border/20 px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C8860A]/12 text-[#C8860A]"><UserPlus size={18} /></div>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary"><UserPlus size={18} /></div>
             <div>
               <h4 className="text-base font-semibold text-foreground">Asignar vigilante</h4>
               <p className="text-xs text-muted-foreground">Programa la cobertura del turno de este puesto</p>
@@ -247,7 +247,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
                         disabled={p.occupied}
                         onClick={() => setSelectedPositionId(p.id)}
                         title={p.occupied ? 'Puesto ocupado' : undefined}
-                        className={`rounded-xl border px-3 py-2 text-sm font-medium transition-all ${p.occupied ? 'cursor-not-allowed border-border/30 text-muted-foreground/40 line-through' : selectedPositionId === p.id ? 'border-[#C8860A] bg-[#C8860A]/10 text-[#C8860A]' : 'border-border/40 text-muted-foreground hover:border-[#C8860A]/40'}`}
+                        className={`rounded-xl border px-3 py-2 text-sm font-medium transition-all ${p.occupied ? 'cursor-not-allowed border-border/30 text-muted-foreground/40 line-through' : selectedPositionId === p.id ? 'border-primary bg-primary/10 text-primary' : 'border-border/40 text-muted-foreground hover:border-primary/40'}`}
                       >{p.label}{p.occupied ? ' · ocupado' : ''}</button>
                     ))}
                   </div>
@@ -277,7 +277,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
 
         <div className="flex items-center justify-end gap-2 border-t border-border/20 px-5 py-3">
           <button onClick={onClose} className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted/20 hover:text-foreground">Cancelar</button>
-          <button onClick={saveShift} disabled={saving || !shiftGuard || (assignMode === 'rotation' && !selectedPositionId)} className="inline-flex items-center gap-1.5 rounded-xl bg-[#C8860A] px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#B37809] active:scale-95 disabled:opacity-40">
+          <button onClick={saveShift} disabled={saving || !shiftGuard || (assignMode === 'rotation' && !selectedPositionId)} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-40">
             {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
             {assignMode === 'rotation' ? 'Asignar rotación' : 'Crear turno'}
           </button>

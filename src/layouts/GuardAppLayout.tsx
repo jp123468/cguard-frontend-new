@@ -14,7 +14,7 @@ export default function GuardAppLayout() {
       {/* Header */}
       <header className="bg-card border-b px-4 py-3 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2">
-          <Shield size={20} className="text-[#C8860A]" />
+          <Shield size={20} className="text-primary" />
           <span className="font-bold text-foreground text-sm">CGuard Pro</span>
         </div>
         <span className="text-xs text-muted-foreground">Vigilante</span>
@@ -34,7 +34,7 @@ export default function GuardAppLayout() {
             end={to === '/guard'}
             className={({ isActive }) =>
               `flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
-                isActive ? 'text-[#C8860A]' : 'text-muted-foreground hover:text-foreground'
+                isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               }`
             }
           >

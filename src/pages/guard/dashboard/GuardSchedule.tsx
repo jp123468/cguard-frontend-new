@@ -24,7 +24,7 @@ export default function GuardSchedule() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="animate-spin text-[#C8860A]" size={32} />
+        <Loader2 className="animate-spin text-primary" size={32} />
       </div>
     );
   }
@@ -50,14 +50,14 @@ export default function GuardSchedule() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
       <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-        <Calendar size={22} className="text-[#C8860A]" />
+        <Calendar size={22} className="text-primary" />
         {t('guard.schedule.title', 'Mi Horario')}
       </h1>
 
       {/* Upcoming Shifts */}
       <div className="bg-card border rounded-xl p-4 space-y-3">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Clock size={16} className="text-[#C8860A]" />
+          <Clock size={16} className="text-primary" />
           {t('guard.schedule.upcoming', 'Próximos turnos')}
         </h3>
         {shifts.length === 0 ? (

@@ -82,7 +82,7 @@ export default function ClientEmailReports({ client }: { client: any }) {
           </div>
 
           <div className="ml-4">
-            <button onClick={openInvite} className="flex items-center gap-2 bg-[#C8860A] text-white px-5 py-2 rounded-full shadow hover:bg-[#B37809] whitespace-nowrap">
+            <button onClick={openInvite} className="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-full shadow hover:bg-primary/90 whitespace-nowrap">
               <Plus size={16} />
               Add New Email
             </button>
@@ -107,7 +107,7 @@ export default function ClientEmailReports({ client }: { client: any }) {
                   <td colSpan={6} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
+                        <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
                           <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                           <circle cx="85" cy="100" r="8" fill="white" />
                           <circle cx="115" cy="100" r="8" fill="white" />
@@ -184,12 +184,12 @@ export default function ClientEmailReports({ client }: { client: any }) {
                       const active = selectedReports.includes(r);
                       return (
                         <label key={r} className="flex items-start gap-3">
-                          <button type="button" onClick={() => toggleReport(r)} className={`w-5 h-5 rounded-sm flex items-center justify-center border ${active ? 'bg-[#C8860A] border-[#C8860A]' : 'bg-card border-border'}`}>
+                          <button type="button" onClick={() => toggleReport(r)} className={`w-5 h-5 rounded-sm flex items-center justify-center border ${active ? 'bg-primary border-primary' : 'bg-card border-border'}`}>
                             {active ? (
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             ) : null}
                           </button>
-                          <span className={`${active ? 'text-[#C8860A] font-semibold' : 'text-foreground dark:text-muted-foreground/40'}`}>{r}</span>
+                          <span className={`${active ? 'text-primary font-semibold' : 'text-foreground dark:text-muted-foreground/40'}`}>{r}</span>
                         </label>
                       );
                     })}
@@ -200,7 +200,7 @@ export default function ClientEmailReports({ client }: { client: any }) {
 
             <div className="p-4 bg-card dark:bg-slate-800 sticky bottom-0 z-20">
               <div className="flex items-center justify-end">
-                <button onClick={handleSaveEmail} className="ml-auto w-12 h-12 rounded-full bg-[#C8860A] text-white flex items-center justify-center shadow-lg hover:bg-[#B37809]">Save</button>
+                <button onClick={handleSaveEmail} className="ml-auto w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90">Save</button>
               </div>
             </div>
           </div>

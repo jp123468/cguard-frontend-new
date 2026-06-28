@@ -68,7 +68,7 @@ export default function AlarmECV({
     <Card className="p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <PhoneCall className="size-4 text-[#C8860A]" /> Verificación (ECV)
+          <PhoneCall className="size-4 text-primary" /> Verificación (ECV)
         </div>
         {exempt ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[11px] font-medium text-red-600">
@@ -106,7 +106,7 @@ export default function AlarmECV({
                     key={o.key}
                     onClick={() => log(ct, o.key)}
                     disabled={busyKey === `${ct.id}:${o.key}`}
-                    className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:border-[#C8860A] hover:text-foreground disabled:opacity-50"
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:border-primary hover:text-foreground disabled:opacity-50"
                   >
                     {busyKey === `${ct.id}:${o.key}` ? <Loader2 className="size-3 animate-spin" /> : null}
                     {o.label}

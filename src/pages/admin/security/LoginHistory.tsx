@@ -75,7 +75,7 @@ export default function LoginHistory() {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <History className="size-5 text-[#C8860A]" /> Historial de Inicio de Sesión
+              <History className="size-5 text-primary" /> Historial de Inicio de Sesión
             </h1>
             <p className="text-sm text-muted-foreground">
               Inicios y cierres de sesión, intentos fallidos y eventos de dispositivos de esta empresa.
@@ -88,7 +88,7 @@ export default function LoginHistory() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Buscar por usuario, IP o dispositivo…"
-                className="h-9 w-64 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-[#C8860A] focus:outline-none"
+                className="h-9 w-64 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-primary focus:outline-none"
               />
             </div>
             <button onClick={() => load(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-input text-muted-foreground hover:text-foreground" title="Recargar">
@@ -104,7 +104,7 @@ export default function LoginHistory() {
               onClick={() => setFilter(f.key)}
               className={
                 "rounded-full px-3 py-1 text-xs font-medium transition-colors " +
-                (filter === f.key ? "bg-[#C8860A] text-white" : "bg-muted text-muted-foreground hover:bg-muted/70")
+                (filter === f.key ? "bg-primary text-white" : "bg-muted text-muted-foreground hover:bg-muted/70")
               }
             >
               {f.label}

@@ -38,9 +38,9 @@ export default function AlarmVideoVerification({ caseId }: { caseId: string }) {
   return (
     <Card className="p-4">
       <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-        <Video className="size-4 text-[#C8860A]" /> Verificación por video
+        <Video className="size-4 text-primary" /> Verificación por video
         {clips.length > 0 && (
-          <span className="rounded-full bg-[#C8860A]/15 px-2 py-0.5 text-[11px] font-medium text-[#C8860A]">
+          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary">
             {clips.length} clip{clips.length > 1 ? "s" : ""} de verificación
           </span>
         )}
@@ -66,7 +66,7 @@ export default function AlarmVideoVerification({ caseId }: { caseId: string }) {
         <div className="mt-3 space-y-1.5">
           {clips.map((cl) => (
             <div key={cl.id} className="flex items-center gap-2 rounded-lg border border-border/50 bg-background px-3 py-2 text-xs">
-              <Film className="size-3.5 shrink-0 text-[#C8860A]" />
+              <Film className="size-3.5 shrink-0 text-primary" />
               <span className="min-w-0 flex-1 truncate text-foreground" title={cl.label}>{cl.label || "Clip de verificación"}</span>
               <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">{cl.status || "pending"}</span>
               {cl.shareToken && (
@@ -74,7 +74,7 @@ export default function AlarmVideoVerification({ caseId }: { caseId: string }) {
                   href={`/video/shared/${cl.shareToken}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[#C8860A] hover:underline"
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
                 >
                   <ExternalLink className="size-3" /> Enlace
                 </a>

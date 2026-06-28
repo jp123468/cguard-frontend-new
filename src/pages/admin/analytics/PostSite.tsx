@@ -26,7 +26,7 @@ export default function PostSite() {
             <HBars items={data.topIncidentSites.map((s) => ({ label: s.site, count: s.count }))} color="#ef4444" empty="Sin incidentes en el período." />
           </Section>
 
-          <Section title="Desempeño por sitio de servicio" icon={<Building2 size={16} className="text-[#C8860A]" />}>
+          <Section title="Desempeño por sitio de servicio" icon={<Building2 size={16} className="text-primary" />}>
             {data.perSite.length === 0 ? (
               <p className="py-4 text-sm text-muted-foreground">Sin actividad registrada en el período.</p>
             ) : (

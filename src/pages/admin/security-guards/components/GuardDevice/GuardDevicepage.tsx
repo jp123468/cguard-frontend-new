@@ -96,7 +96,7 @@ export default function GuardDevicePage({ guard }: Props) {
         <div className="mx-auto max-w-5xl space-y-6 pb-12">
           {/* ── HERO ─────────────────────────────────────────────────────────── */}
           <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-muted/40 shadow-sm">
-            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-[#C8860A]/15 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-primary/15 to-transparent" />
             <div className="relative p-6 flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-muted ring-4 ring-background flex items-center justify-center shadow-md shrink-0">
                 <Smartphone className="w-7 h-7" style={{ color: GOLD }} />

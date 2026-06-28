@@ -58,10 +58,10 @@ export default function Scheduling() {
           </Section>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <Section title="Próximos turnos sin cubrir (7 días)" icon={<CalendarClock size={16} className="text-[#C8860A]" />}>
+            <Section title="Próximos turnos sin cubrir (7 días)" icon={<CalendarClock size={16} className="text-primary" />}>
               <HBars items={data.upcomingUncovered.map((s) => ({ label: s.site, count: s.count }))} color="#ef4444" empty="¡Todos los turnos próximos están cubiertos!" />
             </Section>
-            <Section title="Cobertura por sitio" icon={<Building2 size={16} className="text-[#C8860A]" />}>
+            <Section title="Cobertura por sitio" icon={<Building2 size={16} className="text-primary" />}>
               {data.perSite.length === 0 ? (
                 <p className="py-4 text-sm text-muted-foreground">Sin turnos en el período.</p>
               ) : (

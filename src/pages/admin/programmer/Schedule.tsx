@@ -979,7 +979,7 @@ export default function Schedule() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="animate-spin text-[#C8860A]" size={32} />
+            <Loader2 className="animate-spin text-primary" size={32} />
           </div>
         ) : stations.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
@@ -990,10 +990,10 @@ export default function Schedule() {
           <>
           {/* ─── Onboarding CTA: stations exist but unconfigured ─── */}
           {(positions.length === 0 || assignments.length === 0) && (
-            <div className="bg-gradient-to-br from-[#C8860A]/10 to-[#C8860A]/5 border border-[#C8860A]/30 rounded-xl p-4 lg:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl p-4 lg:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex items-start gap-3 flex-1">
-                <div className="shrink-0 w-10 h-10 rounded-xl bg-[#C8860A]/15 flex items-center justify-center">
-                  <Sparkles size={20} className="text-[#C8860A]" />
+                <div className="shrink-0 w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                  <Sparkles size={20} className="text-primary" />
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-sm font-bold text-foreground">Tus estaciones aún no tienen horario</h3>
@@ -1005,7 +1005,7 @@ export default function Schedule() {
               <button
                 onClick={runAutoAssign}
                 disabled={autoAssigning}
-                className="shrink-0 px-4 py-2.5 bg-[#C8860A] text-white rounded-xl text-sm font-semibold hover:bg-[#B37809] disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                className="shrink-0 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 {autoAssigning ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
                 {autoAssigning ? 'Asignando...' : 'Generar asignación automática'}
@@ -1016,9 +1016,9 @@ export default function Schedule() {
             {/* ─── Left Sidebar Panel ─── */}
             <div className="w-[260px] shrink-0 space-y-3 hidden xl:block">
               {/* AI Auto-Assign */}
-              <div className="bg-gradient-to-br from-[#C8860A]/10 to-[#C8860A]/5 border border-[#C8860A]/30 rounded-xl p-4">
+              <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles size={16} className="text-[#C8860A]" />
+                  <Sparkles size={16} className="text-primary" />
                   <h3 className="text-sm font-bold text-foreground">Asignación AI</h3>
                 </div>
                 <p className="text-[11px] text-muted-foreground mb-3">
@@ -1027,7 +1027,7 @@ export default function Schedule() {
                 <button
                   onClick={generateDraft}
                   disabled={proposalLoading}
-                  className="w-full px-4 py-2.5 bg-[#C8860A] text-white rounded-xl text-sm font-semibold hover:bg-[#B37809] disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
                 >
                   {proposalLoading ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
                   {proposalLoading ? 'Generando borrador...' : 'Generar borrador de horario'}
@@ -1180,7 +1180,7 @@ export default function Schedule() {
                         <span className="text-[10px] font-semibold text-foreground">{pct}%</span>
                       </div>
                       <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#C8860A] rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>
                       <div className="text-[9px] text-muted-foreground mt-1">{covered}/{fijoPositions.length} posiciones cubiertas</div>
                     </div>
@@ -1229,9 +1229,9 @@ export default function Schedule() {
                   const isToday = fmtDate(day) === todayStr;
                   const isSunday = day.getDay() === 0;
                   return (
-                    <div key={i} className={`px-0.5 py-2 text-center border-r border-border/20 last:border-r-0 ${isToday ? 'bg-[#C8860A]/5' : ''} ${isSunday ? 'bg-red-500/5' : ''}`}>
+                    <div key={i} className={`px-0.5 py-2 text-center border-r border-border/20 last:border-r-0 ${isToday ? 'bg-primary/5' : ''} ${isSunday ? 'bg-red-500/5' : ''}`}>
                       <div className="text-[9px] font-medium text-muted-foreground uppercase">{DAYS_ES[day.getDay()]}</div>
-                      <div className={`text-xs font-semibold mt-0.5 ${isToday ? 'text-[#C8860A]' : 'text-foreground'}`}>
+                      <div className={`text-xs font-semibold mt-0.5 ${isToday ? 'text-primary' : 'text-foreground'}`}>
                         {day.getDate()}
                       </div>
                     </div>
@@ -1344,7 +1344,7 @@ export default function Schedule() {
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => openAssignForm(station.id, pos.id)}
-                                  className="p-1 rounded-md bg-[#C8860A]/10 hover:bg-[#C8860A]/20 text-[#C8860A] transition-colors"
+                                  className="p-1 rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
                                   title="Asignar vigilante"
                                 >
                                   <Plus size={12} />
@@ -1369,7 +1369,7 @@ export default function Schedule() {
                             return (
                               <div
                                 key={dayIdx}
-                                className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}
+                                className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-primary/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}
                                 onDragOver={e => e.preventDefault()}
                                 onDrop={e => handleDrop(e, station.id, pos.id)}
                               >
@@ -1586,7 +1586,7 @@ export default function Schedule() {
                             const isSunday = day.getDay() === 0;
                             const assigned = posAssignments.length > 0;
                             const cov = sfPreview.get(`${pos.id}-${dateStr}`);
-                            const cellBase = `border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-[#C8860A]/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`;
+                            const cellBase = `border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-primary/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`;
 
                             if (!cov) {
                               // Rest day (no gap for this SF). Unassigned → clickable to assign.
@@ -1641,7 +1641,7 @@ export default function Schedule() {
                   {unassignedGuards.map(g => (
                     <div
                       key={g.id}
-                      className="px-3 py-1.5 rounded-lg bg-muted/30 border border-border/30 text-xs font-medium text-foreground cursor-grab hover:border-[#C8860A]/40 hover:bg-[#C8860A]/5 transition-all active:cursor-grabbing"
+                      className="px-3 py-1.5 rounded-lg bg-muted/30 border border-border/30 text-xs font-medium text-foreground cursor-grab hover:border-primary/40 hover:bg-primary/5 transition-all active:cursor-grabbing"
                       draggable
                       onDragStart={(e) => { e.dataTransfer.setData('guardId', g.id); }}
                     >
@@ -1736,7 +1736,7 @@ export default function Schedule() {
                   const availableGuards = guardsPool.filter(g => !occupiedIds.has(g.id));
 
                   return (
-                    <select value={assignGuard} onChange={e => setAssignGuard(e.target.value)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none">
+                    <select value={assignGuard} onChange={e => setAssignGuard(e.target.value)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none">
                       <option value="">Seleccionar vigilante...</option>
                       {availableGuards.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
                       {availableGuards.length === 0 && <option value="" disabled>Todos los vigilantes ya están asignados</option>}
@@ -1770,7 +1770,7 @@ export default function Schedule() {
             </div>
             <div className="px-5 py-3 border-t border-border/20 flex items-center justify-end gap-2">
               <button onClick={() => setShowAssignForm(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-all">Cancelar</button>
-              <button onClick={saveAssignment} disabled={assignSaving || !assignGuard} className="px-5 py-2 bg-[#C8860A] text-white rounded-xl text-sm font-semibold hover:bg-[#B37809] disabled:opacity-40 transition-all shadow-sm">
+              <button onClick={saveAssignment} disabled={assignSaving || !assignGuard} className="px-5 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 transition-all shadow-sm">
                 {assignSaving ? <Loader2 size={14} className="animate-spin" /> : 'Asignar'}
               </button>
             </div>
@@ -1798,9 +1798,9 @@ export default function Schedule() {
                   <button
                     key={opt.value}
                     onClick={() => { setConfigType(opt.value); setConfigRotation(''); }}
-                    className={`p-3 rounded-xl border text-left transition-all ${configType === opt.value ? 'bg-[#C8860A]/10 border-[#C8860A]' : 'border-border/40 hover:border-border'}`}
+                    className={`p-3 rounded-xl border text-left transition-all ${configType === opt.value ? 'bg-primary/10 border-primary' : 'border-border/40 hover:border-border'}`}
                   >
-                    <div className={`text-sm font-medium ${configType === opt.value ? 'text-[#C8860A]' : 'text-foreground'}`}>{opt.label}</div>
+                    <div className={`text-sm font-medium ${configType === opt.value ? 'text-primary' : 'text-foreground'}`}>{opt.label}</div>
                     <div className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</div>
                   </button>
                 ))}
@@ -1814,7 +1814,7 @@ export default function Schedule() {
                       <button
                         key={r.id}
                         onClick={() => setConfigRotation(r.id)}
-                        className={`px-2 py-2 rounded-lg text-xs font-medium border transition-all relative ${configRotation === r.id ? 'bg-[#C8860A]/10 border-[#C8860A] text-[#C8860A]' : r.id === recommendedRotationId ? 'border-emerald-500/50 text-emerald-600 bg-emerald-500/5' : 'border-border/40 text-muted-foreground hover:border-border'}`}
+                        className={`px-2 py-2 rounded-lg text-xs font-medium border transition-all relative ${configRotation === r.id ? 'bg-primary/10 border-primary text-primary' : r.id === recommendedRotationId ? 'border-emerald-500/50 text-emerald-600 bg-emerald-500/5' : 'border-border/40 text-muted-foreground hover:border-border'}`}
                       >
                         {r.name}
                         {r.id === recommendedRotationId && <span className="absolute -top-1.5 -right-1 text-[7px] bg-emerald-500 text-white px-1 rounded">REC</span>}
@@ -1841,15 +1841,15 @@ export default function Schedule() {
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-[10px] text-muted-foreground mb-1">Días</label>
-                      <input type="number" min={0} max={30} value={customDays} onChange={e => setCustomDays(Number(e.target.value))} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background text-center focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] outline-none" />
+                      <input type="number" min={0} max={30} value={customDays} onChange={e => setCustomDays(Number(e.target.value))} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background text-center focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
                     </div>
                     <div>
                       <label className="block text-[10px] text-muted-foreground mb-1">Noches</label>
-                      <input type="number" min={0} max={30} value={customNights} onChange={e => setCustomNights(Number(e.target.value))} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background text-center focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] outline-none" />
+                      <input type="number" min={0} max={30} value={customNights} onChange={e => setCustomNights(Number(e.target.value))} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background text-center focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
                     </div>
                     <div>
                       <label className="block text-[10px] text-muted-foreground mb-1">Descanso</label>
-                      <input type="number" min={0} max={30} value={customRest} onChange={e => setCustomRest(Number(e.target.value))} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background text-center focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] outline-none" />
+                      <input type="number" min={0} max={30} value={customRest} onChange={e => setCustomRest(Number(e.target.value))} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background text-center focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
                     </div>
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-1">
@@ -1863,7 +1863,7 @@ export default function Schedule() {
             </div>
             <div className="px-5 py-3 border-t border-border/20 flex items-center justify-end gap-2">
               <button onClick={() => setConfigStation(null)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground">Cancelar</button>
-              <button onClick={saveStationConfig} disabled={configSaving} className="px-5 py-2 bg-[#C8860A] text-white rounded-xl text-sm font-semibold hover:bg-[#B37809] disabled:opacity-40 transition-all shadow-sm">
+              <button onClick={saveStationConfig} disabled={configSaving} className="px-5 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 transition-all shadow-sm">
                 {configSaving ? <Loader2 size={14} className="animate-spin" /> : 'Guardar'}
               </button>
             </div>
@@ -1923,7 +1923,7 @@ export default function Schedule() {
           <div className="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl bg-card shadow-2xl border border-border/30 overflow-hidden">
             <div className="px-5 py-4 border-b border-border/20">
               <div className="flex items-center gap-2">
-                {planData ? <CheckCircle2 size={18} className="text-emerald-600" /> : <FileText size={18} className="text-[#C8860A]" />}
+                {planData ? <CheckCircle2 size={18} className="text-emerald-600" /> : <FileText size={18} className="text-primary" />}
                 <h3 className="text-base font-bold text-foreground">{planData ? 'Plan de implementación' : 'Borrador de horario'}</h3>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
@@ -2102,7 +2102,7 @@ export default function Schedule() {
 
             <div className="px-5 py-3 border-t border-border/20 flex items-center justify-between gap-3">
               {planData ? (
-                <button onClick={closeProposalModal} className="ml-auto px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#C8860A] hover:bg-[#B37809] transition-all shadow-sm">Listo</button>
+                <button onClick={closeProposalModal} className="ml-auto px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary/90 transition-all shadow-sm">Listo</button>
               ) : (
                 <>
                   <button onClick={discardProposal} disabled={publishing} className="px-4 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-500/10 disabled:opacity-50 transition-all flex items-center gap-1.5">
@@ -2115,7 +2115,7 @@ export default function Schedule() {
                       <button
                         onClick={() => publishProposal(hasGaps)}
                         disabled={publishing}
-                        className={`px-6 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all shadow-sm flex items-center gap-2 ${hasGaps ? 'bg-red-600 hover:bg-red-700' : 'bg-[#C8860A] hover:bg-[#B37809]'}`}
+                        className={`px-6 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-all shadow-sm flex items-center gap-2 ${hasGaps ? 'bg-red-600 hover:bg-red-700' : 'bg-primary hover:bg-primary/90'}`}
                       >
                         {publishing ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
                         {publishing ? 'Publicando...' : hasGaps ? 'Publicar con faltantes' : 'Publicar y aplicar'}

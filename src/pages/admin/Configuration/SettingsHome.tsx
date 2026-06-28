@@ -33,7 +33,7 @@ export default function SettingsHome() {
     <AppLayout>
       <div className="mx-auto max-w-6xl p-4 sm:p-6">
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#C8860A] via-[#D49A24] to-[#9A6705] p-6 shadow-md sm:p-8">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-[#D49A24] to-[#9A6705] p-6 shadow-md sm:p-8">
           <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/15 blur-2xl" />
           <div className="absolute -bottom-16 -left-10 h-48 w-48 rounded-full bg-black/10 blur-2xl" />
           <div className="relative">
@@ -90,7 +90,7 @@ export default function SettingsHome() {
                           to={item.path}
                           className="group relative flex items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#E8C879] hover:shadow-md"
                         >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#FFF3D6] text-[#C8860A] transition-colors group-hover:bg-[#FCE6B0]">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#FFF3D6] text-primary transition-colors group-hover:bg-[#FCE6B0]">
                             <Icon className="h-5 w-5" />
                           </div>
                           <div className="min-w-0 flex-1">
@@ -98,7 +98,7 @@ export default function SettingsHome() {
                               <h3 className="truncate text-sm font-semibold text-foreground">
                                 {t(`settings.configuracion.${item.id}`, { defaultValue: item.label })}
                               </h3>
-                              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-[#C8860A]" />
+                              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
                             </div>
                             {item.desc ? (
                               <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{item.desc}</p>

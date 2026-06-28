@@ -338,7 +338,7 @@ export default function ProjectForm({
             </Button>
             <Button
               type="submit"
-              className="min-w-28 bg-[#C8860A] text-white border border-[#C8860A] hover:bg-[#B37809] cursor-pointer"
+              className="min-w-28 bg-primary text-white border border-primary hover:bg-primary/90 cursor-pointer"
             >
               Guardar
             </Button>

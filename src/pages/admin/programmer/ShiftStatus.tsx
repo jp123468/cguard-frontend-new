@@ -227,7 +227,7 @@ export default function ShiftStatus() {
             <div className="flex items-center gap-2">
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10 hover:text-[#C8860A]">
+                  <Button variant="outline" className="text-primary border-primary/30 hover:bg-primary/10 hover:text-primary">
                     <Filter className="h-4 w-4 mr-2" /> Filtros
                   </Button>
                 </SheetTrigger>
@@ -284,7 +284,7 @@ export default function ShiftStatus() {
 
                     <div className="space-y-2 pt-4">
                       <Button
-                        className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
+                        className="w-full bg-primary hover:bg-primary/90 text-white"
                         onClick={() => {
                           setAppliedFilters({ ...filters });
                           setIsFiltersOpen(false);
@@ -295,7 +295,7 @@ export default function ShiftStatus() {
                       </Button>
                       <Button
                         variant="outline"
-                        className="w-full text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10"
+                        className="w-full text-primary border-primary/30 hover:bg-primary/10"
                         onClick={() => {
                           const empty = { startDate: "", startTime: "", endDate: "", endTime: "" };
                           setFilters(empty);
@@ -312,7 +312,7 @@ export default function ShiftStatus() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-[#C8860A]">
+                  <Button variant="ghost" size="icon" className="text-primary">
                     <EllipsisVertical className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>

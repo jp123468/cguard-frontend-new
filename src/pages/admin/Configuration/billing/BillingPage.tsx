@@ -96,14 +96,14 @@ export default function BillingPage() {
       <div className="p-4 sm:p-6">
         <div className="mx-auto max-w-2xl">
           <div className="mb-5 flex items-center gap-2">
-            <CreditCard size={20} className="text-[#C8860A]" />
+            <CreditCard size={20} className="text-primary" />
             <h1 className="text-xl font-bold tracking-tight text-foreground">
               {t("settings.configuracion.billing", { defaultValue: "Suscripción" })}
             </h1>
           </div>
           {loading || !data ? (
             <div className="flex min-h-[30vh] items-center justify-center">
-              <Loader2 className="animate-spin text-[#C8860A]" size={28} />
+              <Loader2 className="animate-spin text-primary" size={28} />
             </div>
           ) : (
             <div className="space-y-6">
@@ -112,7 +112,7 @@ export default function BillingPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between text-base">
                     <span className="flex items-center gap-2">
-                      <CreditCard size={18} className="text-[#C8860A]" />
+                      <CreditCard size={18} className="text-primary" />
                       {t("billing.title", { defaultValue: "Estado de la suscripción" })}
                     </span>
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${meta.cls}`}>{meta.label}</span>
@@ -158,7 +158,7 @@ export default function BillingPage() {
                     </span>
                     <span className="flex items-center gap-1 font-semibold text-foreground">
                       {data.seats}
-                      <span className="text-xs font-normal text-[#C8860A]">
+                      <span className="text-xs font-normal text-primary">
                         {showUsers
                           ? t("billing.hideUsers", { defaultValue: "ocultar" })
                           : t("billing.viewUsers", { defaultValue: "ver" })}
@@ -236,12 +236,12 @@ export default function BillingPage() {
                   )}
 
                   {!isActive && (
-                    <div className="mt-2 flex items-center justify-between rounded-lg border border-[#C8860A]/30 bg-[#C8860A]/5 px-3 py-3">
+                    <div className="mt-2 flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-3">
                       <div className="text-sm">
                         <div className="font-semibold text-foreground">{t("billing.firstCharge", { defaultValue: "Primer cargo hoy" })}</div>
                         <div className="text-xs text-muted-foreground">{t("billing.thenMonthly", { defaultValue: "Luego {{m}}/mes", m: `${money(q!.monthlyCents, currency)}` })}</div>
                       </div>
-                      <div className="text-lg font-bold text-[#C8860A]">{money(q!.firstChargeCents, currency)}</div>
+                      <div className="text-lg font-bold text-primary">{money(q!.firstChargeCents, currency)}</div>
                     </div>
                   )}
 

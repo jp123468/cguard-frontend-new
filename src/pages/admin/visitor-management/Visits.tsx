@@ -121,7 +121,7 @@ export default function Visits() {
 
                         <Sheet open={openFilter} onOpenChange={setOpenFilter}>
                             <SheetTrigger asChild>
-                                <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A]">
+                                <Button variant="outline" className="border-primary/30 text-primary">
                                     <FilterIcon className="mr-2 h-4 w-4" />
                                     Filtros
                                 </Button>

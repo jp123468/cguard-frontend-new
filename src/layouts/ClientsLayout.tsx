@@ -103,11 +103,11 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
                           <li key={it.id} className="bg-card">
                             <Link
                               to={resolvedPath}
-                              className={`flex items-center justify-between px-4 py-3 text-sm ${isActive ? 'bg-[#C8860A]/10 text-[#C8860A] font-medium' : 'text-foreground hover:bg-accent'} `}
+                              className={`flex items-center justify-between px-4 py-3 text-sm ${isActive ? 'bg-primary/10 text-primary font-medium' : 'text-foreground hover:bg-accent'} `}
                             >
                               <span className="text-sm">{t(it.label)}</span>
                               {typeof badgeCount === 'number' && (
-                                <span className="ml-3 inline-flex items-center justify-center min-w-[20px] h-6 px-2 text-sm font-semibold rounded-md bg-[#C8860A] text-white">{badgeCount}</span>
+                                <span className="ml-3 inline-flex items-center justify-center min-w-[20px] h-6 px-2 text-sm font-semibold rounded-md bg-primary text-white">{badgeCount}</span>
                               )}
                             </Link>
                           </li>

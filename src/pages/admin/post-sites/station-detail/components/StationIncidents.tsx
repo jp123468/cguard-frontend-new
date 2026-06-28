@@ -85,7 +85,7 @@ export default function StationIncidents({ stationId, postSiteId }: Props) {
 
       {loading ? (
         <div className="flex items-center justify-center py-10">
-          <Loader2 className="animate-spin text-[#C8860A]" />
+          <Loader2 className="animate-spin text-primary" />
         </div>
       ) : error ? (
         <div className="p-6 text-sm text-red-600">{error}</div>

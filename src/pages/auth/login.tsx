@@ -171,7 +171,7 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#C8860A] dark:focus:ring-[#C8860A]/20"
+              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
               autoComplete="email"
             />
           </div>
@@ -190,7 +190,7 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-12 text-foreground placeholder-slate-400 transition-all focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#C8860A] dark:focus:ring-[#C8860A]/20"
+              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-12 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
               autoComplete="current-password"
             />
             <button

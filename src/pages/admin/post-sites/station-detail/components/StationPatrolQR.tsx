@@ -165,7 +165,7 @@ export default function StationPatrolQR({ station, stationId }: Props) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
-              <QrCode className="h-5 w-5 text-[#C8860A]" />
+              <QrCode className="h-5 w-5 text-primary" />
               {t('station.patrolQr.title', 'Generar Códigos QR de Rondas')}
               {!loading && checkpoints.length > 0 && (
                 <span className="text-sm font-normal text-muted-foreground">({checkpoints.length})</span>
@@ -178,7 +178,7 @@ export default function StationPatrolQR({ station, stationId }: Props) {
           {checkpoints.length > 0 && (
             <button
               onClick={() => printQrs(checkpoints)}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#C8860A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#B37809]"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
             >
               <Printer className="h-4 w-4" /> {t('station.patrolQr.printAll', 'Imprimir todos')}
             </button>
@@ -195,7 +195,7 @@ export default function StationPatrolQR({ station, stationId }: Props) {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12"><Loader2 className="animate-spin text-[#C8860A]" /></div>
+        <div className="flex items-center justify-center py-12"><Loader2 className="animate-spin text-primary" /></div>
       ) : error ? (
         <div className="rounded-lg border border-border bg-card p-6 text-sm text-red-600">{error}</div>
       ) : checkpoints.length === 0 ? (

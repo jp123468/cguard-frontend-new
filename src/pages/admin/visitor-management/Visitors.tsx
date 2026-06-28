@@ -837,7 +837,7 @@ export default function Visitors() {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="border-[#C8860A]/30 text-[#C8860A]"
+                                    className="border-primary/30 text-primary"
                                 >
                                     <FilterIcon className="mr-2 h-4 w-4" />
                                     {t('visitantes.filters') || 'Filtros'}

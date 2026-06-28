@@ -78,7 +78,7 @@ export default function GuardsLayout({ navKey, title, children }: Props) {
                             to={resolvedPath} 
                             className={`block px-3 py-2.5 rounded text-base ${
                               isActive 
-                                ? 'bg-[#C8860A]/10 text-[#C8860A] font-medium' 
+                                ? 'bg-primary/10 text-primary font-medium' 
                                 : 'text-foreground hover:bg-accent'
                             }`}
                           >

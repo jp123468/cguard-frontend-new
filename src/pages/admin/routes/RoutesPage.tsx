@@ -173,7 +173,7 @@ export default function RoutesPage() {
 
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A]">
+                <Button variant="outline" className="border-primary/30 text-primary">
                   <FilterIcon className="mr-2 h-4 w-4" />
                   Filtros
                 </Button>
@@ -226,7 +226,7 @@ export default function RoutesPage() {
                   </div>
 
                   <Button
-                    className="w-full bg-[#C8860A] text-white hover:bg-[#C8860A]"
+                    className="w-full bg-primary text-white hover:bg-primary"
                     onClick={aplicarFiltros}
                   >
                     Filtro
@@ -312,7 +312,7 @@ export default function RoutesPage() {
                       : <StatusBadge tone="green">Activo</StatusBadge>}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Button variant="ghost" size="sm" className="text-[#C8860A]" onClick={() => { setDetailId(r.id); setDetailOpen(true); }}>Ver</Button>
+                    <Button variant="ghost" size="sm" className="text-primary" onClick={() => { setDetailId(r.id); setDetailOpen(true); }}>Ver</Button>
                   </td>
                 </tr>
               ))}

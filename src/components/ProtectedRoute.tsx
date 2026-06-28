@@ -64,7 +64,7 @@ function LoadingScreen() {
         />
       )}
       <div className="flex flex-col items-center gap-3">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#C8860A]/20 border-t-[#C8860A]" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
         <p className="text-sm text-muted-foreground">Cargando…</p>
       </div>
     </div>

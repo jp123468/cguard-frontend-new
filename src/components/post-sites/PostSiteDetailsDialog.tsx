@@ -73,7 +73,7 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
         </div>
         {loading ? (
           <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-6 w-6 animate-spin text-[#C8860A]" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : error ? (
           <div className="py-4 text-center text-red-500 text-sm">
@@ -202,7 +202,7 @@ export default function PostSiteDetailsDialog({ open, onOpenChange, siteId }: Pr
               <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
                 Cerrar
               </Button>
-              <Button size="sm" className="bg-[#C8860A] hover:bg-[#B37809]" asChild>
+              <Button size="sm" className="bg-primary hover:bg-primary/90" asChild>
                 <Link to={`/post-sites/${site.id}/edit`}>Editar</Link>
               </Button>
             </div>

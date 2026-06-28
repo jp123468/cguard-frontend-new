@@ -46,7 +46,7 @@ export default function ListView({ currentDate, shifts = [], onCreateShift, onEd
                             {/* Day header */}
                             <div className="px-6 py-3 flex items-center gap-3 border-b border-border">
                                 <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${
-                                    isToday ? 'bg-[#C8860A] text-white' : 'bg-muted text-foreground'
+                                    isToday ? 'bg-primary text-white' : 'bg-muted text-foreground'
                                 }`}>
                                     {day.getDate()}
                                 </div>
@@ -111,7 +111,7 @@ export default function ListView({ currentDate, shifts = [], onCreateShift, onEd
                 <DropdownMenuTrigger asChild>
                     <Button
                         size="icon"
-                        className="sticky bottom-6 float-right mr-6 h-12 w-12 rounded-full bg-[#C8860A] hover:bg-[#B37809] shadow-lg"
+                        className="sticky bottom-6 float-right mr-6 h-12 w-12 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
                         title="Agregar"
                     >
                         <Plus className="h-6 w-6 text-white" />

@@ -57,7 +57,7 @@ export default function SubSidebar({
       {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-border/60">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFF3D6] text-[#C8860A]">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFF3D6] text-primary">
             <Settings className="h-4 w-4" />
           </div>
           <div className="min-w-0">
@@ -77,7 +77,7 @@ export default function SubSidebar({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("settings.searchPlaceholder", { defaultValue: "Buscar ajuste..." })}
-            className="w-full rounded-lg border border-border bg-background py-1.5 pl-8 pr-3 text-[12px] outline-none transition-colors focus:border-[#C8860A] focus:ring-1 focus:ring-[#C8860A]/30"
+            className="w-full rounded-lg border border-border bg-background py-1.5 pl-8 pr-3 text-[12px] outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/30"
           />
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function SubSidebar({
                               <Icon
                                 className={[
                                   "h-4 w-4 shrink-0 transition-colors",
-                                  isActive ? "text-[#C8860A]" : "text-muted-foreground group-hover:text-foreground",
+                                  isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
                                 ].join(" ")}
                               />
                               <span className="truncate">

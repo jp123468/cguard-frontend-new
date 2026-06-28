@@ -142,9 +142,9 @@ export default function GuardMemosPage() {
 
           {/* ── HERO ─────────────────────────────────────────────────────────── */}
           <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-muted/40 shadow-sm">
-            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-[#C8860A]/15 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-primary/15 to-transparent" />
             <div className="relative p-6 flex flex-col sm:flex-row sm:items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-[#C8860A]/10 ring-1 ring-[#C8860A]/20 flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center shrink-0">
                 {guardInitials ? (
                   <span className="text-base font-bold" style={{ color: GOLD }}>{guardInitials}</span>
                 ) : (
@@ -214,8 +214,8 @@ export default function GuardMemosPage() {
               </div>
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-3 py-14 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-[#C8860A]/10 flex items-center justify-center">
-                  <FileText size={32} className="text-[#C8860A]/50" />
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <FileText size={32} className="text-primary/50" />
                 </div>
                 <div>
                   <h3 className="text-base font-semibold text-foreground">
@@ -287,7 +287,7 @@ export default function GuardMemosPage() {
             >
               <div className="flex items-center justify-between p-5 border-b sticky top-0 bg-card z-10">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#C8860A]/10 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
                     <Send size={16} style={{ color: GOLD }} />
                   </div>
                   <h2 className="font-semibold text-sm tracking-tight">
@@ -329,7 +329,7 @@ export default function GuardMemosPage() {
                     onChange={(e) => setForm({ ...form, content: e.target.value })}
                     placeholder={t('guards.memos.form.contentPlaceholder', { defaultValue: 'Escribe el memo...' })}
                     rows={8}
-                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none leading-relaxed"
+                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none leading-relaxed"
                   />
                 </div>
               </div>

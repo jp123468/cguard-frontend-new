@@ -221,7 +221,7 @@ export default function Header({
               aria-label={t('header.account')}
             >
               {avatar ? (
-                <img src={avatar} alt={userName} className="w-7 h-7 rounded-full object-cover ring-2 ring-[#C8860A]/30" />
+                <img src={avatar} alt={userName} className="w-7 h-7 rounded-full object-cover ring-2 ring-primary/30" />
               ) : (
                 <div
                   className="w-7 h-7 rounded-full text-white text-xs font-semibold grid place-items-center"
@@ -333,7 +333,7 @@ export default function Header({
           <div className="flex justify-end">
             <Button
               onClick={handleFeedbackSubmit}
-              className="bg-[#C8860A] hover:bg-[#B37809] text-white px-8"
+              className="bg-primary hover:bg-primary/90 text-white px-8"
             >
               {t('header.send')}
             </Button>
@@ -350,46 +350,46 @@ export default function Header({
           </DialogHeader>
 
           <div className="grid grid-cols-2 gap-4 py-6">
-            <button className="flex flex-col items-center gap-3 p-6 rounded-lg border border-border hover:border-[#C8860A]/30 hover:bg-[#C8860A]/10 transition-colors">
+            <button className="flex flex-col items-center gap-3 p-6 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/10 transition-colors">
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <HelpCircle className="w-6 h-6 text-foreground/70" />
               </div>
               <div className="text-center">
-                <div className="font-medium text-[#C8860A] mb-1">Centro de Soporte</div>
+                <div className="font-medium text-primary mb-1">Centro de Soporte</div>
                 <div className="text-sm text-muted-foreground">Lista de artículos</div>
               </div>
             </button>
 
-            <button className="flex flex-col items-center gap-3 p-6 rounded-lg border border-border hover:border-[#C8860A]/30 hover:bg-[#C8860A]/10 transition-colors">
+            <button className="flex flex-col items-center gap-3 p-6 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/10 transition-colors">
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <svg className="w-6 h-6 text-foreground/70" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
                 </svg>
               </div>
               <div className="text-center">
-                <div className="font-medium text-[#C8860A] mb-1">Video de Youtube</div>
+                <div className="font-medium text-primary mb-1">Video de Youtube</div>
                 <div className="text-sm text-muted-foreground">Videos instructivos</div>
               </div>
             </button>
 
-            <button className="flex flex-col items-center gap-3 p-6 rounded-lg border border-border hover:border-[#C8860A]/30 hover:bg-[#C8860A]/10 transition-colors">
+            <button className="flex flex-col items-center gap-3 p-6 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/10 transition-colors">
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <MessageSquare className="w-6 h-6 text-foreground/70" />
               </div>
               <div className="text-center">
-                <div className="font-medium text-[#C8860A] mb-1">Soporte por Chat</div>
+                <div className="font-medium text-primary mb-1">Soporte por Chat</div>
                 <div className="text-sm text-muted-foreground">Soporte por Chat en Vivo</div>
               </div>
             </button>
 
-            <button className="flex flex-col items-center gap-3 p-6 rounded-lg border border-border hover:border-[#C8860A]/30 hover:bg-[#C8860A]/10 transition-colors">
+            <button className="flex flex-col items-center gap-3 p-6 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/10 transition-colors">
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <svg className="w-6 h-6 text-foreground/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                 </svg>
               </div>
               <div className="text-center">
-                <div className="font-medium text-[#C8860A] mb-1">Enviar Ticket</div>
+                <div className="font-medium text-primary mb-1">Enviar Ticket</div>
                 <div className="text-sm text-muted-foreground">Tickets de Soporte</div>
               </div>
             </button>

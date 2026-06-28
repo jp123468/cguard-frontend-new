@@ -496,7 +496,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
 
           <button
             onClick={() => openForm(selectedDate || undefined)}
-            className="px-3 py-1.5 bg-[#C8860A] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-[#B37809] transition-all shadow-sm active:scale-95"
+            className="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-primary/90 transition-all shadow-sm active:scale-95"
           >
             <Plus size={13} strokeWidth={2.5} /> Nuevo turno
           </button>
@@ -505,7 +505,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
         {/* Calendar Body */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="animate-spin text-[#C8860A]" size={24} />
+            <Loader2 className="animate-spin text-primary" size={24} />
           </div>
         ) : error ? (
           <div className="p-6 text-sm text-red-500">{error}</div>
@@ -614,7 +614,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
                             key={ev.id || i}
                             onClick={() => setSelectedShift(isSelected ? null : ev)}
                             className={`w-full text-left rounded-xl p-2.5 transition-all duration-200 border ${
-                              isSelected ? 'border-[#C8860A]/30 shadow-lg' : 'border-transparent hover:border-border/30'
+                              isSelected ? 'border-primary/30 shadow-lg' : 'border-transparent hover:border-border/30'
                             }`}
                             style={{ backgroundColor: color.bg }}
                           >
@@ -753,14 +753,14 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
                 key={i}
                 onClick={() => onSelectDate(key)}
                 className={`py-2.5 text-center transition-all relative group ${
-                  selectedDate === key ? 'bg-[#C8860A]/[0.04]' : ''
+                  selectedDate === key ? 'bg-primary/[0.04]' : ''
                 }`}
               >
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
                   {DAYS_ES[i]}
                 </div>
                 <div className={`mt-1 w-8 h-8 mx-auto flex items-center justify-center rounded-full text-sm font-semibold transition-all ${
-                  isToday(d) ? 'bg-[#C8860A] text-white shadow-sm shadow-[#C8860A]/30' :
+                  isToday(d) ? 'bg-primary text-white shadow-sm shadow-primary/30' :
                   selectedDate === key ? 'bg-foreground/8 text-foreground' :
                   'text-foreground group-hover:bg-muted/20'
                 }`}>
@@ -773,7 +773,7 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
                   }`} />
                 )}
                 {!isScheduledDay && hasEvents && (
-                  <div className="mt-1 mx-auto w-1.5 h-1.5 rounded-full bg-[#C8860A]/50" />
+                  <div className="mt-1 mx-auto w-1.5 h-1.5 rounded-full bg-primary/50" />
                 )}
               </button>
             );
@@ -793,7 +793,7 @@ function WeekView({ days, eventsByDate, coverageByDate, guardColorMap, selectedD
               <div
                 key={dayIdx}
                 className={`flex flex-col gap-1.5 border-l border-border/8 p-1.5 min-h-[220px] transition-colors ${
-                  selectedDate === key ? 'bg-[#C8860A]/[0.03]' : ''
+                  selectedDate === key ? 'bg-primary/[0.03]' : ''
                 }`}
               >
                 {slots.length === 0 ? (
@@ -1048,12 +1048,12 @@ function MonthView({ days, eventsByDate, coverageByDate, guardColorMap, selected
                   key={di}
                   onClick={() => onSelectDate(key)}
                   className={`relative min-h-[62px] rounded-xl p-1 flex flex-col items-center transition-all duration-150 group ${
-                    selectedDate === key ? 'bg-[#C8860A]/10 ring-1 ring-[#C8860A]/25 shadow-sm' : 'hover:bg-muted/15'
+                    selectedDate === key ? 'bg-primary/10 ring-1 ring-primary/25 shadow-sm' : 'hover:bg-muted/15'
                   } ${!isCurrentMonth ? 'opacity-25' : ''}`}
                 >
                   <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full transition-all ${
-                    isToday(day) ? 'bg-[#C8860A] text-white shadow-sm shadow-[#C8860A]/30' :
-                    selectedDate === key ? 'text-[#C8860A] font-semibold' :
+                    isToday(day) ? 'bg-primary text-white shadow-sm shadow-primary/30' :
+                    selectedDate === key ? 'text-primary font-semibold' :
                     'text-foreground group-hover:bg-muted/20'
                   }`}>
                     {day.getDate()}

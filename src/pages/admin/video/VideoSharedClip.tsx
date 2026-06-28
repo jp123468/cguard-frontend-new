@@ -42,16 +42,16 @@ export default function VideoSharedClip() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#0b1220] p-4 text-slate-100">
       <div className="w-full max-w-3xl">
         <div className="mb-4 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#C8860A]/40 bg-[#111a2e] text-[#C8860A]"><Film size={18} /></div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/40 bg-[#111a2e] text-primary"><Film size={18} /></div>
           <div>
-            <p className="text-sm font-bold tracking-tight">CGUARD<span className="text-[#C8860A]">PRO</span></p>
+            <p className="text-sm font-bold tracking-tight">CGUARD<span className="text-primary">PRO</span></p>
             <p className="text-[11px] text-slate-400">Video compartido de forma segura</p>
           </div>
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-black">
           {loading ? (
-            <div className="flex h-72 items-center justify-center"><Loader2 className="animate-spin text-[#C8860A]" /></div>
+            <div className="flex h-72 items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>
           ) : error ? (
             <div className="flex h-72 flex-col items-center justify-center gap-2 text-center text-slate-300">
               <ShieldAlert className="text-rose-400" size={28} />

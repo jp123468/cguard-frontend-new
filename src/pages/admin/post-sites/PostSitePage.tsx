@@ -565,7 +565,7 @@ export default function PostSitePage() {
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  className="text-[#C8860A] border-[#C8860A]/30"
+                  className="text-primary border-primary/30"
                 >
                   <Filter className="mr-2 h-4 w-4" />
                   {t('postSites.filtersTitle', 'Filtros')}
@@ -890,7 +890,7 @@ export default function PostSitePage() {
                         <td className="px-4 py-2.5"></td>
                         <td className="px-4 py-2.5 pl-12">
                           <div className="flex items-center gap-2">
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#C8860A]"></span>
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary"></span>
                             <span className="text-sm font-medium text-foreground/80">
                               {station.name || station.stationName || 'Estación'}
                             </span>
@@ -905,7 +905,7 @@ export default function PostSitePage() {
                           {shifts.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {shifts.map((s, i) => (
-                                <span key={i} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] bg-[#C8860A]/10 text-[#C8860A]">
+                                <span key={i} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] bg-primary/10 text-primary">
                                   {s.nombre} {s.startTime}–{s.endTime}
                                 </span>
                               ))}

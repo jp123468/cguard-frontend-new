@@ -88,7 +88,7 @@ export default function CheckpointLocationPicker({
       <div className="rounded-md border border-border bg-muted/20 p-3">
         <div className="mb-1 flex items-center justify-between text-sm">
           <span className="font-medium text-foreground">Radio de cobertura</span>
-          <span className="font-mono text-[#C8860A]">{radius} m</span>
+          <span className="font-mono text-primary">{radius} m</span>
         </div>
         <input
           type="range"
@@ -97,7 +97,7 @@ export default function CheckpointLocationPicker({
           step={5}
           value={radius}
           onChange={(e) => onChange(lat ?? FALLBACK[0], lng ?? FALLBACK[1], Number(e.target.value))}
-          className="w-full accent-[#C8860A]"
+          className="w-full accent-primary"
           disabled={!hasPin}
         />
         <p className="mt-1 text-[11px] text-muted-foreground">

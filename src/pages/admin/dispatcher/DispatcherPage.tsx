@@ -1103,7 +1103,7 @@ export default function DispatcherPage() {
               </Button>
             ) : (
               <Button
-                className="bg-[#C8860A]/30 text-white cursor-not-allowed"
+                className="bg-primary/30 text-white cursor-not-allowed"
                 disabled
                 onClick={() => toast.error(t('dispatcher.no_permission_create'))}
                 title={t('dispatcher.no_permission_create')}
@@ -1115,7 +1115,7 @@ export default function DispatcherPage() {
             {/* Filtros */}
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="border-[#C8860A]/30 text-[#C8860A]">
+                <Button variant="outline" className="border-primary/30 text-primary">
                   <FilterIcon className="mr-2 h-4 w-4" />
                   {t('dispatcher.filters')}
                 </Button>
@@ -1289,7 +1289,7 @@ export default function DispatcherPage() {
 
                   {/* Botón aplicar */}
                   <Button
-                    className="w-full bg-[#C8860A] text-white hover:bg-[#B37809]"
+                    className="w-full bg-primary text-white hover:bg-primary/90"
                     onClick={() => void aplicarFiltros()}
                   >
                     {t('dispatcher.apply_filters')}
@@ -1674,7 +1674,7 @@ export default function DispatcherPage() {
 
             <DialogFooter className="mt-4 flex justify-end gap-2">
               <Button variant="outline" onClick={() => setSendDialogOpen(false)}>{t('cancel')}</Button>
-              <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={performSend} disabled={sendingEmail}>{sendingEmail ? t('dispatcher.sending') : t('send')}</Button>
+              <Button className="bg-primary hover:bg-primary/90 text-white" onClick={performSend} disabled={sendingEmail}>{sendingEmail ? t('dispatcher.sending') : t('send')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1711,7 +1711,7 @@ export default function DispatcherPage() {
 
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction className="bg-[#C8860A] text-white hover:bg-[#B37809]" onClick={handleCreateShare} disabled={shareLoading}>
+                <AlertDialogAction className="bg-primary text-white hover:bg-primary/90" onClick={handleCreateShare} disabled={shareLoading}>
                   {shareLoading ? 'Creando...' : 'Generar y copiar'}
                 </AlertDialogAction>
               </AlertDialogFooter>

@@ -226,15 +226,15 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Horario del turno — the scheduleType is the single source of truth */}
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#C8860A]/10 flex items-center justify-center flex-shrink-0">
-                <Clock size={16} className="text-[#C8860A]" />
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Clock size={16} className="text-primary" />
               </div>
               <div>
                 <div className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1.5">Horario del turno</div>
                 {(() => {
                   const info = TURNO_LABELS.find((o) => o.key === scheduleTypeToTurno(station.scheduleType));
                   return info ? (
-                    <span className="inline-flex items-center rounded-lg border border-[#C8860A]/30 bg-[#C8860A]/10 px-2.5 py-1 text-xs font-medium text-[#C8860A]">
+                    <span className="inline-flex items-center rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
                       {info.label}
                       <span className="font-mono opacity-70 ml-1.5">{info.sub}</span>
                     </span>
@@ -247,8 +247,8 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
 
             {/* Guards required — derived from the turno (24h ⇒ 2 fijos, else 1) */}
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#C8860A]/10 flex items-center justify-center flex-shrink-0">
-                <Users size={16} className="text-[#C8860A]" />
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Users size={16} className="text-primary" />
               </div>
               <div>
                 <div className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">Fijos requeridos</div>
@@ -261,8 +261,8 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             {/* Location */}
             {(lat || lng) && (
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#C8860A]/10 flex items-center justify-center flex-shrink-0">
-                  <MapPin size={16} className="text-[#C8860A]" />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <MapPin size={16} className="text-primary" />
                 </div>
                 <div>
                   <div className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">Ubicación</div>
@@ -295,9 +295,9 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   // ── EDIT MODE ──
   return (
     <div className="space-y-4">
-      <div className="bg-card border border-[#C8860A]/20 rounded-2xl overflow-hidden shadow-lg">
+      <div className="bg-card border border-primary/20 rounded-2xl overflow-hidden shadow-lg">
         {/* Edit header */}
-        <div className="px-6 py-4 border-b border-border/20 flex items-center justify-between bg-[#C8860A]/[0.03]">
+        <div className="px-6 py-4 border-b border-border/20 flex items-center justify-between bg-primary/[0.03]">
           <div>
             <h3 className="text-sm font-semibold text-foreground">Configurar puesto</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Turno, ubicación y tolerancia de marcación. "Guardar" aplica la tolerancia.</p>
@@ -312,7 +312,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-1.5 bg-[#C8860A] text-white rounded-lg text-xs font-semibold hover:bg-[#B37809] disabled:opacity-50 transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+              className="px-4 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
             >
               {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
               Guardar
@@ -323,7 +323,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
         {/* Horario del turno — drives scheduleType + positions (engine source of truth) */}
         <div className="p-6 border-t border-border/30 space-y-3">
           <div className="flex items-center gap-2">
-            <Clock size={16} className="text-[#C8860A]" />
+            <Clock size={16} className="text-primary" />
             <h3 className="text-sm font-semibold text-foreground">Horario del turno</h3>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -335,7 +335,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
                 key={o.key}
                 type="button"
                 onClick={() => setTurno(o.key)}
-                className={`rounded-xl border px-3 py-2 text-left transition-all ${turno === o.key ? 'border-[#C8860A] bg-[#C8860A]/10' : 'border-border/40 hover:border-[#C8860A]/40'}`}
+                className={`rounded-xl border px-3 py-2 text-left transition-all ${turno === o.key ? 'border-primary bg-primary/10' : 'border-border/40 hover:border-primary/40'}`}
               >
                 <div className="text-xs font-semibold text-foreground">{o.label}</div>
                 <div className="text-[10px] text-muted-foreground">{o.sub}</div>
@@ -346,11 +346,11 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Hora inicio</label>
-                <input type="time" value={customStart} onChange={(e) => setCustomStart(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] outline-none" />
+                <input type="time" value={customStart} onChange={(e) => setCustomStart(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
               </div>
               <div>
                 <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Hora fin</label>
-                <input type="time" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] outline-none" />
+                <input type="time" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
               </div>
             </div>
           )}
@@ -362,7 +362,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             <button
               onClick={updateHorario}
               disabled={savingHorario}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#C8860A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#B37809] disabled:opacity-50"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
             >
               {savingHorario ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
               Actualizar horario
@@ -375,13 +375,13 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
         <div className="p-6 border-t border-border/30 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MapPin size={16} className="text-[#C8860A]" />
+              <MapPin size={16} className="text-primary" />
               <h3 className="text-sm font-semibold text-foreground">Ubicación y geocerca</h3>
             </div>
             <button
               onClick={saveLocation}
               disabled={savingLoc}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#C8860A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#B37809] disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
             >
               {savingLoc ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
               Guardar ubicación y geocerca
@@ -404,7 +404,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
         {/* Clock-in tolerance windows */}
         <div className="p-6 border-t border-border/30 space-y-3">
           <div className="flex items-center gap-2">
-            <Clock size={16} className="text-[#C8860A]" />
+            <Clock size={16} className="text-primary" />
             <h3 className="text-sm font-semibold text-foreground">Tolerancia de marcación de entrada</h3>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -420,7 +420,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
                 value={clockInEarlyBufferMin}
                 onChange={(e) => setClockInEarlyBufferMin(e.target.value)}
                 placeholder="Por defecto"
-                className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none"
+                className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
               />
             </div>
             <div>
@@ -432,7 +432,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
                 value={clockInLateGraceMin}
                 onChange={(e) => setClockInLateGraceMin(e.target.value)}
                 placeholder="Por defecto"
-                className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A] transition-all outline-none"
+                className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
               />
             </div>
           </div>

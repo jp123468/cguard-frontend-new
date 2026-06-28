@@ -143,7 +143,7 @@ function CameraModal({ open, mode, onClose, onCapture }: {
               <img src={captured.url} alt="Captura" className="w-full rounded border" />
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => { setCapturedPhoto(null); startCamera(); }} className="flex-1 gap-1"><X size={14} /> Retomar</Button>
-                <Button onClick={() => { capturedUrlRef.current = null; onCapture(captured.blob, captured.url); onClose(); }} className="flex-1 gap-1 bg-[#C8860A] hover:bg-[#a86e08] text-white"><Check size={14} /> Usar foto</Button>
+                <Button onClick={() => { capturedUrlRef.current = null; onCapture(captured.blob, captured.url); onClose(); }} className="flex-1 gap-1 bg-primary hover:bg-[#a86e08] text-white"><Check size={14} /> Usar foto</Button>
               </div>
             </div>
           ) : (
@@ -154,7 +154,7 @@ function CameraModal({ open, mode, onClose, onCapture }: {
                 {!ready && <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="animate-spin text-white" /></div>}
                 {mode === 'id-scan' && ready && <div className="absolute inset-4 border-2 border-dashed border-amber-400 rounded opacity-70 pointer-events-none" />}
               </div>
-              <Button onClick={capture} disabled={!ready} className="w-full gap-2 bg-[#C8860A] hover:bg-[#a86e08] text-white"><Camera size={15} /> Capturar</Button>
+              <Button onClick={capture} disabled={!ready} className="w-full gap-2 bg-primary hover:bg-[#a86e08] text-white"><Camera size={15} /> Capturar</Button>
             </div>
           )}
           <canvas ref={canvasRef} className="hidden" />
@@ -305,7 +305,7 @@ function VisitorFormModal({ open, initialData, stationId, onClose, onSaved }: {
             {/* Actions */}
             <div className="flex gap-2 pt-1">
               <Button variant="outline" onClick={onClose} disabled={saving} className="flex-1">Cancelar</Button>
-              <Button onClick={handleSave} disabled={saving || scanning} className="flex-1 bg-[#C8860A] hover:bg-[#a86e08] text-white gap-1">
+              <Button onClick={handleSave} disabled={saving || scanning} className="flex-1 bg-primary hover:bg-[#a86e08] text-white gap-1">
                 {saving ? <Loader2 size={13} className="animate-spin" /> : <UserCheck size={13} />}
                 {isEdit ? 'Actualizar' : 'Registrar'}
               </Button>
@@ -358,13 +358,13 @@ export default function StationVisitors({ stationId }: Props) {
         <h3 className="text-base font-semibold text-foreground">
           Registro de Visitantes {total > 0 && <span className="ml-1 text-sm font-normal text-muted-foreground">({total})</span>}
         </h3>
-        <Button size="sm" onClick={() => { setEditRow(null); setFormOpen(true); }} className="gap-1 bg-[#C8860A] hover:bg-[#a86e08] text-white">
+        <Button size="sm" onClick={() => { setEditRow(null); setFormOpen(true); }} className="gap-1 bg-primary hover:bg-[#a86e08] text-white">
           <Plus size={14} /> Nuevo Visitante
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-[#C8860A]" /></div>
+        <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
       ) : error ? (
         <div className="p-6 text-sm text-red-600">{error}</div>
       ) : rows.length === 0 ? (
@@ -404,7 +404,7 @@ export default function StationVisitors({ stationId }: Props) {
                       <td className="px-4 py-3 text-foreground">{guard}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => { setEditRow(r); setFormOpen(true); }} className="p-1.5 text-muted-foreground hover:text-[#C8860A] hover:bg-amber-500/10 rounded" title="Editar"><Edit2 size={14} /></button>
+                          <button onClick={() => { setEditRow(r); setFormOpen(true); }} className="p-1.5 text-muted-foreground hover:text-primary hover:bg-amber-500/10 rounded" title="Editar"><Edit2 size={14} /></button>
                           <button onClick={() => handleDelete(r.id)} disabled={deleting === r.id} className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-500/10 rounded disabled:opacity-40" title="Eliminar">
                             {deleting === r.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                           </button>

@@ -140,7 +140,7 @@ export default function NominaSettings() {
             </Section>
 
             <div className="fixed bottom-6 right-6 z-10">
-              <Button onClick={save} disabled={saving} className="bg-[#C8860A] hover:bg-[#B37809] text-white shadow-lg">
+              <Button onClick={save} disabled={saving} className="bg-primary hover:bg-primary/90 text-white shadow-lg">
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Guardar configuración
               </Button>

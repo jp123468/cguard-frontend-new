@@ -131,7 +131,7 @@ export default function TenantsPage() {
 
           <div className="ml-auto">
             {hasPermission('tenantEdit') && (
-              <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" asChild>
+              <Button className="bg-primary hover:bg-primary/90 text-white" asChild>
                 <Link to="/superadmin/tenants/new">{t('actions.add') || 'Add'}</Link>
               </Button>
             )}

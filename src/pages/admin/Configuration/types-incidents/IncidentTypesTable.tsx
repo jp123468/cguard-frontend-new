@@ -83,7 +83,7 @@ export default function IncidentTypesTable({
           <Input className="pl-9" placeholder="Buscar tipo de incidente" value={query} onChange={(e) => onQueryChange?.(e.target.value)} />
         </div>
 
-        <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white px-8"
+        <Button className="bg-primary hover:bg-primary/90 text-white px-8"
           onClick={onCreate}>Nuevo Tipo de Incidente</Button>
       </div>
 

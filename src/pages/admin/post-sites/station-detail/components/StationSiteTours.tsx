@@ -153,7 +153,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
     }
   };
 
-  const inputCls = 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]';
+  const inputCls = 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary';
 
   return (
     <>
@@ -169,7 +169,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowNewTour(true)} className="inline-flex items-center gap-2 rounded-full bg-[#C8860A] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#B37809]">
+            <button onClick={() => setShowNewTour(true)} className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary/90">
               <Plus size={16} /> {t('station.siteTours.new', 'Nueva ronda')}
             </button>
             <button onClick={() => setShowSettings(true)} className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-sm text-foreground hover:bg-muted/30">
@@ -179,7 +179,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-[#C8860A]" /></div>
+          <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
         ) : error ? (
           <div className="p-6 text-sm text-red-600">{error}</div>
         ) : tours.length === 0 ? (
@@ -218,7 +218,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
                   {isOpen && (
                     <div className="border-t bg-muted/10 px-6 py-4">
                       {cpLoading === id ? (
-                        <div className="flex justify-center py-4"><Loader2 className="animate-spin text-[#C8860A]" size={18} /></div>
+                        <div className="flex justify-center py-4"><Loader2 className="animate-spin text-primary" size={18} /></div>
                       ) : (
                         <>
                           {list.length === 0 ? (
@@ -264,19 +264,19 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
                                 onChange={(la, ln, r) => { setCpLat(la); setCpLng(ln); setCpRadius(r); }}
                               />
                               {stationLat != null && stationLng != null && (
-                                <button onClick={() => { setCpLat(stationLat); setCpLng(stationLng); }} className="inline-flex items-center gap-1.5 text-xs text-[#C8860A] hover:underline">
+                                <button onClick={() => { setCpLat(stationLat); setCpLng(stationLng); }} className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
                                   <Crosshair size={13} /> {t('station.siteTours.useStationLoc', 'Usar ubicación del puesto')}
                                 </button>
                               )}
                               <div className="flex justify-end gap-2 pt-1">
                                 <button onClick={() => setAddingFor(null)} className="rounded-md border px-3 py-1.5 text-sm">{t('common.cancel', 'Cancelar')}</button>
-                                <button onClick={() => createCheckpoint(id)} disabled={savingCp || !cpName.trim()} className="inline-flex items-center gap-1.5 rounded-md bg-[#C8860A] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#B37809] disabled:opacity-50">
+                                <button onClick={() => createCheckpoint(id)} disabled={savingCp || !cpName.trim()} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
                                   {savingCp && <Loader2 className="animate-spin" size={14} />} {t('common.save', 'Guardar')}
                                 </button>
                               </div>
                             </div>
                           ) : (
-                            <button onClick={() => openAddCheckpoint(id)} className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-dashed border-[#C8860A]/50 px-3 py-1.5 text-sm font-medium text-[#C8860A] hover:bg-[#C8860A]/5">
+                            <button onClick={() => openAddCheckpoint(id)} className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-dashed border-primary/50 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/5">
                               <Plus size={15} /> {t('station.siteTours.addPoint', 'Agregar punto de control')}
                             </button>
                           )}
@@ -311,7 +311,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
             </div>
             <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
               <button onClick={() => setShowNewTour(false)} className="rounded-md border px-4 py-2 text-sm">{t('common.cancel', 'Cancelar')}</button>
-              <button onClick={createTour} disabled={savingTour || !tourName.trim()} className="inline-flex items-center gap-1.5 rounded-md bg-[#C8860A] px-5 py-2 text-sm font-semibold text-white hover:bg-[#B37809] disabled:opacity-50">
+              <button onClick={createTour} disabled={savingTour || !tourName.trim()} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
                 {savingTour && <Loader2 className="animate-spin" size={14} />} {t('station.siteTours.create', 'Crear ronda')}
               </button>
             </div>

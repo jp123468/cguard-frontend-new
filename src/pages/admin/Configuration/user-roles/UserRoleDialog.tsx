@@ -125,7 +125,7 @@ export default function UserRoleDialog({
             />
             <div className="flex justify-end">
               <Button
-                className="bg-[#C8860A] hover:bg-[#B37809] text-white"
+                className="bg-primary hover:bg-primary/90 text-white"
                 type="submit"
                 disabled={submitting}
               >

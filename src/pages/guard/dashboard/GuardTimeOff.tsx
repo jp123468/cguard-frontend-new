@@ -78,7 +78,7 @@ export default function GuardTimeOff() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="animate-spin text-[#C8860A]" size={32} />
+        <Loader2 className="animate-spin text-primary" size={32} />
       </div>
     );
   }
@@ -87,12 +87,12 @@ export default function GuardTimeOff() {
     <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <CalendarOff size={22} className="text-[#C8860A]" />
+          <CalendarOff size={22} className="text-primary" />
           {t('guard.timeOff.title', 'Mis Permisos')}
         </h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-3 py-1.5 bg-[#C8860A] text-white rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-[#B37809]"
+          className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-primary/90"
         >
           <Plus size={14} /> Solicitar
         </button>
@@ -128,7 +128,7 @@ export default function GuardTimeOff() {
           </div>
           <div className="flex gap-2 justify-end">
             <button onClick={() => setShowForm(false)} className="px-3 py-1.5 border rounded-md text-sm">Cancelar</button>
-            <button onClick={handleSubmit} disabled={saving} className="px-4 py-1.5 bg-[#C8860A] text-white rounded-md text-sm font-medium disabled:opacity-50">
+            <button onClick={handleSubmit} disabled={saving} className="px-4 py-1.5 bg-primary text-white rounded-md text-sm font-medium disabled:opacity-50">
               {saving ? <Loader2 size={14} className="animate-spin" /> : 'Enviar'}
             </button>
           </div>

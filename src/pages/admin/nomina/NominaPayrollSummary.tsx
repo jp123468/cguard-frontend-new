@@ -181,7 +181,7 @@ export default function NominaPayrollSummary() {
         ),
     } as Column<any>,
     ...(ratesEnabled
-      ? [{ key: "grossPay", header: "Pago bruto", render: (_v: any, r: SummaryRow) => <span className="font-semibold text-[#C8860A]">{money(r.grossPay)}</span> } as Column<any>]
+      ? [{ key: "grossPay", header: "Pago bruto", render: (_v: any, r: SummaryRow) => <span className="font-semibold text-primary">{money(r.grossPay)}</span> } as Column<any>]
       : []),
   ];
 
@@ -202,7 +202,7 @@ export default function NominaPayrollSummary() {
               Hasta
               <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 block rounded-lg border border-border bg-background px-3 py-1.5 text-sm" />
             </label>
-            <Button onClick={load} disabled={loading} className="bg-[#C8860A] hover:bg-[#B37809] text-white">
+            <Button onClick={load} disabled={loading} className="bg-primary hover:bg-primary/90 text-white">
               {loading ? "Generando…" : "Generar"}
             </Button>
             <Button variant="outline" onClick={exportCsv} disabled={!rows.length}>

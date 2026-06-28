@@ -216,7 +216,7 @@ export default function AddStationPage() {
   };
 
   const inputCls =
-    'w-full px-3 py-2 border border-input rounded-md text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-[#C8860A]';
+    'w-full px-3 py-2 border border-input rounded-md text-sm text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary';
 
   return (
     <PostSiteLayout
@@ -240,7 +240,7 @@ export default function AddStationPage() {
 
         {loadingSite && !site ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-[#C8860A]" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
           <Card>
@@ -295,13 +295,13 @@ export default function AddStationPage() {
                         onClick={() => selectTurno(key)}
                         className={`flex flex-col items-start gap-2 rounded-xl border p-3 text-left transition-all ${
                           selected
-                            ? 'border-[#C8860A] bg-[#C8860A]/10 ring-1 ring-[#C8860A]/30'
-                            : 'border-input bg-card hover:border-[#C8860A]/40'
+                            ? 'border-primary bg-primary/10 ring-1 ring-primary/30'
+                            : 'border-input bg-card hover:border-primary/40'
                         }`}
                       >
-                        <Icon className={`h-5 w-5 ${selected ? 'text-[#C8860A]' : 'text-muted-foreground'}`} />
+                        <Icon className={`h-5 w-5 ${selected ? 'text-primary' : 'text-muted-foreground'}`} />
                         <div>
-                          <p className={`text-sm font-semibold ${selected ? 'text-[#C8860A]' : 'text-foreground'}`}>{label}</p>
+                          <p className={`text-sm font-semibold ${selected ? 'text-primary' : 'text-foreground'}`}>{label}</p>
                           <p className="text-[11px] text-muted-foreground">{sub}</p>
                         </div>
                       </button>
@@ -345,8 +345,8 @@ export default function AddStationPage() {
                 <div className="rounded-xl border border-input bg-muted/30 p-4 text-sm">
                   <p className="mb-2 font-medium text-foreground">Cobertura 24 horas — dos jornadas</p>
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5"><Sun className="h-3.5 w-3.5 text-[#C8860A]" /> Diurno · 07:00 – 19:00</span>
-                    <span className="inline-flex items-center gap-1.5"><Moon className="h-3.5 w-3.5 text-[#C8860A]" /> Nocturno · 19:00 – 07:00</span>
+                    <span className="inline-flex items-center gap-1.5"><Sun className="h-3.5 w-3.5 text-primary" /> Diurno · 07:00 – 19:00</span>
+                    <span className="inline-flex items-center gap-1.5"><Moon className="h-3.5 w-3.5 text-primary" /> Nocturno · 19:00 – 07:00</span>
                     <span className="ml-auto font-semibold text-foreground">2 fijos</span>
                   </div>
                 </div>
@@ -453,7 +453,7 @@ export default function AddStationPage() {
           <Button
             onClick={createStation}
             disabled={!newName.trim() || !turnoType || saving}
-            className="gap-2 bg-[#C8860A] text-white hover:bg-[#B37809]"
+            className="gap-2 bg-primary text-white hover:bg-primary/90"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             {t('actions.save', 'Guardar')}

@@ -24,9 +24,9 @@ export default function NoWorkspaceAccess() {
         aria-labelledby="no-workspace-title"
         className="w-full max-w-md rounded-2xl bg-white p-7 shadow-2xl dark:bg-slate-900"
       >
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#C8860A]/10">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <svg
-            className="h-7 w-7 text-[#C8860A]"
+            className="h-7 w-7 text-primary"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -62,7 +62,7 @@ export default function NoWorkspaceAccess() {
           <button
             type="button"
             onClick={() => signOut()}
-            className="w-full rounded-lg bg-[#C8860A] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#a96f08] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]/40"
+            className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#a96f08] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             Cerrar sesión
           </button>

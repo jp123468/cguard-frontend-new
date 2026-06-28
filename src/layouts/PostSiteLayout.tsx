@@ -128,7 +128,7 @@ export default function PostSiteLayout({ title, children, site }: Props) {
                                         to={path}
                                         data-active={isActive ? 'true' : undefined}
                                         className={`flex items-center justify-between px-5 py-3 text-sm ${
-                                          isActive ? 'bg-[#C8860A]/10 text-[#C8860A] font-medium' : 'text-foreground hover:bg-accent'
+                                          isActive ? 'bg-primary/10 text-primary font-medium' : 'text-foreground hover:bg-accent'
                                         }`}
                                       >
                                         <span>{it.label}</span>
@@ -231,7 +231,7 @@ const InventoryModal: React.FC<any> = ({ open, onClose, stations, selectedStatio
 
         <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-card rounded-b-md">
           <button onClick={onClose} className="px-4 py-2 rounded-md border text-sm">{t('common.cancel', 'Cancelar')}</button>
-          <button onClick={onCreate} disabled={creating} className="px-6 py-2 bg-[#C8860A] text-white rounded-md">{creating ? t('common.creating','Creando...') : t('postSites.inventories.create','Crear inventario')}</button>
+          <button onClick={onCreate} disabled={creating} className="px-6 py-2 bg-primary text-white rounded-md">{creating ? t('common.creating','Creando...') : t('postSites.inventories.create','Crear inventario')}</button>
         </div>
       </div>
     </div>

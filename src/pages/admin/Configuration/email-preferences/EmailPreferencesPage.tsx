@@ -106,12 +106,12 @@ export default function EmailPreferencesPage() {
         <div className="mx-auto max-w-2xl">
           {loading ? (
             <div className="flex min-h-[30vh] items-center justify-center">
-              <Loader2 className="animate-spin text-[#C8860A]" size={28} />
+              <Loader2 className="animate-spin text-primary" size={28} />
             </div>
           ) : (
             <div className="space-y-6">
               <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-4">
-                <Mail size={18} className="mt-0.5 shrink-0 text-[#C8860A]" />
+                <Mail size={18} className="mt-0.5 shrink-0 text-primary" />
                 <p className="text-sm text-muted-foreground">
                   {t("emailPreferences.intro", {
                     defaultValue:
@@ -139,7 +139,7 @@ export default function EmailPreferencesPage() {
               ))}
 
               <div className="flex justify-end">
-                <Button onClick={save} disabled={saving} className="bg-[#C8860A] text-white hover:bg-[#B37809]">
+                <Button onClick={save} disabled={saving} className="bg-primary text-white hover:bg-primary/90">
                   {saving ? <Loader2 className="mr-2 animate-spin" size={16} /> : <Save className="mr-2" size={16} />}
                   {t("emailPreferences.save", { defaultValue: "Guardar preferencias" })}
                 </Button>

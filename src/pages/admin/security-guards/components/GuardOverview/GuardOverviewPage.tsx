@@ -23,7 +23,7 @@ const StatTile = ({
 }) => {
   const ring =
     accent === 'gold'
-      ? 'bg-[#C8860A]/10 text-[#C8860A]'
+      ? 'bg-primary/10 text-primary'
       : accent === 'green'
         ? 'bg-green-500/10 text-green-600'
         : accent === 'blue'
@@ -121,7 +121,7 @@ export default function GuardResumenPage() {
             <>
               {/* ── HERO ───────────────────────────────────────────────────── */}
               <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-muted/40 shadow-sm">
-                <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-[#C8860A]/15 to-transparent" />
+                <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-primary/15 to-transparent" />
                 <div className="relative p-6 flex flex-col sm:flex-row items-center sm:items-end gap-5">
                   <div className="relative">
                     <div className="w-24 h-24 rounded-2xl bg-muted ring-4 ring-background overflow-hidden flex items-center justify-center shadow-md text-2xl font-semibold text-foreground/70">

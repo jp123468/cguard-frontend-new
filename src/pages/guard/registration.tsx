@@ -69,10 +69,10 @@ export default function GuardRegistration() {
 
   const errorClass = (field: string) => (errors[field] ? "!border-red-500 ring-2 ring-red-500/30" : "");
 
-  const formControl = "h-11 w-full rounded-lg border border-input bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-[#C8860A] focus:ring-2 focus:ring-[#C8860A]/25 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
+  const formControl = "h-11 w-full rounded-lg border border-input bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-primary/25 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
   const labelClass = "mb-1.5 block min-h-[32px] text-[11px] font-semibold uppercase leading-snug tracking-wide text-muted-foreground";
   // Native textarea/select share the input look but manage their own height.
-  const textareaControl = "w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-sm min-h-[84px] resize-none text-foreground placeholder:text-muted-foreground/70 focus:border-[#C8860A] focus:ring-2 focus:ring-[#C8860A]/25 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
+  const textareaControl = "w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-sm min-h-[84px] resize-none text-foreground placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-primary/25 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed";
 
   const validateEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -605,8 +605,8 @@ export default function GuardRegistration() {
     >
       {done ? (
         <div className="text-center">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#C8860A]/12">
-            <CheckCircle2 className="h-9 w-9 text-[#C8860A]" />
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary/12">
+            <CheckCircle2 className="h-9 w-9 text-primary" />
           </div>
           <p className="text-sm leading-relaxed text-muted-foreground">
             Gracias{firstName ? `, ${firstName}` : ''}. Tu información fue enviada a{' '}
@@ -615,14 +615,14 @@ export default function GuardRegistration() {
           </p>
           <div className="mt-6 space-y-3 text-left">
             <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 p-3.5">
-              <Clock className="mt-0.5 h-5 w-5 shrink-0 text-[#C8860A]" />
+              <Clock className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
               <div>
                 <p className="text-sm font-semibold text-foreground">Espera la confirmación</p>
                 <p className="text-xs text-muted-foreground">Tu empresa activará tu cuenta y te asignará a un puesto.</p>
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 p-3.5">
-              <Smartphone className="mt-0.5 h-5 w-5 shrink-0 text-[#C8860A]" />
+              <Smartphone className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
               <div>
                 <p className="text-sm font-semibold text-foreground">Descarga la app de vigilante</p>
                 <p className="text-xs text-muted-foreground">Google Play · App Store. Inicia sesión cuando tu cuenta esté activa.</p>
@@ -648,9 +648,9 @@ export default function GuardRegistration() {
                   key={s}
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
                     s < step
-                      ? 'bg-[#C8860A] text-white'
+                      ? 'bg-primary text-white'
                       : s === step
-                        ? 'bg-[#C8860A] text-white ring-4 ring-[#C8860A]/20'
+                        ? 'bg-primary text-white ring-4 ring-primary/20'
                         : 'bg-muted text-muted-foreground'
                   }`}
                 >
@@ -661,7 +661,7 @@ export default function GuardRegistration() {
           </div>
           {/* progress bar */}
           <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-[#C8860A] transition-all duration-300" style={{ width: `${(step / totalSteps) * 100}%` }} />
+            <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${(step / totalSteps) * 100}%` }} />
           </div>
         </div>
 
@@ -809,10 +809,10 @@ export default function GuardRegistration() {
           </div>
           <div className="ml-auto flex gap-2">
             {step < totalSteps && (
-              <button type="button" onClick={handleNext} className="rounded-lg bg-[#C8860A] px-7 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#a96f08]">Siguiente</button>
+              <button type="button" onClick={handleNext} className="rounded-lg bg-primary px-7 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#a96f08]">Siguiente</button>
             )}
             {step === totalSteps && (
-              <button type="submit" disabled={isLoading} className="inline-flex items-center gap-2 rounded-lg bg-[#C8860A] px-7 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#a96f08] disabled:opacity-60 disabled:cursor-not-allowed">
+              <button type="submit" disabled={isLoading} className="inline-flex items-center gap-2 rounded-lg bg-primary px-7 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#a96f08] disabled:opacity-60 disabled:cursor-not-allowed">
                 {isLoading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
                 {isLoading ? "Registrando…" : "Registrarse"}
               </button>
@@ -821,7 +821,7 @@ export default function GuardRegistration() {
         </div>
 
         <div className="pt-2 text-center">
-          <NavLink to="/login" className="text-xs font-medium text-muted-foreground transition-colors hover:text-[#C8860A]">{t('auth.back_to_login', { defaultValue: 'Volver a iniciar sesión' })}</NavLink>
+          <NavLink to="/login" className="text-xs font-medium text-muted-foreground transition-colors hover:text-primary">{t('auth.back_to_login', { defaultValue: 'Volver a iniciar sesión' })}</NavLink>
         </div>
       </form>
       )}

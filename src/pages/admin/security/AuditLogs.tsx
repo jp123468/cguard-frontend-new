@@ -47,7 +47,7 @@ export default function AuditLogs() {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <ShieldCheck className="size-5 text-[#C8860A]" /> Registro de seguridad
+              <ShieldCheck className="size-5 text-primary" /> Registro de seguridad
             </h1>
             <p className="text-sm text-muted-foreground">Inicios y cierres de sesión, intentos fallidos y eventos de dispositivos.</p>
           </div>
@@ -55,7 +55,7 @@ export default function AuditLogs() {
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar…"
-                className="h-9 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-[#C8860A] focus:outline-none" />
+                className="h-9 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-primary focus:outline-none" />
             </div>
             <button onClick={load} className="grid h-9 w-9 place-items-center rounded-lg border border-input text-muted-foreground hover:text-foreground">
               <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />

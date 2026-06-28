@@ -216,7 +216,7 @@ export default function ShiftTemplates() {
             <div className="flex items-center gap-2 ml-auto">
               <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
                 <SheetTrigger asChild>
-                  <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={openNew}>
+                  <Button className="bg-primary hover:bg-primary/90 text-white" onClick={openNew}>
                     Nueva Plantilla de Turno
                   </Button>
                 </SheetTrigger>
@@ -374,7 +374,7 @@ export default function ShiftTemplates() {
 
                     <div className="flex gap-2 pt-4">
                       <Button
-                        className="flex-1 bg-[#C8860A] hover:bg-[#B37809] text-white"
+                        className="flex-1 bg-primary hover:bg-primary/90 text-white"
                         onClick={handleSave}
                         disabled={saving}
                       >
@@ -382,7 +382,7 @@ export default function ShiftTemplates() {
                       </Button>
                       <Button
                         variant="outline"
-                        className="flex-1 text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10"
+                        className="flex-1 text-primary border-primary/30 hover:bg-primary/10"
                         onClick={() => setIsFormOpen(false)}
                         disabled={saving}
                       >
@@ -395,7 +395,7 @@ export default function ShiftTemplates() {
 
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10 hover:text-[#C8860A]">
+                  <Button variant="outline" className="text-primary border-primary/30 hover:bg-primary/10 hover:text-primary">
                     <Filter className="h-4 w-4 mr-2" /> Filtros
                   </Button>
                 </SheetTrigger>
@@ -452,7 +452,7 @@ export default function ShiftTemplates() {
                 <TableRow>
                   <TableCell colSpan={7} className="h-[300px] text-center">
                     <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                      <Loader2 className="h-8 w-8 animate-spin text-[#C8860A]" />
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
                       <p className="text-sm">Cargando plantillas…</p>
                     </div>
                   </TableCell>
@@ -474,7 +474,7 @@ export default function ShiftTemplates() {
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox />
                     </TableCell>
-                    <TableCell className="text-[#C8860A] font-medium">{template.templateName}</TableCell>
+                    <TableCell className="text-primary font-medium">{template.templateName}</TableCell>
                     <TableCell>{template.startTime}</TableCell>
                     <TableCell>{template.endTime}</TableCell>
                     <TableCell>{postSiteName(template.postSiteId)}</TableCell>

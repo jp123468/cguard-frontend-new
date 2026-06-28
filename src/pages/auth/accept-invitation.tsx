@@ -134,7 +134,7 @@ export default function AcceptInvitation() {
   const tenantLogo = fetched?.tenant?.logoUrl as string | undefined;
   const role = roleLabel(fetched?.roles);
 
-  const inputCls = "h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:border-[#C8860A] focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-60";
+  const inputCls = "h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60";
 
   return (
     <div className="min-h-screen w-full flex bg-background">
@@ -142,7 +142,7 @@ export default function AcceptInvitation() {
       <div className="relative hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between overflow-hidden p-12 xl:p-16"
         style={{ background: "linear-gradient(145deg, #0F1923 0%, #1C2B3A 55%, #0F1923 100%)" }}>
         <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "linear-gradient(#C8860A 1px, transparent 1px), linear-gradient(90deg, #C8860A 1px, transparent 1px)", backgroundSize: "46px 46px" }} />
-        <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#C8860A] opacity-10 blur-3xl" />
+        <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary opacity-10 blur-3xl" />
         <div className="pointer-events-none absolute -left-32 bottom-0 h-[32rem] w-[32rem] rounded-full bg-[#F5C300] opacity-[0.06] blur-3xl" />
 
         <div className="relative z-10 flex items-center gap-3">
@@ -150,7 +150,7 @@ export default function AcceptInvitation() {
             <img src={tenantLogo} alt={tenantName || "Logo"} className="h-14 object-contain" />
           ) : (
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#C8860A]/15"><ShieldCheck className="h-6 w-6 text-[#C8860A]" /></span>
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/15"><ShieldCheck className="h-6 w-6 text-primary" /></span>
               <span className="text-2xl font-bold text-white">{tenantName || "CGuard Pro"}</span>
             </div>
           )}
@@ -178,25 +178,25 @@ export default function AcceptInvitation() {
         <div className="w-full max-w-md">
           {/* Mobile brand */}
           <div className="mb-8 flex items-center justify-center gap-2 lg:hidden">
-            {tenantLogo ? <img src={tenantLogo} alt={tenantName || "Logo"} className="h-10 object-contain" /> : <><ShieldCheck className="h-7 w-7 text-[#C8860A]" /><span className="text-lg font-bold text-foreground">{tenantName || "CGuard Pro"}</span></>}
+            {tenantLogo ? <img src={tenantLogo} alt={tenantName || "Logo"} className="h-10 object-contain" /> : <><ShieldCheck className="h-7 w-7 text-primary" /><span className="text-lg font-bold text-foreground">{tenantName || "CGuard Pro"}</span></>}
           </div>
 
           {phase === "signing-in" ? (
             <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-xl">
-              <Loader2 className="mx-auto mb-4 h-9 w-9 animate-spin text-[#C8860A]" />
+              <Loader2 className="mx-auto mb-4 h-9 w-9 animate-spin text-primary" />
               <p className="text-base font-semibold text-foreground">Accediendo al panel…</p>
               <p className="mt-1 text-sm text-muted-foreground">Un momento, estamos preparando tu cuenta.</p>
             </div>
           ) : loading ? (
             <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-xl">
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#C8860A]" />
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
             </div>
           ) : inviteNotFound ? (
             <div className="rounded-2xl border border-border bg-card p-8 shadow-xl">
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-red-500/10"><AlertCircle className="h-7 w-7 text-red-500" /></div>
               <h2 className="text-center text-xl font-bold text-foreground">Invitación no válida</h2>
               <p className="mt-2 text-center text-sm text-muted-foreground">El enlace de invitación no existe, ya fue usado o expiró. Pide a tu administrador que te reenvíe la invitación.</p>
-              <button onClick={() => navigate("/login")} className="mt-6 w-full rounded-xl bg-[#C8860A] py-2.5 text-sm font-semibold text-white transition hover:bg-[#B37809]">Ir a iniciar sesión</button>
+              <button onClick={() => navigate("/login")} className="mt-6 w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90">Ir a iniciar sesión</button>
             </div>
           ) : (
             <>
@@ -264,7 +264,7 @@ export default function AcceptInvitation() {
                 </div>
 
                 <button type="submit" disabled={!canSubmit}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C8860A] py-3 text-sm font-semibold text-white transition hover:bg-[#B37809] disabled:cursor-not-allowed disabled:opacity-50">
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Activar y entrar al panel <ArrowRight className="h-4 w-4" /></>}
                 </button>
               </form>

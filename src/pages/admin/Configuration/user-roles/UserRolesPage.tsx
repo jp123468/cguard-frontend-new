@@ -321,7 +321,7 @@ export default function UserRolesPage() {
                       </Button>
                     )}
                     <Button variant="outline" onClick={() => { setExpandedRoleId(null); setExpandedRolePerms([]); setPermQuery(""); }}>Cancelar</Button>
-                    <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={() => saveExpandedPermissions(expandedRoleId as string, expandedRolePerms)}>Guardar</Button>
+                    <Button className="bg-primary hover:bg-primary/90 text-white" onClick={() => saveExpandedPermissions(expandedRoleId as string, expandedRolePerms)}>Guardar</Button>
                   </div>
                 )}
               </div>

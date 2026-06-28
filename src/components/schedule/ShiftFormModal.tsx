@@ -362,7 +362,7 @@ export default function ShiftFormModal({
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={saving} className="bg-[#C8860A] hover:bg-[#B37809] text-white">
+            <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-white">
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {isEdit ? "Guardar Cambios" : "Crear Turno"}
             </Button>

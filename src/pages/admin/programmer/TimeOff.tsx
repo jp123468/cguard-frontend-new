@@ -280,7 +280,7 @@ export default function TimeOff() {
               {/* New Request Sheet */}
               <Sheet open={isNewRequestOpen} onOpenChange={(v) => { setIsNewRequestOpen(v); if (!v) resetForm(); }}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10 hover:text-[#C8860A]">
+                  <Button variant="outline" className="text-primary border-primary/30 hover:bg-primary/10 hover:text-primary">
                     Nueva entrada
                   </Button>
                 </SheetTrigger>
@@ -375,7 +375,7 @@ export default function TimeOff() {
                   </div>
                   <SheetFooter>
                     <Button
-                      className="bg-[#C8860A] hover:bg-[#B37809] text-white w-full sm:w-auto"
+                      className="bg-primary hover:bg-primary/90 text-white w-full sm:w-auto"
                       disabled={saving}
                       onClick={handleCreate}
                     >
@@ -388,7 +388,7 @@ export default function TimeOff() {
 
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30 hover:bg-[#C8860A]/10 hover:text-[#C8860A]">
+                  <Button variant="outline" className="text-primary border-primary/30 hover:bg-primary/10 hover:text-primary">
                     <Filter className="h-4 w-4 mr-2" /> Filtros
                   </Button>
                 </SheetTrigger>
@@ -402,7 +402,7 @@ export default function TimeOff() {
                   <div className="space-y-4 py-4">
                     <p className="text-sm text-muted-foreground">Usa el filtro de estado en la barra principal para filtrar por pendiente, aprobado o rechazado.</p>
                     <Button
-                      className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
+                      className="w-full bg-primary hover:bg-primary/90 text-white"
                       onClick={() => setIsFiltersOpen(false)}
                     >
                       Cerrar
@@ -413,7 +413,7 @@ export default function TimeOff() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-[#C8860A]">
+                  <Button variant="ghost" size="icon" className="text-primary">
                     <EllipsisVertical className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>

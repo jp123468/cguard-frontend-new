@@ -137,7 +137,7 @@ export function DateRangePicker({
         <PopoverContent className="w-auto p-0" align="end">
           <div className="flex">
             {/* Sidebar with presets */}
-            <div className="border-r bg-[#C8860A] text-white p-1.5 w-40">
+            <div className="border-r bg-primary text-white p-1.5 w-40">
               <div className="space-y-0.5">
                 {presets.map((preset) => (
                   <button

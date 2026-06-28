@@ -101,7 +101,7 @@ export function ServiceTypePicker({ value, onChange, error }: ServiceTypePickerP
               type="button"
               onClick={() => handleSelectKnown(st.value)}
               className={cn(
-                'flex items-start gap-3 rounded-lg border-2 p-4 text-left transition-all duration-150 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]',
+                'flex items-start gap-3 rounded-lg border-2 p-4 text-left transition-all duration-150 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                 isSelected
                   ? [st.color, st.borderColor, 'shadow-sm ring-1', st.borderColor.replace('border-', 'ring-')]
                   : 'border-border bg-card hover:border-border',
@@ -133,7 +133,7 @@ export function ServiceTypePicker({ value, onChange, error }: ServiceTypePickerP
           type="button"
           onClick={handleSelectOther}
           className={cn(
-            'flex items-start gap-3 rounded-lg border-2 p-4 text-left transition-all duration-150 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]',
+            'flex items-start gap-3 rounded-lg border-2 p-4 text-left transition-all duration-150 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
             isOther
               ? 'border-gray-400 bg-muted/30 shadow-sm ring-1 ring-gray-400'
               : 'border-border bg-card hover:border-border',

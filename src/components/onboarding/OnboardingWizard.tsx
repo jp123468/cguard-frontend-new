@@ -381,7 +381,7 @@ export default function OnboardingWizard({
                       className="absolute -bottom-1.5 -right-1.5 grid h-7 w-7 place-items-center rounded-full border border-border bg-background shadow-sm transition-colors hover:bg-accent"
                       aria-label="Subir logo"
                     >
-                      <Camera className="h-3.5 w-3.5 text-[#C8860A]" />
+                      <Camera className="h-3.5 w-3.5 text-primary" />
                     </button>
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -438,7 +438,7 @@ export default function OnboardingWizard({
                   <button
                     type="button"
                     onClick={() => setShowManualAddress((v) => !v)}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-[#C8860A] hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
                   >
                     <Edit className="h-3 w-3" />
                     {showManualAddress ? "Búsqueda automática" : "Ingresar manualmente"}
@@ -512,7 +512,7 @@ export default function OnboardingWizard({
                       if (tz) { set({ timezone: tz }); toast.success(`Zona horaria detectada: ${tz}`); }
                       else toast.info("No se pudo detectar; selecciónala manualmente.");
                     }}
-                    className="text-xs font-medium text-[#C8860A] hover:underline"
+                    className="text-xs font-medium text-primary hover:underline"
                   >
                     Detectar por dirección
                   </button>
@@ -562,7 +562,7 @@ export default function OnboardingWizard({
               <Button
                 type="button"
                 onClick={next}
-                className="bg-[#C8860A] px-6 text-white hover:bg-[#B37809]"
+                className="bg-primary px-6 text-white hover:bg-primary/90"
               >
                 Comenzar <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
@@ -572,7 +572,7 @@ export default function OnboardingWizard({
                 type="button"
                 onClick={next}
                 disabled={!canAdvance(step)}
-                className="bg-[#C8860A] px-6 text-white hover:bg-[#B37809] disabled:opacity-50"
+                className="bg-primary px-6 text-white hover:bg-primary/90 disabled:opacity-50"
               >
                 Continuar <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
@@ -582,7 +582,7 @@ export default function OnboardingWizard({
                 type="button"
                 onClick={handleFinish}
                 disabled={submitting || !step2Valid || !step3Valid}
-                className="bg-[#C8860A] px-6 text-white hover:bg-[#B37809] disabled:opacity-50"
+                className="bg-primary px-6 text-white hover:bg-primary/90 disabled:opacity-50"
               >
                 {submitting ? (
                   <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Guardando...</>
@@ -640,7 +640,7 @@ function WelcomeStep({ days, trialEnd }: { days: number | null; trialEnd: string
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vamos a configurar</p>
         {items.map(({ icon: Icon, text }) => (
           <div key={text} className="flex items-center gap-3 text-sm text-foreground">
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#C8860A]/12 text-[#C8860A]">
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary">
               <Icon className="h-4 w-4" />
             </span>
             {text}
@@ -679,7 +679,7 @@ function ReviewStep({
   const tzLabel = TIMEZONE_OPTIONS.find((t) => t.value === form.timezone)?.label || form.timezone;
   return (
     <div className="space-y-4 animate-in fade-in-50 duration-300">
-      <div className="flex items-center gap-3 rounded-xl border border-[#C8860A]/30 bg-[#C8860A]/8 p-3">
+      <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/8 p-3">
         <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-background">
           {logoPreview ? (
             <img src={logoPreview} alt="logo" className="h-full w-full object-cover" />
@@ -696,12 +696,12 @@ function ReviewStep({
       <div className="rounded-xl border border-border bg-card divide-y divide-border px-4">
         <div className="flex items-center justify-between py-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Empresa</span>
-          <button type="button" onClick={() => onEdit(1)} className="text-xs font-medium text-[#C8860A] hover:underline">Editar</button>
+          <button type="button" onClick={() => onEdit(1)} className="text-xs font-medium text-primary hover:underline">Editar</button>
         </div>
         <ReviewRow label="RUC / Cédula" value={form.taxNumber} />
         <div className="flex items-center justify-between py-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Contacto y ubicación</span>
-          <button type="button" onClick={() => onEdit(2)} className="text-xs font-medium text-[#C8860A] hover:underline">Editar</button>
+          <button type="button" onClick={() => onEdit(2)} className="text-xs font-medium text-primary hover:underline">Editar</button>
         </div>
         <ReviewRow label="Teléfono" value={form.phone} />
         <ReviewRow label="Correo" value={form.email} />
@@ -712,7 +712,7 @@ function ReviewStep({
 
       {trialEnd && (
         <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-          <Gift className="h-3.5 w-3.5 text-[#C8860A]" />
+          <Gift className="h-3.5 w-3.5 text-primary" />
           Tu prueba gratuita termina el {trialEnd}
           {days != null && days > 0 ? ` (${days} día${days === 1 ? "" : "s"} restantes)` : ""}.
         </div>

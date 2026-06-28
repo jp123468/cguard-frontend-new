@@ -45,7 +45,7 @@ export default function ClientPortal({ client }: Props) {
       {/* Header */}
       <div>
         <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <Globe className="w-5 h-5 text-[#C8860A]" />
+          <Globe className="w-5 h-5 text-primary" />
           Acceso al Portal del Cliente
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
@@ -55,7 +55,7 @@ export default function ClientPortal({ client }: Props) {
 
       {/* Info card */}
       <div className="bg-amber-500/10 border border-amber-200 rounded-lg p-4 flex gap-3">
-        <ShieldCheck className="w-5 h-5 text-[#C8860A] flex-shrink-0 mt-0.5" />
+        <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
         <div className="text-sm text-amber-700 space-y-1">
           <p className="font-medium">¿Cómo funciona?</p>
           <ul className="list-disc list-inside space-y-0.5 text-amber-700">
@@ -68,8 +68,8 @@ export default function ClientPortal({ client }: Props) {
 
       {/* Client summary */}
       <div className="bg-card border rounded-lg p-4 flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full bg-[#C8860A]/10 flex items-center justify-center">
-          <span className="text-[#C8860A] font-semibold text-sm">
+        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <span className="text-primary font-semibold text-sm">
             {(name || '?').charAt(0).toUpperCase()}
           </span>
         </div>
@@ -93,7 +93,7 @@ export default function ClientPortal({ client }: Props) {
         <button
           onClick={() => setDialog('confirm')}
           disabled={!email && !userId}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[#C8860A] text-white text-sm font-semibold rounded-lg hover:bg-[#B37809] transition-colors disabled:opacity-40 disabled:cursor-not-allowed w-fit"
+          className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed w-fit"
         >
           <Mail className="w-4 h-4" />
           Enviar invitación al portal
@@ -142,7 +142,7 @@ export default function ClientPortal({ client }: Props) {
           <div className="bg-card rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0">
-                <Mail className="w-5 h-5 text-[#C8860A]" />
+                <Mail className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-sm">Enviar invitación al portal</h3>
@@ -152,7 +152,7 @@ export default function ClientPortal({ client }: Props) {
 
             <div className="bg-muted/30 rounded-lg px-4 py-3 text-center">
               <p className="text-sm font-semibold text-foreground">{name}</p>
-              <p className="text-sm text-[#C8860A]">{email || '(sin correo registrado)'}</p>
+              <p className="text-sm text-primary">{email || '(sin correo registrado)'}</p>
             </div>
 
             <p className="text-xs text-muted-foreground text-center">
@@ -168,7 +168,7 @@ export default function ClientPortal({ client }: Props) {
               </button>
               <button
                 onClick={handleSendInvitation}
-                className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-[#C8860A] rounded-lg hover:bg-[#B37809] transition-colors"
+                className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Enviar
               </button>
@@ -181,7 +181,7 @@ export default function ClientPortal({ client }: Props) {
       {dialog === 'sending' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="bg-card rounded-2xl shadow-xl w-full max-w-xs p-8 flex flex-col items-center gap-4">
-            <Loader2 className="w-8 h-8 text-[#C8860A] animate-spin" />
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
             <p className="text-sm font-medium text-foreground">Enviando invitación…</p>
           </div>
         </div>

@@ -83,10 +83,10 @@ export default function GuardConfiguracionPage() {
             {/* Tabs */}
             <div className="border-b">
               <nav className="grid grid-cols-4 text-sm">
-                <button onClick={() => setActiveTab('general')} className={`py-3 text-center ${activeTab === 'general' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-foreground/70'}`}>General</button>
-                <button onClick={() => setActiveTab('time')} className={`py-3 text-center ${activeTab === 'time' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-foreground/70'}`}>Time Clock</button>
-                <button onClick={() => setActiveTab('scheduler')} className={`py-3 text-center ${activeTab === 'scheduler' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-foreground/70'}`}>Scheduler</button>
-                <button onClick={() => setActiveTab('notifications')} className={`py-3 text-center ${activeTab === 'notifications' ? 'border-b-2 border-[#C8860A] text-[#C8860A]' : 'text-foreground/70'}`}>Notifications</button>
+                <button onClick={() => setActiveTab('general')} className={`py-3 text-center ${activeTab === 'general' ? 'border-b-2 border-primary text-primary' : 'text-foreground/70'}`}>General</button>
+                <button onClick={() => setActiveTab('time')} className={`py-3 text-center ${activeTab === 'time' ? 'border-b-2 border-primary text-primary' : 'text-foreground/70'}`}>Time Clock</button>
+                <button onClick={() => setActiveTab('scheduler')} className={`py-3 text-center ${activeTab === 'scheduler' ? 'border-b-2 border-primary text-primary' : 'text-foreground/70'}`}>Scheduler</button>
+                <button onClick={() => setActiveTab('notifications')} className={`py-3 text-center ${activeTab === 'notifications' ? 'border-b-2 border-primary text-primary' : 'text-foreground/70'}`}>Notifications</button>
               </nav>
             </div>
 
@@ -442,7 +442,7 @@ export default function GuardConfiguracionPage() {
 
             {/* Save Button pinned bottom-right */}
             <div className="fixed right-6 bottom-6 z-40">
-              <button disabled={!id || saving} onClick={() => setConfirmOpen(true)} className="px-4 py-2 bg-[#C8860A] text-white rounded-full shadow hover:bg-[#B37809] disabled:opacity-50">Save Settings</button>
+              <button disabled={!id || saving} onClick={() => setConfirmOpen(true)} className="px-4 py-2 bg-primary text-white rounded-full shadow hover:bg-primary/90 disabled:opacity-50">Save Settings</button>
             </div>
 
             {/* Confirm dialog */}

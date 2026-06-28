@@ -83,7 +83,7 @@ export default function NominaTimeClock() {
     <AppLayout>
       <div className="mx-auto max-w-md p-6">
         <div className="rounded-3xl border border-border/50 bg-card p-8 text-center shadow-sm">
-          <span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#C8860A]/15 text-[#C8860A]">
+          <span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
             <Clock size={30} />
           </span>
           <h1 className="text-xl font-bold text-foreground">Reloj de Asistencia</h1>
@@ -126,7 +126,7 @@ export default function NominaTimeClock() {
                     Marcar salida
                   </Button>
                 ) : (
-                  <Button onClick={doClockIn} disabled={busy || !stationId} className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white py-6 text-base">
+                  <Button onClick={doClockIn} disabled={busy || !stationId} className="w-full bg-primary hover:bg-primary/90 text-white py-6 text-base">
                     {busy ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
                     Marcar entrada
                   </Button>

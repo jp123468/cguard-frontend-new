@@ -93,7 +93,7 @@ export default function NominaRecords() {
       key: "patrols",
       header: "Rondas",
       render: (_v, r) => (
-        <span className="font-medium text-[#C8860A]">{r.numberOfPatrolsDuringShift ?? 0}</span>
+        <span className="font-medium text-primary">{r.numberOfPatrolsDuringShift ?? 0}</span>
       ),
     },
     {

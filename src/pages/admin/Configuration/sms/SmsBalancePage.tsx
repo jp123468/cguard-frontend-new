@@ -154,7 +154,7 @@ export default function SmsBalancePage() {
         <div className="mx-auto max-w-2xl">
           {loading ? (
             <div className="flex min-h-[30vh] items-center justify-center">
-              <Loader2 className="animate-spin text-[#C8860A]" size={28} />
+              <Loader2 className="animate-spin text-primary" size={28} />
             </div>
           ) : (
             <div className="space-y-6">
@@ -162,7 +162,7 @@ export default function SmsBalancePage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <Wallet size={18} className="text-[#C8860A]" />
+                    <Wallet size={18} className="text-primary" />
                     {t("sms.balanceTitle", { defaultValue: "Saldo de mensajería SMS" })}
                   </CardTitle>
                 </CardHeader>
@@ -186,7 +186,7 @@ export default function SmsBalancePage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <MessageSquare size={18} className="text-[#C8860A]" />
+                    <MessageSquare size={18} className="text-primary" />
                     {t("sms.accountTitle", { defaultValue: "Cuenta de envío (Twilio)" })}
                   </CardTitle>
                 </CardHeader>
@@ -218,7 +218,7 @@ export default function SmsBalancePage() {
                     <Button
                       onClick={onProvision}
                       disabled={provisioning || !account?.platformConfigured}
-                      className="bg-[#C8860A] text-white hover:bg-[#B37809]"
+                      className="bg-primary text-white hover:bg-primary/90"
                     >
                       {provisioning ? <Loader2 className="mr-2 animate-spin" size={16} /> : <Plus className="mr-2" size={16} />}
                       {t("sms.createSubaccount", { defaultValue: "Crear subcuenta SMS" })}
@@ -229,7 +229,7 @@ export default function SmsBalancePage() {
                     <Button
                       onClick={openBuy}
                       disabled={!account?.platformConfigured}
-                      className="bg-[#C8860A] text-white hover:bg-[#B37809]"
+                      className="bg-primary text-white hover:bg-primary/90"
                     >
                       <Phone className="mr-2" size={16} />
                       {t("sms.buyNumber", { defaultValue: "Comprar número" })}
@@ -250,7 +250,7 @@ export default function SmsBalancePage() {
                         key={p}
                         onClick={() => setAmount(p)}
                         className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
-                          amount === p ? "border-[#C8860A] bg-[#C8860A]/10 text-[#C8860A]" : "border-border text-foreground hover:bg-muted/30"
+                          amount === p ? "border-primary bg-primary/10 text-primary" : "border-border text-foreground hover:bg-muted/30"
                         }`}
                       >
                         ${p}
@@ -313,7 +313,7 @@ export default function SmsBalancePage() {
               <div className="w-full max-w-lg rounded-xl bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between border-b p-5">
                   <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
-                    <Phone size={18} className="text-[#C8860A]" />
+                    <Phone size={18} className="text-primary" />
                     {t("sms.buyNumberTitle", { defaultValue: "Comprar número de envío" })}
                   </h2>
                   <button onClick={() => !buying && setBuyOpen(false)} className="text-muted-foreground hover:text-foreground">
@@ -363,7 +363,7 @@ export default function SmsBalancePage() {
                               size="sm"
                               onClick={() => buyNumber(n.phoneNumber)}
                               disabled={!!buying}
-                              className="bg-[#C8860A] text-white hover:bg-[#B37809]"
+                              className="bg-primary text-white hover:bg-primary/90"
                             >
                               {buying === n.phoneNumber ? <Loader2 className="animate-spin" size={14} /> : t("sms.buy", { defaultValue: "Comprar" })}
                             </Button>

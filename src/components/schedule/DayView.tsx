@@ -161,7 +161,7 @@ export default function DayView({ currentDate, shifts = [], gaps = [], onCreateS
                 <DropdownMenuTrigger asChild>
                     <Button
                         size="icon"
-                        className="absolute bottom-6 right-6 h-12 w-12 rounded-full bg-[#C8860A] hover:bg-[#B37809] shadow-lg"
+                        className="absolute bottom-6 right-6 h-12 w-12 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
                         title="Agregar"
                     >
                         <Plus className="h-6 w-6 text-white" />

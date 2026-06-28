@@ -81,7 +81,7 @@ export default function Guard() {
 
           {/* Tier distribution */}
           {!!tierTotal && (
-            <Section title="Distribución de desempeño" icon={<Award size={16} className="text-[#C8860A]" />}>
+            <Section title="Distribución de desempeño" icon={<Award size={16} className="text-primary" />}>
               <div className="flex h-3 w-full overflow-hidden rounded-full">
                 {(["excellent", "good", "fair", "poor"] as const).map((t) => {
                   const v = counts![t]; if (!v) return null;
@@ -97,9 +97,9 @@ export default function Guard() {
           )}
 
           {/* Leaderboard */}
-          <Section title="Ranking de desempeño" icon={<Award size={16} className="text-[#C8860A]" />}>
+          <Section title="Ranking de desempeño" icon={<Award size={16} className="text-primary" />}>
             {lbLoading ? (
-              <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-[#C8860A]" size={18} /></div>
+              <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-primary" size={18} /></div>
             ) : !lb || lb.guards.length === 0 ? (
               <p className="py-4 text-sm text-muted-foreground">No hay vigilantes para evaluar.</p>
             ) : (

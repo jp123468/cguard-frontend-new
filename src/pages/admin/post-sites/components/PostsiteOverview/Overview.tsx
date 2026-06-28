@@ -49,7 +49,7 @@ export default function PostSiteOverview({ site }: { site?: any }) {
   // readability; only the icon chip carries colour.
   const stats = [
     { id: 'assigned',  label: t('postSites.overview.Stats.guardsAssigned'),    value: assignedCount,  icon: Users,          accent: 'text-blue-600 bg-blue-600/10' },
-    { id: 'onsite',    label: t('postSites.overview.Stats.guardOnSite'),       value: onsiteCount,    icon: ShieldCheck,    accent: 'text-[#C8860A] bg-[#C8860A]/10' },
+    { id: 'onsite',    label: t('postSites.overview.Stats.guardOnSite'),       value: onsiteCount,    icon: ShieldCheck,    accent: 'text-primary bg-primary/10' },
     { id: 'tours',     label: t('postSites.overview.Stats.toursCompleted'),    value: toursCount,     icon: Route,          accent: 'text-emerald-600 bg-emerald-600/10' },
     { id: 'tasks',     label: t('postSites.overview.Stats.tasksCompleted'),    value: tasksCount,     icon: ClipboardCheck, accent: 'text-indigo-600 bg-indigo-600/10' },
     { id: 'incidents', label: t('postSites.overview.Stats.incidentsReported'), value: incidentsCount, icon: AlertTriangle,  accent: 'text-rose-600 bg-rose-600/10' },
@@ -201,7 +201,7 @@ export default function PostSiteOverview({ site }: { site?: any }) {
         <CardContent className="p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-4 min-w-0">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#C8860A]/10 text-[#C8860A]">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Building2 className="h-7 w-7" />
               </div>
               <div className="min-w-0">
@@ -278,7 +278,7 @@ export default function PostSiteOverview({ site }: { site?: any }) {
             </h3>
             {address ? (
               <a href={mapsUrl} target="_blank" rel="noreferrer"
-                 className="inline-flex items-center gap-1.5 text-sm text-[#C8860A] hover:underline">
+                 className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
                 {t('postSites.overview.Map.openInMaps', 'Abrir en Google Maps')}
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
@@ -294,7 +294,7 @@ export default function PostSiteOverview({ site }: { site?: any }) {
               <MapPin className="h-7 w-7 opacity-50" />
               <p className="text-sm">{t('postSites.overview.Map.noCoords', 'Este sitio no tiene coordenadas configuradas.')}</p>
               {address ? (
-                <a href={mapsUrl} target="_blank" rel="noreferrer" className="text-sm text-[#C8860A] hover:underline">
+                <a href={mapsUrl} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">
                   {t('postSites.overview.Map.openInMaps', 'Abrir en Google Maps')}
                 </a>
               ) : null}
@@ -358,7 +358,7 @@ export default function PostSiteOverview({ site }: { site?: any }) {
                         {t('common.clear', 'Limpiar')}
                       </Button>
                     ) : null}
-                    <Button size="sm" className="bg-[#C8860A] text-white hover:bg-[#b3780a]" onClick={() => setOpenFilter(false)}>
+                    <Button size="sm" className="bg-primary text-white hover:bg-[#b3780a]" onClick={() => setOpenFilter(false)}>
                       {t('common.apply', 'Filtrar')}
                     </Button>
                   </div>

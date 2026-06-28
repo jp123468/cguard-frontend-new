@@ -96,7 +96,7 @@ export default function StationRondaHistory({ station, stationId }: Props) {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-[#C8860A]" /></div>
+        <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
       ) : error ? (
         <div className="p-6 text-sm text-red-600">{error}</div>
       ) : rows.length === 0 ? (
@@ -113,7 +113,7 @@ export default function StationRondaHistory({ station, stationId }: Props) {
               <li key={r.id}>
                 <button onClick={() => setExpanded(isOpen ? null : r.id)} className="flex w-full items-center gap-3 px-6 py-3 text-left hover:bg-muted/20">
                   {isOpen ? <ChevronDown size={18} className="shrink-0 text-muted-foreground" /> : <ChevronRight size={18} className="shrink-0 text-muted-foreground" />}
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#C8860A]/12 text-[#C8860A]"><Route size={16} /></div>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary"><Route size={16} /></div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium text-foreground">{r.rondaName}</span>
@@ -136,7 +136,7 @@ export default function StationRondaHistory({ station, stationId }: Props) {
                 {/* progress bar */}
                 <div className="px-6 pb-2">
                   <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-[#C8860A]" style={{ width: `${pct}%` }} />
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
 
@@ -149,7 +149,7 @@ export default function StationRondaHistory({ station, stationId }: Props) {
                         {r.scans.map((s) => (
                           <li key={s.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2">
                             <div className="flex items-center gap-2 min-w-0">
-                              <Flag size={13} className="shrink-0 text-[#C8860A]" />
+                              <Flag size={13} className="shrink-0 text-primary" />
                               <span className="truncate text-sm font-medium text-foreground">{s.checkpoint}</span>
                               <span className="text-xs text-muted-foreground">{fmt(s.scannedAt)}</span>
                             </div>

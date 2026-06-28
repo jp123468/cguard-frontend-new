@@ -9,7 +9,7 @@ export function Copyable({ text }: { text: string }) {
   const { t } = useTranslation()
   return (
     <div className="flex items-center gap-2">
-      <div className="max-w-[70vw] truncate rounded-md border-2 border-dashed border-[#C8860A]/60 px-6 py-3 text-lg font-medium">
+      <div className="max-w-[70vw] truncate rounded-md border-2 border-dashed border-primary/60 px-6 py-3 text-lg font-medium">
         {text}
       </div>
       <TooltipProvider>

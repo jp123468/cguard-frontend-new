@@ -508,7 +508,7 @@ export default function GuardIndicators({ guard }: Props) {
                     placeholder={t('guards.KPI.kpisearch', 'Buscar KPI')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
+                    className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -520,7 +520,7 @@ export default function GuardIndicators({ guard }: Props) {
               {/* Right: Add Button */}
               <button
                 onClick={handleAddKPI}
-                className="ml-2 px-3 py-2 bg-[#C8860A] text-white rounded-md text-sm font-medium flex items-center gap-2 hover:bg-[#B37809] transition-colors"
+                className="ml-2 px-3 py-2 bg-primary text-white rounded-md text-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
               >
                 <Plus size={16} />
                 {t('guards.KPI.kpiadded', 'Añadir Nuevo KPI')}
@@ -559,7 +559,7 @@ export default function GuardIndicators({ guard }: Props) {
                           <td colSpan={5} className="px-4 py-12">
                             <div className="flex flex-col items-center justify-center gap-4">
                               <div className="w-32 h-32">
-                                <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
+                                <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
                                   <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                                   <circle cx="85" cy="100" r="8" fill="white" />
                                   <circle cx="115" cy="100" r="8" fill="white" />
@@ -775,7 +775,7 @@ export default function GuardIndicators({ guard }: Props) {
                         <select
                           value={formData.frequency}
                           onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
-                          className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] bg-card"
+                          className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary bg-card"
                         >
                           <option value="">{t('guards.KPI.modal.frequencyOptions.select', 'Seleccionar frecuencia')}</option>
                           <option value="diario">{t('guards.KPI.modal.frequencyOptions.daily', 'Diario')}</option>
@@ -793,7 +793,7 @@ export default function GuardIndicators({ guard }: Props) {
                           value={formData.description}
                           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                           placeholder={t('guards.KPI.modal.descriptionPlaceholder', 'Ingrese la descripción')}
-                          className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none"
+                          className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                           rows={4}
                         />
                       </div>
@@ -821,7 +821,7 @@ export default function GuardIndicators({ guard }: Props) {
                               }}
                               disabled={!formData.standardReports}
                               placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
-                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A] disabled:bg-gray-300 disabled:cursor-not-allowed"
+                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-300 disabled:cursor-not-allowed"
                             />
                           </div>
                         </div>
@@ -847,7 +847,7 @@ export default function GuardIndicators({ guard }: Props) {
                               }}
                               disabled={!formData.incidentReports}
                               placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
-                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A] disabled:bg-gray-300 disabled:cursor-not-allowed"
+                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-300 disabled:cursor-not-allowed"
                             />
                           </div>
                         </div>
@@ -873,7 +873,7 @@ export default function GuardIndicators({ guard }: Props) {
                               }}
                               disabled={!formData.routeReports}
                               placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
-                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A] disabled:bg-gray-300 disabled:cursor-not-allowed"
+                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-300 disabled:cursor-not-allowed"
                             />
                           </div>
                         </div>
@@ -899,7 +899,7 @@ export default function GuardIndicators({ guard }: Props) {
                               }}
                               disabled={!formData.taskReports}
                               placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
-                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A] disabled:bg-gray-300 disabled:cursor-not-allowed"
+                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-300 disabled:cursor-not-allowed"
                             />
                           </div>
                         </div>
@@ -925,7 +925,7 @@ export default function GuardIndicators({ guard }: Props) {
                               }}
                               disabled={!formData.verificationReports}
                               placeholder={t('guards.KPI.modal.defineNumber', 'Definir un Número')}
-                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A] disabled:bg-gray-300 disabled:cursor-not-allowed"
+                              className="w-32 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-300 disabled:cursor-not-allowed"
                             />
                           </div>
                         </div>
@@ -939,7 +939,7 @@ export default function GuardIndicators({ guard }: Props) {
                             type="checkbox"
                             checked={formData.emailNotification}
                             onChange={(e) => setFormData({ ...formData, emailNotification: e.target.checked })}
-                            className="rounded w-5 h-5 ml-auto accent-[#C8860A]"
+                            className="rounded w-5 h-5 ml-auto accent-primary"
                           />
                         </div>
 
@@ -974,12 +974,12 @@ export default function GuardIndicators({ guard }: Props) {
                                   }}
                                   onKeyPress={handleKeyPress}
                                   placeholder={t('guards.KPI.modal.newEmailPlaceholder', 'Nuevo Correo Electrónico...')}
-                                  className={`flex-1 px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${emailError ? 'border-red-500 focus:ring-red-500' : 'focus:ring-[#C8860A]'
+                                  className={`flex-1 px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${emailError ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'
                                     }`}
                                 />
                                 <button
                                   onClick={handleAddEmail}
-                                  className="px-4 py-2 bg-[#C8860A] text-white rounded-md text-sm font-medium hover:bg-[#B37809] transition-colors"
+                                  className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
                                 >
                                   {t('guards.KPI.modal.addEmail', 'Agregar')}
                                 </button>
@@ -1003,7 +1003,7 @@ export default function GuardIndicators({ guard }: Props) {
                       </button>
                       <button
                         onClick={handleSubmitKPI}
-                        className="px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809]"
+                        className="px-6 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary/90"
                       >
                         {t('guards.KPI.modal.addButton', 'AÑADIR')}
                       </button>

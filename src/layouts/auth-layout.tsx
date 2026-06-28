@@ -73,9 +73,9 @@ export default function AuthLayout({ children, title, variant = 'admin', subtitl
         />
 
         {/* Orbes decorativos */}
-        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#C8860A] opacity-10 blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary opacity-10 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 -left-32 h-[32rem] w-[32rem] rounded-full bg-[#F5C300] opacity-5 blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-[#C8860A] opacity-5 blur-2xl pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-primary opacity-5 blur-2xl pointer-events-none" />
 
         {/* Logo */}
         <div className="relative z-10">

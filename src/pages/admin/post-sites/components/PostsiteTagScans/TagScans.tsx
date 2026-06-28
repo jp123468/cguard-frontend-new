@@ -349,7 +349,7 @@ export default function TagScans({
         <div className="flex items-center justify-end gap-2">
           <Sheet open={showFilters} onOpenChange={setShowFilters}>
             <SheetTrigger asChild>
-              <Button size="sm" variant="outline" className="rounded-2xl w-full bg-[#C8860A] hover:bg-[#C8860A] text-white">
+              <Button size="sm" variant="outline" className="rounded-2xl w-full bg-primary hover:bg-primary text-white">
                 <Funnel className="mr-2 h-4 w-4 text-white" />
                 FILTROS
               </Button>
@@ -391,7 +391,7 @@ export default function TagScans({
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="w-full rounded-2xl bg-[#C8860A] hover:bg-[#C8860A] text-white"
+                  className="w-full rounded-2xl bg-primary hover:bg-primary text-white"
                 >
                   Limpiar filtros
                 </button>

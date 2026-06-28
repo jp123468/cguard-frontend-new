@@ -156,7 +156,7 @@ export default function ProjectsPage() {
             {/* Filters */}
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30">
+                <Button variant="outline" className="text-primary border-primary/30">
                   <Filter className="mr-2 h-4 w-4" />
                   Filtros
                 </Button>
@@ -199,7 +199,7 @@ export default function ProjectsPage() {
                   </div>
 
                   <Button
-                    className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
+                    className="w-full bg-primary hover:bg-primary/90 text-white"
                     onClick={() => { setFilters({ ...tempFilters }); setOpenFilter(false); }}
                   >
                     Aplicar filtros

@@ -130,12 +130,12 @@ export default function ClientFiles({ client }: Props) {
                 placeholder="Search Files"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
+                className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
 
-          <button onClick={handleOpenUpload} className="px-6 py-2 bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors">
+          <button onClick={handleOpenUpload} className="px-6 py-2 bg-primary text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors">
             <Plus size={18} />
             Upload New Files
           </button>
@@ -157,7 +157,7 @@ export default function ClientFiles({ client }: Props) {
                   <td colSpan={6} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
+                        <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
                           <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                           <circle cx="85" cy="100" r="8" fill="white" />
                           <circle cx="115" cy="100" r="8" fill="white" />
@@ -271,7 +271,7 @@ export default function ClientFiles({ client }: Props) {
 
             <div className="flex items-center justify-end gap-3 p-4 border-t bg-card">
               <button onClick={() => { setUploadFiles([]); setShowUpload(false); }} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">Cancel</button>
-              <button onClick={() => { handleSubmitUpload(); }} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">Upload</button>
+              <button onClick={() => { handleSubmitUpload(); }} className="px-4 py-2 bg-primary text-white rounded-md">Upload</button>
             </div>
           </div>
         </div>

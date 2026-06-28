@@ -48,7 +48,7 @@ export default function WeekView({ currentDate, shifts = [], gaps = [], onCreate
                                 {day.toLocaleDateString('es-ES', { weekday: 'short' })}
                             </div>
                             <div className={`text-lg font-bold mt-0.5 w-8 h-8 flex items-center justify-center mx-auto rounded-full ${
-                                isToday ? 'bg-[#C8860A] text-white' : 'text-foreground'
+                                isToday ? 'bg-primary text-white' : 'text-foreground'
                             }`}>
                                 {day.getDate()}
                             </div>
@@ -108,7 +108,7 @@ export default function WeekView({ currentDate, shifts = [], gaps = [], onCreate
                 <DropdownMenuTrigger asChild>
                     <Button
                         size="icon"
-                        className="absolute bottom-6 right-6 h-12 w-12 rounded-full bg-[#C8860A] hover:bg-[#B37809] shadow-lg"
+                        className="absolute bottom-6 right-6 h-12 w-12 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
                         title="Agregar"
                     >
                         <Plus className="h-6 w-6 text-white" />

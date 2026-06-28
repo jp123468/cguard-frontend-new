@@ -525,7 +525,7 @@ export default function PostSiteImportDialog({ open, onOpenChange, onSuccess }: 
           <div className="space-y-2 p-3 rounded-lg bg-muted/30 border border-dashed">
             <div className="space-y-1">
               <h4 className="text-sm font-medium flex items-center gap-2">
-                <FileSpreadsheet className="h-4 w-4 text-[#C8860A]" />
+                <FileSpreadsheet className="h-4 w-4 text-primary" />
                 Estructura de columnas requerida
               </h4>
               <p className="text-xs text-muted-foreground">
@@ -539,14 +539,14 @@ export default function PostSiteImportDialog({ open, onOpenChange, onSuccess }: 
                 "country", "contactPhone", "contactEmail", "description"
               ].map((col) => (
                 <span key={col} className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-background border text-foreground">
-                  {col} <span className="text-[#C8860A] ml-1">*</span>
+                  {col} <span className="text-primary ml-1">*</span>
                 </span>
               ))}
             </div>
 
             <Button
               variant="link"
-              className="h-auto p-0 text-[#C8860A] text-xs hover:no-underline"
+              className="h-auto p-0 text-primary text-xs hover:no-underline"
               onClick={downloadTemplate}
             >
               ¿No tienes el archivo? Descarga la plantilla aquí

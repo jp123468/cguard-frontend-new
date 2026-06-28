@@ -56,7 +56,7 @@ const Reports: React.FC<ReportsProps> = ({ onNavigate }) => {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Buscar un informe…"
-        className="w-full rounded-xl border border-border/50 bg-background/70 py-2.5 pl-10 pr-9 text-sm text-foreground outline-none backdrop-blur transition-all placeholder:text-muted-foreground/60 focus:border-[#C8860A] focus:ring-2 focus:ring-[#C8860A]/20"
+        className="w-full rounded-xl border border-border/50 bg-background/70 py-2.5 pl-10 pr-9 text-sm text-foreground outline-none backdrop-blur transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20"
       />
       {query && (
         <button
@@ -124,7 +124,7 @@ const Reports: React.FC<ReportsProps> = ({ onNavigate }) => {
                         variant="ghost"
                         size="sm"
                         onClick={() => go(section.viewAllHref)}
-                        className="gap-1 text-[#C8860A] hover:bg-[#C8860A]/10 hover:text-[#C8860A]"
+                        className="gap-1 text-primary hover:bg-primary/10 hover:text-primary"
                       >
                         Ver todo <ArrowRight size={14} />
                       </Button>

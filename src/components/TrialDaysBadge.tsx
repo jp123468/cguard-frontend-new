@@ -35,7 +35,7 @@ export default function TrialDaysBadge() {
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors",
         urgent
           ? "border-red-300 bg-red-500/10 text-red-600 hover:bg-red-500/15 dark:border-red-900"
-          : "border-[#C8860A]/30 bg-[#C8860A]/10 text-[#C8860A] hover:bg-[#C8860A]/15",
+          : "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15",
       ].join(" ")}
     >
       <Gift className="h-3.5 w-3.5" />

@@ -109,7 +109,7 @@ export default function UserRolesTable({
           />
         </div>
 
-        <PermissionedButton permission="settingsEdit" className="bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={onNew}> Nuevo Rol</PermissionedButton>
+        <PermissionedButton permission="settingsEdit" className="bg-primary hover:bg-primary/90 text-white" onClick={onNew}> Nuevo Rol</PermissionedButton>
       </div>
 
       <div className="rounded-md border">

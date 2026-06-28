@@ -60,7 +60,7 @@ export default function LiveTrackingPage() {
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  className="text-[#C8860A] border-[#C8860A]/30"
+                  className="text-primary border-primary/30"
                 >
                   <Filter className="mr-2 h-4 w-4" />
                   Filtros
@@ -117,7 +117,7 @@ export default function LiveTrackingPage() {
                   </label>
 
                   <Button
-                    className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
+                    className="w-full bg-primary hover:bg-primary/90 text-white"
                     onClick={() => {
                       // Aplica tus filtros reales aquí
                       setOpenFilter(false);

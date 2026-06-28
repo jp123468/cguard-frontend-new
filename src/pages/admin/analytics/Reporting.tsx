@@ -37,17 +37,17 @@ export default function Reporting() {
 
           {/* Team performance — official score (links to Vigilantes) */}
           {lb && lb.averageScore != null && (
-            <Section title="Desempeño del equipo" icon={<Award size={16} className="text-[#C8860A]" />}>
+            <Section title="Desempeño del equipo" icon={<Award size={16} className="text-primary" />}>
               <div className="grid gap-5 md:grid-cols-3">
                 <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-muted/10 p-4 text-center">
-                  <p className="text-5xl font-bold text-[#C8860A]">{lb.averageScore}</p>
+                  <p className="text-5xl font-bold text-primary">{lb.averageScore}</p>
                   <p className="text-xs text-muted-foreground">Puntuación promedio /100</p>
                   <p className="mt-1 text-xs text-muted-foreground">{lb.counts.scored} vigilantes evaluados · {lb.counts.excellent} excelentes</p>
                 </div>
                 <div className="md:col-span-2">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="text-sm font-semibold text-foreground">Vigilantes con menor desempeño</p>
-                    <Link to="/analytics/guard" className="inline-flex items-center gap-1 text-xs font-medium text-[#C8860A] hover:underline">Ver ranking completo <ArrowRight size={12} /></Link>
+                    <Link to="/analytics/guard" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">Ver ranking completo <ArrowRight size={12} /></Link>
                   </div>
                   {lb.guards.filter((g) => g.hasData).length === 0 ? (
                     <p className="text-sm text-muted-foreground">Sin vigilantes evaluados en el período.</p>
@@ -78,7 +78,7 @@ export default function Reporting() {
             <Section title="Incidentes por prioridad" icon={<AlertTriangle size={16} className="text-red-500" />}>
               <HBars items={data.incidentsByPriority} color="#ef4444" empty="Sin incidentes en el período." />
             </Section>
-            <Section title="Sitios con más incidentes" icon={<Building2 size={16} className="text-[#C8860A]" />}>
+            <Section title="Sitios con más incidentes" icon={<Building2 size={16} className="text-primary" />}>
               <HBars items={data.topIncidentSites.map((s) => ({ label: s.site, count: s.count }))} color={GOLD} empty="Sin incidentes en el período." />
             </Section>
             <Section title="Asistencia" icon={<Clock size={16} className="text-amber-500" />}>
@@ -98,7 +98,7 @@ export default function Reporting() {
             </Section>
           </div>
 
-          <Section title="Resumen por sitio de servicio" icon={<Building2 size={16} className="text-[#C8860A]" />}>
+          <Section title="Resumen por sitio de servicio" icon={<Building2 size={16} className="text-primary" />}>
             {data.perSite.length === 0 ? (
               <p className="py-4 text-sm text-muted-foreground">Sin actividad registrada en el período.</p>
             ) : (

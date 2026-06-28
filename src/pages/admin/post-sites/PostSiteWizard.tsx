@@ -1392,7 +1392,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
     <div className="max-w-2xl mx-auto">
       {loadingEdit ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="h-8 w-8 animate-spin text-[#C8860A]" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
         <>
@@ -1429,7 +1429,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
               type="button"
               onClick={handleCreateSite}
               disabled={submitting || !address.trim()}
-              className="bg-[#C8860A] text-white hover:bg-[#B37809] gap-2 min-w-36"
+              className="bg-primary text-white hover:bg-primary/90 gap-2 min-w-36"
             >
               {submitting ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> {isEdit ? 'Guardando…' : 'Creando…'}</>

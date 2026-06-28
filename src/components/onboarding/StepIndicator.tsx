@@ -47,15 +47,15 @@ export default function StepIndicator({
                 aria-current={isActive ? "step" : undefined}
                 aria-label={`Paso ${i + 1}: ${step.label}`}
                 className={cn(
-                  "group flex items-center gap-2.5 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]/50",
+                  "group flex items-center gap-2.5 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
                   clickable ? "cursor-pointer" : "cursor-default",
                 )}
               >
                 <span
                   className={cn(
                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all duration-300",
-                    isActive && "border-[#C8860A] bg-[#C8860A] text-white shadow-[0_0_0_4px_rgba(200,134,10,0.18)]",
-                    isCompleted && "border-[#C8860A] bg-[#C8860A]/15 text-[#C8860A]",
+                    isActive && "border-primary bg-primary text-white shadow-[0_0_0_4px_rgba(200,134,10,0.18)]",
+                    isCompleted && "border-primary bg-primary/15 text-primary",
                     !isActive && !isCompleted && "border-border bg-muted text-muted-foreground",
                   )}
                 >

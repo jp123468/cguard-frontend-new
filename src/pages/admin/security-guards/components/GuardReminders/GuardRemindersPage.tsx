@@ -177,7 +177,7 @@ export default function GuardRemindersPage() {
                     placeholder={t('guards.reminders.searchPlaceholder', { defaultValue: 'Search reminders' })}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]"
+                    className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -191,7 +191,7 @@ export default function GuardRemindersPage() {
                 </button>
                 <button
                   onClick={handleAddReminder}
-                  className="px-4 py-2 bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-[#B37809] transition-colors"
+                  className="px-4 py-2 bg-primary text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors"
                 >
                   <Plus size={16} />
                   {t('guards.reminders.addReminder', { defaultValue: 'Add Reminder' })}
@@ -230,7 +230,7 @@ export default function GuardRemindersPage() {
                       <td colSpan={5} className="px-4 py-12">
                         <div className="flex flex-col items-center justify-center gap-4">
                           <div className="w-32 h-32">
-                            <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
+                            <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
                               <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                               <circle cx="85" cy="100" r="8" fill="white" />
                               <circle cx="115" cy="100" r="8" fill="white" />
@@ -298,12 +298,12 @@ export default function GuardRemindersPage() {
                 <div className="p-6 space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">{t('guards.reminders.form.title', { defaultValue: 'Title' })} <span className="text-red-500">*</span></label>
-                    <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder={t('guards.reminders.form.titlePlaceholder', { defaultValue: 'Title*' })} className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A]" />
+                    <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder={t('guards.reminders.form.titlePlaceholder', { defaultValue: 'Title*' })} className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">{t('guards.reminders.form.description', { defaultValue: 'Description' })}</label>
-                    <textarea value={formData.description ?? ''} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder={t('guards.reminders.form.descriptionPlaceholder', { defaultValue: 'Description' })} className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#C8860A] resize-none" rows={4} />
+                    <textarea value={formData.description ?? ''} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder={t('guards.reminders.form.descriptionPlaceholder', { defaultValue: 'Description' })} className="w-full px-3 py-2 border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none" rows={4} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -401,7 +401,7 @@ export default function GuardRemindersPage() {
                 </div>
 
                 <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
-                  <button onClick={handleSubmitReminder} className="px-6 py-2 bg-[#C8860A] text-white rounded-md font-semibold hover:bg-[#B37809]">{t('guards.reminders.modal.save', { defaultValue: 'Save' })}</button>
+                  <button onClick={handleSubmitReminder} className="px-6 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary/90">{t('guards.reminders.modal.save', { defaultValue: 'Save' })}</button>
                 </div>
               </div>
             </div>
@@ -430,7 +430,7 @@ export default function GuardRemindersPage() {
 
                 <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
                   <button onClick={() => setShowFilters(false)} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">{t('guards.reminders.filters.cancel', { defaultValue: 'Cancel' })}</button>
-                  <button onClick={() => { /* TODO: apply filters */ setShowFilters(false); }} className="px-4 py-2 bg-[#C8860A] text-white rounded-md">{t('guards.reminders.filters.apply', { defaultValue: 'Apply' })}</button>
+                  <button onClick={() => { /* TODO: apply filters */ setShowFilters(false); }} className="px-4 py-2 bg-primary text-white rounded-md">{t('guards.reminders.filters.apply', { defaultValue: 'Apply' })}</button>
                 </div>
               </div>
             </div>

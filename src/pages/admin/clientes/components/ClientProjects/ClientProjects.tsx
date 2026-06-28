@@ -87,7 +87,7 @@ export default function ClientProjects({ client }: Props) {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Proyectos</h2>
         <Button
-          className="bg-[#C8860A] hover:bg-[#B37809] text-white"
+          className="bg-primary hover:bg-primary/90 text-white"
           size="sm"
           onClick={() => { setEditingId(undefined); setOpenForm(true); }}
         >

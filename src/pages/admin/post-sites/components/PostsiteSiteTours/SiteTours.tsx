@@ -719,7 +719,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
               <Settings size={16} />
               <span className="text-sm font-medium">Configuraciones</span>
             </button>
-            <button onClick={() => { setEditingTourId(null); setTourName(''); setTourDesc(''); setScheduledDays([]); setContinuous(false); setTimeMode('specific'); setSelectTime(''); setMaxDuration(''); setStationId(''); setShowNewTourModal(true); }} className="inline-flex items-center gap-3 bg-[#C8860A] text-white px-4 py-2 rounded-full hover:bg-[#B37809]">
+            <button onClick={() => { setEditingTourId(null); setTourName(''); setTourDesc(''); setScheduledDays([]); setContinuous(false); setTimeMode('specific'); setSelectTime(''); setMaxDuration(''); setStationId(''); setShowNewTourModal(true); }} className="inline-flex items-center gap-3 bg-primary text-white px-4 py-2 rounded-full hover:bg-primary/90">
               <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
                 <Plus size={14} />
               </span>
@@ -768,7 +768,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                     <td colSpan={4} className="px-6 py-16">
                       <div className="flex flex-col items-center justify-center gap-4">
                         <div className="w-40 h-40">
-                          <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
+                          <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
                             <rect x="40" y="48" width="120" height="84" fill="currentColor" rx="10" />
                             <path d="M60 78 L140 78" stroke="white" strokeWidth="3" strokeLinecap="round" />
                             <circle cx="90" cy="100" r="6" fill="white" />
@@ -925,7 +925,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                         toast.error(msg);
                       }
                     }}
-                    className="px-4 py-2 rounded-full bg-[#C8860A] text-white hover:bg-[#B37809]"
+                    className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary/90"
                   >
                     {t('siteTour.actions.archive', 'Archive')}
                   </button>
@@ -1296,7 +1296,7 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                         toast.error(msg);
                       }
                     }}
-                    className={"ml-2 inline-flex items-center justify-center px-4 py-2 rounded-full shadow-lg " + (isFormValid ? "bg-[#C8860A] text-white hover:bg-[#B37809]" : "bg-muted text-muted-foreground cursor-not-allowed")}
+                    className={"ml-2 inline-flex items-center justify-center px-4 py-2 rounded-full shadow-lg " + (isFormValid ? "bg-primary text-white hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed")}
                   >
                     <span className="text-sm font-semibold">{t('siteTour.buttons.submit')}</span>
                   </button>

@@ -422,7 +422,7 @@ export default function ClientContacts({ client }: { client: any }) {
           <div className="flex-shrink-0">
             <button
               onClick={handleOpenAdd}
-              className={`w-full md:w-auto ${isCompact ? 'px-3 py-1' : 'px-6 py-2'} bg-[#C8860A] text-white rounded-md text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#B37809] transition-colors whitespace-nowrap`}
+              className={`w-full md:w-auto ${isCompact ? 'px-3 py-1' : 'px-6 py-2'} bg-primary text-white rounded-md text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors whitespace-nowrap`}
             >
               <Plus size={isCompact ? 14 : 18} />
               <span>{t('clients.contacts.addcontact') || 'Agregar contacto'}</span>
@@ -447,7 +447,7 @@ export default function ClientContacts({ client }: { client: any }) {
                   <td colSpan={6} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
+                        <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
                           <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                           <circle cx="85" cy="100" r="8" fill="white" />
                           <circle cx="115" cy="100" r="8" fill="white" />
@@ -606,7 +606,7 @@ export default function ClientContacts({ client }: { client: any }) {
               <button
                 onClick={handleAdd}
                 disabled={!canSubmit}
-                className={`${canSubmit ? 'bg-[#C8860A] hover:bg-[#C8860A]' : 'bg-[#C8860A]/60 cursor-not-allowed opacity-60'} text-white transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]/30`}
+                className={`${canSubmit ? 'bg-primary hover:bg-primary' : 'bg-primary/60 cursor-not-allowed opacity-60'} text-white transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30`}
               >
                 {(form && (form as any).id) ? (t('save') || 'Save') : (t('clients.contacts.form.Addcontact') || 'ADD')}
               </button>

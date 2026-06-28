@@ -38,7 +38,7 @@ const NEXT_DAYS: Date[] = Array.from({ length: 28 }, (_, i) => {
  *  small gap separates each week. */
 function CoverageStrip({ work, type }: { work: Set<string>; type: PosType }) {
   if (!work || work.size === 0) return null;
-  const onCls = type === 'sacafranco' ? 'bg-indigo-500 text-white' : 'bg-[#C8860A] text-white';
+  const onCls = type === 'sacafranco' ? 'bg-indigo-500 text-white' : 'bg-primary text-white';
   return (
     <div className="mt-1.5 flex gap-px overflow-x-auto pb-1">
       {NEXT_DAYS.map((d, i) => {
@@ -272,7 +272,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
 
   const modalOpen = !!assignType || !!changeTarget;
   const modalIsSaca = assignType === 'sacafranco' || changeTarget?.type === 'sacafranco';
-  const selectCls = 'w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm outline-none transition-all focus:border-[#C8860A] focus:ring-2 focus:ring-[#C8860A]/20';
+  const selectCls = 'w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20';
 
   return (
     <>
@@ -289,14 +289,14 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
             {rows.length > 0 && (
               <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
                 <span className="font-medium">Próximas 4 semanas:</span>
-                <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-[#C8860A]" /> Fijo trabaja</span>
+                <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-primary" /> Fijo trabaja</span>
                 <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-indigo-500" /> Sacafranco cubre</span>
                 <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-muted/40" /> Descanso</span>
               </div>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowShiftModal(true)} className="inline-flex items-center gap-1.5 rounded-full bg-[#C8860A] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#B37809]">
+            <button onClick={() => setShowShiftModal(true)} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary/90">
               <UserPlus size={15} /> {t('station.guards.assign', 'Asignar vigilante')}
             </button>
             <button onClick={() => openAssign('sacafranco')} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/30">
@@ -306,7 +306,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-[#C8860A]" /></div>
+          <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
         ) : error ? (
           <div className="p-6 text-sm text-red-600">{error}</div>
         ) : rows.length === 0 ? (
@@ -318,13 +318,13 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
           <ul className="divide-y">
             {rows.map((a) => (
               <li key={a.id} className="flex items-center gap-3 px-6 py-3 hover:bg-muted/20">
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${a.type === 'sacafranco' ? 'bg-indigo-500/12 text-indigo-600' : 'bg-[#C8860A]/12 text-[#C8860A]'}`}>
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${a.type === 'sacafranco' ? 'bg-indigo-500/12 text-indigo-600' : 'bg-primary/12 text-primary'}`}>
                   {a.type === 'sacafranco' ? <Repeat size={16} /> : <Shield size={16} />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium text-foreground">{a.guardName}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${a.type === 'sacafranco' ? 'bg-indigo-500/10 text-indigo-600' : 'bg-[#C8860A]/10 text-[#C8860A]'}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${a.type === 'sacafranco' ? 'bg-indigo-500/10 text-indigo-600' : 'bg-primary/10 text-primary'}`}>
                       {a.type === 'sacafranco' ? 'Sacafranco' : 'Fijo'}
                     </span>
                     {a.rotation ? <span className="text-xs text-muted-foreground">· {a.rotation}</span> : null}
@@ -350,7 +350,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
           <div className="flex w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-border/30 bg-card shadow-2xl max-h-[90vh] animate-in fade-in slide-in-from-bottom-4 duration-200 sm:rounded-2xl sm:zoom-in-95" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-border/20 px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${modalIsSaca ? 'bg-indigo-500/12 text-indigo-600' : 'bg-[#C8860A]/12 text-[#C8860A]'}`}>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${modalIsSaca ? 'bg-indigo-500/12 text-indigo-600' : 'bg-primary/12 text-primary'}`}>
                   {modalIsSaca ? <Repeat size={18} /> : <UserPlus size={18} />}
                 </div>
                 <div>
@@ -387,7 +387,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
 
             <div className="flex items-center justify-end gap-2 border-t border-border/20 px-5 py-3">
               <button onClick={closeModal} className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/20 hover:text-foreground">{t('common.cancel', 'Cancelar')}</button>
-              <button onClick={submitAssign} disabled={saving || !pickGuard} className="inline-flex items-center gap-1.5 rounded-xl bg-[#C8860A] px-5 py-2 text-sm font-semibold text-white hover:bg-[#B37809] disabled:opacity-40">
+              <button onClick={submitAssign} disabled={saving || !pickGuard} className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-40">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
                 {changeTarget ? t('station.guards.save', 'Guardar') : t('station.guards.assignBtn', 'Asignar')}
               </button>

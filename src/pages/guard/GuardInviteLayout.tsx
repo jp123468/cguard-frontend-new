@@ -49,7 +49,7 @@ export default function GuardInviteLayout({
             backgroundSize: "48px 48px",
           }}
         />
-        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#C8860A] opacity-10 blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary opacity-10 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 -left-32 h-[32rem] w-[32rem] rounded-full bg-[#F5C300] opacity-5 blur-3xl pointer-events-none" />
 
         {/* Tenant logo / name */}
@@ -115,7 +115,7 @@ export default function GuardInviteLayout({
           {tenantLogoUrl ? (
             <img src={tenantLogoUrl} alt={company} className="h-10 max-w-[160px] object-contain" />
           ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold text-[#C8860A]" style={{ background: "rgba(200,134,10,0.12)" }}>{initials}</div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold text-primary" style={{ background: "rgba(200,134,10,0.12)" }}>{initials}</div>
           )}
           <span className="text-base font-bold text-foreground">{tenantName || ""}</span>
         </div>

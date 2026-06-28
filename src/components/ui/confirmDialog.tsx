@@ -78,7 +78,7 @@ export function ConfirmHost() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex gap-3">
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${danger ? 'bg-red-500/15 text-red-500' : 'bg-[#C8860A]/15 text-[#C8860A]'}`}>
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${danger ? 'bg-red-500/15 text-red-500' : 'bg-primary/15 text-primary'}`}>
             {danger ? <AlertTriangle size={20} /> : <HelpCircle size={20} />}
           </div>
           <div className="min-w-0 flex-1 pt-0.5">
@@ -96,7 +96,7 @@ export function ConfirmHost() {
           <button
             autoFocus
             onClick={() => close(true)}
-            className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition-colors ${danger ? 'bg-red-500 hover:bg-red-600' : 'bg-[#C8860A] hover:bg-[#B37809]'}`}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition-colors ${danger ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary/90'}`}
           >
             {state.confirmText || 'Confirmar'}
           </button>

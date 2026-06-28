@@ -34,7 +34,7 @@ export default function AlarmReports() {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <BarChart3 className="size-5 text-[#C8860A]" /> Reportes de falsas alarmas
+              <BarChart3 className="size-5 text-primary" /> Reportes de falsas alarmas
             </h1>
             <p className="text-sm text-muted-foreground">Dispositiones y tasa de falsas alarmas por panel.</p>
           </div>
@@ -44,13 +44,13 @@ export default function AlarmReports() {
                 <button
                   key={d}
                   onClick={() => setDays(d)}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium ${days === d ? "bg-[#C8860A] text-white" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium ${days === d ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   {d}d
                 </button>
               ))}
             </div>
-            <Link to="/alarm/queue" className="text-xs text-[#C8860A] hover:underline">Cola →</Link>
+            <Link to="/alarm/queue" className="text-xs text-primary hover:underline">Cola →</Link>
           </div>
         </div>
 
@@ -66,7 +66,7 @@ export default function AlarmReports() {
               <Kpi label="Falsas" value={o.false} icon={<ShieldAlert className="size-3.5 text-amber-600" />} tone="text-amber-600" />
               <Kpi label="Runaway" value={o.runaway} icon={<Siren className="size-3.5 text-red-600" />} tone="text-red-600" />
               <Kpi label="Pruebas" value={o.test} icon={<FlaskConical className="size-3.5" />} />
-              <Kpi label="Tasa falsas" value={`${o.falseRate}%`} icon={<ShieldAlert className="size-3.5 text-[#C8860A]" />} tone="text-[#C8860A]" />
+              <Kpi label="Tasa falsas" value={`${o.falseRate}%`} icon={<ShieldAlert className="size-3.5 text-primary" />} tone="text-primary" />
             </div>
 
             <Card className="mt-5 overflow-hidden">

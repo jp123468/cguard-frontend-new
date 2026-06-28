@@ -435,7 +435,7 @@ export default function GuardAsignarSitiosPage() {
 
             {/* ── HERO ─────────────────────────────────────────────────────── */}
             <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-muted/40 shadow-sm">
-              <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-r from-[#C8860A]/15 to-transparent" />
+              <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-r from-primary/15 to-transparent" />
               <div className="relative p-5 flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-md shrink-0" style={{ background: GOLD }}>
                   <MapPin className="w-7 h-7" />
@@ -470,7 +470,7 @@ export default function GuardAsignarSitiosPage() {
                       placeholder={t('guards.assignSites.searchPlaceholder', { defaultValue: 'Search Post Sites' })}
                       value={''}
                       onChange={() => {}}
-                      className="h-9 w-48 pl-8 pr-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-[#C8860A]/40"
+                      className="h-9 w-48 pl-8 pr-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
                   <div className="relative" ref={actionRef}>
@@ -517,7 +517,7 @@ export default function GuardAsignarSitiosPage() {
                       aria-label="select all"
                       checked={allSelected}
                       onChange={(e) => toggleSelectAll(e.target.checked)}
-                      className="h-4 w-4 rounded accent-[#C8860A]"
+                      className="h-4 w-4 rounded accent-primary"
                     />
                     {t('guards.assignSites.selectAll') || 'Seleccionar todo'}
                   </label>
@@ -526,7 +526,7 @@ export default function GuardAsignarSitiosPage() {
                     return (
                       <div
                         key={m.id}
-                        className={`group flex items-center gap-3 rounded-xl border p-3.5 transition hover:shadow-sm ${checked ? 'border-[#C8860A]/60 bg-[#C8860A]/5' : 'hover:bg-muted/30'}`}
+                        className={`group flex items-center gap-3 rounded-xl border p-3.5 transition hover:shadow-sm ${checked ? 'border-primary/60 bg-primary/5' : 'hover:bg-muted/30'}`}
                       >
                         <input
                           type="checkbox"
@@ -534,7 +534,7 @@ export default function GuardAsignarSitiosPage() {
                           onChange={(e) => {
                             if (e.target.checked) setSelectedIds((prev) => [...prev, m.id]); else setSelectedIds((prev) => prev.filter(id => id !== m.id));
                           }}
-                          className="h-4 w-4 rounded accent-[#C8860A] shrink-0"
+                          className="h-4 w-4 rounded accent-primary shrink-0"
                         />
                         <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0 text-muted-foreground">
                           <Building2 className="w-4.5 h-4.5" />

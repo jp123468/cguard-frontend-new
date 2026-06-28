@@ -34,7 +34,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ items, className }) => {
               {!isLast ? (
                 <Link
                   to={item.path || "#"}
-                  className="text-[#C8860A] font-medium hover:underline"
+                  className="text-primary font-medium hover:underline"
                 >
                   {item.label}
                 </Link>

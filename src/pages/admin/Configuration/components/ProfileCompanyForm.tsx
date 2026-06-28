@@ -730,7 +730,7 @@ export default function ProfileCompanyForm() {
                     toast.info("No se pudo detectar la zona horaria; selecciónala manualmente.");
                   }
                 }}
-                className="text-xs font-medium text-[#C8860A] hover:underline"
+                className="text-xs font-medium text-primary hover:underline"
               >
                 Detectar por dirección
               </button>

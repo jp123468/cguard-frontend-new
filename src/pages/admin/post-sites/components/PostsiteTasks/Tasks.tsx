@@ -58,7 +58,7 @@ export default function Tasks({ site }: { site?: any }) {
                     </div>
 
                     <div className="flex-shrink-0">
-                        <button onClick={() => setShowNewTaskModal(true)} className="inline-flex items-center gap-3 bg-[#C8860A] text-white px-4 py-2 rounded-full hover:bg-[#B37809]">
+                        <button onClick={() => setShowNewTaskModal(true)} className="inline-flex items-center gap-3 bg-primary text-white px-4 py-2 rounded-full hover:bg-primary/90">
                             <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
                                 <Plus size={14} />
                             </span>
@@ -83,7 +83,7 @@ export default function Tasks({ site }: { site?: any }) {
                                 <td colSpan={4} className="px-4 py-12">
                                     <div className="flex flex-col items-center justify-center gap-4">
                                         <div className="w-40 h-40">
-                                            <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
+                                            <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
                                                 <rect x="40" y="48" width="120" height="84" fill="currentColor" rx="10" />
                                                 <path d="M60 78 L140 78" stroke="white" strokeWidth="3" strokeLinecap="round" />
                                                 <circle cx="90" cy="100" r="6" fill="white" />
@@ -157,8 +157,8 @@ export default function Tasks({ site }: { site?: any }) {
 
                                 <div className="border-t pt-4">
                                     <div className="flex items-center gap-6">
-                                        <button onClick={() => setTab('oneoff')} className={`pb-2 ${tab === 'oneoff' ? 'text-[#C8860A] border-b-2 border-[#C8860A]' : 'text-muted-foreground'}`}>{t('postSites.tasks.oneoff')}</button>
-                                        <button onClick={() => setTab('recurring')} className={`pb-2 ${tab === 'recurring' ? 'text-[#C8860A] border-b-2 border-[#C8860A]' : 'text-muted-foreground'}`}>{t('postSites.tasks.recurring')}</button>
+                                        <button onClick={() => setTab('oneoff')} className={`pb-2 ${tab === 'oneoff' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}>{t('postSites.tasks.oneoff')}</button>
+                                        <button onClick={() => setTab('recurring')} className={`pb-2 ${tab === 'recurring' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}>{t('postSites.tasks.recurring')}</button>
                                     </div>
 
                                     {tab === 'oneoff' && (
@@ -191,7 +191,7 @@ export default function Tasks({ site }: { site?: any }) {
                                         <label className="block text-sm text-foreground/70 mb-2">{t('postSites.tasks.subtasks')}</label>
                                         <div className="flex gap-2">
                                             <input value={newSubTask} onChange={e => setNewSubTask(e.target.value)} placeholder={t('postSites.tasks.form.newSubTask')} className="flex-1 border rounded-lg h-10 px-3" />
-                                            <button onClick={() => { if (newSubTask.trim()) { setSubTasks(s => [...s, newSubTask.trim()]); setNewSubTask(''); } }} className="px-3 py-2 border rounded-lg text-[#C8860A]">{t('postSites.tasks.add')}</button>
+                                            <button onClick={() => { if (newSubTask.trim()) { setSubTasks(s => [...s, newSubTask.trim()]); setNewSubTask(''); } }} className="px-3 py-2 border rounded-lg text-primary">{t('postSites.tasks.add')}</button>
                                         </div>
 
                                         <ul className="mt-2 space-y-2">
@@ -215,7 +215,7 @@ export default function Tasks({ site }: { site?: any }) {
                             </div>
 
                             <div className="absolute bottom-4 right-4">
-                                <button onClick={() => { /* submit */ setShowNewTaskModal(false); }} className="ml-2 inline-flex items-center justify-center w-12 h-12 bg-[#C8860A] text-white rounded-full shadow-lg hover:bg-[#B37809]">
+                                <button onClick={() => { /* submit */ setShowNewTaskModal(false); }} className="ml-2 inline-flex items-center justify-center w-12 h-12 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90">
                                     <span className="text-sm font-semibold">{t('postSites.tasks.submit')}</span>
                                 </button>
                             </div>

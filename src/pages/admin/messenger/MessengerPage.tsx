@@ -212,7 +212,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
           <aside className="flex w-full max-w-xs flex-col border-r border-border">
             <div className="flex items-center justify-between gap-2 border-b border-border p-3">
               <h2 className="text-sm font-bold text-foreground">{pageTitle}</h2>
-              <button onClick={() => setComposeOpen(true)} className="flex items-center gap-1.5 rounded-lg bg-[#C8860A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#B37809]">
+              <button onClick={() => setComposeOpen(true)} className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90">
                 <Plus size={14} /> Nuevo
               </button>
             </div>
@@ -224,7 +224,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
               ) : (
                 visibleConversations.map((c) => (
                   <button key={c.id} onClick={() => onSelect(c)} className={`flex w-full items-start gap-3 border-b border-border/40 px-3 py-3 text-left hover:bg-muted/40 ${selected?.id === c.id ? "bg-muted/60" : ""}`}>
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#C8860A]/15 text-xs font-bold text-[#C8860A]">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
                       {c.isGroup ? <Users size={16} /> : (c.recipientName || "?").slice(0, 2).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -251,7 +251,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
             ) : (
               <>
                 <div className="flex items-center gap-3 border-b border-border p-3">
-                  <div className="grid h-9 w-9 place-items-center rounded-full bg-[#C8860A]/15 text-xs font-bold text-[#C8860A]">{selected.isGroup ? <Users size={16} /> : (selected.recipientName || "?").slice(0, 2).toUpperCase()}</div>
+                  <div className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">{selected.isGroup ? <Users size={16} /> : (selected.recipientName || "?").slice(0, 2).toUpperCase()}</div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-foreground">{selected.recipientName}</p>
                     <p className="text-[11px] text-muted-foreground">{selected.isGroup ? `Grupo · ${selected.memberCount || 0} miembros` : selected.recipientType === "guard" ? "Vigilante" : "Cliente"}{selected.isOneWay ? " · Solo lectura" : ""}</p>
@@ -279,7 +279,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
                     const mine = m.senderType === "staff";
                     return (
                       <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm ${mine ? "bg-[#C8860A] text-white" : "bg-muted text-foreground"}`}>
+                        <div className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm ${mine ? "bg-primary text-white" : "bg-muted text-foreground"}`}>
                           {!mine && <p className="mb-0.5 text-[10px] font-semibold opacity-70">{m.senderName}</p>}
                           {Array.isArray(m.attachments) && m.attachments.length > 0 && (
                             <div className="mb-1 grid gap-1.5">
@@ -307,7 +307,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
                           {a.type === "video" ? (
                             <div className="flex h-full w-full items-center justify-center bg-black/60 text-white"><Play size={18} /></div>
                           ) : a.type === "audio" ? (
-                            <div className="flex h-full w-full items-center justify-center bg-[#C8860A]/15 text-[#C8860A]"><Mic size={18} /></div>
+                            <div className="flex h-full w-full items-center justify-center bg-primary/15 text-primary"><Mic size={18} /></div>
                           ) : (
                             <PendingThumb att={a} />
                           )}
@@ -322,7 +322,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
                       {uploading ? <Loader2 size={16} className="animate-spin" /> : <Paperclip size={16} />}
                     </button>
                     {recorder.recording ? (
-                      <div className="flex flex-1 items-center gap-2 rounded-xl border border-[#C8860A]/40 bg-[#C8860A]/10 px-3.5 py-2 text-sm">
+                      <div className="flex flex-1 items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3.5 py-2 text-sm">
                         <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
                         <span className="font-mono text-foreground">{String(Math.floor(recorder.elapsedMs / 60000)).padStart(2, "0")}:{String(Math.floor((recorder.elapsedMs % 60000) / 1000)).padStart(2, "0")}</span>
                         <span className="text-muted-foreground">Grabando nota de voz…</span>
@@ -335,7 +335,7 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
                         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSend(); } }}
                         placeholder="Escribe un mensaje…"
                         rows={1}
-                        className="max-h-32 min-h-[40px] flex-1 resize-none rounded-xl border border-input bg-background px-3.5 py-2 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20"
+                        className="max-h-32 min-h-[40px] flex-1 resize-none rounded-xl border border-input bg-background px-3.5 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                       />
                     )}
                     {recorder.supported && !draft.trim() && pending.length === 0 && (
@@ -343,13 +343,13 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
                         onClick={onToggleRecord}
                         disabled={uploading}
                         title={recorder.recording ? "Detener y enviar" : "Grabar nota de voz"}
-                        className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white disabled:opacity-50 ${recorder.recording ? "bg-red-500 hover:bg-red-600" : "bg-[#C8860A] hover:bg-[#B37809]"}`}
+                        className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white disabled:opacity-50 ${recorder.recording ? "bg-red-500 hover:bg-red-600" : "bg-primary hover:bg-primary/90"}`}
                       >
                         {recorder.recording ? <Send size={16} /> : <Mic size={16} />}
                       </button>
                     )}
                     {(!recorder.supported || draft.trim() || pending.length > 0) && (
-                      <button onClick={onSend} disabled={sending || uploading || recorder.recording || (!draft.trim() && pending.length === 0)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#C8860A] text-white hover:bg-[#B37809] disabled:opacity-50">
+                      <button onClick={onSend} disabled={sending || uploading || recorder.recording || (!draft.trim() && pending.length === 0)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50">
                         {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                       </button>
                     )}
@@ -461,7 +461,7 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
   const Tab = ({ id, icon, label }: { id: "direct" | "group"; icon: ReactNode; label: string }) => (
     <button
       onClick={() => setMode(id)}
-      className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${mode === id ? "bg-[#C8860A] text-white" : "text-muted-foreground hover:bg-muted"}`}
+      className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${mode === id ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted"}`}
     >
       {icon} {label}
     </button>
@@ -494,7 +494,7 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
                 <div>
                   <div className="relative">
                     <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={isClient ? "Buscar cliente…" : "Buscar vigilante…"} className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
+                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={isClient ? "Buscar cliente…" : "Buscar vigilante…"} className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
                   </div>
                   {results.length > 0 && (
                     <div className="mt-2 max-h-44 overflow-auto rounded-xl border border-border">
@@ -505,11 +505,11 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
                   )}
                 </div>
               )}
-              <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Mensaje…" rows={4} className="w-full resize-none rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
+              <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Mensaje…" rows={4} className="w-full resize-none rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
             </>
           ) : (
             <>
-              <input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Nombre del grupo" className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
+              <input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Nombre del grupo" className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
               {site ? (
                 <div className="flex items-center justify-between rounded-xl border border-border bg-muted/40 px-3 py-2">
                   <span className="text-sm font-medium text-foreground">Puesto: {site.label}</span>
@@ -519,7 +519,7 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
                 <div>
                   <div className="relative">
                     <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input value={siteQ} onChange={(e) => setSiteQ(e.target.value)} placeholder="Buscar puesto/sitio…" className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
+                    <input value={siteQ} onChange={(e) => setSiteQ(e.target.value)} placeholder="Buscar puesto/sitio…" className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
                   </div>
                   {siteResults.length > 0 && (
                     <div className="mt-2 max-h-44 overflow-auto rounded-xl border border-border">
@@ -532,21 +532,21 @@ function ComposeDialog({ scope, onClose, onSent }: { scope: "operational" | "cli
                 </div>
               )}
               <label className="flex items-center gap-2 text-sm text-foreground">
-                <input type="checkbox" checked={oneWay} onChange={(e) => setOneWay(e.target.checked)} className="h-4 w-4 rounded border-input text-[#C8860A] focus:ring-[#C8860A]/30" />
+                <input type="checkbox" checked={oneWay} onChange={(e) => setOneWay(e.target.checked)} className="h-4 w-4 rounded border-input text-primary focus:ring-primary/30" />
                 Solo anuncios (los miembros no pueden responder)
               </label>
-              <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Primer mensaje (opcional)…" rows={3} className="w-full resize-none rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
+              <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Primer mensaje (opcional)…" rows={3} className="w-full resize-none rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
             </>
           )}
         </div>
         <div className="flex justify-end gap-2 border-t border-border p-4">
           <button onClick={onClose} className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Cancelar</button>
           {mode === "direct" ? (
-            <button onClick={sendDirect} disabled={!picked || !body.trim() || sending} className="flex items-center gap-2 rounded-xl bg-[#C8860A] px-5 py-2 text-sm font-semibold text-white hover:bg-[#B37809] disabled:opacity-50">
+            <button onClick={sendDirect} disabled={!picked || !body.trim() || sending} className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
               {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Enviar
             </button>
           ) : (
-            <button onClick={createGroup} disabled={!groupName.trim() || !site || sending} className="flex items-center gap-2 rounded-xl bg-[#C8860A] px-5 py-2 text-sm font-semibold text-white hover:bg-[#B37809] disabled:opacity-50">
+            <button onClick={createGroup} disabled={!groupName.trim() || !site || sending} className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
               {sending ? <Loader2 size={14} className="animate-spin" /> : <Users size={14} />} Crear grupo
             </button>
           )}
@@ -617,7 +617,7 @@ function MembersPanel({ conversation, onClose, onChanged }: { conversation: Conv
         <div className="border-b border-border p-3">
           <div className="relative">
             <UserPlus size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Añadir vigilante…" disabled={busy} className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-[#C8860A] focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Añadir vigilante…" disabled={busy} className="w-full rounded-xl border border-input bg-background py-2 pl-9 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
           </div>
           {results.length > 0 && (
             <div className="mt-2 max-h-40 overflow-auto rounded-xl border border-border">
@@ -636,7 +636,7 @@ function MembersPanel({ conversation, onClose, onChanged }: { conversation: Conv
           ) : (
             members.map((m) => (
               <div key={m.id} className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-muted/40">
-                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#C8860A]/15 text-[10px] font-bold text-[#C8860A]">{(m.name || "?").slice(0, 2).toUpperCase()}</div>
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">{(m.name || "?").slice(0, 2).toUpperCase()}</div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{m.name}</p>
                   <p className="text-[10px] text-muted-foreground">{m.participantType === "staff" ? "Operador" : "Vigilante"}{m.role === "admin" ? " · Admin" : ""}{m.source === "auto" ? " · Auto" : ""}</p>

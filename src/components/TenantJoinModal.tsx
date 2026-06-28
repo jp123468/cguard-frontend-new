@@ -716,7 +716,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                             />
                             <div className="flex justify-end gap-2">
                                 <Button variant="ghost" onClick={() => setToken('')} disabled={loading}>{t('actions.cancel') || 'Limpiar'}</Button>
-                                <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white px-8"
+                                <Button className="bg-primary hover:bg-primary/90 text-white px-8"
                                     onClick={handleAccept} disabled={loading}>{t('tenantJoinModal.joinButton') /* reuse join text */}</Button>
                             </div>
                         </div>
@@ -903,7 +903,7 @@ export default function TenantJoinModal({ open, onOpenChange }: { open: boolean;
                                 </div>
                                 <div className="flex justify-end gap-3">
                                     <Button variant="ghost" onClick={() => closeWithoutReopen()} disabled={loading}>{t('actions.cancel')}</Button>
-                                    <Button className="bg-[#C8860A] hover:bg-[#B37809] text-white px-8"
+                                    <Button className="bg-primary hover:bg-primary/90 text-white px-8"
                                         onClick={handleCreate}
                                         disabled={
                                             loading ||

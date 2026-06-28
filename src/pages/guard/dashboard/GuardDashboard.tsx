@@ -92,7 +92,7 @@ export default function GuardDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-[#C8860A]" size={32} />
+        <Loader2 className="animate-spin text-primary" size={32} />
       </div>
     );
   }
@@ -113,7 +113,7 @@ export default function GuardDashboard() {
     <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
       {/* Header */}
       <div className="text-center">
-        <Shield className="mx-auto text-[#C8860A] mb-2" size={40} />
+        <Shield className="mx-auto text-primary mb-2" size={40} />
         <h1 className="text-xl font-bold text-foreground">
           {guard?.fullName || t('guard.dashboard.title', 'Mi Panel')}
         </h1>
@@ -152,7 +152,7 @@ export default function GuardDashboard() {
                     key={st.id}
                     onClick={() => handleClockIn(st.id)}
                     disabled={clockingIn}
-                    className="px-6 py-3 bg-[#C8860A] text-white rounded-xl font-semibold text-base hover:bg-[#B37809] disabled:opacity-50 w-full"
+                    className="px-6 py-3 bg-primary text-white rounded-xl font-semibold text-base hover:bg-primary/90 disabled:opacity-50 w-full"
                   >
                     {clockingIn ? <Loader2 size={18} className="animate-spin mx-auto" /> : `Marcar Entrada — ${st.stationName}`}
                   </button>
@@ -172,7 +172,7 @@ export default function GuardDashboard() {
       {/* Current/Next Shift */}
       <div className="bg-card border rounded-xl p-4 space-y-3">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Clock size={16} className="text-[#C8860A]" />
+          <Clock size={16} className="text-primary" />
           {t('guard.dashboard.shifts', 'Turnos')}
         </h3>
         {currentShift ? (
@@ -196,7 +196,7 @@ export default function GuardDashboard() {
       {stations.length > 0 && (
         <div className="bg-card border rounded-xl p-4 space-y-3">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <MapPin size={16} className="text-[#C8860A]" />
+            <MapPin size={16} className="text-primary" />
             {t('guard.dashboard.stations', 'Mis Puestos')}
           </h3>
           {stations.map((st: any) => (

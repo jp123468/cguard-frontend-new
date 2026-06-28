@@ -247,7 +247,7 @@ export default function StationGeofencePolygon({
               ref={searchRef}
               type="text"
               placeholder="Buscar dirección del puesto…"
-              className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-[#C8860A]/20 focus:border-[#C8860A]"
+              className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
           {hasSite && (

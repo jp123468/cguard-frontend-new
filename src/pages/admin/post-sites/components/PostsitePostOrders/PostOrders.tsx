@@ -52,7 +52,7 @@ export default function PostSiteOrders({ site }: { site?: any }) {
           </div>
 
           <div className="flex-shrink-0">
-            <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-3 bg-[#C8860A] text-white px-4 py-2 rounded-full hover:bg-[#B37809]">
+            <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-3 bg-primary text-white px-4 py-2 rounded-full hover:bg-primary/90">
               <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
                 <Plus size={14} />
               </span>
@@ -78,7 +78,7 @@ export default function PostSiteOrders({ site }: { site?: any }) {
                 <td colSpan={5} className="px-4 py-12">
                   <div className="flex flex-col items-center justify-center gap-4">
                     <div className="w-40 h-40">
-                      <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
+                      <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
                         <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
                         <circle cx="85" cy="100" r="8" fill="white" />
                         <circle cx="115" cy="100" r="8" fill="white" />
@@ -150,7 +150,7 @@ export default function PostSiteOrders({ site }: { site?: any }) {
             </div>
 
             <div className="sticky bottom-0 bg-card border-t p-4 flex items-center justify-end gap-3">
-                <button onClick={() => { /* submit logic */ setShowModal(false);} } className="w-12 h-12 bg-[#C8860A] text-white rounded-full flex items-center justify-center shadow-lg">Add</button>
+                <button onClick={() => { /* submit logic */ setShowModal(false);} } className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-lg">Add</button>
               </div>
           </div>
         </div>

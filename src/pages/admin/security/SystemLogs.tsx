@@ -83,7 +83,7 @@ export default function SystemLogs() {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <ScrollText className="size-5 text-[#C8860A]" /> Registros del Sistema
+              <ScrollText className="size-5 text-primary" /> Registros del Sistema
             </h1>
             <p className="text-sm text-muted-foreground">
               Todas las acciones (creaciones, cambios y eliminaciones) de esta empresa — quién, qué y cuándo.
@@ -96,7 +96,7 @@ export default function SystemLogs() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Buscar por entidad, usuario o ID…"
-                className="h-9 w-64 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-[#C8860A] focus:outline-none"
+                className="h-9 w-64 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-primary focus:outline-none"
               />
             </div>
             <button onClick={() => load(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-input text-muted-foreground hover:text-foreground" title="Recargar">
@@ -113,7 +113,7 @@ export default function SystemLogs() {
               onClick={() => setAction(f.key)}
               className={
                 "rounded-full px-3 py-1 text-xs font-medium transition-colors " +
-                (action === f.key ? "bg-[#C8860A] text-white" : "bg-muted text-muted-foreground hover:bg-muted/70")
+                (action === f.key ? "bg-primary text-white" : "bg-muted text-muted-foreground hover:bg-muted/70")
               }
             >
               {f.label}

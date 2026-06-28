@@ -59,7 +59,7 @@ export default function StationLayout({ title, children, station }: Props) {
             <div className="bg-card border border-border rounded-md p-4 m-3 flex-1 overflow-hidden">
               <Link
                 to={`/post-sites/${postSiteId}/stations`}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-[#C8860A] mb-3"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary mb-3"
               >
                 <ChevronLeft size={14} />
                 {t('station.details.backToStations', 'Volver a Puestos')}
@@ -83,7 +83,7 @@ export default function StationLayout({ title, children, station }: Props) {
                                 data-active={isActive ? 'true' : undefined}
                                 className={`flex items-center justify-between px-5 py-3 text-sm ${
                                   isActive
-                                    ? 'bg-[#C8860A]/10 text-[#C8860A] font-medium'
+                                    ? 'bg-primary/10 text-primary font-medium'
                                     : 'text-foreground hover:bg-accent'
                                 }`}
                               >

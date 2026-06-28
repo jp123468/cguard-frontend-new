@@ -98,7 +98,7 @@ export default function RotationStyleSelect({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Patrón de rotación</label>
-        <button type="button" onClick={() => setCustom((v) => !v)} className="inline-flex items-center gap-1 text-[11px] font-medium text-[#C8860A] hover:underline">
+        <button type="button" onClick={() => setCustom((v) => !v)} className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline">
           <Plus size={12} /> Personalizado
         </button>
       </div>
@@ -112,7 +112,7 @@ export default function RotationStyleSelect({
               key={s.id}
               type="button"
               onClick={() => onChange(s.id)}
-              className={`rounded-xl border px-3 py-2 text-left transition-all ${value === s.id ? 'border-[#C8860A] bg-[#C8860A]/10' : 'border-border/40 hover:border-[#C8860A]/40'}`}
+              className={`rounded-xl border px-3 py-2 text-left transition-all ${value === s.id ? 'border-primary bg-primary/10' : 'border-border/40 hover:border-primary/40'}`}
             >
               <div className="text-xs font-semibold text-foreground">{s.name}</div>
               <div className="text-[10px] text-muted-foreground">{describe(s)}</div>
@@ -126,19 +126,19 @@ export default function RotationStyleSelect({
         <div className="mt-1 flex flex-wrap items-end gap-2 rounded-xl border border-border/40 bg-muted/10 p-3">
           <div>
             <label className="block text-[10px] font-medium text-muted-foreground mb-1 uppercase">{is24h ? 'Días' : 'Trabaja'}</label>
-            <input type="number" min={1} max={30} value={cWork} onChange={(e) => setCWork(e.target.value)} className="w-20 rounded-lg border border-border/40 bg-background px-2 py-1.5 text-sm font-mono outline-none focus:border-[#C8860A]" />
+            <input type="number" min={1} max={30} value={cWork} onChange={(e) => setCWork(e.target.value)} className="w-20 rounded-lg border border-border/40 bg-background px-2 py-1.5 text-sm font-mono outline-none focus:border-primary" />
           </div>
           {is24h && (
             <div>
               <label className="block text-[10px] font-medium text-muted-foreground mb-1 uppercase">Noches</label>
-              <input type="number" min={1} max={30} value={cNight} onChange={(e) => setCNight(e.target.value)} className="w-20 rounded-lg border border-border/40 bg-background px-2 py-1.5 text-sm font-mono outline-none focus:border-[#C8860A]" />
+              <input type="number" min={1} max={30} value={cNight} onChange={(e) => setCNight(e.target.value)} className="w-20 rounded-lg border border-border/40 bg-background px-2 py-1.5 text-sm font-mono outline-none focus:border-primary" />
             </div>
           )}
           <div>
             <label className="block text-[10px] font-medium text-muted-foreground mb-1 uppercase">Descansa</label>
-            <input type="number" min={1} max={30} value={cRest} onChange={(e) => setCRest(e.target.value)} className="w-20 rounded-lg border border-border/40 bg-background px-2 py-1.5 text-sm font-mono outline-none focus:border-[#C8860A]" />
+            <input type="number" min={1} max={30} value={cRest} onChange={(e) => setCRest(e.target.value)} className="w-20 rounded-lg border border-border/40 bg-background px-2 py-1.5 text-sm font-mono outline-none focus:border-primary" />
           </div>
-          <button type="button" onClick={createCustom} disabled={creating} className="inline-flex items-center gap-1.5 rounded-lg bg-[#C8860A] px-3 py-2 text-xs font-semibold text-white hover:bg-[#B37809] disabled:opacity-50">
+          <button type="button" onClick={createCustom} disabled={creating} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
             {creating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Crear y usar
           </button>
         </div>

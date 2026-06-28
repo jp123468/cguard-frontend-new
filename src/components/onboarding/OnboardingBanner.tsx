@@ -62,9 +62,9 @@ export default function OnboardingBanner({
   const days = isTrialing(tenant.billingStatus) ? trialDaysLeft(tenant.trialEndsAt) : null;
 
   return (
-    <div className="flex flex-col gap-2 border-b border-[#C8860A]/30 bg-gradient-to-r from-amber-50 to-amber-50/40 px-4 py-2.5 text-sm dark:from-amber-950/30 dark:to-amber-950/10 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-2 border-b border-primary/30 bg-gradient-to-r from-amber-50 to-amber-50/40 px-4 py-2.5 text-sm dark:from-amber-950/30 dark:to-amber-950/10 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-2.5 sm:items-center">
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#C8860A]/15 text-[#C8860A]">
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary">
           <Sparkles className="h-4 w-4" />
         </span>
         <div className="min-w-0">
@@ -76,7 +76,7 @@ export default function OnboardingBanner({
             </span>
           )}
           {days != null && (
-            <span className="ml-1 font-medium text-[#C8860A]">
+            <span className="ml-1 font-medium text-primary">
               · {days > 0 ? `Te quedan ${days} día${days === 1 ? "" : "s"} de prueba` : "Tu prueba termina hoy"}
             </span>
           )}
@@ -85,7 +85,7 @@ export default function OnboardingBanner({
       <Button
         size="sm"
         onClick={onOpenWizard}
-        className="shrink-0 self-start bg-[#C8860A] text-white hover:bg-[#B37809] sm:self-auto"
+        className="shrink-0 self-start bg-primary text-white hover:bg-primary/90 sm:self-auto"
       >
         Continuar configuración <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
       </Button>

@@ -530,7 +530,7 @@ export default function SecurityGuardsPage() {
             <h1 className="mt-1 text-xl font-bold text-foreground">Vigilantes de Seguridad</h1>
           </div>
           {hasPermission('securityGuardCreate') && (
-            <Button className="shrink-0 bg-[#C8860A] hover:bg-[#B37809] text-white" asChild>
+            <Button className="shrink-0 bg-primary hover:bg-primary/90 text-white" asChild>
               <Link to="/security-guards/new">
                 <UserPlus className="mr-2 h-4 w-4" />
                 {t('guards.list.newGuard', 'Nuevo Vigilante')}
@@ -581,7 +581,7 @@ export default function SecurityGuardsPage() {
                 onClick={() => { setFilterStatus(tab.key); setCurrentPage(1); }}
                 className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                   filterStatus === tab.key
-                    ? 'border-[#C8860A] text-[#C8860A]'
+                    ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -666,7 +666,7 @@ export default function SecurityGuardsPage() {
                 <SheetTrigger asChild>
                   <Button
                     variant="outline"
-                    className="text-[#C8860A] border-[#C8860A]/30"
+                    className="text-primary border-primary/30"
                   >
                     <Filter className="mr-2 h-4 w-4" />
                     {t('guards.list.filters', 'Filtros')}
@@ -761,7 +761,7 @@ export default function SecurityGuardsPage() {
                       </Select>
                     </div>
                     <Button
-                      className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white"
+                      className="w-full bg-primary hover:bg-primary/90 text-white"
                       onClick={() => {
                         // Aplica tus filtros reales aquí
                         setOpenFilter(false);
@@ -1131,7 +1131,7 @@ export default function SecurityGuardsPage() {
                             : 'Agrega tu primer vigilante para comenzar.'}
                         </p>
                         {hasPermission('securityGuardCreate') && filterStatus === 'todos' && !searchQuery && (
-                          <Button className="mt-4 bg-[#C8860A] hover:bg-[#B37809] text-white" asChild>
+                          <Button className="mt-4 bg-primary hover:bg-primary/90 text-white" asChild>
                             <Link to="/security-guards/new">
                               <UserPlus className="mr-2 h-4 w-4" />
                               Nuevo Vigilante
@@ -1246,7 +1246,7 @@ export default function SecurityGuardsPage() {
               {t('actions.cancel', 'Cancelar')}
             </Button>
             <Button
-              className="bg-[#C8860A] hover:bg-[#B37809] text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
               onClick={async () => {
                 if (!guardToArchive) return;
                 setArchiveLoading(true);
@@ -1409,7 +1409,7 @@ export default function SecurityGuardsPage() {
               {t('actions.cancel', 'Cancelar')}
             </Button>
             <Button
-              className={bulkActionType === "eliminar" ? "bg-red-600 hover:bg-red-700 text-white" : "bg-[#C8860A] hover:bg-[#B37809] text-white"}
+              className={bulkActionType === "eliminar" ? "bg-red-600 hover:bg-red-700 text-white" : "bg-primary hover:bg-primary/90 text-white"}
               onClick={async () => {
                 setBulkActionLoading(true);
                 try {
@@ -1558,7 +1558,7 @@ export default function SecurityGuardsPage() {
               </Button>
               {hasPermission('securityGuardEdit') && (
                 <Button
-                  className="bg-[#C8860A] hover:bg-[#B37809] text-white text-sm px-4 py-1"
+                  className="bg-primary hover:bg-primary/90 text-white text-sm px-4 py-1"
                   onClick={() => {
                     setDetailsOpen(false);
                     const realId = detailsGuard.raw?.id || detailsGuard.id;
@@ -1592,7 +1592,7 @@ export default function SecurityGuardsPage() {
               </ul>
               <Button
                 variant="link"
-                className="px-0 text-[#C8860A]"
+                className="px-0 text-primary"
                 onClick={() => {
                   const csvContent = `Nombre,Correo,Teléfono,Estado,Cédula,Fecha Contrato,Género,Tipo Sangre,Credenciales,Fecha Nac.,Lugar Nac.,Estado Civ.,Educación,Dirección\nFrank Mendoza,frankmendoza12@gmail.com,+593123456789,Activo,12345678888,30/11/2025,Femenino,AB-,7878787887878usahuia,10/6/2004,Pastocalle,Casado,Universidad,Calle principal`;
                   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1954,7 +1954,7 @@ export default function SecurityGuardsPage() {
               <Button variant="outline">Cancelar</Button>
             </DialogClose>
             <Button
-              className="bg-[#C8860A] hover:bg-[#B37809] text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
               onClick={handleAssignStation}
               disabled={!assignStationId || assignLoading}
             >

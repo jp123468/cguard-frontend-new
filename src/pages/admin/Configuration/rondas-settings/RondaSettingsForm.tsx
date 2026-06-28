@@ -108,7 +108,7 @@ export default function RondaSettingsForm({
   if (loading) {
     return (
       <div className="flex min-h-[30vh] items-center justify-center">
-        <Loader2 className="animate-spin text-[#C8860A]" size={28} />
+        <Loader2 className="animate-spin text-primary" size={28} />
       </div>
     );
   }
@@ -116,7 +116,7 @@ export default function RondaSettingsForm({
   return (
     <div className="space-y-6">
       {postSiteId && inherited && (
-        <p className="rounded-lg border border-[#C8860A]/30 bg-[#C8860A]/10 px-3 py-2 text-xs text-[#C8860A]">
+        <p className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary">
           Este sitio usa la configuración predeterminada del inquilino. Al guardar, creará una configuración específica para este sitio.
         </p>
       )}
@@ -124,7 +124,7 @@ export default function RondaSettingsForm({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Clock size={18} className="text-[#C8860A]" /> Cadencia de la ronda
+            <Clock size={18} className="text-primary" /> Cadencia de la ronda
           </CardTitle>
         </CardHeader>
         <CardContent className="divide-y">
@@ -138,7 +138,7 @@ export default function RondaSettingsForm({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <ShieldCheck size={18} className="text-[#C8860A]" /> Validación de puntos
+            <ShieldCheck size={18} className="text-primary" /> Validación de puntos
           </CardTitle>
         </CardHeader>
         <CardContent className="divide-y">
@@ -152,7 +152,7 @@ export default function RondaSettingsForm({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Bell size={18} className="text-[#C8860A]" /> Notificaciones
+            <Bell size={18} className="text-primary" /> Notificaciones
           </CardTitle>
         </CardHeader>
         <CardContent className="divide-y">
@@ -165,7 +165,7 @@ export default function RondaSettingsForm({
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={save} disabled={saving} className="bg-[#C8860A] text-white hover:bg-[#B37809]">
+        <Button onClick={save} disabled={saving} className="bg-primary text-white hover:bg-primary/90">
           {saving ? <Loader2 className="mr-2 animate-spin" size={16} /> : <Save className="mr-2" size={16} />}
           Guardar configuración
         </Button>

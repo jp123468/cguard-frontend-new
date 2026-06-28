@@ -119,7 +119,7 @@ export function CategorySelect({
                 <button
                     type="button"
                     disabled={isLoading}
-                    className="flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-lg border border-input bg-background px-2.5 py-1.5 text-left text-sm transition-colors hover:border-[#C8860A]/50 focus:outline-none focus:ring-2 focus:ring-[#C8860A]/20 disabled:opacity-60"
+                    className="flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-lg border border-input bg-background px-2.5 py-1.5 text-left text-sm transition-colors hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
                 >
                     {selected.length === 0 ? (
                         <span className="py-0.5 text-muted-foreground">
@@ -127,14 +127,14 @@ export function CategorySelect({
                         </span>
                     ) : (
                         selected.map((s) => (
-                            <span key={s.id} className="inline-flex items-center gap-1 rounded-md bg-[#C8860A]/10 px-2 py-0.5 text-xs font-medium text-[#C8860A]">
+                            <span key={s.id} className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                                 {s.name}
                                 <span
                                     role="button"
                                     tabIndex={-1}
                                     aria-label={`Quitar ${s.name}`}
                                     onClick={(e) => { e.stopPropagation(); remove(s.id); }}
-                                    className="-mr-0.5 rounded p-0.5 hover:bg-[#C8860A]/20 hover:text-[#8a5e07]"
+                                    className="-mr-0.5 rounded p-0.5 hover:bg-primary/20 hover:text-[#8a5e07]"
                                 >
                                     <X size={12} />
                                 </span>
@@ -155,7 +155,7 @@ export function CategorySelect({
                     <CommandList>
                         {canCreate && (
                             <CommandGroup>
-                                <CommandItem value={`__create__${q}`} onSelect={createFromQuery} className="gap-2 font-medium text-[#C8860A]">
+                                <CommandItem value={`__create__${q}`} onSelect={createFromQuery} className="gap-2 font-medium text-primary">
                                     {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                                     <span>{t('categories.createNamed', 'Crear')} «{q}»</span>
                                 </CommandItem>
@@ -167,7 +167,7 @@ export function CategorySelect({
                                 const checked = selectedIds.includes(opt.id);
                                 return (
                                     <CommandItem key={opt.id} value={opt.name} onSelect={() => toggle(opt.id)} className="gap-2">
-                                        <span className={`flex h-4 w-4 items-center justify-center rounded border ${checked ? 'border-[#C8860A] bg-[#C8860A] text-white' : 'border-input'}`}>
+                                        <span className={`flex h-4 w-4 items-center justify-center rounded border ${checked ? 'border-primary bg-primary text-white' : 'border-input'}`}>
                                             {checked && <Check size={12} />}
                                         </span>
                                         <span>{opt.name}</span>

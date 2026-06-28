@@ -78,7 +78,7 @@ export function ProjectTypePicker({ value, onChange, error }: ProjectTypePickerP
               type="button"
               onClick={() => onChange(pt.value)}
               className={cn(
-                'flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-left transition-all duration-150 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8860A]',
+                'flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-left transition-all duration-150 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                 isSelected
                   ? [pt.color, pt.borderColor, 'shadow-sm']
                   : 'border-border bg-card hover:border-border',

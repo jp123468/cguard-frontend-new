@@ -120,7 +120,7 @@ export default function GuardSummary({ guard }: Props) {
   const StatCard = ({ title, value, previous, isTime = false, color = 'blue' }: any) => {
     const colorClasses = {
       blue: 'text-blue-500',
-      orange: 'text-[#C8860A]',
+      orange: 'text-primary',
       gray: 'text-foreground',
       red: 'text-red-500',
     };

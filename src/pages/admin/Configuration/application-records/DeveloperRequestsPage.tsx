@@ -100,8 +100,8 @@ export default function DeveloperRequestsPage() {
             <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" className="gap-2 whitespace-nowrap">
-                  <Filter className="h-4 w-4 text-[#C8860A]" />
-                  <span className="text-[#C8860A]">Filtros</span>
+                  <Filter className="h-4 w-4 text-primary" />
+                  <span className="text-primary">Filtros</span>
                 </Button>
               </SheetTrigger>
               <SheetContent>

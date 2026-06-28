@@ -53,7 +53,7 @@ export default function AlarmActionPlan({ caseId }: { caseId: string }) {
     return (
       <Card className="p-4">
         <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-foreground">
-          <ClipboardList className="size-4 text-[#C8860A]" /> Plan de acción
+          <ClipboardList className="size-4 text-primary" /> Plan de acción
         </div>
         <p className="text-xs text-muted-foreground">
           Sin plan de acción configurado para este caso. Crea uno en Paneles para guiar la respuesta del operador.
@@ -69,13 +69,13 @@ export default function AlarmActionPlan({ caseId }: { caseId: string }) {
     <Card className="p-4">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <ClipboardList className="size-4 text-[#C8860A]" /> Plan de acción
+          <ClipboardList className="size-4 text-primary" /> Plan de acción
           {planName && <span className="text-xs font-normal text-muted-foreground">· {planName}</span>}
         </div>
         <span className="text-xs font-semibold text-muted-foreground">{doneCount}/{steps.length}</span>
       </div>
       <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-[#C8860A]" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
       </div>
       <ol className="space-y-1.5">
         {steps.map((s, i) => {
@@ -86,14 +86,14 @@ export default function AlarmActionPlan({ caseId }: { caseId: string }) {
               <button
                 onClick={() => toggle(i, !done)}
                 disabled={savingIdx === i}
-                className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border ${done ? "border-[#C8860A] bg-[#C8860A] text-white" : "border-border text-transparent hover:border-[#C8860A]"}`}
+                className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border ${done ? "border-primary bg-primary text-white" : "border-border text-transparent hover:border-primary"}`}
                 title={done ? "Desmarcar" : "Marcar como completado"}
               >
                 {savingIdx === i ? <Loader2 className="size-3 animate-spin text-muted-foreground" /> : <Check className="size-3.5" />}
               </button>
               <div className="min-w-0 flex-1">
                 <div className={`flex items-center gap-1.5 text-sm ${done ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                  <span className="text-[#C8860A]">{meta.icon}</span>
+                  <span className="text-primary">{meta.icon}</span>
                   <span className="font-medium">{meta.label}</span>
                 </div>
                 {s.detail && <p className="text-xs text-muted-foreground">{s.detail}</p>}

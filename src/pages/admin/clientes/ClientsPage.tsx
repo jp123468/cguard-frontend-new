@@ -543,7 +543,7 @@ export default function ClientesPage() {
                   <div className="text-xs text-muted-foreground truncate">{row.email || '-'}</div>
                   <div className="text-xs text-muted-foreground truncate">{row.phoneNumber || '-'}</div>
                   <div className="mt-2">
-                    <Link to={`/clients/${row.id}/overview`} className="text-sm text-[#C8860A]">{t('actions.viewDetails', 'Ver')}</Link>
+                    <Link to={`/clients/${row.id}/overview`} className="text-sm text-primary">{t('actions.viewDetails', 'Ver')}</Link>
                   </div>
                 </div>
               </DropdownMenuContent>
@@ -756,7 +756,7 @@ export default function ClientesPage() {
                   <SheetTrigger asChild>
                     <Button
                       variant="outline"
-                      className="text-[#C8860A] border-[#C8860A]/30 flex-1 md:flex-none justify-center"
+                      className="text-primary border-primary/30 flex-1 md:flex-none justify-center"
                     >
                       <Filter className="mr-2 h-4 w-4" />
                       {t('clients.filters.title')}
@@ -817,7 +817,7 @@ export default function ClientesPage() {
                         </Select>
                       </div>
 
-                      <Button className="w-full bg-[#C8860A] hover:bg-[#B37809] text-white" onClick={() => setOpenFilter(false)}>{t('clients.applyFilters')}</Button>
+                      <Button className="w-full bg-primary hover:bg-primary/90 text-white" onClick={() => setOpenFilter(false)}>{t('clients.applyFilters')}</Button>
                       <Button variant="outline" className="w-full" onClick={() => { setFilters({ active: true }); setOpenFilter(false); }}>{t('clients.clearFilters')}</Button>
                     </div>
                   </SheetContent>
@@ -1028,7 +1028,7 @@ export default function ClientesPage() {
               {t('clients.cancel')}
             </Button>
             <Button
-              className="bg-[#C8860A]-500 hover:bg-[#C8860A]-600"
+              className="bg-primary-500 hover:bg-primary-600"
               onClick={handleCategorizeSubmit} disabled={categorizeSaving || categorizeLoading}
               >
               {categorizeSaving ? t('clients.saving') : t('clients.save')}
@@ -1090,7 +1090,7 @@ export default function ClientesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-[#C8860A] hover:bg-[#B37809] text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
               onClick={async () => {
                 try {
                   const results = await Promise.allSettled(
@@ -1191,7 +1191,7 @@ export default function ClientesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('clients.cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-[#C8860A] hover:bg-[#B37809] text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
               onClick={async () => {
                 if (!restoreClient) return;
                 try {
@@ -1214,8 +1214,8 @@ export default function ClientesPage() {
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 mb-1">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C8860A]/10">
-                <Smartphone className="h-5 w-5 text-[#C8860A]" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Smartphone className="h-5 w-5 text-primary" />
               </div>
               <AlertDialogTitle className="text-base">
                 {(sendAccessClient as any)?.onboardingStatus === 'invited' || (sendAccessClient as any)?.onboardingStatus === 'active'
@@ -1254,7 +1254,7 @@ export default function ClientesPage() {
             <AlertDialogCancel disabled={sendingAccess}>{t('clients.cancel', 'Cancelar')}</AlertDialogCancel>
             {sendAccessClient?.email && (
               <AlertDialogAction
-                className="bg-[#C8860A] hover:bg-[#B37809] text-white"
+                className="bg-primary hover:bg-primary/90 text-white"
                 disabled={sendingAccess}
                 onClick={async (e) => {
                   e.preventDefault();

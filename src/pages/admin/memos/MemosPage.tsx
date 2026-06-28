@@ -411,7 +411,7 @@ export default function MemosPage() {
             <div className="ml-auto flex flex-wrap items-center gap-2">
               <Sheet open={openFilter} onOpenChange={setOpenFilter}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="text-[#C8860A] border-[#C8860A]/30">
+                  <Button variant="outline" className="text-primary border-primary/30">
                     <Filter className="mr-2 h-4 w-4" /> Filtros
                   </Button>
                 </SheetTrigger>

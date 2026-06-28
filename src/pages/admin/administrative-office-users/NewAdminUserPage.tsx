@@ -787,7 +787,7 @@ export default function NewAdminUserPage() {
             <div className="flex justify-between items-center">
               <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
                 <DialogTrigger asChild>
-                  <Button className="border border-[#C8860A] text-[#C8860A] bg-transparent hover:bg-[#C8860A]/10 hover:text-[#C8860A] hover:border-[#C8860A] transition duration-200 px-4 py-2 rounded-md" variant="outline">{t('adminOfficeUsers.newUser.invite.createTrigger', { defaultValue: 'Crear código de invitación' })}</Button>
+                  <Button className="border border-primary text-primary bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary transition duration-200 px-4 py-2 rounded-md" variant="outline">{t('adminOfficeUsers.newUser.invite.createTrigger', { defaultValue: 'Crear código de invitación' })}</Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
@@ -815,13 +815,13 @@ export default function NewAdminUserPage() {
                   </div>
 
                   <DialogFooter>
-                    <Button className="bg-[#C8860A] text-white hover:bg-[#B37809]" onClick={createInvitationToken} disabled={inviteLoading}>
+                    <Button className="bg-primary text-white hover:bg-primary/90" onClick={createInvitationToken} disabled={inviteLoading}>
                       {inviteLoading ? t('adminOfficeUsers.newUser.invite.generating', { defaultValue: 'Generando...' }) : (generatedToken ? t('adminOfficeUsers.newUser.invite.regen', { defaultValue: 'Regenerar' }) : t('adminOfficeUsers.newUser.invite.generate', { defaultValue: 'Generar código' }))}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-              <Button className="bg-[#C8860A] text-white hover:bg-[#B37809]" type="submit" disabled={formState.isSubmitting}>
+              <Button className="bg-primary text-white hover:bg-primary/90" type="submit" disabled={formState.isSubmitting}>
                 {formState.isSubmitting ? t('adminOfficeUsers.newUser.form.creating', { defaultValue: 'Creando...' }) : t('adminOfficeUsers.newUser.form.create', { defaultValue: 'Crear' })}
               </Button>
               </div>

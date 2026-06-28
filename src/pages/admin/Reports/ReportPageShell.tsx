@@ -15,7 +15,7 @@ import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
 const fieldCls =
-  "w-full rounded-xl border border-border/50 bg-background px-3 py-2 text-sm text-foreground outline-none transition-all focus:border-[#C8860A] focus:ring-2 focus:ring-[#C8860A]/20";
+  "w-full rounded-xl border border-border/50 bg-background px-3 py-2 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20";
 
 /** Default filter fields, used when a page doesn't supply its own. */
 function DefaultFilters() {
@@ -40,7 +40,7 @@ function DefaultFilters() {
         </div>
       </div>
       <label className="flex items-center gap-2 pt-1 text-sm text-muted-foreground">
-        <input type="checkbox" className="h-4 w-4 rounded border-border accent-[#C8860A]" />
+        <input type="checkbox" className="h-4 w-4 rounded border-border accent-primary" />
         Mostrar datos archivados
       </label>
     </>
@@ -101,13 +101,13 @@ export default function ReportPageShell({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar…"
-                className="w-full rounded-xl border border-border/50 bg-background py-2 pl-9 pr-3 text-sm text-foreground outline-none transition-all focus:border-[#C8860A] focus:ring-2 focus:ring-[#C8860A]/20"
+                className="w-full rounded-xl border border-border/50 bg-background py-2 pl-9 pr-3 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="gap-2 border-[#C8860A]/30 text-[#C8860A] hover:bg-[#C8860A]/10">
+                <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10">
                   <Filter className="h-4 w-4" /> Filtros
                 </Button>
               </SheetTrigger>
@@ -115,7 +115,7 @@ export default function ReportPageShell({
                 <SheetHeader><SheetTitle>Filtros</SheetTitle></SheetHeader>
                 <div className="mt-6 space-y-5">
                   {filters || <DefaultFilters />}
-                  <Button onClick={() => setFiltersOpen(false)} className="w-full bg-[#C8860A] text-white hover:bg-[#B37809]">
+                  <Button onClick={() => setFiltersOpen(false)} className="w-full bg-primary text-white hover:bg-primary/90">
                     Aplicar filtros
                   </Button>
                 </div>
@@ -151,7 +151,7 @@ export default function ReportPageShell({
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                 {empty?.message || "Ajusta los filtros o el rango de fechas para ver resultados en este informe."}
               </p>
-              <Button onClick={() => setFiltersOpen(true)} variant="outline" className="mt-4 gap-2 border-[#C8860A]/30 text-[#C8860A] hover:bg-[#C8860A]/10">
+              <Button onClick={() => setFiltersOpen(true)} variant="outline" className="mt-4 gap-2 border-primary/30 text-primary hover:bg-primary/10">
                 <Filter className="h-4 w-4" /> Configurar filtros
               </Button>
             </div>

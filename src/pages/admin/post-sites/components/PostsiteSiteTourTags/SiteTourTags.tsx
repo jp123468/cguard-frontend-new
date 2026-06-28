@@ -963,7 +963,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                         </div>
 
                         <div className="flex-shrink-0 ml-4">
-                            <button onClick={() => setShowNewTag(true)} className="inline-flex items-center gap-3 bg-[#C8860A] text-white px-4 py-2 rounded-full hover:bg-[#B37809]">
+                            <button onClick={() => setShowNewTag(true)} className="inline-flex items-center gap-3 bg-primary text-white px-4 py-2 rounded-full hover:bg-primary/90">
                                 <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
                                     <Plus size={14} />
                                 </span>
@@ -1084,7 +1084,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                                 </td>
                                                 <td className="px-4 py-3 break-words">{tag.tagIdentifier || tag.id || (tag as any)._id}</td>
                                                 <td className="px-4 py-3 text-right">
-                                                    <button onClick={() => openQrFor(tag.tagIdentifier || tag.id || (tag as any)._id)} className="px-3 py-1 bg-[#C8860A] text-white rounded">{t('siteTourTag.qrButton', 'QR')}</button>
+                                                    <button onClick={() => openQrFor(tag.tagIdentifier || tag.id || (tag as any)._id)} className="px-3 py-1 bg-primary text-white rounded">{t('siteTourTag.qrButton', 'QR')}</button>
                                                 </td>
                                             </tr>
                                         );
@@ -1094,7 +1094,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                         <td colSpan={4} className="px-4 py-12">
                                             <div className="flex flex-col items-center justify-center gap-4">
                                                 <div className="w-40 h-40">
-                                                    <svg viewBox="0 0 200 200" className="w-full h-full text-[#C8860A]/10">
+                                                    <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
                                                         <rect x="40" y="48" width="120" height="84" fill="currentColor" rx="10" />
                                                         <path d="M60 78 L140 78" stroke="white" strokeWidth="3" strokeLinecap="round" />
                                                         <circle cx="90" cy="100" r="6" fill="white" />
@@ -1221,7 +1221,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                         <button
                                             onClick={() => submitTag()}
                                             disabled={!(form.siteTourId || currentTourId)}
-                                            className={`ml-2 inline-flex items-center justify-center px-4 py-2 rounded-full shadow ${!(form.siteTourId || currentTourId) ? 'bg-gray-300 text-foreground/70 cursor-not-allowed' : 'bg-[#C8860A] text-white hover:bg-[#B37809]'}`}
+                                            className={`ml-2 inline-flex items-center justify-center px-4 py-2 rounded-full shadow ${!(form.siteTourId || currentTourId) ? 'bg-gray-300 text-foreground/70 cursor-not-allowed' : 'bg-primary text-white hover:bg-primary/90'}`}
                                         >
                                             <span className="text-sm font-semibold">{t('siteTourTag.modal.submit') || 'Submit'}</span>
                                         </button>
@@ -1271,7 +1271,7 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                             <div className="text-sm text-foreground break-words">{qrValue}</div>
 
                             <div className="flex gap-2">
-                                <button onClick={printQr} className="px-4 py-2 bg-[#C8860A] text-white rounded">{t('siteTourTag.qrModal.print', 'Print')}</button>
+                                <button onClick={printQr} className="px-4 py-2 bg-primary text-white rounded">{t('siteTourTag.qrModal.print', 'Print')}</button>
                             </div>
                         </div>
                     </div>

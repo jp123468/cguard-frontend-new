@@ -76,7 +76,7 @@ export default function AlarmAnalytics() {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <Activity className="size-5 text-[#C8860A]" /> Análisis de Monitoreo
+              <Activity className="size-5 text-primary" /> Análisis de Monitoreo
             </h1>
             <p className="text-sm text-muted-foreground">Tiempos de respuesta, cumplimiento de SLA y desempeño de operadores.</p>
           </div>
@@ -84,16 +84,16 @@ export default function AlarmAnalytics() {
             <div className="flex rounded-lg border border-border p-0.5">
               {PERIODS.map((p) => (
                 <button key={p} onClick={() => setDays(p)}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium ${days === p ? "bg-[#C8860A] text-white" : "text-muted-foreground hover:text-foreground"}`}>
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium ${days === p ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"}`}>
                   {p}d
                 </button>
               ))}
             </div>
             <button onClick={exportAudit} disabled={exporting}
-              className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-foreground hover:border-[#C8860A] disabled:opacity-50">
+              className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-foreground hover:border-primary disabled:opacity-50">
               {exporting ? <RefreshCw className="size-3.5 animate-spin" /> : <Download className="size-3.5" />} Exportar auditoría
             </button>
-            <Link to="/alarm/reports" className="text-xs text-[#C8860A] hover:underline">Falsas alarmas →</Link>
+            <Link to="/alarm/reports" className="text-xs text-primary hover:underline">Falsas alarmas →</Link>
           </div>
         </div>
 
@@ -119,13 +119,13 @@ export default function AlarmAnalytics() {
             </div>
 
             <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
-              <Section title="Por categoría" icon={<AlertTriangle size={16} className="text-[#C8860A]" />}>
+              <Section title="Por categoría" icon={<AlertTriangle size={16} className="text-primary" />}>
                 <HBars items={toItems(d.byCategory, (k) => CAT_LABEL[k] || k)} color={GOLD} empty="Sin datos" />
               </Section>
-              <Section title="Por prioridad" icon={<BarChart3 size={16} className="text-[#C8860A]" />}>
+              <Section title="Por prioridad" icon={<BarChart3 size={16} className="text-primary" />}>
                 <HBars items={toItems(d.byPriority)} color="#8b5cf6" empty="Sin datos" />
               </Section>
-              <Section title="Despachos" icon={<Send size={16} className="text-[#C8860A]" />}>
+              <Section title="Despachos" icon={<Send size={16} className="text-primary" />}>
                 <HBars
                   items={toItems(d.dispatchByType, (k) => ({ guard: "Vigilante", police: "Policía", fire: "Bomberos", medical: "Médico" }[k] || k))}
                   color="#0ea5e9" empty="Sin despachos" />
@@ -133,7 +133,7 @@ export default function AlarmAnalytics() {
             </div>
 
             <div className="mt-5">
-              <Section title="Desempeño de operadores" icon={<Users size={16} className="text-[#C8860A]" />}>
+              <Section title="Desempeño de operadores" icon={<Users size={16} className="text-primary" />}>
                 {(!d.operators || d.operators.length === 0) ? (
                   <p className="px-1 py-3 text-sm text-muted-foreground">Sin casos asignados a operadores en el período.</p>
                 ) : (

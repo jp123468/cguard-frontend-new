@@ -56,7 +56,7 @@ export function DataTable<T extends { id: string }>({
 
     const table = (
         <table className="min-w-full text-sm text-left border-collapse">
-            <thead className="bg-muted/30">
+            <thead className="bg-muted/40">
                 <tr className="border-b">
                     {showSelection && (
                         <th className="px-4 py-3 w-10">
@@ -81,7 +81,7 @@ export function DataTable<T extends { id: string }>({
                         return (
                             <th
                                 key={key}
-                                className={`px-4 py-3 font-semibold ${col.className ?? ""}`}
+                                className={`px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground ${col.className ?? ""}`}
                             >
                                 {col.sortable ? (
                                     <button
@@ -132,7 +132,7 @@ export function DataTable<T extends { id: string }>({
                     data.map((row) => (
                         <tr
                             key={row.id}
-                            className={`border-b hover:bg-muted/30 ${onRowClick ? 'cursor-pointer' : ''}`}
+                            className={`border-b border-border/60 transition-colors hover:bg-muted/40 ${onRowClick ? 'cursor-pointer' : ''}`}
                             onClick={onRowClick ? () => onRowClick(row) : undefined}
                         >
                             {showSelection && (
@@ -167,5 +167,5 @@ export function DataTable<T extends { id: string }>({
 
     if (containerless) return table;
 
-    return <div className="border rounded-lg overflow-hidden bg-card">{table}</div>;
+    return <div className="border rounded-2xl overflow-hidden bg-card shadow-sm">{table}</div>;
 }

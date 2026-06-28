@@ -409,7 +409,7 @@ export default function GuardLicenses({ guard }: Props) {
                 return (
                   <div
                     key={lic.id}
-                    className={`group relative bg-card border rounded-2xl p-5 shadow-sm transition hover:shadow-md cursor-pointer ${selected ? 'ring-2 ring-[#C8860A]' : ''}`}
+                    className={`group relative bg-card border rounded-2xl p-5 shadow-sm transition hover:shadow-md cursor-pointer ${selected ? 'ring-2 ring-primary' : ''}`}
                     onClick={() => openDetails(lic.id)}
                   >
                     {/* selection checkbox */}
@@ -418,7 +418,7 @@ export default function GuardLicenses({ guard }: Props) {
                       checked={selected}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => onSelectOne(lic.id, e.target.checked)}
-                      className="absolute top-4 right-4 h-4 w-4 rounded border-input accent-[#C8860A] cursor-pointer opacity-0 group-hover:opacity-100 checked:opacity-100 transition"
+                      className="absolute top-4 right-4 h-4 w-4 rounded border-input accent-primary cursor-pointer opacity-0 group-hover:opacity-100 checked:opacity-100 transition"
                     />
 
                     <div className="flex items-start gap-3 pr-6">
