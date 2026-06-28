@@ -111,18 +111,14 @@
   background: var(--sidebar);
   border-bottom: 1px solid var(--sidebar-border);
 }
-/* Dark mode keeps the richer glass/amber treatment. */
+/* Dark mode: clean near-black sidebar, neutral grey divider (no amber wash). */
 .dark .app-sidebar {
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--cc-accent) 6%, var(--sidebar)) 0%, var(--sidebar) 55%);
-  border-right: 0;
+  background: var(--sidebar);
+  border-right: 1px solid var(--sidebar-border);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
-.dark .app-sidebar::before {
-  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 160px; pointer-events: none;
-  background: radial-gradient(120% 80% at 30% 0%, color-mix(in oklab, var(--cc-accent) 16%, transparent), transparent 70%);
-}
+.dark .app-sidebar::before { content: none; }
 .dark .app-sidebar-head {
   background: color-mix(in oklab, var(--sidebar) 70%, transparent);
   border-bottom: 1px solid color-mix(in oklab, var(--cc-accent) 16%, var(--border));
