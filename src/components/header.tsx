@@ -23,6 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import { useTranslation } from 'react-i18next';
 import { toast } from "sonner";
+import { alarmService } from "@/lib/api/alarmService";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -84,8 +85,58 @@ export default function Header({
   // Active panic alerts (from the realtime stream). A panic shows a full-screen
   // red alarm overlay instead of a passing toast.
   const [panicAlerts, setPanicAlerts] = useState<PlatformNotification[]>([]);
-  const dismissPanic = (id: string) =>
-    setPanicAlerts((prev) => prev.filter((a) => a.id !== id));
+
+  // Silencing an SOS REQUIRES recording the action taken → acknowledge the alarm
+  // case (logged to history). Only on success do we remove the alert; on failure
+  // we keep it on screen (never silently lose an SOS).
+  const handleAcknowledgePanic = async (alert: PlatformNotification, action: string) => {
+    const caseId = (alert.payload as any)?.caseId;
+    try {
+      if (caseId) {
+        await alarmService.acknowledge(String(caseId), action);
+        toast.success("SOS reconocido y registrado en el historial");
+      }
+    } catch {
+      toast.error("No se pudo registrar el reconocimiento — intenta de nuevo");
+      return; // keep the alert up; don't silence on failure
+    }
+    setPanicAlerts((prev) => prev.filter((a) => a.id !== alert.id));
+  };
+
+  // On mount, re-surface any UNACKNOWLEDGED panic case (status 'queued') so a page
+  // reload / navigation never loses an active SOS — it stays until acknowledged.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const cases = await alarmService.cases({ status: "queued" });
+        const panic = (Array.isArray(cases) ? cases : []).filter(
+          (c) => c.category === "panic" || String(c.title || "").includes("SOS"),
+        );
+        if (!alive || !panic.length) return;
+        setPanicAlerts((prev) => {
+          const have = new Set(prev.map((a) => a.id));
+          const seeded = panic
+            .filter((c) => !have.has(c.id))
+            .map((c) => ({
+              id: c.id,
+              eventType: "panic.alert",
+              createdAt: c.createdAt || new Date().toISOString(),
+              payload: {
+                source: c.customerId ? "client" : "guard",
+                caseId: c.id,
+                title: c.title,
+                stationName: String(c.title || "").split("·").pop()?.trim() || null,
+                incidentId: c.incidentId,
+                priority: "critical",
+              },
+            })) as unknown as PlatformNotification[];
+          return [...seeded, ...prev];
+        });
+      } catch { /* non-fatal; the live stream still delivers new ones */ }
+    })();
+    return () => { alive = false; };
+  }, [tenantId]);
 
   const { notifications, unreadCount, connected, markRead, markAllRead } =
     useNotificationStream(tenantId, (n) => {
@@ -149,7 +200,7 @@ export default function Header({
 
   return (
     <>
-    <PanicAlertOverlay alerts={panicAlerts} onDismiss={dismissPanic} />
+    <PanicAlertOverlay alerts={panicAlerts} onAcknowledge={handleAcknowledgePanic} />
     <header className="sticky top-0 z-50 bg-background border-b border-border shadow-sm h-14" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
       <div className="h-14 px-4 flex items-center justify-between">
         <div className="flex items-center gap-2">

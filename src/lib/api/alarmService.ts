@@ -333,8 +333,8 @@ export const alarmService = {
   case(id: string): Promise<AlarmCase> {
     return ApiService.get(`/tenant/${tid()}/alarm/case/${id}`);
   },
-  acknowledge(id: string): Promise<AlarmCase> {
-    return ApiService.post(`/tenant/${tid()}/alarm/case/${id}/acknowledge`);
+  acknowledge(id: string, action?: string): Promise<AlarmCase> {
+    return ApiService.post(`/tenant/${tid()}/alarm/case/${id}/acknowledge`, action ? { action } : undefined);
   },
   dispatch(
     id: string,
