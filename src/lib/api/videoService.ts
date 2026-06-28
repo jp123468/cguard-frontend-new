@@ -154,7 +154,11 @@ const qstr = (params?: Record<string, string | undefined>): string => {
 export const videoService = {
   // --- Devices ---
   devices(): Promise<Device[]> {
-    return ApiService.get(`/tenant/${tid()}/video/devices`);
+    // The endpoint returns { rows, count }, not a bare array — unwrap it (mirrors
+    // relaySites). Without this the list was always empty, so saved devices "vanished".
+    return ApiService.get(`/tenant/${tid()}/video/devices`).then((r: any) =>
+      Array.isArray(r) ? r : r?.rows ?? [],
+    );
   },
   device(id: string): Promise<Device> {
     return ApiService.get(`/tenant/${tid()}/video/device/${id}`);
