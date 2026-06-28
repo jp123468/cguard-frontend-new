@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Tag } from 'lucide-react';
+import { Tag } from 'lucide-react';
 import { ApiService, ApiError } from '@/services/api/apiService';
+import { Section, EmptyState, SkeletonCards, StatusBadge, FadeIn } from '@/components/kit';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -88,36 +89,39 @@ export default function StationSiteTourTags({ stationId, postSiteId }: Props) {
   }, [stationId]);
 
   return (
-    <div className="bg-card border rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b">
-        <h3 className="text-base font-semibold text-foreground">
+    <Section
+      icon={<Tag />}
+      title={
+        <span>
           {t('station.tags.title', 'Etiquetas de Rondas')}
           {!loading && tags.length > 0 && (
             <span className="ml-2 text-sm font-normal text-muted-foreground">({tags.length})</span>
           )}
-        </h3>
-        {tours.length > 0 && (
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {tours.length} {tours.length === 1
-              ? t('station.tags.tour', 'ronda')
-              : t('station.tags.tours', 'rondas')}
-          </p>
-        )}
-      </div>
+        </span>
+      }
+      contentClassName="-mx-5 -mb-5"
+    >
+      {tours.length > 0 && (
+        <p className="px-5 -mt-2 mb-3 text-xs text-muted-foreground">
+          {tours.length} {tours.length === 1
+            ? t('station.tags.tour', 'ronda')
+            : t('station.tags.tours', 'rondas')}
+        </p>
+      )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-10">
-          <Loader2 className="animate-spin text-primary" />
-        </div>
+        <div className="px-5 pb-5"><SkeletonCards count={4} /></div>
       ) : error ? (
-        <div className="p-6 text-sm text-red-600">{error}</div>
+        <div className="px-5 pb-5 text-sm text-red-600">{error}</div>
       ) : tags.length === 0 ? (
-        <div className="p-6 flex flex-col items-center gap-2 text-muted-foreground">
-          <Tag size={24} className="text-muted-foreground/60" />
-          <span className="text-sm">{t('station.tags.empty', 'No hay etiquetas configuradas para este puesto.')}</span>
+        <div className="px-5 pb-5">
+          <EmptyState
+            icon={<Tag />}
+            title={t('station.tags.empty', 'No hay etiquetas configuradas para este puesto.')}
+          />
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <FadeIn className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-muted/30 border-b">
               <tr>
@@ -145,9 +149,7 @@ export default function StationSiteTourTags({ stationId, postSiteId }: Props) {
                   <tr key={tag.id || i} className="hover:bg-muted/30">
                     <td className="px-6 py-3 text-foreground font-medium">{name}</td>
                     <td className="px-6 py-3">
-                      <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 uppercase">
-                        {type}
-                      </span>
+                      <StatusBadge tone="primary" dot={false} className="uppercase">{type}</StatusBadge>
                     </td>
                     <td className="px-6 py-3 text-foreground/70">{tourName}</td>
                     <td className="px-6 py-3 text-muted-foreground">{location}</td>
@@ -156,8 +158,8 @@ export default function StationSiteTourTags({ stationId, postSiteId }: Props) {
               })}
             </tbody>
           </table>
-        </div>
+        </FadeIn>
       )}
-    </div>
+    </Section>
   );
 }

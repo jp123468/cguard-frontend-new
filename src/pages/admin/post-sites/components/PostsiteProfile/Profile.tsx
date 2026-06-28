@@ -9,6 +9,7 @@ import { ServiceTypeBadge } from '@/components/post-sites/ServiceTypeBadge';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { stationService } from '@/lib/api/stationService';
 import { toast } from 'sonner';
+import { StatusBadge, EmptyState } from '@/components/kit';
 import { MapPin, Phone, Mail, Building2, Globe, Tag, Pencil, Check, X, DollarSign, Shield, ShieldCheck, ShieldOff, Clock, UserCircle2 } from 'lucide-react';
 
 function formatDate(d?: string) {
@@ -203,7 +204,7 @@ export default function PostSiteProfile({ site }: { site?: any }) {
     const mapLngNum = mapLng ? Number(mapLng) : NaN;
 
     return (
-        <div ref={containerRef} className="space-y-0">
+        <div ref={containerRef} className="space-y-0 animate-fade-up">
             <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
 
                 {/* ── Cover photo ─────────────────────────────────────────── */}
@@ -371,9 +372,13 @@ export default function PostSiteProfile({ site }: { site?: any }) {
                 </div>
 
                 {!activeStatus || !activeStatus.stations || activeStatus.stations.length === 0 ? (
-                    <div className="px-6 py-10 text-center text-muted-foreground text-sm">
-                        {activeStatusLoading ? 'Cargando estaciones...' : 'No hay estaciones registradas para este sitio.'}
-                    </div>
+                    activeStatusLoading ? (
+                        <div className="px-6 py-10 text-center text-muted-foreground text-sm">Cargando estaciones...</div>
+                    ) : (
+                        <div className="p-6">
+                            <EmptyState icon={<Shield />} title="No hay estaciones registradas para este sitio." />
+                        </div>
+                    )
                 ) : (
                     <div className="divide-y divide-border">
                         {activeStatus.stations.map((station: any) => (
@@ -386,9 +391,9 @@ export default function PostSiteProfile({ site }: { site?: any }) {
                                         <ShieldOff size={16} className="text-muted-foreground flex-shrink-0" />
                                     )}
                                     <span className="font-semibold text-foreground text-sm">{station.stationName}</span>
-                                    <span className={`ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${station.isActive ? 'bg-emerald-500/15 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
+                                    <StatusBadge tone={station.isActive ? 'green' : 'slate'} className="ml-auto">
                                         {station.isActive ? 'Activo' : 'Sin cobertura'}
-                                    </span>
+                                    </StatusBadge>
                                 </div>
 
                                 {/* Active guards grid */}

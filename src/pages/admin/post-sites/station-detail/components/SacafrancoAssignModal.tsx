@@ -3,6 +3,7 @@ import { X, Shield, CheckCircle2, CalendarDays, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ApiService } from '@/services/api/apiService';
 import { getTenantTimezone } from '@/utils/tenantLocation';
+import { EmptyState } from '@/components/kit';
 
 /** Local (tenant-tz) YYYY-MM-DD for a shift start. */
 function localDateKey(iso: string): string {
@@ -137,7 +138,11 @@ export default function SacafrancoAssignModal({
           {loading ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground"><Loader2 className="animate-spin" /></div>
           ) : candidates.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">No hay vigilantes disponibles (todos tienen una rotación activa).</p>
+            <EmptyState
+              icon={<Shield />}
+              title="Sin vigilantes disponibles"
+              description="Todos los vigilantes tienen una rotación activa."
+            />
           ) : candidates.map((g) => (
             <div key={g.id} className="rounded-xl border border-border/30 bg-background/40 p-3">
               <div className="flex items-center justify-between gap-3">

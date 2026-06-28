@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { FileDown, Printer, Funnel } from 'lucide-react';
+import { FileDown, Printer, Funnel, QrCode } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmptyState } from '@/components/kit';
 
 export default function TagScans({
   tourId,
@@ -314,7 +315,7 @@ export default function TagScans({
   };
 
   return (
-    <div className="bg-card border rounded-lg p-4 flex-1 flex flex-col">
+    <div className="cg-card p-4 flex-1 flex flex-col animate-fade-up">
       <div className="mb-4 grid gap-3 lg:grid-cols-[minmax(0,12rem)_minmax(24rem,1fr)_auto] lg:items-center">
         <div className="flex flex-wrap items-center gap-2">
           <Select value="" onValueChange={(value) => {
@@ -425,30 +426,16 @@ export default function TagScans({
       </div>
 
       {loading ? (
-        <div className="text-center py-12">Cargando registros...</div>
+        <div className="text-center py-12 text-sm text-muted-foreground">Cargando registros...</div>
       ) : error || filteredRows.length === 0 ? (
-        <div className="overflow-auto flex-1">
-          <table className="w-full text-sm">
-            <tbody>
-              <tr>
-                <td colSpan={6} className="py-20">
-                  <div className="flex flex-col items-center justify-center text-center">
-                    <img
-                      src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
-                      alt="Sin datos"
-                      className="h-36 mb-4"
-                    />
-                    <h3 className="text-lg font-semibold">No se encontraron resultados</h3>
-                    <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-                      {tourId || postSiteId
-                        ? 'No hay etiquetas escaneadas para este recorrido o puesto.'
-                        : 'No hay etiquetas escaneadas.'}
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="overflow-auto flex-1 py-8">
+          <EmptyState
+            icon={<QrCode />}
+            title="No se encontraron resultados"
+            description={tourId || postSiteId
+              ? 'No hay etiquetas escaneadas para este recorrido o puesto.'
+              : 'No hay etiquetas escaneadas.'}
+          />
         </div>
       ) : (
         <div className="overflow-auto flex-1">

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ApiService } from "@/services/api/apiService";
 import { AuthService } from "@/services/auth/authService";
 import { useAuth } from "@/contexts/AuthContext";
+import { FadeIn } from "@/components/kit";
 
 /**
  * AcceptInvitation — onboarding for INTERNAL administrative users (admins,
@@ -175,7 +176,7 @@ export default function AcceptInvitation() {
 
       {/* Right — form */}
       <div className="flex flex-1 flex-col items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md">
+        <FadeIn className="w-full max-w-md">
           {/* Mobile brand */}
           <div className="mb-8 flex items-center justify-center gap-2 lg:hidden">
             {tenantLogo ? <img src={tenantLogo} alt={tenantName || "Logo"} className="h-10 object-contain" /> : <><ShieldCheck className="h-7 w-7 text-primary" /><span className="text-lg font-bold text-foreground">{tenantName || "CGuard Pro"}</span></>}
@@ -196,7 +197,7 @@ export default function AcceptInvitation() {
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-red-500/10"><AlertCircle className="h-7 w-7 text-red-500" /></div>
               <h2 className="text-center text-xl font-bold text-foreground">Invitación no válida</h2>
               <p className="mt-2 text-center text-sm text-muted-foreground">El enlace de invitación no existe, ya fue usado o expiró. Pide a tu administrador que te reenvíe la invitación.</p>
-              <button onClick={() => navigate("/login")} className="mt-6 w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90">Ir a iniciar sesión</button>
+              <button onClick={() => navigate("/login")} className="cg-gradient-brand mt-6 w-full rounded-xl py-2.5 text-sm font-semibold text-primary-foreground transition hover:shadow-lg hover:brightness-[1.04]">Ir a iniciar sesión</button>
             </div>
           ) : (
             <>
@@ -264,7 +265,7 @@ export default function AcceptInvitation() {
                 </div>
 
                 <button type="submit" disabled={!canSubmit}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50">
+                  className="cg-gradient-brand flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-primary-foreground transition hover:shadow-lg hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-50">
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Activar y entrar al panel <ArrowRight className="h-4 w-4" /></>}
                 </button>
               </form>
@@ -272,7 +273,7 @@ export default function AcceptInvitation() {
               <p className="mt-6 text-center text-xs text-muted-foreground">{tenantName ? `© ${new Date().getFullYear()} ${tenantName}` : "CGuard Pro"} · Acceso seguro</p>
             </>
           )}
-        </div>
+        </FadeIn>
       </div>
     </div>
   );

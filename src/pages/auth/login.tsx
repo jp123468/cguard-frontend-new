@@ -1,6 +1,7 @@
 import { NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 import AuthLayout from "@/layouts/auth-layout";
+import { FadeIn } from "@/components/kit";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthForm } from "@/hooks/useAuthForm";
 import { toast } from "sonner";
@@ -127,9 +128,10 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout 
+    <AuthLayout
       title={t('auth.login_prompt') || 'Inicia sesión en tu cuenta'}
     >
+      <FadeIn>
       {/* Botones de Inicio de Sesión Social */}
       <div className="mb-6 grid grid-cols-2 gap-3">
         <button
@@ -160,7 +162,7 @@ export default function Login() {
       <form className="space-y-4" onSubmit={handleLogin}>
         <div>
           <label className="mb-2 block text-sm font-medium text-foreground dark:text-muted-foreground/60">
-            {t('auth.email_label')}<span style={{ color: "#C8860A" }}>*</span>
+            {t('auth.email_label')}<span className="text-primary">*</span>
           </label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -179,7 +181,7 @@ export default function Login() {
 
         <div>
           <label className="mb-2 block text-sm font-medium text-foreground dark:text-muted-foreground/60">
-            {t('auth.password_label')}<span style={{ color: "#C8860A" }}>*</span>
+            {t('auth.password_label')}<span className="text-primary">*</span>
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -204,7 +206,7 @@ export default function Login() {
         </div>
 
         <div className="text-right">
-          <NavLink to="/forgot-password" className="text-sm font-medium hover:underline" style={{ color: "#C8860A" }}>
+          <NavLink to="/forgot-password" className="text-sm font-medium text-primary hover:underline">
             {t('auth.forgot_password')}
           </NavLink>
         </div>
@@ -212,8 +214,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-lg py-3 font-semibold text-white transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg, #C8860A 0%, #F5C300 100%)" }}
+          className="cg-gradient-brand w-full rounded-lg py-3 font-semibold text-primary-foreground transition-all hover:shadow-lg hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isLoading ? t('auth.signing_in') : t('auth.login')}
         </button>
@@ -229,11 +230,12 @@ export default function Login() {
 
         <div className="text-center">
           <span className="text-sm text-foreground/70 dark:text-muted-foreground">{t('auth.no_account_text')} </span>
-          <NavLink to="/register" className="text-sm font-semibold hover:underline" style={{ color: "#C8860A" }}>
+          <NavLink to="/register" className="text-sm font-semibold text-primary hover:underline">
             {t('auth.create_account')}
           </NavLink>
         </div>
       </form>
+      </FadeIn>
     </AuthLayout>
   );
 }

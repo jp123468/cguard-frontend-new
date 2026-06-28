@@ -23,6 +23,8 @@ import { ApiService } from '@/services/api/apiService';
 import KpiBarChart from '@/components/KpiBarChart';
 import { useTranslation } from "react-i18next";
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { Button } from '@/components/ui/button';
+import { EmptyState, StatusBadge } from '@/components/kit';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 type Props = {
   site?: any;
@@ -373,7 +375,7 @@ export default function PostSiteKPIs({ site }: Props) {
   }, []);
 
     return (
-      <div ref={containerRef} className="bg-card border rounded-lg p-6 shadow-sm min-h-[560px]">
+      <div ref={containerRef} className="cg-card p-6 min-h-[560px] animate-fade-up">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative inline-block">
             <button
@@ -415,13 +417,10 @@ export default function PostSiteKPIs({ site }: Props) {
             </div>
           </div>
 
-          <button
-            onClick={handleAddKPI}
-            className="ml-2 px-3 py-2 bg-primary text-white rounded-md text-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
-          >
+          <Button variant="brand" onClick={handleAddKPI} className="ml-2">
             <Plus size={16} />
             {t('postSites.KPI.kpiadded', 'Añadir Nuevo KPI')}
-          </button>
+          </Button>
         </div>
 
         <div>
@@ -451,22 +450,12 @@ export default function PostSiteKPIs({ site }: Props) {
             <tbody>
               {kpiData.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                          <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                          <circle cx="85" cy="100" r="8" fill="white" />
-                          <circle cx="115" cy="100" r="8" fill="white" />
-                          <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                          <path d="M 60 60 L 70 50 M 140 60 L 150 50 M 80 40 L 90 30 M 120 40 L 110 30" stroke="currentColor" strokeWidth="2" />
-                        </svg>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-lg font-semibold text-foreground">{t('clients.empty.title', 'No se encontraron resultados')}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">{t('clients.empty.description', 'No pudimos encontrar ningún elemento que coincida con su búsqueda')}</p>
-                      </div>
-                    </div>
+                  <td colSpan={5} className="px-4 py-8">
+                    <EmptyState
+                      icon={<FileText />}
+                      title={t('clients.empty.title', 'No se encontraron resultados')}
+                      description={t('clients.empty.description', 'No pudimos encontrar ningún elemento que coincida con su búsqueda')}
+                    />
                   </td>
                 </tr>
               ) : (
@@ -601,7 +590,7 @@ export default function PostSiteKPIs({ site }: Props) {
                                                 <td className="border px-4 py-2 font-semibold">{m.name.toUpperCase()}</td>
                                                 <td className="border px-4 py-2">{m.target}</td>
                                                 <td className="border px-4 py-2">{m.actual}</td>
-                                                <td className={`border px-4 py-2 ${m.actual >= m.target ? 'text-green-600' : 'text-red-600'}`}>{m.actual >= m.target ? t('postSites.KPI.status.achieved', 'Achieved') : t('postSites.KPI.status.notAchieved', 'Not Achieved')}</td>
+                                                <td className="border px-4 py-2"><StatusBadge tone={m.actual >= m.target ? 'green' : 'red'}>{m.actual >= m.target ? t('postSites.KPI.status.achieved', 'Achieved') : t('postSites.KPI.status.notAchieved', 'Not Achieved')}</StatusBadge></td>
                                               </tr>
                                           ))
                                         )}
@@ -842,12 +831,9 @@ export default function PostSiteKPIs({ site }: Props) {
                           placeholder={t('postSites.KPI.modal.newEmailPlaceholder', 'New email...')}
                           className={`flex-1 px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 ${emailError ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'}`}
                         />
-                        <button
-                          onClick={handleAddEmail}
-                          className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-                        >
+                        <Button variant="brand" onClick={handleAddEmail}>
                           {t('postSites.KPI.modal.addEmail', 'Add')}
-                        </button>
+                        </Button>
                       </div>
                       {emailError && (<p className="text-xs text-red-500">{emailError}</p>)}
                     </div>
@@ -857,7 +843,7 @@ export default function PostSiteKPIs({ site }: Props) {
             </div>
 
             <div className="flex items-center justify-end gap-3 p-6 border-t sticky bottom-0 bg-card">
-              <button onClick={handleSubmitKPI} className="px-6 py-2 bg-primary text-white rounded-md font-semibold hover:bg-primary/90">{t('postSites.KPI.modal.add', 'ADD')}</button>
+              <Button variant="brand" onClick={handleSubmitKPI} className="px-6">{t('postSites.KPI.modal.add', 'ADD')}</Button>
             </div>
           </div>
         </div>

@@ -16,6 +16,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
+import { Section, EmptyState, SkeletonCards, FadeIn } from '@/components/kit';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -143,7 +144,7 @@ function CameraModal({ open, mode, onClose, onCapture }: {
               <img src={captured.url} alt="Captura" className="w-full rounded border" />
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => { setCapturedPhoto(null); startCamera(); }} className="flex-1 gap-1"><X size={14} /> Retomar</Button>
-                <Button onClick={() => { capturedUrlRef.current = null; onCapture(captured.blob, captured.url); onClose(); }} className="flex-1 gap-1 bg-primary hover:bg-[#a86e08] text-white"><Check size={14} /> Usar foto</Button>
+                <Button variant="brand" onClick={() => { capturedUrlRef.current = null; onCapture(captured.blob, captured.url); onClose(); }} className="flex-1 gap-1"><Check size={14} /> Usar foto</Button>
               </div>
             </div>
           ) : (
@@ -154,7 +155,7 @@ function CameraModal({ open, mode, onClose, onCapture }: {
                 {!ready && <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="animate-spin text-white" /></div>}
                 {mode === 'id-scan' && ready && <div className="absolute inset-4 border-2 border-dashed border-amber-400 rounded opacity-70 pointer-events-none" />}
               </div>
-              <Button onClick={capture} disabled={!ready} className="w-full gap-2 bg-primary hover:bg-[#a86e08] text-white"><Camera size={15} /> Capturar</Button>
+              <Button variant="brand" onClick={capture} disabled={!ready} className="w-full gap-2"><Camera size={15} /> Capturar</Button>
             </div>
           )}
           <canvas ref={canvasRef} className="hidden" />
@@ -305,7 +306,7 @@ function VisitorFormModal({ open, initialData, stationId, onClose, onSaved }: {
             {/* Actions */}
             <div className="flex gap-2 pt-1">
               <Button variant="outline" onClick={onClose} disabled={saving} className="flex-1">Cancelar</Button>
-              <Button onClick={handleSave} disabled={saving || scanning} className="flex-1 bg-primary hover:bg-[#a86e08] text-white gap-1">
+              <Button variant="brand" onClick={handleSave} disabled={saving || scanning} className="flex-1 gap-1">
                 {saving ? <Loader2 size={13} className="animate-spin" /> : <UserCheck size={13} />}
                 {isEdit ? 'Actualizar' : 'Registrar'}
               </Button>
@@ -353,24 +354,33 @@ export default function StationVisitors({ stationId }: Props) {
   };
 
   return (
-    <div className="bg-card border rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b flex items-center justify-between">
-        <h3 className="text-base font-semibold text-foreground">
+    <Section
+      icon={<UserCheck />}
+      title={
+        <span>
           Registro de Visitantes {total > 0 && <span className="ml-1 text-sm font-normal text-muted-foreground">({total})</span>}
-        </h3>
-        <Button size="sm" onClick={() => { setEditRow(null); setFormOpen(true); }} className="gap-1 bg-primary hover:bg-[#a86e08] text-white">
+        </span>
+      }
+      action={
+        <Button variant="brand" size="sm" onClick={() => { setEditRow(null); setFormOpen(true); }} className="gap-1">
           <Plus size={14} /> Nuevo Visitante
         </Button>
-      </div>
-
+      }
+      contentClassName="-mx-5 -mb-5"
+    >
       {loading ? (
-        <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
+        <div className="px-5 pb-5"><SkeletonCards count={4} /></div>
       ) : error ? (
-        <div className="p-6 text-sm text-red-600">{error}</div>
+        <div className="px-6 pb-6 text-sm text-red-600">{error}</div>
       ) : rows.length === 0 ? (
-        <div className="p-6 text-sm text-muted-foreground">No hay visitantes registrados para este puesto.</div>
+        <div className="px-5 pb-5">
+          <EmptyState
+            icon={<UserCheck />}
+            title="No hay visitantes registrados para este puesto."
+          />
+        </div>
       ) : (
-        <>
+        <FadeIn>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-muted/30 border-b">
@@ -425,10 +435,10 @@ export default function StationVisitors({ stationId }: Props) {
               </div>
             </div>
           )}
-        </>
+        </FadeIn>
       )}
 
       <VisitorFormModal open={formOpen} initialData={editRow} stationId={stationId} onClose={() => { setFormOpen(false); setEditRow(null); }} onSaved={load} />
-    </div>
+    </Section>
   );
 }

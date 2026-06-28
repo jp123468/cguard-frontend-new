@@ -2,9 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
-import { Plus, Trash, Eye, MoreVertical, X } from 'lucide-react';
+import { Plus, Trash, Eye, MoreVertical, X, Shield } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useTranslation } from 'react-i18next';
+import { EmptyState, SkeletonCards } from '@/components/kit';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
 
@@ -598,8 +599,8 @@ export default function Stations({ site }: { site?: any }) {
   // Assigned guards updates must be done via AssignGuards component/page.
 
   return (
-    <div className="space-y-4 flex-1 min-h-0 flex flex-col">
-      <div className="bg-card border rounded-lg p-4 flex-1 flex flex-col">
+    <div className="space-y-4 flex-1 min-h-0 flex flex-col animate-fade-up">
+      <div className="cg-card p-4 flex-1 flex flex-col">
         <div className="flex items-center justify-between mb-4 gap-3">
           
 
@@ -669,9 +670,11 @@ export default function Stations({ site }: { site?: any }) {
 
         <div className="w-full flex-1 flex flex-col min-h-0">
           {loading ? (
-            <div>{t('postSites.stations.loading', 'Loading...')}</div>
+            <SkeletonCards count={4} />
           ) : stations.length === 0 ? (
-            <div className="min-h-[320px] flex items-center justify-center text-sm text-muted-foreground">{t('postSites.stations.noStations', 'No stations added yet.')}</div>
+            <div className="min-h-[320px] flex items-center justify-center">
+              <EmptyState icon={<Shield />} title={t('postSites.stations.noStations', 'No stations added yet.')} />
+            </div>
           ) : (
             <>
               <div className="hidden md:block flex-1 min-h-0">

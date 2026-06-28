@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
 import AuthLayout from "@/layouts/auth-layout";
+import { FadeIn } from "@/components/kit";
 import { toast } from "sonner";
 import { AuthService } from "@/services/auth/authService";
 import { NavLink } from "react-router-dom";
@@ -45,10 +46,11 @@ export default function ForgotPassword() {
     <AuthLayout
       title={t('auth.forgot_title', { defaultValue: 'Forgot your password?' })}
     >
+      <FadeIn>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="mb-2 block text-sm font-medium text-foreground dark:text-muted-foreground/60">
-            {t('auth.email_label', { defaultValue: 'Email' })}<span style={{ color: "#F75638" }}>*</span>
+            {t('auth.email_label', { defaultValue: 'Email' })}<span className="text-primary">*</span>
           </label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -60,7 +62,7 @@ export default function ForgotPassword() {
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-[#0C2459] focus:outline-none focus:ring-2 focus:ring-[#0C2459]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#F75638] dark:focus:ring-[#F75638]/20"
+              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
               autoComplete="email"
             />
           </div>
@@ -75,8 +77,7 @@ export default function ForgotPassword() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-lg py-3 font-semibold text-white transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg, #0C2459 0%, #1a3a7d 100%)" }}
+          className="cg-gradient-brand w-full rounded-lg py-3 font-semibold text-primary-foreground transition-all hover:shadow-lg hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isLoading ? t('auth.sending', { defaultValue: 'Sending link...' }) : t('auth.send_reset', { defaultValue: 'SEND RESET LINK' })}
         </button>
@@ -93,7 +94,7 @@ export default function ForgotPassword() {
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <NavLink to="/login" className="font-medium hover:underline" style={{ color: "#F75638" }}>
+          <NavLink to="/login" className="font-medium text-primary hover:underline">
             {t('auth.back_to_login', { defaultValue: 'Back to login' })}
           </NavLink>
           <NavLink to="/register" className="text-foreground/70 hover:underline dark:text-muted-foreground">
@@ -101,6 +102,7 @@ export default function ForgotPassword() {
           </NavLink>
         </div>
       </form>
+      </FadeIn>
     </AuthLayout>
   );
 }

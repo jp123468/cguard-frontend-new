@@ -16,6 +16,7 @@ import inventoryItemService, {
 } from '@/lib/api/inventoryItemService';
 import inventoryAssignmentService, { InventoryAssignment } from '@/lib/api/inventoryAssignmentService';
 import { securityGuardService } from '@/lib/api/securityGuardService';
+import { EmptyState } from '@/components/kit';
 
 type ConditionKey = 'bueno' | 'regular' | 'danado';
 const CONDITIONS: ConditionKey[] = ['bueno', 'regular', 'danado'];
@@ -199,7 +200,7 @@ function AssignModal({ postSiteId, onClose, onDone }: AssignModalProps) {
 
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
           <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
-          <Button onClick={handleAssign} disabled={saving || !selectedItem}>{saving ? 'Asignando...' : 'Asignar'}</Button>
+          <Button variant="brand" onClick={handleAssign} disabled={saving || !selectedItem}>{saving ? 'Asignando...' : 'Asignar'}</Button>
         </div>
       </div>
     </div>
@@ -253,7 +254,7 @@ function ReturnModal({ assignment, onClose, onDone }: ReturnModalProps) {
         </div>
         <div className="flex justify-end gap-3 pt-1">
           <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
-          <Button onClick={handleReturn} disabled={saving}>{saving ? 'Procesando...' : 'Confirmar devolución'}</Button>
+          <Button variant="brand" onClick={handleReturn} disabled={saving}>{saving ? 'Procesando...' : 'Confirmar devolución'}</Button>
         </div>
       </div>
     </div>
@@ -329,7 +330,7 @@ export default function Inventory({ site }: { site?: any }) {
           <h2 className="text-lg font-semibold text-foreground">Inventario asignado</h2>
           <p className="text-sm text-muted-foreground">{countMsg}</p>
         </div>
-        <Button onClick={() => setShowAssignModal(true)} disabled={!postSiteId} size="sm">
+        <Button variant="brand" onClick={() => setShowAssignModal(true)} disabled={!postSiteId} size="sm">
           <Plus className="w-4 h-4 mr-1" /> Asignar artículo
         </Button>
       </div>
@@ -345,15 +346,16 @@ export default function Inventory({ site }: { site?: any }) {
         {loading ? (
           <div className="text-center py-10 text-muted-foreground text-sm">Cargando asignaciones...</div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
-            <Package className="w-10 h-10 text-muted-foreground/60" />
-            <span className="text-sm">{query ? 'Sin resultados' : 'Sin artículos asignados a este puesto'}</span>
-            {!query && (
+          <EmptyState
+            icon={<Package />}
+            title={query ? 'Sin resultados' : 'Sin artículos asignados a este puesto'}
+            action={!query ? (
               <Button size="sm" variant="outline" onClick={() => setShowAssignModal(true)}>
                 <Plus className="w-3.5 h-3.5 mr-1" /> Asignar primer artículo
               </Button>
-            )}
-          </div>
+            ) : undefined}
+            className="border-0"
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

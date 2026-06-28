@@ -4,7 +4,7 @@ const tid = (): string => localStorage.getItem("tenantId") || "";
 
 export type DeviceType = "dvr" | "nvr" | "camera" | "cloud";
 export type DeviceProtocol = "rtsp" | "onvif" | "hls" | "webrtc";
-export type DeviceStatus = "online" | "offline" | "unknown";
+export type DeviceStatus = "online" | "offline" | "unknown" | "auth_failed" | "unreachable";
 
 export interface Device {
   id: string;

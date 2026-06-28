@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Loader2, Route, ChevronDown, ChevronRight, MapPin, MapPinOff, HelpCircle,
+  Route, ChevronDown, ChevronRight, MapPin, MapPinOff, HelpCircle,
   User, Clock, CheckCircle2, Flag,
 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
+import { Section, EmptyState, SkeletonCards, StatusBadge } from '@/components/kit';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -42,9 +43,9 @@ const fmtTime = (v: any) => {
 
 function statusBadge(status: string) {
   const s = (status || '').toLowerCase();
-  if (s === 'completed') return <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700"><CheckCircle2 size={12} /> Completada</span>;
-  if (s === 'assigned' || s === 'in_progress' || s === 'started') return <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-700">En progreso</span>;
-  return <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{status || '—'}</span>;
+  if (s === 'completed') return <StatusBadge tone="green" dot={false}><CheckCircle2 size={12} /> Completada</StatusBadge>;
+  if (s === 'assigned' || s === 'in_progress' || s === 'started') return <StatusBadge tone="orange" dot={false}>En progreso</StatusBadge>;
+  return <StatusBadge tone="slate" dot={false}>{status || '—'}</StatusBadge>;
 }
 
 function locationBadge(s: Scan) {
@@ -82,30 +83,33 @@ export default function StationRondaHistory({ station, stationId }: Props) {
   useEffect(() => { load(); }, [load]);
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
-      <div className="flex items-center justify-between border-b px-6 py-4">
-        <div>
-          <h3 className="text-base font-semibold text-foreground">
-            {t('station.rondaHistory.title', 'Historial de Rondas')}
-            {rows.length > 0 && <span className="ml-2 text-sm font-normal text-muted-foreground">({rows.length})</span>}
-          </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {t('station.rondaHistory.hint', 'Todas las rondas realizadas en este puesto, con sus puntos de control y ubicación.')}
-          </p>
-        </div>
-      </div>
+    <Section
+      icon={<Route />}
+      title={
+        <span>
+          {t('station.rondaHistory.title', 'Historial de Rondas')}
+          {rows.length > 0 && <span className="ml-2 text-sm font-normal text-muted-foreground">({rows.length})</span>}
+        </span>
+      }
+      contentClassName="-mx-5 -mb-5"
+    >
+      <p className="px-6 -mt-2 mb-3 text-xs text-muted-foreground">
+        {t('station.rondaHistory.hint', 'Todas las rondas realizadas en este puesto, con sus puntos de control y ubicación.')}
+      </p>
 
       {loading ? (
-        <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
+        <div className="px-5 pb-5"><SkeletonCards count={3} /></div>
       ) : error ? (
-        <div className="p-6 text-sm text-red-600">{error}</div>
+        <div className="px-6 pb-6 text-sm text-red-600">{error}</div>
       ) : rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 p-10 text-center text-muted-foreground">
-          <Route className="h-8 w-8 opacity-50" />
-          <p className="text-sm">{t('station.rondaHistory.empty', 'No hay rondas registradas en este puesto.')}</p>
+        <div className="px-5 pb-5">
+          <EmptyState
+            icon={<Route />}
+            title={t('station.rondaHistory.empty', 'No hay rondas registradas en este puesto.')}
+          />
         </div>
       ) : (
-        <ul className="divide-y">
+        <ul className="divide-y border-t">
           {rows.map((r) => {
             const isOpen = expanded === r.id;
             const pct = r.totalTags > 0 ? Math.round((r.scannedCount / r.totalTags) * 100) : 0;
@@ -165,6 +169,6 @@ export default function StationRondaHistory({ station, stationId }: Props) {
           })}
         </ul>
       )}
-    </div>
+    </Section>
   );
 }

@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, MoreVertical, Plus, X } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
+import { Button } from '@/components/ui/button';
+import { Section, StatusBadge } from '@/components/kit';
 
 type Report = {
   id: string;
@@ -65,7 +67,7 @@ export default function PostSiteAssignReports({ site }: { site?: any }) {
 
   return (
     <div ref={containerRef} className="space-y-4">
-      <div className="bg-card border rounded-lg p-4">
+      <Section>
         <div className="flex items-center justify-between gap-4 mb-4">
           <div ref={actionRef} className="relative">
             <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-full bg-card text-sm inline-flex items-center gap-2">
@@ -88,10 +90,10 @@ export default function PostSiteAssignReports({ site }: { site?: any }) {
           </div>
 
           <div className="flex-shrink-0">
-            <button onClick={() => { setAssignOpen(true); setAssignTarget(null); }} className="inline-flex items-center gap-3 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700">
-              <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center"><Plus size={14} /></span>
-              <span className="text-sm font-medium">Assign Report</span>
-            </button>
+            <Button variant="brand" onClick={() => { setAssignOpen(true); setAssignTarget(null); }}>
+              <Plus size={16} />
+              <span>Assign Report</span>
+            </Button>
           </div>
         </div>
 
@@ -114,7 +116,7 @@ export default function PostSiteAssignReports({ site }: { site?: any }) {
                   <td className="px-4 py-4 text-sm text-foreground">{r.name}</td>
                   <td className="px-4 py-4 text-sm text-muted-foreground">{r.description}</td>
                   <td className="px-4 py-4">
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${r.type === 'Standard' ? 'bg-green-100 text-green-700' : 'bg-red-500/15 text-red-700'}`}>{r.type}</span>
+                    <StatusBadge tone={r.type === 'Standard' ? 'green' : 'red'}>{r.type}</StatusBadge>
                   </td>
                   <td className="px-4 py-4 text-right relative">
                     <button onClick={() => openRowMenu(r.id)} className="p-2 rounded-full hover:bg-muted/30"><MoreVertical size={16} /></button>
@@ -141,7 +143,7 @@ export default function PostSiteAssignReports({ site }: { site?: any }) {
             )} loading={false} />
           </div>
         </div>
-      </div>
+      </Section>
 
       {assignOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center">
@@ -160,8 +162,8 @@ export default function PostSiteAssignReports({ site }: { site?: any }) {
               </div>
 
               <div className="mt-6 flex items-center justify-end gap-3">
-                <button onClick={() => setAssignOpen(false)} className="px-4 py-2 rounded-full bg-muted text-foreground">Cancel</button>
-                <button onClick={() => setAssignOpen(false)} className="px-4 py-2 rounded-full bg-blue-600 text-white">Assign</button>
+                <Button variant="outline" onClick={() => setAssignOpen(false)}>Cancel</Button>
+                <Button variant="brand" onClick={() => setAssignOpen(false)}>Assign</Button>
               </div>
             </div>
           </div>

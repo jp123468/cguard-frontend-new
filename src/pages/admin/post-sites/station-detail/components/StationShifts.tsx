@@ -8,6 +8,7 @@ import { Loader2, Plus, ChevronLeft, ChevronRight, User, Calendar, AlertTriangle
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { getTenantTimezone } from '@/utils/tenantLocation';
+import { Button } from '@/components/ui/button';
 
 // Minutes-of-day of a UTC instant rendered in the tenant timezone. Shift times
 // are stored as UTC; the jornada window is the station's local wall-clock. We
@@ -494,12 +495,14 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
             </button>
           </div>
 
-          <button
+          <Button
+            variant="brand"
+            size="sm"
             onClick={() => openForm(selectedDate || undefined)}
-            className="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-primary/90 transition-all shadow-sm active:scale-95"
+            className="gap-1.5 active:scale-95"
           >
             <Plus size={13} strokeWidth={2.5} /> Nuevo turno
-          </button>
+          </Button>
         </div>
 
         {/* Calendar Body */}

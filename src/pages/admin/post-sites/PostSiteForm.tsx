@@ -22,6 +22,8 @@ import { useClientSelection } from '@/contexts/ClientSelectionContext';
 import ServiceTypeConfigFields from "@/components/post-sites/ServiceTypeConfigFields";
 import { ServiceTypePicker } from "@/components/post-sites/ServiceTypeBadge";
 import AddressAutocomplete, { AddressComponents } from "@/components/maps/AddressAutocomplete";
+import { Section } from "@/components/kit";
+import { Building2, ShieldCheck, Info, MapPin, Clock } from "lucide-react";
 
 export type Client = { id: string; name: string; lastName?: string };
 
@@ -186,10 +188,8 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
                     {/* ── Cliente ──────────────────────────────────── */}
-                    <section className="space-y-3">
-                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                            Cliente
-                        </h2>
+                    <Section title="Cliente" icon={<Building2 />}>
+                      <div className="space-y-3">
                         <FormField<PostSiteInput>
                             control={form.control}
                             name="clientId"
@@ -212,11 +212,11 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
                                 </FormItem>
                             )}
                         />
-                    </section>
+                      </div>
+                    </Section>
 
                     {/* ── Tipo de servicio ─────────────────────────── */}
-                    <section>
-                        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Tipo de servicio</h2>
+                    <Section title="Tipo de servicio" icon={<ShieldCheck />}>
                         <Controller
                             control={form.control}
                             name="serviceType"
@@ -228,7 +228,7 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
                                 />
                             )}
                         />
-                    </section>
+                    </Section>
 
                     {/* ── Service-type specific config ───────────────── */}
                     {serviceType && (
@@ -239,11 +239,8 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
                     )}
 
                     {/* ── Información básica ───────────────────────── */}
-                    <section className="space-y-4">
-                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                            Información básica
-                        </h2>
-
+                    <Section title="Información básica" icon={<Info />}>
+                      <div className="space-y-4">
                         <FormField<PostSiteInput>
                             control={form.control}
                             name="description"
@@ -291,14 +288,12 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
                                 )}
                             />
                         </div>
-                    </section>
+                      </div>
+                    </Section>
 
                     {/* ── Ubicación del servicio ────────────────────── */}
-                    <section className="space-y-4">
-                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                            Ubicación del servicio
-                        </h2>
-
+                    <Section title="Ubicación del servicio" icon={<MapPin />}>
+                      <div className="space-y-4">
                         {/* Google Maps autocomplete — populates all address fields */}
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-1">
@@ -414,14 +409,12 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
                                 )}
                             />
                         </div>
-                    </section>
+                      </div>
+                    </Section>
 
                     {/* ── Horario de servicio ───────────────────────── */}
-                    <section className="space-y-4">
-                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                            Horario de servicio
-                        </h2>
-
+                    <Section title="Horario de servicio" icon={<Clock />}>
+                      <div className="space-y-4">
                         <FormField<PostSiteInput>
                             control={form.control}
                             name="stationSchedule"
@@ -487,10 +480,11 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
                                 </FormItem>
                             )}
                         />
-                    </section>
+                      </div>
+                    </Section>
 
                     {/* ── Estado ───────────────────────────────────── */}
-                    <section>
+                    <Section title="Estado" icon={<ShieldCheck />}>
                         <FormField<PostSiteInput>
                             control={form.control}
                             name="status"
@@ -511,7 +505,7 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
                                 </FormItem>
                             )}
                         />
-                    </section>
+                    </Section>
 
                     {/* ── Acciones ──────────────────────────────────── */}
                     <div className="flex justify-end gap-3 pt-2">
@@ -520,7 +514,8 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
                         </Button>
                         <Button
                             type="submit"
-                            className="min-w-28 bg-primary text-white border border-primary hover:bg-primary/90 cursor-pointer"
+                            variant="brand"
+                            className="min-w-28 cursor-pointer"
                         >
                             {t('postSites.form.submit', 'Guardar')}
                         </Button>

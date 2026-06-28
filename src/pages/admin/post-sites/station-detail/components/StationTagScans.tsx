@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2, MapPin, MapPinOff, HelpCircle } from 'lucide-react';
+import { ScanLine, MapPin, MapPinOff, HelpCircle } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
+import { Section, EmptyState, SkeletonCards, FadeIn } from '@/components/kit';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -77,28 +78,31 @@ export default function StationTagScans({ stationId }: Props) {
   };
 
   return (
-    <div className="bg-card border rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b">
-        <h3 className="text-base font-semibold text-foreground">
+    <Section
+      icon={<ScanLine />}
+      title={
+        <span>
           {t('station.tagScans.title', 'Escaneos de Tags')}
           {total > 0 && (
             <span className="ml-2 text-sm font-normal text-muted-foreground">({total})</span>
           )}
-        </h3>
-      </div>
-
+        </span>
+      }
+      contentClassName="-mx-5 -mb-5"
+    >
       {loading ? (
-        <div className="flex items-center justify-center py-10">
-          <Loader2 className="animate-spin text-primary" />
-        </div>
+        <div className="px-5 pb-5"><SkeletonCards count={4} /></div>
       ) : error ? (
-        <div className="p-6 text-sm text-red-600">{error}</div>
+        <div className="px-5 pb-5 text-sm text-red-600">{error}</div>
       ) : rows.length === 0 ? (
-        <div className="p-6 text-sm text-muted-foreground">
-          {t('station.tagScans.empty', 'No hay escaneos para este puesto.')}
+        <div className="px-5 pb-5">
+          <EmptyState
+            icon={<ScanLine />}
+            title={t('station.tagScans.empty', 'No hay escaneos para este puesto.')}
+          />
         </div>
       ) : (
-        <>
+        <FadeIn>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-muted/30 border-b">
@@ -164,8 +168,8 @@ export default function StationTagScans({ stationId }: Props) {
               </div>
             </div>
           )}
-        </>
+        </FadeIn>
       )}
-    </div>
+    </Section>
   );
 }

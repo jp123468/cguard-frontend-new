@@ -4,6 +4,7 @@ import AuthLayout from "@/layouts/auth-layout";
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
 import { ApiService } from '@/services/api/apiService';
+import { FadeIn } from "@/components/kit";
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
@@ -78,10 +79,10 @@ export default function VerifyEmail() {
 
   return (
     <AuthLayout title={t('auth.verify_email_title') || 'Verificando correo'}>
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-500" />
+      <FadeIn className="flex flex-col items-center justify-center py-12">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-primary dark:border-white/10 dark:border-t-primary" />
         <p className="mt-4 text-foreground/70">{t('auth.verify_email_processing') || 'Procesando verificación...'}</p>
-      </div>
+      </FadeIn>
     </AuthLayout>
   );
 }

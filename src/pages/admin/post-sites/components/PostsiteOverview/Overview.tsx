@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ServiceTypeBadge } from "@/components/post-sites/ServiceTypeBadge";
+import { StatCard, EmptyState, Stagger } from '@/components/kit';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import {
   Users, ShieldCheck, Route, ClipboardCheck, AlertTriangle, Clock,
@@ -48,12 +49,12 @@ export default function PostSiteOverview({ site }: { site?: any }) {
   // Each stat: icon + a soft accent colour. Values stay in `foreground` for
   // readability; only the icon chip carries colour.
   const stats = [
-    { id: 'assigned',  label: t('postSites.overview.Stats.guardsAssigned'),    value: assignedCount,  icon: Users,          accent: 'text-blue-600 bg-blue-600/10' },
-    { id: 'onsite',    label: t('postSites.overview.Stats.guardOnSite'),       value: onsiteCount,    icon: ShieldCheck,    accent: 'text-primary bg-primary/10' },
-    { id: 'tours',     label: t('postSites.overview.Stats.toursCompleted'),    value: toursCount,     icon: Route,          accent: 'text-emerald-600 bg-emerald-600/10' },
-    { id: 'tasks',     label: t('postSites.overview.Stats.tasksCompleted'),    value: tasksCount,     icon: ClipboardCheck, accent: 'text-indigo-600 bg-indigo-600/10' },
-    { id: 'incidents', label: t('postSites.overview.Stats.incidentsReported'), value: incidentsCount, icon: AlertTriangle,  accent: 'text-rose-600 bg-rose-600/10' },
-    { id: 'hrs',       label: t('postSites.overview.Stats.hoursLogged'),       value: hoursLogged,    icon: Clock,          accent: 'text-slate-600 bg-slate-500/10' },
+    { id: 'assigned',  label: t('postSites.overview.Stats.guardsAssigned'),    value: assignedCount,  icon: Users,          accent: 'blue' as const },
+    { id: 'onsite',    label: t('postSites.overview.Stats.guardOnSite'),       value: onsiteCount,    icon: ShieldCheck,    accent: 'primary' as const },
+    { id: 'tours',     label: t('postSites.overview.Stats.toursCompleted'),    value: toursCount,     icon: Route,          accent: 'green' as const },
+    { id: 'tasks',     label: t('postSites.overview.Stats.tasksCompleted'),    value: tasksCount,     icon: ClipboardCheck, accent: 'blue' as const },
+    { id: 'incidents', label: t('postSites.overview.Stats.incidentsReported'), value: incidentsCount, icon: AlertTriangle,  accent: 'red' as const },
+    { id: 'hrs',       label: t('postSites.overview.Stats.hoursLogged'),       value: hoursLogged,    icon: Clock,          accent: 'slate' as const },
   ];
 
   useEffect(() => {
@@ -195,7 +196,7 @@ export default function PostSiteOverview({ site }: { site?: any }) {
   const mapsUrl = address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : '';
 
   return (
-    <div ref={containerRef} className="space-y-6">
+    <div ref={containerRef} className="space-y-6 animate-fade-up">
       {/* ── Site identity header ─────────────────────────────────────────── */}
       <Card className="overflow-hidden">
         <CardContent className="p-6">
@@ -248,24 +249,14 @@ export default function PostSiteOverview({ site }: { site?: any }) {
           </h3>
           <span className="text-xs text-muted-foreground/70">· {t('postSites.overview.last7days', 'últimos 7 días')}</span>
         </div>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+        <Stagger className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
           {stats.map((s) => {
             const Icon = s.icon;
             return (
-              <Card key={s.id} className="transition-shadow hover:shadow-md">
-                <CardContent className="flex items-center gap-3 p-4">
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${s.accent}`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-2xl font-semibold leading-tight text-foreground">{s.value}</div>
-                    <div className="truncate text-xs text-muted-foreground">{s.label}</div>
-                  </div>
-                </CardContent>
-              </Card>
+              <StatCard key={s.id} label={s.label} value={s.value} icon={<Icon />} accent={s.accent} />
             );
           })}
-        </div>
+        </Stagger>
       </div>
 
       {/* ── Location map ─────────────────────────────────────────────────── */}
@@ -367,11 +358,11 @@ export default function PostSiteOverview({ site }: { site?: any }) {
             </Sheet>
           </div>
 
-          <div className="mt-6 flex flex-col items-center justify-center gap-2 py-10 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-              <Activity className="h-6 w-6" />
-            </div>
-            <p className="text-sm text-muted-foreground">{t('postSites.overview.noActivity', 'Sin actividad por ahora.')}</p>
+          <div className="mt-6">
+            <EmptyState
+              icon={<Activity />}
+              title={t('postSites.overview.noActivity', 'Sin actividad por ahora.')}
+            />
           </div>
         </CardContent>
       </Card>

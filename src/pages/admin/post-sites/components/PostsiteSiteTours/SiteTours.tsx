@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Select, { MultiValue, OptionsOrGroups } from 'react-select';
-import { Search, ChevronDown, Plus, X, Clock, EllipsisVertical, Eye, Edit, Trash, Settings } from 'lucide-react';
+import { Search, ChevronDown, Plus, X, Clock, EllipsisVertical, Eye, Edit, Trash, Settings, Route } from 'lucide-react';
 import RondaSettingsForm from '@/pages/admin/Configuration/rondas-settings/RondaSettingsForm';
 import { useTranslation } from 'react-i18next';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { EmptyState } from '@/components/kit';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
@@ -663,8 +664,8 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
 
 
   return (
-    <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-card border rounded-lg p-4 flex-1 flex flex-col">
+    <div ref={containerRef} className="min-h-screen flex flex-col animate-fade-up">
+      <div className="cg-card p-4 flex-1 flex flex-col">
         <div className="flex items-center justify-between gap-4 mb-4 sticky top-0 bg-card z-10">
             <div className="relative">
             <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-full bg-card text-sm inline-flex items-center gap-2">
@@ -765,21 +766,12 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
                   </tr>
                 ) : filteredTours.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-16">
-                      <div className="flex flex-col items-center justify-center gap-4">
-                        <div className="w-40 h-40">
-                          <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                            <rect x="40" y="48" width="120" height="84" fill="currentColor" rx="10" />
-                            <path d="M60 78 L140 78" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                            <circle cx="90" cy="100" r="6" fill="white" />
-                            <circle cx="110" cy="100" r="6" fill="white" />
-                          </svg>
-                        </div>
-                        <div className="text-center">
-                          <h3 className="text-lg font-semibold text-foreground">{t('siteTour.empty.title')}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">{t('siteTour.empty.message')}</p>
-                        </div>
-                      </div>
+                    <td colSpan={4} className="px-6 py-8">
+                      <EmptyState
+                        icon={<Route />}
+                        title={t('siteTour.empty.title')}
+                        description={t('siteTour.empty.message')}
+                      />
                     </td>
                   </tr>
                 ) : (

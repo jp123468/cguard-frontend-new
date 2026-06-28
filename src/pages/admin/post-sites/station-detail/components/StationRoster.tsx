@@ -83,7 +83,7 @@ export default function StationRoster({ stationId, tenantId, events, guardColorM
       </div>
       <div className="flex gap-3 overflow-x-auto pb-1">
         {roster.map((g) => {
-          const color = guardColorMap[g.id] || { accent: '#C8860A', bg: 'rgba(200,134,10,0.08)', text: 'inherit' };
+          const color = guardColorMap[g.id] || { accent: 'var(--primary)', bg: 'rgba(200,134,10,0.08)', text: 'inherit' };
           const isSf = g.role?.isRelief;
           const accent = isSf ? '#10b981' : color.accent;
           return (

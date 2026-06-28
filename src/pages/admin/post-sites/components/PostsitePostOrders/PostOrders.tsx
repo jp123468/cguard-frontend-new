@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Search, ChevronDown, Plus, X, ArrowUpDown } from 'lucide-react';
+import { Search, ChevronDown, Plus, X, ArrowUpDown, FileText } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { EmptyState } from '@/components/kit';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function PostSiteOrders({ site }: { site?: any }) {
@@ -16,10 +17,8 @@ export default function PostSiteOrders({ site }: { site?: any }) {
   useScrollToTopOnMount(containerRef);
 
   return (
-    <div ref={containerRef} className="space-y-4">
-      
-
-      <div className="bg-card border rounded-lg p-4 shadow-sm">
+    <div ref={containerRef} className="space-y-4 animate-fade-up">
+      <div className="cg-card p-4">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="relative">
             <button
@@ -75,21 +74,12 @@ export default function PostSiteOrders({ site }: { site?: any }) {
             </thead>
             <tbody>
               <tr>
-                <td colSpan={5} className="px-4 py-12">
-                  <div className="flex flex-col items-center justify-center gap-4">
-                    <div className="w-40 h-40">
-                      <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                        <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                        <circle cx="85" cy="100" r="8" fill="white" />
-                        <circle cx="115" cy="100" r="8" fill="white" />
-                        <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                    <div className="text-center">
-                      <h3 className="text-lg font-semibold text-foreground">No Result Found</h3>
-                      <p className="text-sm text-muted-foreground mt-1">We can't find any item matching your search</p>
-                    </div>
-                  </div>
+                <td colSpan={5} className="px-4 py-8">
+                  <EmptyState
+                    icon={<FileText />}
+                    title="No Result Found"
+                    description="We can't find any item matching your search"
+                  />
                 </td>
               </tr>
             </tbody>

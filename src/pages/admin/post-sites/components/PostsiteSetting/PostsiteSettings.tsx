@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Info } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function PostSiteSettings({ site }: { site?: any }) {
@@ -36,7 +37,7 @@ export default function PostSiteSettings({ site }: { site?: any }) {
   useScrollToTopOnMount(containerRef);
 
   return (
-    <div ref={containerRef} className="relative bg-card border rounded-md shadow-sm">
+    <div ref={containerRef} className="relative cg-card p-0 overflow-hidden animate-fade-up">
       <div className="p-6 space-y-4 overflow-auto">
         <div className="space-y-4 mt-4">
           <SettingRow checked={values.enforceClockInBeforeCheckIn} onChange={() => toggle('enforceClockInBeforeCheckIn')}>Enforce clock-in before check-in</SettingRow>
@@ -79,7 +80,7 @@ export default function PostSiteSettings({ site }: { site?: any }) {
 
       {/* Fixed footer */}
       <div className="border-t p-4 bg-card sticky bottom-0 z-10 flex justify-end">
-        <button onClick={save} className="px-4 py-2 rounded-full bg-blue-600 text-white">Save</button>
+        <Button onClick={save} variant="brand">Save</Button>
       </div>
     </div>
   );

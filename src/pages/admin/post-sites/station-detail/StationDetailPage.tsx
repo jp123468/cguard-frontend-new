@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, Navigate } from 'react-router-dom';
 import StationLayout from '@/layouts/StationLayout';
 import { ApiService } from '@/services/api/apiService';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { EmptyState, FadeIn } from '@/components/kit';
 import StationOverview from './components/StationOverview';
 import StationVisitors from './components/StationVisitors';
 import StationGuards from './components/StationGuards';
@@ -79,13 +80,17 @@ export default function StationDetailPage() {
     <StationLayout station={station}>
       <div className="p-4">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-16">
             <Loader2 className="animate-spin text-primary" />
           </div>
         ) : error ? (
-          <div className="text-red-600">{error}</div>
+          <EmptyState
+            icon={<AlertTriangle />}
+            title={t('station.details.loadError', 'Error al cargar puesto')}
+            description={error}
+          />
         ) : (
-          <div className="space-y-4">{renderTab()}</div>
+          <FadeIn className="space-y-4">{renderTab()}</FadeIn>
         )}
       </div>
     </StationLayout>

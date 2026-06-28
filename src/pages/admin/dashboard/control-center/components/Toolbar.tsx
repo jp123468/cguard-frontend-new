@@ -16,7 +16,7 @@ export function Toolbar({
   return (
     <div className="cc-glass mb-5 flex flex-wrap items-center justify-between gap-3 px-4 py-3">
       <div>
-        <h1 className="text-lg font-bold tracking-tight text-foreground">Panel de control</h1>
+        <h1 className="font-display text-lg font-bold tracking-tight text-foreground">Panel de control</h1>
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {demo ? (
             <><Sparkles size={12} className="text-[color:var(--cc-accent)]" />Datos de demostración</>

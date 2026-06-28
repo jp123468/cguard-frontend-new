@@ -5,6 +5,8 @@ import { Loader2, UserPlus, Users, X, Repeat, Shield, RefreshCw, Trash2 } from '
 import { toast } from 'sonner';
 import { confirmDialog } from '@/components/ui/confirmDialog';
 import { ApiService } from '@/services/api/apiService';
+import { Section, EmptyState, SkeletonCards, StatusBadge } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 import ShiftAssignModal from './ShiftAssignModal';
 
 type Props = { station: any; stationId: string; postSiteId: string };
@@ -276,46 +278,58 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
 
   return (
     <>
-      <div className="overflow-hidden rounded-lg border bg-card">
-        <div className="flex flex-col gap-3 border-b px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-base font-semibold text-foreground">
-              {t('station.guards.title', 'Vigilantes Asignados')}
-              {rows.length > 0 && <span className="ml-2 text-sm font-normal text-muted-foreground">({rows.length})</span>}
-            </h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {t('station.guards.hint', 'El fijo cubre la rotación; el sacafranco cubre sus días de descanso.')}
-            </p>
-            {rows.length > 0 && (
-              <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
-                <span className="font-medium">Próximas 4 semanas:</span>
-                <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-primary" /> Fijo trabaja</span>
-                <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-indigo-500" /> Sacafranco cubre</span>
-                <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-muted/40" /> Descanso</span>
-              </div>
-            )}
-          </div>
+      <Section
+        icon={<Users />}
+        title={
+          <>
+            {t('station.guards.title', 'Vigilantes Asignados')}
+            {rows.length > 0 && <span className="ml-2 font-normal text-muted-foreground">({rows.length})</span>}
+          </>
+        }
+        action={
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowShiftModal(true)} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary/90">
+            <Button variant="brand" size="sm" className="rounded-full" onClick={() => setShowShiftModal(true)}>
               <UserPlus size={15} /> {t('station.guards.assign', 'Asignar vigilante')}
-            </button>
-            <button onClick={() => openAssign('sacafranco')} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/30">
+            </Button>
+            <Button variant="outline" size="sm" className="rounded-full" onClick={() => openAssign('sacafranco')}>
               <Repeat size={15} /> {t('station.guards.addSaca', 'Agregar sacafranco')}
-            </button>
+            </Button>
           </div>
+        }
+        contentClassName="-mx-5 -mb-5"
+      >
+        <div className="px-5">
+          <p className="-mt-2 text-xs text-muted-foreground">
+            {t('station.guards.hint', 'El fijo cubre la rotación; el sacafranco cubre sus días de descanso.')}
+          </p>
+          {rows.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+              <span className="font-medium">Próximas 4 semanas:</span>
+              <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-primary" /> Fijo trabaja</span>
+              <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-indigo-500" /> Sacafranco cubre</span>
+              <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-muted/40" /> Descanso</span>
+            </div>
+          )}
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
+          <div className="px-5 pb-5 pt-4"><SkeletonCards count={3} /></div>
         ) : error ? (
           <div className="p-6 text-sm text-red-600">{error}</div>
         ) : rows.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 p-10 text-center text-muted-foreground">
-            <Users className="h-8 w-8 opacity-50" />
-            <p className="text-sm">{t('station.guards.empty', 'No hay vigilantes asignados. Asigna un vigilante fijo para empezar.')}</p>
+          <div className="px-5 pb-5 pt-4">
+            <EmptyState
+              icon={<Users />}
+              title={t('station.guards.empty', 'No hay vigilantes asignados. Asigna un vigilante fijo para empezar.')}
+              action={
+                <Button variant="brand" size="sm" className="rounded-full" onClick={() => setShowShiftModal(true)}>
+                  <UserPlus size={15} /> {t('station.guards.assign', 'Asignar vigilante')}
+                </Button>
+              }
+            />
           </div>
         ) : (
-          <ul className="divide-y">
+          <ul className="mt-4 divide-y border-t">
             {rows.map((a) => (
               <li key={a.id} className="flex items-center gap-3 px-6 py-3 hover:bg-muted/20">
                 <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${a.type === 'sacafranco' ? 'bg-indigo-500/12 text-indigo-600' : 'bg-primary/12 text-primary'}`}>
@@ -324,9 +338,9 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium text-foreground">{a.guardName}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${a.type === 'sacafranco' ? 'bg-indigo-500/10 text-indigo-600' : 'bg-primary/10 text-primary'}`}>
+                    <StatusBadge tone={a.type === 'sacafranco' ? 'blue' : 'primary'} dot={false}>
                       {a.type === 'sacafranco' ? 'Sacafranco' : 'Fijo'}
-                    </span>
+                    </StatusBadge>
                     {a.rotation ? <span className="text-xs text-muted-foreground">· {a.rotation}</span> : null}
                   </div>
                   <div className="text-xs text-muted-foreground">{a.positionName}</div>
@@ -342,7 +356,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
             ))}
           </ul>
         )}
-      </div>
+      </Section>
 
       {/* Assign / Change modal — portaled so the station layout can't clip it */}
       {modalOpen && createPortal(

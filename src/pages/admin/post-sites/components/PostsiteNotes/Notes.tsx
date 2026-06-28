@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, ChevronDown, Plus, X, EllipsisVertical, Eye, Pencil, Trash } from 'lucide-react';
+import { Search, ChevronDown, Plus, X, EllipsisVertical, Eye, Pencil, Trash, StickyNote } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { EmptyState } from '@/components/kit';
 import { useTranslation } from 'react-i18next';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { toast } from 'sonner';
@@ -168,8 +169,8 @@ export default function PostSiteNotes({ site }: Props) {
   useScrollToTopOnMount(containerRef);
 
   return (
-    <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
+    <div ref={containerRef} className="min-h-screen flex flex-col animate-fade-up">
+      <div className="cg-card p-6 flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative" ref={actionRef}>
             <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]">
@@ -223,22 +224,12 @@ export default function PostSiteNotes({ site }: Props) {
             <tbody>
               {notesData.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                          <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                          <circle cx="85" cy="100" r="8" fill="white" />
-                          <circle cx="115" cy="100" r="8" fill="white" />
-                          <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                          <path d="M 60 60 L 70 50 M 140 60 L 150 50 M 80 40 L 90 30 M 120 40 L 110 30" stroke="currentColor" strokeWidth="2" />
-                        </svg>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-lg font-semibold text-foreground">{t('clients.empty.title')}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">{t('clients.empty.description')}</p>
-                      </div>
-                    </div>
+                  <td colSpan={6} className="px-4 py-8">
+                    <EmptyState
+                      icon={<StickyNote />}
+                      title={t('clients.empty.title')}
+                      description={t('clients.empty.description')}
+                    />
                   </td>
                 </tr>
               ) : (

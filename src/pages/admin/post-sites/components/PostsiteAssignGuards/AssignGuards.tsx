@@ -8,6 +8,8 @@ import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Section, EmptyState } from '@/components/kit';
 
 export default function AssignGuards({ site }: { site?: any }) {
     const { t } = useTranslation();
@@ -690,7 +692,7 @@ export default function AssignGuards({ site }: { site?: any }) {
 
     return (
         <div ref={containerRef} className="space-y-4">
-            <div className="bg-card border rounded-lg p-4 flex flex-col">
+            <Section contentClassName="flex flex-col">
                 <div className="flex items-center justify-between gap-4 mb-4">
                     <div className="relative flex items-center pl-2">
                         <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-full bg-card text-sm inline-flex items-center gap-2">
@@ -714,12 +716,10 @@ export default function AssignGuards({ site }: { site?: any }) {
                     </div>
 
                     <div className="flex-shrink-0">
-                        <button onClick={() => setShowAssignModal(true)} className="inline-flex items-center gap-3 bg-primary text-white px-4 py-2 rounded-full hover:bg-primary/90">
-                            <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center">
-                                <Plus size={14} />
-                            </span>
-                            <span className="text-sm font-medium">{t('clients.assignGuards.assignButton', 'Assign Guard')}</span>
-                        </button>
+                        <Button variant="brand" onClick={() => setShowAssignModal(true)}>
+                            <Plus size={16} />
+                            <span>{t('clients.assignGuards.assignButton', 'Assign Guard')}</span>
+                        </Button>
                     </div>
                 </div>
 
@@ -740,20 +740,11 @@ export default function AssignGuards({ site }: { site?: any }) {
                                 {assignedGuards.filter(r => matchesQuery(r, query)).length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="px-4 py-12">
-                                        <div className="flex flex-col items-center justify-center gap-4">
-                                            <div className="w-40 h-40">
-                                                <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                                                    <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                                                    <circle cx="85" cy="100" r="8" fill="white" />
-                                                    <circle cx="115" cy="100" r="8" fill="white" />
-                                                    <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                                                </svg>
-                                            </div>
-                                            <div className="text-center">
-                                                <h3 className="text-lg font-semibold text-foreground">{t('clients.assignGuards.emptyTitle', 'No Result Found')}</h3>
-                                                <p className="text-sm text-muted-foreground mt-1">{t('clients.assignGuards.emptyMessage', 'No guards are assigned to this post site.')}</p>
-                                            </div>
-                                        </div>
+                                        <EmptyState
+                                            icon={<Search />}
+                                            title={t('clients.assignGuards.emptyTitle', 'No Result Found')}
+                                            description={t('clients.assignGuards.emptyMessage', 'No guards are assigned to this post site.')}
+                                        />
                                     </td>
                                 </tr>
                                 ) : (
@@ -1174,7 +1165,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-            </div>
+            </Section>
         </div>
     );
 }

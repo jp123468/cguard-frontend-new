@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import PostSiteLayout from '@/layouts/PostSiteLayout';
 import { postSiteService, setTenantId as setGlobalTenantId } from '@/lib/api/postSiteService';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle, MapPinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { EmptyState } from '@/components/kit';
 import Overview from './components/PostsiteOverview/Overview';
 import Profile from './components/PostsiteProfile/Profile';
 import Contacts from './components/PostsiteContacts/Contacts';
@@ -119,15 +120,22 @@ export default function PostSiteDetailsPage() {
     <PostSiteLayout title={site?.businessName || site?.companyName || site?.name || t('postSites.Details.title', '-')} site={site}>
       <div className="p-4">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-12">
             <Loader2 className="animate-spin text-primary" />
           </div>
         ) : error ? (
-          <div className="text-red-600">{error}</div>
+          <EmptyState
+            icon={<AlertTriangle />}
+            title={t('postSites.Details.errorTitle', 'No se pudo cargar el sitio')}
+            description={error}
+          />
         ) : site ? (
-          <div className="space-y-4">{renderTab()}</div>
+          <div className="space-y-4 animate-fade-up">{renderTab()}</div>
         ) : (
-          <div>{t('postSites.Details.notfoundpostsite', 'No post sites found')}</div>
+          <EmptyState
+            icon={<MapPinOff />}
+            title={t('postSites.Details.notfoundpostsite', 'No post sites found')}
+          />
         )}
       </div>
     </PostSiteLayout>

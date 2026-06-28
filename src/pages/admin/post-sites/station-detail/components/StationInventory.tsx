@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2 } from 'lucide-react';
+import { Package } from 'lucide-react';
 import inventoryAssignmentService from '@/lib/api/inventoryAssignmentService';
+import { Section, EmptyState, SkeletonCards } from '@/components/kit';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -33,30 +34,33 @@ export default function StationInventory({ stationId }: Props) {
   }, [stationId]);
 
   return (
-    <div className="bg-card border rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b">
-        <h3 className="text-base font-semibold text-foreground">
+    <Section
+      icon={<Package />}
+      title={
+        <>
           {t('station.inventory.title', 'Inventario / Dotación')}
           {rows.length > 0 && (
-            <span className="ml-2 text-sm font-normal text-muted-foreground">({rows.length})</span>
+            <span className="ml-2 font-normal text-muted-foreground">({rows.length})</span>
           )}
-        </h3>
-      </div>
-
+        </>
+      }
+      contentClassName="-mx-5 -mb-5"
+    >
       {loading ? (
-        <div className="flex items-center justify-center py-10">
-          <Loader2 className="animate-spin text-primary" />
-        </div>
+        <div className="px-5 pb-5"><SkeletonCards count={3} /></div>
       ) : error ? (
-        <div className="p-6 text-sm text-red-600">{error}</div>
+        <div className="px-5 pb-5 text-sm text-red-600">{error}</div>
       ) : rows.length === 0 ? (
-        <div className="p-6 text-sm text-muted-foreground">
-          {t('station.inventory.empty', 'No hay inventario para este puesto.')}
+        <div className="px-5 pb-5">
+          <EmptyState
+            icon={<Package />}
+            title={t('station.inventory.empty', 'No hay inventario para este puesto.')}
+          />
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-muted/30 border-b">
+            <thead className="bg-muted/30 border-y">
               <tr>
                 <th className="px-6 py-3 text-left font-semibold text-foreground/70">
                   {t('station.inventory.col.item', 'Artículo')}
@@ -95,6 +99,6 @@ export default function StationInventory({ stationId }: Props) {
           </table>
         </div>
       )}
-    </div>
+    </Section>
   );
 }

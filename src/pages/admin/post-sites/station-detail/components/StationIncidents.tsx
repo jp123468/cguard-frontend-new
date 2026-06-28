@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
+import { Section, EmptyState, SkeletonCards, StatusBadge } from '@/components/kit';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -63,40 +64,41 @@ export default function StationIncidents({ stationId, postSiteId }: Props) {
     }
   };
 
-  const statusBadge = (status: string) => {
+  const statusTone = (status: string): 'slate' | 'orange' | 'blue' => {
     const s = (status || '').toLowerCase();
-    if (s === 'cerrado' || s === 'closed' || s === 'resolved')
-      return 'bg-muted text-foreground/70';
-    if (s === 'abierto' || s === 'open')
-      return 'bg-yellow-500/15 text-yellow-700';
-    return 'bg-blue-500/10 text-blue-600';
+    if (s === 'cerrado' || s === 'closed' || s === 'resolved') return 'slate';
+    if (s === 'abierto' || s === 'open') return 'orange';
+    return 'blue';
   };
 
   return (
-    <div className="bg-card border rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b">
-        <h3 className="text-base font-semibold text-foreground">
+    <Section
+      icon={<AlertTriangle />}
+      title={
+        <>
           {t('station.incidents.title', 'Incidencias')}
           {rows.length > 0 && (
-            <span className="ml-2 text-sm font-normal text-muted-foreground">({rows.length})</span>
+            <span className="ml-2 font-normal text-muted-foreground">({rows.length})</span>
           )}
-        </h3>
-      </div>
-
+        </>
+      }
+      contentClassName="-mx-5 -mb-5"
+    >
       {loading ? (
-        <div className="flex items-center justify-center py-10">
-          <Loader2 className="animate-spin text-primary" />
-        </div>
+        <div className="px-5 pb-5"><SkeletonCards count={3} /></div>
       ) : error ? (
-        <div className="p-6 text-sm text-red-600">{error}</div>
+        <div className="px-5 pb-5 text-sm text-red-600">{error}</div>
       ) : rows.length === 0 ? (
-        <div className="p-6 text-sm text-muted-foreground">
-          {t('station.incidents.empty', 'No hay incidencias para este puesto.')}
+        <div className="px-5 pb-5">
+          <EmptyState
+            icon={<AlertTriangle />}
+            title={t('station.incidents.empty', 'No hay incidencias para este puesto.')}
+          />
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-muted/30 border-b">
+            <thead className="bg-muted/30 border-y">
               <tr>
                 <th className="px-6 py-3 text-left font-semibold text-foreground/70">
                   {t('station.incidents.col.description', 'Descripción')}
@@ -131,9 +133,7 @@ export default function StationIncidents({ stationId, postSiteId }: Props) {
                       <div className="truncate">{description}</div>
                     </td>
                     <td className="px-6 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${statusBadge(status)}`}>
-                        {status}
-                      </span>
+                      <StatusBadge tone={statusTone(status)} className="capitalize">{status}</StatusBadge>
                     </td>
                     <td className="px-6 py-3 text-muted-foreground font-mono text-xs">{fmt(date)}</td>
                     <td className="px-6 py-3 text-foreground">{guardName}</td>
@@ -144,6 +144,6 @@ export default function StationIncidents({ stationId, postSiteId }: Props) {
           </table>
         </div>
       )}
-    </div>
+    </Section>
   );
 }

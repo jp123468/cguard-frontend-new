@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Car } from 'lucide-react';
+import { Car } from 'lucide-react';
 import { visitorLogService } from '@/lib/api/visitorLogService';
+import { Section, EmptyState, SkeletonCards, FadeIn } from '@/components/kit';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -62,32 +63,35 @@ export default function StationParking({ stationId }: Props) {
   }, [stationId]);
 
   return (
-    <div className="bg-card border rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b">
-        <h3 className="text-base font-semibold text-foreground">
+    <Section
+      icon={<Car />}
+      title={
+        <span>
           {t('station.parking.title', 'Gestión de Parking')}
           {!loading && rows.length > 0 && (
             <span className="ml-2 text-sm font-normal text-muted-foreground">({rows.length})</span>
           )}
-        </h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {t('station.parking.subtitle', 'Registro de entrada y salida de vehículos en este puesto')}
-        </p>
-      </div>
+        </span>
+      }
+      contentClassName="-mx-5 -mb-5"
+    >
+      <p className="px-5 -mt-2 mb-3 text-xs text-muted-foreground">
+        {t('station.parking.subtitle', 'Registro de entrada y salida de vehículos en este puesto')}
+      </p>
 
       {loading ? (
-        <div className="flex items-center justify-center py-10">
-          <Loader2 className="animate-spin text-primary" />
-        </div>
+        <div className="px-5 pb-5"><SkeletonCards count={4} /></div>
       ) : error ? (
-        <div className="p-6 text-sm text-red-600">{error}</div>
+        <div className="px-5 pb-5 text-sm text-red-600">{error}</div>
       ) : rows.length === 0 ? (
-        <div className="p-6 flex flex-col items-center gap-2 text-muted-foreground">
-          <Car size={24} className="text-muted-foreground/60" />
-          <span className="text-sm">{t('station.parking.empty', 'No hay registros de parking para este puesto.')}</span>
+        <div className="px-5 pb-5">
+          <EmptyState
+            icon={<Car />}
+            title={t('station.parking.empty', 'No hay registros de parking para este puesto.')}
+          />
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <FadeIn className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-muted/30 border-b">
               <tr>
@@ -131,8 +135,8 @@ export default function StationParking({ stationId }: Props) {
               })}
             </tbody>
           </table>
-        </div>
+        </FadeIn>
       )}
-    </div>
+    </Section>
   );
 }

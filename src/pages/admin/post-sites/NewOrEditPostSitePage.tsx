@@ -4,11 +4,12 @@ import PostSiteWizard from "./PostSiteWizard";
 
 type Category = { id: string; name: string };
 import { clientService } from "@/lib/api/clientService";
-import { Loader2 } from "lucide-react";
+import { MapPin, Pencil } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { useTranslation } from "react-i18next";
 import type { Client } from "./PostSiteForm";
+import { PageContainer, PageHeader, SkeletonCards } from "@/components/kit";
 
 export default function NewOrEditPostSitePage() {
     const { id } = useParams<{ id: string }>();
@@ -42,13 +43,18 @@ export default function NewOrEditPostSitePage() {
                 ]}
             />
             <section className="p-4">
-                {loading ? (
-                    <div className="flex items-center justify-center py-16">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    </div>
-                ) : (
-                    <PostSiteWizard clients={clients} mode={id ? 'edit' : 'create'} id={id} />
-                )}
+                <PageContainer width="narrow">
+                    <PageHeader
+                        icon={id ? <Pencil /> : <MapPin />}
+                        title={id ? t('postSites.editPostSite', 'Editar Puesto de seguridad') : t('postSites.newPostSite', 'Nuevo Puesto de seguridad')}
+                        subtitle={t('postSites.wizardSubtitle', 'Configura el sitio, su ubicación, servicio y estaciones paso a paso.')}
+                    />
+                    {loading ? (
+                        <SkeletonCards count={4} />
+                    ) : (
+                        <PostSiteWizard clients={clients} mode={id ? 'edit' : 'create'} id={id} />
+                    )}
+                </PageContainer>
             </section>
         </AppLayout>
     );

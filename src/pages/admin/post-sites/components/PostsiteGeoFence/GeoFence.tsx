@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
-import { Plus, ChevronDown } from 'lucide-react';
+import { Plus, ChevronDown, MapPin } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { Section, EmptyState } from '@/components/kit';
 
 export default function PostSiteGeoFence({ site }: { site?: any }) {
   const [addOpen, setAddOpen] = useState(false);
@@ -28,13 +29,13 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
 
   return (
   <div ref={containerRef} className="space-y-4">
-      <div className="bg-card border rounded-lg p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Geo-Fence</h3>
-
+      <Section
+        title="Geo-Fence"
+        icon={<MapPin />}
+        action={(
           <div className="relative" ref={addRef}>
-            <button onClick={() => setAddOpen(v => !v)} className="inline-flex items-center gap-3 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700">
-              <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center"><Plus size={14} /></span>
+            <button onClick={() => setAddOpen(v => !v)} className="inline-flex items-center gap-2 cg-gradient-brand text-primary-foreground px-4 py-2 rounded-full shadow-sm hover:brightness-[1.04]">
+              <Plus size={16} />
               <span className="text-sm font-medium">Add Geofence</span>
               <ChevronDown size={16} />
             </button>
@@ -46,8 +47,8 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
               </div>
             )}
           </div>
-        </div>
-
+        )}
+      >
         <div className="mb-4">
           <iframe
             title="geofence-map"
@@ -68,7 +69,9 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
               </thead>
               <tbody>
                 <tr>
-                  <td colSpan={3} className="px-4 py-12 text-center text-muted-foreground">No geofences defined yet</td>
+                  <td colSpan={3} className="px-4 py-12">
+                    <EmptyState icon={<MapPin />} title="Sin geocercas" description="No geofences defined yet" />
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -83,7 +86,7 @@ export default function PostSiteGeoFence({ site }: { site?: any }) {
             )} loading={false} />
           </div>
         </div>
-      </div>
+      </Section>
     </div>
   );
 }

@@ -58,7 +58,7 @@ export function SectionHeader({ title, icon, right, live }: { title: string; ico
     <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-2">
       <div className="flex items-center gap-2 min-w-0">
         {icon && <span className="cc-accent-text shrink-0">{icon}</span>}
-        <h3 className="text-sm font-semibold tracking-wide text-foreground truncate uppercase">{title}</h3>
+        <h3 className="font-display text-sm font-semibold tracking-wide text-foreground truncate uppercase">{title}</h3>
         {live && (
           <span className="ml-1 flex items-center gap-1 text-[10px] font-semibold uppercase text-emerald-400">
             <StatusDot status="online" /> live

@@ -378,7 +378,7 @@ function StationRow({
       </div>
 
       {/* Jornadas section */}
-      <div className="border-t border-border bg-muted/30/40 px-4 py-3 space-y-2">
+      <div className="border-t border-border bg-muted/30 px-4 py-3 space-y-2">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
             <Clock className="h-3 w-3" /> Jornadas / Turnos
@@ -797,8 +797,9 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
             </Button>
             <Button
               type="button"
+              variant="brand"
               onClick={() => navigate(`/post-sites/${targetId}/profile`)}
-              className="bg-amber-600 text-white hover:bg-amber-700 gap-2"
+              className="gap-2"
             >
               <MapPin className="h-4 w-4" />
               Ir al perfil
@@ -1092,7 +1093,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
           </div>
 
           {/* Equipment */}
-          <div className="rounded-xl border border-amber-100 bg-amber-500/10/50 p-4 space-y-3">
+          <div className="rounded-xl border border-amber-100 bg-amber-500/10 p-4 space-y-3">
             <div className="flex items-center gap-2">
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-500/15 text-amber-700">
                 <Zap className="h-4 w-4" />
@@ -1109,7 +1110,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
           </div>
 
           {/* Training */}
-          <div className="rounded-xl border border-amber-100 bg-amber-500/10/50 p-4 space-y-3">
+          <div className="rounded-xl border border-amber-100 bg-amber-500/10 p-4 space-y-3">
             <div className="flex items-center gap-2">
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-500/15 text-amber-700">
                 <Star className="h-4 w-4" />
@@ -1126,7 +1127,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
           </div>
 
           {/* Deployment checks */}
-          <div className="rounded-xl border border-amber-100 bg-amber-500/10/50 p-4 space-y-4">
+          <div className="rounded-xl border border-amber-100 bg-amber-500/10 p-4 space-y-4">
             <div className="flex items-center gap-2">
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-500/15 text-amber-700">
                 <Shield className="h-4 w-4" />
@@ -1308,7 +1309,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
           {/* Equipment & training chips */}
           {(allEquip.length > 0 || allTraining.length > 0) && (            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {allEquip.length > 0 && (
-                <div className="rounded-xl border border-amber-100 bg-amber-500/10/40 p-3">
+                <div className="rounded-xl border border-amber-100 bg-amber-500/10 p-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 mb-2 flex items-center gap-1">
                     <Zap className="h-3 w-3" /> Equipamiento
                   </p>
@@ -1325,7 +1326,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
                 </div>
               )}
               {allTraining.length > 0 && (
-                <div className="rounded-xl border border-amber-100 bg-amber-500/10/40 p-3">
+                <div className="rounded-xl border border-amber-100 bg-amber-500/10 p-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 mb-2 flex items-center gap-1">
                     <Star className="h-3 w-3" /> Capacitación
                   </p>
@@ -1427,9 +1428,10 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
           {isLastMainStep ? (
             <Button
               type="button"
+              variant="brand"
               onClick={handleCreateSite}
               disabled={submitting || !address.trim()}
-              className="bg-primary text-white hover:bg-primary/90 gap-2 min-w-36"
+              className="gap-2 min-w-36"
             >
               {submitting ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> {isEdit ? 'Guardando…' : 'Creando…'}</>
@@ -1440,9 +1442,10 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
           ) : (
             <Button
               type="button"
+              variant="brand"
               onClick={() => setStep((s) => s + 1)}
               disabled={!canGoNext()}
-              className="bg-amber-600 text-white hover:bg-amber-700 gap-1.5"
+              className="gap-1.5"
             >
               Siguiente
               <ChevronRight className="h-4 w-4" />

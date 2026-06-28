@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Search, Plus, X, List } from 'lucide-react';
+import { Search, Plus, X, List, ListChecks } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { toast } from 'sonner';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
+import { Button } from '@/components/ui/button';
+import { Section, EmptyState } from '@/components/kit';
 
 type ChecklistItem = { id: string; text: string };
 
@@ -101,7 +103,7 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
 
   return (
     <div ref={containerRef} className="space-y-4">
-      <div className="bg-card border rounded-lg p-4">
+      <Section>
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="relative">
             <select value={action} onChange={e => handleActionChange(e.target.value)} className="h-10 rounded-full border px-3 bg-card text-sm">
@@ -118,10 +120,10 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
           </div>
 
           <div className="flex-shrink-0">
-            <button onClick={() => setModalOpen(true)} className="inline-flex items-center gap-3 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700">
-              <span className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center"><Plus size={14} /></span>
-              <span className="text-sm font-medium">New Checklist</span>
-            </button>
+            <Button variant="brand" onClick={() => setModalOpen(true)}>
+              <Plus size={16} />
+              <span>New Checklist</span>
+            </Button>
           </div>
         </div>
 
@@ -140,21 +142,12 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
             <tbody>
               {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-12">
-                      <div className="flex flex-col items-center justify-center gap-4">
-                        <div className="w-40 h-40">
-                          <svg viewBox="0 0 200 200" className="w-full h-full text-blue-100">
-                            <rect x="40" y="48" width="120" height="84" fill="currentColor" rx="10" />
-                            <path d="M60 78 L140 78" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                            <circle cx="90" cy="100" r="6" fill="white" />
-                            <circle cx="110" cy="100" r="6" fill="white" />
-                          </svg>
-                        </div>
-                        <div className="text-center">
-                          <h3 className="text-lg font-semibold text-foreground">No Result Found</h3>
-                          <p className="text-sm text-muted-foreground mt-1">We can't find any item matching your search</p>
-                        </div>
-                      </div>
+                    <td colSpan={5} className="px-4 py-12">
+                      <EmptyState
+                        icon={<ListChecks />}
+                        title="No Result Found"
+                        description="We can't find any item matching your search"
+                      />
                     </td>
                   </tr>
               ) : (
@@ -183,7 +176,7 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
             )} loading={false} />
           </div>
         </div>
-      </div>
+      </Section>
 
       {/* Modal as right-side drawer */}
       {modalOpen && (
@@ -233,8 +226,8 @@ export default function PostSiteChecklists({ site }: { site?: any }) {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t">
-                <button onClick={() => { submitDraft(true); }} className="px-4 py-2 rounded-full bg-muted text-foreground">Save As Draft</button>
-                <button onClick={() => { submitDraft(false); }} className="px-4 py-2 rounded-full bg-blue-600 text-white">Submit</button>
+                <Button variant="outline" onClick={() => { submitDraft(true); }}>Save As Draft</Button>
+                <Button variant="brand" onClick={() => { submitDraft(false); }}>Submit</Button>
               </div>
             </div>
           </div>

@@ -55,7 +55,7 @@ export default function OperationsMapFull() {
         style={{ background: "linear-gradient(to bottom, rgba(8,12,20,0.82), rgba(8,12,20,0))" }}
       >
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white">
+          <div className="flex items-center gap-2 font-display text-sm font-semibold text-white">
             <Radio size={15} className="text-emerald-400" />
             Operaciones en tiempo real
             {demo && <span className="rounded-full bg-[color:var(--cc-accent)]/20 px-2 py-0.5 text-[10px] font-bold text-[color:var(--cc-accent)]">DEMO</span>}

@@ -7,6 +7,8 @@ import {
   Bell, Image as ImageIcon, Video, Mic, User, CheckCircle2, FileText,
 } from 'lucide-react';
 import { stationOrderService } from '@/lib/api/stationOrderService';
+import { Section, EmptyState, SkeletonCards } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -102,41 +104,36 @@ export default function StationOrders({ stationId }: Props) {
   return (
     <div className="space-y-4">
       {/* header */}
-      <div className="glass flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl" style={{ background: 'color-mix(in oklab, var(--cc-accent) 16%, transparent)', color: 'var(--cc-accent)' }}>
-            <ClipboardList size={18} />
+      <Section
+        icon={<ClipboardList />}
+        title={t('station.orders.title', 'Consignas específicas')}
+        action={
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-lg border border-border bg-background p-0.5">
+              <button onClick={() => setView('list')} className={`rounded-md px-3 py-1.5 text-xs font-medium ${view === 'list' ? 'bg-primary/14 text-primary' : 'text-muted-foreground'}`}>{t('station.orders.tabList', 'Consignas')}</button>
+              <button onClick={() => setView('log')} className={`rounded-md px-3 py-1.5 text-xs font-medium ${view === 'log' ? 'bg-primary/14 text-primary' : 'text-muted-foreground'}`}>{t('station.orders.tabLog', 'Registro de actividad')}</button>
+            </div>
+            {view === 'list' && (
+              <Button variant="brand" size="sm" onClick={() => setModal({ ...EMPTY })}>
+                <Plus size={16} /> {t('station.orders.add', 'Agregar consigna')}
+              </Button>
+            )}
           </div>
-          <div>
-            <h2 className="text-base font-semibold text-foreground">{t('station.orders.title', 'Consignas específicas')}</h2>
-            <p className="text-xs text-muted-foreground">{t('station.orders.subtitle', 'Requisitos recurrentes que los vigilantes deben completar en esta estación.')}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-border bg-background p-0.5">
-            <button onClick={() => setView('list')} className={`rounded-md px-3 py-1.5 text-xs font-medium ${view === 'list' ? 'text-[color:var(--cc-accent)]' : 'text-muted-foreground'}`} style={view === 'list' ? { background: 'color-mix(in oklab, var(--cc-accent) 14%, transparent)' } : undefined}>{t('station.orders.tabList', 'Consignas')}</button>
-            <button onClick={() => setView('log')} className={`rounded-md px-3 py-1.5 text-xs font-medium ${view === 'log' ? 'text-[color:var(--cc-accent)]' : 'text-muted-foreground'}`} style={view === 'log' ? { background: 'color-mix(in oklab, var(--cc-accent) 14%, transparent)' } : undefined}>{t('station.orders.tabLog', 'Registro de actividad')}</button>
-          </div>
-          {view === 'list' && (
-            <button onClick={() => setModal({ ...EMPTY })}
-              className="flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-black"
-              style={{ background: 'var(--cc-accent)' }}>
-              <Plus size={16} /> {t('station.orders.add', 'Agregar consigna')}
-            </button>
-          )}
-        </div>
-      </div>
+        }
+      >
+        <p className="-mt-2 text-xs text-muted-foreground">{t('station.orders.subtitle', 'Requisitos recurrentes que los vigilantes deben completar en esta estación.')}</p>
+      </Section>
 
       {view === 'log' ? (
         <ActivityLog stationId={stationId} t={t} />
       ) : /* list */ loading ? (
-        <div className="grid place-items-center py-16"><Loader2 className="animate-spin text-muted-foreground" /></div>
+        <SkeletonCards count={4} className="lg:grid-cols-2" />
       ) : rows.length === 0 ? (
-        <div className="glass grid place-items-center py-14 text-center">
-          <ClipboardList className="mb-2 text-muted-foreground/40" size={32} />
-          <p className="text-sm font-medium text-foreground">{t('station.orders.emptyTitle', 'Sin consignas')}</p>
-          <p className="mt-1 max-w-sm text-xs text-muted-foreground">{t('station.orders.emptyHint', 'Agrega tareas recurrentes (por ejemplo: abrir los baños públicos a las 09:00) que el vigilante deberá completar.')}</p>
-        </div>
+        <EmptyState
+          icon={<ClipboardList />}
+          title={t('station.orders.emptyTitle', 'Sin consignas')}
+          description={t('station.orders.emptyHint', 'Agrega tareas recurrentes (por ejemplo: abrir los baños públicos a las 09:00) que el vigilante deberá completar.')}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {rows.map((o) => (
@@ -295,13 +292,13 @@ function ActivityLog({ stationId, t }: { stationId: string; t: any }) {
       .finally(() => setLoading(false));
   }, [stationId]);
 
-  if (loading) return <div className="grid place-items-center py-16"><Loader2 className="animate-spin text-muted-foreground" /></div>;
+  if (loading) return <SkeletonCards count={3} className="sm:grid-cols-1" />;
   if (!rows.length) return (
-    <div className="glass grid place-items-center py-14 text-center">
-      <CheckCircle2 className="mb-2 text-muted-foreground/40" size={32} />
-      <p className="text-sm font-medium text-foreground">{t('station.orders.logEmpty', 'Sin actividad registrada')}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{t('station.orders.logEmptyHint', 'Cuando un vigilante complete una consigna, aparecerá aquí con su evidencia.')}</p>
-    </div>
+    <EmptyState
+      icon={<CheckCircle2 />}
+      title={t('station.orders.logEmpty', 'Sin actividad registrada')}
+      description={t('station.orders.logEmptyHint', 'Cuando un vigilante complete una consigna, aparecerá aquí con su evidencia.')}
+    />
   );
 
   return (

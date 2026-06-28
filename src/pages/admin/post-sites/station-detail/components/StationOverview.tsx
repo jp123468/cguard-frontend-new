@@ -7,6 +7,7 @@ import { confirmDialog } from '@/components/ui/confirmDialog';
 import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
 import RotationStyleSelect from '@/components/schedule/RotationStyleSelect';
 import { reverseGeocode } from '@/lib/geocodeClient';
+import { Section, StatCard, Stagger } from '@/components/kit';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -210,73 +211,50 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
 
   // ── READ MODE ──
   if (!editing) {
+    const turnoInfo = TURNO_LABELS.find((o) => o.key === scheduleTypeToTurno(station.scheduleType));
     return (
       <div className="space-y-4">
-        <div className="bg-card border border-border/40 rounded-2xl p-6 relative">
-          <button
-            onClick={() => setEditing(true)}
-            className="absolute top-4 right-4 p-2 rounded-xl bg-muted/20 hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-all"
-            title="Editar horario"
-          >
-            <Pencil size={14} />
-          </button>
-
-          <h2 className="text-lg font-semibold text-foreground mb-4">{name}</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Horario del turno — the scheduleType is the single source of truth */}
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Clock size={16} className="text-primary" />
-              </div>
-              <div>
-                <div className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1.5">Horario del turno</div>
-                {(() => {
-                  const info = TURNO_LABELS.find((o) => o.key === scheduleTypeToTurno(station.scheduleType));
-                  return info ? (
-                    <span className="inline-flex items-center rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                      {info.label}
-                      <span className="font-mono opacity-70 ml-1.5">{info.sub}</span>
-                    </span>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">Sin configurar — edita para asignar el turno</div>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Guards required — derived from the turno (24h ⇒ 2 fijos, else 1) */}
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Users size={16} className="text-primary" />
-              </div>
-              <div>
-                <div className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">Fijos requeridos</div>
-                <div className="text-sm text-foreground font-semibold">
-                  {station.scheduleType === '24h' ? 2 : station.scheduleType ? 1 : '—'}
-                </div>
-              </div>
-            </div>
-
-            {/* Location */}
+        <Section
+          icon={<MapPin />}
+          title={name}
+          action={
+            <button
+              onClick={() => setEditing(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground"
+              title="Editar horario"
+            >
+              <Pencil size={14} /> Editar
+            </button>
+          }
+        >
+          <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <StatCard
+              icon={<Clock />}
+              label="Horario del turno"
+              value={turnoInfo ? turnoInfo.label : 'Sin configurar'}
+              hint={turnoInfo ? turnoInfo.sub : 'Edita para asignar el turno'}
+            />
+            <StatCard
+              icon={<Users />}
+              label="Fijos requeridos"
+              accent="blue"
+              value={station.scheduleType === '24h' ? 2 : station.scheduleType ? 1 : '—'}
+            />
             {(lat || lng) && (
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <MapPin size={16} className="text-primary" />
-                </div>
-                <div>
-                  <div className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">Ubicación</div>
-                  <div className="text-sm text-foreground">{stationAddress || `${lat}, ${lng}`}</div>
-                </div>
-              </div>
+              <StatCard
+                icon={<MapPin />}
+                label="Ubicación"
+                accent="green"
+                value={stationAddress || `${lat}, ${lng}`}
+                className="sm:col-span-2"
+              />
             )}
-          </div>
-        </div>
+          </Stagger>
+        </Section>
 
         {/* Assigned guards */}
         {assignedGuards.length > 0 && (
-          <div className="bg-card border border-border/40 rounded-2xl p-6">
-            <h3 className="text-base font-semibold text-foreground mb-3">Vigilantes Asignados</h3>
+          <Section icon={<Users />} title="Vigilantes Asignados">
             <ul className="divide-y divide-border/20">
               {assignedGuards.slice(0, 8).map((g: any, i: number) => {
                 const gname = g.fullName || g.name || `${g.firstName || ''} ${g.lastName || ''}`.trim() || g.email || '-';
@@ -286,7 +264,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             {assignedGuards.length > 8 && (
               <div className="text-xs text-muted-foreground mt-2">+{assignedGuards.length - 8} más</div>
             )}
-          </div>
+          </Section>
         )}
       </div>
     );

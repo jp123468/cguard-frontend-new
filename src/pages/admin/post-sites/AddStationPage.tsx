@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { ChevronLeft, Loader2, Sun, Moon, Clock, SlidersHorizontal } from 'lucide-react';
+import { ChevronLeft, Loader2, Sun, Moon, Clock, SlidersHorizontal, ShieldPlus } from 'lucide-react';
 import PostSiteLayout from '@/layouts/PostSiteLayout';
 import { postSiteService, setTenantId as setGlobalTenantId } from '@/lib/api/postSiteService';
 import { ApiService } from '@/services/api/apiService';
@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StationGeofencePolygon, { type PolyPoint } from '@/components/GoogleMap/StationGeofencePolygon';
 import RotationStyleSelect from '@/components/schedule/RotationStyleSelect';
+import { PageContainer, PageHeader } from '@/components/kit';
 
 // Mirrors the staffing model used in the Stations tab: one jornada = 1 fijo.
 function jornadaType(start?: string, end?: string): 'diurno' | 'nocturno' | null {
@@ -223,20 +224,17 @@ export default function AddStationPage() {
       title={site?.businessName || site?.companyName || site?.name || t('postSites.postsite', 'Post Site')}
       site={site}
     >
-      <div className="mx-auto w-full max-w-3xl p-4">
-        {/* Page header */}
-        <div className="mb-4">
-          <Link to={stationsUrl} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ChevronLeft className="h-4 w-4" />
-            {t('postSites.stations.backToStations', 'Estaciones')}
-          </Link>
-          <h1 className="mt-1 text-2xl font-semibold text-foreground">
-            {t('postSites.stations.createTitle', 'Crear estación')}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t('postSites.stations.createSubtitle', 'Define el turno, horario y la geocerca del puesto.')}
-          </p>
-        </div>
+      <div className="p-4">
+        <PageContainer width="narrow">
+        <Link to={stationsUrl} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <ChevronLeft className="h-4 w-4" />
+          {t('postSites.stations.backToStations', 'Estaciones')}
+        </Link>
+        <PageHeader
+          icon={<ShieldPlus />}
+          title={t('postSites.stations.createTitle', 'Crear estación')}
+          subtitle={t('postSites.stations.createSubtitle', 'Define el turno, horario y la geocerca del puesto.')}
+        />
 
         {loadingSite && !site ? (
           <div className="flex items-center justify-center py-16">
@@ -451,14 +449,16 @@ export default function AddStationPage() {
             {t('actions.cancel', 'Cancelar')}
           </Button>
           <Button
+            variant="brand"
             onClick={createStation}
             disabled={!newName.trim() || !turnoType || saving}
-            className="gap-2 bg-primary text-white hover:bg-primary/90"
+            className="gap-2"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             {t('actions.save', 'Guardar')}
           </Button>
         </div>
+        </PageContainer>
       </div>
     </PostSiteLayout>
   );

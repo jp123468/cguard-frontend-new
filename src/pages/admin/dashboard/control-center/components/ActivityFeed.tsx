@@ -1,5 +1,6 @@
 import { AlertTriangle, LogIn, Route, Siren, Activity as ActivityIcon, Radio } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { EmptyState } from "@/components/kit";
 import type { ActivityItem } from "../types";
 import { activityRoute } from "../navigation";
 import { GlassCard, SectionHeader, statusColor } from "./primitives";
@@ -23,7 +24,12 @@ export function ActivityFeed({ items, live }: { items: ActivityItem[]; live?: bo
       <SectionHeader title="Actividad reciente" icon={<ActivityIcon size={16} />} live={live} />
       <div className="max-h-[360px] overflow-y-auto px-2 pb-3">
         {items.length === 0 ? (
-          <p className="px-3 py-8 text-center text-xs text-muted-foreground">Sin actividad reciente.</p>
+          <EmptyState
+            className="border-0 py-8"
+            icon={<ActivityIcon />}
+            title="Sin actividad reciente"
+            description="Las novedades operativas aparecerán aquí en tiempo real."
+          />
         ) : items.map((it) => {
           const Icon = ICON[it.kind] || ActivityIcon;
           const c = statusColor(it.status);

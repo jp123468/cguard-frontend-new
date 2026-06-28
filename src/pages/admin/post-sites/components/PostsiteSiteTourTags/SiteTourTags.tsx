@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Plus, X, ChevronDown } from 'lucide-react';
+import { Plus, X, ChevronDown, QrCode } from 'lucide-react';
+import { EmptyState } from '@/components/kit';
 import { getTenantTimezone } from '@/utils/tenantLocation';
 import { loadGoogleMaps } from '@/utils/loadGoogleMaps';
 
@@ -1091,21 +1092,12 @@ export default function PostSiteTourTags({ site }: { site?: any }) {
                                     })
                                 ) : (
                                     <tr>
-                                        <td colSpan={4} className="px-4 py-12">
-                                            <div className="flex flex-col items-center justify-center gap-4">
-                                                <div className="w-40 h-40">
-                                                    <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                                                        <rect x="40" y="48" width="120" height="84" fill="currentColor" rx="10" />
-                                                        <path d="M60 78 L140 78" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                                                        <circle cx="90" cy="100" r="6" fill="white" />
-                                                        <circle cx="110" cy="100" r="6" fill="white" />
-                                                    </svg>
-                                                </div>
-                                                <div className="text-center">
-                                                    <h3 className="text-lg font-semibold text-foreground">{t('siteTourTag.empty.title')}</h3>
-                                                    <p className="text-sm text-muted-foreground mt-1">{t('siteTourTag.empty.message')}</p>
-                                                </div>
-                                            </div>
+                                        <td colSpan={4} className="px-4 py-8">
+                                            <EmptyState
+                                                icon={<QrCode />}
+                                                title={t('siteTourTag.empty.title')}
+                                                description={t('siteTourTag.empty.message')}
+                                            />
                                         </td>
                                     </tr>
                                 )}

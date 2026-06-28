@@ -45,6 +45,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
+import { EmptyState, StatusBadge, SkeletonCards } from '@/components/kit';
 
 export default function Incidents({ site }: { site?: any }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -749,7 +750,7 @@ export default function Incidents({ site }: { site?: any }) {
 
                 <div className="mt-6 flex gap-2 justify-end">
                   <Button variant="secondary" className="px-3 py-1 text-sm" onClick={clearFilters}>{t('incidents.clearFilters') || 'Clear filters'}</Button>
-                  <Button className="bg-primary text-white hover:bg-primary px-3 py-1 text-sm" onClick={applyFilters}>{t('incidents.applyFilters') || 'Apply filters'}</Button>
+                  <Button variant="brand" className="px-3 py-1 text-sm" onClick={applyFilters}>{t('incidents.applyFilters') || 'Apply filters'}</Button>
                 </div>
               </SheetContent>
             </Sheet>
@@ -774,12 +775,12 @@ export default function Incidents({ site }: { site?: any }) {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button className="bg-primary text-white hover:bg-primary" onClick={() => navigate('/dispatch-tickets/new', { state: { duplicate: { clientId: site?.clientAccountId || site?.clientId || site?.client?.id || undefined, siteId: site?.id, siteName: site?.name } } })}>{t('incidents.newIncident')}</Button>
+            <Button variant="brand" onClick={() => navigate('/dispatch-tickets/new', { state: { duplicate: { clientId: site?.clientAccountId || site?.clientId || site?.client?.id || undefined, siteId: site?.id, siteName: site?.name } } })}>{t('incidents.newIncident')}</Button>
           </div>
         </div>
 
         {loading ? (
-          <div>Loading...</div>
+          <SkeletonCards count={4} className="mt-4" />
         ) : (
           <>
           <div className="mt-4 overflow-hidden rounded-lg border">
@@ -814,16 +815,12 @@ export default function Incidents({ site }: { site?: any }) {
               <tbody>
                         {incidents.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-20">
-                      <div className="flex flex-col items-center justify-center text-center">
-                        <img
-                          src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
-                          alt="Sin datos"
-                          className="mb-4 h-36"
-                        />
-                        <h3 className="text-lg font-semibold">{t('incidents.emptyTitle') || 'No incidents found for this post site.'}</h3>
-                        <p className="mt-1 max-w-xs text-sm text-muted-foreground">{t('incidents.emptyMessage') || 'Try adjusting filters or create a new incident.'}</p>
-                      </div>
+                    <td colSpan={7} className="py-12">
+                      <EmptyState
+                        icon={<Filter />}
+                        title={t('incidents.emptyTitle') || 'No incidents found for this post site.'}
+                        description={t('incidents.emptyMessage') || 'Try adjusting filters or create a new incident.'}
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -867,26 +864,14 @@ export default function Incidents({ site }: { site?: any }) {
                             (() => {
                               const s = (it.status || '').toString().toLowerCase();
                               if (s === 'cerrado' || s === 'closed') {
-                                return (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                    Cerrado
-                                  </span>
-                                );
+                                return <StatusBadge tone="green">Cerrado</StatusBadge>;
                               }
 
                               if (s === 'abierto' || s === 'open') {
-                                return (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-red-500/15 text-red-700">
-                                    Abierto
-                                  </span>
-                                );
+                                return <StatusBadge tone="red">Abierto</StatusBadge>;
                               }
 
-                              return (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-muted text-foreground">
-                                  {it.status || '-'}
-                                </span>
-                              );
+                              return <StatusBadge tone="slate">{it.status || '-'}</StatusBadge>;
                             })()
                           }
                         </td>

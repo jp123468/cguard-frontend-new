@@ -2,8 +2,9 @@ import { useMemo, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User, Shield, UserCog, AlertTriangle, Building2, Timer, Route, CheckCircle2,
-  Activity, Cpu, Radio, Map as MapIcon, Maximize2, type LucideIcon,
+  Activity, Cpu, Radio, Map as MapIcon, Maximize2, LayoutDashboard, type LucideIcon,
 } from "lucide-react";
+import { Stagger, EmptyState } from "@/components/kit";
 import AppLayout from "@/layouts/app-layout";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,17 +75,21 @@ export default function ControlCenter() {
           />
 
           {data.error === "no-tenant" ? (
-            <GlassCard className="p-10 text-center text-muted-foreground">
-              Selecciona un negocio (inquilino) para ver el panel de control.
+            <GlassCard className="p-4" hover={false}>
+              <EmptyState
+                icon={<LayoutDashboard />}
+                title="Selecciona un negocio"
+                description="Elige un negocio (inquilino) para ver el panel de control en tiempo real."
+              />
             </GlassCard>
           ) : (
             <>
               {/* KPI grid */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
+              <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
                 {data.kpis.map((k, i) => (
                   <KpiCard key={k.key} kpi={k} icon={KPI_ICON[k.key]} index={i} />
                 ))}
-              </div>
+              </Stagger>
 
               {/* Map + side column */}
               <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-3">

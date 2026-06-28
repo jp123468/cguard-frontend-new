@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
-import { Search, ChevronDown, Plus, X, Paperclip } from 'lucide-react';
+import { Search, ChevronDown, Plus, X, Paperclip, FileText } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { Button } from '@/components/ui/button';
+import { Section, EmptyState } from '@/components/kit';
 
 type Props = { site?: any };
 
@@ -28,7 +30,7 @@ export default function PostSiteFiles({ site }: Props) {
 
   return (
     <div ref={containerRef} className="space-y-4">
-      <div className="bg-card border rounded-lg p-6 shadow-sm">
+      <Section>
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative" ref={actionRef}>
             <button onClick={() => setActionOpen(!actionOpen)} className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 min-w-[100px]">
@@ -50,10 +52,10 @@ export default function PostSiteFiles({ site }: Props) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button onClick={() => setShowUploadModal(true)} className="px-4 py-2 bg-primary text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-primary/90">
-              <Plus size={14} />
+            <Button variant="brand" onClick={() => setShowUploadModal(true)}>
+              <Plus size={16} />
               Upload New Files
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -74,20 +76,11 @@ export default function PostSiteFiles({ site }: Props) {
               {filesData.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-4 py-12">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-gray-100">
-                          <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                          <circle cx="85" cy="100" r="8" fill="white" />
-                          <circle cx="115" cy="100" r="8" fill="white" />
-                          <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-lg font-semibold text-foreground">No Files Found</h3>
-                        <p className="text-sm text-muted-foreground mt-1">Upload files using the button on the right</p>
-                      </div>
-                    </div>
+                    <EmptyState
+                      icon={<FileText />}
+                      title="No Files Found"
+                      description="Upload files using the button on the right"
+                    />
                   </td>
                 </tr>
               ) : (
@@ -120,7 +113,7 @@ export default function PostSiteFiles({ site }: Props) {
             />
           </div>
         </div>
-      </div>
+      </Section>
 
       {showUploadModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center">
@@ -182,13 +175,13 @@ export default function PostSiteFiles({ site }: Props) {
             </div>
 
             <div className="flex items-center justify-end gap-3 p-4 border-t bg-card">
-              <button onClick={() => {
+              <Button variant="brand" onClick={() => {
                 if (uploadFiles.length === 0) { setShowUploadModal(false); return; }
                 const newFiles = uploadFiles.map((f) => ({ id: Date.now().toString() + Math.random().toString(36).slice(2,7), name: f.name, date: new Date().toISOString().slice(0,10), addedBy: 'You' }));
                 setFilesData(prev => [...newFiles, ...prev]);
                 setUploadFiles([]);
                 setShowUploadModal(false);
-              }} className="px-4 py-2 bg-primary text-white rounded-md">Upload</button>
+              }}>Upload</Button>
             </div>
           </div>
         </div>

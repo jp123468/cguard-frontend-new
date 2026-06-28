@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import AuthLayout from "@/layouts/auth-layout";
+import { FadeIn } from "@/components/kit";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -106,7 +107,7 @@ export default function Register() {
     <AuthLayout
       title={t('auth.register_prompt') || 'Crea tu cuenta'}
     >
-   
+      <FadeIn>
       {/* Botones Sociales */}
         <div className="mb-6 flex justify-center">
         <button
@@ -141,7 +142,7 @@ export default function Register() {
         {/* Nombre */}
         <div>
           <label htmlFor="name" className="mb-2 block text-sm font-medium text-foreground dark:text-muted-foreground/60">
-            {t('auth.name_label')}<span style={{ color: "#F75638" }}>*</span>
+            {t('auth.name_label')}<span className="text-primary">*</span>
           </label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -153,7 +154,7 @@ export default function Register() {
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRegister()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-[#0C2459] focus:outline-none focus:ring-2 focus:ring-[#0C2459]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#F75638] dark:focus:ring-[#F75638]/20"
+              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
               autoComplete="name"
             />
           </div>
@@ -161,7 +162,7 @@ export default function Register() {
         {/* Email */}
         <div>
           <label htmlFor="email" className="mb-2 block text-sm font-medium text-foreground dark:text-muted-foreground/60">
-            Correo Electrónico<span style={{ color: "#F75638" }}>*</span>
+            Correo Electrónico<span className="text-primary">*</span>
           </label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -173,7 +174,7 @@ export default function Register() {
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRegister()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-[#0C2459] focus:outline-none focus:ring-2 focus:ring-[#0C2459]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#F75638] dark:focus:ring-[#F75638]/20"
+              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
               autoComplete="email"
             />
           </div>
@@ -182,7 +183,7 @@ export default function Register() {
         {/* Contraseña */}
         <div>
           <label htmlFor="password" className="mb-2 block text-sm font-medium text-foreground dark:text-muted-foreground/60">
-            {t('auth.password_label')}<span style={{ color: "#F75638" }}>*</span>
+            {t('auth.password_label')}<span className="text-primary">*</span>
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -194,7 +195,7 @@ export default function Register() {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRegister()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-12 text-foreground placeholder-slate-400 transition-all focus:border-[#0C2459] focus:outline-none focus:ring-2 focus:ring-[#0C2459]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#F75638] dark:focus:ring-[#F75638]/20"
+              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-12 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
               autoComplete="new-password"
             />
             <button
@@ -210,7 +211,7 @@ export default function Register() {
         {/* Confirmar Contraseña */}
         <div>
           <label htmlFor="confirm" className="mb-2 block text-sm font-medium text-foreground dark:text-muted-foreground/60">
-            {t('auth.confirm_password_label')}<span style={{ color: "#F75638" }}>*</span>
+            {t('auth.confirm_password_label')}<span className="text-primary">*</span>
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -222,7 +223,7 @@ export default function Register() {
               onChange={(e) => setConfirm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRegister()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-12 text-foreground placeholder-slate-400 transition-all focus:border-[#0C2459] focus:outline-none focus:ring-2 focus:ring-[#0C2459]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-[#F75638] dark:focus:ring-[#F75638]/20"
+              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-12 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
               autoComplete="new-password"
             />
             <button
@@ -241,8 +242,7 @@ export default function Register() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-lg py-3 font-semibold text-white transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg, #0C2459 0%, #1a3a7d 100%)" }}
+          className="cg-gradient-brand w-full rounded-lg py-3 font-semibold text-primary-foreground transition-all hover:shadow-lg hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isLoading ? t('auth.creating_account') : t('auth.create_account')}
         </button>
@@ -260,11 +260,12 @@ export default function Register() {
         {/* Enlace para Iniciar Sesión */}
         <div className="text-center">
           <span className="text-sm text-foreground/70 dark:text-muted-foreground">{t('auth.already_have_account')} </span>
-          <NavLink to="/login" className="text-sm font-semibold hover:underline" style={{ color: "#F75638" }}>
+          <NavLink to="/login" className="text-sm font-semibold text-primary hover:underline">
             {t('auth.login')}
           </NavLink>
         </div>
       </form>
+      </FadeIn>
     </AuthLayout>
   );
 }

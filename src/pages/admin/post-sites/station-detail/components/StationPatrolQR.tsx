@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Loader2, QrCode, Download, Printer, MapPin, ShieldCheck, AlertTriangle, Crosshair } from 'lucide-react';
 import { ApiService, ApiError } from '@/services/api/apiService';
 import { toast } from 'sonner';
+import { Section, EmptyState, SkeletonCards, Stagger } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -161,29 +163,27 @@ export default function StationPatrolQR({ station, stationId }: Props) {
   return (
     <div className="space-y-5">
       {/* Header + how-it-works banner */}
-      <div className="rounded-lg border border-border bg-card p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
-              <QrCode className="h-5 w-5 text-primary" />
-              {t('station.patrolQr.title', 'Generar Códigos QR de Rondas')}
-              {!loading && checkpoints.length > 0 && (
-                <span className="text-sm font-normal text-muted-foreground">({checkpoints.length})</span>
-              )}
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t('station.patrolQr.subtitle', 'Imprime y coloca estos QR en cada punto de control. El vigilante los escanea durante la ronda.')}
-            </p>
-          </div>
-          {checkpoints.length > 0 && (
-            <button
-              onClick={() => printQrs(checkpoints)}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
-            >
+      <Section
+        icon={<QrCode />}
+        title={
+          <span>
+            {t('station.patrolQr.title', 'Generar Códigos QR de Rondas')}
+            {!loading && checkpoints.length > 0 && (
+              <span className="ml-2 text-sm font-normal text-muted-foreground">({checkpoints.length})</span>
+            )}
+          </span>
+        }
+        action={
+          checkpoints.length > 0 ? (
+            <Button variant="brand" size="sm" onClick={() => printQrs(checkpoints)} className="gap-2">
               <Printer className="h-4 w-4" /> {t('station.patrolQr.printAll', 'Imprimir todos')}
-            </button>
-          )}
-        </div>
+            </Button>
+          ) : undefined
+        }
+      >
+        <p className="-mt-2 text-sm text-muted-foreground">
+          {t('station.patrolQr.subtitle', 'Imprime y coloca estos QR en cada punto de control. El vigilante los escanea durante la ronda.')}
+        </p>
 
         <div className="mt-4 flex items-start gap-2 rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-700">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
@@ -192,23 +192,23 @@ export default function StationPatrolQR({ station, stationId }: Props) {
             <strong>{stationRadius} m</strong>. {t('station.patrolQr.verifyNote2', 'Los escaneos fuera de rango quedan registrados como "fuera de ubicación".')}
           </p>
         </div>
-      </div>
+      </Section>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12"><Loader2 className="animate-spin text-primary" /></div>
+        <SkeletonCards count={6} className="sm:grid-cols-2 xl:grid-cols-3" />
       ) : error ? (
-        <div className="rounded-lg border border-border bg-card p-6 text-sm text-red-600">{error}</div>
+        <div className="rounded-2xl border border-border bg-card p-6 text-sm text-red-600">{error}</div>
       ) : checkpoints.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
-          <QrCode className="h-8 w-8 opacity-50" />
-          <p className="text-sm">{t('station.patrolQr.empty', 'Aún no hay puntos de control. Créalos en la sección "Rondas de Seguridad" y vuelve aquí para generar sus QR.')}</p>
-        </div>
+        <EmptyState
+          icon={<QrCode />}
+          title={t('station.patrolQr.empty', 'Aún no hay puntos de control. Créalos en la sección "Rondas de Seguridad" y vuelve aquí para generar sus QR.')}
+        />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {checkpoints.map((cp) => {
             const hasCoords = cp.latitude != null && cp.longitude != null;
             return (
-              <div key={cp.id} className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
+              <div key={cp.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
                 <div className="flex items-center justify-center bg-white p-4">
                   <img src={qrUrl(cp.tagIdentifier, 300)} alt={cp.name} className="h-44 w-44" />
                 </div>
@@ -256,7 +256,7 @@ export default function StationPatrolQR({ station, stationId }: Props) {
               </div>
             );
           })}
-        </div>
+        </Stagger>
       )}
     </div>
   );

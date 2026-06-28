@@ -1,4 +1,5 @@
 import { DollarSign, TrendingUp } from "lucide-react";
+import { EmptyState } from "@/components/kit";
 import type { RevenueSeries } from "../types";
 import { GlassCard, SectionHeader } from "./primitives";
 import { AreaChart } from "./AreaChart";
@@ -20,11 +21,12 @@ export function RevenuePanel({ revenue }: { revenue: RevenueSeries }) {
         ) : null
       } />
       {!revenue.hasData ? (
-        <div className="grid place-items-center px-4 py-10 text-center">
-          <DollarSign className="mb-2 text-muted-foreground/40" size={28} />
-          <p className="text-sm font-medium">Sin datos de facturación</p>
-          <p className="mt-1 text-xs text-muted-foreground">Registra cobros (billing) para ver ingresos mensuales y tendencia.</p>
-        </div>
+        <EmptyState
+          className="border-0 py-10"
+          icon={<DollarSign />}
+          title="Sin datos de facturación"
+          description="Registra cobros (billing) para ver ingresos mensuales y tendencia."
+        />
       ) : (
         <>
           <div className="grid grid-cols-3 gap-2 px-4 pb-1">

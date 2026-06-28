@@ -27,7 +27,7 @@ export function CustomizePanel({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="cc-glass relative h-full w-full max-w-md overflow-y-auto rounded-none border-l p-5 animate-in slide-in-from-right">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Personalizar panel</h2>
+          <h2 className="font-display text-base font-semibold text-foreground">Personalizar panel</h2>
           <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-white/5"><X size={18} /></button>
         </div>
 

@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, ChevronDown, Plus, X } from 'lucide-react';
+import { Search, ChevronDown, Plus, X, ClipboardList } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { EmptyState } from '@/components/kit';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 
 export default function Tasks({ site }: { site?: any }) {
@@ -32,8 +33,8 @@ export default function Tasks({ site }: { site?: any }) {
     useScrollToTopOnMount(containerRef);
 
     return (
-        <div ref={containerRef} className="space-y-4">
-            <div className="bg-card border rounded-lg p-4">
+        <div ref={containerRef} className="space-y-4 animate-fade-up">
+            <div className="cg-card p-4">
                 <div className="flex items-center justify-between gap-4 mb-4">
                     <div className="relative">
                         <button onClick={() => setActionOpen(v => !v)} className="px-3 py-2 border rounded-full bg-card text-sm inline-flex items-center gap-2">
@@ -80,21 +81,12 @@ export default function Tasks({ site }: { site?: any }) {
                         </thead>
                         <tbody>
                             <tr>
-                                <td colSpan={4} className="px-4 py-12">
-                                    <div className="flex flex-col items-center justify-center gap-4">
-                                        <div className="w-40 h-40">
-                                            <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                                                <rect x="40" y="48" width="120" height="84" fill="currentColor" rx="10" />
-                                                <path d="M60 78 L140 78" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                                                <circle cx="90" cy="100" r="6" fill="white" />
-                                                <circle cx="110" cy="100" r="6" fill="white" />
-                                            </svg>
-                                        </div>
-                                        <div className="text-center">
-                                            <h3 className="text-lg font-semibold text-foreground">{t('postSites.tasks.empty.title')}</h3>
-                                            <p className="text-sm text-muted-foreground mt-1">{t('postSites.tasks.empty.message')}</p>
-                                        </div>
-                                    </div>
+                                <td colSpan={4} className="px-4 py-8">
+                                    <EmptyState
+                                        icon={<ClipboardList />}
+                                        title={t('postSites.tasks.empty.title')}
+                                        description={t('postSites.tasks.empty.message')}
+                                    />
                                 </td>
                             </tr>
                         </tbody>

@@ -8,8 +8,10 @@ import { clientService } from '@/lib/api/clientService';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import { toast } from "sonner";
-import { EllipsisVertical, Pencil, Trash, Plus, X } from 'lucide-react';
+import { EllipsisVertical, Pencil, Trash, Plus, X, Users } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { Button } from '@/components/ui/button';
+import { Section, EmptyState } from '@/components/kit';
 
 
 type Contact = {
@@ -275,7 +277,7 @@ export default function PostSiteContacts({ site }: { site?: any }) {
 
   return (
     <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
+      <Section className="flex-1 flex flex-col min-h-0" contentClassName="flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center w-full">
             <div className="flex-shrink-0">
@@ -315,15 +317,10 @@ export default function PostSiteContacts({ site }: { site?: any }) {
             </div>
           </div>
           <div>
-            <button
-              onClick={handleOpenAdd}
-              className="px-6 py-2 bg-primary text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors whitespace-nowrap min-w-[160px]"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+            <Button variant="brand" onClick={handleOpenAdd} className="whitespace-nowrap min-w-[160px]">
+              <Plus className="h-4 w-4" />
               <span>{t('clients.contacts.addcontact') || 'Add Contact'}</span>
-            </button>
+            </Button>
           </div>
         </div>
         <div className="mt-6 flex-1 min-h-0">
@@ -342,21 +339,12 @@ export default function PostSiteContacts({ site }: { site?: any }) {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                          <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                          <circle cx="85" cy="100" r="8" fill="white" />
-                          <circle cx="115" cy="100" r="8" fill="white" />
-                          <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-lg font-semibold text-foreground">{t('clients.empty.title') || 'No results found'}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">{t('clients.empty.description') || "We couldn't find any items matching your search."}</p>
-                      </div>
-                    </div>
+                  <td colSpan={5} className="px-4 py-12">
+                    <EmptyState
+                      icon={<Users />}
+                      title={t('clients.empty.title') || 'No results found'}
+                      description={t('clients.empty.description') || "We couldn't find any items matching your search."}
+                    />
                   </td>
                 </tr>
               ) : filtered.map(c => (
@@ -430,7 +418,7 @@ export default function PostSiteContacts({ site }: { site?: any }) {
             />
           </div>
         </div>
-      </div>
+      </Section>
 
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center">

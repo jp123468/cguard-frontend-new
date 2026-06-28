@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Loader2, Settings, X, Plus, Trash2, ChevronDown, ChevronRight, MapPin, QrCode, Crosshair,
+  Loader2, Settings, X, Plus, Trash2, ChevronDown, ChevronRight, MapPin, QrCode, Crosshair, Route,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { confirmDialog } from '@/components/ui/confirmDialog';
 import { ApiService } from '@/services/api/apiService';
 import RondaSettingsForm from '@/pages/admin/Configuration/rondas-settings/RondaSettingsForm';
 import CheckpointLocationPicker from '@/components/maps/CheckpointLocationPicker';
+import { Section, EmptyState, SkeletonCards, StatusBadge } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 
@@ -157,38 +159,43 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
 
   return (
     <>
-      <div className="overflow-hidden rounded-lg border bg-card">
-        <div className="flex flex-col gap-3 border-b px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-base font-semibold text-foreground">
-              {t('station.siteTours.title', 'Rondas de Seguridad')}
-              {tours.length > 0 && <span className="ml-2 text-sm font-normal text-muted-foreground">({tours.length})</span>}
-            </h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {t('station.siteTours.hint', 'Crea rondas y sus puntos de control. Luego genera los QR en la pestaña "Generar QR de Rondas".')}
-            </p>
-          </div>
+      <Section
+        icon={<Route />}
+        title={
+          <span>
+            {t('station.siteTours.title', 'Rondas de Seguridad')}
+            {tours.length > 0 && <span className="ml-2 text-sm font-normal text-muted-foreground">({tours.length})</span>}
+          </span>
+        }
+        action={
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowNewTour(true)} className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary/90">
+            <Button variant="brand" size="sm" onClick={() => setShowNewTour(true)} className="gap-1.5 rounded-full">
               <Plus size={16} /> {t('station.siteTours.new', 'Nueva ronda')}
-            </button>
-            <button onClick={() => setShowSettings(true)} className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-sm text-foreground hover:bg-muted/30">
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)} className="gap-1.5 rounded-full">
               <Settings size={15} /> {t('station.siteTours.settings', 'Configuraciones')}
-            </button>
+            </Button>
           </div>
-        </div>
+        }
+        contentClassName="-mx-5 -mb-5"
+      >
+        <p className="px-6 -mt-2 mb-3 text-xs text-muted-foreground">
+          {t('station.siteTours.hint', 'Crea rondas y sus puntos de control. Luego genera los QR en la pestaña "Generar QR de Rondas".')}
+        </p>
 
         {loading ? (
-          <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
+          <div className="px-5 pb-5"><SkeletonCards count={3} /></div>
         ) : error ? (
-          <div className="p-6 text-sm text-red-600">{error}</div>
+          <div className="px-6 pb-6 text-sm text-red-600">{error}</div>
         ) : tours.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 p-10 text-center text-muted-foreground">
-            <QrCode className="h-8 w-8 opacity-50" />
-            <p className="text-sm">{t('station.siteTours.empty', 'Aún no hay rondas. Crea la primera con "Nueva ronda".')}</p>
+          <div className="px-5 pb-5">
+            <EmptyState
+              icon={<QrCode />}
+              title={t('station.siteTours.empty', 'Aún no hay rondas. Crea la primera con "Nueva ronda".')}
+            />
           </div>
         ) : (
-          <ul className="divide-y">
+          <ul className="divide-y border-t">
             {tours.map((r: any) => {
               const id = String(r.id);
               const name = r.name || r.tourName || r.description || '—';
@@ -201,9 +208,9 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
                     <button onClick={() => toggleExpand(id)} className="flex flex-1 items-center gap-3 text-left">
                       {isOpen ? <ChevronDown size={18} className="text-muted-foreground" /> : <ChevronRight size={18} className="text-muted-foreground" />}
                       <span className="font-medium text-foreground">{name}</span>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${active ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'}`}>
+                      <StatusBadge tone={active ? 'green' : 'slate'}>
                         {active ? t('station.siteTours.active', 'Activa') : t('station.siteTours.inactive', 'Inactiva')}
-                      </span>
+                      </StatusBadge>
                       {cps[id] && (
                         <span className="text-xs text-muted-foreground">
                           {list.length} {list.length === 1 ? t('station.siteTours.point', 'punto') : t('station.siteTours.points', 'puntos')}
@@ -269,10 +276,10 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
                                 </button>
                               )}
                               <div className="flex justify-end gap-2 pt-1">
-                                <button onClick={() => setAddingFor(null)} className="rounded-md border px-3 py-1.5 text-sm">{t('common.cancel', 'Cancelar')}</button>
-                                <button onClick={() => createCheckpoint(id)} disabled={savingCp || !cpName.trim()} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
+                                <Button variant="outline" size="sm" onClick={() => setAddingFor(null)}>{t('common.cancel', 'Cancelar')}</Button>
+                                <Button variant="brand" size="sm" onClick={() => createCheckpoint(id)} disabled={savingCp || !cpName.trim()} className="gap-1.5">
                                   {savingCp && <Loader2 className="animate-spin" size={14} />} {t('common.save', 'Guardar')}
-                                </button>
+                                </Button>
                               </div>
                             </div>
                           ) : (
@@ -289,7 +296,7 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
             })}
           </ul>
         )}
-      </div>
+      </Section>
 
       {/* Create ronda modal */}
       {showNewTour && (
@@ -310,10 +317,10 @@ export default function StationSiteTours({ station, stationId, postSiteId }: Pro
               </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
-              <button onClick={() => setShowNewTour(false)} className="rounded-md border px-4 py-2 text-sm">{t('common.cancel', 'Cancelar')}</button>
-              <button onClick={createTour} disabled={savingTour || !tourName.trim()} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
+              <Button variant="outline" onClick={() => setShowNewTour(false)}>{t('common.cancel', 'Cancelar')}</Button>
+              <Button variant="brand" onClick={createTour} disabled={savingTour || !tourName.trim()} className="gap-1.5">
                 {savingTour && <Loader2 className="animate-spin" size={14} />} {t('station.siteTours.create', 'Crear ronda')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

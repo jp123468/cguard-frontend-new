@@ -21,9 +21,9 @@ export function KpiCard({ kpi, icon: Icon, index = 0 }: { kpi: Kpi; icon?: Lucid
       ariaLabel={to ? `Ver ${kpi.label}` : undefined}
     >
       <div className="flex items-start justify-between">
-        <div className="grid h-10 w-10 place-items-center rounded-xl"
+        <div className="grid h-11 w-11 place-items-center rounded-xl transition-transform group-hover:scale-105"
           style={{ background: `color-mix(in oklab, ${accent} 16%, transparent)`, color: accent }}>
-          {Icon ? <Icon size={18} /> : <StatusDot color={accent} />}
+          {Icon ? <Icon size={20} /> : <StatusDot color={accent} />}
         </div>
         {kpi.status && kpi.status !== "neutral" && (
           <span className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide"
@@ -37,7 +37,7 @@ export function KpiCard({ kpi, icon: Icon, index = 0 }: { kpi: Kpi; icon?: Lucid
           <motion.span
             key={String(kpi.value)}
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-            className="text-2xl font-bold tabular-nums text-foreground">
+            className="font-display text-2xl font-bold tabular-nums leading-tight text-foreground">
             {kpi.value}
           </motion.span>
           {kpi.unit && <span className="mb-0.5 text-xs text-muted-foreground">{kpi.unit}</span>}
@@ -46,7 +46,7 @@ export function KpiCard({ kpi, icon: Icon, index = 0 }: { kpi: Kpi; icon?: Lucid
           )}
         </div>
         <div className="mt-0.5 flex items-center justify-between">
-          <p className="text-xs text-muted-foreground truncate">{kpi.label}</p>
+          <p className="cg-eyebrow truncate">{kpi.label}</p>
           {kpi.trend != null && (
             <span className={`flex items-center gap-0.5 text-[11px] ${trendColor}`}>
               <TrendIcon size={12} />{Math.abs(Math.round((kpi.trend || 0) * 100))}%

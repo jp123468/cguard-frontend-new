@@ -264,8 +264,9 @@ export default function VideoDevices() {
   const onTest = async (d: Device) => {
     setBusy((b) => ({ ...b, [d.id]: "test" }));
     try {
-      const res = await videoService.testDevice(d.id);
+      const res: any = await videoService.testDevice(d.id);
       const status = (res?.status as DeviceStatus) ?? "unknown";
+      const message = res?.message as string | undefined;
       setDevices((prev) =>
         prev.map((x) =>
           x.id === d.id
@@ -273,8 +274,10 @@ export default function VideoDevices() {
             : x
         )
       );
-      if (status === "online") toast.success(`${d.name}: conexión exitosa`);
-      else if (status === "offline") toast.error(`${d.name}: sin conexión`);
+      if (status === "online") toast.success(`${d.name}: stream OK`);
+      else if (status === "auth_failed") toast.error(`${d.name}: ${message || "credenciales incorrectas"}`, { duration: 9000 });
+      else if (status === "unreachable") toast.error(`${d.name}: ${message || "no se pudo leer el stream"}`, { duration: 9000 });
+      else if (status === "offline") toast.error(`${d.name}: ${message || "sin conexión"}`);
       else toast(`${d.name}: estado desconocido`);
     } catch (e: any) {
       toast.error(e?.message || "Falló la prueba de conexión");
