@@ -8,6 +8,17 @@
 
 @theme inline {
 
+  /* Brand typeface — Poppins everywhere (loaded in index.html). */
+  --font-sans: "Poppins", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
+
+  /* Elevation scale — soft, layered shadows (the "expensive" look). */
+  --shadow-xs: 0 1px 2px 0 oklch(0.2 0.02 264 / 0.04);
+  --shadow-sm: 0 1px 3px 0 oklch(0.2 0.02 264 / 0.06), 0 1px 2px -1px oklch(0.2 0.02 264 / 0.05);
+  --shadow-md: 0 4px 12px -2px oklch(0.2 0.02 264 / 0.08), 0 2px 6px -2px oklch(0.2 0.02 264 / 0.05);
+  --shadow-lg: 0 12px 28px -6px oklch(0.2 0.02 264 / 0.12), 0 6px 12px -6px oklch(0.2 0.02 264 / 0.07);
+  --shadow-xl: 0 24px 48px -12px oklch(0.2 0.02 264 / 0.18);
+
   --radius-sm: calc(var(--radius) - 4px);
 
   --radius-md: calc(var(--radius) - 2px);
@@ -81,7 +92,7 @@
 
 :root {
 
-  --radius: 0.625rem;
+  --radius: 0.75rem;
 
   /* Cool gray canvas — clearly distinct from white cards so they lift off it.
      This page-vs-card separation is the hallmark of a serious CRM. */
@@ -244,3 +255,86 @@
   pointer-events: auto !important;
   cursor: pointer !important;
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   C-GUARD PRO — GLOBAL DESIGN SYSTEM
+   Reusable animation + surface utilities. Documented in the style guide
+   (/style-guide) and in memory (design-system.md). Use these classes everywhere
+   instead of ad-hoc styles.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  html { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  body { font-family: var(--font-sans); letter-spacing: -0.011em; }
+  h1, h2, h3, h4, h5, .font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+  /* Refined scrollbars — thin, neutral, on-brand. */
+  * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-thumb { background: color-mix(in oklch, var(--muted-foreground) 25%, transparent); border-radius: 9999px; border: 3px solid transparent; background-clip: content-box; }
+  *::-webkit-scrollbar-thumb:hover { background: color-mix(in oklch, var(--muted-foreground) 40%, transparent); background-clip: content-box; }
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────────── */
+@keyframes cg-fade-up   { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes cg-fade-in   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cg-scale-in  { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes cg-slide-left{ from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+@keyframes cg-shimmer   { 100% { transform: translateX(100%); } }
+@keyframes cg-float     { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes cg-pulse-ring{ 0% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 45%, transparent); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* ── Entrance animations (respect reduced-motion) ─────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-up   { animation: cg-fade-up   0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .animate-fade-in   { animation: cg-fade-in   0.4s ease both; }
+  .animate-scale-in  { animation: cg-scale-in  0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .animate-slide-left{ animation: cg-slide-left 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .animate-float     { animation: cg-float 4s ease-in-out infinite; }
+  .animate-pulse-ring{ animation: cg-pulse-ring 2s ease-out infinite; }
+
+  /* Stagger: children animate in sequence. Wrap a container with .cg-stagger. */
+  .cg-stagger > * { animation: cg-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .cg-stagger > *:nth-child(1){ animation-delay: 0.02s; }
+  .cg-stagger > *:nth-child(2){ animation-delay: 0.07s; }
+  .cg-stagger > *:nth-child(3){ animation-delay: 0.12s; }
+  .cg-stagger > *:nth-child(4){ animation-delay: 0.17s; }
+  .cg-stagger > *:nth-child(5){ animation-delay: 0.22s; }
+  .cg-stagger > *:nth-child(6){ animation-delay: 0.27s; }
+  .cg-stagger > *:nth-child(7){ animation-delay: 0.32s; }
+  .cg-stagger > *:nth-child(8){ animation-delay: 0.37s; }
+}
+
+/* ── Surface utilities ────────────────────────────────────────────────────── */
+/* Elevated card — the standard content surface across the platform. */
+.cg-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+.cg-card-hover:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.hover-lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+/* Frosted glass — for sticky headers / overlays. */
+.cg-glass {
+  background: color-mix(in oklch, var(--card) 72%, transparent);
+  backdrop-filter: saturate(160%) blur(12px); -webkit-backdrop-filter: saturate(160%) blur(12px);
+  border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
+}
+
+/* Brand gradients + gradient text. */
+.cg-gradient-brand { background-image: linear-gradient(135deg, color-mix(in oklch, var(--primary) 92%, white) 0%, var(--primary) 55%, color-mix(in oklch, var(--primary) 70%, black) 100%); }
+.cg-gradient-hero  { background-image: linear-gradient(135deg, color-mix(in oklch, var(--primary) 14%, var(--card)) 0%, var(--card) 60%); }
+.cg-text-gradient  { background: linear-gradient(120deg, var(--primary), color-mix(in oklch, var(--primary) 60%, var(--foreground))); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Shimmer skeleton block. */
+.cg-skeleton { position: relative; overflow: hidden; background: var(--muted); border-radius: var(--radius-md); }
+.cg-skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--card) 60%, transparent), transparent); animation: cg-shimmer 1.6s infinite; }
+
+/* Tiny section eyebrow label. */
+.cg-eyebrow { font-size: 11px; line-height: 1; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted-foreground); font-weight: 600; }
+
+/* Focus ring helper for custom interactive elements. */
+.cg-focus { outline: none; }
+.cg-focus:focus-visible { box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 45%, transparent); }

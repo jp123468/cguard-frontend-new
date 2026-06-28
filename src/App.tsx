@@ -162,6 +162,7 @@ import GuardDashboard from "./pages/guard/dashboard/GuardDashboard";
 import GuardSchedulePage from "./pages/guard/dashboard/GuardSchedule";
 import GuardTimeOffPage from "./pages/guard/dashboard/GuardTimeOff";
 import MemosPage from "./pages/admin/memos/MemosPage";
+import StyleGuide from "./pages/StyleGuide";
 import TenantsPage from "./pages/admin/superadmin/TenantsPage";
 import RequireGlobalAdmin from "./components/RequireGlobalAdmin";
 
@@ -241,6 +242,9 @@ export default function App() {
             <Routes>
               {/* Enlace público de video compartido (cliente, sin login) */}
               <Route path="/video/shared/:token" element={<VideoSharedClip />} />
+
+              {/* Guía de estilo / sistema de diseño */}
+              <Route path="/style-guide" element={<StyleGuide />} />
 
               {/* Rutas públicas (solo accesibles si NO estás logueado) */}
               <Route
