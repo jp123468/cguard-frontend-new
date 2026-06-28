@@ -1,11 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-*{
-    font-family: 'Inter', sans-serif !important;
-}
-
-
-
+/* REMOVED: a global `@import Inter` + `* { font-family: Inter !important }` lived here
+   and force-overrode the entire app's font (incl. the sidebar) to Inter, defeating the
+   Poppins design system. Poppins is now the brand font (self-hosted + globals.css/glass.css). */
 
 /* GOOGLE TRASNLATE */
 /* Ocultar completamente la barra de Google */

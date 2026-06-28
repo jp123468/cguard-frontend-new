@@ -4,6 +4,15 @@ import ReactDOM from "react-dom/client";
 
 import App from "./App.tsx";
 // import { Provider } from "./provider.tsx";
+// Self-hosted Poppins (bundled — no dependency on the Google Fonts CDN, which can be
+// blocked/slow and was leaving the UI on a fallback font). Loaded BEFORE the global
+// styles so the @font-face is registered first.
+import "@fontsource/poppins/300.css";
+import "@fontsource/poppins/400.css";
+import "@fontsource/poppins/500.css";
+import "@fontsource/poppins/600.css";
+import "@fontsource/poppins/700.css";
+import "@fontsource/poppins/800.css";
 import "@/styles/globals.css";
 import "@/styles/glass.css";
 import { Toaster } from "sonner";
