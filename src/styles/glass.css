@@ -171,3 +171,17 @@
 @media (prefers-reduced-motion: reduce) {
   .cc-dot::after, .cc-scan::before, .cc-rise { animation: none; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   POPPINS — BULLETPROOF GLOBAL FONT
+   Non-layered (glass.css carries no @layer), loaded after globals.css → wins the
+   cascade over @layer base + Tailwind preflight. Targets the app shell, sidebar,
+   header and ALL their descendants + form controls, so nothing escapes Poppins.
+   ════════════════════════════════════════════════════════════════════════════ */
+html, body, button, input, select, textarea, optgroup,
+.app-shell, .app-shell *,
+.app-sidebar, .app-sidebar *,
+.app-header, .app-header *,
+.app-nav-item, .app-subnav-item {
+  font-family: "Poppins", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
