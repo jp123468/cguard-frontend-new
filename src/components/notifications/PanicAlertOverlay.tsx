@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Siren, Phone, MapPin, User, Building2, Clock } from "lucide-react";
 import { startPanicAlarm, stopPanicAlarm } from "@/lib/notificationSound";
 import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
@@ -92,7 +93,10 @@ export function PanicAlertOverlay({
       </div>
     ) : null;
 
-  return (
+  // Portal to <body> so `position: fixed` is relative to the VIEWPORT. Mounted
+  // inside the header, an ancestor's backdrop-filter would otherwise make `fixed`
+  // resolve against the 56px header box → the modal pinned to the top + clipped.
+  return createPortal(
     // Dimmed backdrop — the SOS modal sits centered on top of the whole CRM. No
     // click-away dismissal: the backdrop swallows clicks (no onClick handler).
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -193,6 +197,7 @@ export function PanicAlertOverlay({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
