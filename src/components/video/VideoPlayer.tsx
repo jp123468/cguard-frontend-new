@@ -57,12 +57,12 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 /* <video>. If it can't establish (remote / cold stream), the caller    */
 /* falls back to buffered HLS.                                          */
 /* ------------------------------------------------------------------ */
-async function whepConnect(whepUrl: string, video: HTMLVideoElement): Promise<RTCPeerConnection | null> {
+async function whepConnect(whepUrl: string): Promise<{ pc: RTCPeerConnection; stream: MediaStream } | null> {
   const pc = new RTCPeerConnection({ iceServers: [] }); // LAN: host candidates, no STUN/TURN
   pc.addTransceiver("video", { direction: "recvonly" });
   pc.addTransceiver("audio", { direction: "recvonly" });
   const ms = new MediaStream();
-  pc.ontrack = (e) => { ms.addTrack(e.track); video.srcObject = ms; video.play().catch(() => {}); };
+  pc.ontrack = (e) => ms.addTrack(e.track); // attach to <video> only once connected (don't fight HLS)
   await pc.setLocalDescription(await pc.createOffer());
   // non-trickle: wait for ICE gathering (LAN host candidates are near-instant)
   await new Promise<void>((res) => {
@@ -75,7 +75,7 @@ async function whepConnect(whepUrl: string, video: HTMLVideoElement): Promise<RT
   const r = await fetch(whepUrl, { method: "POST", headers: { "Content-Type": "application/sdp" }, body: pc.localDescription?.sdp || "" });
   if (!r.ok) { pc.close(); return null; }
   await pc.setRemoteDescription({ type: "answer", sdp: await r.text() });
-  return pc;
+  return { pc, stream: ms };
 }
 function waitConnected(pc: RTCPeerConnection, timeoutMs: number): Promise<boolean> {
   return new Promise((res) => {
@@ -181,34 +181,39 @@ export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, vi
       }).catch(() => onErr("No se pudo cargar el reproductor de video"));
     };
 
-    const tryWebRTC = async () => {
-      if (!stream?.webrtcUrl || typeof RTCPeerConnection === "undefined") { startHls(); return; }
-      // The first offer also wakes MediaMTX's on-demand stream; retry a few times while it warms.
-      for (let attempt = 0; attempt < 4 && !cancelled; attempt++) {
-        try {
-          const pc = await whepConnect(stream.webrtcUrl, video);
-          if (cancelled) { pc?.close(); return; }
-          if (pc) {
-            pcRef.current = pc;
-            if (await waitConnected(pc, 6000)) {
-              if (cancelled) { destroyPc(); return; }
-              setTransport("webrtc");
-              pc.addEventListener("connectionstatechange", () => {
-                if (!cancelled && (pc.connectionState === "failed" || pc.connectionState === "disconnected")) {
-                  destroyPc(); startHls(); // lost WebRTC → fall back
-                }
-              });
-              return; // WebRTC live
-            }
-            destroyPc();
-          }
-        } catch { destroyPc(); }
-        await delay(1500);
-      }
-      if (!cancelled) startHls(); // WebRTC never established → HLS
-    };
+    // Start HLS right away (reliable, and it wakes/warms the on-demand stream). Then try
+    // to UPGRADE to WebRTC against the now-warm stream; on success, switch the <video> to
+    // WebRTC (sub-second) and tear HLS down. On failure, we simply stay on HLS.
+    startHls();
 
-    tryWebRTC();
+    const upgradeToWebRTC = async () => {
+      if (!stream?.webrtcUrl || typeof RTCPeerConnection === "undefined") return;
+      for (let attempt = 0; attempt < 3 && !cancelled; attempt++) {
+        await delay(attempt === 0 ? 2000 : 2500); // let HLS warm the stream first
+        if (cancelled) return;
+        try {
+          const res = await whepConnect(stream.webrtcUrl);
+          if (cancelled || !res) { res?.pc.close(); continue; }
+          pcRef.current = res.pc;
+          if (await waitConnected(res.pc, 5000)) {
+            if (cancelled) { destroyPc(); return; }
+            destroyHls();                       // switch off HLS
+            try { video.srcObject = res.stream; } catch { /* */ }
+            if (autoPlay) video.play().catch(() => {});
+            setTransport("webrtc");
+            res.pc.addEventListener("connectionstatechange", () => {
+              if (!cancelled && (res.pc.connectionState === "failed" || res.pc.connectionState === "disconnected")) {
+                destroyPc(); try { video.srcObject = null; } catch { /* */ } startHls(); // drop back to HLS
+              }
+            });
+            return; // upgraded
+          }
+          destroyPc();
+        } catch { destroyPc(); }
+      }
+    };
+    upgradeToWebRTC();
+
     return () => { cancelled = true; destroyHls(); destroyPc(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, stream?.url, stream?.webrtcUrl, autoPlay]);
