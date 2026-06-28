@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Globe2, Check, Loader2 } from "lucide-react"
 import AppLayout from "@/layouts/app-layout";
+import { PageContainer, PageHeader, Section } from "@/components/kit";
+import { Button } from "@/components/ui/button";
 
 type Lang = { code: string; name: string; flag: string }
 const LANGS: Lang[] = [
@@ -153,24 +155,18 @@ export default function LanguageGooglePage() {
 
   return (
     <AppLayout>
-      <div className="px-5  space-y-8">
-        <header className="flex items-center gap-3">
-          <Globe2 className="h-7 w-7 text-emerald-400" />
-          <div>
-            <h1 className="text-3xl font-bold text-white">Idioma de la interfaz</h1>
-            <p className="text-muted-foreground">
-              Traducción instantánea con Google Translate, integrada a tu panel.
-            </p>
-          </div>
-        </header>
+      <PageContainer width="narrow">
+        <PageHeader
+          icon={<Globe2 />}
+          title="Idioma de la interfaz"
+          subtitle="Traducción instantánea con Google Translate, integrada a tu panel."
+        />
 
         {/* Selección de idioma */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
-          <h2 className="mb-4 text-sm font-semibold text-muted-foreground/60">Selecciona un idioma</h2>
-
+        <Section title="Selecciona un idioma" icon={<Globe2 />}>
           {!ready ? (
-            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-800/50 p-4 text-muted-foreground/60">
-              <Loader2 className="h-5 w-5 animate-spin" />
+            <div className="flex items-center gap-3 rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
               Cargando motor de traducción…
             </div>
           ) : (
@@ -180,20 +176,20 @@ export default function LanguageGooglePage() {
                   key={lang.code}
                   onClick={() => onPick(lang.code)}
                   className={[
-                    "flex items-center justify-between rounded-xl border p-4 transition-all duration-200",
+                    "flex items-center justify-between rounded-2xl border p-4 transition-all duration-200 active:scale-[0.99]",
                     selected === lang.code
-                      ? "border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/10"
-                      : "border-white/10 bg-slate-800/50 hover:bg-slate-800 hover:border-emerald-400/40",
+                      ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/30"
+                      : "border-border bg-card hover:border-primary/40 hover:bg-muted/50",
                   ].join(" ")}
                 >
                   <div className="flex items-center gap-3 text-left">
                     <span className="text-2xl">{lang.flag}</span>
                     <div>
-                      <p className="text-base font-medium text-white">{lang.name}</p>
+                      <p className="text-base font-medium text-foreground">{lang.name}</p>
                       <p className="text-xs text-muted-foreground">{lang.code.toUpperCase()}</p>
                     </div>
                   </div>
-                  {selected === lang.code && <Check className="h-5 w-5 text-emerald-400" />}
+                  {selected === lang.code && <Check className="h-5 w-5 text-primary" />}
                 </button>
               ))}
             </div>
@@ -202,12 +198,11 @@ export default function LanguageGooglePage() {
           <p className="mt-4 text-xs text-muted-foreground text-center">
             Traducido automáticamente por Google Translate.
           </p>
-        </div>
+        </Section>
 
         {/* Vista previa */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
-          <h2 className="mb-3 text-sm font-semibold text-muted-foreground/60">Vista previa</h2>
-          <div className="rounded-lg border border-white/10 bg-slate-800/60 p-4 text-slate-200 text-center">
+        <Section title="Vista previa" icon={<Check />}>
+          <div className="rounded-xl border bg-muted/40 p-4 text-foreground text-center">
             {selected === "es" && <p>Tu idioma actual es <strong>Español</strong>.</p>}
             {selected === "en" && <p>Your current language is <strong>English</strong>.</p>}
             {selected === "pt" && <p>Seu idioma atual é <strong>Português</strong>.</p>}
@@ -215,39 +210,39 @@ export default function LanguageGooglePage() {
             {selected === "de" && <p>Ihre aktuelle Sprache ist <strong>Deutsch</strong>.</p>}
             {selected === "it" && <p>La tua lingua corrente è <strong>Italiano</strong>.</p>}
           </div>
-        </div>
+        </Section>
 
         {/* Botones */}
         <div className="flex justify-end gap-3">
-          <button
+          <Button
+            variant="outline"
             onClick={() => {
               const prev = localStorage.getItem("language") || "es"
               setSelected(prev)
             }}
-            className="rounded-lg border border-white/10 bg-slate-800/60 px-5 py-2 text-slate-200 hover:bg-slate-800"
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="brand"
             onClick={() => {
               const lang = LANGS.find((l) => l.code === selected)
               setToastMessage(`Cambiando idioma a ${lang?.name ?? selected.toUpperCase()}`)
               setShowToast(true)
               setTimeout(() => changeLanguage(selected), 500)
             }}
-            className="rounded-lg hover:cursor-pointer bg-emerald-500 px-5 py-2 font-semibold text-foreground hover:bg-emerald-400"
           >
             Guardar cambios
-          </button>
+          </Button>
         </div>
-      </div>
+      </PageContainer>
 
       {/* Contenedor oculto para Google */}
       <div id="__gt_container" className="hidden" />
 
       {/* Toast simple */}
       {showToast && (
-        <div className="fixed bottom-4 right-4 rounded-lg bg-emerald-500 px-6 py-3 text-foreground font-semibold shadow-lg">
+        <div className="fixed bottom-4 right-4 rounded-xl cg-gradient-brand px-6 py-3 text-primary-foreground font-semibold shadow-lg">
           {toastMessage}
         </div>
       )}

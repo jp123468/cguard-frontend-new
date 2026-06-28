@@ -28,6 +28,8 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Command, CommandInput, CommandList, CommandGroup, CommandItem } from "@/components/ui/command";
 import { usePermissions } from "@/hooks/usePermissions";
 import UserPermissionOverrides, { Overrides } from "./UserPermissionOverrides";
+import { PageContainer, PageHeader, Section } from "@/components/kit";
+import { UserCog, ShieldCheck, ChevronDown, ChevronRight } from "lucide-react";
 
 function ClientMultiSelect({
   value,
@@ -455,7 +457,14 @@ export default function EditAdminUserPage() {
         ]}
       />
 
-      <div className="p-4">
+      <PageContainer width="wide" className="p-4">
+        <PageHeader
+          icon={<UserCog />}
+          title={id ? t('adminOfficeUsers.editUser.breadcrumb.edit', { defaultValue: 'Editar Usuario' }) : t('adminOfficeUsers.editUser.breadcrumb.new', { defaultValue: 'Nuevo Usuario' })}
+          subtitle={t('adminOfficeUsers.editUser.subtitle', { defaultValue: 'Actualiza la identidad, el nivel de acceso y los permisos del usuario' })}
+        />
+
+        <Section title={t('adminOfficeUsers.editUser.sectionTitle', { defaultValue: 'Datos del usuario' })} icon={<UserCog />}>
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -559,19 +568,22 @@ export default function EditAdminUserPage() {
             </div>
 
             {canEditPerms && id && (
-              <div className="rounded-lg border bg-card dark:bg-slate-800 p-4 shadow-sm">
+              <div className="rounded-2xl border bg-card dark:bg-slate-800 p-4 shadow-sm">
                 <button
                   type="button"
                   onClick={() => setPermsOpen((v) => !v)}
                   className="flex w-full items-center justify-between text-left"
                 >
-                  <div>
-                    <div className="text-sm font-semibold">Permisos individuales</div>
-                    <div className="text-xs text-muted-foreground">
-                      Concede o revoca permisos específicos para este usuario, además de su rol.
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary [&_svg]:size-5"><ShieldCheck /></span>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold">Permisos individuales</div>
+                      <div className="text-xs text-muted-foreground">
+                        Concede o revoca permisos específicos para este usuario, además de su rol.
+                      </div>
                     </div>
                   </div>
-                  <span className="text-muted-foreground">{permsOpen ? '▼' : '►'}</span>
+                  <span className="text-muted-foreground [&_svg]:size-4">{permsOpen ? <ChevronDown /> : <ChevronRight />}</span>
                 </button>
                 {permsOpen && (
                   <div className="mt-4 space-y-3">
@@ -599,13 +611,14 @@ export default function EditAdminUserPage() {
             )}
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={formState.isSubmitting}>
+              <Button variant="brand" type="submit" disabled={formState.isSubmitting}>
                 {formState.isSubmitting ? (id ? t('adminOfficeUsers.editUser.form.savingEdit', { defaultValue: 'Guardando...' }) : t('adminOfficeUsers.editUser.form.savingNew', { defaultValue: 'Enviando...' })) : (id ? t('adminOfficeUsers.editUser.form.save', { defaultValue: 'Guardar' }) : t('adminOfficeUsers.editUser.form.send', { defaultValue: 'Enviar' }))}
               </Button>
             </div>
           </form>
         </Form>
-      </div>
+        </Section>
+      </PageContainer>
     </AppLayout>
   );
 }

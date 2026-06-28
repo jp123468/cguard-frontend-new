@@ -1,4 +1,3 @@
-import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -6,8 +5,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { MoreVertical, FileX } from "lucide-react";
+import { MoreVertical, FileX, Boxes } from "lucide-react";
+import { Section, StatusBadge, EmptyState } from "@/components/kit";
 
 export type ModuleRow = {
   id: string;
@@ -25,7 +24,7 @@ export default function ModulesTable({
   onDisable?: (id: string) => void;
 }) {
   return (
-    <Card className="p-0 overflow-hidden">
+    <Section title="Módulos contratados" icon={<Boxes />} contentClassName="overflow-hidden rounded-xl border">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
@@ -39,14 +38,13 @@ export default function ModulesTable({
         <TableBody>
           {modules.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4}>
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <FileX className="h-14 w-14 text-muted-foreground/50 mb-4" />
-                  <p className="text-lg font-semibold">No se encontraron resultados</p>
-                  <p className="text-sm text-muted-foreground">
-                    No pudimos encontrar ningún elemento que coincida con su búsqueda
-                  </p>
-                </div>
+              <TableCell colSpan={4} className="p-0">
+                <EmptyState
+                  icon={<FileX />}
+                  title="No se encontraron resultados"
+                  description="No pudimos encontrar ningún elemento que coincida con su búsqueda"
+                  className="border-0"
+                />
               </TableCell>
             </TableRow>
           ) : (
@@ -60,14 +58,14 @@ export default function ModulesTable({
                 </TableCell>
                 <TableCell className="align-top">{m.price}</TableCell>
                 <TableCell className="align-top">
-                  <Badge variant="secondary" className={m.status === "Activo" ? "bg-emerald-500/15 text-emerald-600" : "bg-slate-200"}>
+                  <StatusBadge tone={m.status === "Activo" ? "green" : "slate"}>
                     {m.status}
-                  </Badge>
+                  </StatusBadge>
                 </TableCell>
                 <TableCell className="align-top text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -88,6 +86,6 @@ export default function ModulesTable({
           )}
         </TableBody>
       </Table>
-    </Card>
+    </Section>
   );
 }

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { FileText, ShieldAlert } from 'lucide-react';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { clientService } from '@/lib/api/clientService';
 import { postSiteService } from '@/lib/api/postSiteService';
 import IncidentTypesService from '@/services/incident-types.service';
+import { Section, StatusBadge, EmptyState } from '@/components/kit';
 
 // Only allow http/https URLs to be used as navigable hrefs. Rejects
 // javascript:/data:/other schemes that could come from server-stored data.
@@ -131,7 +133,16 @@ export default function DispatchPublicView() {
     return null;
   })();
 
-  if (!payload) return (<div style={{ padding: 24 }}>No disponible o enlace expirado.</div>);
+  if (!payload) return (
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-6">
+      <EmptyState
+        icon={<ShieldAlert />}
+        title="No disponible"
+        description="Este enlace no existe o ha expirado."
+        className="bg-card max-w-sm"
+      />
+    </div>
+  );
 
   // prepare guard rows for display
   const guardRows: JSX.Element[] = [];
@@ -179,23 +190,20 @@ export default function DispatchPublicView() {
 
   return (
     <div className="p-6 bg-muted/30 min-h-screen" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto space-y-4">
         {/* Logo + Map header */}
-        <div className="flex flex-col items-center mb-4">
+        <div className="flex flex-col items-center mb-2">
           <img src="/assets/logo/c-guard-logo.png" alt="C Guard logo" className="h-32 mb-4" style={{ objectFit: 'contain' }} />
-          {coords && <div className="w-full mb-2"><IncidentMap lat={coords.lat} lng={coords.lng} label={payload?.ticketId || payload?.id} /></div>}
+          {coords && <div className="w-full overflow-hidden rounded-2xl border shadow-sm"><IncidentMap lat={coords.lat} lng={coords.lng} label={payload?.ticketId || payload?.id} /></div>}
         </div>
 
-        <div className="bg-card border rounded-md overflow-hidden">
-          <div className="bg-muted px-4 py-2 text-sm font-semibold flex items-center justify-between">
-            <div>Basic Details</div>
-          </div>
-          <div className="p-0 text-sm">
+        <Section title="Basic Details" icon={<FileText />} contentClassName="overflow-hidden rounded-xl border">
+          <div className="text-sm">
             <table className="w-full text-sm border-collapse">
               <tbody>
                 <tr className="border-b">
                   <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Ticket ID</td>
-                  <td className="py-3 px-4 text-sm text-foreground">{ticketShort} <span className={`inline-block text-xs ml-2 px-2 py-0.5 rounded-full ${payload.status === 'open' || payload.status === 'abierto' ? 'bg-red-500/15 text-red-700' : 'bg-green-100 text-green-700'}`}>{payload.status ?? ''}</span></td>
+                  <td className="py-3 px-4 text-sm text-foreground">{ticketShort} <StatusBadge className="ml-2" tone={payload.status === 'open' || payload.status === 'abierto' ? 'red' : 'green'}>{payload.status ?? ''}</StatusBadge></td>
                   <td className="py-3 px-4 text-xs font-medium text-muted-foreground">Date/Time</td>
                   <td className="py-3 px-4 text-sm text-foreground">{payload.createdAt ? new Date(payload.createdAt).toLocaleString() : '-'}</td>
                 </tr>
@@ -230,27 +238,23 @@ export default function DispatchPublicView() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Section>
 
-        <div className="mt-4 space-y-4">
-          <div className="bg-card border rounded-md overflow-hidden">
-            <div className="bg-muted px-4 py-2 text-sm font-semibold">Incident Details</div>
-            <div className="p-4 text-sm">{payload?.content || payload?.incidentDetails || payload?.details || '-'}</div>
-          </div>
+        <div className="space-y-4">
+          <Section title="Incident Details" icon={<FileText />}>
+            <div className="text-sm text-foreground">{payload?.content || payload?.incidentDetails || payload?.details || '-'}</div>
+          </Section>
 
-          <div className="bg-card border rounded-md overflow-hidden">
-            <div className="bg-muted px-4 py-2 text-sm font-semibold">Action Taken</div>
-            <div className="p-4 text-sm">{payload?.actionsTaken || payload?.actionTaken || payload?.action || '-'}</div>
-          </div>
+          <Section title="Action Taken" icon={<FileText />}>
+            <div className="text-sm text-foreground">{payload?.actionsTaken || payload?.actionTaken || payload?.action || '-'}</div>
+          </Section>
 
-          <div className="bg-card border rounded-md overflow-hidden">
-            <div className="bg-muted px-4 py-2 text-sm font-semibold">Internal Notes</div>
-            <div className="p-4 text-sm whitespace-pre-wrap">{payload?.internalNotes || payload?.notes || '-'}</div>
-          </div>
+          <Section title="Internal Notes" icon={<FileText />}>
+            <div className="text-sm text-foreground whitespace-pre-wrap">{payload?.internalNotes || payload?.notes || '-'}</div>
+          </Section>
 
-          <div className="bg-card border rounded-md overflow-hidden">
-            <div className="bg-muted px-4 py-2 text-sm font-semibold">Files</div>
-            <div className="p-4 text-sm">
+          <Section title="Files" icon={<FileText />}>
+            <div className="text-sm">
               {payload?.requestDocumentPDF && payload.requestDocumentPDF.length > 0 ? (
                 <ul className="list-disc pl-5">
                   {payload.requestDocumentPDF.map((f: any, i: number) => (
@@ -266,15 +270,14 @@ export default function DispatchPublicView() {
                 </div>
               )}
             </div>
-          </div>
+          </Section>
 
-          <div className="bg-card border rounded-md overflow-hidden">
-            <div className="bg-muted px-4 py-2 text-sm font-semibold">Guard Assigned</div>
-            <div className="p-4 text-sm">
-              <div className="overflow-x-auto">
+          <Section title="Guard Assigned" icon={<ShieldAlert />}>
+            <div className="text-sm">
+              <div className="overflow-x-auto rounded-xl border">
                 <table className="w-full text-sm table-fixed border-collapse">
                   <thead>
-                    <tr className="bg-muted/30 text-left">
+                    <tr className="bg-muted/40 text-left">
                       <th className="py-2 px-3 text-xs font-medium text-muted-foreground">Guard</th>
                       <th className="py-2 px-3 text-xs font-medium text-muted-foreground">Status</th>
                       <th className="py-2 px-3 text-xs font-medium text-muted-foreground">Date/Time</th>
@@ -292,13 +295,12 @@ export default function DispatchPublicView() {
                 </table>
               </div>
             </div>
-          </div>
+          </Section>
         </div>
 
         <div className="mt-6 max-w-4xl mx-auto">
-          <div className="bg-card border rounded-md overflow-hidden">
-            <div className="bg-muted px-4 py-2 text-sm font-semibold">Ticket Summary</div>
-            <div className="p-4">
+          <Section title="Ticket Summary" icon={<FileText />}>
+            <div>
               {payload?.comments && payload.comments.length === 0 ? (
                 <div className="text-sm text-muted-foreground">No hay comentarios aún</div>
               ) : (
@@ -320,7 +322,7 @@ export default function DispatchPublicView() {
                 </div>
               )}
             </div>
-          </div>
+          </Section>
 
         </div>
       </div>

@@ -17,10 +17,18 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { Search, Star, Loader2, RotateCcw, AlertCircle } from "lucide-react";
+import { Search, Star, Loader2, RotateCcw, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import guardRatingService, { GuardRatingRecord } from "@/lib/api/guardRatingService";
 import { securityGuardService } from "@/lib/api/securityGuardService";
+import {
+  PageContainer,
+  PageHeader,
+  Section,
+  StatCard,
+  EmptyState,
+  Stagger,
+} from "@/components/kit";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -127,25 +135,33 @@ export default function GuardRatings() {
           { label: "Calificaciones de vigilantes" },
         ]}
       />
-      <div className="p-6 space-y-4">
+      <PageContainer width="wide" className="p-6">
+        <PageHeader
+          icon={<Star />}
+          title="Calificaciones de vigilantes"
+          subtitle="Reseñas y puntuaciones enviadas por los clientes sobre tus vigilantes."
+        />
+
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">
-              {guardFilter === "all" ? "Promedio general" : "Promedio del vigilante"}
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-2xl font-bold text-foreground">
-                {average != null ? average.toFixed(2) : "—"}
-              </p>
-              {average != null && <Stars value={Math.round(average)} />}
-            </div>
-          </div>
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Calificaciones</p>
-            <p className="text-2xl font-bold text-foreground">{count}</p>
-          </div>
-        </div>
+        <Stagger className="grid grid-cols-2 gap-4">
+          <StatCard
+            icon={<Star />}
+            accent="orange"
+            label={guardFilter === "all" ? "Promedio general" : "Promedio del vigilante"}
+            value={average != null ? average.toFixed(2) : "—"}
+            hint={
+              average != null ? (
+                <span className="inline-flex"><Stars value={Math.round(average)} /></span>
+              ) : undefined
+            }
+          />
+          <StatCard
+            icon={<Star />}
+            accent="primary"
+            label="Calificaciones"
+            value={count}
+          />
+        </Stagger>
 
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -175,9 +191,9 @@ export default function GuardRatings() {
         </div>
 
         {/* Table */}
-        <div className="border rounded-md">
+        <Section title="Listado de calificaciones" icon={<Star />} contentClassName="overflow-hidden rounded-xl border">
           <Table>
-            <TableHeader className="bg-slate-50">
+            <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead className="font-bold text-foreground">Fecha</TableHead>
                 <TableHead className="font-bold text-foreground">Vigilante</TableHead>
@@ -196,27 +212,29 @@ export default function GuardRatings() {
                 </TableRow>
               ) : error ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-[300px] text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <AlertCircle className="h-10 w-10 text-red-300 mb-3" />
-                      <h3 className="text-lg font-medium text-foreground mb-1">No se pudo cargar la información</h3>
-                      <p className="text-sm max-w-xs mb-4">Ocurrió un error al obtener las calificaciones.</p>
-                      <Button variant="outline" onClick={fetchRecords}>
-                        <RotateCcw className="h-4 w-4 mr-2" /> Reintentar
-                      </Button>
-                    </div>
+                  <TableCell colSpan={6} className="p-0">
+                    <EmptyState
+                      icon={<AlertCircle />}
+                      title="No se pudo cargar la información"
+                      description="Ocurrió un error al obtener las calificaciones."
+                      className="border-0"
+                      action={
+                        <Button variant="outline" onClick={fetchRecords}>
+                          <RotateCcw className="h-4 w-4 mr-2" /> Reintentar
+                        </Button>
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ) : paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-[400px] text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <div className="bg-yellow-500/10 p-6 rounded-full mb-4">
-                        <Star className="w-12 h-12 text-yellow-200" />
-                      </div>
-                      <h3 className="text-lg font-medium text-foreground mb-1">No hay calificaciones</h3>
-                      <p className="text-sm max-w-xs">Las calificaciones enviadas por los clientes aparecerán aquí.</p>
-                    </div>
+                  <TableCell colSpan={6} className="p-0">
+                    <EmptyState
+                      icon={<Star />}
+                      title="No hay calificaciones"
+                      description="Las calificaciones enviadas por los clientes aparecerán aquí."
+                      className="border-0"
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -235,10 +253,10 @@ export default function GuardRatings() {
               )}
             </TableBody>
           </Table>
-        </div>
+        </Section>
 
         {/* Pagination */}
-        <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex items-center justify-end space-x-2 py-2">
           <div className="text-sm text-muted-foreground">Elementos por página</div>
           <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
             <SelectTrigger className="w-[70px]"><SelectValue /></SelectTrigger>
@@ -254,21 +272,17 @@ export default function GuardRatings() {
               : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, filtered.length)} de ${filtered.length}`}
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="icon" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            <Button variant="outline" size="icon" className="rounded-xl" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
               <span className="sr-only">Página anterior</span>
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+            <Button variant="outline" size="icon" className="rounded-xl" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
               <span className="sr-only">Página siguiente</span>
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

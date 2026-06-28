@@ -37,7 +37,8 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Copy, RefreshCcw } from "lucide-react";
+import { Copy, UserPlus, Ticket } from "lucide-react";
+import { PageContainer, PageHeader, Section } from "@/components/kit";
 
 function ClientMultiSelect({
   value,
@@ -656,7 +657,14 @@ export default function NewAdminUserPage() {
         ]}
       />
 
-      <div className="p-4">
+      <PageContainer width="wide" className="p-4">
+        <PageHeader
+          icon={<UserPlus />}
+          title={editUserId ? t('adminOfficeUsers.editUser.breadcrumb.edit', { defaultValue: 'Editar Usuario' }) : t('adminOfficeUsers.newUser.breadcrumb.new', { defaultValue: 'Nuevo Usuario' })}
+          subtitle={t('adminOfficeUsers.newUser.subtitle', { defaultValue: 'Define la identidad, el nivel de acceso y las asignaciones del usuario' })}
+        />
+
+        <Section title={t('adminOfficeUsers.newUser.sectionTitle', { defaultValue: 'Datos del usuario' })} icon={<UserPlus />}>
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6">
             {/* Fila 1 */}
@@ -787,7 +795,7 @@ export default function NewAdminUserPage() {
             <div className="flex justify-between items-center">
               <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
                 <DialogTrigger asChild>
-                  <Button className="border border-primary text-primary bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary transition duration-200 px-4 py-2 rounded-md" variant="outline">{t('adminOfficeUsers.newUser.invite.createTrigger', { defaultValue: 'Crear código de invitación' })}</Button>
+                  <Button className="border-primary/40 text-primary hover:bg-primary/10 transition" variant="outline"><Ticket className="mr-2 h-4 w-4" />{t('adminOfficeUsers.newUser.invite.createTrigger', { defaultValue: 'Crear código de invitación' })}</Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
@@ -815,19 +823,20 @@ export default function NewAdminUserPage() {
                   </div>
 
                   <DialogFooter>
-                    <Button className="bg-primary text-white hover:bg-primary/90" onClick={createInvitationToken} disabled={inviteLoading}>
+                    <Button variant="brand" onClick={createInvitationToken} disabled={inviteLoading}>
                       {inviteLoading ? t('adminOfficeUsers.newUser.invite.generating', { defaultValue: 'Generando...' }) : (generatedToken ? t('adminOfficeUsers.newUser.invite.regen', { defaultValue: 'Regenerar' }) : t('adminOfficeUsers.newUser.invite.generate', { defaultValue: 'Generar código' }))}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-              <Button className="bg-primary text-white hover:bg-primary/90" type="submit" disabled={formState.isSubmitting}>
+              <Button variant="brand" type="submit" disabled={formState.isSubmitting}>
                 {formState.isSubmitting ? t('adminOfficeUsers.newUser.form.creating', { defaultValue: 'Creando...' }) : t('adminOfficeUsers.newUser.form.create', { defaultValue: 'Crear' })}
               </Button>
               </div>
           </form>
         </Form>
-      </div>
+        </Section>
+      </PageContainer>
     </AppLayout>
   );
 }

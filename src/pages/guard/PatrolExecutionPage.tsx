@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { MapPin, Route, ClipboardList, Loader2 } from 'lucide-react';
 import patrolService from '@/lib/api/patrolService';
 import userService from '@/lib/api/userService';
 import CheckpointAction from '@/components/supervisor/CheckpointAction';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import inventoryService from '@/lib/api/inventoryService';
+import { PageContainer, PageHeader, Section, StatusBadge } from '@/components/kit';
 
 export default function PatrolExecutionPage() {
   const { id } = useParams<{ id?: string }>();
@@ -42,7 +42,11 @@ export default function PatrolExecutionPage() {
     return () => { mounted = false; };
   }, [id]);
 
-  if (!patrol) return <div className="p-6">Cargando patrulla...</div>;
+  if (!patrol) return (
+    <div className="flex items-center justify-center min-h-[40vh]">
+      <Loader2 className="animate-spin text-primary" size={32} />
+    </div>
+  );
 
   const checkpoints = patrol.checkpoints || [];
   const cp = checkpoints[currentIndex];
@@ -87,38 +91,51 @@ export default function PatrolExecutionPage() {
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Ejecución patrulla: {patrol.name || patrol.id}</h2>
-      <Card>
-        <CardContent>
-          <div className="mb-4">
-            <div className="text-sm font-medium">Punto actual</div>
-            <div className="text-lg">{cp?.name || cp?.address || 'Sin nombre'}</div>
-            <div className="text-sm text-muted-foreground">{cp?.address}</div>
-          </div>
+    <PageContainer width="narrow">
+      <PageHeader
+        icon={<Route />}
+        title={`Ejecución patrulla: ${patrol.name || patrol.id}`}
+        subtitle="Valida tu llegada y registra el inventario en cada punto"
+        badges={
+          checkpoints.length > 0 ? (
+            <StatusBadge tone="primary" dot={false}>
+              Punto {currentIndex + 1} de {checkpoints.length}
+            </StatusBadge>
+          ) : undefined
+        }
+      />
 
-          <div className="mb-4">
-            <CheckpointAction
-              patrolId={patrol.id}
-              scannedBy={currentUser?.id}
-              proximityThresholdMeters={100}
-              onResult={handleResult}
+      <Section title="Punto actual" icon={<MapPin />}>
+        <div className="mb-4">
+          <div className="text-lg font-semibold text-foreground">{cp?.name || cp?.address || 'Sin nombre'}</div>
+          {cp?.address && <div className="text-sm text-muted-foreground mt-0.5">{cp.address}</div>}
+        </div>
+
+        <div className="mb-2">
+          <CheckpointAction
+            patrolId={patrol.id}
+            scannedBy={currentUser?.id}
+            proximityThresholdMeters={100}
+            onResult={handleResult}
+          />
+        </div>
+      </Section>
+
+      {scannedOk && (
+        <Section title="Control / Inventario" icon={<ClipboardList />}>
+          <div className="space-y-3">
+            <textarea
+              className="w-full rounded-lg border border-input bg-background p-2.5 text-sm resize-none focus:border-primary focus:ring-2 focus:ring-primary/25 focus:outline-none transition-colors"
+              rows={4}
+              value={inventoryNote}
+              onChange={(e) => setInventoryNote(e.target.value)}
             />
-          </div>
-
-          {scannedOk && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium">Control / Inventario</label>
-                <textarea className="w-full border rounded p-2" rows={4} value={inventoryNote} onChange={(e) => setInventoryNote(e.target.value)} />
-              </div>
-              <div className="flex justify-end">
-                <Button onClick={handleFinish}>Finalizar puesto</Button>
-              </div>
+            <div className="flex justify-end">
+              <Button variant="brand" onClick={handleFinish}>Finalizar puesto</Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+        </Section>
+      )}
+    </PageContainer>
   );
 }

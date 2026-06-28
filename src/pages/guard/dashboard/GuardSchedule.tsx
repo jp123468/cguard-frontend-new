@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Calendar, Loader2, Clock } from 'lucide-react';
+import { Calendar, Loader2, Clock, CalendarCheck, Plane } from 'lucide-react';
 import guardMeService from '@/lib/api/guardMeService';
+import { PageContainer, PageHeader, Section, StatusBadge } from '@/components/kit';
 
 export default function GuardSchedule() {
   const { t } = useTranslation();
@@ -48,38 +49,31 @@ export default function GuardSchedule() {
   const now = Date.now();
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-      <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-        <Calendar size={22} className="text-primary" />
-        {t('guard.schedule.title', 'Mi Horario')}
-      </h1>
+    <PageContainer width="narrow">
+      <PageHeader
+        icon={<Calendar />}
+        title={t('guard.schedule.title', 'Mi Horario')}
+        subtitle={t('guard.schedule.upcoming', 'Próximos turnos')}
+      />
 
       {/* Upcoming Shifts */}
-      <div className="bg-card border rounded-xl p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Clock size={16} className="text-primary" />
-          {t('guard.schedule.upcoming', 'Próximos turnos')}
-        </h3>
+      <Section title={t('guard.schedule.upcoming', 'Próximos turnos')} icon={<Clock />}>
         {shifts.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Sin turnos programados.</p>
+          <p className="text-sm text-muted-foreground">Sin turnos programados.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {shifts.map((s: any) => {
               const isActive = new Date(s.startTime).getTime() <= now && new Date(s.endTime).getTime() >= now;
               return (
                 <div
                   key={s.id}
-                  className={`border rounded-lg p-3 ${isActive ? 'border-green-400 bg-green-500/5' : ''}`}
+                  className={`rounded-xl border p-3.5 ${isActive ? 'border-green-400/70 bg-green-500/5' : ''}`}
                 >
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-foreground">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-foreground">
                       {s.station?.stationName || 'Puesto'}
                     </p>
-                    {isActive && (
-                      <span className="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-                        AHORA
-                      </span>
-                    )}
+                    {isActive && <StatusBadge tone="green">AHORA</StatusBadge>}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {fmtDate(s.startTime)} — {fmtDate(s.endTime)}
@@ -89,43 +83,39 @@ export default function GuardSchedule() {
             })}
           </div>
         )}
-      </div>
+      </Section>
 
       {/* Free Days */}
-      <div className="bg-card border rounded-xl p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">
-          {t('guard.schedule.freeDays', 'Días libres')}
-        </h3>
+      <Section title={t('guard.schedule.freeDays', 'Días libres')} icon={<CalendarCheck />}>
         {freeDays.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No tienes días libres aprobados próximos.</p>
+          <p className="text-sm text-muted-foreground">No tienes días libres aprobados próximos.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {freeDays.slice(0, 30).map((d: string) => (
-              <span key={d} className="inline-flex items-center rounded-full border border-green-300 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+              <StatusBadge key={d} tone="green" dot={false}>
                 {fmtDay(d + 'T12:00:00')}
-              </span>
+              </StatusBadge>
             ))}
           </div>
         )}
-      </div>
+      </Section>
 
       {/* Approved Time Off */}
       {timeOff.length > 0 && (
-        <div className="bg-card border rounded-xl p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-foreground">
-            {t('guard.schedule.approvedTimeOff', 'Permisos aprobados')}
-          </h3>
-          {timeOff.map((to: any) => (
-            <div key={to.id} className="border rounded-lg p-3">
-              <p className="text-sm font-medium text-foreground capitalize">{to.type}</p>
-              <p className="text-xs text-muted-foreground">
-                {fmtDay(to.startDate)} — {fmtDay(to.endDate)}
-              </p>
-              {to.reason && <p className="text-xs text-muted-foreground mt-1">{to.reason}</p>}
-            </div>
-          ))}
-        </div>
+        <Section title={t('guard.schedule.approvedTimeOff', 'Permisos aprobados')} icon={<Plane />}>
+          <div className="space-y-2.5">
+            {timeOff.map((to: any) => (
+              <div key={to.id} className="rounded-xl border p-3.5">
+                <p className="text-sm font-semibold text-foreground capitalize">{to.type}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {fmtDay(to.startDate)} — {fmtDay(to.endDate)}
+                </p>
+                {to.reason && <p className="text-xs text-muted-foreground mt-1">{to.reason}</p>}
+              </div>
+            ))}
+          </div>
+        </Section>
       )}
-    </div>
+    </PageContainer>
   );
 }

@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { CalendarOff, Loader2, Plus, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import guardMeService from '@/lib/api/guardMeService';
+import { PageContainer, PageHeader, Section, EmptyState, FadeIn } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 export default function GuardTimeOff() {
   const { t } = useTranslation();
@@ -84,69 +86,72 @@ export default function GuardTimeOff() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <CalendarOff size={22} className="text-primary" />
-          {t('guard.timeOff.title', 'Mis Permisos')}
-        </h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-primary/90"
-        >
-          <Plus size={14} /> Solicitar
-        </button>
-      </div>
+    <PageContainer width="narrow">
+      <PageHeader
+        icon={<CalendarOff />}
+        title={t('guard.timeOff.title', 'Mis Permisos')}
+        subtitle="Solicita y consulta tus permisos"
+        actions={
+          <Button variant="brand" onClick={() => setShowForm(!showForm)}>
+            <Plus size={16} /> Solicitar
+          </Button>
+        }
+      />
 
       {/* New Request Form */}
       {showForm && (
-        <div className="bg-card border rounded-xl p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-foreground">Nueva solicitud</h3>
-          <div>
-            <label className="block text-xs font-medium text-foreground/70 mb-1">Tipo</label>
-            <select value={type} onChange={e => setType(e.target.value)} className="w-full px-2 py-1.5 border rounded-md text-sm">
-              <option value="vacaciones">Vacaciones</option>
-              <option value="enfermedad">Enfermedad</option>
-              <option value="personal">Personal</option>
-              <option value="calamidad">Calamidad doméstica</option>
-              <option value="otro">Otro</option>
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-foreground/70 mb-1">Desde</label>
-              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-2 py-1.5 border rounded-md text-sm" />
+        <FadeIn>
+          <Section title="Nueva solicitud">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Tipo</label>
+                <select value={type} onChange={e => setType(e.target.value)} className="w-full h-9 px-2.5 border border-input bg-background rounded-lg text-sm">
+                  <option value="vacaciones">Vacaciones</option>
+                  <option value="enfermedad">Enfermedad</option>
+                  <option value="personal">Personal</option>
+                  <option value="calamidad">Calamidad doméstica</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Desde</label>
+                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full h-9 px-2.5 border border-input bg-background rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Hasta</label>
+                  <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full h-9 px-2.5 border border-input bg-background rounded-lg text-sm" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Motivo (opcional)</label>
+                <textarea value={reason} onChange={e => setReason(e.target.value)} rows={2} className="w-full px-2.5 py-2 border border-input bg-background rounded-lg text-sm resize-none" placeholder="Describe el motivo..." />
+              </div>
+              <div className="flex gap-2 justify-end pt-1">
+                <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+                <Button variant="brand" onClick={handleSubmit} disabled={saving}>
+                  {saving ? <Loader2 size={16} className="animate-spin" /> : 'Enviar'}
+                </Button>
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-foreground/70 mb-1">Hasta</label>
-              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-2 py-1.5 border rounded-md text-sm" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-foreground/70 mb-1">Motivo (opcional)</label>
-            <textarea value={reason} onChange={e => setReason(e.target.value)} rows={2} className="w-full px-2 py-1.5 border rounded-md text-sm resize-none" placeholder="Describe el motivo..." />
-          </div>
-          <div className="flex gap-2 justify-end">
-            <button onClick={() => setShowForm(false)} className="px-3 py-1.5 border rounded-md text-sm">Cancelar</button>
-            <button onClick={handleSubmit} disabled={saving} className="px-4 py-1.5 bg-primary text-white rounded-md text-sm font-medium disabled:opacity-50">
-              {saving ? <Loader2 size={14} className="animate-spin" /> : 'Enviar'}
-            </button>
-          </div>
-        </div>
+          </Section>
+        </FadeIn>
       )}
 
       {/* Existing requests */}
       {rows.length === 0 ? (
-        <div className="bg-card border rounded-xl p-6 text-center text-sm text-muted-foreground">
-          No tienes solicitudes de permiso.
-        </div>
+        <EmptyState
+          icon={<CalendarOff />}
+          title="Sin solicitudes"
+          description="No tienes solicitudes de permiso."
+        />
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {rows.map((r: any) => (
-            <div key={r.id} className="bg-card border rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-foreground capitalize">{r.type || 'Permiso'}</p>
-                <span className="flex items-center gap-1 text-xs font-medium">
+            <div key={r.id} className="cg-card cg-card-hover p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground capitalize">{r.type || 'Permiso'}</p>
+                <span className="flex items-center gap-1.5 text-xs font-semibold">
                   {statusIcon(r.status)}
                   {statusLabel(r.status)}
                 </span>
@@ -159,6 +164,6 @@ export default function GuardTimeOff() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

@@ -38,10 +38,11 @@ import {
   Search,
   Send,
   Archive,
+  Users,
 } from "lucide-react";
+import { PageContainer, PageHeader, Section, StatusBadge, EmptyState } from "@/components/kit";
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
-import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { usePermissions } from '@/hooks/usePermissions';
 import { PermissionedButton } from '@/components/permissions/Permissioned';
@@ -476,9 +477,21 @@ export default function AdminOfficeUsersPage() {
         ]}
       />
 
-      <section className="p-4">
+      <PageContainer width="wide" className="p-4">
+        <PageHeader
+          icon={<Users />}
+          title={t('adminOfficeUsers.title', { defaultValue: 'Usuarios de Oficina Administrativa' })}
+          subtitle={t('adminOfficeUsers.subtitle', { defaultValue: 'Administra el acceso, los roles y los permisos del personal de oficina' })}
+          actions={(
+            <PermissionedButton permission="userCreate" asChild variant="brand">
+              <Link to="/back-office/new">{t('adminOfficeUsers.newUser.breadcrumb.new', { defaultValue: 'Nuevo Usuario' })}</Link>
+            </PermissionedButton>
+          )}
+        />
+
+        <Section>
         {/* Acciones superiores */}
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             {/* Bulk action: show Suspender and conditionally Activar if any selected is archived */}
             <Select key={selectKey} value={bulkAction ?? undefined} onValueChange={(v) => {
@@ -528,10 +541,6 @@ export default function AdminOfficeUsersPage() {
                 aria-label={t('adminOfficeUsers.searchPlaceholder', { defaultValue: 'Buscar usuario' })}
               />
             </div>
-
-            <PermissionedButton permission="userCreate" asChild className="bg-primary text-white hover:bg-primary/90">
-              <Link to="/back-office/new">{t('adminOfficeUsers.newUser.breadcrumb.new', { defaultValue: 'Nuevo Usuario' })}</Link>
-            </PermissionedButton>
 
             {/* Filtros */}
             <Sheet open={openFilter} onOpenChange={setOpenFilter}>
@@ -629,7 +638,7 @@ export default function AdminOfficeUsersPage() {
         </div>
 
         {/* Tabla */}
-        <div className="mt-4 overflow-hidden rounded-lg border">
+        <div className="mt-4 overflow-hidden rounded-xl border">
           <div className="md:block hidden">
             <table className="min-w-full border-collapse text-left text-sm">
               <thead className="bg-muted/30">
@@ -649,18 +658,13 @@ export default function AdminOfficeUsersPage() {
               <tbody>
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-20">
-                      <div className="flex flex-col items-center justify-center text-center">
-                        <img
-                          src="https://app.guardspro.com/assets/icons/custom/no-data-found.png"
-                          alt="Sin datos"
-                          className="mb-4 h-36"
-                        />
-                        <h3 className="text-lg font-semibold">{t('adminOfficeUsers.noData.title', { defaultValue: 'No se encontraron resultados' })}</h3>
-                        <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-                          {t('adminOfficeUsers.noData.message', { defaultValue: 'No pudimos encontrar ningún elemento que coincida con su búsqueda' })}
-                        </p>
-                      </div>
+                    <td colSpan={7} className="py-12">
+                      <EmptyState
+                        icon={<Users />}
+                        title={t('adminOfficeUsers.noData.title', { defaultValue: 'No se encontraron resultados' })}
+                        description={t('adminOfficeUsers.noData.message', { defaultValue: 'No pudimos encontrar ningún elemento que coincida con su búsqueda' })}
+                        className="border-0"
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -691,32 +695,32 @@ export default function AdminOfficeUsersPage() {
                           // archived (backend) or archivado (spanish) => show red Archivado
                           if (status === "archived" || status === "archivado") {
                             return (
-                              <Badge variant="outline" className="bg-red-500/10 text-red-700">
+                              <StatusBadge tone="red">
                                 {t('adminOfficeUsers.statuses.archived', { defaultValue: 'Archivado' })}
-                              </Badge>
+                              </StatusBadge>
                             );
                           }
 
                           if (status === "invited" || status === "pending") {
                             return (
-                              <Badge className="bg-yellow-500/15 text-yellow-800 hover:bg-yellow-500/15">
+                              <StatusBadge tone="orange">
                                 {t('adminOfficeUsers.statuses.pending', { defaultValue: 'Pendiente' })}
-                              </Badge>
+                              </StatusBadge>
                             );
                           }
 
                           if (u.active === false) {
                             return (
-                              <Badge className="bg-muted text-foreground hover:bg-muted">
+                              <StatusBadge tone="slate">
                                 {t('adminOfficeUsers.statuses.inactive', { defaultValue: 'Inactivo' })}
-                              </Badge>
+                              </StatusBadge>
                             );
                           }
 
                           return (
-                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                            <StatusBadge tone="green">
                               {t('adminOfficeUsers.statuses.active', { defaultValue: 'Activo' })}
-                            </Badge>
+                            </StatusBadge>
                           );
                         })()}
                       </td>
@@ -836,7 +840,7 @@ export default function AdminOfficeUsersPage() {
           </div>
         </div>
         {/* Footer de tabla */}
-        <div className="flex items-center justify-between bg-muted/30 px-4 py-3 text-sm text-foreground/70">
+        <div className="mt-2 flex items-center justify-between rounded-xl bg-muted/30 px-4 py-3 text-sm text-foreground/70">
           <div className="flex items-center gap-2">
             <span>{t('adminOfficeUsers.footer.itemsPerPage', { defaultValue: 'Elementos por página' })}</span>
             <Select
@@ -878,6 +882,7 @@ export default function AdminOfficeUsersPage() {
             </div>
           </div>
         </div>
+        </Section>
 
         {/* Confirm dialogs for resend and suspend */ }
   <AlertDialog open={resendDialogOpen} onOpenChange={setResendDialogOpen}>
@@ -980,7 +985,7 @@ export default function AdminOfficeUsersPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </section >
+      </PageContainer>
     </AppLayout >
   );
 }

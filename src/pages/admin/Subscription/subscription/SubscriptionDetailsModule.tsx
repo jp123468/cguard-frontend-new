@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +11,14 @@ import {
 import { DialogDescription } from "@/components/ui/dialog";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
+import { Sparkles, CreditCard, Check } from "lucide-react";
+import {
+  PageContainer,
+  PageHeader,
+  Section,
+  Field,
+  StatusBadge,
+} from "@/components/kit";
 
 type BillingPeriod = "monthly" | "annual";
 type PlanKey = "essential" | "advance" | "professional";
@@ -58,72 +65,65 @@ export default function SubscriptionDetailsModule() {
   };
 
   return (
-    <div className="space-y-6">
+    <PageContainer width="wide">
+      <PageHeader
+        icon={<CreditCard />}
+        title="Suscripción"
+        subtitle="Gestiona tu plan, periodo de facturación y módulos contratados."
+      />
+
       {/* Banner */}
-      <Card className="p-4 bg-primary/10 border-primary/30">
-        <p className="text-sm">
-          <span className="font-semibold">Special Offer!!</span> Update Now and
-          Get 15% Off For Next 3 Months!! Your account will be immediately
-          charged based on number of active users in the system.{" "}
-          <button
-            className="text-primary underline-offset-2 hover:underline"
-            onClick={() => console.log("Click en oferta")}
-          >
-            (Click Here)
-          </button>
-        </p>
+      <Card className="p-4 rounded-2xl bg-primary/10 border-primary/30">
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary [&_svg]:size-5">
+            <Sparkles />
+          </span>
+          <p className="text-sm">
+            <span className="font-semibold">Special Offer!!</span> Update Now and
+            Get 15% Off For Next 3 Months!! Your account will be immediately
+            charged based on number of active users in the system.{" "}
+            <button
+              className="text-primary underline-offset-2 hover:underline"
+              onClick={() => console.log("Click en oferta")}
+            >
+              (Click Here)
+            </button>
+          </p>
+        </div>
       </Card>
 
       {/* Información de suscripción */}
-      <Card className="p-6 space-y-6">
-        <div className="grid grid-cols-2 gap-6 text-sm">
-          <div className="space-y-1">
-            <div className="text-muted-foreground">Cliente</div>
-            <div className="font-medium">
-              {/* Mock screen — no real customer PII is committed here.
-                  Replace with backend-driven data when billing is wired up. */}
-              &mdash;
-            </div>
+      <Section
+        title="Información de suscripción"
+        icon={<CreditCard />}
+        action={
+          <Button
+            variant="outline"
+            onClick={() => console.log("Gestionar suscripción")}
+          >
+            Gestionar Suscripción
+          </Button>
+        }
+      >
+        <div className="grid grid-cols-2 gap-6">
+          <Field
+            label="Cliente"
+            value={
+              /* Mock screen — no real customer PII is committed here.
+                 Replace with backend-driven data when billing is wired up. */
+              "—"
+            }
+          />
+          <Field label="Creado" value="Oct 07, 2025" />
+          <Field label="Periodo Actual" value="Oct 07, 2025 to Nov 06, 2025" />
+          <div className="min-w-0">
+            <div className="cg-eyebrow mb-0.5">Estado de la Suscripción</div>
+            <StatusBadge tone="red">Trialing</StatusBadge>
           </div>
-          <div className="space-y-1">
-            <div className="text-muted-foreground">Creado</div>
-            <div className="font-medium">Oct 07, 2025</div>
-          </div>
-
-          <div className="space-y-1">
-            <div className="text-muted-foreground">Periodo Actual</div>
-            <div className="font-medium">
-              Oct 07, 2025 to Nov 06, 2025
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="text-muted-foreground">
-              Estado de la Suscripción
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge
-                variant="secondary"
-                className="bg-rose-100 text-rose-700"
-              >
-                Trialing
-              </Badge>
-              <Button
-                variant="outline"
-                onClick={() => console.log("Gestionar suscripción")}
-              >
-                Gestionar Suscripción
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-1 col-span-2">
-            <div className="text-muted-foreground">Usuarios Activos</div>
-            <div className="font-medium">3</div>
-          </div>
+          <Field className="col-span-2" label="Usuarios Activos" value="3" />
         </div>
 
-        <Separator />
+        <Separator className="my-6" />
 
         {/* Selector Mensual / Anual */}
         <div className="flex justify-center">
@@ -131,39 +131,38 @@ export default function SubscriptionDetailsModule() {
             type="single"
             value={period}
             onValueChange={(v) => v && setPeriod(v as BillingPeriod)}
-            className="rounded-md border p-1 bg-muted/50"
+            className="rounded-xl border p-1 bg-muted/50"
           >
-            <ToggleGroupItem value="monthly" className="px-6">
+            <ToggleGroupItem value="monthly" className="px-6 rounded-lg">
               Mensual
             </ToggleGroupItem>
-            <ToggleGroupItem value="annual" className="px-6">
+            <ToggleGroupItem value="annual" className="px-6 rounded-lg">
               Anual
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
 
         {/* Planes */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="mt-6 grid md:grid-cols-3 gap-6">
           {(["essential", "advance", "professional"] as PlanKey[]).map(
             (plan) => {
               const price = priceByPeriod[plan];
               const isCurrent = plan === currentPlan;
+              const isPopular = plan === "professional";
               return (
-                <Card key={plan} className="p-6 flex flex-col gap-4">
+                <Card
+                  key={plan}
+                  className={`p-6 flex flex-col gap-4 rounded-2xl transition-shadow hover:shadow-md ${
+                    isPopular ? "border-primary/40 ring-1 ring-primary/20" : ""
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">{PLAN_LABEL[plan]}</h3>
-                    {plan === "professional" && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-indigo-500/15 text-indigo-700"
-                      >
-                        POPULAR
-                      </Badge>
-                    )}
+                    {isPopular && <StatusBadge tone="primary" dot={false}>POPULAR</StatusBadge>}
                   </div>
 
                   <div className="space-y-1">
-                    <div className="text-3xl font-semibold">
+                    <div className="font-display text-3xl font-bold">
                       {isAnnual ? `$${price.toFixed(2)}` : `$${price}`}
                       <span className="text-base font-normal text-muted-foreground">
                         {" "}
@@ -180,13 +179,13 @@ export default function SubscriptionDetailsModule() {
                   <div className="mt-auto">
                     {isCurrent && plan === "professional" &&
                     period === "monthly" ? (
-                      <Button className="w-full" variant="default">
-                        Plan Actual
+                      <Button className="w-full" variant="brand">
+                        <Check className="h-4 w-4 mr-1.5" /> Plan Actual
                       </Button>
                     ) : (
                       <Button
                         className="w-full"
-                        variant={plan === "professional" ? "default" : "outline"}
+                        variant={isPopular ? "brand" : "outline"}
                         onClick={() => handleBuy(plan)}
                       >
                         {`Comprar ${PLAN_LABEL[plan]}`}
@@ -198,7 +197,7 @@ export default function SubscriptionDetailsModule() {
             }
           )}
         </div>
-      </Card>
+      </Section>
 
       {/* Modal de Confirmación */}
       <Dialog open={openConfirm} onOpenChange={setOpenConfirm}>
@@ -267,6 +266,6 @@ export default function SubscriptionDetailsModule() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

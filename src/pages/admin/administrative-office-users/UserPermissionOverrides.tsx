@@ -86,8 +86,8 @@ export default function UserPermissionOverrides({
         Object.keys(filtered)
           .filter((g) => !HIDDEN_GROUPS.has(g))
           .map((group) => (
-            <div key={group} className="rounded-lg border bg-card dark:bg-slate-800 p-4 shadow-sm">
-              <div className="text-sm font-semibold mb-3">{RESOURCE_LABELS[group] ?? group}</div>
+            <div key={group} className="rounded-2xl border bg-card dark:bg-slate-800 p-4 shadow-sm">
+              <div className="text-sm font-semibold mb-3 tracking-tight">{RESOURCE_LABELS[group] ?? group}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {filtered[group].map((p) => {
                   const st = stateOf(p);
@@ -98,10 +98,10 @@ export default function UserPermissionOverrides({
                       disabled={disabled}
                       onClick={() => cycle(p)}
                       title={isFloor(p) ? "Requerido para el acceso de administrador (no se puede denegar)" : p}
-                      className={"flex items-center justify-between gap-2 rounded border px-2 py-1.5 text-left " + (disabled ? "opacity-60 cursor-not-allowed " : "hover:bg-slate-50 dark:hover:bg-slate-700 ")}
+                      className={"flex items-center justify-between gap-2 rounded-xl border px-2.5 py-2 text-left transition " + (disabled ? "opacity-60 cursor-not-allowed " : "hover:bg-primary/5 hover:border-primary/30 dark:hover:bg-slate-700 ")}
                     >
                       <span className="min-w-0 truncate text-sm">{formatPermissionLabel(p)}</span>
-                      <span className={"shrink-0 rounded border px-1.5 py-0.5 text-[10px] " + st.cls}>{st.label}</span>
+                      <span className={"shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold " + st.cls}>{st.label}</span>
                     </button>
                   );
                 })}

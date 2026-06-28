@@ -26,10 +26,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Search, EllipsisVertical, Loader2, CheckCircle, RotateCcw, AlertCircle,
+  Inbox, MailQuestion, MailOpen, Layers,
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
 import customerRequestService, { CustomerRequestRecord } from "@/lib/api/customerRequestService";
+import { PageContainer, PageHeader, Section, StatCard, StatusBadge, EmptyState, Stagger } from "@/components/kit";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -115,9 +117,9 @@ export default function CustomerRequests() {
   const getStatusBadge = (status: string | null) => {
     switch (status) {
       case "abierto":
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Abierta</Badge>;
+        return <StatusBadge tone="orange">Abierta</StatusBadge>;
       case "cerrado":
-        return <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-200">Atendida</Badge>;
+        return <StatusBadge tone="green">Atendida</StatusBadge>;
       default:
         return <Badge variant="outline">{status ?? "—"}</Badge>;
     }
@@ -131,23 +133,21 @@ export default function CustomerRequests() {
           { label: "Solicitudes de clientes" },
         ]}
       />
-      <div className="p-6 space-y-4">
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Abiertas</p>
-            <p className="text-2xl font-bold text-yellow-600">{stats.open}</p>
-          </div>
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Atendidas</p>
-            <p className="text-2xl font-bold text-green-600">{stats.closed}</p>
-          </div>
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Total</p>
-            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-          </div>
-        </div>
+      <PageContainer width="wide" className="p-6">
+        <PageHeader
+          icon={<Inbox />}
+          title="Solicitudes de clientes"
+          subtitle="Mensajes y solicitudes enviadas desde la app de clientes"
+        />
 
+        {/* Stats */}
+        <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StatCard label="Abiertas" value={stats.open} icon={<MailQuestion />} accent="orange" />
+          <StatCard label="Atendidas" value={stats.closed} icon={<MailOpen />} accent="green" />
+          <StatCard label="Total" value={stats.total} icon={<Layers />} accent="primary" />
+        </Stagger>
+
+        <Section>
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row justify-between gap-4">
           <div className="w-full md:w-52">
@@ -175,7 +175,7 @@ export default function CustomerRequests() {
         </div>
 
         {/* Table */}
-        <div className="border rounded-md">
+        <div className="mt-4 border rounded-xl overflow-hidden">
           <Table>
             <TableHeader className="bg-slate-50">
               <TableRow>
@@ -211,16 +211,12 @@ export default function CustomerRequests() {
               ) : paginated.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-[400px] text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <div className="bg-blue-500/10 p-6 rounded-full mb-4">
-                        <svg className="w-12 h-12 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                            d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-medium text-foreground mb-1">No hay solicitudes de clientes</h3>
-                      <p className="text-sm max-w-xs">Las solicitudes enviadas desde la app de clientes aparecerán aquí.</p>
-                    </div>
+                    <EmptyState
+                      icon={<Inbox />}
+                      title="No hay solicitudes de clientes"
+                      description="Las solicitudes enviadas desde la app de clientes aparecerán aquí."
+                      className="border-0"
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -292,7 +288,8 @@ export default function CustomerRequests() {
             </Button>
           </div>
         </div>
-      </div>
+        </Section>
+      </PageContainer>
     </AppLayout>
   );
 }

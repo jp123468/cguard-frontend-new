@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Clock, Shield, CheckCircle, XCircle, Loader2, Calendar } from 'lucide-react';
+import { MapPin, Clock, Shield, CheckCircle, XCircle, Loader2, LogOut, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 import guardMeService from '@/lib/api/guardMeService';
+import { PageContainer, PageHeader, Section, StatusBadge, FadeIn } from '@/components/kit';
 
 export default function GuardDashboard() {
   const { t } = useTranslation();
@@ -97,6 +98,10 @@ export default function GuardDashboard() {
     );
   }
 
+  // i18n-friendly status labels reused below
+  const onDutyLabel = t('guard.dashboard.onDuty', 'En servicio');
+  const offDutyLabel = t('guard.dashboard.offDuty', 'Fuera de servicio');
+
   const guard = data?.guard;
   const stations = data?.stations || [];
   const currentShift = data?.currentShift;
@@ -110,106 +115,104 @@ export default function GuardDashboard() {
   };
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <Shield className="mx-auto text-primary mb-2" size={40} />
-        <h1 className="text-xl font-bold text-foreground">
-          {guard?.fullName || t('guard.dashboard.title', 'Mi Panel')}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {isClockedIn
-            ? t('guard.dashboard.onDuty', 'En servicio')
-            : t('guard.dashboard.offDuty', 'Fuera de servicio')}
-        </p>
-      </div>
+    <PageContainer width="narrow">
+      <PageHeader
+        icon={<Shield />}
+        title={guard?.fullName || t('guard.dashboard.title', 'Mi Panel')}
+        subtitle={isClockedIn ? onDutyLabel : offDutyLabel}
+        badges={
+          <StatusBadge tone={isClockedIn ? 'green' : 'slate'}>
+            {isClockedIn ? onDutyLabel : offDutyLabel}
+          </StatusBadge>
+        }
+      />
 
       {/* Clock Status */}
-      <div className={`rounded-xl border-2 p-6 text-center ${isClockedIn ? 'border-green-500 bg-green-500/5' : 'border-border bg-card'}`}>
-        {isClockedIn ? (
-          <>
-            <CheckCircle className="mx-auto text-green-600 mb-2" size={32} />
-            <p className="text-sm font-medium text-green-700">Entrada registrada</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Desde: {fmtTime(data?.activeClockIn?.punchInTime)}
-            </p>
-            <button
-              onClick={handleClockOut}
-              disabled={clockingOut}
-              className="mt-4 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold text-base hover:bg-red-700 disabled:opacity-50 w-full"
-            >
-              {clockingOut ? <Loader2 size={18} className="animate-spin mx-auto" /> : 'Marcar Salida'}
-            </button>
-          </>
-        ) : (
-          <>
-            <XCircle className="mx-auto text-muted-foreground mb-2" size={32} />
-            <p className="text-sm font-medium text-foreground">Sin entrada activa</p>
-            {stations.length > 0 && (
-              <div className="mt-4 space-y-2">
-                {stations.map((st: any) => (
-                  <button
-                    key={st.id}
-                    onClick={() => handleClockIn(st.id)}
-                    disabled={clockingIn}
-                    className="px-6 py-3 bg-primary text-white rounded-xl font-semibold text-base hover:bg-primary/90 disabled:opacity-50 w-full"
-                  >
-                    {clockingIn ? <Loader2 size={18} className="animate-spin mx-auto" /> : `Marcar Entrada — ${st.stationName}`}
-                  </button>
-                ))}
+      <FadeIn>
+        <div className={`cg-card cg-card-hover p-6 text-center ${isClockedIn ? 'ring-2 ring-green-500/40 bg-green-500/5' : ''}`}>
+          {isClockedIn ? (
+            <>
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-500/12 text-green-600">
+                <CheckCircle size={30} />
               </div>
-            )}
-            {stations.length === 0 && (
-              <p className="text-xs text-muted-foreground mt-2">No tienes puestos asignados.</p>
-            )}
-          </>
-        )}
-        {gpsError && (
-          <p className="text-xs text-red-600 mt-2">{gpsError}</p>
-        )}
-      </div>
+              <p className="text-sm font-semibold text-green-700">Entrada registrada</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Desde: {fmtTime(data?.activeClockIn?.punchInTime)}
+              </p>
+              <button
+                onClick={handleClockOut}
+                disabled={clockingOut}
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold text-base shadow-sm hover:bg-red-700 disabled:opacity-50 transition"
+              >
+                {clockingOut ? <Loader2 size={18} className="animate-spin" /> : <><LogOut size={18} /> Marcar Salida</>}
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <XCircle size={30} />
+              </div>
+              <p className="text-sm font-semibold text-foreground">Sin entrada activa</p>
+              {stations.length > 0 && (
+                <div className="mt-5 space-y-2">
+                  {stations.map((st: any) => (
+                    <button
+                      key={st.id}
+                      onClick={() => handleClockIn(st.id)}
+                      disabled={clockingIn}
+                      className="inline-flex w-full items-center justify-center gap-2 px-6 py-3 cg-gradient-brand text-primary-foreground rounded-xl font-semibold text-base shadow-sm hover:opacity-90 disabled:opacity-50 transition"
+                    >
+                      {clockingIn ? <Loader2 size={18} className="animate-spin" /> : <><LogIn size={18} /> {`Marcar Entrada — ${st.stationName}`}</>}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {stations.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-2">No tienes puestos asignados.</p>
+              )}
+            </>
+          )}
+          {gpsError && (
+            <p className="text-xs text-red-600 mt-3">{gpsError}</p>
+          )}
+        </div>
+      </FadeIn>
 
       {/* Current/Next Shift */}
-      <div className="bg-card border rounded-xl p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Clock size={16} className="text-primary" />
-          {t('guard.dashboard.shifts', 'Turnos')}
-        </h3>
+      <Section title={t('guard.dashboard.shifts', 'Turnos')} icon={<Clock />}>
         {currentShift ? (
-          <div className="bg-green-500/10 border border-green-300 rounded-lg p-3">
-            <p className="text-xs font-medium text-green-700">Turno actual</p>
-            <p className="text-sm text-foreground font-medium">{currentShift.station?.stationName || '-'}</p>
+          <div className="rounded-xl border border-green-300/60 bg-green-500/10 p-3.5">
+            <StatusBadge tone="green">Turno actual</StatusBadge>
+            <p className="mt-2 text-sm font-semibold text-foreground">{currentShift.station?.stationName || '-'}</p>
             <p className="text-xs text-muted-foreground">{fmtTime(currentShift.startTime)} — {fmtTime(currentShift.endTime)}</p>
           </div>
         ) : nextShift ? (
-          <div className="bg-blue-500/10 border border-blue-300 rounded-lg p-3">
-            <p className="text-xs font-medium text-blue-700">Próximo turno</p>
-            <p className="text-sm text-foreground font-medium">{nextShift.station?.stationName || '-'}</p>
+          <div className="rounded-xl border border-blue-300/60 bg-blue-500/10 p-3.5">
+            <StatusBadge tone="blue">Próximo turno</StatusBadge>
+            <p className="mt-2 text-sm font-semibold text-foreground">{nextShift.station?.stationName || '-'}</p>
             <p className="text-xs text-muted-foreground">{fmtTime(nextShift.startTime)} — {fmtTime(nextShift.endTime)}</p>
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Sin turnos programados.</p>
+          <p className="text-sm text-muted-foreground">Sin turnos programados.</p>
         )}
-      </div>
+      </Section>
 
       {/* Assigned Stations */}
       {stations.length > 0 && (
-        <div className="bg-card border rounded-xl p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <MapPin size={16} className="text-primary" />
-            {t('guard.dashboard.stations', 'Mis Puestos')}
-          </h3>
-          {stations.map((st: any) => (
-            <div key={st.id} className="border rounded-lg p-3">
-              <p className="text-sm font-medium text-foreground">{st.stationName}</p>
-              <p className="text-xs text-muted-foreground">
-                {st.startingTimeInDay || '?'} — {st.finishTimeInDay || '?'}
-                {st.stationSchedule && ` · ${st.stationSchedule}`}
-              </p>
-            </div>
-          ))}
-        </div>
+        <Section title={t('guard.dashboard.stations', 'Mis Puestos')} icon={<MapPin />}>
+          <div className="space-y-2.5">
+            {stations.map((st: any) => (
+              <div key={st.id} className="rounded-xl border p-3.5">
+                <p className="text-sm font-semibold text-foreground">{st.stationName}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {st.startingTimeInDay || '?'} — {st.finishTimeInDay || '?'}
+                  {st.stationSchedule && ` · ${st.stationSchedule}`}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Section>
       )}
-    </div>
+    </PageContainer>
   );
 }

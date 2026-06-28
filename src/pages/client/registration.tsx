@@ -9,6 +9,8 @@ const MISEGURIDAD_PLAY_URL = (import.meta as any).env?.VITE_MISEGURIDAD_PLAY_URL
 const MISEGURIDAD_IOS_URL = (import.meta as any).env?.VITE_MISEGURIDAD_IOS_URL || "https://apps.apple.com/search?term=Mi%20Seguridad%20CGuardPro";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { FadeIn } from "@/components/kit";
 import { ApiService } from "@/services/api/apiService";
 import { AuthService } from '@/services/auth/authService';
 
@@ -286,7 +288,7 @@ export default function ClientRegistration() {
 
           {/* Finish: Mi Seguridad app + download links (clients don't use the web login) */}
           {done ? (
-            <div className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5 text-center">
+            <FadeIn className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5 text-center">
               <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary/12">
                 <CheckCircle2 className="h-9 w-9 text-primary" />
               </div>
@@ -315,9 +317,9 @@ export default function ClientRegistration() {
               </div>
 
               <p className="mt-5 text-xs text-muted-foreground">Inicia sesión en la app con el correo y la contraseña que acabas de crear.</p>
-            </div>
+            </FadeIn>
           ) : (
-          <div className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5">
+          <FadeIn className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5">
             <form className="space-y-3" onSubmit={handleSubmit}>
               {inviteNotFound && (
                 <div className="rounded-md border border-yellow-300 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 p-3 text-sm text-yellow-800 dark:text-yellow-300">
@@ -360,10 +362,10 @@ export default function ClientRegistration() {
                 </div>
               </div>
               <div className="flex justify-end mt-4">
-                <button type="submit" className="bg-primary hover:bg-primary/90 text-white px-8 py-2 rounded" disabled={isLoading}>{isLoading ? t('client.registering', { defaultValue: 'Registrando...' }) : t('client.register', { defaultValue: 'Registrar' })}</button>
+                <Button type="submit" variant="brand" size="lg" className="px-8" disabled={isLoading}>{isLoading ? t('client.registering', { defaultValue: 'Registrando...' }) : t('client.register', { defaultValue: 'Registrar' })}</Button>
               </div>
             </form>
-          </div>
+          </FadeIn>
           )}
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
