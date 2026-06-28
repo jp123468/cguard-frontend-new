@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { PageContainer, PageHeader, Section, Stagger, StatCard, EmptyState } from "@/components/kit";
 import {
   alarmService,
+  alarmSourceMeta,
   type AlarmCase,
   type AlarmCaseStatus,
 } from "@/lib/api/alarmService";
@@ -346,6 +347,10 @@ export default function AlarmQueue() {
                           {cat.label}
                         </Badge>
                         <Badge className={st.className}>{st.label}</Badge>
+                        {(() => {
+                          const sm = alarmSourceMeta(c.source);
+                          return <Badge className={sm.className}>{sm.short}</Badge>;
+                        })()}
                         {c.incidentId ? (
                           <Badge className="border-transparent bg-purple-500/15 text-purple-600">
                             <AlertTriangle className="size-3.5" />

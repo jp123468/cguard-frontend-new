@@ -45,6 +45,7 @@ import {
 } from "@/components/kit";
 import {
   alarmService,
+  alarmSourceMeta,
   type AlarmCase,
   type AlarmEvent,
   type AlarmAuditLog,
@@ -433,6 +434,10 @@ export default function AlarmCaseDetail() {
                     {cat.label}
                   </Badge>
                   <Badge className={st.className}>{st.label}</Badge>
+                  {(() => {
+                    const sm = alarmSourceMeta(data.source);
+                    return <Badge className={sm.className}>{sm.label}</Badge>;
+                  })()}
                   {data.disposition ? (
                     <Badge className="border-transparent bg-slate-500/15 text-slate-600">
                       {DISPOSITIONS.find((d) => d.value === data.disposition)?.label ||

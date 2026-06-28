@@ -159,6 +159,8 @@ export interface AlarmCase {
   postSiteId?: string | null;
   stationId?: string | null;
   customerId?: string | null;
+  /** Origin: 'alarm_panel' | 'client_app' | 'worker_app' | 'manual'. */
+  source?: string | null;
   tenantId?: string;
   createdById?: string | null;
   createdAt?: string;
@@ -166,6 +168,25 @@ export interface AlarmCase {
   panel?: AlarmPanel | null;
   events?: AlarmEvent[];
   auditLogs?: AlarmAuditLog[];
+}
+
+/**
+ * Display metadata for an alarm case's ORIGIN — so operators can tell at a glance
+ * whether a case came from a monitored alarm panel, a customer's SOS, or a guard's
+ * panic button. Legacy/null cases are treated as alarm-panel (all pre-dated panels).
+ */
+export function alarmSourceMeta(source?: string | null): { label: string; short: string; className: string } {
+  switch (source) {
+    case 'client_app':
+      return { label: 'App Cliente · SOS', short: 'SOS Cliente', className: 'bg-red-500/15 text-red-600 border-red-500/30 dark:text-red-400' };
+    case 'worker_app':
+      return { label: 'App Vigilante · Pánico', short: 'Pánico', className: 'bg-orange-500/15 text-orange-600 border-orange-500/30 dark:text-orange-400' };
+    case 'manual':
+      return { label: 'Creada manualmente', short: 'Manual', className: 'bg-slate-500/15 text-slate-600 border-slate-500/30 dark:text-slate-300' };
+    case 'alarm_panel':
+    default:
+      return { label: 'Sistema de alarma', short: 'Panel', className: 'bg-sky-500/15 text-sky-600 border-sky-500/30 dark:text-sky-400' };
+  }
 }
 
 export type AlarmDispatchType = "guard" | "police" | "fire" | "medical";
