@@ -34,6 +34,17 @@ export function targetForNotification(n: PlatformNotification): string {
   const type = (n.eventType || '').toLowerCase();
   const id = n.sourceEntityId;
 
+  // SOS / panic / alarm-case events → the alarm case in the Centro de Alarmas, where
+  // the operator can acknowledge, run the action plan, dispatch and resolve. Falls
+  // back to the linked incident, then the queue. (Must precede the incident rule —
+  // a panic carries an incidentId but belongs in the alarm case, not the report.)
+  if (type === 'panic.alert' || type.startsWith('alarm')) {
+    const caseId = (n.payload as any)?.caseId;
+    if (caseId) return `/alarm/case/${caseId}`;
+    if (id) return `/reports/incident/${id}`;
+    return '/alarm/queue';
+  }
+
   // Requests that need a supervisor DECISION → the Nómina approvals queue,
   // focused on the specific request. Includes LATE clock-in requests
   // (attendance.clockin_requested) and early clock-out requests. Must precede
