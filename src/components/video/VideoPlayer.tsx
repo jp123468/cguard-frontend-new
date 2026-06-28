@@ -104,6 +104,7 @@ export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, vi
   const hlsRef = React.useRef<any>(null);
   const pcRef = React.useRef<RTCPeerConnection | null>(null);
   const recoverRef = React.useRef(0);
+  const netRetryRef = React.useRef(0);
   const [transport, setTransport] = React.useState<"webrtc" | "hls" | null>(null);
 
   const [state, setState] = React.useState<PlayerState>("loading");
@@ -147,6 +148,7 @@ export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, vi
     if (!video) return;
     let cancelled = false;
     recoverRef.current = 0;
+    netRetryRef.current = 0;
     const onErr = (m: string) => { if (!cancelled) { setErrorMsg(m); setState("error"); } };
     const destroyHls = () => { if (hlsRef.current) { try { hlsRef.current.destroy(); } catch { /* */ } hlsRef.current = null; } };
     const destroyPc = () => { if (pcRef.current) { try { pcRef.current.close(); } catch { /* */ } pcRef.current = null; } };
@@ -171,7 +173,21 @@ export function VideoPlayer({ camera, className, autoPlay = true, ptz = true, vi
           hls.on(Hls.Events.MANIFEST_PARSED, () => { if (autoPlay) video.play().catch(() => {}); });
           hls.on(Hls.Events.ERROR, (_e: any, d: any) => {
             if (!d?.fatal) return; // non-fatal: hls.js self-heals (key to no-spinner)
-            if (d.type === Hls.ErrorTypes.NETWORK_ERROR) { try { hls.startLoad(); } catch { /* */ } return; }
+            if (d.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              // The on-demand stream needs ~20s to warm (ffmpeg pulling the camera RTSP),
+              // so the manifest legitimately 500s at first. Retry a FEW times WITH a delay
+              // (no tight hammer loop). If it keeps failing, the camera source is
+              // unreachable — stop retrying and show the offline overlay instead of
+              // spamming the endpoint with 500s forever.
+              if (netRetryRef.current < 8) {
+                netRetryRef.current++;
+                setTimeout(() => { if (!cancelled) { try { hls.startLoad(); } catch { /* */ } } }, 3000);
+              } else {
+                destroyHls();
+                if (!cancelled) { setStream(null); setState("offline"); }
+              }
+              return;
+            }
             if (d.type === Hls.ErrorTypes.MEDIA_ERROR) { try { hls.recoverMediaError(); } catch { /* */ } return; }
             if (recoverRef.current < 4) { recoverRef.current++; destroyHls(); setTimeout(() => { if (!cancelled) attach(); }, 1500); }
             else onErr("No se pudo reproducir la transmisión");
