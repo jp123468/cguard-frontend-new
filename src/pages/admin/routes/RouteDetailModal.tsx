@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Modal, Field, StatusBadge, SkeletonBlock, EmptyState } from '@/components/kit';
+import { Route, MapPin, Pencil } from 'lucide-react';
 import routeService from '@/lib/api/routeService';
 import userService from '@/lib/api/userService';
 import vehicleService from '@/lib/api/vehicleService';
@@ -176,67 +177,97 @@ export default function RouteDetailModal({ open, onOpenChange, routeId }: Props)
     }
   };
 
+  const supervisorValue = guardLabel ?? (
+    (typeof route?.assignedGuard === 'object' && (route?.assignedGuard?.firstName || route?.assignedGuard?.lastName))
+      ? `${route?.assignedGuard?.firstName || ''} ${route?.assignedGuard?.lastName || ''}`.trim()
+      : (typeof route?.assignedGuard === 'object' && route?.assignedGuard?.email)
+        ? route.assignedGuard.email
+        : (typeof route?.assignedGuard === 'string')
+          ? route.assignedGuard
+          : (route?.supervisorId || '—')
+  );
+
+  const vehicleValue = vehicleLabel ?? (
+    (typeof route?.vehicle === 'object')
+      ? (route?.vehicle?.name || route?.vehicle?.licensePlate || route?.vehicle?.id)
+      : (typeof route?.vehicle === 'string')
+        ? route.vehicle
+        : (route?.vehicleId || '—')
+  );
+
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onOpenChange(false); else onOpenChange(true); }}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Detalle de la Ruta</DialogTitle>
-          <DialogDescription>
-            {loading ? 'Cargando...' : route ? `Información de ${route.name || route.id}` : 'Sin datos'}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="mt-4 space-y-3">
-          {loading && <div>Cargando...</div>}
-          {!loading && route && (
-            <div>
-              <div className="mb-2"><strong>Nombre:</strong> {route.name || '—'}</div>
-              <div className="mb-2"><strong>Tipo:</strong> {route.continuous ? 'Continua' : 'Programada'}</div>
-              {route.days && route.days.length > 0 && (
-                <div className="mb-2"><strong>Días:</strong> {route.days.map((day) => DAY_LABEL[day] || day).join(', ')}</div>
-              )}
-              <div className="mb-2"><strong>Supervisor:</strong> {guardLabel ?? (
-                (typeof route.assignedGuard === 'object' && (route.assignedGuard?.firstName || route.assignedGuard?.lastName))
-                  ? `${route.assignedGuard?.firstName || ''} ${route.assignedGuard?.lastName || ''}`.trim()
-                  : (typeof route.assignedGuard === 'object' && route.assignedGuard?.email)
-                    ? route.assignedGuard.email
-                    : (typeof route.assignedGuard === 'string')
-                      ? route.assignedGuard
-                      : (route.supervisorId || '—')
-              )}</div>
-
-              <div className="mb-2"><strong>Vehículo:</strong> {vehicleLabel ?? (
-                (typeof route.vehicle === 'object')
-                  ? (route.vehicle?.name || route.vehicle?.licensePlate || route.vehicle?.id)
-                  : (typeof route.vehicle === 'string')
-                    ? route.vehicle
-                    : (route.vehicleId || '—')
-              )}</div>
-              <div className="mb-2"><strong>Estado:</strong> {route.completed ? 'Completada' : (route.active === false ? 'Inactivo' : 'Activo')}</div>
-              <div className="mb-2"><strong>Ventana:</strong> {route.windowStart ? new Date(route.windowStart).toLocaleDateString() : '—'} — {route.windowEnd ? new Date(route.windowEnd).toLocaleDateString() : '—'}</div>
-              <div className="mb-2"><strong>Hora de Inicio:</strong> {(route.windowStart ? new Date(route.windowStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : route.startTime) || '—'}</div>
-              <div className="mb-2"><strong>Hora de Fin:</strong> {(route.windowEnd ? new Date(route.windowEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : route.endTime) || '—'}</div>
-
-              <div className="mt-3"><strong>Puestos:</strong></div>
-              <ul className="list-disc ml-6 mt-2">
-                {(route.points && route.points.length) ? route.points.map((p: any) => (
-                  <li key={p.id || p.siteId}>
-                    <div className="font-medium">{p.siteName || p.address || p.siteId}</div>
-                    <div className="text-sm text-muted-foreground">Pasadas: {(p.scheduledHits !== undefined && p.scheduledHits !== null) ? String(p.scheduledHits) : '—'} — Duración: {(p.duration !== undefined && p.duration !== null) ? String(p.duration) + ' min' : '—'}</div>
-                  </li>
-                )) : <li>—</li>}
-              </ul>
-            </div>
-          )}
+    <Modal
+      open={open}
+      onOpenChange={(v) => { if (!v) onOpenChange(false); else onOpenChange(true); }}
+      size="lg"
+      icon={<Route />}
+      title="Detalle de la Ruta"
+      description={loading ? 'Cargando...' : route ? `Información de ${route.name || route.id}` : 'Sin datos'}
+      footer={
+        <div className="flex w-full justify-end gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
+          <Button variant="brand" onClick={handleEdit}><Pencil className="size-4" />Editar</Button>
         </div>
-
-        <DialogFooter className="mt-4">
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
-            <Button onClick={handleEdit}>Editar</Button>
+      }
+    >
+      {loading && (
+        <div className="space-y-3">
+          <SkeletonBlock className="h-4 w-1/2" />
+          <SkeletonBlock className="h-4 w-2/3" />
+          <SkeletonBlock className="h-4 w-1/3" />
+        </div>
+      )}
+      {!loading && route && (
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Nombre" value={route.name || '—'} />
+            <Field label="Tipo" value={route.continuous ? 'Continua' : 'Programada'} />
+            <Field label="Supervisor" value={supervisorValue} />
+            <Field label="Vehículo" value={vehicleValue} />
+            <div className="min-w-0">
+              <div className="cg-eyebrow mb-0.5">Estado</div>
+              <StatusBadge tone={route.completed ? 'green' : (route.active === false ? 'slate' : 'primary')}>
+                {route.completed ? 'Completada' : (route.active === false ? 'Inactivo' : 'Activo')}
+              </StatusBadge>
+            </div>
+            <Field
+              label="Ventana"
+              value={`${route.windowStart ? new Date(route.windowStart).toLocaleDateString() : '—'} — ${route.windowEnd ? new Date(route.windowEnd).toLocaleDateString() : '—'}`}
+            />
+            <Field
+              label="Hora de Inicio"
+              value={(route.windowStart ? new Date(route.windowStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : route.startTime) || '—'}
+            />
+            <Field
+              label="Hora de Fin"
+              value={(route.windowEnd ? new Date(route.windowEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : route.endTime) || '—'}
+            />
+            {route.days && route.days.length > 0 && (
+              <Field className="sm:col-span-2" label="Días" value={route.days.map((day) => DAY_LABEL[day] || day).join(', ')} />
+            )}
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+
+          <div>
+            <div className="cg-eyebrow mb-2 flex items-center gap-1.5">
+              <MapPin className="size-3.5" /> Puestos
+            </div>
+            {(route.points && route.points.length) ? (
+              <div className="space-y-2">
+                {route.points.map((p: any) => (
+                  <div key={p.id || p.siteId} className="rounded-xl border bg-muted/20 p-3">
+                    <div className="font-medium text-sm">{p.siteName || p.address || p.siteId}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      Pasadas: {(p.scheduledHits !== undefined && p.scheduledHits !== null) ? String(p.scheduledHits) : '—'} — Duración: {(p.duration !== undefined && p.duration !== null) ? String(p.duration) + ' min' : '—'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState icon={<MapPin />} title="Sin puestos" description="Esta ruta no tiene puestos definidos." />
+            )}
+          </div>
+        </div>
+      )}
+    </Modal>
   );
 }

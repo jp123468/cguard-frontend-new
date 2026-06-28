@@ -130,8 +130,14 @@ export interface Clip {
 }
 
 export interface StreamInfo {
-  type: "hls" | "webrtc" | "none";
+  type: "hls" | "webrtc" | "go2rtc" | "none";
   url: string | null;
+  /** go2rtc WebSocket url (MSE/WebRTC signaling) — same-origin through the proxy. */
+  ws?: string;
+  /** go2rtc player engine transport priority, e.g. "webrtc,mse,hls". */
+  mode?: string;
+  src?: string;
+  gateway?: string;
   snapshotUrl?: string;
 }
 
@@ -216,6 +222,10 @@ export const videoService = {
   },
   stream(cameraId: string): Promise<StreamInfo> {
     return ApiService.get(`/tenant/${tid()}/video/camera/${cameraId}/stream`);
+  },
+  /** PTZ control via ONVIF. velocities -1..1; { stop: true } halts motion. */
+  ptz(cameraId: string, body: { pan?: number; tilt?: number; zoom?: number; stop?: boolean }): Promise<{ ok: boolean }> {
+    return ApiService.post(`/tenant/${tid()}/video/camera/${cameraId}/ptz`, body);
   },
 
   // --- Events ---

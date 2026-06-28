@@ -37,11 +37,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Search, Filter, EllipsisVertical, Upload, FileText, FileSpreadsheet,
+  Search, Filter, EllipsisVertical, FileText, FileSpreadsheet,
   Printer, Mail, ChevronsUpDown, X, Loader2, CheckCircle, XCircle, Trash2,
+  CalendarOff, Clock, ThumbsUp, ThumbsDown, Plus,
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
-import { Badge } from "@/components/ui/badge";
+import { PageContainer, PageHeader, Section, StatCard, Stagger, StatusBadge, EmptyState } from "@/components/kit";
 import timeOffRequestService, { TimeOffRecord } from "@/lib/api/timeOffRequestService";
 import { securityGuardService } from "@/lib/api/securityGuardService";
 
@@ -214,13 +215,13 @@ export default function TimeOff() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pendiente</Badge>;
+        return <StatusBadge tone="orange">Pendiente</StatusBadge>;
       case "approved":
-        return <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-200">Aprobado</Badge>;
+        return <StatusBadge tone="green">Aprobado</StatusBadge>;
       case "rejected":
-        return <Badge variant="outline" className="bg-red-500/10 text-red-700 border-red-200">Rechazado</Badge>;
+        return <StatusBadge tone="red">Rechazado</StatusBadge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <StatusBadge tone="slate">{status}</StatusBadge>;
     }
   };
 
@@ -232,22 +233,19 @@ export default function TimeOff() {
           { label: "Solicitudes de tiempo libre" },
         ]}
       />
-      <div className="p-6 space-y-4">
+      <PageContainer width="wide" className="px-4 lg:px-6">
+        <PageHeader
+          icon={<CalendarOff />}
+          title="Tiempo Libre"
+          subtitle="Solicitudes de vacaciones, enfermedad y permisos del personal."
+        />
+
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Pendientes</p>
-            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-          </div>
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Aprobadas</p>
-            <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
-          </div>
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Rechazadas</p>
-            <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
-          </div>
-        </div>
+        <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard label="Pendientes" value={stats.pending} icon={<Clock />} accent="orange" />
+          <StatCard label="Aprobadas" value={stats.approved} icon={<ThumbsUp />} accent="green" />
+          <StatCard label="Rechazadas" value={stats.rejected} icon={<ThumbsDown />} accent="red" />
+        </Stagger>
 
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -280,8 +278,8 @@ export default function TimeOff() {
               {/* New Request Sheet */}
               <Sheet open={isNewRequestOpen} onOpenChange={(v) => { setIsNewRequestOpen(v); if (!v) resetForm(); }}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="text-primary border-primary/30 hover:bg-primary/10 hover:text-primary">
-                    Nueva entrada
+                  <Button variant="brand">
+                    <Plus className="h-4 w-4 mr-1" /> Nueva entrada
                   </Button>
                 </SheetTrigger>
                 <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
@@ -375,7 +373,8 @@ export default function TimeOff() {
                   </div>
                   <SheetFooter>
                     <Button
-                      className="bg-primary hover:bg-primary/90 text-white w-full sm:w-auto"
+                      variant="brand"
+                      className="w-full sm:w-auto"
                       disabled={saving}
                       onClick={handleCreate}
                     >
@@ -402,7 +401,8 @@ export default function TimeOff() {
                   <div className="space-y-4 py-4">
                     <p className="text-sm text-muted-foreground">Usa el filtro de estado en la barra principal para filtrar por pendiente, aprobado o rechazado.</p>
                     <Button
-                      className="w-full bg-primary hover:bg-primary/90 text-white"
+                      variant="brand"
+                      className="w-full"
                       onClick={() => setIsFiltersOpen(false)}
                     >
                       Cerrar
@@ -437,9 +437,9 @@ export default function TimeOff() {
         </div>
 
         {/* Table */}
-        <div className="border rounded-md">
+        <Section title="Solicitudes de tiempo libre" icon={<CalendarOff />} contentClassName="overflow-x-auto -mx-1">
           <Table>
-            <TableHeader className="bg-slate-50">
+            <TableHeader className="bg-muted/40">
               <TableRow>
                 <TableHead className="w-[50px]"><Checkbox /></TableHead>
                 <TableHead className="font-bold text-foreground">Fecha de solicitud</TableHead>
@@ -460,17 +460,13 @@ export default function TimeOff() {
                 </TableRow>
               ) : paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-[400px] text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <div className="bg-blue-500/10 p-6 rounded-full mb-4">
-                        <svg className="w-12 h-12 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                            d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-medium text-foreground mb-1">No se encontraron resultados</h3>
-                      <p className="text-sm max-w-xs">No pudimos encontrar ningún elemento que coincida con su búsqueda</p>
-                    </div>
+                  <TableCell colSpan={8} className="h-[360px] text-center">
+                    <EmptyState
+                      icon={<CalendarOff />}
+                      title="No se encontraron resultados"
+                      description="No pudimos encontrar ningún elemento que coincida con su búsqueda."
+                      className="border-0 py-2"
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -516,7 +512,7 @@ export default function TimeOff() {
               )}
             </TableBody>
           </Table>
-        </div>
+        </Section>
 
         {/* Pagination */}
         <div className="flex items-center justify-end space-x-2 py-4">
@@ -549,7 +545,7 @@ export default function TimeOff() {
             </Button>
           </div>
         </div>
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

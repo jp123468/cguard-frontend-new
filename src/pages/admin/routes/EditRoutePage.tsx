@@ -4,6 +4,8 @@ import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import RouteForm from "./RouteForm";
 import routeService from "@/lib/api/routeService";
+import { PageContainer, PageHeader, SkeletonCards, EmptyState } from "@/components/kit";
+import { Route as RouteIcon, AlertCircle } from "lucide-react";
 
 export default function EditRoutePage() {
   const params = useParams<{ tenantId?: string; id?: string }>();
@@ -102,7 +104,10 @@ export default function EditRoutePage() {
             { label: 'Editar ruta' },
           ]}
         />
-        <div className="p-6">Cargando ruta...</div>
+        <PageContainer width="wide" className="p-6">
+          <PageHeader icon={<RouteIcon />} title="Editar ruta" subtitle="Cargando ruta..." />
+          <SkeletonCards count={4} />
+        </PageContainer>
       </AppLayout>
     );
   }
@@ -116,7 +121,10 @@ export default function EditRoutePage() {
             { label: 'Editar ruta' },
           ]}
         />
-        <div className="p-6">No se encontró la ruta.</div>
+        <PageContainer width="wide" className="p-6">
+          <PageHeader icon={<RouteIcon />} title="Editar ruta" />
+          <EmptyState icon={<AlertCircle />} title="No se encontró la ruta" description="La ruta solicitada no existe o no está disponible." />
+        </PageContainer>
       </AppLayout>
     );
   }
@@ -129,14 +137,19 @@ export default function EditRoutePage() {
           { label: 'Editar ruta' },
         ]}
       />
-      <div className="p-6">
+      <PageContainer width="wide" className="p-6">
+        <PageHeader
+          icon={<RouteIcon />}
+          title="Editar ruta"
+          subtitle={routeData?.name ? `Modifica «${routeData.name}»` : 'Modifica la configuración de la ruta'}
+        />
         <RouteForm
           mode="edit"
           routeId={params.id}
           initialData={routeData}
           onSuccess={() => navigate('/vehicle-patrol/routes', { replace: true })}
         />
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

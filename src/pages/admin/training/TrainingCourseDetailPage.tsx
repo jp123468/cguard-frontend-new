@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -17,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Lock } from 'lucide-react';
+import { Lock, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
@@ -29,8 +28,7 @@ import { TRAINING_CATEGORIES, TRAINING_LEVELS } from './trainingConstants';
 import LessonsManager from './components/LessonsManager';
 import QuizManager from './components/QuizManager';
 import AssignGuardsPanel from './components/AssignGuardsPanel';
-
-const GOLD = '#C8860A';
+import { PageContainer, PageHeader, StatusBadge, EmptyState } from '@/components/kit';
 
 export default function TrainingCourseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -128,7 +126,13 @@ export default function TrainingCourseDetailPage() {
   if (!course) {
     return (
       <AppLayout>
-        <div className="p-8 text-center text-muted-foreground">Curso no encontrado.</div>
+        <PageContainer className="p-4">
+          <EmptyState
+            icon={<GraduationCap />}
+            title="Curso no encontrado"
+            description="El curso que buscas no existe o no está disponible."
+          />
+        </PageContainer>
       </AppLayout>
     );
   }
@@ -144,24 +148,25 @@ export default function TrainingCourseDetailPage() {
         ]}
       />
 
-      <section className="p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold">{course.title}</h1>
+      <PageContainer width="wide" className="p-4">
+        <PageHeader
+          icon={<GraduationCap />}
+          title={course.title}
+          subtitle={isAddon
+            ? 'Curso de la plataforma otorgado a tu empresa. Es de solo lectura; puedes asignarlo a tus vigilantes.'
+            : undefined}
+          badges={
+            <>
               {isAddon && (
-                <Badge variant="outline" className="gap-1"><Lock className="h-3 w-3" /> Curso addon</Badge>
+                <StatusBadge tone="slate" dot={false}><Lock className="h-3 w-3" /> Curso addon</StatusBadge>
               )}
-              {course.published ? <Badge>Publicado</Badge> : <Badge variant="secondary">Borrador</Badge>}
-            </div>
-            {isAddon && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Curso de la plataforma otorgado a tu empresa. Es de solo lectura; puedes asignarlo a tus vigilantes.
-              </p>
-            )}
-          </div>
-          <Button variant="outline" onClick={() => navigate('/training/courses')}>Volver</Button>
-        </div>
+              {course.published
+                ? <StatusBadge tone="green">Publicado</StatusBadge>
+                : <StatusBadge tone="slate">Borrador</StatusBadge>}
+            </>
+          }
+          actions={<Button variant="outline" onClick={() => navigate('/training/courses')}>Volver</Button>}
+        />
 
         <Tabs defaultValue="details">
           <TabsList>
@@ -173,7 +178,7 @@ export default function TrainingCourseDetailPage() {
 
           {/* DETAILS */}
           <TabsContent value="details" className="mt-4">
-            <Card>
+            <Card className="cg-card-hover rounded-2xl">
               <CardContent className="pt-6 space-y-4 max-w-2xl">
                 <div className="space-y-2">
                   <Label>Título *</Label>
@@ -237,7 +242,7 @@ export default function TrainingCourseDetailPage() {
                 </div>
                 {!readOnly && (
                   <div className="flex justify-end">
-                    <Button className="text-white" style={{ backgroundColor: GOLD }} disabled={saving} onClick={saveMeta}>
+                    <Button variant="brand" disabled={saving} onClick={saveMeta}>
                       {saving ? 'Guardando...' : 'Guardar cambios'}
                     </Button>
                   </div>
@@ -274,7 +279,7 @@ export default function TrainingCourseDetailPage() {
             </TabsContent>
           )}
         </Tabs>
-      </section>
+      </PageContainer>
     </AppLayout>
   );
 }

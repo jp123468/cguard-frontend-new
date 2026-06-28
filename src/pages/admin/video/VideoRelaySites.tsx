@@ -5,6 +5,12 @@ import { Loader2, Plus, Trash2, Download, RefreshCw, KeyRound, Server } from "lu
 import AppLayout from "@/layouts/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  PageContainer,
+  PageHeader,
+  EmptyState,
+  Stagger,
+} from "@/components/kit";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -111,42 +117,45 @@ export default function VideoRelaySites() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Sitios remotos (Relay)</h1>
-            <p className="text-sm text-muted-foreground">
-              Para DVR/NVR detrás de NAT en otra red o país. El sitio empuja sus cámaras a la nube; no se abren puertos.
-            </p>
-          </div>
-          <Button onClick={() => setNewOpen(true)} style={{ backgroundColor: GOLD }} className="text-white">
-            <Plus className="mr-2 h-4 w-4" /> Nuevo sitio relay
-          </Button>
-        </div>
+      <PageContainer width="wide">
+        <PageHeader
+          icon={<Server />}
+          title="Sitios remotos (Relay)"
+          subtitle="Para DVR/NVR detrás de NAT en otra red o país. El sitio empuja sus cámaras a la nube; no se abren puertos."
+          actions={
+            <Button onClick={() => setNewOpen(true)} variant="brand">
+              <Plus className="mr-2 h-4 w-4" /> Nuevo sitio relay
+            </Button>
+          }
+        />
 
         {loading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Cargando…
           </div>
         ) : error ? (
-          <Card><CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-            <p className="text-sm text-muted-foreground">{error}</p>
-            <Button variant="outline" onClick={load}><RefreshCw className="mr-2 h-4 w-4" />Reintentar</Button>
-          </CardContent></Card>
+          <EmptyState
+            icon={<RefreshCw />}
+            title="No se pudieron cargar los sitios"
+            description={error}
+            action={
+              <Button variant="outline" onClick={load}>
+                <RefreshCw className="mr-2 h-4 w-4" />Reintentar
+              </Button>
+            }
+          />
         ) : sites.length === 0 ? (
-          <Card><CardContent className="flex flex-col items-center gap-2 py-14 text-center">
-            <div className="rounded-full bg-amber-500/10 p-5"><Server className="h-10 w-10" style={{ color: GOLD }} /></div>
-            <h3 className="text-lg font-medium text-foreground">Aún no hay sitios remotos</h3>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              Crea un sitio, descarga su relay (docker-compose) y ejecútalo en un equipo del sitio donde está el DVR.
-            </p>
-          </CardContent></Card>
+          <EmptyState
+            icon={<Server />}
+            title="Aún no hay sitios remotos"
+            description="Crea un sitio, descarga su relay (docker-compose) y ejecútalo en un equipo del sitio donde está el DVR."
+          />
         ) : (
-          <div className="grid gap-3 lg:grid-cols-2">
+          <Stagger className="grid gap-3 lg:grid-cols-2">
             {sites.map((s) => {
               const badge = STATUS[s.status || "unknown"] || STATUS.unknown;
               return (
-                <Card key={s.id}><CardContent className="flex items-start gap-3 p-4">
+                <Card key={s.id} className="cg-card-hover"><CardContent className="flex items-start gap-3 p-4">
                   <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-500/10">
                     <Server className="h-5 w-5" style={{ color: GOLD }} />
                   </div>
@@ -174,9 +183,9 @@ export default function VideoRelaySites() {
                 </CardContent></Card>
               );
             })}
-          </div>
+          </Stagger>
         )}
-      </div>
+      </PageContainer>
 
       {/* New site */}
       <Dialog open={newOpen} onOpenChange={(o) => { if (!saving) { setNewOpen(o); if (!o) { setName(""); setNotes(""); } } }}>
@@ -197,7 +206,7 @@ export default function VideoRelaySites() {
           </div>
           <DialogFooter>
             <Button variant="outline" disabled={saving} onClick={() => setNewOpen(false)}>Cancelar</Button>
-            <Button disabled={saving} onClick={create} style={{ backgroundColor: GOLD }} className="text-white">
+            <Button disabled={saving} onClick={create} variant="brand">
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Crear
             </Button>
           </DialogFooter>
@@ -234,7 +243,7 @@ export default function VideoRelaySites() {
                 <Button variant="outline" onClick={() => { navigator.clipboard?.writeText(bundle.compose); toast.success("Copiado"); }}>
                   Copiar
                 </Button>
-                <Button onClick={downloadCompose} style={{ backgroundColor: GOLD }} className="text-white">
+                <Button onClick={downloadCompose} variant="brand">
                   <Download className="mr-2 h-4 w-4" />Descargar docker-compose
                 </Button>
               </DialogFooter>

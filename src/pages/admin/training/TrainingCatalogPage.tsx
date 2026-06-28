@@ -10,8 +10,7 @@ import { toast } from 'sonner';
 import { usePermissions } from '@/hooks/usePermissions';
 import { trainingCourseService, type TrainingCourse } from '@/lib/api/trainingCourseService';
 import { categoryLabel, levelLabel } from './trainingConstants';
-
-const GOLD = '#C8860A';
+import { PageContainer, PageHeader, EmptyState, SkeletonCards } from '@/components/kit';
 
 export default function TrainingCatalogPage() {
   const navigate = useNavigate();
@@ -59,25 +58,25 @@ export default function TrainingCatalogPage() {
         ]}
       />
 
-      <section className="p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <GraduationCap className="h-6 w-6" style={{ color: GOLD }} />
-          <h1 className="text-xl font-semibold">Cursos de la plataforma</h1>
-        </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          Cursos addon otorgados a tu empresa por C-Guard Pro. Son de solo lectura, pero puedes asignarlos a tus vigilantes.
-        </p>
+      <PageContainer width="wide" className="p-4">
+        <PageHeader
+          icon={<GraduationCap />}
+          title="Cursos de la plataforma"
+          subtitle="Cursos addon otorgados a tu empresa por C-Guard Pro. Son de solo lectura, pero puedes asignarlos a tus vigilantes."
+        />
 
-        {loading && <div className="py-16 text-center text-muted-foreground">Cargando...</div>}
+        {loading && <SkeletonCards count={6} className="lg:grid-cols-3" />}
         {!loading && courses.length === 0 && (
-          <Card><CardContent className="py-16 text-center text-muted-foreground">
-            Tu empresa aún no tiene cursos addon otorgados.
-          </CardContent></Card>
+          <EmptyState
+            icon={<GraduationCap />}
+            title="Sin cursos addon"
+            description="Tu empresa aún no tiene cursos addon otorgados."
+          />
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {!loading && courses.map((c) => (
-            <Card key={c.id} className="flex flex-col">
+            <Card key={c.id} className="flex flex-col cg-card-hover rounded-2xl">
               {c.coverUrl && (
                 <div className="h-32 w-full bg-muted overflow-hidden rounded-t-lg">
                   <img src={c.coverUrl} alt={c.title} className="h-full w-full object-cover" />
@@ -95,7 +94,7 @@ export default function TrainingCatalogPage() {
                   <Badge variant="secondary">{categoryLabel(c.category)}</Badge>
                   <Badge variant="secondary">{levelLabel(c.level)}</Badge>
                   <span className="inline-flex items-center gap-1 text-muted-foreground">
-                    <Award className="h-3.5 w-3.5" style={{ color: GOLD }} /> {c.pointsValue ?? 0} pts
+                    <Award className="h-3.5 w-3.5 text-primary" /> {c.pointsValue ?? 0} pts
                   </span>
                 </div>
                 <div className="mt-4 flex gap-2">
@@ -105,8 +104,8 @@ export default function TrainingCatalogPage() {
                   {canAssign && (
                     <Button
                       size="sm"
-                      className="flex-1 text-white"
-                      style={{ backgroundColor: GOLD }}
+                      variant="brand"
+                      className="flex-1"
                       onClick={() => navigate(`/training/courses/${c.id}`)}
                     >
                       <Users className="h-4 w-4 mr-1" /> Asignar
@@ -117,7 +116,7 @@ export default function TrainingCatalogPage() {
             </Card>
           ))}
         </div>
-      </section>
+      </PageContainer>
     </AppLayout>
   );
 }

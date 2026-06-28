@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { LogIn, LogOut, Smartphone, AlertTriangle, RefreshCw, Search, History, ShieldCheck, Loader2 } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
-import { Card } from "@/components/ui/card";
+import { PageContainer, PageHeader, Section } from "@/components/kit";
 import { useInfiniteAuditList } from "./useInfiniteAuditList";
 
 type Row = {
@@ -71,33 +71,30 @@ export default function LoginHistory() {
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-6xl p-4 sm:p-6">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <History className="size-5 text-primary" /> Historial de Inicio de Sesión
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Inicios y cierres de sesión, intentos fallidos y eventos de dispositivos de esta empresa.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Buscar por usuario, IP o dispositivo…"
-                className="h-9 w-64 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-primary focus:outline-none"
-              />
+      <PageContainer width="wide">
+        <PageHeader
+          icon={<History />}
+          title="Historial de Inicio de Sesión"
+          subtitle="Inicios y cierres de sesión, intentos fallidos y eventos de dispositivos de esta empresa."
+          actions={
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Buscar por usuario, IP o dispositivo…"
+                  className="h-9 w-64 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-primary focus:outline-none"
+                />
+              </div>
+              <button onClick={() => load(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-input text-muted-foreground hover:text-foreground" title="Recargar">
+                <RefreshCw className={`size-4 ${loading && items.length === 0 ? "animate-spin" : ""}`} />
+              </button>
             </div>
-            <button onClick={() => load(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-input text-muted-foreground hover:text-foreground" title="Recargar">
-              <RefreshCw className={`size-4 ${loading && items.length === 0 ? "animate-spin" : ""}`} />
-            </button>
-          </div>
-        </div>
+          }
+        />
 
-        <div className="mb-3 flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {FILTERS.map((f) => (
             <button
               key={f.key}
@@ -115,8 +112,8 @@ export default function LoginHistory() {
           </span>
         </div>
 
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
+        <Section contentClassName="-mx-5 -mb-5">
+          <div className="overflow-x-auto rounded-t-2xl">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
@@ -161,8 +158,8 @@ export default function LoginHistory() {
               <span>— Fin del historial —</span>
             ) : null}
           </div>
-        </Card>
-      </div>
+        </Section>
+      </PageContainer>
     </AppLayout>
   );
 }

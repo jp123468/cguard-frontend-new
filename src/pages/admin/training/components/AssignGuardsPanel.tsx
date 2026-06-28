@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -13,14 +12,13 @@ import {
 } from '@/components/ui/select';
 import { UserPlus, Users, Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { Section, FadeIn } from '@/components/kit';
 import { securityGuardService } from '@/lib/api/securityGuardService';
 import {
   trainingEnrollmentService,
   type EnrollmentRow,
 } from '@/lib/api/trainingEnrollmentService';
 import { ENROLLMENT_STATUS_LABELS, ENROLLMENT_STATUS_VARIANT } from '../trainingConstants';
-
-const GOLD = '#C8860A';
 
 interface GuardOption {
   id: string;
@@ -122,9 +120,9 @@ export default function AssignGuardsPanel({ courseId, published }: Props) {
   };
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="pt-6 space-y-4 max-w-2xl">
+    <FadeIn className="space-y-4">
+      <Section title="Asignar curso" icon={<UserPlus />}>
+        <div className="space-y-4 max-w-2xl">
           {!published && (
             <p className="text-sm text-amber-600">Este curso es un borrador. Publícalo para poder asignarlo.</p>
           )}
@@ -175,15 +173,14 @@ export default function AssignGuardsPanel({ courseId, published }: Props) {
             <Input type="date" className="w-64" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </div>
 
-          <Button className="text-white" style={{ backgroundColor: GOLD }} disabled={assigning || !published} onClick={handleAssign}>
+          <Button variant="brand" disabled={assigning || !published} onClick={handleAssign}>
             <UserPlus className="h-4 w-4 mr-1" /> {assigning ? 'Asignando...' : 'Asignar curso'}
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </Section>
 
-      <div>
-        <h3 className="text-sm font-semibold mb-2">Vigilantes asignados</h3>
-        <div className="border rounded-lg overflow-hidden">
+      <Section title="Vigilantes asignados" icon={<Users />} contentClassName="-mx-5 -mb-5">
+        <div className="border-t overflow-hidden">
           <table className="min-w-full text-sm text-left">
             <thead className="bg-muted/30">
               <tr className="border-b">
@@ -223,7 +220,7 @@ export default function AssignGuardsPanel({ courseId, published }: Props) {
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
+      </Section>
+    </FadeIn>
   );
 }

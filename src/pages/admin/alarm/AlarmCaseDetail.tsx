@@ -39,6 +39,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  PageContainer,
+  Section,
+  EmptyState,
+} from "@/components/kit";
+import {
   alarmService,
   type AlarmCase,
   type AlarmEvent,
@@ -356,16 +361,19 @@ export default function AlarmCaseDetail() {
   if (!data) {
     return (
       <AppLayout>
-        <div className="mx-auto w-full max-w-3xl px-4 py-10">
-          <Card className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <Siren className="size-8 text-muted-foreground" />
-            <p className="font-medium">Caso no encontrado</p>
-            <Button variant="outline" onClick={() => navigate("/alarm/queue")}>
-              <ArrowLeft className="size-4" />
-              Volver a la cola
-            </Button>
-          </Card>
-        </div>
+        <PageContainer width="narrow">
+          <EmptyState
+            icon={<Siren />}
+            title="Caso no encontrado"
+            description="El caso solicitado no existe o ya no está disponible."
+            action={
+              <Button variant="outline" onClick={() => navigate("/alarm/queue")}>
+                <ArrowLeft className="size-4" />
+                Volver a la cola
+              </Button>
+            }
+          />
+        </PageContainer>
       </AppLayout>
     );
   }
@@ -394,7 +402,7 @@ export default function AlarmCaseDetail() {
 
   return (
     <AppLayout>
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+      <PageContainer width="wide">
         {/* Back + refresh */}
         <div className="mb-4 flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={() => navigate("/alarm/queue")}>
@@ -461,10 +469,9 @@ export default function AlarmCaseDetail() {
             </Button>
             <Button
               size="sm"
+              variant="brand"
               disabled={busy || !isOpen}
               onClick={() => setDispatchOpen(true)}
-              style={{ backgroundColor: GOLD, color: "#fff" }}
-              className="hover:opacity-90"
             >
               <Radio className="size-4" />
               Despachar
@@ -533,11 +540,7 @@ export default function AlarmCaseDetail() {
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           {/* Panel / site info */}
-          <Card className="p-5 lg:col-span-1">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-              <Cpu className="size-4" style={{ color: GOLD }} />
-              Panel y sitio
-            </h2>
+          <Section title="Panel y sitio" icon={<Cpu />} className="lg:col-span-1">
             {panel ? (
               <dl className="space-y-2.5 text-sm">
                 <Field label="Panel" value={panel.name} />
@@ -575,17 +578,21 @@ export default function AlarmCaseDetail() {
             ) : (
               <p className="text-sm text-muted-foreground">Sin información de panel.</p>
             )}
-          </Card>
+          </Section>
 
           {/* Events timeline */}
-          <Card className="p-5 lg:col-span-2">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-              <FileText className="size-4" style={{ color: GOLD }} />
-              Cronología de eventos
-              <span className="ml-1 rounded-full bg-muted px-1.5 text-xs text-muted-foreground">
-                {sortedEvents.length}
+          <Section
+            className="lg:col-span-2"
+            icon={<FileText />}
+            title={
+              <span className="flex items-center gap-2">
+                Cronología de eventos
+                <span className="rounded-full bg-muted px-1.5 text-xs font-normal text-muted-foreground">
+                  {sortedEvents.length}
+                </span>
               </span>
-            </h2>
+            }
+          >
             {sortedEvents.length === 0 ? (
               <p className="text-sm text-muted-foreground">Sin eventos registrados.</p>
             ) : (
@@ -624,17 +631,21 @@ export default function AlarmCaseDetail() {
                 })}
               </ol>
             )}
-          </Card>
+          </Section>
 
           {/* Audit log */}
-          <Card className="p-5 lg:col-span-3">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-              <History className="size-4" style={{ color: GOLD }} />
-              Registro de auditoría
-              <span className="ml-1 rounded-full bg-muted px-1.5 text-xs text-muted-foreground">
-                {sortedAudit.length}
+          <Section
+            className="lg:col-span-3"
+            icon={<History />}
+            title={
+              <span className="flex items-center gap-2">
+                Registro de auditoría
+                <span className="rounded-full bg-muted px-1.5 text-xs font-normal text-muted-foreground">
+                  {sortedAudit.length}
+                </span>
               </span>
-            </h2>
+            }
+          >
             {sortedAudit.length === 0 ? (
               <p className="text-sm text-muted-foreground">Sin entradas de auditoría.</p>
             ) : (
@@ -654,9 +665,9 @@ export default function AlarmCaseDetail() {
                 ))}
               </ul>
             )}
-          </Card>
+          </Section>
         </div>
-      </div>
+      </PageContainer>
 
       {/* ----------------------------- Modals ----------------------------- */}
 
@@ -671,12 +682,7 @@ export default function AlarmCaseDetail() {
             <Button variant="outline" onClick={() => setDispatchOpen(false)} disabled={busy}>
               Cancelar
             </Button>
-            <Button
-              onClick={onDispatch}
-              disabled={busy}
-              style={{ backgroundColor: GOLD, color: "#fff" }}
-              className="hover:opacity-90"
-            >
+            <Button onClick={onDispatch} variant="brand" disabled={busy}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Radio className="size-4" />}
               Despachar
             </Button>
@@ -732,12 +738,7 @@ export default function AlarmCaseDetail() {
             <Button variant="outline" onClick={() => setCloseOpen(false)} disabled={busy}>
               Cancelar
             </Button>
-            <Button
-              onClick={onClose}
-              disabled={busy}
-              style={{ backgroundColor: GOLD, color: "#fff" }}
-              className="hover:opacity-90"
-            >
+            <Button onClick={onClose} variant="brand" disabled={busy}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}
               Cerrar caso
             </Button>
@@ -775,12 +776,7 @@ export default function AlarmCaseDetail() {
             <Button variant="outline" onClick={() => setIncidentOpen(false)} disabled={busy}>
               Cancelar
             </Button>
-            <Button
-              onClick={onIncident}
-              disabled={busy}
-              style={{ backgroundColor: GOLD, color: "#fff" }}
-              className="hover:opacity-90"
-            >
+            <Button onClick={onIncident} variant="brand" disabled={busy}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <AlertTriangle className="size-4" />}
               Crear incidente
             </Button>
@@ -821,12 +817,7 @@ export default function AlarmCaseDetail() {
             <Button variant="outline" onClick={() => setNoteOpen(false)} disabled={busy}>
               Cancelar
             </Button>
-            <Button
-              onClick={onNote}
-              disabled={busy}
-              style={{ backgroundColor: GOLD, color: "#fff" }}
-              className="hover:opacity-90"
-            >
+            <Button onClick={onNote} variant="brand" disabled={busy}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <StickyNote className="size-4" />}
               Guardar nota
             </Button>

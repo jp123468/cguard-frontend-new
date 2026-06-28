@@ -25,7 +25,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -35,7 +34,11 @@ import {
 import {
   ChevronDown,
   ChevronUp,
+  Route as RouteIcon,
+  MapPin,
+  Trash2,
 } from "lucide-react";
+import { Section } from "@/components/kit";
 import userService from "@/lib/api/userService";
 import { postSiteService } from "@/lib/api/postSiteService";
 import vehicleService from "@/lib/api/vehicleService";
@@ -514,6 +517,7 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Section title="Datos generales" icon={<RouteIcon />} contentClassName="space-y-6">
         <FormField
           control={form.control}
           name="name"
@@ -541,11 +545,9 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
             </FormItem>
           )}
         />
+        </Section>
 
-        <div className="space-y-3">
-          <div className="text-sm font-semibold">Programar Ruta</div>
-          <Card>
-            <CardContent className="space-y-4 pt-6">
+        <Section title="Programar Ruta" contentClassName="space-y-4">
               <div className="flex items-center gap-3">
                 <Switch
                   checked={form.watch("continuous")}
@@ -650,10 +652,9 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
                   )}
                 />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+        </Section>
 
+        <Section title="Asignación" contentClassName="space-y-6">
         <FormField
           control={form.control}
           name="supervisorId"
@@ -758,11 +759,11 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
             </FormItem>
           )}
         />
+        </Section>
 
-        <div className="space-y-3">
-          <div className="text-sm font-semibold">Definir ruta</div>
-          <div className="rounded-lg border">
-            <div className="flex items-center justify-between border-b px-4 py-3">
+        <Section title="Definir ruta" icon={<MapPin />}>
+          <div className="overflow-hidden rounded-xl border">
+            <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
               <div className="text-sm font-medium">Puntos y tiempos</div>
             </div>
             <div className="overflow-x-auto">
@@ -810,9 +811,9 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
-                            <button type="button" onClick={() => movePoint(idx, -1)} className="rounded border px-2 py-1"><ChevronUp className="h-3.5 w-3.5" /></button>
-                            <button type="button" onClick={() => movePoint(idx, 1)} className="rounded border px-2 py-1"><ChevronDown className="h-3.5 w-3.5" /></button>
-                            <button type="button" onClick={() => removePoint(p.siteId)} className="rounded border px-2 py-1 text-red-600">Eliminar</button>
+                            <button type="button" onClick={() => movePoint(idx, -1)} className="rounded-lg border px-2 py-1 transition-colors hover:bg-muted"><ChevronUp className="h-3.5 w-3.5" /></button>
+                            <button type="button" onClick={() => movePoint(idx, 1)} className="rounded-lg border px-2 py-1 transition-colors hover:bg-muted"><ChevronDown className="h-3.5 w-3.5" /></button>
+                            <button type="button" onClick={() => removePoint(p.siteId)} className="rounded-lg border px-2 py-1 text-red-600 transition-colors hover:bg-red-500/10"><Trash2 className="h-3.5 w-3.5" /></button>
                           </div>
                         </td>
                       </tr>
@@ -822,8 +823,9 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
               </table>
             </div>
           </div>
-        </div>
+        </Section>
 
+        <Section title="Vehículo y opciones" contentClassName="space-y-6">
         <FormField
           control={form.control}
           name="vehicleId"
@@ -942,12 +944,13 @@ export default function RouteForm({ mode, routeId, initialData, onSuccess }: Rou
             </div>
           )}
         />
+        </Section>
 
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <Button variant="outline" type="button" onClick={() => window.history.back()}>
             Cancelar
           </Button>
-          <Button type="submit" className="bg-primary text-white hover:bg-primary" disabled={submitting || form.formState.isSubmitting}>
+          <Button variant="brand" type="submit" disabled={submitting || form.formState.isSubmitting}>
             {submitting ? 'Enviando...' : (mode === 'edit' ? 'Actualizar' : 'Enviar')}
           </Button>
         </div>

@@ -14,6 +14,11 @@ import {
 
 import AppLayout from "@/layouts/app-layout";
 import { Card } from "@/components/ui/card";
+import {
+  PageContainer,
+  PageHeader,
+  EmptyState,
+} from "@/components/kit";
 import { cn } from "@/lib/utils";
 import {
   videoService,
@@ -280,27 +285,14 @@ export default function VideoMonitoring() {
 
   return (
     <AppLayout>
-      <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6">
+      <PageContainer width="wide" className="max-w-[1600px]">
         {/* Header */}
-        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span
-              className="flex size-10 items-center justify-center rounded-xl"
-              style={{ backgroundColor: `${GOLD}1A`, color: GOLD }}
-            >
-              <MonitorPlay className="size-5" />
-            </span>
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight">
-                Monitoreo de video
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Vigilancia en vivo de todas las cámaras conectadas.
-              </p>
-            </div>
-          </div>
-
-          {/* Filters */}
+        <PageHeader
+          icon={<MonitorPlay />}
+          title="Monitoreo de video"
+          subtitle="Vigilancia en vivo de todas las cámaras conectadas."
+          actions={
+          /* Filters */
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <select
               className={selectClass}
@@ -345,7 +337,8 @@ export default function VideoMonitoring() {
               <span className="hidden sm:inline">Actualizar</span>
             </button>
           </div>
-        </div>
+          }
+        />
 
         {/* Body */}
         {loading ? (
@@ -354,35 +347,36 @@ export default function VideoMonitoring() {
             <p className="text-sm">Cargando cámaras…</p>
           </div>
         ) : error ? (
-          <Card className="flex flex-col items-center justify-center gap-3 py-20 text-center">
-            <AlertTriangle className="size-8 text-amber-500" />
-            <p className="text-sm font-medium">{error}</p>
-            <button
-              type="button"
-              onClick={load}
-              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-white"
-              style={{ backgroundColor: GOLD }}
-            >
-              <RefreshCw className="size-4" />
-              Reintentar
-            </button>
-          </Card>
+          <EmptyState
+            icon={<AlertTriangle />}
+            title="No se pudieron cargar las cámaras"
+            description={error}
+            action={
+              <button
+                type="button"
+                onClick={load}
+                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-white"
+                style={{ backgroundColor: GOLD }}
+              >
+                <RefreshCw className="size-4" />
+                Reintentar
+              </button>
+            }
+          />
         ) : visible.length === 0 ? (
-          <Card className="flex flex-col items-center justify-center gap-3 py-20 text-center">
-            <CameraIcon className="size-9 text-muted-foreground/60" />
-            <div>
-              <p className="text-sm font-medium">
-                {cameras.length === 0
-                  ? "Aún no hay cámaras configuradas"
-                  : "Ninguna cámara coincide con los filtros"}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {cameras.length === 0
-                  ? "Agrega un dispositivo y sincroniza sus cámaras para comenzar."
-                  : "Ajusta los filtros para ver más cámaras."}
-              </p>
-            </div>
-          </Card>
+          <EmptyState
+            icon={<CameraIcon />}
+            title={
+              cameras.length === 0
+                ? "Aún no hay cámaras configuradas"
+                : "Ninguna cámara coincide con los filtros"
+            }
+            description={
+              cameras.length === 0
+                ? "Agrega un dispositivo y sincroniza sus cámaras para comenzar."
+                : "Ajusta los filtros para ver más cámaras."
+            }
+          />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {visible.map((camera) => (
@@ -403,7 +397,7 @@ export default function VideoMonitoring() {
             {visible.length} cámara{visible.length === 1 ? "" : "s"} en vista
           </p>
         ) : null}
-      </div>
+      </PageContainer>
 
       {/* Action modals */}
       <TrimShareModal

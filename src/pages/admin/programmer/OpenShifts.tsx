@@ -27,21 +27,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
-import { Search, Filter, EllipsisVertical, FileText, FileSpreadsheet, Printer, Mail, ChevronsUpDown, X, Loader2, UserCheck } from "lucide-react";
+import { Search, Filter, EllipsisVertical, FileText, FileSpreadsheet, Printer, Mail, X, Loader2, UserCheck, CalendarClock, CalendarDays, CalendarRange } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import { PageContainer, PageHeader, Section, StatCard, Stagger, EmptyState, Modal } from "@/components/kit";
 import shiftService, { ShiftRecord } from "@/lib/api/shiftService";
 import { securityGuardService } from "@/lib/api/securityGuardService";
 
@@ -209,22 +203,19 @@ export default function OpenShifts() {
           { label: "Turno Abierto" },
         ]}
       />
-      <div className="p-6 space-y-4">
+      <PageContainer width="wide" className="px-4 lg:px-6">
+        <PageHeader
+          icon={<CalendarClock />}
+          title="Turnos Abiertos"
+          subtitle="Turnos sin vigilante asignado · asígnalos al personal disponible."
+        />
+
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Abiertos</p>
-            <p className="text-2xl font-bold text-orange-600">{stats.total}</p>
-          </div>
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Hoy</p>
-            <p className="text-2xl font-bold text-blue-600">{stats.today}</p>
-          </div>
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Esta Semana</p>
-            <p className="text-2xl font-bold text-purple-600">{stats.thisWeek}</p>
-          </div>
-        </div>
+        <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard label="Total Abiertos" value={stats.total} icon={<CalendarClock />} accent="orange" />
+          <StatCard label="Hoy" value={stats.today} icon={<CalendarDays />} accent="blue" />
+          <StatCard label="Esta Semana" value={stats.thisWeek} icon={<CalendarRange />} accent="primary" />
+        </Stagger>
 
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row justify-end gap-4">
@@ -299,7 +290,8 @@ export default function OpenShifts() {
 
                     <div className="space-y-2 pt-4">
                       <Button
-                        className="w-full bg-primary hover:bg-primary/90 text-white"
+                        variant="brand"
+                        className="w-full"
                         onClick={() => {
                           setAppliedFilters({ ...filters });
                           setIsFiltersOpen(false);
@@ -351,9 +343,9 @@ export default function OpenShifts() {
         </div>
 
         {/* Table */}
-        <div className="border rounded-md">
+        <Section title="Turnos abiertos" icon={<CalendarClock />} contentClassName="overflow-x-auto -mx-1">
           <Table>
-            <TableHeader className="bg-slate-50">
+            <TableHeader className="bg-muted/40">
               <TableRow>
                 <TableHead className="w-[50px]"><Checkbox /></TableHead>
                 <TableHead className="font-bold text-foreground">Fecha</TableHead>
@@ -373,17 +365,13 @@ export default function OpenShifts() {
                 </TableRow>
               ) : paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-[400px] text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <div className="bg-blue-500/10 p-6 rounded-full mb-4">
-                        <svg className="w-12 h-12 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                            d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-medium text-foreground mb-1">No hay turnos abiertos</h3>
-                      <p className="text-sm max-w-xs">Todos los turnos tienen vigilante asignado o no hay turnos en el período seleccionado.</p>
-                    </div>
+                  <TableCell colSpan={7} className="h-[360px] text-center">
+                    <EmptyState
+                      icon={<CalendarClock />}
+                      title="No hay turnos abiertos"
+                      description="Todos los turnos tienen vigilante asignado o no hay turnos en el período seleccionado."
+                      className="border-0 py-2"
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -414,7 +402,7 @@ export default function OpenShifts() {
               )}
             </TableBody>
           </Table>
-        </div>
+        </Section>
 
         {/* Pagination */}
         <div className="flex items-center justify-end space-x-2 py-4">
@@ -447,22 +435,35 @@ export default function OpenShifts() {
             </Button>
           </div>
         </div>
-      </div>
+      </PageContainer>
 
       {/* Assign Guard Modal */}
-      <Dialog
+      <Modal
         open={!!assignTarget}
         onOpenChange={(open) => {
           if (!open) { setAssignTarget(null); setSelectedGuard(null); setGuardSearch(""); }
         }}
+        title="Asignar Vigilante"
+        icon={<UserCheck />}
+        footer={(
+          <>
+            <Button variant="outline" onClick={() => { setAssignTarget(null); setSelectedGuard(null); setGuardSearch(""); }}>
+              Cancelar
+            </Button>
+            <Button
+              variant="brand"
+              disabled={!selectedGuard || assigning}
+              onClick={handleAssign}
+            >
+              {assigning ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Confirmar Asignación
+            </Button>
+          </>
+        )}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Asignar Vigilante</DialogTitle>
-          </DialogHeader>
           {assignTarget && (
             <div className="space-y-4">
-              <div className="bg-slate-50 rounded-md p-3 text-sm">
+              <div className="bg-muted/40 rounded-xl p-3 text-sm">
                 <div className="font-medium">{assignTarget.station?.stationName ?? "Sin estación"}</div>
                 <div className="text-muted-foreground">
                   {formatDate(assignTarget.startTime)} · {formatTime(assignTarget.startTime)} – {formatTime(assignTarget.endTime)}
@@ -489,10 +490,10 @@ export default function OpenShifts() {
                   filteredGuards.map((g) => (
                     <div
                       key={g.userId}
-                      className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-slate-50 border-b last:border-b-0 ${selectedGuard?.userId === g.userId ? "bg-orange-50" : ""}`}
+                      className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/50 border-b last:border-b-0 ${selectedGuard?.userId === g.userId ? "bg-primary/10" : ""}`}
                       onClick={() => setSelectedGuard(g)}
                     >
-                      <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${selectedGuard?.userId === g.userId ? "border-primary bg-primary" : "border-slate-300"}`} />
+                      <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${selectedGuard?.userId === g.userId ? "border-primary bg-primary" : "border-muted-foreground/30"}`} />
                       <span className="text-sm">{g.fullName}</span>
                     </div>
                   ))
@@ -500,21 +501,7 @@ export default function OpenShifts() {
               </div>
             </div>
           )}
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setAssignTarget(null); setSelectedGuard(null); setGuardSearch(""); }}>
-              Cancelar
-            </Button>
-            <Button
-              className="bg-primary hover:bg-primary/90 text-white"
-              disabled={!selectedGuard || assigning}
-              onClick={handleAssign}
-            >
-              {assigning ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Confirmar Asignación
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </Modal>
     </AppLayout>
   );
 }

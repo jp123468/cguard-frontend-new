@@ -33,9 +33,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
-import { Search, Filter, EllipsisVertical, FileText, FileSpreadsheet, Printer, Mail, ChevronsUpDown, X, Loader2 } from "lucide-react";
+import { Search, Filter, EllipsisVertical, FileText, FileSpreadsheet, Printer, Mail, ChevronsUpDown, X, Loader2, ListChecks, Clock, PlayCircle, CheckCircle2, XCircle } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
-import { Badge } from "@/components/ui/badge";
+import { PageContainer, PageHeader, Section, StatCard, Stagger, StatusBadge, EmptyState } from "@/components/kit";
 import shiftService, { ShiftRecord } from "@/lib/api/shiftService";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -154,13 +154,13 @@ export default function ShiftStatus() {
   const getStatusBadge = (status: ShiftStatusValue) => {
     switch (status) {
       case "pending":
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pendiente</Badge>;
+        return <StatusBadge tone="orange">Pendiente</StatusBadge>;
       case "in-progress":
-        return <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-200">En Progreso</Badge>;
+        return <StatusBadge tone="blue">En Progreso</StatusBadge>;
       case "completed":
-        return <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-200">Completado</Badge>;
+        return <StatusBadge tone="green">Completado</StatusBadge>;
       case "cancelled":
-        return <Badge variant="outline" className="bg-red-500/10 text-red-700 border-red-200">Cancelado</Badge>;
+        return <StatusBadge tone="red">Cancelado</StatusBadge>;
     }
   };
 
@@ -172,26 +172,20 @@ export default function ShiftStatus() {
           { label: "Estado del Turno" },
         ]}
       />
-      <div className="p-6 space-y-4">
+      <PageContainer width="wide" className="px-4 lg:px-6">
+        <PageHeader
+          icon={<ListChecks />}
+          title="Estado de Turnos"
+          subtitle="Seguimiento del progreso de los turnos: pendientes, en curso y completados."
+        />
+
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Pendientes</p>
-            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-          </div>
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">En Progreso</p>
-            <p className="text-2xl font-bold text-blue-600">{stats.inProgress}</p>
-          </div>
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Completados</p>
-            <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
-          </div>
-          <div className="border rounded-lg p-4 bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Cancelados</p>
-            <p className="text-2xl font-bold text-red-600">{stats.cancelled}</p>
-          </div>
-        </div>
+        <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard label="Pendientes" value={stats.pending} icon={<Clock />} accent="orange" />
+          <StatCard label="En Progreso" value={stats.inProgress} icon={<PlayCircle />} accent="blue" />
+          <StatCard label="Completados" value={stats.completed} icon={<CheckCircle2 />} accent="green" />
+          <StatCard label="Cancelados" value={stats.cancelled} icon={<XCircle />} accent="red" />
+        </Stagger>
 
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -284,7 +278,8 @@ export default function ShiftStatus() {
 
                     <div className="space-y-2 pt-4">
                       <Button
-                        className="w-full bg-primary hover:bg-primary/90 text-white"
+                        variant="brand"
+                        className="w-full"
                         onClick={() => {
                           setAppliedFilters({ ...filters });
                           setIsFiltersOpen(false);
@@ -336,9 +331,9 @@ export default function ShiftStatus() {
         </div>
 
         {/* Table */}
-        <div className="border rounded-md">
+        <Section title="Turnos" icon={<ListChecks />} contentClassName="overflow-x-auto -mx-1">
           <Table>
-            <TableHeader className="bg-slate-50">
+            <TableHeader className="bg-muted/40">
               <TableRow>
                 <TableHead className="w-[50px]"><Checkbox /></TableHead>
                 <TableHead className="font-bold text-foreground">Fecha</TableHead>
@@ -359,17 +354,13 @@ export default function ShiftStatus() {
                 </TableRow>
               ) : paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-[400px] text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <div className="bg-blue-500/10 p-6 rounded-full mb-4">
-                        <svg className="w-12 h-12 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                            d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-medium text-foreground mb-1">No se encontraron resultados</h3>
-                      <p className="text-sm max-w-xs">No pudimos encontrar ningún elemento que coincida con su búsqueda</p>
-                    </div>
+                  <TableCell colSpan={8} className="h-[360px] text-center">
+                    <EmptyState
+                      icon={<ListChecks />}
+                      title="No se encontraron resultados"
+                      description="No pudimos encontrar ningún elemento que coincida con su búsqueda."
+                      className="border-0 py-2"
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -392,7 +383,7 @@ export default function ShiftStatus() {
               )}
             </TableBody>
           </Table>
-        </div>
+        </Section>
 
         {/* Pagination */}
         <div className="flex items-center justify-end space-x-2 py-4">
@@ -425,7 +416,7 @@ export default function ShiftStatus() {
             </Button>
           </div>
         </div>
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

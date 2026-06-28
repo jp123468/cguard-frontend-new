@@ -19,6 +19,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { clientService } from '@/lib/api/clientService';
+import { Section } from '@/components/kit';
+import { Layers, FileText, CalendarRange, ClipboardList } from 'lucide-react';
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Nombre requerido').max(200),
@@ -135,13 +137,10 @@ export default function ProjectForm({
   return (
     <div className="max-w-2xl mx-auto">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
           {/* ── Tipo de proyecto ─────────────────────────── */}
-          <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Tipo de proyecto
-            </h2>
+          <Section title="Tipo de proyecto" icon={<Layers />}>
             <Controller
               control={form.control}
               name="type"
@@ -153,13 +152,10 @@ export default function ProjectForm({
                 />
               )}
             />
-          </section>
+          </Section>
 
           {/* ── Información básica ───────────────────────── */}
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Información básica
-            </h2>
+          <Section title="Información básica" icon={<FileText />} contentClassName="space-y-4">
 
             <FormField
               control={form.control}
@@ -218,13 +214,10 @@ export default function ProjectForm({
                 </FormItem>
               )}
             />
-          </section>
+          </Section>
 
           {/* ── Fechas y lugar ────────────────────────────── */}
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Fechas y lugar
-            </h2>
+          <Section title="Fechas y lugar" icon={<CalendarRange />} contentClassName="space-y-4">
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
@@ -282,13 +275,10 @@ export default function ProjectForm({
                 </FormItem>
               )}
             />
-          </section>
+          </Section>
 
           {/* ── Estado y notas ───────────────────────────── */}
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Estado y notas
-            </h2>
+          <Section title="Estado y notas" icon={<ClipboardList />} contentClassName="space-y-4">
 
             <FormField
               control={form.control}
@@ -329,7 +319,7 @@ export default function ProjectForm({
                 </FormItem>
               )}
             />
-          </section>
+          </Section>
 
           {/* ── Acciones ──────────────────────────────────── */}
           <div className="flex justify-end gap-3 pt-2">
@@ -338,7 +328,8 @@ export default function ProjectForm({
             </Button>
             <Button
               type="submit"
-              className="min-w-28 bg-primary text-white border border-primary hover:bg-primary/90 cursor-pointer"
+              variant="brand"
+              className="min-w-28"
             >
               Guardar
             </Button>

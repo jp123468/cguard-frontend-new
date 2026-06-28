@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { ScrollText, RefreshCw, Search, ChevronDown, ChevronRight, PlusCircle, PencilLine, Trash2, Activity, Loader2 } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
-import { Card } from "@/components/ui/card";
+import { PageContainer, PageHeader, Section } from "@/components/kit";
 import { useInfiniteAuditList } from "./useInfiniteAuditList";
 
 type LogRow = {
@@ -79,31 +79,28 @@ export default function SystemLogs() {
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-6xl p-4 sm:p-6">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <ScrollText className="size-5 text-primary" /> Registros del Sistema
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Todas las acciones (creaciones, cambios y eliminaciones) de esta empresa — quién, qué y cuándo.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Buscar por entidad, usuario o ID…"
-                className="h-9 w-64 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-primary focus:outline-none"
-              />
+      <PageContainer width="wide">
+        <PageHeader
+          icon={<ScrollText />}
+          title="Registros del Sistema"
+          subtitle="Todas las acciones (creaciones, cambios y eliminaciones) de esta empresa — quién, qué y cuándo."
+          actions={
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Buscar por entidad, usuario o ID…"
+                  className="h-9 w-64 rounded-lg border border-input bg-background pl-8 pr-3 text-sm focus:border-primary focus:outline-none"
+                />
+              </div>
+              <button onClick={() => load(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-input text-muted-foreground hover:text-foreground" title="Recargar">
+                <RefreshCw className={`size-4 ${loading && items.length === 0 ? "animate-spin" : ""}`} />
+              </button>
             </div>
-            <button onClick={() => load(true)} className="grid h-9 w-9 place-items-center rounded-lg border border-input text-muted-foreground hover:text-foreground" title="Recargar">
-              <RefreshCw className={`size-4 ${loading && items.length === 0 ? "animate-spin" : ""}`} />
-            </button>
-          </div>
-        </div>
+          }
+        />
 
         {/* Action filter */}
         <div className="mb-3 flex flex-wrap gap-1.5">
@@ -124,8 +121,8 @@ export default function SystemLogs() {
           </span>
         </div>
 
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
+        <Section contentClassName="-mx-5 -mb-5">
+          <div className="overflow-x-auto rounded-t-2xl">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
@@ -192,8 +189,8 @@ export default function SystemLogs() {
               <span>— Fin de los registros —</span>
             ) : null}
           </div>
-        </Card>
-      </div>
+        </Section>
+      </PageContainer>
     </AppLayout>
   );
 }

@@ -13,15 +13,18 @@ import {
 } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   alarmService,
   type AlarmSignal,
 } from "@/lib/api/alarmService";
-
-const GOLD = "#C8860A";
+import {
+  PageContainer,
+  PageHeader,
+  Section,
+  EmptyState,
+} from "@/components/kit";
 
 /* ------------------------------------------------------------------ */
 /* Metadata (Spanish labels)                                           */
@@ -134,43 +137,29 @@ export default function AlarmSignals() {
 
   return (
     <AppLayout>
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span
-              className="flex size-11 items-center justify-center rounded-xl"
-              style={{ backgroundColor: `${GOLD}1A`, color: GOLD }}
+      <PageContainer width="wide">
+        <PageHeader
+          icon={<Radio />}
+          title="Registro de señales"
+          subtitle="Tráfico crudo recibido de los paneles (inmutable)"
+          actions={
+            <Button
+              variant="outline"
+              onClick={() => load()}
+              disabled={loading}
             >
-              <Radio className="size-6" />
-            </span>
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight">
-                Registro de señales
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Tráfico crudo recibido de los paneles (inmutable)
-              </p>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            onClick={() => load()}
-            disabled={loading}
-            className="self-start sm:self-auto"
-          >
-            {loading ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RefreshCw className="size-4" />
-            )}
-            Actualizar
-          </Button>
-        </div>
+              {loading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RefreshCw className="size-4" />
+              )}
+              Actualizar
+            </Button>
+          }
+        />
 
         {/* Controls */}
-        <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="relative min-w-[240px] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -188,11 +177,11 @@ export default function AlarmSignals() {
                 key={n}
                 type="button"
                 onClick={() => setLimit(n)}
-                className="inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium transition-colors"
-                style={
-                  limit === n
-                    ? { backgroundColor: GOLD, borderColor: GOLD, color: "#fff" }
-                    : undefined
+                className={
+                  "inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium transition-colors " +
+                  (limit === n
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "hover:bg-muted")
                 }
               >
                 {n}
@@ -208,24 +197,17 @@ export default function AlarmSignals() {
             Cargando señales…
           </div>
         ) : filtered.length === 0 ? (
-          <Card className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <span
-              className="flex size-12 items-center justify-center rounded-full"
-              style={{ backgroundColor: `${GOLD}14`, color: GOLD }}
-            >
-              <Radio className="size-6" />
-            </span>
-            <div>
-              <p className="font-medium">Sin señales</p>
-              <p className="text-sm text-muted-foreground">
-                {query
-                  ? "Ninguna señal coincide con la búsqueda."
-                  : "Aún no se han recibido señales."}
-              </p>
-            </div>
-          </Card>
+          <EmptyState
+            icon={<Radio />}
+            title="Sin señales"
+            description={
+              query
+                ? "Ninguna señal coincide con la búsqueda."
+                : "Aún no se han recibido señales."
+            }
+          />
         ) : (
-          <Card className="overflow-hidden p-0">
+          <Section contentClassName="-mx-1">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-sm">
                 <thead>
@@ -309,16 +291,16 @@ export default function AlarmSignals() {
                 </tbody>
               </table>
             </div>
-          </Card>
+          </Section>
         )}
 
         {!loading && filtered.length > 0 ? (
-          <p className="mt-3 text-right text-xs text-muted-foreground">
+          <p className="text-right text-xs text-muted-foreground">
             {filtered.length} señal{filtered.length === 1 ? "" : "es"}
             {query ? ` (de ${signals.length})` : ""}
           </p>
         ) : null}
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

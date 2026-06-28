@@ -17,8 +17,16 @@ import {
 } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  PageContainer,
+  PageHeader,
+  Section,
+  EmptyState,
+  SkeletonCards,
+  FadeIn,
+  Stagger,
+} from "@/components/kit";
 import {
   CreateIncidentModal,
   DispatchModal,
@@ -186,43 +194,29 @@ export default function VideoEvents() {
 
   return (
     <AppLayout>
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span
-              className="flex size-11 items-center justify-center rounded-xl"
-              style={{ backgroundColor: `${GOLD}1A`, color: GOLD }}
+      <PageContainer width="wide">
+        <PageHeader
+          icon={<Activity />}
+          title="Eventos de video"
+          subtitle="Alertas de movimiento, alarmas y sabotaje de sus cámaras"
+          actions={
+            <Button
+              variant="outline"
+              onClick={() => load()}
+              disabled={loading}
             >
-              <Activity className="size-6" />
-            </span>
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight">
-                Eventos de video
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Alertas de movimiento, alarmas y sabotaje de sus cámaras
-              </p>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            onClick={() => load()}
-            disabled={loading}
-            className="self-start sm:self-auto"
-          >
-            {loading ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RefreshCw className="size-4" />
-            )}
-            Actualizar
-          </Button>
-        </div>
+              {loading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RefreshCw className="size-4" />
+              )}
+              Actualizar
+            </Button>
+          }
+        />
 
         {/* Filters */}
-        <div className="mb-5 flex flex-wrap items-center gap-2">
+        <FadeIn className="flex flex-wrap items-center gap-2">
           <span className="mr-1 flex items-center gap-1.5 text-sm text-muted-foreground">
             <Filter className="size-4" />
             Estado:
@@ -257,33 +251,23 @@ export default function VideoEvents() {
               </button>
             );
           })}
-        </div>
+        </FadeIn>
 
         {/* List */}
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-muted-foreground">
-            <Loader2 className="mr-2 size-5 animate-spin" />
-            Cargando eventos…
-          </div>
+          <SkeletonCards count={4} className="sm:grid-cols-1" />
         ) : events.length === 0 ? (
-          <Card className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <span
-              className="flex size-12 items-center justify-center rounded-full"
-              style={{ backgroundColor: `${GOLD}14`, color: GOLD }}
-            >
-              <Video className="size-6" />
-            </span>
-            <div>
-              <p className="font-medium">No hay eventos</p>
-              <p className="text-sm text-muted-foreground">
-                {status === "all"
-                  ? "Aún no se han registrado eventos de video."
-                  : "No hay eventos con este estado."}
-              </p>
-            </div>
-          </Card>
+          <EmptyState
+            icon={<Video />}
+            title="No hay eventos"
+            description={
+              status === "all"
+                ? "Aún no se han registrado eventos de video."
+                : "No hay eventos con este estado."
+            }
+          />
         ) : (
-          <div className="space-y-3">
+          <Stagger className="space-y-3">
             {events.map((ev) => {
               const type = TYPE_META[ev.type || "manual"] || TYPE_META.manual;
               const sev = SEVERITY_META[ev.severity || "medium"] || SEVERITY_META.medium;
@@ -293,9 +277,9 @@ export default function VideoEvents() {
               const isAck = ev.status === "ack" || isResolved;
 
               return (
-                <Card
+                <div
                   key={ev.id}
-                  className="p-4 transition-shadow hover:shadow-md"
+                  className="cg-card cg-card-hover p-4"
                 >
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     {/* Left: info */}
@@ -378,12 +362,12 @@ export default function VideoEvents() {
                       </Button>
                     </div>
                   </div>
-                </Card>
+                </div>
               );
             })}
-          </div>
+          </Stagger>
         )}
-      </div>
+      </PageContainer>
 
       {/* Modals */}
       <CreateIncidentModal

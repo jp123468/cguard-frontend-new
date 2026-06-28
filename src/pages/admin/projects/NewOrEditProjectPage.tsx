@@ -1,6 +1,8 @@
 import { useParams } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
 import Breadcrumb from '@/components/ui/breadcrumb';
+import { PageContainer, PageHeader } from '@/components/kit';
+import { FolderKanban } from 'lucide-react';
 import ProjectForm from './ProjectForm';
 
 export default function NewOrEditProjectPage() {
@@ -15,12 +17,17 @@ export default function NewOrEditProjectPage() {
           { label: id ? 'Editar proyecto' : 'Nuevo proyecto' },
         ]}
       />
-      <section className="p-4 max-w-2xl mx-auto mt-4">
+      <PageContainer width="narrow" className="mt-4">
+        <PageHeader
+          icon={<FolderKanban />}
+          title={id ? 'Editar proyecto' : 'Nuevo proyecto'}
+          subtitle={id ? 'Actualiza los datos del proyecto.' : 'Crea un nuevo proyecto y asígnalo a un cliente.'}
+        />
         <ProjectForm
           mode={id ? 'edit' : 'create'}
           projectId={id}
         />
-      </section>
+      </PageContainer>
     </AppLayout>
   );
 }

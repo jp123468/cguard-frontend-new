@@ -3,14 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,16 +13,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Pencil, Trash2, Video, FileText, Paperclip, GripVertical } from 'lucide-react';
+import { Plus, Pencil, Trash2, Video, FileText, Paperclip, GripVertical, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
+import { Modal, EmptyState, FadeIn, Stagger } from '@/components/kit';
 import {
   trainingCourseService,
   type TrainingLesson,
   type TrainingResource,
   type TrainingLessonInput,
 } from '@/lib/api/trainingCourseService';
-
-const GOLD = '#C8860A';
 
 interface Props {
   courseId: string;
@@ -153,23 +144,35 @@ export default function LessonsManager({ courseId, lessons, readOnly, onChange }
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
+    <FadeIn className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">Lecciones ordenadas que verán los vigilantes.</p>
         {!readOnly && (
-          <Button className="text-white" style={{ backgroundColor: GOLD }} onClick={openNew}>
+          <Button variant="brand" onClick={openNew}>
             <Plus className="h-4 w-4 mr-1" /> Agregar lección
           </Button>
         )}
       </div>
 
       {sorted.length === 0 && (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">No hay lecciones todavía.</CardContent></Card>
+        <EmptyState
+          icon={<BookOpen />}
+          title="No hay lecciones todavía"
+          description="Agrega lecciones con video, texto y recursos para construir el curso."
+          action={
+            !readOnly ? (
+              <Button variant="brand" onClick={openNew}>
+                <Plus className="h-4 w-4 mr-1" /> Agregar lección
+              </Button>
+            ) : undefined
+          }
+        />
       )}
 
+      <Stagger className="space-y-3">
       {sorted.map((l, idx) => (
-        <Card key={l.id}>
-          <CardContent className="py-4 flex items-start gap-3">
+        <div key={l.id} className="cg-card cg-card-hover">
+          <div className="py-4 px-5 flex items-start gap-3">
             <div className="flex flex-col items-center pt-1 text-muted-foreground">
               {!readOnly ? (
                 <div className="flex flex-col">
@@ -195,21 +198,31 @@ export default function LessonsManager({ courseId, lessons, readOnly, onChange }
             </div>
             {!readOnly && (
               <div className="flex items-center gap-1">
-                <button className="p-1.5 rounded hover:bg-muted" onClick={() => openEdit(l)}><Pencil className="h-4 w-4" /></button>
-                <button className="p-1.5 rounded hover:bg-muted text-red-600" onClick={() => setDeleteId(l.id)}><Trash2 className="h-4 w-4" /></button>
+                <button className="p-1.5 rounded-lg hover:bg-muted" onClick={() => openEdit(l)}><Pencil className="h-4 w-4" /></button>
+                <button className="p-1.5 rounded-lg hover:bg-muted text-red-600" onClick={() => setDeleteId(l.id)}><Trash2 className="h-4 w-4" /></button>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ))}
+      </Stagger>
 
       {/* Lesson form */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editing ? 'Editar lección' : 'Nueva lección'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
+      <Modal
+        open={open}
+        onOpenChange={setOpen}
+        title={editing ? 'Editar lección' : 'Nueva lección'}
+        icon={<BookOpen />}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button variant="brand" disabled={saving} onClick={handleSave}>
+              {saving ? 'Guardando...' : 'Guardar'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
             <div className="space-y-2">
               <Label>Título *</Label>
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
@@ -243,15 +256,8 @@ export default function LessonsManager({ courseId, lessons, readOnly, onChange }
                 </div>
               ))}
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button className="text-white" style={{ backgroundColor: GOLD }} disabled={saving} onClick={handleSave}>
-              {saving ? 'Guardando...' : 'Guardar'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </Modal>
 
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
@@ -265,6 +271,6 @@ export default function LessonsManager({ courseId, lessons, readOnly, onChange }
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </FadeIn>
   );
 }

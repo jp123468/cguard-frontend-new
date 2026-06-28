@@ -19,6 +19,8 @@ import { postSiteService } from '@/lib/api/postSiteService';
 import IncidentTypesService from '@/services/incident-types.service';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { toast } from 'sonner';
+import { PageContainer, PageHeader } from '@/components/kit';
+import { Printer } from 'lucide-react';
 
 export function DispatchDetailsContent({ requestId }: { requestId?: string | null }) {
   const { t } = useTranslation();
@@ -326,7 +328,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
             <div className="bg-muted px-4 py-2 text-sm font-semibold flex items-center justify-between">
                 <div>{t('dispatcher.basic_details') || 'Basic Details'}</div>
               <div className="flex items-center gap-2">
-                <Button className="bg-card border text-black text-sm" asChild>
+                <Button variant="brand" size="sm" asChild>
                     <Link to={`/dispatch-tickets/${requestId}/edit`}>{t('dispatcher.edit') || 'Editar'}</Link>
                 </Button>
 
@@ -533,11 +535,14 @@ export default function DispatchDetailsPage() {
         ]}
       />
 
-      <section className="p-6">
-        <div className="max-w-4xl mx-auto">
-          <DispatchDetailsContent requestId={id ?? null} />
-        </div>
-      </section>
+      <PageContainer width="wide" className="px-6 pt-4">
+        <PageHeader
+          icon={<Printer />}
+          title="Detalle del Incidente"
+          subtitle="Vista imprimible del incidente."
+        />
+        <DispatchDetailsContent requestId={id ?? null} />
+      </PageContainer>
     </AppLayout>
   );
 }

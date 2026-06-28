@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CheckCircle2, Clock } from 'lucide-react';
+import { CheckCircle2, Clock, GraduationCap, Users, BadgeCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePermissions } from '@/hooks/usePermissions';
 import { trainingCourseService, type TrainingCourse } from '@/lib/api/trainingCourseService';
@@ -27,8 +27,7 @@ import {
   type EnrollmentDetail,
 } from '@/lib/api/trainingEnrollmentService';
 import { ENROLLMENT_STATUS_LABELS, ENROLLMENT_STATUS_VARIANT } from './trainingConstants';
-
-const GOLD = '#C8860A';
+import { PageContainer, PageHeader, Section, StatCard, Stagger } from '@/components/kit';
 
 export default function TrainingEnrollmentsPage() {
   const { courseId } = useParams<{ courseId: string }>();
@@ -109,29 +108,35 @@ export default function TrainingEnrollmentsPage() {
         ]}
       />
 
-      <section className="p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-          <div>
-            <h1 className="text-xl font-semibold">{course?.title ?? 'Progreso del curso'}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {completedCount} de {realEnrollments.length} vigilantes completaron el curso.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                {Object.entries(ENROLLMENT_STATUS_LABELS).map(([v, l]) => (
-                  <SelectItem key={v} value={v}>{l}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={() => navigate(`/training/courses/${courseId}`)}>Editar curso</Button>
-          </div>
-        </div>
+      <PageContainer width="wide" className="p-4">
+        <PageHeader
+          icon={<GraduationCap />}
+          title={course?.title ?? 'Progreso del curso'}
+          subtitle={`${completedCount} de ${realEnrollments.length} vigilantes completaron el curso.`}
+          actions={
+            <>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  {Object.entries(ENROLLMENT_STATUS_LABELS).map(([v, l]) => (
+                    <SelectItem key={v} value={v}>{l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="outline" onClick={() => navigate(`/training/courses/${courseId}`)}>Editar curso</Button>
+            </>
+          }
+        />
 
-        <div className="border rounded-lg overflow-hidden">
+        <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard label="Inscripciones" value={realEnrollments.length} icon={<Users />} accent="blue" />
+          <StatCard label="Completaron" value={completedCount} icon={<BadgeCheck />} accent="green" />
+          <StatCard label="Pendientes" value={Math.max(realEnrollments.length - completedCount, 0)} icon={<Clock />} accent="orange" />
+        </Stagger>
+
+        <Section title="Progreso de vigilantes" icon={<Users />} contentClassName="-mx-5 -mb-5">
+          <div className="overflow-hidden rounded-b-2xl">
           <table className="min-w-full text-sm text-left">
             <thead className="bg-muted/30">
               <tr className="border-b">
@@ -160,7 +165,7 @@ export default function TrainingEnrollmentsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 w-24 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${r.progressPercentage ?? 0}%`, backgroundColor: GOLD }} />
+                          <div className="h-full rounded-full bg-primary" style={{ width: `${r.progressPercentage ?? 0}%` }} />
                         </div>
                         <span className="text-xs text-muted-foreground">{r.progressPercentage ?? 0}%</span>
                       </div>
@@ -182,8 +187,9 @@ export default function TrainingEnrollmentsPage() {
               })}
             </tbody>
           </table>
-        </div>
-      </section>
+          </div>
+        </Section>
+      </PageContainer>
 
       <Sheet open={!!detail || detailLoading} onOpenChange={(o) => { if (!o) { setDetail(null); } }}>
         <SheetContent side="right" className="w-[420px] overflow-y-auto">
@@ -199,7 +205,7 @@ export default function TrainingEnrollmentsPage() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${detail.progressPercentage ?? 0}%`, backgroundColor: GOLD }} />
+                  <div className="h-full rounded-full bg-primary" style={{ width: `${detail.progressPercentage ?? 0}%` }} />
                 </div>
                 <span className="text-sm">{detail.progressPercentage ?? 0}%</span>
               </div>

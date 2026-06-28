@@ -10,8 +10,9 @@ import {
 } from "@/lib/validators/dispatch-create.schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
+import { X, ClipboardPlus, Users, FileText, Paperclip, NotebookPen } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { PageContainer, PageHeader, Section, FadeIn } from "@/components/kit";
 import {
   Select,
   SelectContent,
@@ -1138,9 +1139,15 @@ export default function NewDispatchPage() {
         ]}
       />
 
-      <div className="p-6">
+      <PageContainer width="wide" className="px-6 pt-4">
+        <PageHeader
+          icon={<ClipboardPlus />}
+          title="Nuevo Incidente"
+          subtitle="Registra un nuevo incidente y notifica al vigilante correspondiente."
+        />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Section title="Información del incidente" icon={<Users />}>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {!isFromPostSite ? (
                   <>
@@ -1417,12 +1424,10 @@ export default function NewDispatchPage() {
                 )}
               />
             </div>
+            </Section>
 
-            <div className="rounded-lg border">
-              <div className="border-b px-4 py-3 text-sm font-semibold">
-                Detalles del incidente
-              </div>
-              <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
+            <Section title="Detalles del incidente" icon={<FileText />}>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="location"
@@ -1561,8 +1566,9 @@ export default function NewDispatchPage() {
                   )}
                 />
               </div>
-            </div>
+            </Section>
 
+            <Section title="Seguimiento" icon={<NotebookPen />}>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
@@ -1592,7 +1598,9 @@ export default function NewDispatchPage() {
                 )}
               />
             </div>
+            </Section>
 
+            <Section title="Adjuntos" icon={<Paperclip />}>
               <FormField
                 control={form.control}
                 name="attachment"
@@ -1670,19 +1678,20 @@ export default function NewDispatchPage() {
                   </FormItem>
                 )}
               />
+            </Section>
 
-            <div className="flex items-center justify-end gap-2">
+            <FadeIn className="flex items-center justify-end gap-2">
               <Button variant="outline" asChild>
                 <Link to="/dispatch-tickets">Cancelar</Link>
               </Button>
               <Button
                 type="submit"
-                className="bg-primary text-white hover:bg-primary/90"
+                variant="brand"
                 disabled={form.formState.isSubmitting}
               >
                 Enviar
               </Button>
-            </div>
+            </FadeIn>
           </form>
         </Form>
         {debugGuards ? (
@@ -1691,7 +1700,7 @@ export default function NewDispatchPage() {
             <pre style={{ maxHeight: 300, overflow: 'auto' }}>{JSON.stringify((assignedVigilantes || []).slice(0,50), null, 2)}</pre>
           </div>
         ) : null}
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

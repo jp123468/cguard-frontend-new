@@ -18,12 +18,19 @@ import {
 } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import {
+  PageContainer,
+  PageHeader,
+  StatCard,
+  Stagger,
+  EmptyState,
+} from "@/components/kit";
 
 import {
   alarmService,
@@ -576,12 +583,7 @@ function PanelModal({
             >
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              disabled={saving}
-              style={{ backgroundColor: GOLD }}
-              className="text-white hover:opacity-90"
-            >
+            <Button type="submit" variant="brand" disabled={saving}>
               {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
               {editing ? "Guardar cambios" : "Agregar panel"}
             </Button>
@@ -910,13 +912,7 @@ function ZonesManager({ panelId }: { panelId: string }) {
           </label>
         </div>
         <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-3">
-          <Button
-            type="submit"
-            size="sm"
-            disabled={saving}
-            style={{ backgroundColor: GOLD }}
-            className="text-white hover:opacity-90"
-          >
+          <Button type="submit" size="sm" variant="brand" disabled={saving}>
             {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
             {editingId ? "Guardar zona" : "Agregar zona"}
           </Button>
@@ -1207,13 +1203,7 @@ function ContactsManager({ panelId }: { panelId: string }) {
           />
         </div>
         <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-3">
-          <Button
-            type="submit"
-            size="sm"
-            disabled={saving}
-            style={{ backgroundColor: GOLD }}
-            className="text-white hover:opacity-90"
-          >
+          <Button type="submit" size="sm" variant="brand" disabled={saving}>
             {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
             {editingId ? "Guardar contacto" : "Agregar contacto"}
           </Button>
@@ -1353,69 +1343,35 @@ export default function AlarmPanels() {
 
   return (
     <AppLayout>
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">
+      <PageContainer width="wide">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-              <ShieldAlert className="h-6 w-6" style={{ color: GOLD }} />
-              Paneles de alarma
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Administra los paneles monitoreados, sus zonas y contactos de aviso.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline">
-              <Link to="/alarm/queue">Cola de casos</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/alarm/signals">Señales</Link>
-            </Button>
-            <Button
-              onClick={openCreate}
-              style={{ backgroundColor: GOLD }}
-              className="text-white hover:opacity-90"
-            >
-              <Plus className="mr-1.5 h-4 w-4" />
-              Agregar panel
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          icon={<ShieldAlert />}
+          title="Paneles de alarma"
+          subtitle="Administra los paneles monitoreados, sus zonas y contactos de aviso."
+          actions={
+            <>
+              <Button asChild variant="outline">
+                <Link to="/alarm/queue">Cola de casos</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/alarm/signals">Señales</Link>
+              </Button>
+              <Button variant="brand" onClick={openCreate}>
+                <Plus className="mr-1.5 h-4 w-4" />
+                Agregar panel
+              </Button>
+            </>
+          }
+        />
 
         {/* Summary */}
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Total</div>
-              <div className="text-2xl font-bold">{counts.total}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">En línea</div>
-              <div className="text-2xl font-bold text-emerald-600">
-                {counts.online}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Armados</div>
-              <div className="text-2xl font-bold text-amber-600">
-                {counts.armed}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Sin conexión</div>
-              <div className="text-2xl font-bold text-red-600">
-                {counts.offline}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard label="Total" value={counts.total} icon={<ShieldAlert />} accent="slate" />
+          <StatCard label="En línea" value={counts.online} icon={<Wifi />} accent="green" />
+          <StatCard label="Armados" value={counts.armed} icon={<ShieldAlert />} accent="orange" />
+          <StatCard label="Sin conexión" value={counts.offline} icon={<WifiOff />} accent="red" />
+        </Stagger>
 
         {/* List */}
         {loading ? (
@@ -1423,23 +1379,17 @@ export default function AlarmPanels() {
             <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Cargando paneles...
           </div>
         ) : panels.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-              <ShieldAlert className="h-10 w-10 text-muted-foreground" />
-              <div className="text-lg font-medium">No hay paneles</div>
-              <p className="max-w-sm text-sm text-muted-foreground">
-                Agrega tu primer panel de alarma para comenzar a recibir señales.
-              </p>
-              <Button
-                onClick={openCreate}
-                style={{ backgroundColor: GOLD }}
-                className="mt-2 text-white hover:opacity-90"
-              >
+          <EmptyState
+            icon={<ShieldAlert />}
+            title="No hay paneles"
+            description="Agrega tu primer panel de alarma para comenzar a recibir señales."
+            action={
+              <Button variant="brand" onClick={openCreate}>
                 <Plus className="mr-1.5 h-4 w-4" />
                 Agregar panel
               </Button>
-            </CardContent>
-          </Card>
+            }
+          />
         ) : (
           <div className="space-y-3">
             {panels.map((p) => {
@@ -1525,7 +1475,7 @@ export default function AlarmPanels() {
             })}
           </div>
         )}
-      </div>
+      </PageContainer>
 
       <PanelModal
         open={modalOpen}

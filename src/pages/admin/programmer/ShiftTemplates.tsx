@@ -33,8 +33,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Filter, EllipsisVertical, X, Edit, Trash2, Loader2 } from "lucide-react";
+import { Search, Filter, EllipsisVertical, X, Edit, Trash2, Loader2, LayoutTemplate, Plus } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
 import { toast } from "sonner";
 import shiftTemplateService, {
   type ShiftTemplate,
@@ -199,7 +200,13 @@ export default function ShiftTemplates() {
           { label: "Plantillas de turno" },
         ]}
       />
-      <div className="p-6 space-y-4">
+      <PageContainer width="wide" className="px-4 lg:px-6">
+        <PageHeader
+          icon={<LayoutTemplate />}
+          title="Plantillas de Turno"
+          subtitle="Define plantillas reutilizables para crear turnos rápidamente."
+        />
+
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row justify-between gap-4">
           <div className="flex flex-col md:flex-row gap-4 w-full items-center">
@@ -216,8 +223,8 @@ export default function ShiftTemplates() {
             <div className="flex items-center gap-2 ml-auto">
               <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
                 <SheetTrigger asChild>
-                  <Button className="bg-primary hover:bg-primary/90 text-white" onClick={openNew}>
-                    Nueva Plantilla de Turno
+                  <Button variant="brand" onClick={openNew}>
+                    <Plus className="h-4 w-4 mr-1" /> Nueva Plantilla de Turno
                   </Button>
                 </SheetTrigger>
                 <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
@@ -374,15 +381,17 @@ export default function ShiftTemplates() {
 
                     <div className="flex gap-2 pt-4">
                       <Button
-                        className="flex-1 bg-primary hover:bg-primary/90 text-white"
+                        variant="brand"
+                        className="flex-1"
                         onClick={handleSave}
                         disabled={saving}
                       >
+                        {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                         {saving ? "Guardando…" : editingId ? "Actualizar" : "Guardar"}
                       </Button>
                       <Button
                         variant="outline"
-                        className="flex-1 text-primary border-primary/30 hover:bg-primary/10"
+                        className="flex-1"
                         onClick={() => setIsFormOpen(false)}
                         disabled={saving}
                       >
@@ -434,9 +443,9 @@ export default function ShiftTemplates() {
         </div>
 
         {/* Table */}
-        <div className="border rounded-md">
+        <Section title="Plantillas" icon={<LayoutTemplate />} contentClassName="overflow-x-auto -mx-1">
           <Table>
-            <TableHeader className="bg-muted/50">
+            <TableHeader className="bg-muted/40">
               <TableRow>
                 <TableHead className="w-[50px]"><Checkbox /></TableHead>
                 <TableHead className="font-bold text-foreground">Nombre de la Plantilla</TableHead>
@@ -460,12 +469,12 @@ export default function ShiftTemplates() {
               ) : filteredTemplates.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-[300px] text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <h3 className="text-lg font-medium text-foreground mb-1">No hay plantillas</h3>
-                      <p className="text-sm max-w-xs">
-                        Crea tu primera plantilla de turno con el botón de arriba.
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={<LayoutTemplate />}
+                      title="No hay plantillas"
+                      description="Crea tu primera plantilla de turno con el botón de arriba."
+                      className="border-0 py-2"
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -501,8 +510,8 @@ export default function ShiftTemplates() {
               )}
             </TableBody>
           </Table>
-        </div>
-      </div>
+        </Section>
+      </PageContainer>
     </AppLayout>
   );
 }

@@ -2,17 +2,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, ClipboardList, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Section, EmptyState, StatusBadge, FadeIn } from '@/components/kit';
 import {
   trainingCourseService,
   type TrainingQuizSummary,
   type QuizQuestionInput,
 } from '@/lib/api/trainingCourseService';
-
-const GOLD = '#C8860A';
 
 interface Props {
   courseId: string;
@@ -93,16 +90,16 @@ export default function QuizManager({ courseId, quiz, passingScore, readOnly, on
 
   if (!editing) {
     return (
-      <Card>
-        <CardContent className="py-6 space-y-3">
+      <FadeIn>
+        <Section title="Cuestionario" icon={<ClipboardList />}>
           {quiz ? (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 font-medium">
                   <CheckCircle2 className="h-5 w-5 text-green-600" /> Cuestionario configurado
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Puntaje para aprobar: <Badge variant="outline">{quiz.passPct}%</Badge>
+                <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
+                  Puntaje para aprobar: <StatusBadge tone="green" dot={false}>{quiz.passPct}%</StatusBadge>
                 </p>
               </div>
               {!readOnly && (
@@ -112,28 +109,27 @@ export default function QuizManager({ courseId, quiz, passingScore, readOnly, on
               )}
             </div>
           ) : (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Sin cuestionario</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Un cuestionario es opcional. Si lo agregas, el vigilante debe aprobarlo para completar el curso.
-                </p>
-              </div>
-              {!readOnly && (
-                <Button className="text-white" style={{ backgroundColor: GOLD }} onClick={() => setEditing(true)}>
-                  <Plus className="h-4 w-4 mr-1" /> Crear cuestionario
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              icon={<HelpCircle />}
+              title="Sin cuestionario"
+              description="Un cuestionario es opcional. Si lo agregas, el vigilante debe aprobarlo para completar el curso."
+              action={
+                !readOnly ? (
+                  <Button variant="brand" onClick={() => setEditing(true)}>
+                    <Plus className="h-4 w-4 mr-1" /> Crear cuestionario
+                  </Button>
+                ) : undefined
+              }
+            />
           )}
-        </CardContent>
-      </Card>
+        </Section>
+      </FadeIn>
     );
   }
 
   return (
-    <Card>
-      <CardContent className="py-6 space-y-4">
+    <FadeIn>
+      <Section title="Editar cuestionario" icon={<ClipboardList />} contentClassName="space-y-4">
         <div className="grid grid-cols-2 gap-3 max-w-md">
           <div className="space-y-2">
             <Label>Puntaje para aprobar (%)</Label>
@@ -153,7 +149,7 @@ export default function QuizManager({ courseId, quiz, passingScore, readOnly, on
 
         <div className="space-y-4">
           {questions.map((q, qi) => (
-            <div key={qi} className="rounded-lg border p-4 space-y-3">
+            <div key={qi} className="rounded-2xl border p-4 space-y-3 bg-muted/20">
               <div className="flex items-start justify-between gap-2">
                 <Label className="pt-2">Pregunta {qi + 1}</Label>
                 {questions.length > 1 && (
@@ -189,11 +185,11 @@ export default function QuizManager({ courseId, quiz, passingScore, readOnly, on
 
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={() => setEditing(false)}>Cancelar</Button>
-          <Button className="text-white" style={{ backgroundColor: GOLD }} disabled={saving} onClick={handleSave}>
+          <Button variant="brand" disabled={saving} onClick={handleSave}>
             {saving ? 'Guardando...' : 'Guardar cuestionario'}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </Section>
+    </FadeIn>
   );
 }

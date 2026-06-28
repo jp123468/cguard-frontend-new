@@ -18,6 +18,8 @@ import { postSiteService } from '@/lib/api/postSiteService';
 import IncidentTypesService from '@/services/incident-types.service';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { toast } from 'sonner';
+import { PageContainer, PageHeader } from '@/components/kit';
+import { FileSearch } from 'lucide-react';
 
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -346,11 +348,11 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
               <IncidentMap lat={coords.lat} lng={coords.lng} label={ticketShort || undefined} />
             </div>
           )}
-          <div className="bg-card border rounded-md overflow-hidden">
-            <div className="bg-muted px-4 py-2 text-sm font-semibold flex items-center justify-between">
+          <div className="cg-card overflow-hidden p-0">
+            <div className="bg-muted/40 border-b px-4 py-2.5 text-sm font-semibold flex items-center justify-between">
                 <div>{t('dispatcher.basic_details')}</div>
                 <div className="flex items-center gap-2">
-                  <Button className="bg-card border text-black text-sm" asChild>
+                  <Button variant="brand" size="sm" asChild>
                     <Link to={`/dispatch-tickets/${requestId}/edit`}>{t('dispatcher.edit')}</Link>
                   </Button>
 
@@ -446,23 +448,23 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
       )}
       {/* Additional detail sections */}
       <div className="mt-4 space-y-4">
-        <div className="bg-card border rounded-md overflow-hidden">
-          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.incident_details')}</div>
+        <div className="cg-card overflow-hidden p-0">
+          <div className="bg-muted/40 border-b px-4 py-2.5 text-sm font-semibold">{t('dispatcher.incident_details')}</div>
           <div className="p-4 text-sm">{requestPayload?.content || requestPayload?.incidentDetails || requestPayload?.details || '-'}</div>
         </div>
 
-        <div className="bg-card border rounded-md overflow-hidden">
-          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.action_taken')}</div>
+        <div className="cg-card overflow-hidden p-0">
+          <div className="bg-muted/40 border-b px-4 py-2.5 text-sm font-semibold">{t('dispatcher.action_taken')}</div>
           <div className="p-4 text-sm">{requestPayload?.actionsTaken || requestPayload?.actionTaken || requestPayload?.action || '-'}</div>
         </div>
 
-        <div className="bg-card border rounded-md overflow-hidden">
-          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.internal_notes')}</div>
+        <div className="cg-card overflow-hidden p-0">
+          <div className="bg-muted/40 border-b px-4 py-2.5 text-sm font-semibold">{t('dispatcher.internal_notes')}</div>
           <div className="p-4 text-sm whitespace-pre-wrap">{requestPayload?.internalNotes || requestPayload?.notes || '-'}</div>
         </div>
 
-        <div className="bg-card border rounded-md overflow-hidden">
-          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.files')}</div>
+        <div className="cg-card overflow-hidden p-0">
+          <div className="bg-muted/40 border-b px-4 py-2.5 text-sm font-semibold">{t('dispatcher.files')}</div>
           <div className="p-4 text-sm">
             {requestPayload?.requestDocumentPDF && requestPayload.requestDocumentPDF.length > 0 ? (
               <ul className="list-disc pl-5">
@@ -482,8 +484,8 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
           </div>
         </div>
 
-        <div className="bg-card border rounded-md overflow-hidden">
-          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.guard_assigned')}</div>
+        <div className="cg-card overflow-hidden p-0">
+          <div className="bg-muted/40 border-b px-4 py-2.5 text-sm font-semibold">{t('dispatcher.guard_assigned')}</div>
           <div className="p-4 text-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-sm table-fixed border-collapse">
@@ -510,8 +512,8 @@ export function DispatchDetailsContent({ requestId, resourceTypeProp }: { reques
 
       {/* Comments list (bottom) */}
       <div className="mt-6 max-w-4xl mx-auto">
-        <div className="bg-card border rounded-md overflow-hidden">
-          <div className="bg-muted px-4 py-2 text-sm font-semibold">{t('dispatcher.ticket_summary')}</div>
+        <div className="cg-card overflow-hidden p-0">
+          <div className="bg-muted/40 border-b px-4 py-2.5 text-sm font-semibold">{t('dispatcher.ticket_summary')}</div>
           <div className="p-4">
             {comments.length === 0 ? (
               <div className="text-sm text-muted-foreground">No hay comentarios aún</div>
@@ -556,11 +558,14 @@ export default function DispatchDetailsPage() {
         ]}
       />
 
-      <section className="p-6">
-        <div className="max-w-4xl mx-auto">
-          <DispatchDetailsContent requestId={id ?? null} />
-        </div>
-      </section>
+      <PageContainer width="wide" className="px-6 pt-4">
+        <PageHeader
+          icon={<FileSearch />}
+          title="Detalle del Incidente"
+          subtitle="Información completa, comentarios y vigilantes asignados."
+        />
+        <DispatchDetailsContent requestId={id ?? null} />
+      </PageContainer>
     </AppLayout>
   );
 }

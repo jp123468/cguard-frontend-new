@@ -5,9 +5,15 @@ import {
   Activity, Clock, Send, ShieldCheck, TrendingUp, AlertTriangle, PhoneCall, Download, Users, RefreshCw, BarChart3,
 } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
-import { Card } from "@/components/ui/card";
 import { MetricCard, DayBars, HBars, Section, GOLD } from "@/pages/admin/analytics/_shared";
 import { alarmService } from "@/lib/api/alarmService";
+import {
+  PageContainer,
+  PageHeader,
+  Stagger,
+  SkeletonCards,
+  EmptyState,
+} from "@/components/kit";
 
 const PERIODS = [7, 30, 90, 365];
 
@@ -72,38 +78,35 @@ export default function AlarmAnalytics() {
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-6xl p-4 sm:p-6">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <Activity className="size-5 text-primary" /> Análisis de Monitoreo
-            </h1>
-            <p className="text-sm text-muted-foreground">Tiempos de respuesta, cumplimiento de SLA y desempeño de operadores.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex rounded-lg border border-border p-0.5">
-              {PERIODS.map((p) => (
-                <button key={p} onClick={() => setDays(p)}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium ${days === p ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"}`}>
-                  {p}d
-                </button>
-              ))}
-            </div>
-            <button onClick={exportAudit} disabled={exporting}
-              className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-foreground hover:border-primary disabled:opacity-50">
-              {exporting ? <RefreshCw className="size-3.5 animate-spin" /> : <Download className="size-3.5" />} Exportar auditoría
-            </button>
-            <Link to="/alarm/reports" className="text-xs text-primary hover:underline">Falsas alarmas →</Link>
-          </div>
-        </div>
+      <PageContainer width="wide">
+        <PageHeader
+          icon={<Activity />}
+          title="Análisis de Monitoreo"
+          subtitle="Tiempos de respuesta, cumplimiento de SLA y desempeño de operadores."
+          actions={
+            <>
+              <div className="flex rounded-lg border border-border p-0.5">
+                {PERIODS.map((p) => (
+                  <button key={p} onClick={() => setDays(p)}
+                    className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${days === p ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                    {p}d
+                  </button>
+                ))}
+              </div>
+              <button onClick={exportAudit} disabled={exporting}
+                className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary disabled:opacity-50">
+                {exporting ? <RefreshCw className="size-3.5 animate-spin" /> : <Download className="size-3.5" />} Exportar auditoría
+              </button>
+              <Link to="/alarm/reports" className="text-xs text-primary hover:underline">Falsas alarmas →</Link>
+            </>
+          }
+        />
 
         {loading || !d ? (
-          <Card className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-            <RefreshCw className="size-4 animate-spin" /> Cargando…
-          </Card>
+          <SkeletonCards count={8} className="lg:grid-cols-4" />
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               <MetricCard icon={<BarChart3 size={16} />} accent={GOLD} value={d.total} label="Casos" sub={`${d.open} abiertos`} />
               <MetricCard icon={<Clock size={16} />} accent="#0ea5e9" value={fmtDur(d.avgTtaSec)} label="Reconocimiento prom." sub="tiempo a reconocer" />
               <MetricCard icon={<Send size={16} />} accent="#8b5cf6" value={fmtDur(d.avgTtdSec)} label="Despacho prom." sub="tiempo a despachar" />
@@ -112,7 +115,7 @@ export default function AlarmAnalytics() {
               <MetricCard icon={<AlertTriangle size={16} />} accent="#f59e0b" value={`${d.escalationRate}%`} label="Tasa de escalado" sub="superaron el SLA" pct={d.escalationRate} />
               <MetricCard icon={<AlertTriangle size={16} />} accent="#ef4444" value={`${d.falseRate}%`} label="Tasa de falsas" sub="falsas + runaway" pct={d.falseRate} />
               <MetricCard icon={<PhoneCall size={16} />} accent="#0ea5e9" value={d.ecvSatisfiedCases} label="ECV satisfecho" sub={`${d.totalCalls} llamadas`} />
-            </div>
+            </Stagger>
 
             <div className="mt-5">
               <DayBars title="Casos de alarma por día" color={GOLD} points={(d.trend || []).map((t: any) => ({ k: t.k, v: t.v }))} />
@@ -135,7 +138,11 @@ export default function AlarmAnalytics() {
             <div className="mt-5">
               <Section title="Desempeño de operadores" icon={<Users size={16} className="text-primary" />}>
                 {(!d.operators || d.operators.length === 0) ? (
-                  <p className="px-1 py-3 text-sm text-muted-foreground">Sin casos asignados a operadores en el período.</p>
+                  <EmptyState
+                    icon={<Users />}
+                    title="Sin operadores"
+                    description="Sin casos asignados a operadores en el período."
+                  />
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -164,7 +171,7 @@ export default function AlarmAnalytics() {
             </div>
           </>
         )}
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }
