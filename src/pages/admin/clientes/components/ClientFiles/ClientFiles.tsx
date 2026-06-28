@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
-import { Search, ChevronDown, Plus, X, Paperclip } from 'lucide-react';
+import { Search, ChevronDown, Plus, X, Paperclip, FileText } from 'lucide-react';
 import ClientsLayout from '@/layouts/ClientsLayout';
 import AppLayout from '@/layouts/app-layout';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import securityGuardService from '@/lib/api/securityGuardService';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { EmptyState } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 type Props = { client?: any };
 
@@ -135,10 +137,10 @@ export default function ClientFiles({ client }: Props) {
             </div>
           </div>
 
-          <button onClick={handleOpenUpload} className="px-6 py-2 bg-primary text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors">
+          <Button onClick={handleOpenUpload} variant="brand">
             <Plus size={18} />
             Upload New Files
-          </button>
+          </Button>
         </div>
 
         <div className="mt-6 md:block hidden flex-1 min-h-0 overflow-y-auto overflow-x-auto">
@@ -155,20 +157,11 @@ export default function ClientFiles({ client }: Props) {
               {filesData.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-12">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                          <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                          <circle cx="85" cy="100" r="8" fill="white" />
-                          <circle cx="115" cy="100" r="8" fill="white" />
-                          <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-lg font-semibold text-foreground">No results found</h3>
-                        <p className="text-sm text-muted-foreground mt-1">We couldn't find<br />any items matching<br />your search</p>
-                      </div>
-                    </div>
+                    <EmptyState
+                      icon={<FileText />}
+                      title="No results found"
+                      description="We couldn't find any items matching your search."
+                    />
                   </td>
                 </tr>
               ) : (
@@ -208,10 +201,10 @@ export default function ClientFiles({ client }: Props) {
       {showUpload && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center" onClick={handleCloseUpload}>
           <div className="absolute inset-0 bg-black opacity-30" onClick={handleCloseUpload} />
-          <div className="w-full sm:w-96 bg-card rounded-t-lg sm:rounded-md flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full sm:w-96 bg-card rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-10">
-              <h3 className="text-lg font-semibold">Upload Files</h3>
-              <button onClick={handleCloseUpload} className="text-muted-foreground hover:text-foreground/70"><X /></button>
+              <h3 className="font-display text-lg font-semibold">Upload Files</h3>
+              <button onClick={handleCloseUpload} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition"><X /></button>
             </div>
 
             <div className="p-6 overflow-y-auto flex-1">
@@ -269,9 +262,9 @@ export default function ClientFiles({ client }: Props) {
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 p-4 border-t bg-card">
-              <button onClick={() => { setUploadFiles([]); setShowUpload(false); }} className="px-4 py-2 text-foreground border rounded-md hover:bg-muted/30">Cancel</button>
-              <button onClick={() => { handleSubmitUpload(); }} className="px-4 py-2 bg-primary text-white rounded-md">Upload</button>
+            <div className="flex items-center justify-end gap-3 p-4 border-t bg-muted/30">
+              <Button variant="outline" onClick={() => { setUploadFiles([]); setShowUpload(false); }}>Cancel</Button>
+              <Button variant="brand" onClick={() => { handleSubmitUpload(); }}>Upload</Button>
             </div>
           </div>
         </div>

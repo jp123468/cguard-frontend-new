@@ -5,6 +5,7 @@ import Breadcrumb from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
     Select,
@@ -223,12 +224,9 @@ export default function Vehicles() {
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <button
-                                    type="button"
-                                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-card text-muted-foreground shadow-sm hover:bg-slate-50"
-                                >
+                                <Button variant="outline" size="icon">
                                     <MoreVertical className="h-4 w-4" />
-                                </button>
+                                </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
                                 <DropdownMenuItem className="flex items-center gap-2">
@@ -261,7 +259,7 @@ export default function Vehicles() {
                         <thead className="bg-muted/30">
                             <tr className="border-b">
                                 <th className="px-4 py-3">
-                                    <input type="checkbox" className="h-4 w-4 rounded border-border" />
+                                    <Checkbox />
                                 </th>
                                 <th className="px-4 py-3 font-semibold">Color</th>
                                 <th className="px-4 py-3 font-semibold">Modelo</th>

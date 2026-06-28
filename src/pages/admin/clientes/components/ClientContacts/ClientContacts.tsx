@@ -3,10 +3,12 @@ import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { EllipsisVertical, Pencil, Trash, Plus, X } from 'lucide-react';
+import { EllipsisVertical, Pencil, Trash, Plus, X, Users, AlertTriangle } from 'lucide-react';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { PhoneInput } from "@/components/phone/PhoneInput";
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { EmptyState } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 
 type PostSite = {
@@ -422,7 +424,7 @@ export default function ClientContacts({ client }: { client: any }) {
           <div className="flex-shrink-0">
             <button
               onClick={handleOpenAdd}
-              className={`w-full md:w-auto ${isCompact ? 'px-3 py-1' : 'px-6 py-2'} bg-primary text-white rounded-md text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors whitespace-nowrap`}
+              className={`w-full md:w-auto ${isCompact ? 'px-3 py-1' : 'px-6 py-2'} cg-gradient-brand text-primary-foreground rounded-lg text-sm font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-lg hover:brightness-[1.04] transition-all whitespace-nowrap`}
             >
               <Plus size={isCompact ? 14 : 18} />
               <span>{t('clients.contacts.addcontact') || 'Agregar contacto'}</span>
@@ -445,20 +447,11 @@ export default function ClientContacts({ client }: { client: any }) {
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-12">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                          <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                          <circle cx="85" cy="100" r="8" fill="white" />
-                          <circle cx="115" cy="100" r="8" fill="white" />
-                          <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-lg font-semibold text-foreground">{t('clients.empty.title') || 'No results found'}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">{t('clients.empty.description') || "We couldn't find any items matching your search."}</p>
-                      </div>
-                    </div>
+                    <EmptyState
+                      icon={<Users />}
+                      title={t('clients.empty.title') || 'No results found'}
+                      description={t('clients.empty.description') || "We couldn't find any items matching your search."}
+                    />
                   </td>
                 </tr>
               ) : filtered.map(c => (
@@ -539,10 +532,15 @@ export default function ClientContacts({ client }: { client: any }) {
       {showAdd && (
         <div className={`fixed inset-0 z-50 flex ${isCompact ? 'items-end' : 'items-center'} justify-center`}> 
           <div className="absolute inset-0 bg-black opacity-30 z-40" onClick={handleCloseAdd} />
-          <div className={`relative w-full sm:ml-auto sm:w-96 bg-card rounded-t-lg sm:rounded-md ${isCompact ? 'h-auto p-4 pb-6 max-h-[90vh]' : 'h-auto p-6 pb-24 max-h-[92vh]'} shadow-xl overflow-auto z-50`} onClick={e => e.stopPropagation()}>
+          <div className={`relative w-full sm:ml-auto sm:w-96 bg-card rounded-t-2xl sm:rounded-2xl ${isCompact ? 'h-auto p-4 pb-6 max-h-[90vh]' : 'h-auto p-6 pb-24 max-h-[92vh]'} shadow-2xl overflow-auto z-50`} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">{form && (form as any).id ? t('clients.contacts.editcontact') : t('clients.contacts.form.AddClientContact')}</h3>
-              <button onClick={handleCloseAdd} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary [&_svg]:size-4">
+                  <Users />
+                </div>
+                <h3 className="font-display text-lg font-semibold">{form && (form as any).id ? t('clients.contacts.editcontact') : t('clients.contacts.form.AddClientContact')}</h3>
+              </div>
+              <button onClick={handleCloseAdd} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition"><X className="h-4 w-4" /></button>
             </div>
             <div className={`overflow-auto pr-2 pb-20 ${isCompact ? '' : 'max-h-[calc(92vh-220px)]'}`}>
               <div className="space-y-4">
@@ -606,7 +604,7 @@ export default function ClientContacts({ client }: { client: any }) {
               <button
                 onClick={handleAdd}
                 disabled={!canSubmit}
-                className={`${canSubmit ? 'bg-primary hover:bg-primary' : 'bg-primary/60 cursor-not-allowed opacity-60'} text-white transition-colors duration-300 ease-out px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30`}
+                className={`${canSubmit ? 'cg-gradient-brand hover:brightness-[1.04] hover:shadow-lg' : 'bg-primary/60 cursor-not-allowed opacity-60'} text-primary-foreground transition-all duration-300 ease-out px-5 py-2 rounded-lg shadow-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30`}
               >
                 {(form && (form as any).id) ? (t('save') || 'Save') : (t('clients.contacts.form.Addcontact') || 'ADD')}
               </button>
@@ -618,14 +616,18 @@ export default function ClientContacts({ client }: { client: any }) {
       {/* Confirm delete modal */}
       {confirmDeleteIds.length > 0 && (
         <div className="fixed inset-0 z-60 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black opacity-30" onClick={() => setConfirmDeleteIds([])} />
-          <div className="bg-card rounded-md shadow-xl p-6 z-70 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-2 text-center">{t('clients.contacts.confirmDeleteTitle', 'Delete contact(s)?')}</h3>
-            <p className="text-sm text-foreground/70 mb-2 text-center">{confirmNames.join(', ')}</p>
-            <p className="text-sm text-foreground/70 mb-4">{t('clients.contacts.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected contact(s)? This action cannot be undone.')}</p>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setConfirmDeleteIds([])} />
+          <div className="relative bg-card rounded-2xl shadow-2xl p-6 z-70 w-full max-w-md">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/12 text-red-600 [&_svg]:size-6">
+              <AlertTriangle />
+            </div>
+            <h3 className="font-display text-lg font-semibold mb-2 text-center">{t('clients.contacts.confirmDeleteTitle', 'Delete contact(s)?')}</h3>
+            <p className="text-sm font-medium text-foreground mb-2 text-center">{confirmNames.join(', ')}</p>
+            <p className="text-sm text-muted-foreground mb-5 text-center">{t('clients.contacts.confirmDeleteMessage', 'Are you sure you want to permanently delete the selected contact(s)? This action cannot be undone.')}</p>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setConfirmDeleteIds([])} className="px-4 py-2 rounded-md border">{t('actions.cancel') || 'Cancel'}</button>
-              <button
+              <Button variant="outline" onClick={() => setConfirmDeleteIds([])}>{t('actions.cancel') || 'Cancel'}</Button>
+              <Button
+                variant="destructive"
                 onClick={() => {
                   if (confirmDeleteIds.length === 1) {
                     deleteContact(confirmDeleteIds[0]);
@@ -633,10 +635,9 @@ export default function ClientContacts({ client }: { client: any }) {
                     deleteSelected(confirmDeleteIds);
                   }
                 }}
-                className="px-4 py-2 rounded-md bg-red-600 text-white"
               >
                 {t('actions.delete') || 'Delete'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -1,8 +1,9 @@
-import { Camera } from "lucide-react";
+import { Camera, Car } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
+import { PageContainer, PageHeader, Section } from "@/components/kit";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -181,13 +182,20 @@ export default function NewVehiclePage() {
         ]}
       />
 
-      <div className="p-6">
+      <section className="p-6">
+       <PageContainer width="narrow">
+        <PageHeader
+          icon={<Car />}
+          title={isEditing ? "Editar vehículo" : "Nuevo vehículo"}
+          subtitle="Registra los datos del vehículo de patrullaje"
+        />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+           <Section title="Datos del vehículo" icon={<Car />} contentClassName="space-y-6">
             <div className="flex items-center justify-center">
               <label
                 htmlFor="vehicle-image"
-                className="group relative inline-flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-md border"
+                className="group relative inline-flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border"
               >
                 {preview ? (
                   <img src={preview} alt="vehículo" className="h-full w-full object-cover" />
@@ -363,15 +371,17 @@ export default function NewVehiclePage() {
               </Button>
               <Button
                 type="submit"
-                className="bg-primary text-white hover:bg-primary/90"
+                variant="brand"
                 disabled={form.formState.isSubmitting}
               >
                 Enviar
               </Button>
             </div>
+           </Section>
           </form>
         </Form>
-      </div>
+       </PageContainer>
+      </section>
     </AppLayout>
   );
 }

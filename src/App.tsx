@@ -71,6 +71,8 @@ import MessengerPage from "./pages/admin/messenger/MessengerPage"
 import RadioDispatch from "./pages/radio/RadioDispatch"
 import RadioDevices from "./pages/admin/radio/RadioDevices"
 import DispatcherPage from "./pages/admin/dispatcher/DispatcherPage"
+import CustomerRequests from "./pages/admin/requests/CustomerRequests"
+import GuardRatings from "./pages/admin/guard-ratings/GuardRatings"
 import NewDispatchPage from "./pages/admin/dispatcher/NewDispatchPage"
 import EditDispatchPage from "./pages/admin/dispatcher/EditDispatchPage"
 import VehiclesPage from "./pages/admin/vehicles/VehiclesPage"
@@ -1320,6 +1322,25 @@ export default function App() {
               <Route path="/public/dispatch/:token" element={<DispatchPublicView />} />
 
               {/* FIN DESPACHADOR */}
+
+              {/* SOLICITUDES Y CALIFICACIONES DE CLIENTES */}
+              <Route
+                path="/customer-requests"
+                element={
+                  <ProtectedRoute>
+                    <CustomerRequests />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guard-ratings"
+                element={
+                  <ProtectedRoute>
+                    <GuardRatings />
+                  </ProtectedRoute>
+                }
+              />
+              {/* FIN SOLICITUDES Y CALIFICACIONES DE CLIENTES */}
 
               {/* GESTION DE VISITANTES */}
               <Route

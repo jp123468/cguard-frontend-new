@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
-import { Search, ChevronDown, Plus, X, Calendar as CalendarIcon, EllipsisVertical, Pencil, Trash, Eye } from 'lucide-react';
+import { Search, ChevronDown, Plus, X, Calendar as CalendarIcon, EllipsisVertical, Pencil, Trash, Eye, FileText } from 'lucide-react';
 import ClientsLayout from '@/layouts/ClientsLayout';
 import AppLayout from '@/layouts/app-layout';
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import MobileCardList from '@/components/responsive/MobileCardList';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
+import { Section, EmptyState, Modal } from '@/components/kit';
 
 type Props = {
     client?: any;
@@ -186,8 +187,8 @@ export default function ClientNotes({ client }: Props) {
     const shortName = (name: string, max = 28) => (name.length <= max ? name : name.slice(0, max) + '...');
 
     return (
-        <div ref={containerRef} className="min-h-screen flex flex-col">
-            <div className="bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
+        <div ref={containerRef}>
+            <Section title={t('clients.nav.notes', 'Notas')} icon={<FileText />}>
                 <div className="flex items-center justify-between gap-4 mb-6">
                     <div className="relative" ref={actionRef}>
                         <button
@@ -206,30 +207,27 @@ export default function ClientNotes({ client }: Props) {
 
                     <div className="flex-1 max-w-xs">
                         <div className="relative">
-                            <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
+                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                             <input
                                 type="text"
                                 placeholder={t('clients.notes.notesearchPlaceholder', 'Search notes')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-full pl-9 pr-3 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                             />
                         </div>
                     </div>
 
-                    <button
-                        onClick={handleAddNote}
-                        className="px-6 py-2 bg-primary text-white rounded-md text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors"
-                    >
+                    <Button variant="brand" onClick={handleAddNote} className="gap-2">
                         <Plus size={18} />
                         {t('clients.notes.addNote', 'New Note')}
-                    </button>
+                    </Button>
                 </div>
 
                                 <div className="flex-1 min-h-0">
-                                        <div className="md:block hidden overflow-y-auto overflow-x-auto">
+                                        <div className="md:block hidden overflow-x-auto rounded-xl border">
                                             <table className="w-full">
-                        <thead className="-mx-6 px-6 bg-muted/30">
+                        <thead className="bg-muted/40">
                             <tr className="border-b">
                                 <th className="px-4 py-3 text-left">
                                     <input
@@ -240,35 +238,26 @@ export default function ClientNotes({ client }: Props) {
                                         aria-label="Select all notes"
                                     />
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.notes.Title', 'Title')}</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.notes.Date', 'Date')}</th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('clients.notes.Added By', 'Added By')}</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('clients.notes.Title', 'Title')}</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('clients.notes.Date', 'Date')}</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('clients.notes.Added By', 'Added By')}</th>
                                 <th className="px-4 py-3 text-left"></th>
                             </tr>
                         </thead>
                         <tbody>
                             {notesData.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-12">
-                                        <div className="flex flex-col items-center justify-center gap-4">
-                                            <div className="w-32 h-32">
-                                                <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                                                    <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                                                    <circle cx="85" cy="100" r="8" fill="white" />
-                                                    <circle cx="115" cy="100" r="8" fill="white" />
-                                                    <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                                                </svg>
-                                            </div>
-                                            <div className="text-center">
-                                                <h3 className="text-lg font-semibold text-foreground">{t('clients.empty.title', 'No results found')}</h3>
-                                                <p className="text-sm text-muted-foreground mt-1">{t('clients.empty.description', "We couldn't find any items matching your search")}</p>
-                                            </div>
-                                        </div>
+                                    <td colSpan={6} className="px-4 py-8">
+                                        <EmptyState
+                                            icon={<FileText />}
+                                            title={t('clients.empty.title', 'No results found')}
+                                            description={t('clients.empty.description', "We couldn't find any items matching your search")}
+                                        />
                                     </td>
                                 </tr>
                             ) : (
                                 notesData.map((note) => (
-                                    <tr key={note.id} className="border-b hover:bg-muted/30">
+                                    <tr key={note.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                                         <td className="px-4 py-3 text-sm text-foreground">
                                             <input
                                                 type="checkbox"
@@ -334,7 +323,7 @@ export default function ClientNotes({ client }: Props) {
                                             />
                                         </div>
                                 </div>
-            </div>
+            </Section>
 
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center" onClick={handleCloseModal}>

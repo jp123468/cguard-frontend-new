@@ -4,8 +4,10 @@ import ClientForm from '@/pages/admin/clientes/ClientForm';
 import { useEffect, useState as useStateReact } from 'react';
 import { categoryService } from '@/lib/api/categoryService';
 import { Button } from '@/components/ui/button';
+import { User, Pencil } from 'lucide-react';
 // MobileCardList removed: render full details on mobile for complete info
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
+import { Section, Field } from '@/components/kit';
 
 export default function ClientProfile({ client }: { client: any }) {
   const { t } = useTranslation();
@@ -56,10 +58,11 @@ export default function ClientProfile({ client }: { client: any }) {
   useScrollToTopOnMount(containerRef);
 
   return (
-    <div ref={containerRef} className="p-4 bg-card border rounded-md">
-      <div className="mb-4">
-        <h3 className="text-2xl font-semibold">{t('clients.nav.profile') || 'Perfil'}</h3>
-      </div>
+    <div ref={containerRef}>
+      <Section
+        title={t('clients.nav.profile') || 'Perfil'}
+        icon={<User />}
+      >
 
       {editing ? (
         <div>
@@ -81,176 +84,51 @@ export default function ClientProfile({ client }: { client: any }) {
         <>
           {/* Mobile: show full client details (same fields as desktop) */}
           <div className="md:hidden">
-            <div className="bg-card border rounded-md p-4 space-y-4">
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.name', 'Nombre')}</p>
-                <p className="text-lg text-foreground">{client.name || '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.lastName', 'Apellidos')}</p>
-                <p className="text-lg text-foreground">{client.lastName || '-'}</p>
-              </div>
-
+            <div className="space-y-4">
+              <Field label={t('clients.form.name', 'Nombre')} value={client.name || '-'} />
+              <Field label={t('clients.form.lastName', 'Apellidos')} value={client.lastName || '-'} />
               {client.commercialName && (
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.commercialName', 'Nombre comercial')}</p>
-                <p className="text-lg text-foreground">{client.commercialName}</p>
-              </div>
+                <Field label={t('clients.form.commercialName', 'Nombre comercial')} value={client.commercialName} />
               )}
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.email', 'Email')}</p>
-                <p className="text-lg text-foreground">{client.email || '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.personType', 'Tipo de persona')}</p>
-                <p className="text-lg text-foreground">{client.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{client.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</p>
-                <p className="text-lg text-foreground">{client.documentNumber || '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.phone', 'Teléfono')}</p>
-                <p className="text-lg text-foreground">{client.phoneNumber || '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.address', 'Dirección')}</p>
-                <p className="text-lg text-foreground">{client.address || '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.addressLine2', 'Dirección Complementaria')}</p>
-                <p className="text-lg text-foreground">{client.addressLine2 || '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.postalCode', 'Código postal')}</p>
-                <p className="text-lg text-foreground">{client.postalCode || '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.city', 'Ciudad')}</p>
-                <p className="text-lg text-foreground">{client.city || '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.country', 'País')}</p>
-                <p className="text-lg text-foreground">{client.country || '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.fax', 'Landline')}</p>
-                <p className="text-lg text-foreground">{client.landline || client.faxNumber || '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.website', 'Website')}</p>
-                <p className="text-lg text-foreground">{client.website || '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.latitude', 'Latitud')}</p>
-                <p className="text-lg text-foreground">{client.latitude ?? client.lat ?? '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.longitude', 'Longitud')}</p>
-                <p className="text-lg text-foreground">{client.longitude ?? client.lng ?? '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.active', 'Activo')}</p>
-                <p className="text-lg text-foreground">{client.active === false ? 'No' : client.active === true ? 'Sí' : '-'}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-foreground/70">{t('clients.form.categories', 'Sectores')}</p>
-                <p className="text-lg text-foreground">{(categoryNames && categoryNames.length) ? categoryNames.join(', ') : ((client.categoryNames && client.categoryNames.length) ? client.categoryNames.join(', ') : ((client.categoryIds && client.categoryIds.length) ? client.categoryIds.join(', ') : '-'))}</p>
-              </div>
+              <Field label={t('clients.form.email', 'Email')} value={client.email || '-'} />
+              <Field label={t('clients.form.personType', 'Tipo de persona')} value={client.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')} />
+              <Field label={client.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')} value={client.documentNumber || '-'} />
+              <Field label={t('clients.form.phone', 'Teléfono')} value={client.phoneNumber || '-'} />
+              <Field label={t('clients.form.address', 'Dirección')} value={client.address || '-'} />
+              <Field label={t('clients.form.addressLine2', 'Dirección Complementaria')} value={client.addressLine2 || '-'} />
+              <Field label={t('clients.form.postalCode', 'Código postal')} value={client.postalCode || '-'} />
+              <Field label={t('clients.form.city', 'Ciudad')} value={client.city || '-'} />
+              <Field label={t('clients.form.country', 'País')} value={client.country || '-'} />
+              <Field label={t('clients.form.fax', 'Landline')} value={client.landline || client.faxNumber || '-'} />
+              <Field label={t('clients.form.website', 'Website')} value={client.website || '-'} />
+              <Field label={t('clients.form.latitude', 'Latitud')} value={client.latitude ?? client.lat ?? '-'} />
+              <Field label={t('clients.form.longitude', 'Longitud')} value={client.longitude ?? client.lng ?? '-'} />
+              <Field label={t('clients.form.active', 'Activo')} value={client.active === false ? 'No' : client.active === true ? 'Sí' : '-'} />
+              <Field label={t('clients.form.categories', 'Sectores')} value={(categoryNames && categoryNames.length) ? categoryNames.join(', ') : ((client.categoryNames && client.categoryNames.length) ? client.categoryNames.join(', ') : ((client.categoryIds && client.categoryIds.length) ? client.categoryIds.join(', ') : '-'))} />
             </div>
           </div>
 
-          <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.name', 'Nombre')}</p>
-              <p className="text-lg text-foreground">{client.name || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.lastName', 'Apellidos')}</p>
-              <p className="text-lg text-foreground">{client.lastName || '-'}</p>
-            </div>
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+            <Field label={t('clients.form.name', 'Nombre')} value={client.name || '-'} />
+            <Field label={t('clients.form.lastName', 'Apellidos')} value={client.lastName || '-'} />
             {client.commercialName && (
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.commercialName', 'Nombre comercial')}</p>
-              <p className="text-lg text-foreground">{client.commercialName}</p>
-            </div>
+              <Field label={t('clients.form.commercialName', 'Nombre comercial')} value={client.commercialName} />
             )}
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.email', 'Email')}</p>
-              <p className="text-lg text-foreground">{client.email || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.personType', 'Tipo de persona')}</p>
-              <p className="text-lg text-foreground">{client.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{client.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}</p>
-              <p className="text-lg text-foreground">{client.documentNumber || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.phone', 'Teléfono')}</p>
-              <p className="text-lg text-foreground">{client.phoneNumber || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.address', 'Dirección')}</p>
-              <p className="text-lg text-foreground">{client.address || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.addressLine2', 'Dirección Complementaria')}</p>
-              <p className="text-lg text-foreground">{client.addressLine2 || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.postalCode', 'Código postal')}</p>
-              <p className="text-lg text-foreground">{client.postalCode || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.city', 'Ciudad')}</p>
-              <p className="text-lg text-foreground">{client.city || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.country', 'País')}</p>
-              <p className="text-lg text-foreground">{client.country || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.fax', 'Landline')}</p>
-              <p className="text-lg text-foreground">{client.landline || client.faxNumber || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.website', 'Website')}</p>
-              <p className="text-lg text-foreground">{client.website || '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.latitude', 'Latitud')}</p>
-              <p className="text-lg text-foreground">{client.latitude ?? client.lat ?? '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.longitude', 'Longitud')}</p>
-              <p className="text-lg text-foreground">{client.longitude ?? client.lng ?? '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.active', 'Activo')}</p>
-              <p className="text-lg text-foreground">{client.active === false ? 'No' : client.active === true ? 'Sí' : '-'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-foreground/70">{t('clients.form.categories', 'Sectores')}</p>
-              <p className="text-lg text-foreground">{(categoryNames && categoryNames.length) ? categoryNames.join(', ') : ((client.categoryNames && client.categoryNames.length) ? client.categoryNames.join(', ') : ((client.categoryIds && client.categoryIds.length) ? client.categoryIds.join(', ') : '-'))}</p>
-            </div>
+            <Field label={t('clients.form.email', 'Email')} value={client.email || '-'} />
+            <Field label={t('clients.form.personType', 'Tipo de persona')} value={client.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')} />
+            <Field label={client.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')} value={client.documentNumber || '-'} />
+            <Field label={t('clients.form.phone', 'Teléfono')} value={client.phoneNumber || '-'} />
+            <Field label={t('clients.form.address', 'Dirección')} value={client.address || '-'} />
+            <Field label={t('clients.form.addressLine2', 'Dirección Complementaria')} value={client.addressLine2 || '-'} />
+            <Field label={t('clients.form.postalCode', 'Código postal')} value={client.postalCode || '-'} />
+            <Field label={t('clients.form.city', 'Ciudad')} value={client.city || '-'} />
+            <Field label={t('clients.form.country', 'País')} value={client.country || '-'} />
+            <Field label={t('clients.form.fax', 'Landline')} value={client.landline || client.faxNumber || '-'} />
+            <Field label={t('clients.form.website', 'Website')} value={client.website || '-'} />
+            <Field label={t('clients.form.latitude', 'Latitud')} value={client.latitude ?? client.lat ?? '-'} />
+            <Field label={t('clients.form.longitude', 'Longitud')} value={client.longitude ?? client.lng ?? '-'} />
+            <Field label={t('clients.form.active', 'Activo')} value={client.active === false ? 'No' : client.active === true ? 'Sí' : '-'} />
+            <Field label={t('clients.form.categories', 'Sectores')} value={(categoryNames && categoryNames.length) ? categoryNames.join(', ') : ((client.categoryNames && client.categoryNames.length) ? client.categoryNames.join(', ') : ((client.categoryIds && client.categoryIds.length) ? client.categoryIds.join(', ') : '-'))} />
           </div>
         </>
       )}
@@ -287,18 +165,21 @@ export default function ClientProfile({ client }: { client: any }) {
                 setButtonFading(false);
               }, 300);
             }}
-            className={`min-w-28 text-base bg-[#FE6F02] text-white  cursor-pointer border border-[#FE6F02] px-4 py-2 hover:bg-[#e65b00] transition-opacity duration-300 ${buttonFading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+            variant="brand"
+            className={`min-w-28 gap-2 transition-opacity duration-300 ${buttonFading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
           >
+            <Pencil className="size-4" />
             {t('actions.edit', 'Editar')}
           </Button>
         )}
       </div>
       <div>
-        <div className="mt-4 text-sm text-muted-foreground">
+        <div className="mt-4 text-xs text-muted-foreground">
           <div>{t('profile.createdAt', 'Fecha de creación')}: {client.createdAt ? new Date(client.createdAt).toLocaleDateString() : '-'}</div>
           <div>{t('profile.updatedAt', 'Última actualización')}: {client.updatedAt ? new Date(client.updatedAt).toLocaleDateString() : '-'}</div>
         </div>
       </div>
+      </Section>
     </div>
   );
 }

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Globe, Mail, CheckCircle2, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 import { clientService } from '@/lib/api/clientService';
 import { toast } from 'sonner';
+import { Section, FadeIn, StatusBadge } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 type Props = { client?: any };
 
@@ -41,10 +43,10 @@ export default function ClientPortal({ client }: Props) {
   }
 
   return (
-    <div className="p-6 flex flex-col gap-6 max-w-2xl">
+    <FadeIn className="p-6 flex flex-col gap-6 max-w-2xl">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+        <h2 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
           <Globe className="w-5 h-5 text-primary" />
           Acceso al Portal del Cliente
         </h2>
@@ -54,7 +56,7 @@ export default function ClientPortal({ client }: Props) {
       </div>
 
       {/* Info card */}
-      <div className="bg-amber-500/10 border border-amber-200 rounded-lg p-4 flex gap-3">
+      <div className="cg-card border-amber-200/60 bg-amber-500/10 p-4 flex gap-3">
         <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
         <div className="text-sm text-amber-700 space-y-1">
           <p className="font-medium">¿Cómo funciona?</p>
@@ -67,9 +69,9 @@ export default function ClientPortal({ client }: Props) {
       </div>
 
       {/* Client summary */}
-      <div className="bg-card border rounded-lg p-4 flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <span className="text-primary font-semibold text-sm">
+      <Section className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-full cg-gradient-brand text-primary-foreground flex items-center justify-center shadow-sm shrink-0">
+          <span className="font-semibold text-sm">
             {(name || '?').charAt(0).toUpperCase()}
           </span>
         </div>
@@ -78,26 +80,23 @@ export default function ClientPortal({ client }: Props) {
           <p className="text-xs text-muted-foreground truncate">{email || 'Sin correo electrónico'}</p>
         </div>
         {userId ? (
-          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-            Usuario vinculado
-          </span>
+          <StatusBadge tone="green">Usuario vinculado</StatusBadge>
         ) : (
-          <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">
-            Sin usuario
-          </span>
+          <StatusBadge tone="slate">Sin usuario</StatusBadge>
         )}
-      </div>
+      </Section>
 
       {/* Action button */}
       {dialog === 'idle' && (
-        <button
+        <Button
+          variant="brand"
           onClick={() => setDialog('confirm')}
           disabled={!email && !userId}
-          className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed w-fit"
+          className="w-fit"
         >
           <Mail className="w-4 h-4" />
           Enviar invitación al portal
-        </button>
+        </Button>
       )}
 
       {/* Sent state */}
@@ -160,18 +159,20 @@ export default function ClientPortal({ client }: Props) {
             </p>
 
             <div className="flex gap-3 mt-1">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setDialog('idle')}
-                className="flex-1 px-4 py-2 text-sm font-medium text-foreground bg-muted rounded-lg hover:bg-muted transition-colors"
+                className="flex-1"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="brand"
                 onClick={handleSendInvitation}
-                className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+                className="flex-1"
               >
                 Enviar
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -186,6 +187,6 @@ export default function ClientPortal({ client }: Props) {
           </div>
         </div>
       )}
-    </div>
+    </FadeIn>
   );
 }

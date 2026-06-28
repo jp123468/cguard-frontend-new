@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import attendanceService from "@/lib/api/attendanceService";
 import { fmtDateTime } from "./shared";
+import { PageContainer, PageHeader, Section, StatusBadge, EmptyState, SkeletonCards } from "@/components/kit";
+import { CheckCircle2, LogIn, LogOut, PencilLine, Inbox } from "lucide-react";
 
 interface CorrectionRow {
   id: string;
@@ -185,62 +187,76 @@ export default function NominaApprovals() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 space-y-4">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Aprobaciones</h1>
-          <p className="text-sm text-muted-foreground">Entradas tardías, salidas anticipadas y correcciones pendientes</p>
-        </div>
+      <PageContainer width="wide" className="p-4 sm:p-6">
+        <PageHeader
+          icon={<CheckCircle2 />}
+          title="Aprobaciones"
+          subtitle="Entradas tardías, salidas anticipadas y correcciones pendientes"
+        />
 
         {loading ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">Cargando…</div>
+          <SkeletonCards count={6} />
         ) : (
           <div className="space-y-6">
             {/* Late clock-in requests */}
-            <div className="space-y-2">
-              <h2 className="text-sm font-semibold text-foreground">
-                Entradas tardías
-                {ciRows.length > 0 && (
-                  <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-600">
-                    {ciRows.length}
-                  </span>
-                )}
-              </h2>
+            <Section
+              title="Entradas tardías"
+              icon={<LogIn />}
+              action={ciRows.length > 0 && <StatusBadge tone="orange" dot={false}>{ciRows.length}</StatusBadge>}
+            >
               <DataTable
                 columns={ciColumns}
                 data={ciRows}
-                emptyState={<div className="py-10 text-center text-sm text-muted-foreground">Sin solicitudes de entrada tardía</div>}
+                emptyState={
+                  <EmptyState
+                    icon={<Inbox />}
+                    title="Sin solicitudes de entrada tardía"
+                    description="Las solicitudes de entrada fuera de horario aparecerán aquí."
+                  />
+                }
               />
-            </div>
+            </Section>
 
             {/* Early clock-out requests */}
-            <div className="space-y-2">
-              <h2 className="text-sm font-semibold text-foreground">
-                Salidas anticipadas
-                {coRows.length > 0 && (
-                  <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-600">
-                    {coRows.length}
-                  </span>
-                )}
-              </h2>
+            <Section
+              title="Salidas anticipadas"
+              icon={<LogOut />}
+              action={coRows.length > 0 && <StatusBadge tone="orange" dot={false}>{coRows.length}</StatusBadge>}
+            >
               <DataTable
                 columns={coColumns}
                 data={coRows}
-                emptyState={<div className="py-10 text-center text-sm text-muted-foreground">Sin solicitudes de salida anticipada</div>}
+                emptyState={
+                  <EmptyState
+                    icon={<Inbox />}
+                    title="Sin solicitudes de salida anticipada"
+                    description="Las solicitudes de salida antes del fin de turno aparecerán aquí."
+                  />
+                }
               />
-            </div>
+            </Section>
 
             {/* Manual corrections */}
-            <div className="space-y-2">
-              <h2 className="text-sm font-semibold text-foreground">Correcciones manuales</h2>
+            <Section
+              title="Correcciones manuales"
+              icon={<PencilLine />}
+              action={rows.length > 0 && <StatusBadge tone="primary" dot={false}>{rows.length}</StatusBadge>}
+            >
               <DataTable
                 columns={columns}
                 data={rows}
-                emptyState={<div className="py-10 text-center text-sm text-muted-foreground">Sin correcciones pendientes</div>}
+                emptyState={
+                  <EmptyState
+                    icon={<Inbox />}
+                    title="Sin correcciones pendientes"
+                    description="Las correcciones de marcaciones enviadas para revisión aparecerán aquí."
+                  />
+                }
               />
-            </div>
+            </Section>
           </div>
         )}
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

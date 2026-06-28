@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import attendanceService from "@/lib/api/attendanceService";
 import { EXCEPTION_LABEL, SEVERITY_META, fmtDateTime } from "./shared";
+import { PageContainer, PageHeader, Section, EmptyState, SkeletonCards } from "@/components/kit";
+import { AlertTriangle, Filter, ListChecks, PartyPopper } from "lucide-react";
 
 interface ExceptionRow {
   id: string;
@@ -76,33 +78,45 @@ export default function NominaExceptions() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Excepciones</h1>
-            <p className="text-sm text-muted-foreground">Desviaciones de asistencia abiertas</p>
-          </div>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
-          >
-            {TYPE_OPTIONS.map((t) => (
-              <option key={t} value={t}>{t === "" ? "Todos los tipos" : EXCEPTION_LABEL[t] || t}</option>
-            ))}
-          </select>
-        </div>
+      <PageContainer width="wide" className="p-4 sm:p-6">
+        <PageHeader
+          icon={<AlertTriangle />}
+          title="Excepciones"
+          subtitle="Desviaciones de asistencia abiertas"
+          actions={
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5">
+              <Filter className="size-4 text-muted-foreground" />
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="bg-transparent text-sm outline-none"
+              >
+                {TYPE_OPTIONS.map((t) => (
+                  <option key={t} value={t}>{t === "" ? "Todos los tipos" : EXCEPTION_LABEL[t] || t}</option>
+                ))}
+              </select>
+            </div>
+          }
+        />
 
-        {loading ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">Cargando…</div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={rows}
-            emptyState={<div className="py-12 text-center text-sm text-muted-foreground">Sin excepciones abiertas 🎉</div>}
-          />
-        )}
-      </div>
+        <Section title="Excepciones abiertas" icon={<ListChecks />}>
+          {loading ? (
+            <SkeletonCards count={4} />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={rows}
+              emptyState={
+                <EmptyState
+                  icon={<PartyPopper />}
+                  title="Sin excepciones abiertas"
+                  description="No hay desviaciones de asistencia pendientes para los filtros seleccionados."
+                />
+              }
+            />
+          )}
+        </Section>
+      </PageContainer>
     </AppLayout>
   );
 }

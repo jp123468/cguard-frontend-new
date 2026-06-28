@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
-import { Search, ChevronDown, Plus, EllipsisVertical, Eye, Archive } from 'lucide-react';
+import { Search, ChevronDown, Plus, EllipsisVertical, Eye, Archive, MapPin } from 'lucide-react';
 import { postSiteService } from '@/lib/api/postSiteService';
 import { stationService } from '@/lib/api/stationService';
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,6 +10,8 @@ import MobileCardList from '@/components/responsive/MobileCardList';
 import { ServiceTypeBadge } from '@/components/post-sites/ServiceTypeBadge';
 import { useTranslation } from 'react-i18next';
 import { useClientSelection } from '@/contexts/ClientSelectionContext';
+import { Section, EmptyState, StatusBadge, Modal } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 export default function ClientPostSites({ client }: { client: any }) {
   const { t } = useTranslation();
@@ -63,13 +65,13 @@ export default function ClientPostSites({ client }: { client: any }) {
   useScrollToTopOnMount(containerRef);
 
   return (
-    <div ref={containerRef} className="min-h-screen flex flex-col">
-      <div className="bg-card border rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
+    <div ref={containerRef}>
+      <Section title={t('clientPostSites.headers.postSite')} icon={<MapPin />}>
         <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:w-auto" ref={actionRef}>
             <button
               onClick={() => setActionOpen(!actionOpen)}
-              className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 w-full sm:min-w-[100px] justify-center"
+              className="px-3 py-2 border rounded-md bg-card text-foreground text-sm font-medium flex items-center gap-2 hover:bg-muted/30 w-full sm:min-w-[100px] justify-center transition-colors"
             >
               {actionSelection}
               <ChevronDown size={16} />
@@ -83,29 +85,28 @@ export default function ClientPostSites({ client }: { client: any }) {
 
           <div className="w-full sm:flex-1 flex justify-center">
             <div className="relative w-full max-w-lg">
-              <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 placeholder={t('clientPostSites.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full pl-9 pr-3 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
 
-          <div className="w-full sm:w-auto">
-            <button
-              onClick={() => { setSelectedClient(client); navigate('/post-sites/new'); }}
-              className="px-6 py-2 bg-primary text-white rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors w-full justify-center">
-            
-            
-              {t('clientPostSites.newPostSite')}
-            </button>
-          </div>
+          <Button
+            variant="brand"
+            onClick={() => { setSelectedClient(client); navigate('/post-sites/new'); }}
+            className="w-full gap-2 rounded-full sm:w-auto"
+          >
+            <Plus className="size-4" />
+            {t('clientPostSites.newPostSite')}
+          </Button>
         </div>
 
-        <div className="mt-6 md:block hidden flex-1 min-h-0 overflow-y-auto overflow-x-auto">
+        <div className="md:block hidden overflow-x-auto rounded-xl border">
           <table className="w-full table-fixed">
             <colgroup>
               <col style={{ width: '48px' }} />
@@ -117,7 +118,7 @@ export default function ClientPostSites({ client }: { client: any }) {
               <col style={{ width: '48px' }} />
             </colgroup>
             <thead>
-              <tr className="border-b bg-muted/30">
+              <tr className="border-b bg-muted/40">
                 <th className="px-3 py-2 text-left">
                   <input
                     type="checkbox"
@@ -129,37 +130,28 @@ export default function ClientPostSites({ client }: { client: any }) {
                     checked={filtered.length > 0 && selectedIds.length === filtered.length}
                   />
                 </th>
-                <th className="px-3 py-2 text-left text-sm font-semibold text-foreground">{t('clientPostSites.headers.postSite')}</th>
-                <th className="px-3 py-2 text-left text-sm font-semibold text-foreground">Tipo</th>
-                <th className="px-3 py-2 text-left text-sm font-semibold text-foreground">{t('clientPostSites.headers.email')}</th>
-                <th className="px-3 py-2 text-left text-sm font-semibold text-foreground">{t('clientPostSites.headers.phoneNumber')}</th>
-                <th className="px-3 py-2 text-left text-sm font-semibold text-foreground">{t('clientPostSites.headers.status')}</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('clientPostSites.headers.postSite')}</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tipo</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('clientPostSites.headers.email')}</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('clientPostSites.headers.phoneNumber')}</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('clientPostSites.headers.status')}</th>
                 <th className="px-3 py-2 text-left"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-40 h-40">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                          <rect x="30" y="60" width="140" height="100" fill="currentColor" rx="12" />
-                          <circle cx="80" cy="95" r="8" fill="white" />
-                          <circle cx="120" cy="95" r="8" fill="white" />
-                          <path d="M 80 125 L 120 125" stroke="white" strokeWidth="4" fill="none" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-lg font-semibold text-foreground">{t('clientPostSites.noResult.title')}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">{t('clientPostSites.noResult.description')}</p>
-                      </div>
-                    </div>
+                  <td colSpan={7} className="px-4 py-8">
+                    <EmptyState
+                      icon={<MapPin />}
+                      title={t('clientPostSites.noResult.title')}
+                      description={t('clientPostSites.noResult.description')}
+                    />
                   </td>
                 </tr>
               ) : (
                 filtered.map((s) => (
-                  <tr key={s.id} className="border-b hover:bg-muted/30">
+                  <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="px-2 py-2 text-sm text-foreground">
                       <input
                         type="checkbox"
@@ -176,9 +168,9 @@ export default function ClientPostSites({ client }: { client: any }) {
                     <td className="px-3 py-2 text-sm text-foreground"><div className="truncate">{s.contactPhone ?? s.phone ?? '-'}</div></td>
                     <td className="px-4 py-3 text-sm text-foreground">
                       {(s.status === 'active' || s.active === true) ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">{t('common.active')}</span>
+                        <StatusBadge tone="green">{t('common.active')}</StatusBadge>
                       ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-muted text-foreground/70 text-xs font-semibold">{t('common.inactive')}</span>
+                        <StatusBadge tone="slate">{t('common.inactive')}</StatusBadge>
                       )}
                     </td>
                     <td className="px-3 py-2 text-sm text-foreground relative overflow-visible">
@@ -199,7 +191,7 @@ export default function ClientPostSites({ client }: { client: any }) {
           </table>
         </div>
         {/* Mobile cards */}
-        <div className="mt-6 md:hidden">
+        <div className="md:hidden">
           <MobileCardList
             items={filtered}
             loading={false}
@@ -215,9 +207,9 @@ export default function ClientPostSites({ client }: { client: any }) {
                   <div className="text-right">
                     <div>
                       {s.status === 'active' ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">{t('common.active')}</span>
+                        <StatusBadge tone="green">{t('common.active')}</StatusBadge>
                       ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-muted text-foreground/70 text-xs font-semibold">{t('common.inactive')}</span>
+                        <StatusBadge tone="slate">{t('common.inactive')}</StatusBadge>
                       )}
                     </div>
                     <div className="mt-2">
@@ -239,15 +231,19 @@ export default function ClientPostSites({ client }: { client: any }) {
         </div>
 
         {/* Archive confirmation modal (bottom-sheet on mobile) */}
-        {archiveTargetIds.length > 0 && (
-          <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <div className="absolute inset-0 bg-black opacity-30" onClick={() => setArchiveTargetIds([])} />
-            <div className="bg-card rounded-t-lg sm:rounded-md shadow-xl p-4 sm:p-6 z-70 w-full sm:max-w-md max-h-full sm:max-h-[90vh] overflow-auto">
-              <h3 className="text-lg font-semibold mb-2 text-center">{t('clientPostSites.confirmArchiveTitle', { count: archiveTargetIds.length })}</h3>
-              <p className="text-sm text-foreground/70 mb-4 text-center">{t('clientPostSites.confirmArchiveDescription', { count: archiveTargetIds.length })}</p>
-              <div className="flex justify-end gap-3">
-                <button onClick={() => setArchiveTargetIds([])} className="px-4 py-2 rounded-md border">{t('common.cancel')}</button>
-                <button onClick={async () => {
+        <Modal
+          open={archiveTargetIds.length > 0}
+          onOpenChange={(o) => { if (!o) setArchiveTargetIds([]); }}
+          title={t('clientPostSites.confirmArchiveTitle', { count: archiveTargetIds.length })}
+          icon={<Archive />}
+          size="sm"
+          footer={
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setArchiveTargetIds([])}>{t('common.cancel')}</Button>
+              <Button
+                variant="destructive"
+                disabled={archiveLoading}
+                onClick={async () => {
                   setArchiveLoading(true);
                   try {
                     const results = await Promise.all(archiveTargetIds.map(async (id) => {
@@ -285,12 +281,14 @@ export default function ClientPostSites({ client }: { client: any }) {
                     setArchiveLoading(false);
                     setArchiveTargetIds([]);
                   }
-                }} className="px-4 py-2 rounded-md bg-red-600 text-white">{archiveLoading ? t('clientPostSites.archiving') : t('clientPostSites.archive')}</button>
-              </div>
+                }}
+              >{archiveLoading ? t('clientPostSites.archiving') : t('clientPostSites.archive')}</Button>
             </div>
-          </div>
-        )}
-      </div>
+          }
+        >
+          <p className="text-sm text-muted-foreground text-center">{t('clientPostSites.confirmArchiveDescription', { count: archiveTargetIds.length })}</p>
+        </Modal>
+      </Section>
     </div>
   );
 }

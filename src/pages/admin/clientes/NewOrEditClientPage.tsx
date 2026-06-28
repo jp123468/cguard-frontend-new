@@ -7,6 +7,8 @@ import Breadcrumb from "@/components/ui/breadcrumb";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useTranslation } from "react-i18next";
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { PageContainer, PageHeader } from "@/components/kit";
+import { Building2, UserPlus } from "lucide-react";
 
 
 export default function NewOrEditClientPage() {
@@ -43,9 +45,16 @@ export default function NewOrEditClientPage() {
                     { label: id ? t('clients.editClient') : t('clients.newClient') },
                 ]}
             />
-            <section className="p-4">
+            <PageContainer>
+                <PageHeader
+                    icon={id ? <Building2 /> : <UserPlus />}
+                    title={id ? t('clients.editClient') : t('clients.newClient')}
+                    subtitle={id
+                        ? t('clients.editClientSubtitle', { defaultValue: 'Actualiza la información del cliente.' })
+                        : t('clients.newClientSubtitle', { defaultValue: 'Registra un nuevo cliente en la plataforma.' })}
+                />
                 <ClientForm mode={id ? "edit" : "create"} id={id} categories={cats} />
-            </section>
+            </PageContainer>
         </AppLayout>
     );
 }

@@ -43,8 +43,9 @@ import {
     CategoryOption,
 } from "@/components/categories/CategorySelect";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info, User, Mail, Phone, Tag, Globe, Building2, Upload, X, Image, Loader2, UserPlus, Trash2 } from "lucide-react";
+import { Info, User, Mail, Phone, Tag, Globe, Building2, Upload, X, Image, Loader2, UserPlus, Trash2, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Section, Stagger } from "@/components/kit";
 
 export type Category = { id: string; name: string };
 
@@ -416,16 +417,14 @@ export default function ClientForm({
         <div className="space-y-5">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                  <Stagger className="space-y-5">
 
                     {/* ── Section 1: Personal Info ─────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
-                        <div className="flex items-center gap-2 px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                                <User className="h-4 w-4 text-primary" />
-                            </div>
-                            <span className="text-sm font-semibold text-foreground">{personType === 'PJ' ? t('clients.form.legalRep', 'Representante legal') : t('clients.form.personalInfo', 'Información personal')}</span>
-                        </div>
-                        <div className="p-5 space-y-4">
+                    <Section
+                        icon={<User />}
+                        title={personType === 'PJ' ? t('clients.form.legalRep', 'Representante legal') : t('clients.form.personalInfo', 'Información personal')}
+                        contentClassName="space-y-4"
+                    >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField<ClientInput>
                                     control={form.control}
@@ -549,18 +548,14 @@ export default function ClientForm({
                                     )}
                                 />
                             </div>
-                        </div>
-                    </div>
+                    </Section>
 
                     {/* ── Section 2: Business Info ──────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
-                        <div className="flex items-center gap-2 px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                                <Building2 className="h-4 w-4 text-primary" />
-                            </div>
-                            <span className="text-sm font-semibold text-foreground">{t('clients.form.businessInfo', 'Información de empresa')}</span>
-                        </div>
-                        <div className="p-5 space-y-4">
+                    <Section
+                        icon={<Building2 />}
+                        title={t('clients.form.businessInfo', 'Información de empresa')}
+                        contentClassName="space-y-4"
+                    >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField<ClientInput>
                                     control={form.control}
@@ -708,18 +703,14 @@ export default function ClientForm({
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                    </Section>
 
                     {/* ── Section 3: Contact ────────────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
-                        <div className="flex items-center gap-2 px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                                <Mail className="h-4 w-4 text-primary" />
-                            </div>
-                            <span className="text-sm font-semibold text-foreground">{t('clients.form.contactInfo', 'Contacto')}</span>
-                        </div>
-                        <div className="p-5 space-y-4">
+                    <Section
+                        icon={<Mail />}
+                        title={t('clients.form.contactInfo', 'Contacto')}
+                        contentClassName="space-y-4"
+                    >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField<ClientInput>
                                     control={form.control}
@@ -773,22 +764,20 @@ export default function ClientForm({
                                     )}
                                 />
                             </div>
-                        </div>
-                    </div>
+                    </Section>
 
                     {/* ── Personas con acceso adicionales (optional) ──────────── */}
                     {mode === 'create' && (
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
-                        <div className="flex items-center justify-between gap-2 px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
-                          <div className="flex items-center gap-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10"><UserPlus className="h-4 w-4 text-primary" /></div>
-                            <span className="text-sm font-semibold text-foreground">{t('clients.form.extraAccess', 'Personas con acceso adicionales')}</span>
-                          </div>
+                      <Section
+                        icon={<UserPlus />}
+                        title={t('clients.form.extraAccess', 'Personas con acceso adicionales')}
+                        action={(
                           <button type="button" onClick={addAccessPerson} className="inline-flex items-center gap-1.5 rounded-lg border border-input px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10">
                             <UserPlus size={13} /> {t('clients.form.addPerson', 'Agregar persona')}
                           </button>
-                        </div>
-                        <div className="p-5 space-y-3">
+                        )}
+                        contentClassName="space-y-3"
+                      >
                           <p className="text-xs text-muted-foreground -mt-1">
                             {personType === 'PJ'
                               ? 'Opcional. Ej: la persona encargada de la operación. Recibirá acceso a la app además del representante legal.'
@@ -805,19 +794,11 @@ export default function ClientForm({
                               <button type="button" onClick={() => removeAccessPerson(i)} className="sm:col-span-1 grid place-items-center rounded-lg text-muted-foreground hover:text-red-500" aria-label="Quitar"><Trash2 size={15} /></button>
                             </div>
                           ))}
-                        </div>
-                      </div>
+                      </Section>
                     )}
 
                     {/* ── Section 3: Sector ─────────────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
-                        <div className="flex items-center gap-2 px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                                <Tag className="h-4 w-4 text-primary" />
-                            </div>
-                            <span className="text-sm font-semibold text-foreground">{t('clients.form.categoryLabel', 'Sector de seguridad')}</span>
-                        </div>
-                        <div className="p-5">
+                    <Section icon={<Tag />} title={t('clients.form.categoryLabel', 'Sector de seguridad')}>
                             <FormField<ClientInput>
                                 control={form.control}
                                 name="categoryIds"
@@ -860,23 +841,14 @@ export default function ClientForm({
                                     );
                                 }}
                             />
-                        </div>
-                    </div>
+                    </Section>
 
                     {/* ── Section 4: Address ────────────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
-                        {/* Section header */}
-                        <div className="flex items-center justify-between px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700">
-                            <div className="flex items-center gap-2">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                                    <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                </div>
-                                <span className="text-sm font-semibold text-foreground">{t('clients.form.addressSearch', 'Dirección')}</span>
-                            </div>
-                            {/* Mode toggle pills */}
+                    <Section
+                        icon={<MapPin />}
+                        title={t('clients.form.addressSearch', 'Dirección')}
+                        action={(
+                            /* Mode toggle pills */
                             <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-700 p-0.5 gap-0.5">
                                 <button
                                     type="button"
@@ -893,9 +865,9 @@ export default function ClientForm({
                                     {t('clients.form.switchToManual', 'Manual')}
                                 </button>
                             </div>
-                        </div>
-
-                        <div className="p-5 space-y-4">
+                        )}
+                        contentClassName="space-y-4"
+                    >
                             {showAddressAutocomplete ? (
                                 <AddressAutocomplete
                                     key={addressMapKey}
@@ -1107,11 +1079,10 @@ export default function ClientForm({
                                     </div>
                                 </details>
                             </div>
-                        </div>
-                    </div>{/* end address card */}
+                    </Section>{/* end address card */}
 
                     {/* ── Section 5: More Info ──────────────────────────────── */}
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden">
+                    <div className="cg-card cg-card-hover overflow-hidden">
                         <Accordion type="single" collapsible defaultValue="more">
                             <AccordionItem value="more" className="border-0">
                                 <AccordionTrigger className="px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700 hover:no-underline hover:bg-slate-50 [&[data-state=open]]:border-b [&[data-state=closed]]:border-b-0 rounded-none">
@@ -1192,8 +1163,9 @@ export default function ClientForm({
                         </Button>
                         <Button
                             type="submit"
+                            variant="brand"
                             disabled={form.formState.isSubmitting}
-                            className="min-w-28 bg-primary text-white border border-primary hover:bg-[#b07809] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="min-w-28 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {form.formState.isSubmitting ? (
                                 <span className="flex items-center gap-2">
@@ -1207,6 +1179,7 @@ export default function ClientForm({
                             )}
                         </Button>
                     </div>
+                  </Stagger>
                 </form>
             </Form>
         </div>

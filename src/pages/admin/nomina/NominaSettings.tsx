@@ -4,7 +4,16 @@ import SettingsLayout from "@/layouts/SettingsLayout";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import attendanceService from "@/lib/api/attendanceService";
-import { Loader2 } from "lucide-react";
+import { Section, FadeIn, SkeletonCards } from "@/components/kit";
+import {
+  Loader2,
+  SlidersHorizontal,
+  Timer,
+  MapPinned,
+  BellRing,
+  CheckSquare,
+  Wallet,
+} from "lucide-react";
 
 function set<T extends object>(obj: T, path: string, value: any): T {
   const next: any = { ...obj };
@@ -48,7 +57,7 @@ export default function NominaSettings() {
           type="number"
           value={s?.[a]?.[b] ?? 0}
           onChange={(e) => setS((prev: any) => set(prev, path, Number(e.target.value)))}
-          className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
         />
       </label>
     );
@@ -57,68 +66,76 @@ export default function NominaSettings() {
   const Toggle = ({ label, path }: { label: string; path: string }) => {
     const [a, b] = path.split(".");
     return (
-      <label className="flex items-center gap-2 py-1">
+      <label className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-muted/30 px-3 py-2.5 transition hover:border-primary/40">
         <input
           type="checkbox"
           checked={!!s?.[a]?.[b]}
           onChange={(e) => setS((prev: any) => set(prev, path, e.target.checked))}
+          className="size-4 accent-primary"
         />
         <span className="text-sm text-foreground">{label}</span>
       </label>
     );
   };
 
-  const Section = ({ title, children }: { title: string; children: any }) => (
-    <div className="rounded-2xl border border-border/50 bg-card p-5">
-      <h3 className="mb-3 text-sm font-semibold text-foreground">{title}</h3>
+  const SettingsSection = ({
+    title,
+    icon,
+    children,
+  }: {
+    title: string;
+    icon: React.ReactNode;
+    children: any;
+  }) => (
+    <Section title={title} icon={icon}>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
-    </div>
+    </Section>
   );
 
   return (
     <AppLayout>
       <SettingsLayout navKey="configuracion" title="Asistencia / Time & Attendance">
         {loading || !s ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">Cargando…</div>
+          <SkeletonCards count={4} />
         ) : (
-          <div className="space-y-4 pb-24">
-            <Section title="General">
+          <FadeIn className="space-y-4 pb-28">
+            <SettingsSection title="General" icon={<SlidersHorizontal />}>
               <Toggle label="Reloj de asistencia habilitado" path="general.timeClockEnabled" />
               <Toggle label="Requerir selfie al marcar" path="general.requireSelfie" />
               <Toggle label="Requerir notas en excepciones" path="general.requireNotesOnException" />
-            </Section>
+            </SettingsSection>
 
-            <Section title="Ventanas de tiempo (minutos)">
+            <SettingsSection title="Ventanas de tiempo (minutos)" icon={<Timer />}>
               <Num label="Entrada anticipada permitida" path="windows.earlyClockInMin" />
               <Num label="Tolerancia de retraso (gracia)" path="windows.lateGraceMin" />
               <Num label="Umbral de salida anticipada" path="windows.earlyClockoutThresholdMin" />
               <Num label="Umbral sin marcar salida" path="windows.missedClockoutThresholdMin" />
               <Num label="Umbral inasistencia (no-show)" path="windows.noShowThresholdMin" />
-            </Section>
+            </SettingsSection>
 
-            <Section title="Geocerca">
+            <SettingsSection title="Geocerca" icon={<MapPinned />}>
               <Num label="Radio por defecto (m)" path="geofence.defaultRadiusM" />
               <Toggle label="Requerir validación de geocerca" path="geofence.requireValidation" />
               <Toggle label="Permitir fuera de geocerca (con aprobación)" path="geofence.allowOutsideWithApproval" />
-            </Section>
+            </SettingsSection>
 
-            <Section title="Notificaciones">
+            <SettingsSection title="Notificaciones" icon={<BellRing />}>
               <Toggle label="Notificar solo al supervisor asignado al puesto" path="notifications.assignedSupervisorsOnly" />
-            </Section>
+            </SettingsSection>
 
-            <Section title="Aprobaciones">
+            <SettingsSection title="Aprobaciones" icon={<CheckSquare />}>
               <Toggle label="Auto-aprobar marcaciones normales" path="approval.autoApproveNormal" />
               <Toggle label="Requerir aprobación para excepciones" path="approval.requireApprovalForExceptions" />
               <Toggle label="Bloquear registros al cerrar la nómina" path="approval.lockAfterPayrollClose" />
-            </Section>
+            </SettingsSection>
 
-            <Section title="Nómina">
+            <SettingsSection title="Nómina" icon={<Wallet />}>
               <label className="block">
                 <span className="text-xs font-medium text-muted-foreground">Periodo de nómina</span>
                 <select
                   value={s.payroll?.periodType || "biweekly"}
                   onChange={(e) => setS((p: any) => set(p, "payroll.periodType", e.target.value))}
-                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="weekly">Semanal</option>
                   <option value="biweekly">Quincenal</option>
@@ -132,20 +149,20 @@ export default function NominaSettings() {
                 <input
                   value={s.payroll?.currency || "USD"}
                   onChange={(e) => setS((p: any) => set(p, "payroll.currency", e.target.value))}
-                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
                 />
               </label>
               <Num label="Tarifa por hora (0 = no calcular pago)" path="payroll.defaultHourlyRate" />
               <Num label="Multiplicador horas extra" path="payroll.overtimeMultiplier" />
-            </Section>
+            </SettingsSection>
 
             <div className="fixed bottom-6 right-6 z-10">
-              <Button onClick={save} disabled={saving} className="bg-primary hover:bg-primary/90 text-white shadow-lg">
+              <Button variant="brand" onClick={save} disabled={saving} className="shadow-lg">
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Guardar configuración
               </Button>
             </div>
-          </div>
+          </FadeIn>
         )}
       </SettingsLayout>
     </AppLayout>

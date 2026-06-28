@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Clock, MapPin, LogIn, LogOut, Loader2 } from "lucide-react";
+import { Clock, MapPin, LogIn, LogOut, Loader2, UserX } from "lucide-react";
 import attendanceService from "@/lib/api/attendanceService";
+import { PageContainer, FadeIn, StatusBadge, EmptyState } from "@/components/kit";
 
 interface Station { id: string; stationName?: string; name?: string }
 
@@ -81,35 +82,45 @@ export default function NominaTimeClock() {
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-md p-6">
-        <div className="rounded-3xl border border-border/50 bg-card p-8 text-center shadow-sm">
-          <span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-            <Clock size={30} />
+      <PageContainer width="narrow" className="max-w-md p-4 sm:p-6">
+        <FadeIn className="cg-card cg-card-hover overflow-hidden p-8 text-center">
+          <span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl cg-gradient-brand text-primary-foreground shadow-md [&_svg]:size-7">
+            <Clock />
           </span>
-          <h1 className="text-xl font-bold text-foreground">Reloj de Asistencia</h1>
+          <h1 className="font-display text-xl font-bold tracking-tight text-foreground">Reloj de Asistencia</h1>
 
           {loading ? (
-            <div className="py-10 text-sm text-muted-foreground">Cargando…</div>
+            <div className="space-y-3 py-10">
+              <div className="cg-skeleton mx-auto h-4 w-2/3" />
+              <div className="cg-skeleton mx-auto h-4 w-1/2" />
+              <div className="cg-skeleton mx-auto mt-6 h-12 w-full rounded-xl" />
+            </div>
           ) : notGuard ? (
-            <p className="mt-4 text-sm text-muted-foreground">
-              Este reloj es para vigilantes. Tu cuenta no tiene un perfil de vigilante asignado, por lo
-              que no puedes marcar entrada/salida desde aquí.
-            </p>
+            <div className="mt-4">
+              <EmptyState
+                icon={<UserX />}
+                title="Reloj para vigilantes"
+                description="Tu cuenta no tiene un perfil de vigilante asignado, por lo que no puedes marcar entrada/salida desde aquí."
+                className="border-none py-6"
+              />
+            </div>
           ) : (
             <>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Estado: {isClockedIn ? <span className="font-semibold text-emerald-600">En servicio</span> : <span className="font-semibold text-muted-foreground">Fuera de servicio</span>}
-              </p>
+              <div className="mt-2 flex justify-center">
+                <StatusBadge tone={isClockedIn ? "green" : "slate"}>
+                  {isClockedIn ? "En servicio" : "Fuera de servicio"}
+                </StatusBadge>
+              </div>
 
               {!isClockedIn && (
                 <div className="mt-5 text-left">
-                  <label className="text-xs font-medium text-muted-foreground">
-                    <MapPin className="mr-1 inline h-3.5 w-3.5" /> Puesto
+                  <label className="cg-eyebrow flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" /> Puesto
                   </label>
                   <select
                     value={stationId}
                     onChange={(e) => setStationId(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
                   >
                     {stations.length === 0 && <option value="">Sin puestos asignados</option>}
                     {stations.map((s) => (
@@ -126,7 +137,7 @@ export default function NominaTimeClock() {
                     Marcar salida
                   </Button>
                 ) : (
-                  <Button onClick={doClockIn} disabled={busy || !stationId} className="w-full bg-primary hover:bg-primary/90 text-white py-6 text-base">
+                  <Button variant="brand" onClick={doClockIn} disabled={busy || !stationId} className="w-full py-6 text-base">
                     {busy ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
                     Marcar entrada
                   </Button>
@@ -137,8 +148,8 @@ export default function NominaTimeClock() {
               </p>
             </>
           )}
-        </div>
-      </div>
+        </FadeIn>
+      </PageContainer>
     </AppLayout>
   );
 }

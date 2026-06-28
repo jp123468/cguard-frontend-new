@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
-import { Search, Plus, X, ChevronDown } from 'lucide-react';
+import { Search, Plus, X, ChevronDown, Mail, Check } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
+import { EmptyState, StatusBadge } from '@/components/kit';
+import { Button } from '@/components/ui/button';
 
 type Props = { client?: any };
 export default function ClientEmailReports({ client }: { client: any }) {
@@ -82,10 +84,10 @@ export default function ClientEmailReports({ client }: { client: any }) {
           </div>
 
           <div className="ml-4">
-            <button onClick={openInvite} className="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-full shadow hover:bg-primary/90 whitespace-nowrap">
+            <Button onClick={openInvite} variant="brand" className="rounded-full whitespace-nowrap">
               <Plus size={16} />
               Add New Email
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -105,30 +107,23 @@ export default function ClientEmailReports({ client }: { client: any }) {
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-12">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                      <div className="w-32 h-32">
-                        <svg viewBox="0 0 200 200" className="w-full h-full text-primary/10">
-                          <rect x="50" y="80" width="100" height="80" fill="currentColor" rx="8" />
-                          <circle cx="85" cy="100" r="8" fill="white" />
-                          <circle cx="115" cy="100" r="8" fill="white" />
-                          <path d="M 85 120 L 115 120" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-lg font-semibold text-foreground">No results found</h3>
-                        <p className="text-sm text-muted-foreground mt-1">We couldn't find<br />any items matching<br />your search</p>
-                      </div>
-                    </div>
+                    <EmptyState
+                      icon={<Mail />}
+                      title="No results found"
+                      description="We couldn't find any items matching your search."
+                    />
                   </td>
                 </tr>
               ) : (
                 filtered.map((u) => (
-                  <tr key={u.id} className="border-b hover:bg-muted/30">
+                  <tr key={u.id} className="border-b hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-4 text-sm text-foreground">{u.email}</td>
                     <td className="px-4 py-4 text-sm text-foreground">{u.frequency}</td>
                     <td className="px-4 py-4 text-sm text-foreground">{(Array.isArray(client?.postSites) ? (client.postSites.find((ps: any) => ps.id === u.postSite)?.name) : u.postSite) || ''}</td>
                     <td className="px-4 py-4 text-sm text-foreground">{u.date ? new Date(u.date).toLocaleDateString() : ''}</td>
-                    <td className="px-4 py-4 text-sm text-foreground">{u.status || 'Active'}</td>
+                    <td className="px-4 py-4 text-sm text-foreground">
+                      <StatusBadge tone={(u.status || 'Active') === 'Active' ? 'green' : 'slate'}>{u.status || 'Active'}</StatusBadge>
+                    </td>
                   </tr>
                 ))
               )}
@@ -143,8 +138,13 @@ export default function ClientEmailReports({ client }: { client: any }) {
 
           <div className="fixed right-0 top-0 bottom-0 w-[520px] bg-card dark:bg-slate-800 shadow-2xl flex flex-col text-foreground dark:text-gray-100" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card dark:bg-slate-800 z-10">
-              <h3 className="text-lg font-semibold text-foreground dark:text-gray-100">Add New Email</h3>
-              <button onClick={() => setShowInvite(false)} className="text-muted-foreground hover:text-foreground/70 dark:text-muted-foreground/60 dark:hover:text-white"><X /></button>
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary [&_svg]:size-4">
+                  <Mail />
+                </div>
+                <h3 className="font-display text-lg font-semibold text-foreground dark:text-gray-100">Add New Email</h3>
+              </div>
+              <button onClick={() => setShowInvite(false)} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition dark:text-muted-foreground/60 dark:hover:text-white"><X /></button>
             </div>
 
             <div className="p-6 overflow-y-auto flex-1">
@@ -184,10 +184,8 @@ export default function ClientEmailReports({ client }: { client: any }) {
                       const active = selectedReports.includes(r);
                       return (
                         <label key={r} className="flex items-start gap-3">
-                          <button type="button" onClick={() => toggleReport(r)} className={`w-5 h-5 rounded-sm flex items-center justify-center border ${active ? 'bg-primary border-primary' : 'bg-card border-border'}`}>
-                            {active ? (
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            ) : null}
+                          <button type="button" onClick={() => toggleReport(r)} className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${active ? 'bg-primary border-primary text-primary-foreground' : 'bg-card border-border'}`}>
+                            {active ? <Check size={12} strokeWidth={3} /> : null}
                           </button>
                           <span className={`${active ? 'text-primary font-semibold' : 'text-foreground dark:text-muted-foreground/40'}`}>{r}</span>
                         </label>
@@ -198,9 +196,9 @@ export default function ClientEmailReports({ client }: { client: any }) {
               </div>
             </div>
 
-            <div className="p-4 bg-card dark:bg-slate-800 sticky bottom-0 z-20">
+            <div className="p-4 border-t bg-muted/30 dark:bg-slate-800 sticky bottom-0 z-20">
               <div className="flex items-center justify-end">
-                <button onClick={handleSaveEmail} className="ml-auto w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90">Save</button>
+                <Button onClick={handleSaveEmail} variant="brand">Save</Button>
               </div>
             </div>
           </div>

@@ -15,6 +15,8 @@ import ClientUserAccess from './components/ClientUserAccess/ClientUserAccess';
 import ClientEmailReports from './components/ClientEmailReports/ClientEmailReports';
 import ClientProjects from './components/ClientProjects/ClientProjects';
 import { toast } from 'sonner';
+import { SkeletonCards, EmptyState, FadeIn } from '@/components/kit';
+import { Building2 } from 'lucide-react';
 
 export default function ClientsDetails() {
   const { id } = useParams();
@@ -110,9 +112,7 @@ export default function ClientsDetails() {
       <ClientsLayout navKey="clients" title="clients.nav.title" client={client}>
         <div className="flex-1 flex flex-col">
           {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="text-muted-foreground">Cargando...</div>
-            </div>
+            <SkeletonCards count={4} className="p-1" />
           ) : client ? (
             <>
               {activeTab === 'overview' && <ClientOverview client={client} />}
@@ -127,9 +127,13 @@ export default function ClientsDetails() {
               {activeTab === 'projects' && <ClientProjects client={client} />}
             </>
           ) : (
-            <div className="flex items-center justify-center h-32">
-              <div className="text-muted-foreground">No se pudo cargar el cliente</div>
-            </div>
+            <FadeIn>
+              <EmptyState
+                icon={<Building2 />}
+                title="No se pudo cargar el cliente"
+                description="Vuelve a intentarlo o revisa que el cliente exista."
+              />
+            </FadeIn>
           )}
         </div>
       </ClientsLayout>

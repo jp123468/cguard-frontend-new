@@ -4,9 +4,10 @@ import { DataTable, type Column } from "@/components/table/DataTable";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { confirmDialog } from "@/components/ui/confirmDialog";
-import { FileDown, Printer, Lock, FileSpreadsheet, Save } from "lucide-react";
+import { FileDown, Printer, Lock, FileSpreadsheet, Save, Wallet, CalendarDays, Clock, Timer, Pencil } from "lucide-react";
 import * as XLSX from "xlsx";
 import attendanceService from "@/lib/api/attendanceService";
+import { PageContainer, PageHeader, Section, StatCard, Stagger } from "@/components/kit";
 
 interface SummaryRow {
   guardId: string;
@@ -187,72 +188,71 @@ export default function NominaPayrollSummary() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Resumen de Nómina</h1>
-            <p className="text-sm text-muted-foreground">Horas pagables por vigilante (sin cálculo de pago)</p>
-          </div>
-          <div className="flex flex-wrap items-end gap-2">
-            <label className="text-xs text-muted-foreground">
-              Desde
-              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 block rounded-lg border border-border bg-background px-3 py-1.5 text-sm" />
-            </label>
-            <label className="text-xs text-muted-foreground">
-              Hasta
-              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 block rounded-lg border border-border bg-background px-3 py-1.5 text-sm" />
-            </label>
-            <Button onClick={load} disabled={loading} className="bg-primary hover:bg-primary/90 text-white">
-              {loading ? "Generando…" : "Generar"}
-            </Button>
-            <Button variant="outline" onClick={exportCsv} disabled={!rows.length}>
-              <FileDown className="mr-1.5 h-4 w-4" /> CSV
-            </Button>
-            <Button variant="outline" onClick={exportXlsx} disabled={!rows.length}>
-              <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Excel
-            </Button>
-            <Button variant="outline" onClick={exportPdf} disabled={!rows.length}>
-              <Printer className="mr-1.5 h-4 w-4" /> PDF
-            </Button>
-            {editRates ? (
-              <Button onClick={saveRates} disabled={savingRates} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                <Save className="mr-1.5 h-4 w-4" /> {savingRates ? "Guardando…" : "Guardar tarifas"}
+      <PageContainer width="wide" className="p-4 sm:p-6">
+        <PageHeader
+          icon={<Wallet />}
+          title="Resumen de Nómina"
+          subtitle="Horas pagables por vigilante (sin cálculo de pago)"
+          actions={
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="cg-eyebrow">
+                Desde
+                <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 block rounded-lg border border-border bg-background px-3 py-1.5 text-sm" />
+              </label>
+              <label className="cg-eyebrow">
+                Hasta
+                <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 block rounded-lg border border-border bg-background px-3 py-1.5 text-sm" />
+              </label>
+              <Button variant="brand" onClick={load} disabled={loading}>
+                {loading ? "Generando…" : "Generar"}
               </Button>
-            ) : (
-              <Button variant="outline" onClick={() => setEditRates(true)} disabled={!rows.length}>
-                Editar tarifas
+              <Button variant="outline" onClick={exportCsv} disabled={!rows.length}>
+                <FileDown className="mr-1.5 h-4 w-4" /> CSV
               </Button>
-            )}
-            <Button variant="outline" onClick={closePeriod} disabled={closing} className="text-red-600">
-              <Lock className="mr-1.5 h-4 w-4" /> {closing ? "Cerrando…" : "Cerrar periodo"}
-            </Button>
-          </div>
-        </div>
+              <Button variant="outline" onClick={exportXlsx} disabled={!rows.length}>
+                <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Excel
+              </Button>
+              <Button variant="outline" onClick={exportPdf} disabled={!rows.length}>
+                <Printer className="mr-1.5 h-4 w-4" /> PDF
+              </Button>
+              {editRates ? (
+                <Button onClick={saveRates} disabled={savingRates} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                  <Save className="mr-1.5 h-4 w-4" /> {savingRates ? "Guardando…" : "Guardar tarifas"}
+                </Button>
+              ) : (
+                <Button variant="outline" onClick={() => setEditRates(true)} disabled={!rows.length}>
+                  <Pencil className="mr-1.5 h-4 w-4" /> Editar tarifas
+                </Button>
+              )}
+              <Button variant="outline" onClick={closePeriod} disabled={closing} className="text-red-600">
+                <Lock className="mr-1.5 h-4 w-4" /> {closing ? "Cerrando…" : "Cerrar periodo"}
+              </Button>
+            </div>
+          }
+        />
 
         {totals && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Tile label="Turnos" value={totals.shifts} />
-            <Tile label="Horas totales" value={Number(totals.totalHours).toFixed(2)} />
-            <Tile label="Horas extra" value={Number(totals.overtimeHours).toFixed(2)} />
-            <Tile label={ratesEnabled ? "Pago bruto" : "Tardanzas / Inasist."} value={ratesEnabled ? money(totals.grossPay) : `${totals.lateCount} / ${totals.noShows}`} />
-          </div>
+          <Stagger className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <StatCard icon={<CalendarDays />} accent="primary" label="Turnos" value={totals.shifts} />
+            <StatCard icon={<Clock />} accent="blue" label="Horas totales" value={Number(totals.totalHours).toFixed(2)} />
+            <StatCard icon={<Timer />} accent="orange" label="Horas extra" value={Number(totals.overtimeHours).toFixed(2)} />
+            <StatCard
+              icon={<Wallet />}
+              accent={ratesEnabled ? "green" : "red"}
+              label={ratesEnabled ? "Pago bruto" : "Tardanzas / Inasist."}
+              value={ratesEnabled ? money(totals.grossPay) : `${totals.lateCount} / ${totals.noShows}`}
+            />
+          </Stagger>
         )}
 
-        <DataTable
-          columns={columns}
-          data={rows}
-          emptyState={<div className="py-12 text-center text-sm text-muted-foreground">Sin datos en el rango</div>}
-        />
-      </div>
+        <Section title="Detalle por vigilante" icon={<Wallet />}>
+          <DataTable
+            columns={columns}
+            data={rows}
+            emptyState={<div className="py-12 text-center text-sm text-muted-foreground">Sin datos en el rango</div>}
+          />
+        </Section>
+      </PageContainer>
     </AppLayout>
-  );
-}
-
-function Tile({ label, value }: { label: string; value: any }) {
-  return (
-    <div className="rounded-2xl border border-border/50 bg-card p-4">
-      <div className="text-2xl font-bold text-foreground">{value}</div>
-      <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
-    </div>
   );
 }

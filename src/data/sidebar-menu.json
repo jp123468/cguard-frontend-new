@@ -328,6 +328,18 @@
     "path": "/dispatch-tickets"
   },
   {
+    "id": "solicitudes-clientes",
+    "name": "Solicitudes de clientes",
+    "icon": "FileText",
+    "path": "/customer-requests"
+  },
+  {
+    "id": "calificaciones-vigilantes",
+    "name": "Calificaciones de vigilantes",
+    "icon": "Star",
+    "path": "/guard-ratings"
+  },
+  {
     "id": "seguridad-auditoria",
     "name": "Registro de Seguridad",
     "icon": "Shield",
