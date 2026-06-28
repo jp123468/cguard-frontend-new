@@ -1290,8 +1290,8 @@ export default function ClientesPage() {
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 mb-1">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0ea5e9]/10">
-                <Download className="h-5 w-5 text-[#0ea5e9]" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500/10">
+                <Download className="h-5 w-5 text-sky-500" />
               </div>
               <AlertDialogTitle className="text-base">
                 {t('clients.inviteToApp', 'Invitar a la app')}
@@ -1328,7 +1328,7 @@ export default function ClientesPage() {
             <AlertDialogCancel disabled={sendingAppInvite}>{t('clients.cancel', 'Cancelar')}</AlertDialogCancel>
             {appInviteClient?.email && (
               <AlertDialogAction
-                className="bg-[#0ea5e9] hover:bg-[#0284c7] text-white"
+                className="bg-sky-500 hover:bg-sky-600 text-white"
                 disabled={sendingAppInvite}
                 onClick={async (e) => {
                   e.preventDefault();

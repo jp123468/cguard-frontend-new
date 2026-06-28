@@ -21,7 +21,7 @@ function CoverageBars({ data }: { data: { date: string; scheduled: number; cover
       <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
         <span>{data[0]?.date.slice(5)}</span>
         <span className="flex items-center gap-3">
-          <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-[#22c55e]" /> Cubiertos</span>
+          <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-green-500" /> Cubiertos</span>
           <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded bg-muted-foreground/40" /> Programados</span>
         </span>
         <span>{data[data.length - 1]?.date.slice(5)}</span>
