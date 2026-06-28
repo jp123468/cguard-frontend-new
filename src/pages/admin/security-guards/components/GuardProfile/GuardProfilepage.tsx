@@ -4,7 +4,7 @@ import { getTenantTimezone } from '@/utils/tenantLocation';
 import securityGuardService from '@/lib/api/securityGuardService';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import AppLayout from '@/layouts/app-layout';
@@ -14,623 +14,436 @@ type Props = {
   onGuardUpdate?: (updatedGuard: any) => void;
 };
 
-// Pencil icon for card edit trigger
-const PencilIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-2a2 2 0 01.586-1.414z" />
-  </svg>
+const GOLD = '#C8860A';
+
+/** Dropdown options matching the backend isIn validators. */
+const FIELD_OPTIONS: Record<string, string[]> = {
+  gender: ['Masculino', 'Femenino'],
+  bloodType: ['A+', 'A-', 'AB+', 'AB-', 'O+', 'O-', 'B+', 'B-'],
+  maritalStatus: ['Soltero', 'Casado', 'Unión libre', 'Divorciado'],
+  academicInstruction: ['Primaria', 'Secundaria', 'Universitaria', 'Universidad', 'Especial'],
+};
+
+/** ONLY these securityGuard fields are accepted by the update endpoint. The save
+ *  payload is built from exactly this list, so editing actually persists (the old
+ *  page POSTed the whole bloated object — incl. the nested user/image arrays —
+ *  which silently failed). Name/email/phone live on the linked USER (identity) and
+ *  are shown read-only in the header. */
+const EDITABLE_TEXT = ['governmentId', 'address', 'birthPlace', 'guardCredentials'] as const;
+const EDITABLE_SELECT = ['gender', 'bloodType', 'maritalStatus', 'academicInstruction'] as const;
+const EDITABLE_DATE = ['birthDate', 'hiringContractDate'] as const;
+
+function toDateInput(v: any): string {
+  if (!v) return '';
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10);
+}
+
+// ── Small presentational helpers ────────────────────────────────────────────
+const Section = ({ title, icon, action, children }: { title: string; icon?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode }) => (
+  <div className="bg-card border rounded-2xl p-5 shadow-sm">
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        {icon && <span className="text-muted-foreground">{icon}</span>}
+        <h4 className="font-semibold text-sm tracking-tight">{title}</h4>
+      </div>
+      {action}
+    </div>
+    {children}
+  </div>
 );
 
-// Card with optional per-card edit controls in header
-const InfoCard = ({
-  title,
-  children,
-  t,
-  cardId,
-  editingCard,
-  saving,
-  onEdit,
-  onSave,
-  onCancel,
-}: {
-  title: string;
-  children: React.ReactNode;
-  t: any;
-  cardId?: string;
-  editingCard?: string | null;
-  saving?: boolean;
-  onEdit?: () => void;
-  onSave?: () => void;
-  onCancel?: () => void;
-}) => {
-  const isThisEditing = cardId != null && editingCard === cardId;
-  return (
-    <div className="bg-card border rounded-lg p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="font-semibold text-base">{t(title)}</h4>
-        {cardId && !isThisEditing && (
-          <button
-            onClick={onEdit}
-            className="text-muted-foreground hover:text-[#C8860A] transition-colors p-1 rounded"
-            title={t('guards.profile.actions.edit')}
-          >
-            <PencilIcon />
-          </button>
-        )}
-        {isThisEditing && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onCancel}
-              disabled={saving}
-              className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 border rounded transition-colors disabled:opacity-50"
-            >
-              {t('guards.profile.actions.cancel')}
-            </button>
-            <button
-              onClick={onSave}
-              disabled={saving}
-              className="text-xs bg-[#C8860A] text-white px-3 py-1 rounded hover:bg-[#B37809] transition-colors disabled:opacity-50 flex items-center gap-1"
-            >
-              {saving && <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-              {saving ? t('guards.profile.actions.saving') : t('guards.profile.actions.save')}
-            </button>
-          </div>
-        )}
-      </div>
-      {children}
-    </div>
-  );
-};
+const ReadField = ({ label, value }: { label: string; value: any }) => (
+  <div className="min-w-0">
+    <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-0.5">{label}</div>
+    <div className="font-medium text-sm text-foreground truncate">{value || '—'}</div>
+  </div>
+);
 
-// Constrained profile fields render a dropdown (matching the backend isIn
-// validators) instead of free text, so the tenant picks valid values instead
-// of leaving/typing stray data.
-const FIELD_OPTIONS: Record<string, string[]> = {
-  gender: ["Masculino", "Femenino"],
-  bloodType: ["A+", "A-", "AB+", "AB-", "O+", "O-", "B+", "B-"],
-  maritalStatus: ["Soltero", "Casado", "Unión libre", "Divorciado"],
-  academicInstruction: ["Secundaria", "Universitaria", "Universidad", "Especial", "Primaria"],
-};
-
-const InfoField = ({
-  label,
-  value,
-  field,
-  isEditing,
-  editedGuard,
-  setEditedGuard,
-  t,
-}: {
-  label: string;
-  value: string | number | null | undefined;
-  field?: string;
-  isEditing: boolean;
-  editedGuard: any;
-  setEditedGuard: (guard: any) => void;
-  t: any;
-}) => (
+const EditText = ({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) => (
   <div>
-    <div className="text-xs text-muted-foreground mb-1">{t(label)}</div>
-    {isEditing && field ? (
-      FIELD_OPTIONS[field] ? (
-        <select
-          value={editedGuard?.[field] || ''}
-          onChange={(e) => setEditedGuard({ ...editedGuard, [field]: e.target.value })}
-          className="h-8 text-sm flex w-full rounded-md border border-input bg-background px-2"
-        >
-          <option value="">Seleccionar…</option>
-          {FIELD_OPTIONS[field].map((o) => (
-            <option key={o} value={o}>{o}</option>
-          ))}
-        </select>
-      ) : (
-        <Input
-          value={editedGuard?.[field] || ''}
-          onChange={(e) => setEditedGuard({ ...editedGuard, [field]: e.target.value })}
-          className="h-8 text-sm"
-        />
-      )
-    ) : (
-      <div className="font-medium text-sm">{value || '--'}</div>
-    )}
+    <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{label}</div>
+    <Input type={type} value={value || ''} onChange={(e) => onChange(e.target.value)} className="h-9 text-sm" />
+  </div>
+);
+
+const EditSelect = ({ label, value, field, onChange }: { label: string; value: string; field: string; onChange: (v: string) => void }) => (
+  <div>
+    <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{label}</div>
+    <select
+      value={value || ''}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-9 text-sm flex w-full rounded-md border border-input bg-background px-2"
+    >
+      <option value="">Seleccionar…</option>
+      {(FIELD_OPTIONS[field] || []).map((o) => <option key={o} value={o}>{o}</option>)}
+    </select>
   </div>
 );
 
 export default function GuardProfile({ guard, onGuardUpdate }: Props) {
   const { id } = useParams();
-  const { t } = useTranslation()
-  // Which card is currently being edited (null = view mode)
-  const [editingCard, setEditingCard] = useState<string | null>(null);
+  const { t } = useTranslation();
+
+  const [data, setData] = useState<any>({ ...guard });
+  const [form, setForm] = useState<any>({});
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editedGuard, setEditedGuard] = useState({ ...guard });
-  // Track last successfully saved state so cancel reverts correctly
-  const savedGuardRef = useRef({ ...guard });
-  const [loading, setLoading] = useState(false);
   const [sendingInvite, setSendingInvite] = useState(false);
+  const savedRef = useRef<any>({ ...guard });
 
-  const handleCardEdit = (cardId: string) => setEditingCard(cardId);
+  const setField = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
 
-  const handleCardCancel = () => {
-    setEditedGuard({ ...savedGuardRef.current });
-    setEditingCard(null);
+  // ── Load full guard ────────────────────────────────────────────────────────
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!id) return;
+      try {
+        const resp = await securityGuardService.get(id);
+        if (!mounted) return;
+        const payload = resp && resp.id ? resp : (resp && (resp as any).data) ? (resp as any).data : resp;
+        setData((prev: any) => ({ ...prev, ...payload }));
+        savedRef.current = { ...savedRef.current, ...payload };
+        if (onGuardUpdate) onGuardUpdate(payload);
+      } catch (err) {
+        console.error('Error cargando vigilante:', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [id]);
+
+  const beginEdit = () => {
+    const src = data || {};
+    const next: any = {};
+    [...EDITABLE_TEXT, ...EDITABLE_SELECT].forEach((f) => { next[f] = src[f] ?? ''; });
+    EDITABLE_DATE.forEach((f) => { next[f] = toDateInput(src[f]); });
+    next.languages = Array.isArray(src.languages) ? src.languages.join(', ') : (src.languages || '');
+    next.skills = Array.isArray(src.skills) ? src.skills.join(', ') : (src.skills || '');
+    setForm(next);
+    setEditing(true);
   };
 
-  const handleCardSave = async () => {
+  const cancelEdit = () => { setEditing(false); setForm({}); };
+
+  const save = async () => {
     if (!id) return;
     setSaving(true);
     try {
-      await securityGuardService.update(id, editedGuard);
-      savedGuardRef.current = { ...editedGuard };
-      toast.success(t('guards.profile.toasts.updated'));
-      setEditingCard(null);
-      if (onGuardUpdate) onGuardUpdate(editedGuard);
-    } catch (error) {
+      // Build a CLEAN payload — ONLY backend-accepted securityGuard fields.
+      const payload: any = {};
+      [...EDITABLE_TEXT, ...EDITABLE_SELECT].forEach((f) => { payload[f] = form[f] ?? null; });
+      EDITABLE_DATE.forEach((f) => { if (form[f]) payload[f] = form[f]; });
+      payload.languages = String(form.languages || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+      payload.skills = String(form.skills || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+
+      await securityGuardService.update(id, payload);
+      const merged = { ...data, ...payload };
+      setData(merged);
+      savedRef.current = merged;
+      setEditing(false);
+      setForm({});
+      toast.success(t('guards.profile.toasts.updated') || 'Perfil actualizado');
+      if (onGuardUpdate) onGuardUpdate(merged);
+    } catch (error: any) {
       console.error('Error actualizando vigilante:', error);
-      toast.error(t('guards.profile.toasts.updateError'));
+      toast.error(error?.message || t('guards.profile.toasts.updateError') || 'No se pudo guardar');
     } finally {
       setSaving(false);
     }
   };
 
-  // Fetch full guard details when component mounts or id changes
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (!id) return;
-      setLoading(true);
-      try {
-        const data = await securityGuardService.get(id);
-        if (!mounted) return;
-        // Some endpoints return { rows, count } for lists; single-get should return object
-        const payload = data && data.id ? data : (data && data.data) ? data.data : data;
-        setEditedGuard((prev: any) => ({ ...prev, ...payload }));
-        savedGuardRef.current = { ...savedGuardRef.current, ...payload };
-        if (onGuardUpdate) onGuardUpdate(payload);
-      } catch (err) {
-        console.error('Error cargando vigilante:', err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, [id]);
-
-  // GuardShift (attendance) state
+  // ── Attendance (read-only history) ──────────────────────────────────────────
   const [guardShifts, setGuardShifts] = useState<any[]>([]);
   const [loadingShifts, setLoadingShifts] = useState(false);
-  const [showCreateShiftModal, setShowCreateShiftModal] = useState(false);
-  const [createPunchIn, setCreatePunchIn] = useState<string>('');
-  const [createPunchOut, setCreatePunchOut] = useState<string>('');
-  const [createSchedule, setCreateSchedule] = useState<string>('Diurno');
-
-  const loadGuardShifts = async () => {
-    if (!id) return;
-    setLoadingShifts(true);
-    try {
-      const tenantId = localStorage.getItem('tenantId') || '';
-      const resp = await ApiService.get(`/tenant/${tenantId}/guard-shift?filter[guardName]=${encodeURIComponent(id)}&limit=50`);
-      const rows = Array.isArray(resp) ? resp : (resp && resp.rows) ? resp.rows : [];
-      setGuardShifts(rows);
-    } catch (err) {
-      console.error('Failed loading guard shifts', err);
-    } finally {
-      setLoadingShifts(false);
-    }
-  };
-
   useEffect(() => {
-    loadGuardShifts();
-  }, [id]);
-
-  const handlePunchInNow = async () => {
-    if (!id) return;
-    try {
-      const tenantId = localStorage.getItem('tenantId') || '';
-      const payload = { punchInTime: new Date().toISOString(), guardName: id };
-      await ApiService.post(`/tenant/${tenantId}/guard-shift`, { data: payload });
-      toast.success('Punch in recorded');
-      await loadGuardShifts();
-    } catch (err: any) {
-      console.error('Punch in failed', err);
-      toast.error(err?.message || 'Failed to punch in');
-    }
-  };
-
-  const handlePunchOutLast = async () => {
-    if (!id) return;
-    try {
-      // find last open shift (no punchOutTime)
-      const open = guardShifts.find(g => !g.punchOutTime);
-      if (!open) {
-        toast.info('No open punch found');
-        return;
+    (async () => {
+      if (!id) return;
+      setLoadingShifts(true);
+      try {
+        const tenantId = localStorage.getItem('tenantId') || '';
+        const resp: any = await ApiService.get(`/tenant/${tenantId}/guard-shift?filter[guardName]=${encodeURIComponent(id)}&limit=20`);
+        setGuardShifts(Array.isArray(resp) ? resp : (resp && resp.rows) ? resp.rows : []);
+      } catch (err) {
+        console.error('Failed loading guard shifts', err);
+      } finally {
+        setLoadingShifts(false);
       }
-      const tenantId = localStorage.getItem('tenantId') || '';
-      const now = new Date().toISOString();
-      await ApiService.patch(`/tenant/${tenantId}/guard-shift/${open.id}`, { data: { punchOutTime: now } });
-      toast.success('Punch out recorded');
-      await loadGuardShifts();
-    } catch (err: any) {
-      console.error('Punch out failed', err);
-      toast.error(err?.message || 'Failed to punch out');
-    }
-  };
-
-  const handleCreateManual = async () => {
-    if (!id) return;
-    try {
-      const tenantId = localStorage.getItem('tenantId') || '';
-      const payload: any = { guardName: id, shiftSchedule: createSchedule };
-      if (createPunchIn) payload.punchInTime = new Date(createPunchIn).toISOString();
-      if (createPunchOut) payload.punchOutTime = new Date(createPunchOut).toISOString();
-      await ApiService.post(`/tenant/${tenantId}/guard-shift`, { data: payload });
-      toast.success('Attendance record created');
-      setShowCreateShiftModal(false);
-      setCreatePunchIn(''); setCreatePunchOut(''); setCreateSchedule('Diurno');
-      await loadGuardShifts();
-    } catch (err: any) {
-      console.error('Create guard shift failed', err);
-      toast.error(err?.message || 'Failed creating record');
-    }
-  };
+    })();
+  }, [id]);
 
   const handleSendAppAccess = async () => {
     if (!id) return;
     setSendingInvite(true);
     try {
-      const payload: any = {};
-      if (editedGuard?.guard?.id) {
-        payload.guard = editedGuard.guard.id;
-      } else if (editedGuard?.guard?.email) {
-        payload.contact = editedGuard.guard.email;
-      }
-      payload.securityGuardId = id;
-      if (editedGuard?.guard?.firstName) payload.firstName = editedGuard.guard.firstName;
-      if (editedGuard?.guard?.lastName) payload.lastName = editedGuard.guard.lastName;
+      const payload: any = { securityGuardId: id };
+      if (data?.guard?.id) payload.guard = data.guard.id;
+      else if (data?.guard?.email) payload.contact = data.guard.email;
+      if (data?.guard?.firstName) payload.firstName = data.guard.firstName;
+      if (data?.guard?.lastName) payload.lastName = data.guard.lastName;
       await securityGuardService.resendInvite(payload);
-      toast.success(t('guards.profile.access.inviteSent'));
-      // Reload guard to update access status
-      const refreshed = await securityGuardService.get(id);
-      const data = refreshed && (refreshed as any).id ? refreshed : (refreshed && (refreshed as any).data) ? (refreshed as any).data : refreshed;
-      setEditedGuard((prev: any) => ({ ...prev, ...data }));
-      if (onGuardUpdate) onGuardUpdate(data);
+      toast.success(t('guards.profile.access.inviteSent') || 'Invitación enviada');
+      const refreshed: any = await securityGuardService.get(id);
+      const d = refreshed && refreshed.id ? refreshed : (refreshed && refreshed.data) ? refreshed.data : refreshed;
+      setData((prev: any) => ({ ...prev, ...d }));
     } catch (err: any) {
       console.error('Send app access failed', err);
-      toast.error(err?.message || t('guards.profile.access.inviteError'));
+      toast.error(err?.message || t('guards.profile.access.inviteError') || 'Error al enviar invitación');
     } finally {
       setSendingInvite(false);
     }
   };
 
-  return (
+  // ── Derived ────────────────────────────────────────────────────────────────
+  const avatar = (() => {
+    const pi = data?.profileImage;
+    if (Array.isArray(pi)) return pi[0]?.downloadUrl || pi[0]?.publicUrl || null;
+    return pi?.downloadUrl || pi?.publicUrl || (typeof pi === 'string' && pi ? pi : null);
+  })();
+  const fullName = data?.fullName || [data?.guard?.firstName, data?.guard?.lastName].filter(Boolean).join(' ') || t('guards.profile.nav') || 'Vigilante';
+  const onDuty = !!data?.isOnDuty;
+  const gStatus = data?.guard?.status;
+  const hasPassword = data?.guard?.hasPassword;
+  const isActivated = hasPassword && gStatus === 'active';
+  const tokenExpires = data?.guard?.invitationTokenExpiresAt;
+  const tokenExpired = tokenExpires && new Date(tokenExpires) < new Date();
 
+  const accessBadge = isActivated
+    ? { txt: t('guards.profile.access.statusActive') || 'App activa', cls: 'bg-green-500/15 text-green-700', dot: 'bg-green-500' }
+    : tokenExpired
+      ? { txt: t('guards.profile.access.statusExpired') || 'Invitación expirada', cls: 'bg-red-500/15 text-red-700', dot: 'bg-red-500' }
+      : { txt: t('guards.profile.access.statusPending') || 'Acceso pendiente', cls: 'bg-orange-500/15 text-orange-700', dot: 'bg-orange-500' };
+
+  return (
     <AppLayout>
       <GuardsLayout navKey="keep-safe" title={t('guards.nav.perfil')}>
+        <div className="mx-auto max-w-5xl space-y-6 pb-24">
 
+          {/* ── HERO ─────────────────────────────────────────────────────────── */}
+          <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-muted/40 shadow-sm">
+            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-[#C8860A]/15 to-transparent" />
+            <div className="relative p-6 flex flex-col sm:flex-row items-center sm:items-end gap-5">
+              <div className="relative">
+                <div className="w-28 h-28 rounded-2xl bg-muted ring-4 ring-background overflow-hidden flex items-center justify-center shadow-md">
+                  {avatar ? (
+                    <img src={avatar} alt={fullName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  ) : (
+                    <svg className="w-16 h-16 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+                  )}
+                </div>
+                <span className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ring-2 ring-background ${onDuty ? 'bg-green-500' : 'bg-gray-400'}`} title={onDuty ? 'En servicio' : 'Fuera de servicio'} />
+              </div>
 
-        <div className="space-y-6 relative">
+              <div className="flex-1 min-w-0 text-center sm:text-left">
+                <h1 className="text-2xl font-bold tracking-tight truncate">{fullName}</h1>
+                <div className="mt-1 flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                  {data?.governmentId && <span>CI: <span className="font-medium text-foreground">{data.governmentId}</span></span>}
+                  {data?.guard?.email && <span className="truncate">{data.guard.email}</span>}
+                  {(data?.guard?.phoneNumber || data?.guard?.phone) && <span>{data.guard.phoneNumber || data.guard.phone}</span>}
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${onDuty ? 'bg-green-500/15 text-green-700' : 'bg-muted text-foreground/60'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${onDuty ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    {onDuty ? 'En servicio' : 'Fuera de servicio'}
+                  </span>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${accessBadge.cls}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${accessBadge.dot}`} />
+                    {accessBadge.txt}
+                  </span>
+                </div>
+              </div>
 
-          {/* Profile Image */}
-          <div className="flex justify-center mb-6">
-            <div className="w-32 h-32 rounded-lg bg-muted flex items-center justify-center overflow-hidden border-2 border-border">
-              {(() => {
-                const pi = editedGuard?.profileImage;
-                const src = Array.isArray(pi)
-                  ? (pi[0]?.downloadUrl || pi[0]?.publicUrl || null)
-                  : (pi?.downloadUrl || pi?.publicUrl || (typeof pi === 'string' && pi ? pi : null));
-                return src ? (
-                  <img src={src} alt={editedGuard?.fullName || ''} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <div className="flex items-center gap-2">
+                {!editing ? (
+                  <button onClick={beginEdit} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition" style={{ background: GOLD }}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-2a2 2 0 01.586-1.414z" /></svg>
+                    {t('guards.profile.actions.edit') || 'Editar'}
+                  </button>
                 ) : (
-                  <svg className="w-24 h-24 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                  </svg>
-                );
-              })()}
+                  <div className="flex items-center gap-2">
+                    <button onClick={cancelEdit} disabled={saving} className="text-sm px-3 py-2 rounded-lg border hover:bg-muted transition disabled:opacity-50">{t('guards.profile.actions.cancel') || 'Cancelar'}</button>
+                    <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm disabled:opacity-50" style={{ background: GOLD }}>
+                      {saving && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                      {saving ? (t('guards.profile.actions.saving') || 'Guardando…') : (t('guards.profile.actions.save') || 'Guardar')}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="space-y-6">
-              {/* General Information */}
-              <InfoCard title="guards.profile.cards.general" t={t} cardId="general" editingCard={editingCard} saving={saving} onEdit={() => handleCardEdit('general')} onSave={handleCardSave} onCancel={handleCardCancel}>
-                <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.firstName" value={editedGuard?.guard?.firstName} field="firstName" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.lastName" value={editedGuard?.guard?.lastName} field="lastName" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  {(editedGuard?.guard?.middleName) && (
-                    <InfoField label="guards.profile.fields.middleName" value={editedGuard?.guard?.middleName} field="middleName" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+          {editing && (
+            <div className="text-xs text-muted-foreground bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+              {t('guards.profile.editHint') || 'El nombre, correo y teléfono son la identidad del vigilante y se gestionan desde la invitación de acceso.'}
+            </div>
+          )}
+
+          {/* ── INFO GRID ────────────────────────────────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* MAIN (2/3) */}
+            <div className="lg:col-span-2 space-y-6">
+              <Section title={t('guards.profile.cards.general') || 'Información general'}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <ReadField label={t('guards.profile.fields.firstName') || 'Nombres'} value={data?.guard?.firstName} />
+                  <ReadField label={t('guards.profile.fields.lastName') || 'Apellidos'} value={data?.guard?.lastName} />
+                  {editing ? (
+                    <>
+                      <EditText label={t('guards.profile.fields.id1') || 'Cédula / ID'} value={form.governmentId} onChange={(v) => setField('governmentId', v)} />
+                      <EditText label={t('guards.profile.fields.birthDate') || 'Fecha de nacimiento'} value={form.birthDate} onChange={(v) => setField('birthDate', v)} type="date" />
+                      <EditText label={t('guards.profile.fields.birthPlace') || 'Lugar de nacimiento'} value={form.birthPlace} onChange={(v) => setField('birthPlace', v)} />
+                      <EditText label={t('guards.profile.fields.address') || 'Dirección'} value={form.address} onChange={(v) => setField('address', v)} />
+                    </>
+                  ) : (
+                    <>
+                      <ReadField label={t('guards.profile.fields.id1') || 'Cédula / ID'} value={data?.governmentId} />
+                      <ReadField label={t('guards.profile.fields.birthDate') || 'Fecha de nacimiento'} value={data?.birthDate ? new Date(data.birthDate).toLocaleDateString('es') : null} />
+                      <ReadField label={t('guards.profile.fields.birthPlace') || 'Lugar de nacimiento'} value={data?.birthPlace} />
+                      <ReadField label={t('guards.profile.fields.address') || 'Dirección'} value={data?.address || data?.guard?.homeAddress} />
+                    </>
                   )}
-                  <InfoField label="guards.profile.fields.id1" value={editedGuard?.governmentId} field="governmentId" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.id2" value={editedGuard?.secondaryId} field="secondaryId" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.birthDate" value={editedGuard?.birthDate ? new Date(editedGuard.birthDate).toLocaleDateString('en-US') : null} field="birthDate" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.address" value={editedGuard?.address || editedGuard?.guard?.homeAddress} field="address" isEditing={editingCard === 'general'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
                 </div>
-              </InfoCard>
+              </Section>
 
-              {/* Contact Details */}
-              <InfoCard title="guards.profile.cards.contact" t={t} cardId="contact" editingCard={editingCard} saving={saving} onEdit={() => handleCardEdit('contact')} onSave={handleCardSave} onCancel={handleCardCancel}>
-                <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.email" value={editedGuard?.guard?.email} field="email" isEditing={editingCard === 'contact'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.mobile" value={editedGuard?.guard?.phoneNumber || editedGuard?.guard?.phone || editedGuard?.phoneNumber} field="phoneNumber" isEditing={editingCard === 'contact'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+              <Section title={t('guards.profile.cards.personal') || 'Información personal'}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {editing ? (
+                    <>
+                      <EditSelect label={t('guards.profile.fields.gender') || 'Género'} field="gender" value={form.gender} onChange={(v) => setField('gender', v)} />
+                      <EditSelect label={t('guards.profile.fields.bloodType') || 'Tipo de sangre'} field="bloodType" value={form.bloodType} onChange={(v) => setField('bloodType', v)} />
+                      <EditSelect label={t('guards.profile.fields.maritalStatus') || 'Estado civil'} field="maritalStatus" value={form.maritalStatus} onChange={(v) => setField('maritalStatus', v)} />
+                      <EditSelect label={t('guards.profile.fields.education') || 'Instrucción académica'} field="academicInstruction" value={form.academicInstruction} onChange={(v) => setField('academicInstruction', v)} />
+                      <EditText label={t('guards.profile.fields.guardCredentials') || 'Credencial'} value={form.guardCredentials} onChange={(v) => setField('guardCredentials', v)} />
+                      <EditText label={t('guards.profile.fields.hireDate') || 'Fecha de contratación'} value={form.hiringContractDate} onChange={(v) => setField('hiringContractDate', v)} type="date" />
+                    </>
+                  ) : (
+                    <>
+                      <ReadField label={t('guards.profile.fields.gender') || 'Género'} value={data?.gender} />
+                      <ReadField label={t('guards.profile.fields.bloodType') || 'Tipo de sangre'} value={data?.bloodType} />
+                      <ReadField label={t('guards.profile.fields.maritalStatus') || 'Estado civil'} value={data?.maritalStatus} />
+                      <ReadField label={t('guards.profile.fields.education') || 'Instrucción académica'} value={data?.academicInstruction} />
+                      <ReadField label={t('guards.profile.fields.guardCredentials') || 'Credencial'} value={data?.guardCredentials} />
+                      <ReadField label={t('guards.profile.fields.hireDate') || 'Fecha de contratación'} value={data?.hiringContractDate ? new Date(data.hiringContractDate).toLocaleDateString('es') : null} />
+                    </>
+                  )}
                 </div>
-              </InfoCard>
+              </Section>
 
-              {/* Emergency Contact Details */}
-              <InfoCard title="guards.profile.cards.emergency" t={t} cardId="emergency" editingCard={editingCard} saving={saving} onEdit={() => handleCardEdit('emergency')} onSave={handleCardSave} onCancel={handleCardCancel}>
-                <div className="space-y-4">
-                  <InfoField label="guards.profile.fields.emergencyContact" value={editedGuard?.emergencyContactName} field="emergencyContactName" isEditing={editingCard === 'emergency'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.emergencyContactNumber" value={editedGuard?.emergencyContactPhone} field="emergencyContactPhone" isEditing={editingCard === 'emergency'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.emergencyRelation" value={editedGuard?.emergencyContactRelation} field="emergencyContactRelation" isEditing={editingCard === 'emergency'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+              <Section title={t('guards.profile.cards.languagesSkills') || 'Idiomas y habilidades'}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {editing ? (
+                    <>
+                      <EditText label={t('guards.profile.fields.languages') || 'Idiomas'} value={form.languages} onChange={(v) => setField('languages', v)} />
+                      <EditText label={t('guards.profile.fields.skills') || 'Habilidades'} value={form.skills} onChange={(v) => setField('skills', v)} />
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">{t('guards.profile.fields.languages') || 'Idiomas'}</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(Array.isArray(data?.languages) ? data.languages : []).filter(Boolean).map((l: string) => (
+                            <span key={l} className="px-2 py-0.5 rounded-full bg-muted text-xs font-medium">{l}</span>
+                          ))}
+                          {(!data?.languages || !data.languages.length) && <span className="text-sm text-muted-foreground">—</span>}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">{t('guards.profile.fields.skills') || 'Habilidades'}</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(Array.isArray(data?.skills) ? data.skills : []).filter(Boolean).map((s: string) => (
+                            <span key={s} className="px-2 py-0.5 rounded-full bg-muted text-xs font-medium">{s}</span>
+                          ))}
+                          {(!data?.skills || !data.skills.length) && <span className="text-sm text-muted-foreground">—</span>}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-              </InfoCard>
-              {/* Personal Information */}
-              <InfoCard title="guards.profile.cards.personal" t={t} cardId="personal" editingCard={editingCard} saving={saving} onEdit={() => handleCardEdit('personal')} onSave={handleCardSave} onCancel={handleCardCancel}>
-                <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.birthPlace" value={editedGuard?.birthPlace} field="birthPlace" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.maritalStatus" value={editedGuard?.maritalStatus} field="maritalStatus" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.bloodType" value={editedGuard?.bloodType} field="bloodType" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.education" value={editedGuard?.academicInstruction} field="academicInstruction" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.gender" value={editedGuard?.gender} field="gender" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.guardCredentials" value={editedGuard?.guardCredentials} field="guardCredentials" isEditing={editingCard === 'personal'} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                </div>
-              </InfoCard>
-              {/* More Information */}
-           { /*  <InfoCard title="More Information">
-                <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="Driver License" value={editedGuard?.driverLicense} field="driverLicense" />
-                  <InfoField label="Employee Number" value={editedGuard?.employeeCode || editedGuard?.guardNumber} field="employeeCode" />
-                  <InfoField label="Hire Date" value={editedGuard?.hireDate ? new Date(editedGuard.hireDate).toLocaleDateString('en-US') : null} field="hireDate" />
-                  <InfoField label="Hiring Contract Date" value={editedGuard?.hiringContractDate ? new Date(editedGuard.hiringContractDate).toLocaleDateString('en-US') : null} field="hiringContractDate" />
-                  <InfoField label="Payroll Number" value={editedGuard?.payrollNumber} field="payrollNumber" />
-                  <InfoField label="Payment Type" value={editedGuard?.paymentType || 'Hourly'} field="paymentType" />
-                  <InfoField label="Hourly Rate" value={editedGuard?.hourlyRate} field="hourlyRate" />
-                  <InfoField label="deed" value={editedGuard?.deed} field="deed" />
-                </div>
-              </InfoCard>*/}
+                {editing && <p className="mt-2 text-[11px] text-muted-foreground">{t('guards.profile.placeholders.csvHint') || 'Separa con comas.'}</p>}
+              </Section>
 
-
-
+              {/* Attendance */}
+              <Section title={t('guards.profile.cards.attendance') || 'Asistencia reciente'}>
+                {loadingShifts ? (
+                  <div className="text-sm text-muted-foreground">{t('common.loading') || 'Cargando…'}</div>
+                ) : guardShifts.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">{t('guards.profile.noAttendance') || 'Sin registros de asistencia.'}</div>
+                ) : (
+                  <ul className="divide-y">
+                    {guardShifts.slice(0, 8).map((s) => (
+                      <li key={s.id} className="py-2.5 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium truncate">{s.stationName || (s.station && (s.station.stationName || s.station.name)) || s.shiftSchedule || '—'}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {s.punchInTime ? new Date(s.punchInTime).toLocaleString('es', { timeZone: getTenantTimezone() }) : '—'}
+                            {' → '}
+                            {s.punchOutTime ? new Date(s.punchOutTime).toLocaleString('es', { timeZone: getTenantTimezone() }) : <span className="text-green-600 font-medium">En curso</span>}
+                          </div>
+                        </div>
+                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-medium ${s.punchOutTime ? 'bg-muted text-foreground/60' : 'bg-green-500/15 text-green-700'}`}>{s.shiftSchedule || 'Turno'}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Section>
             </div>
 
-            {/* Right Column */}
+            {/* SIDEBAR (1/3) */}
             <div className="space-y-6">
-              {/* Device Information — read-only (set by mobile app) */}
-              <InfoCard title="guards.profile.cards.deviceInfo" t={t}>
-                <div className="grid grid-cols-2 gap-4">
-                  <InfoField label="guards.profile.fields.deviceType" value={editedGuard?.deviceInfo?.platform || editedGuard?.deviceType} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.deviceModel" value={editedGuard?.deviceInfo?.model} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.osVersion" value={editedGuard?.deviceInfo?.osVersion} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                  <InfoField label="guards.profile.fields.appVersion" value={editedGuard?.deviceInfo?.appVersion} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                </div>
-              </InfoCard>
-
-              {/* Device Permissions — read-only (set by mobile app) */}
-              <InfoCard title="guards.profile.cards.devicePermissions" t={t}>
-                <div className="grid grid-cols-2 gap-4">
-                  <InfoField
-                    label="guards.profile.fields.pushNotifications"
-                    value={editedGuard?.permissions?.pushNotifications ? t('guards.profile.values.enabled') : t('guards.profile.values.disabled')}
-                    isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
-                  />
-                  <InfoField
-                    label="guards.profile.fields.gpsPermission"
-                    value={editedGuard?.permissions?.gpsPermission || t('guards.profile.values.background')}
-                    isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
-                  />
-                  <InfoField
-                    label="guards.profile.fields.camera"
-                    value={editedGuard?.permissions?.camera ? t('guards.profile.values.enabled') : t('guards.profile.values.disabled')}
-                    isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
-                  />
-                  <InfoField
-                    label="guards.profile.fields.microphone"
-                    value={editedGuard?.permissions?.microphone ? t('guards.profile.values.enabled') : t('guards.profile.values.disabled')}
-                    isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t}
-                  />
-                </div>
-              </InfoCard>
-
-              {/* App Access */}
-              {(() => {
-                const guardStatus = editedGuard?.guard?.status;
-                const hasPassword = editedGuard?.guard?.hasPassword;
-                const lastLogin = editedGuard?.guard?.lastLoginAt;
-                const tokenExpires = editedGuard?.guard?.invitationTokenExpiresAt;
-                const isActivated = hasPassword && guardStatus === 'active';
-                const isPending = !hasPassword || guardStatus === 'invited' || guardStatus === 'pending';
-                const tokenIsExpired = tokenExpires && new Date(tokenExpires) < new Date();
-                return (
-                  <div className="bg-card border rounded-lg p-6 shadow-sm">
-                    <h4 className="font-semibold mb-4 text-base">{t('guards.profile.cards.appAccess')}</h4>
-                    <div className="space-y-3">
-                      {/* Status badge */}
-                      <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                          isActivated
-                            ? 'bg-green-100 text-green-700'
-                            : isPending
-                              ? (tokenIsExpired ? 'bg-red-500/15 text-red-700' : 'bg-orange-500/15 text-orange-700')
-                              : 'bg-muted text-foreground/70'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${isActivated ? 'bg-green-500' : isPending ? (tokenIsExpired ? 'bg-red-500' : 'bg-orange-500') : 'bg-gray-400'}`} />
-                          {isActivated
-                            ? t('guards.profile.access.statusActive')
-                            : tokenIsExpired
-                              ? t('guards.profile.access.statusExpired')
-                              : isPending
-                                ? t('guards.profile.access.statusPending')
-                                : t('guards.profile.access.statusNoAccess')}
-                        </span>
-                      </div>
-
-                      {/* Last login */}
-                      {lastLogin && (
-                        <div className="text-xs text-muted-foreground">
-                          {t('guards.profile.access.lastLogin')}: <span className="font-medium text-foreground">{new Date(lastLogin).toLocaleString()}</span>
-                        </div>
-                      )}
-
-                      {/* Token expiry */}
-                      {tokenExpires && !isActivated && (
-                        <div className={`text-xs ${tokenIsExpired ? 'text-red-500' : 'text-muted-foreground'}`}>
-                          {tokenIsExpired
-                            ? t('guards.profile.access.tokenExpired')
-                            : `${t('guards.profile.access.tokenExpires')}: ${new Date(tokenExpires).toLocaleDateString()}`}
-                        </div>
-                      )}
-
-                      {/* Guard email (for context) */}
-                      {editedGuard?.guard?.email && (
-                        <div className="text-xs text-muted-foreground">
-                          {t('guards.profile.access.sendTo')}: <span className="font-medium text-foreground">{editedGuard.guard.email}</span>
-                        </div>
-                      )}
-
-                      {/* Send / Resend invitation button */}
-                      {editedGuard?.guard?.email && (
-                        <button
-                          onClick={handleSendAppAccess}
-                          disabled={sendingInvite}
-                          className="mt-1 w-full flex items-center justify-center gap-2 bg-[#C8860A] hover:bg-[#B37809] disabled:opacity-60 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors"
-                        >
-                          {sendingInvite ? (
-                            <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                          )}
-                          {isActivated
-                            ? t('guards.profile.access.resendInvite')
-                            : t('guards.profile.access.sendInvite')}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Languages & Skills */}
-              <InfoCard title="guards.profile.cards.languagesSkills" t={t} cardId="languages" editingCard={editingCard} saving={saving} onEdit={() => handleCardEdit('languages')} onSave={handleCardSave} onCancel={handleCardCancel}>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">{t('guards.profile.fields.languages')}</div>
-                    {editingCard === 'languages' ? (
-                      <Input
-                        value={editedGuard?.languages?.join(', ') || ''}
-                        onChange={(e) => setEditedGuard({ ...editedGuard, languages: e.target.value.split(',').map((l: string) => l.trim()) })}
-                        placeholder={t('guards.profile.placeholders.languages')}
-                        className="h-8 text-sm"
-                      />
-                    ) : (
-                      <div className="font-medium text-sm">{editedGuard?.languages?.join(', ') || '--'}</div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">{t('guards.profile.fields.skills')}</div>
-                    {editingCard === 'languages' ? (
-                      <Input
-                        value={editedGuard?.skills?.join(', ') || ''}
-                        onChange={(e) => setEditedGuard({ ...editedGuard, skills: e.target.value.split(',').map((s: string) => s.trim()) })}
-                        placeholder={t('guards.profile.placeholders.skills')}
-                        className="h-8 text-sm"
-                      />
-                    ) : (
-                      <div className="font-medium text-sm">{editedGuard?.skills?.join(', ') || '--'}</div>
-                    )}
-                  </div>
-                </div>
-              </InfoCard>
-
-              {/* Attendance / GuardShift */}
-              <InfoCard title="guards.profile.cards.attendance" t={t}>
+              {/* App access */}
+              <Section title={t('guards.profile.cards.appAccess') || 'Acceso a la app'}>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <button onClick={handlePunchInNow} className="bg-green-600 text-white px-3 py-2 rounded">Punch In (now)</button>
-                    <button onClick={handlePunchOutLast} className="bg-red-600 text-white px-3 py-2 rounded">Punch Out (last)</button>
-                    <button onClick={() => setShowCreateShiftModal(true)} className="px-3 py-2 rounded border">Create Record</button>
-                  </div>
-
-                  <div>
-                    {loadingShifts ? (
-                      <div className="text-sm text-muted-foreground">Loading...</div>
-                    ) : guardShifts.length === 0 ? (
-                      <div className="text-sm text-muted-foreground">No attendance records.</div>
-                    ) : (
-                      <ul className="space-y-2">
-                        {guardShifts.map((s) => (
-                          <li key={s.id} className="border rounded p-2 bg-card">
-                            <div className="text-sm font-medium">{s.shiftSchedule || s.schedule || '-'}</div>
-                            <div className="text-xs text-foreground/70">In: {s.punchInTime ? new Date(s.punchInTime).toLocaleString('es', { timeZone: getTenantTimezone() }) : '-'}</div>
-                            <div className="text-xs text-foreground/70">Out: {s.punchOutTime ? new Date(s.punchOutTime).toLocaleString('es', { timeZone: getTenantTimezone() }) : '-'}</div>
-                            <div className="text-xs text-muted-foreground">Station: {s.stationName || (s.station && s.station.name) || '-'}</div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${accessBadge.cls}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${accessBadge.dot}`} />{accessBadge.txt}
+                  </span>
+                  {data?.guard?.lastLoginAt && (
+                    <div className="text-xs text-muted-foreground">{t('guards.profile.access.lastLogin') || 'Último ingreso'}: <span className="font-medium text-foreground">{new Date(data.guard.lastLoginAt).toLocaleString('es')}</span></div>
+                  )}
+                  {data?.guard?.email && (
+                    <div className="text-xs text-muted-foreground">{t('guards.profile.access.sendTo') || 'Enviar a'}: <span className="font-medium text-foreground">{data.guard.email}</span></div>
+                  )}
+                  {data?.guard?.email && (
+                    <button onClick={handleSendAppAccess} disabled={sendingInvite} className="mt-1 w-full flex items-center justify-center gap-2 text-white text-sm font-medium py-2 px-4 rounded-lg disabled:opacity-60 transition" style={{ background: GOLD }}>
+                      {sendingInvite ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                      )}
+                      {isActivated ? (t('guards.profile.access.resendInvite') || 'Reenviar invitación') : (t('guards.profile.access.sendInvite') || 'Enviar acceso')}
+                    </button>
+                  )}
                 </div>
-              </InfoCard>
+              </Section>
 
-              {/* Detalles de la Licencia */}
-              <InfoCard title="guards.profile.cards.licenseDetails" t={t}>
-                {editedGuard?.licenses && editedGuard.licenses.length > 0 ? (
+              {/* Device */}
+              <Section title={t('guards.profile.cards.deviceInfo') || 'Dispositivo'}>
+                <div className="grid grid-cols-2 gap-3">
+                  <ReadField label={t('guards.profile.fields.deviceType') || 'Plataforma'} value={data?.deviceInfo?.platform || data?.deviceType} />
+                  <ReadField label={t('guards.profile.fields.deviceModel') || 'Modelo'} value={data?.deviceInfo?.model} />
+                  <ReadField label={t('guards.profile.fields.osVersion') || 'SO'} value={data?.deviceInfo?.osVersion} />
+                  <ReadField label={t('guards.profile.fields.appVersion') || 'App'} value={data?.deviceInfo?.appVersion} />
+                </div>
+              </Section>
+
+              {/* Licenses */}
+              <Section title={t('guards.profile.cards.licenseDetails') || 'Licencias'}>
+                {data?.licenses && data.licenses.length > 0 ? (
                   <div className="space-y-3">
-                    {editedGuard.licenses.map((license: any, idx: number) => (
-                      <div key={idx} className="border-b last:border-b-0 pb-3 last:pb-0">
-                        <div className="grid grid-cols-2 gap-3">
-                          <InfoField label="guards.profile.fields.licenseType" value={license.type} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                          <InfoField label="guards.profile.fields.licenseNumber" value={license.number} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                          <InfoField label="guards.profile.fields.issueDate" value={license.issueDate ? new Date(license.issueDate).toLocaleDateString('en-US') : null} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
-                          <InfoField label="guards.profile.fields.expiryDate" value={license.expiryDate ? new Date(license.expiryDate).toLocaleDateString('en-US') : null} isEditing={false} editedGuard={editedGuard} setEditedGuard={setEditedGuard} t={t} />
+                    {data.licenses.map((lic: any, idx: number) => (
+                      <div key={idx} className="rounded-lg border p-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <ReadField label={t('guards.profile.fields.licenseType') || 'Tipo'} value={lic.type} />
+                          <ReadField label={t('guards.profile.fields.licenseNumber') || 'Número'} value={lic.number} />
+                          <ReadField label={t('guards.profile.fields.expiryDate') || 'Vence'} value={lic.expiryDate ? new Date(lic.expiryDate).toLocaleDateString('es') : null} />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">{t('guards.profile.noLicense')}</p>
+                  <p className="text-sm text-muted-foreground">{t('guards.profile.noLicense') || 'Sin licencias registradas.'}</p>
                 )}
-              </InfoCard>
+              </Section>
             </div>
           </div>
         </div>
-        {showCreateShiftModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setShowCreateShiftModal(false)} />
-            <aside className="relative mx-auto w-full max-w-md bg-card shadow-xl overflow-auto rounded-lg">
-              <div className="flex items-center justify-between p-4 border-b">
-                <h3 className="text-lg font-semibold">Create Attendance Record</h3>
-                <button onClick={() => setShowCreateShiftModal(false)} className="p-2 text-muted-foreground hover:text-foreground">Close</button>
-              </div>
-              <div className="p-4 space-y-4">
-                <div>
-                  <label className="block text-sm text-foreground/70 mb-1">Punch In</label>
-                  <input type="datetime-local" value={createPunchIn} onChange={e => setCreatePunchIn(e.target.value)} className="w-full border rounded h-10 px-3" />
-                </div>
-                <div>
-                  <label className="block text-sm text-foreground/70 mb-1">Punch Out</label>
-                  <input type="datetime-local" value={createPunchOut} onChange={e => setCreatePunchOut(e.target.value)} className="w-full border rounded h-10 px-3" />
-                </div>
-                <div>
-                  <label className="block text-sm text-foreground/70 mb-1">Shift Schedule</label>
-                  <select value={createSchedule} onChange={e => setCreateSchedule(e.target.value)} className="w-full border rounded h-10 px-3">
-                    <option value="Diurno">Diurno</option>
-                    <option value="Nocturno">Nocturno</option>
-                  </select>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <button onClick={() => setShowCreateShiftModal(false)} className="px-3 py-2 rounded border">Cancel</button>
-                  <button onClick={handleCreateManual} className="px-3 py-2 rounded bg-[#C8860A] text-white">Create</button>
-                </div>
-              </div>
-            </aside>
-          </div>
-        )}
       </GuardsLayout>
     </AppLayout>
   );
