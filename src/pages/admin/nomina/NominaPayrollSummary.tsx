@@ -206,66 +206,76 @@ export default function NominaPayrollSummary() {
         <PageHeader
           icon={<Wallet />}
           title="Resumen de Nómina"
-          subtitle="Horas pagables por vigilante (sin cálculo de pago)"
-          actions={
-            <div className="flex flex-wrap items-end gap-2">
-              <label className="cg-eyebrow">
-                Desde
-                <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 block rounded-lg border border-border bg-background px-3 py-1.5 text-sm" />
-              </label>
-              <label className="cg-eyebrow">
-                Hasta
-                <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 block rounded-lg border border-border bg-background px-3 py-1.5 text-sm" />
-              </label>
-              <Button variant="brand" onClick={load} disabled={loading}>
-                {loading ? "Generando…" : "Generar"}
-              </Button>
-              <Button variant="outline" onClick={exportCsv} disabled={!rows.length}>
-                <FileDown className="mr-1.5 h-4 w-4" /> CSV
-              </Button>
-              <Button variant="outline" onClick={exportXlsx} disabled={!rows.length}>
-                <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Excel
-              </Button>
-              <Button variant="outline" onClick={exportPdf} disabled={!rows.length}>
-                <Printer className="mr-1.5 h-4 w-4" /> PDF
-              </Button>
-              {editRates ? (
-                <Button onClick={saveRates} disabled={savingRates} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+          subtitle="Días trabajados, horas y pago por vigilante en el periodo"
+        />
+
+        {/* Toolbar: rango de fechas (izquierda) · exportar y acciones (derecha) */}
+        <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 lg:flex-row lg:flex-wrap lg:items-end lg:justify-between">
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="cg-eyebrow">
+              Desde
+              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 block rounded-lg border border-border bg-background px-3 py-1.5 text-sm" />
+            </label>
+            <label className="cg-eyebrow">
+              Hasta
+              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 block rounded-lg border border-border bg-background px-3 py-1.5 text-sm" />
+            </label>
+            <Button variant="brand" onClick={load} disabled={loading}>
+              {loading ? "Generando…" : "Generar"}
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={exportCsv} disabled={!rows.length}>
+              <FileDown className="mr-1.5 h-4 w-4" /> CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportXlsx} disabled={!rows.length}>
+              <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Excel
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportPdf} disabled={!rows.length}>
+              <Printer className="mr-1.5 h-4 w-4" /> PDF
+            </Button>
+            {salaryBasis === "hourly" && (
+              editRates ? (
+                <Button size="sm" onClick={saveRates} disabled={savingRates} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                   <Save className="mr-1.5 h-4 w-4" /> {savingRates ? "Guardando…" : "Guardar tarifas"}
                 </Button>
               ) : (
-                <Button variant="outline" onClick={() => setEditRates(true)} disabled={!rows.length}>
+                <Button variant="outline" size="sm" onClick={() => setEditRates(true)} disabled={!rows.length}>
                   <Pencil className="mr-1.5 h-4 w-4" /> Editar tarifas
                 </Button>
-              )}
-              <Button variant="outline" onClick={closePeriod} disabled={closing} className="text-red-600">
-                <Lock className="mr-1.5 h-4 w-4" /> {closing ? "Cerrando…" : "Cerrar periodo"}
-              </Button>
-            </div>
-          }
-        />
+              )
+            )}
+            <Button variant="outline" size="sm" onClick={closePeriod} disabled={closing} className="text-red-600">
+              <Lock className="mr-1.5 h-4 w-4" /> {closing ? "Cerrando…" : "Cerrar periodo"}
+            </Button>
+          </div>
+        </div>
 
         {totals && (
-          <Stagger className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <Stagger className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
             <StatCard icon={<CalendarDays />} accent="primary" label="Turnos" value={totals.shifts} />
             <StatCard icon={<Clock />} accent="blue" label="Horas totales" value={Number(totals.totalHours).toFixed(2)} />
             <StatCard icon={<Timer />} accent="orange" label="Horas extra" value={Number(totals.overtimeHours).toFixed(2)} />
             <StatCard
               icon={<Wallet />}
               accent={ratesEnabled ? "green" : "red"}
-              label={ratesEnabled ? "Pago bruto" : "Tardanzas / Inasist."}
+              label={ratesEnabled ? (salaryBasis === "monthly" ? "Total a pagar" : "Pago bruto") : "Tardanzas / Inasist."}
               value={ratesEnabled ? money(totals.grossPay) : `${totals.lateCount} / ${totals.noShows}`}
             />
           </Stagger>
         )}
 
-        <Section title="Detalle por vigilante" icon={<Wallet />}>
-          <DataTable
-            columns={columns}
-            data={rows}
-            emptyState={<div className="py-12 text-center text-sm text-muted-foreground">Sin datos en el rango</div>}
-          />
-        </Section>
+        <div className="mt-5">
+          <Section title="Detalle por vigilante" icon={<Wallet />}>
+            <div className="overflow-x-auto">
+              <DataTable
+                columns={columns}
+                data={rows}
+                emptyState={<div className="py-12 text-center text-sm text-muted-foreground">Sin datos en el rango</div>}
+              />
+            </div>
+          </Section>
+        </div>
       </PageContainer>
     </AppLayout>
   );
