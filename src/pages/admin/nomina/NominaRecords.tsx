@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import { DataTable, type Column } from "@/components/table/DataTable";
@@ -10,12 +10,51 @@ import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
 import { useFileUrl } from "@/lib/fileUrl";
 import { StatusBadge, fmtDateTime, fmtTime, fmtHours } from "./shared";
 import { PageContainer, PageHeader, Section, EmptyState, SkeletonCards } from "@/components/kit";
-import { MapPin, ImageOff, ClipboardCheck, ClipboardList, Filter } from "lucide-react";
+import { MapPin, ImageOff, ClipboardCheck, ClipboardList, Filter, Download, ChevronLeft, ChevronRight } from "lucide-react";
 
 const STATUS_OPTIONS = [
   "", "on_time", "late", "early_departure", "missed_clockout",
   "no_call_no_show", "overtime", "pending_review", "approved", "rejected",
 ];
+
+type Period = "day" | "week" | "month";
+
+/** [start, end] Date bounds for the period containing `anchor` (local time). */
+function rangeFor(period: Period, anchor: Date): [Date, Date] {
+  const y = anchor.getFullYear(), m = anchor.getMonth(), d = anchor.getDate();
+  if (period === "day") {
+    return [new Date(y, m, d, 0, 0, 0, 0), new Date(y, m, d, 23, 59, 59, 999)];
+  }
+  if (period === "week") {
+    const dow = (anchor.getDay() + 6) % 7; // Monday = 0
+    const start = new Date(y, m, d - dow, 0, 0, 0, 0);
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6, 23, 59, 59, 999);
+    return [start, end];
+  }
+  return [new Date(y, m, 1, 0, 0, 0, 0), new Date(y, m + 1, 0, 23, 59, 59, 999)];
+}
+
+/** Shift the anchor by ±1 of the period unit. */
+function shiftAnchor(period: Period, anchor: Date, dir: number): Date {
+  const d = new Date(anchor);
+  if (period === "day") d.setDate(d.getDate() + dir);
+  else if (period === "week") d.setDate(d.getDate() + dir * 7);
+  else d.setMonth(d.getMonth() + dir);
+  return d;
+}
+
+function rangeLabel(period: Period, anchor: Date): string {
+  const [s, e] = rangeFor(period, anchor);
+  if (period === "day") return s.toLocaleDateString("es", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+  if (period === "month") return s.toLocaleDateString("es", { month: "long", year: "numeric" });
+  const sameMonth = s.getMonth() === e.getMonth();
+  return `${s.toLocaleDateString("es", { day: "2-digit", month: sameMonth ? undefined : "short" })} – ${e.toLocaleDateString("es", { day: "2-digit", month: "short", year: "numeric" })}`;
+}
+
+function csvCell(v: any): string {
+  const s = v == null ? "" : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
 
 export default function NominaRecords() {
   // Deep-link from a clock-in notification: ?focus=<id> auto-opens that record's
@@ -27,8 +66,12 @@ export default function NominaRecords() {
   const [rows, setRows] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
+  const [period, setPeriod] = useState<Period>("week");
+  const [anchor, setAnchor] = useState<Date>(() => new Date());
   const [selected, setSelected] = useState<AttendanceRecord | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const [rangeStart, rangeEnd] = useMemo(() => rangeFor(period, anchor), [period, anchor]);
   // Token-based selfie URL for the open record. punchInPhoto is a raw
   // privateUrl string (no companion downloadUrl), so resolve a token here at the
   // component top level (hooks rules) rather than inside the JSX IIFE below.
@@ -37,12 +80,50 @@ export default function NominaRecords() {
   const load = useCallback(() => {
     setLoading(true);
     attendanceService
-      .list({ "filter[status]": status || undefined, limit: 100 })
+      .list({
+        "filter[status]": status || undefined,
+        // Day/week/month window — sent as the backend's punchInTimeRange [start, end].
+        "filter[punchInTimeRange][0]": rangeStart.toISOString(),
+        "filter[punchInTimeRange][1]": rangeEnd.toISOString(),
+        limit: 1000,
+        orderBy: "punchInTime_DESC",
+      })
       .then((r) => setRows(r.rows || []))
       .catch((e) => toast.error(e?.message || "Error al cargar registros"))
       .finally(() => setLoading(false));
-  }, [status]);
+  }, [status, rangeStart, rangeEnd]);
   useEffect(load, [load]);
+
+  // Export the current period's records to CSV (UTF-8 BOM so Excel reads accents).
+  const exportCsv = () => {
+    if (!rows.length) { toast.error("No hay registros para exportar"); return; }
+    const headers = [
+      "Fecha", "Vigilante", "Puesto", "Programado inicio", "Programado fin",
+      "Entrada", "Salida", "Horas", "Tarde (min)", "Extra (min)",
+      "Rondas", "Incidentes", "Fuera de geocerca", "Estado", "Aprobación",
+    ];
+    const body = rows.map((r) => [
+      r.punchInTime ? new Date(r.punchInTime).toLocaleDateString("es") : "",
+      r.guardName?.fullName || "",
+      r.stationName?.stationName || "",
+      fmtTime(r.scheduledStart), fmtTime(r.scheduledEnd),
+      r.punchInTime ? new Date(r.punchInTime).toLocaleString("es") : "",
+      r.punchOutTime ? new Date(r.punchOutTime).toLocaleString("es") : "",
+      r.hoursWorked ?? "", r.lateMinutes ?? 0, r.overtimeMinutes ?? 0,
+      r.numberOfPatrolsDuringShift ?? 0, r.numberOfIncidentsDurindShift ?? 0,
+      r.punchInOutsideGeofence ? "Sí" : "No",
+      r.status || "", r.approvalStatus || "",
+    ]);
+    const csv = [headers, ...body].map((row) => row.map(csvCell).join(",")).join("\r\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `asistencia_${period}_${rangeStart.toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${rows.length} registro(s) exportado(s)`);
+  };
 
   // Once rows are loaded, open the detail for the notification's record (once).
   useEffect(() => {
@@ -131,22 +212,60 @@ export default function NominaRecords() {
           title="Registros de Asistencia"
           subtitle="Marcaciones de entrada / salida"
           actions={
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5">
-              <Filter className="size-4 text-muted-foreground" />
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="bg-transparent text-sm outline-none"
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{s === "" ? "Todos los estados" : s}</option>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Período: Día / Semana / Mes */}
+              <div className="inline-flex rounded-xl border border-border bg-background p-0.5">
+                {(["day", "week", "month"] as Period[]).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setPeriod(p)}
+                    className={`px-3 py-1 text-sm rounded-lg transition-colors ${period === p ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {p === "day" ? "Día" : p === "week" ? "Semana" : "Mes"}
+                  </button>
                 ))}
-              </select>
+              </div>
+              {/* Navegación de fecha */}
+              <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-background px-1.5 py-1">
+                <button onClick={() => setAnchor((a) => shiftAnchor(period, a, -1))} className="p-1 rounded hover:bg-muted" aria-label="Anterior">
+                  <ChevronLeft className="size-4" />
+                </button>
+                <button onClick={() => setAnchor(new Date())} title="Ir a hoy" className="px-2 text-sm min-w-[9rem] text-center capitalize">
+                  {rangeLabel(period, anchor)}
+                </button>
+                <button onClick={() => setAnchor((a) => shiftAnchor(period, a, +1))} className="p-1 rounded hover:bg-muted" aria-label="Siguiente">
+                  <ChevronRight className="size-4" />
+                </button>
+              </div>
+              {/* Filtro de estado */}
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5">
+                <Filter className="size-4 text-muted-foreground" />
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="bg-transparent text-sm outline-none"
+                >
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>{s === "" ? "Todos los estados" : s}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Exportar */}
+              <Button variant="outline" onClick={exportCsv} className="gap-2">
+                <Download className="size-4" /> Exportar
+              </Button>
             </div>
           }
         />
 
         <Section title="Marcaciones" icon={<ClipboardList />}>
+          {!loading && (
+            <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-muted-foreground">
+              <span><span className="font-semibold text-foreground">{rows.length}</span> registro(s)</span>
+              <span>Horas totales: <span className="font-semibold text-foreground">{fmtHours(rows.reduce((sum, r) => sum + (Number(r.hoursWorked) || 0), 0))}</span></span>
+              <span className="capitalize">{rangeLabel(period, anchor)}</span>
+            </div>
+          )}
           {loading ? (
             <SkeletonCards count={4} />
           ) : (
