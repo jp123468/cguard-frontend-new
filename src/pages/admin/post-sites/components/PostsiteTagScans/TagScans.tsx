@@ -5,9 +5,28 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { FileDown, Printer, Funnel, QrCode } from 'lucide-react';
+import { FileDown, Printer, Funnel, QrCode, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { EmptyState } from '@/components/kit';
+import { fileUrlFromPrivate } from '@/lib/fileUrl';
+
+/**
+ * The checkpoint photo a guard captured at scan time is stored inside scannedData
+ * (token preferred, raw privateUrl as legacy fallback). It can sit at the top level
+ * or under `.extra` depending on the app version — probe both. Returns a viewable URL.
+ */
+function scanPhotoUrl(r: any): string | null {
+  const sd = (r && r.scannedData) || {};
+  const ex = sd.extra && typeof sd.extra === 'object' ? sd.extra : {};
+  const token = ex.photoFileToken || sd.photoFileToken;
+  if (token) {
+    const base = String(import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api').replace(/\/+$/, '');
+    return `${base}/file/download?fileToken=${encodeURIComponent(String(token))}`;
+  }
+  const priv =
+    ex.photoPrivateUrl || sd.photoPrivateUrl || ex.photoUrl || sd.photoUrl || ex.photo || sd.photo;
+  return priv ? fileUrlFromPrivate(String(priv)) : null;
+}
 
 export default function TagScans({
   tourId,
@@ -176,7 +195,10 @@ export default function TagScans({
   const formatRowForDetails = (r: any) => {
     const guardName = r.guardName || r.guard_name || (r.guard && (r.guard.fullName || r.guard.name || r.guard.username)) || (r.assignment && (r.assignment.guardName || (r.assignment.guard && (r.assignment.guard.fullName || r.assignment.guard.name)))) || '';
     const stationName = r.stationName || (r.station && (r.station.stationName || r.station.name)) || null;
-    const note = r.scannedData && r.scannedData.extra && (r.scannedData.extra.note ?? r.scannedData.extra.message) ? (r.scannedData.extra.note ?? r.scannedData.extra.message) : null;
+    const ex = (r.scannedData && r.scannedData.extra && typeof r.scannedData.extra === 'object') ? r.scannedData.extra : {};
+    // The worker app stores the note as `notes` (plural); keep note/message as fallbacks.
+    const note = ex.note ?? ex.message ?? ex.notes ?? null;
+    const checkpointName = ex.checkpointName ?? null;
     const lat = r.scannedData && (r.scannedData.latitude ?? r.scannedData.lat);
     const lng = r.scannedData && (r.scannedData.longitude ?? r.scannedData.lng);
 
@@ -197,6 +219,7 @@ export default function TagScans({
       siteTourTagId: r.siteTourTagId || null,
       tenantId: r.tenantId || null,
       note: note,
+      checkpointName: checkpointName,
       latitude: typeof lat !== 'undefined' ? lat : null,
       longitude: typeof lng !== 'undefined' ? lng : null,
       createdAt: r.createdAt || null,
@@ -505,6 +528,9 @@ export default function TagScans({
                         >
                           Detalles
                         </button>
+                        {scanPhotoUrl(r) ? (
+                          <Camera className="inline-block ml-2 size-4 text-primary align-middle" aria-label="Tiene imagen" />
+                        ) : null}
                       </td>
                     </tr>
                   </React.Fragment>
@@ -526,11 +552,31 @@ export default function TagScans({
             </div>
             <div className="p-4">
               {(() => {
+                const photo = scanPhotoUrl(detailRow);
+                return photo ? (
+                  <div className="mb-5" data-photo-block>
+                    <div className="text-sm text-muted-foreground mb-2">Imagen de la ronda</div>
+                    <a href={photo} target="_blank" rel="noopener noreferrer" className="block">
+                      <img
+                        src={photo}
+                        alt="Imagen de la ronda"
+                        className="w-full max-h-80 rounded-xl border bg-muted object-contain"
+                        onError={(e) => {
+                          const b = e.currentTarget.closest('[data-photo-block]') as HTMLElement | null;
+                          if (b) b.style.display = 'none';
+                        }}
+                      />
+                    </a>
+                  </div>
+                ) : null;
+              })()}
+              {(() => {
                 const d = formatRowForDetails(detailRow);
                 const fields = [
-                  { label: 'Fecha', value: d.createdAt ? new Date(d.createdAt).toLocaleString() : '-' },
+                  { label: 'Fecha', value: d.scannedAt ? new Date(d.scannedAt).toLocaleString() : (d.createdAt ? new Date(d.createdAt).toLocaleString() : '-') },
                   { label: 'Etiqueta (ID)', value: d.tagIdentifier || '-' },
                   { label: 'Nombre etiqueta', value: d.tagName || (detailNames.tagName || '-') },
+                  { label: 'Punto de control', value: d.checkpointName || '-' },
                   { label: 'Estación', value: d.stationName || '-' },
                   { label: 'Vigilante', value: getGuardDisplay(detailRow) },
                   { label: 'Recorrido', value: detailNames.tourName || d.tourId || '-' },
