@@ -2,14 +2,24 @@ import { useRef, useState } from "react";
 import {
   Bell, Moon, Sun, ShieldCheck, AlertTriangle, Footprints, Building2, Home, ShieldAlert,
   User2, ChevronRight, ChevronLeft, Camera, Siren, KeyRound, Truck, UserCheck, Cpu,
-  PhoneCall, Eye, Lock, Radio, Dog, Flame, type LucideIcon,
+  PhoneCall, Eye, Lock, Radio, Dog, Flame, Search, Fingerprint, Package, Banknote,
+  Landmark, Factory, HardHat, Users, Ticket, Navigation, DoorOpen, HeartPulse, ScanLine,
+  Briefcase, Gauge, ClipboardCheck, Car, Crosshair, Plane, Warehouse, Wrench, type LucideIcon,
 } from "lucide-react";
 
 /** Named icons templated services can pass to the app (no upload needed). */
 export const SERVICE_ICONS: Record<string, LucideIcon> = {
-  shield: ShieldCheck, cctv: Camera, alarm: Siren, panic: Siren, patrol: Footprints,
-  access: KeyRound, valuables: Truck, escort: UserCheck, electronic: Cpu, response: PhoneCall,
-  monitoring: Eye, lock: Lock, radio: Radio, k9: Dog, fire: Flame, guard: User2,
+  // core
+  shield: ShieldCheck, guard: User2, cctv: Camera, alarm: Siren, panic: Siren,
+  patrol: Footprints, access: KeyRound, escort: UserCheck, electronic: Cpu,
+  response: PhoneCall, monitoring: Eye, lock: Lock, radio: Radio, k9: Dog, fire: Flame,
+  // industry-specific
+  investigation: Search, fingerprint: Fingerprint, verification: ClipboardCheck,
+  custody: Package, valuables: Truck, cash: Banknote, warehouse: Warehouse,
+  bank: Landmark, industrial: Factory, construction: HardHat, residential: Home,
+  events: Ticket, crowd: Users, gps: Navigation, vehicle: Car, drone: Plane,
+  reception: DoorOpen, firstaid: HeartPulse, scanner: ScanLine, advisory: Briefcase,
+  risk: Gauge, cyber: ShieldAlert, tactical: Crosshair, maintenance: Wrench,
 };
 export function serviceIcon(name?: string | null): LucideIcon {
   return (name && SERVICE_ICONS[name]) || ShieldCheck;
