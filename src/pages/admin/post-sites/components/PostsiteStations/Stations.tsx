@@ -965,7 +965,13 @@ export default function Stations({ site }: { site?: any }) {
                                     <span className="text-sm text-foreground">{g.fullName || g.label || g.name || g.email || g.id}</span>
                                   )}
                                 </div>
-                                <div className="text-sm text-muted-foreground ml-3">{g.station ? g.station : (g.postSite ? g.postSite : '')}</div>
+                                <div className="text-sm text-muted-foreground ml-3">{(() => {
+                                  const st = g.station;
+                                  const ps = g.postSite;
+                                  const stLabel = st == null ? '' : (typeof st === 'string' ? st : (st.stationName || st.name || st.station_name || st.nickname || ''));
+                                  const psLabel = ps == null ? '' : (typeof ps === 'string' ? ps : (ps.name || ps.companyName || ps.stationName || ''));
+                                  return stLabel || psLabel || '';
+                                })()}</div>
                               </div>
                               </li>
                             ))}
