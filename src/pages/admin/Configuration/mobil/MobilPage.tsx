@@ -11,7 +11,24 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, Pencil, Trash2, Smartphone, Image as ImageIcon, Tag, BadgeCheck } from 'lucide-react';
-import CustomerAppPreview from './CustomerAppPreview';
+import CustomerAppPreview, { serviceIcon, SERVICE_ICONS } from './CustomerAppPreview';
+
+/** Pre-made security-service templates: pick one to pre-fill title/description + a
+ * named icon (rendered in the app + preview without an uploaded image). */
+const SERVICE_TEMPLATES: { title: string; description: string; iconName: string }[] = [
+  { title: 'Vigilancia física', description: 'Guardias de seguridad uniformados en sitio, 24/7, para disuasión y control de accesos.', iconName: 'guard' },
+  { title: 'Monitoreo CCTV', description: 'Videovigilancia con cámaras y monitoreo remoto en tiempo real desde nuestra central.', iconName: 'cctv' },
+  { title: 'Monitoreo de alarmas', description: 'Recepción y verificación de señales de alarma con respuesta inmediata.', iconName: 'monitoring' },
+  { title: 'Botón de pánico / SOS', description: 'Alerta de emergencia con un toque y despacho prioritario de unidades.', iconName: 'panic' },
+  { title: 'Rondas de seguridad', description: 'Recorridos programados con verificación por QR/GPS y reporte de novedades.', iconName: 'patrol' },
+  { title: 'Control de acceso', description: 'Gestión de ingreso de personas y vehículos con registro y credenciales.', iconName: 'access' },
+  { title: 'Custodia y transporte de valores', description: 'Acompañamiento y traslado seguro de valores y mercancía.', iconName: 'valuables' },
+  { title: 'Escolta ejecutiva', description: 'Protección personal y acompañamiento para ejecutivos y VIP.', iconName: 'escort' },
+  { title: 'Seguridad electrónica', description: 'Instalación y mantenimiento de alarmas, sensores y sistemas integrados.', iconName: 'electronic' },
+  { title: 'Respuesta a emergencias', description: 'Unidades móviles de reacción ante incidentes y emergencias.', iconName: 'response' },
+  { title: 'Unidad canina (K9)', description: 'Detección y patrullaje con binomios caninos certificados.', iconName: 'k9' },
+  { title: 'Prevención de incendios', description: 'Inspección, prevención y respuesta ante conatos de incendio.', iconName: 'fire' },
+];
 import { toast } from 'sonner';
 import { PageContainer, PageHeader, Section } from '@/components/kit';
 import {
@@ -398,6 +415,7 @@ export default function MobilPage() {
     description: '',
     price: '' as any,
     publishedOnMobile: false,
+    iconName: '' as string,
   };
   const [serviceForm, setServiceForm] = useState(defaultServiceForm);
 
@@ -561,6 +579,25 @@ export default function MobilPage() {
                       <DialogDescription>Configura un servicio para la app móvil.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
+                      {/* Plantillas de servicios de seguridad — pre-llenan título, descripción e ícono */}
+                      <div>
+                        <Label>Plantillas de seguridad</Label>
+                        <div className="mt-1.5 flex max-h-24 flex-wrap gap-1.5 overflow-y-auto">
+                          {SERVICE_TEMPLATES.map((tpl) => {
+                            const Ic = serviceIcon(tpl.iconName);
+                            return (
+                              <button
+                                key={tpl.title}
+                                type="button"
+                                onClick={() => setServiceForm((p) => ({ ...p, title: tpl.title, description: tpl.description, iconName: tpl.iconName, publishedOnMobile: true }))}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs transition hover:border-primary/50 hover:bg-primary/10"
+                              >
+                                <Ic className="size-3.5 text-primary" /> {tpl.title}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                       <div>
                         <Label>Título*</Label>
                         <Input value={serviceForm.title} onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })} placeholder="Título del servicio" />
@@ -568,6 +605,22 @@ export default function MobilPage() {
                       <div>
                         <Label>Descripción</Label>
                         <Textarea value={serviceForm.description} onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })} rows={4} />
+                      </div>
+                      <div>
+                        <Label>Ícono (se envía a la app)</Label>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {Object.entries(SERVICE_ICONS).map(([key, Ic]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              title={key}
+                              onClick={() => setServiceForm({ ...serviceForm, iconName: key })}
+                              className={`grid size-9 place-items-center rounded-lg border transition ${serviceForm.iconName === key ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40'}`}
+                            >
+                              <Ic className="size-4" />
+                            </button>
+                          ))}
+                        </div>
                       </div>
                       <div>
                         <Label>Precio</Label>
@@ -587,6 +640,7 @@ export default function MobilPage() {
                             description: serviceForm.description,
                             price: serviceForm.price || null,
                             publishedOnMobile: serviceForm.publishedOnMobile,
+                            iconName: serviceForm.iconName || null,
                           };
                           if (editingServiceId) {
                             await updateService(editingServiceId, payload);
@@ -633,7 +687,7 @@ export default function MobilPage() {
                       <TableCell className="truncate">{s.description}</TableCell>
                       <TableCell>{s.price ?? '-'}</TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button size="sm" variant="outline" className="text-primary border-primary hover:bg-primary/10" onClick={() => { setEditingServiceId(s.id); setServiceForm({ title: s.title || '', description: s.description || '', price: s.price ?? '', publishedOnMobile: !!s.publishedOnMobile }); setServiceDialogOpen(true); }}>
+                        <Button size="sm" variant="outline" className="text-primary border-primary hover:bg-primary/10" onClick={() => { setEditingServiceId(s.id); setServiceForm({ title: s.title || '', description: s.description || '', price: s.price ?? '', publishedOnMobile: !!s.publishedOnMobile, iconName: s.iconName || '' }); setServiceDialogOpen(true); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button size="sm" variant="destructive" onClick={() => openDeleteConfirmation(s.id, s.title || 'este servicio', 'service')}>
@@ -753,6 +807,19 @@ export default function MobilPage() {
                   title: item.title,
                   description: item.description,
                   image: resolveBannerImageUrl(item),
+                }))}
+                services={services
+                  .filter((s: any) => s.publishedOnMobile)
+                  .map((s: any) => ({
+                    title: s.title,
+                    description: s.description,
+                    image: resolveFileUrl(s.serviceImages?.[0]) || resolveFileUrl(s.iconImage?.[0]) || undefined,
+                    iconName: s.iconName,
+                  }))}
+                certifications={certItems.map((c) => ({
+                  title: c.title,
+                  description: c.description,
+                  image: resolveCertificationImageUrl(c),
                 }))}
               />
             </div>
