@@ -13,6 +13,26 @@ import PostSiteMiniInfo from '@/components/post-sites/PostSiteMiniInfo';
 
 const GOLD = '#C8860A';
 
+// ── Safe label extraction ────────────────────────────────────────────────────
+// The backend may return raw association OBJECTS (full Sequelize models) for
+// client / postSite / station. Rendering an object directly as a JSX child
+// throws React error #31 ("Objects are not valid as a React child"). This helper
+// always returns a printable string, whether given a string, number, or object.
+const labelOf = (val: any): string | null => {
+  if (val === null || val === undefined) return null;
+  if (typeof val === 'string') return val.trim() || null;
+  if (typeof val === 'number') return String(val);
+  if (typeof val === 'object') {
+    const candidate =
+      val.stationName ?? val.companyName ?? val.postSiteName ?? val.fullName ??
+      val.name ?? val.label ?? val.clientName ?? val.clientFullName ??
+      val.title ?? val.id ?? null;
+    if (candidate === null || candidate === undefined) return null;
+    return typeof candidate === 'string' ? (candidate.trim() || null) : String(candidate);
+  }
+  return String(val);
+};
+
 // ── Small presentational helper (matches GuardProfile reference) ─────────────
 const Section = ({ title, icon, action, children }: { title: string; icon?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode }) => (
   <div className="bg-card border rounded-2xl p-5 shadow-sm">
@@ -95,10 +115,10 @@ export default function GuardAsignarSitiosPage() {
           return {
             raw: r,
             id: idVal,
-            client: r.clientName ?? r.clientFullName ?? r.client?.fullName ?? r.clientAccountName ?? null,
+            client: r.clientName ?? r.clientFullName ?? labelOf(r.client) ?? r.clientAccountName ?? labelOf(r.clientAccount) ?? null,
             // Keep businessInfo (post site) separate from station
-            postSite: r.postSiteName ?? r.companyName ?? r.businessInfo?.companyName ?? null,
-            station: (r.station && (r.station.stationName || r.station.name)) ?? r.stationName ?? null,
+            postSite: r.postSiteName ?? r.companyName ?? labelOf(r.businessInfo) ?? labelOf(r.postSite) ?? null,
+            station: labelOf(r.station) ?? r.stationName ?? null,
             tenantUserId: r.tenantUserId ?? r.guardId ?? null,
             businessInfoId: r.postSiteId ?? r.businessInfoId ?? r.stationId,
             // Carry through any tag/recorrido/siteTours/checklist info present on the shift
@@ -118,11 +138,11 @@ export default function GuardAsignarSitiosPage() {
           const siteLooksLikePostSiteName = item.postSite && item.raw && item.raw.postSiteName && item.postSite === item.raw.postSiteName;
           if (haveClient && haveSite && !siteLooksLikePostSiteName) return item;
           try {
-            const post = await stationService.get(item.businessInfoId);
-            const stationName = post.stationName || post.name || post.label || null;
-            const postSiteName = post.companyName || post.postSiteName || post.name || null;
-            let siteName = item.postSite || postSiteName || item.raw.postSiteName || '-';
-            let clientName = item.client || post.client?.fullName || post.client?.name || post.clientAccount?.fullName || post.clientAccount?.name || post.clientAccountName || item.raw.clientName || null;
+            const post: any = await stationService.get(item.businessInfoId);
+            const stationName = labelOf(post.station) ?? post.stationName ?? post.name ?? post.label ?? null;
+            const postSiteName = post.companyName ?? post.postSiteName ?? post.name ?? null;
+            let siteName = item.postSite ?? postSiteName ?? item.raw.postSiteName ?? '-';
+            let clientName = item.client ?? labelOf(post.client) ?? labelOf(post.clientAccount) ?? post.clientAccountName ?? item.raw.clientName ?? null;
 
             // If clientName still null and post exposes a clientAccountId, fetch the client-account
             if (!clientName) {
@@ -131,33 +151,35 @@ export default function GuardAsignarSitiosPage() {
                 try {
                   const clientResp = await api.get(`/tenant/${tenantId}/client-account/${clientId}`);
                   const clientData = clientResp?.data ?? clientResp;
-                  clientName = clientData?.name ?? clientData?.fullName ?? clientData?.label ?? clientName;
+                  clientName = labelOf(clientData) ?? clientName;
                 } catch (e) {
                   // ignore client fetch errors
                 }
               }
             }
 
-            return { ...item, postSite: siteName ?? '-', client: clientName ?? '-', station: stationName ?? item.station ?? null };
+            return { ...item, postSite: labelOf(siteName) ?? '-', client: labelOf(clientName) ?? '-', station: labelOf(stationName) ?? labelOf(item.station) ?? null };
           } catch (e) {
-            return { ...item, postSite: item.postSite ?? (item.raw.postSiteName ?? '-'), client: item.client ?? (item.raw.clientName ?? '-') };
+            return { ...item, postSite: labelOf(item.postSite) ?? (item.raw.postSiteName ?? '-'), client: labelOf(item.client) ?? (item.raw.clientName ?? '-') };
           }
         }));
 
         // Ensure assignments table always shows station(s) when available.
         const enriched = await Promise.all(resolved.map(async (it: any) => {
-          const post = it.postSite ?? '-';
+          const post = labelOf(it.postSite) ?? '-';
           // prefer explicit stationName from item
-          let stationVal = it.station ?? null;
+          let stationVal: any = labelOf(it.station) ?? null;
           try {
             if (!stationVal && it.businessInfoId) {
               // If the raw row contains explicit station info, prefer that
               if (it.raw && (it.raw.stationName || it.raw.station || it.raw.stationId)) {
                 if (it.raw.stationName) {
-                  stationVal = it.raw.stationName;
-                } else if (it.raw.station && (it.raw.station.stationName || it.raw.station.name)) {
+                  stationVal = labelOf(it.raw.stationName);
+                } else if (it.raw.station && typeof it.raw.station === 'object' && (it.raw.station.stationName || it.raw.station.name)) {
                   // station object is already embedded in the shift response — use it directly
                   stationVal = it.raw.station.stationName || it.raw.station.name;
+                } else if (typeof it.raw.station === 'string' && it.raw.station.trim()) {
+                  stationVal = it.raw.station;
                 } else {
                   const stationId = it.raw.stationId || (it.raw.station && it.raw.station.id) || null;
                   if (stationId) {
@@ -165,7 +187,7 @@ export default function GuardAsignarSitiosPage() {
                       const tenantId = localStorage.getItem('tenantId') || '';
                       const stResp = await api.get(`/tenant/${tenantId}/station/${stationId}`);
                       const stData = (stResp as any)?.data ?? stResp;
-                      stationVal = stData?.stationName || stData?.name || stData?.label || null;
+                      stationVal = labelOf(stData?.station) ?? stData?.stationName ?? stData?.name ?? stData?.label ?? null;
                     } catch (err) {
                       // ignore single station fetch errors
                     }
@@ -175,7 +197,10 @@ export default function GuardAsignarSitiosPage() {
                 // Treat businessInfoId as a postSite id and list its stations
                 try {
                   const list = await stationService.list({ postSiteId: it.businessInfoId } as any, { limit: 50, offset: 0 });
-                  const rows = (list.rows || []).map((r: any) => r.stationName || r.name || r.companyName || (r.company && (r.company.name || r.company.companyName)) || r.postSiteName || r.label || r.id).filter(Boolean);
+                  const rows = (list.rows || [])
+                    .map((r: any) => r.stationName || r.name || r.companyName || labelOf(r.company) || r.postSiteName || r.label || r.id)
+                    .map((v: any) => labelOf(v))
+                    .filter(Boolean);
                   if (rows.length) stationVal = rows.join(', ');
                 } catch (e) {
                   // ignore station list errors
@@ -185,8 +210,9 @@ export default function GuardAsignarSitiosPage() {
           } catch (e) {
             // ignore station enrichment errors
           }
-          const stationDisplay = stationVal && String(stationVal).trim() ? String(stationVal) : '-';
-          return { id: it.id, client: it.client ?? '-', postSite: post, station: stationDisplay, tenantUserId: it.tenantUserId, businessInfoId: it.businessInfoId, tags: it.tags ?? null, recorridos: it.recorridos ?? null };
+          const stationLabel = labelOf(stationVal);
+          const stationDisplay = stationLabel && stationLabel.trim() ? stationLabel : '-';
+          return { id: String(it.id ?? ''), client: labelOf(it.client) ?? '-', postSite: labelOf(post) ?? '-', station: stationDisplay, tenantUserId: it.tenantUserId, businessInfoId: it.businessInfoId, tags: it.tags ?? null, recorridos: it.recorridos ?? null };
         }));
         // Deduplicate by businessInfoId + station so we don't show repeated rows
         const dedup = new Map<string, any>();
@@ -336,10 +362,10 @@ export default function GuardAsignarSitiosPage() {
         const rows = Array.isArray(data?.rows) ? data.rows : (Array.isArray(data) ? data : []);
         if (!mounted) return;
         const items = rows.map((r: any) => {
-          const given = r.name ?? r.firstName ?? '';
-          const family = r.lastName ?? r.surname ?? '';
-          const display = (given || family) ? `${given}${family ? ' ' + family : ''}`.trim() : (r.fullName ?? r.label ?? r.id);
-          return { id: r.id, name: display };
+          const given = typeof r.name === 'string' ? r.name : (typeof r.firstName === 'string' ? r.firstName : '');
+          const family = typeof r.lastName === 'string' ? r.lastName : (typeof r.surname === 'string' ? r.surname : '');
+          const display = (given || family) ? `${given}${family ? ' ' + family : ''}`.trim() : (labelOf(r) ?? String(r.id ?? ''));
+          return { id: String(r.id ?? ''), name: labelOf(display) ?? String(r.id ?? '') };
         });
         setClients(items);
       } catch (err) {
@@ -362,7 +388,7 @@ export default function GuardAsignarSitiosPage() {
         if (!tenantId) return;
         // Prefer specific client post-sites endpoint
         const list = await stationService.list({ clientId: selectedClient } as any, { limit: 200, offset: 0 });
-        const items = (list.rows || []).map((r: any) => ({ id: r.id, name: r.companyName || r.postSiteName || r.name || r.stationName || r.label || r.id }));
+        const items = (list.rows || []).map((r: any) => ({ id: String(r.id ?? ''), name: labelOf(r.companyName || r.postSiteName || r.name || r.stationName || r.label) ?? labelOf(r) ?? String(r.id ?? '') }));
         if (!mounted) return;
         setPostSites(items);
       } catch (err) {
@@ -383,7 +409,7 @@ export default function GuardAsignarSitiosPage() {
         if (!tenantId) return;
         const list = await stationService.list({ postSiteId: selectedPostSite } as any, { limit: 200, offset: 0 });
         const rawRows = (list.rows || []);
-        const mapped = rawRows.map((r: any) => ({ id: r.id, name: r.stationName || r.name || r.companyName || r.postSiteName || r.label || r.id }));
+        const mapped = rawRows.map((r: any) => ({ id: String(r.id ?? ''), name: labelOf(r.stationName || r.name || r.companyName || r.postSiteName || r.label) ?? labelOf(r) ?? String(r.id ?? '') }));
         // Filter out the postSite itself (sometimes returned) and dedupe by id+name
         const deduped: Array<{ id: string; name: string }> = [];
         const seenIds = new Set<string>();
@@ -523,6 +549,10 @@ export default function GuardAsignarSitiosPage() {
                   </label>
                   {mappings.map((m) => {
                     const checked = selectedIds.includes(m.id);
+                    // Defensive: never render a raw object as a JSX child (React #31)
+                    const postSiteLabel = labelOf(m.postSite);
+                    const clientLabel = labelOf(m.client);
+                    const stationLabel = labelOf(m.station);
                     return (
                       <div
                         key={m.id}
@@ -540,11 +570,11 @@ export default function GuardAsignarSitiosPage() {
                           <Building2 className="w-4.5 h-4.5" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate">{m.postSite || '—'}</div>
+                          <div className="font-medium text-sm truncate">{postSiteLabel || '—'}</div>
                           <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            <span className="inline-flex items-center gap-1 truncate"><Briefcase className="w-3 h-3 shrink-0" />{m.client || '—'}</span>
-                            {m.station && m.station !== '-' && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-foreground/70 font-medium truncate"><MapPin className="w-3 h-3 shrink-0" />{m.station}</span>
+                            <span className="inline-flex items-center gap-1 truncate"><Briefcase className="w-3 h-3 shrink-0" />{clientLabel || '—'}</span>
+                            {stationLabel && stationLabel !== '-' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-foreground/70 font-medium truncate"><MapPin className="w-3 h-3 shrink-0" />{stationLabel}</span>
                             )}
                           </div>
                         </div>

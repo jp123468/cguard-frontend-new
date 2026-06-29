@@ -370,19 +370,36 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                   <div className="text-sm text-muted-foreground">{t('guards.profile.noAttendance') || 'Sin registros de asistencia.'}</div>
                 ) : (
                   <ul className="divide-y">
-                    {guardShifts.slice(0, 8).map((s) => (
-                      <li key={s.id} className="py-2.5 flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">{s.stationName || (s.station && (s.station.stationName || s.station.name)) || s.shiftSchedule || '—'}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {s.punchInTime ? new Date(s.punchInTime).toLocaleString('es', { timeZone: getTenantTimezone() }) : '—'}
-                            {' → '}
-                            {s.punchOutTime ? new Date(s.punchOutTime).toLocaleString('es', { timeZone: getTenantTimezone() }) : <span className="text-green-600 font-medium">En curso</span>}
+                    {guardShifts.slice(0, 8).map((s) => {
+                      // The guard-shift rows expose `stationName`/`guardName` as
+                      // nested OBJECTS ({ stationName }, { fullName }) — rendering
+                      // one raw throws React #31. And punch times live on the
+                      // dedup `sessions[]` (in/out), not flat punchIn/OutTime.
+                      const stationLabel =
+                        (s.stationName && typeof s.stationName === 'object'
+                          ? s.stationName.stationName || s.stationName.name
+                          : s.stationName) ||
+                        (s.station && (s.station.stationName || s.station.name)) ||
+                        s.shiftSchedule ||
+                        '—';
+                      const sessions = Array.isArray(s.sessions) ? s.sessions : [];
+                      const lastSession = sessions.length ? sessions[sessions.length - 1] : null;
+                      const punchIn = lastSession?.in || s.punchInTime || null;
+                      const punchOut = lastSession?.out || s.punchOutTime || null;
+                      return (
+                        <li key={s.id} className="py-2.5 flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium truncate">{stationLabel}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {punchIn ? new Date(punchIn).toLocaleString('es', { timeZone: getTenantTimezone() }) : '—'}
+                              {' → '}
+                              {punchOut ? new Date(punchOut).toLocaleString('es', { timeZone: getTenantTimezone() }) : <span className="text-green-600 font-medium">En curso</span>}
+                            </div>
                           </div>
-                        </div>
-                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-medium ${s.punchOutTime ? 'bg-muted text-foreground/60' : 'bg-green-500/15 text-green-700'}`}>{s.shiftSchedule || 'Turno'}</span>
-                      </li>
-                    ))}
+                          <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-medium ${punchOut ? 'bg-muted text-foreground/60' : 'bg-green-500/15 text-green-700'}`}>{s.shiftSchedule || 'Turno'}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </Section>
