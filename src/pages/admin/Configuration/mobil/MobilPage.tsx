@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, Pencil, Trash2, Smartphone, Image as ImageIcon, Tag, BadgeCheck } from 'lucide-react';
+import CustomerAppPreview from './CustomerAppPreview';
 import { toast } from 'sonner';
 import { PageContainer, PageHeader, Section } from '@/components/kit';
 import {
@@ -406,9 +407,11 @@ export default function MobilPage() {
         <PageContainer width="wide">
           <PageHeader
             icon={<Smartphone />}
-            title="MOBIL"
-            subtitle="Administra banners, servicios y certificaciones de la app móvil."
+            title="App móvil del cliente (Mi Seguridad)"
+            subtitle="Configura los banners, servicios y certificaciones. La vista previa muestra cómo se verá en el teléfono mientras editas."
           />
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="min-w-0 space-y-6">
           <div className="flex items-center justify-end gap-2">
               <Dialog>
  
@@ -742,6 +745,18 @@ export default function MobilPage() {
               </TableBody>
             </Table>
           </Section>
+            </div>
+            {/* Live phone preview (sticky) — reflects the configured banners. */}
+            <div className="lg:sticky lg:top-6">
+              <CustomerAppPreview
+                banners={bannerItems.map((item) => ({
+                  title: item.title,
+                  description: item.description,
+                  image: resolveBannerImageUrl(item),
+                }))}
+              />
+            </div>
+          </div>
         </PageContainer>
 
         <Dialog open={bannerDialogOpen} onOpenChange={setBannerDialogOpen}>
