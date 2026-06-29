@@ -149,7 +149,8 @@
       "asignarSitios": "Atribuir Sites",
       "conjuntoHabilidades": "Conjunto de Habilidades",
       "departamento": "Departamento",
-      "configuracion": "Configurações"
+      "configuracion": "Configurações",
+      "memos": "Memos"
     },
     "overview": {
       "loading": "Carregando...",
@@ -185,7 +186,8 @@
       },
       "recentActivity": {
         "title": "Atividade recente",
-        "filter": "Filtro"
+        "filter": "Filtro",
+        "empty": "Sem atividade recente"
       },
       "sampleActivity": {
         "message": "Esta mensagem notifica que 'José Alejo Pinos' aceitou a solicitação da empresa e passou para a lista ativa"
@@ -687,18 +689,17 @@
       "sending": "Enviando..."
     }
   },
-"visitantes": {
-  "title": "Visitantes",
-  "bitacoras": "Registros",
-  "loading": "Carregando...",
-  "search": "Pesquisar",
-  "searchVisitor": "Pesquisar visitante",
-  "addVisitor": "Adicionar visitante",
-  "newVisitor": "Novo Visitante",
-  "exportCSV": "Exportar CSV",
-  "exportExcel": "Exportar como Excel",
-  "exportPDF": "Exportar como PDF"
-  ,
-  "searchLogs": "Pesquisar em registros"
-}
+  "visitantes": {
+    "title": "Visitantes",
+    "bitacoras": "Registros",
+    "loading": "Carregando...",
+    "search": "Pesquisar",
+    "searchVisitor": "Pesquisar visitante",
+    "addVisitor": "Adicionar visitante",
+    "newVisitor": "Novo Visitante",
+    "exportCSV": "Exportar CSV",
+    "exportExcel": "Exportar como Excel",
+    "exportPDF": "Exportar como PDF",
+    "searchLogs": "Pesquisar em registros"
+  }
 }

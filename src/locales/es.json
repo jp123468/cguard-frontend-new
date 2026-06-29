@@ -1330,7 +1330,8 @@
       "notas": "Notas",
       "perfil": "Perfil",
       "recordatorios": "Recordatorios",
-      "resumen": "Resumen"
+      "resumen": "Resumen",
+      "memos": "Memos"
     },
     "new": {
       "title": "Nuevo Vigilante",
@@ -1646,7 +1647,8 @@
       },
       "recentActivity": {
         "filter": "Filtrar",
-        "title": "Actividad reciente"
+        "title": "Actividad reciente",
+        "empty": "No hay actividad reciente"
       },
       "sampleActivity": {
         "message": "Este mensaje es para notificarle que 'José Alejo Pinos' ha aceptado la solicitud de la empresa y se ha movido a la lista activa"

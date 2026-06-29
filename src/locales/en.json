@@ -1330,7 +1330,8 @@
       "notas": "Notes",
       "perfil": "Profile",
       "recordatorios": "Reminders",
-      "resumen": "Overview"
+      "resumen": "Overview",
+      "memos": "Memos"
     },
     "new": {
       "title": "New Guard",
@@ -1646,7 +1647,8 @@
       },
       "recentActivity": {
         "filter": "Filter",
-        "title": "Recent Activity"
+        "title": "Recent Activity",
+        "empty": "No recent activity"
       },
       "sampleActivity": {
         "message": "This message is to notify you that 'José Alejo Pinos' has accepted the company request and moved to active list"
