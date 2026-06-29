@@ -23,6 +23,8 @@ interface SummaryRow {
   payableHours: number;
   grossPay: number | null;
   hourlyRate: number | null;
+  daysWorked?: number;
+  monthlySalary?: number | null;
 }
 
 function isoDay(d: Date) {
@@ -36,6 +38,7 @@ export default function NominaPayrollSummary() {
   const [totals, setTotals] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [ratesEnabled, setRatesEnabled] = useState(false);
+  const [salaryBasis, setSalaryBasis] = useState<"hourly" | "monthly">("hourly");
   const [currency, setCurrency] = useState("USD");
   const [closing, setClosing] = useState(false);
   const [editRates, setEditRates] = useState(false);
@@ -51,6 +54,7 @@ export default function NominaPayrollSummary() {
         setRows(rws);
         setTotals(d.totals || null);
         setRatesEnabled(!!d.ratesEnabled);
+        setSalaryBasis((d as any).salaryBasis === "monthly" ? "monthly" : "hourly");
         setCurrency(d.currency || "USD");
         const re: Record<string, number> = {};
         rws.forEach((r) => { re[r.guardId] = r.hourlyRate || 0; });
@@ -95,6 +99,8 @@ export default function NominaPayrollSummary() {
     const data = rows.map((r) => ({
       Vigilante: r.guardName,
       Turnos: r.shifts,
+      "Días trabajados": r.daysWorked ?? 0,
+      ...(salaryBasis === "monthly" ? { "Sueldo mensual": r.monthlySalary ?? 0 } : {}),
       "Horas regulares": r.regularHours,
       "Horas extra": r.overtimeHours,
       "Horas totales": r.totalHours,
@@ -157,6 +163,7 @@ export default function NominaPayrollSummary() {
   const columns: Column<any>[] = [
     { key: "guardName", header: "Vigilante" },
     { key: "shifts", header: "Turnos" },
+    { key: "daysWorked", header: "Días trab.", render: (_v, r) => <span className="font-medium">{r.daysWorked ?? 0}</span> },
     { key: "regularHours", header: "H. regulares", render: (_v, r) => r.regularHours.toFixed(2) },
     { key: "overtimeHours", header: "H. extra", render: (_v, r) => r.overtimeHours.toFixed(2) },
     { key: "totalHours", header: "H. totales", render: (_v, r) => r.totalHours.toFixed(2) },
@@ -164,25 +171,32 @@ export default function NominaPayrollSummary() {
     { key: "noShows", header: "Inasistencias" },
     { key: "approvedCorrections", header: "Correcciones" },
     { key: "payableHours", header: "H. pagables", render: (_v, r) => <span className="font-semibold">{r.payableHours.toFixed(2)}</span> },
-    {
-      key: "hourlyRate",
-      header: "Tarifa/h",
-      render: (_v: any, r: SummaryRow) =>
-        editRates ? (
-          <input
-            type="number"
-            step="0.01"
-            value={rateEdits[r.guardId] ?? 0}
-            onChange={(e) => setRateEdits((p) => ({ ...p, [r.guardId]: Number(e.target.value) }))}
-            className="w-20 rounded border border-border bg-background px-2 py-1 text-sm"
-            onClick={(e) => e.stopPropagation()}
-          />
-        ) : (
-          <span className="text-muted-foreground">{r.hourlyRate ? `${currency} ${r.hourlyRate}` : "—"}</span>
-        ),
-    } as Column<any>,
+    // Hourly basis → editable per-guard rate. Monthly basis → monthly salary column.
+    ...(salaryBasis === "hourly"
+      ? [{
+          key: "hourlyRate",
+          header: "Tarifa/h",
+          render: (_v: any, r: SummaryRow) =>
+            editRates ? (
+              <input
+                type="number"
+                step="0.01"
+                value={rateEdits[r.guardId] ?? 0}
+                onChange={(e) => setRateEdits((p) => ({ ...p, [r.guardId]: Number(e.target.value) }))}
+                className="w-20 rounded border border-border bg-background px-2 py-1 text-sm"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <span className="text-muted-foreground">{r.hourlyRate ? `${currency} ${r.hourlyRate}` : "—"}</span>
+            ),
+        } as Column<any>]
+      : [{
+          key: "monthlySalary",
+          header: "Sueldo mensual",
+          render: (_v: any, r: SummaryRow) => <span className="text-muted-foreground">{r.monthlySalary != null ? money(r.monthlySalary) : "—"}</span>,
+        } as Column<any>]),
     ...(ratesEnabled
-      ? [{ key: "grossPay", header: "Pago bruto", render: (_v: any, r: SummaryRow) => <span className="font-semibold text-primary">{money(r.grossPay)}</span> } as Column<any>]
+      ? [{ key: "grossPay", header: salaryBasis === "monthly" ? "Total a pagar" : "Pago bruto", render: (_v: any, r: SummaryRow) => <span className="font-semibold text-primary">{money(r.grossPay)}</span> } as Column<any>]
       : []),
   ];
 

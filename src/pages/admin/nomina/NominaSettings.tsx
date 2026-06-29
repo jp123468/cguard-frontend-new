@@ -13,6 +13,9 @@ import {
   BellRing,
   CheckSquare,
   Wallet,
+  Coins,
+  Trash2,
+  Plus,
 } from "lucide-react";
 
 function set<T extends object>(obj: T, path: string, value: any): T {
@@ -155,6 +158,92 @@ export default function NominaSettings() {
               <Num label="Tarifa por hora (0 = no calcular pago)" path="payroll.defaultHourlyRate" />
               <Num label="Multiplicador horas extra" path="payroll.overtimeMultiplier" />
             </SettingsSection>
+
+            {/* Salary model — universal: hourly OR fixed monthly salary, with the
+                country's rule for days not worked. */}
+            <SettingsSection title="Modelo salarial" icon={<Coins />}>
+              <label className="block">
+                <span className="text-xs font-medium text-muted-foreground">Base del salario</span>
+                <select
+                  value={s.payroll?.salaryBasis || "hourly"}
+                  onChange={(e) => setS((p: any) => set(p, "payroll.salaryBasis", e.target.value))}
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="hourly">Por hora</option>
+                  <option value="monthly">Sueldo mensual</option>
+                </select>
+              </label>
+              {s.payroll?.salaryBasis === "monthly" && (
+                <Num label="Sueldo mensual por defecto" path="payroll.defaultMonthlySalary" />
+              )}
+              {s.payroll?.salaryBasis === "monthly" && (
+                <label className="block">
+                  <span className="text-xs font-medium text-muted-foreground">Días no trabajados</span>
+                  <select
+                    value={s.payroll?.unworkedDayPolicy || "full"}
+                    onChange={(e) => setS((p: any) => set(p, "payroll.unworkedDayPolicy", e.target.value))}
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="full">Pagar sueldo completo</option>
+                    <option value="deduct_unjustified">Descontar inasistencias injustificadas</option>
+                    <option value="proportional">Proporcional a días trabajados</option>
+                  </select>
+                </label>
+              )}
+            </SettingsSection>
+
+            {/* Configurable extra-hour categories (e.g. Ecuador: suplementarias 1.5×,
+                extraordinarias 2×). Payroll reports hours per category. */}
+            <Section title="Tipos de horas extra" icon={<Coins />}>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Define las categorías de horas extra que tu país/empresa reconoce. El multiplicador se aplica sobre la tarifa base por hora.
+              </p>
+              <div className="space-y-2">
+                {(s.payroll?.extraHourTypes || []).map((t: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      value={t.label || ""}
+                      placeholder="Nombre (ej. Horas suplementarias)"
+                      onChange={(e) =>
+                        setS((p: any) => {
+                          const arr = [...(p.payroll?.extraHourTypes || [])];
+                          arr[i] = { ...arr[i], label: e.target.value, key: arr[i].key || `t${i}` };
+                          return set(p, "payroll.extraHourTypes", arr);
+                        })
+                      }
+                      className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary/60"
+                    />
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={t.multiplier ?? 1}
+                      onChange={(e) =>
+                        setS((p: any) => {
+                          const arr = [...(p.payroll?.extraHourTypes || [])];
+                          arr[i] = { ...arr[i], multiplier: Number(e.target.value) };
+                          return set(p, "payroll.extraHourTypes", arr);
+                        })
+                      }
+                      className="w-20 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary/60"
+                    />
+                    <span className="text-xs text-muted-foreground">×</span>
+                    <button
+                      onClick={() => setS((p: any) => set(p, "payroll.extraHourTypes", (p.payroll?.extraHourTypes || []).filter((_: any, j: number) => j !== i)))}
+                      className="p-2 text-muted-foreground hover:text-red-500"
+                      aria-label="Eliminar"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => setS((p: any) => set(p, "payroll.extraHourTypes", [...(p.payroll?.extraHourTypes || []), { key: `t${Date.now()}`, label: "", multiplier: 1.5 }]))}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-1.5 text-sm text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+                >
+                  <Plus className="size-4" /> Agregar tipo
+                </button>
+              </div>
+            </Section>
 
             <div className="fixed bottom-6 right-6 z-10">
               <Button variant="brand" onClick={save} disabled={saving} className="shadow-lg">
