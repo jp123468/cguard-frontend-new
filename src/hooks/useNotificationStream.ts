@@ -70,7 +70,12 @@ export function useNotificationStream(
   const addNotification = useCallback((n: PlatformNotification, read = false) => {
     setNotifications((prev) => {
       if (prev.some((x) => x.id === n.id)) return prev;
-      return [{ ...n, read }, ...prev].slice(0, MAX_STORED);
+      // Always keep the list sorted NEWEST-FIRST by createdAt. Insertion order can't be
+      // trusted: the REST backlog is seeded one-by-one (each prepended) from an API that
+      // already returns newest-first, which would otherwise REVERSE it to oldest-first.
+      return [{ ...n, read }, ...prev]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, MAX_STORED);
     });
   }, []);
 
