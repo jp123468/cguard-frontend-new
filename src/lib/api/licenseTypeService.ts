@@ -14,9 +14,21 @@ const licenseTypeService = {
     return data;
   },
 
-  async create(input: { name: string }) {
+  async create(input: { name: string; status?: string }) {
     const tenantId = getTenantId();
     const { data } = await api.post<any>(`/tenant/${tenantId}/license-type`, input);
+    return data;
+  },
+
+  async update(id: string, input: { name?: string; status?: string }) {
+    const tenantId = getTenantId();
+    const { data } = await api.put<any>(`/tenant/${tenantId}/license-type/${id}`, input);
+    return data;
+  },
+
+  async destroy(ids: string[]) {
+    const tenantId = getTenantId();
+    const { data } = await api.delete<any>(`/tenant/${tenantId}/license-type`, { data: { ids } });
     return data;
   },
 

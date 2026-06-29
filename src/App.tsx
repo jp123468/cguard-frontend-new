@@ -1558,21 +1558,12 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* The real payroll/nómina config lives at /nomina/settings (salary basis,
+                  monthly, extra-hour types). /setting/payroll-setup was a no-op stub —
+                  redirect it to the working page. */}
               <Route
                 path="/setting/payroll-setup"
-                element={
-                  <ProtectedRoute>
-                    <PayrollSettingsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/setting/payroll-setup"
-                element={
-                  <ProtectedRoute>
-                    <PayrollSettingsPage />
-                  </ProtectedRoute>
-                }
+                element={<Navigate to="/nomina/settings" replace />}
               />
               <Route
                 path="/setting/publishing-sites"

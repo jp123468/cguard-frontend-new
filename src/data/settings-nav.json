@@ -14,7 +14,7 @@
         "items": [
           { "id": "perfil-empresa", "label": "Perfil de la Empresa", "path": "/setting/company-profile", "icon": "Building2", "desc": "Datos, logo e identidad de la empresa." },
           { "id": "billing", "label": "Suscripción", "path": "/setting/billing", "icon": "CreditCard", "desc": "Plan, facturación y pagos." },
-          { "id": "departamentos", "label": "Departamentos", "path": "/setting/departamentos", "icon": "Network", "desc": "Estructura organizacional interna." },
+          { "id": "departamentos", "label": "Departamentos", "path": "/setting/Departamentos", "icon": "Network", "desc": "Estructura organizacional interna." },
           { "id": "roles", "label": "Roles de Usuario", "path": "/setting/roles", "icon": "ShieldHalf", "desc": "Define roles y permisos por tenant." },
           { "id": "campos-perfil", "label": "Campos de Perfil", "path": "/setting/campos-perfil", "icon": "ListChecks", "desc": "Personaliza los campos de los perfiles." }
         ]
@@ -50,7 +50,6 @@
       {
         "label": "INFORMES",
         "items": [
-          { "id": "custom-reports", "label": "Informes Personalizados", "path": "/setting/custom-reports", "icon": "FileBarChart", "desc": "Crea y administra informes a medida." },
           { "id": "report-configuration", "label": "Configuración de Informes", "path": "/setting/report-configuration", "icon": "FileCog", "desc": "Plantillas y opciones de informes." }
         ]
       },
