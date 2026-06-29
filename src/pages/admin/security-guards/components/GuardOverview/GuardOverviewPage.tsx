@@ -4,6 +4,7 @@ import GuardsLayout from '@/layouts/GuardsLayout';
 import GuardSummary from '@/pages/admin/security-guards/components/GuardSummary/GuardSummarypage';
 import { useEffect, useState } from 'react';
 import securityGuardService from '@/lib/api/securityGuardService';
+import { fileUrlFromFile } from '@/lib/fileUrl';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
@@ -56,7 +57,13 @@ export default function GuardResumenPage() {
         if (!mounted) return;
         const g = data.guard ?? data;
         const fullName = g.fullName ?? `${g.firstName ?? ''} ${g.lastName ?? ''}`.trim();
-        setGuard({ ...g, fullName });
+        // The photo comes back on the TOP-LEVEL response as `profileImage` (a signed
+        // file array), NOT on the nested `guard` user — flatten it to `photoUrl` so the
+        // avatar here AND the <GuardSummary guard={guard}> child both render it.
+        const pi = data.profileImage ?? g.profileImage;
+        const photoFile = Array.isArray(pi) ? pi[0] : pi;
+        const photoUrl = data.photoUrl ?? g.photoUrl ?? fileUrlFromFile(photoFile) ?? null;
+        setGuard({ ...g, fullName, photoUrl });
       })
       .catch((err: any) => {
         console.error('Error cargando vigilante:', err);
