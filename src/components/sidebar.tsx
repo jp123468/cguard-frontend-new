@@ -219,8 +219,16 @@ export default function Sidebar() {
 
                   {isExpandable && isExpanded && item.subItems && hasTenant && (
                     <div className="ml-7 mb-1 pl-3" style={{ borderLeft: "1px solid color-mix(in oklab, var(--cc-accent) 18%, var(--border))" }}>
-                      {item.subItems.map((sub) => {
-                        const isActive = location.pathname.startsWith(sub.path);
+                      {(() => {
+                      // Only the BEST (longest) matching sub is active, so prefix
+                      // siblings like /tasks and /tasks/approvals don't BOTH highlight.
+                      const _p = location.pathname;
+                      const _best = (item.subItems || [])
+                        .map((s: any) => s.path)
+                        .filter((sp: string) => _p === sp || _p.startsWith(sp + '/'))
+                        .sort((a: string, b: string) => b.length - a.length)[0] || null;
+                      return item.subItems.map((sub) => {
+                        const isActive = sub.path === _best;
                         return (
                           <NavLink
                             key={sub.id}
@@ -236,7 +244,8 @@ export default function Sidebar() {
                             })()}
                           </NavLink>
                         );
-                      })}
+                      });
+                      })()}
                     </div>
                   )}
                 </div>
