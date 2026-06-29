@@ -59,6 +59,7 @@ import {
   updateBanner,
   updateCertification,
   uploadBannerImage,
+  uploadServiceImage,
   uploadCertificationIcon,
   uploadCertificationImage,
   listServices,
@@ -434,6 +435,8 @@ export default function MobilPage() {
     price: '' as any,
     publishedOnMobile: false,
     iconName: '' as string,
+    images: [] as any[], // existing serviceImages (file objects)
+    newImageFiles: [] as File[], // newly selected images to upload on save
   };
   const [serviceForm, setServiceForm] = useState(defaultServiceForm);
 
@@ -641,6 +644,42 @@ export default function MobilPage() {
                         </div>
                       </div>
                       <div>
+                        <Label>Imágenes del servicio</Label>
+                        <p className="mb-1.5 text-xs text-muted-foreground">Se muestran en la pantalla de detalle del servicio en la app. Puedes agregar varias.</p>
+                        <div className="flex flex-wrap gap-2">
+                          {serviceForm.images.map((img: any, i: number) => (
+                            <div key={`ex-${i}`} className="relative size-16 overflow-hidden rounded-lg border border-border">
+                              <img src={resolveFileUrl(img)} alt="" className="size-full object-cover" />
+                              <button type="button" onClick={() => setServiceForm((p) => ({ ...p, images: p.images.filter((_: any, j: number) => j !== i) }))} className="absolute right-0.5 top-0.5 grid size-4 place-items-center rounded-full bg-black/60 text-white">
+                                <Trash2 className="size-2.5" />
+                              </button>
+                            </div>
+                          ))}
+                          {serviceForm.newImageFiles.map((file: File, i: number) => (
+                            <div key={`new-${i}`} className="relative size-16 overflow-hidden rounded-lg border border-primary/60">
+                              <img src={URL.createObjectURL(file)} alt="" className="size-full object-cover" />
+                              <button type="button" onClick={() => setServiceForm((p) => ({ ...p, newImageFiles: p.newImageFiles.filter((_: File, j: number) => j !== i) }))} className="absolute right-0.5 top-0.5 grid size-4 place-items-center rounded-full bg-black/60 text-white">
+                                <Trash2 className="size-2.5" />
+                              </button>
+                            </div>
+                          ))}
+                          <label className="grid size-16 cursor-pointer place-items-center rounded-lg border border-dashed border-border text-muted-foreground transition hover:border-primary/50 hover:text-foreground">
+                            <Plus className="size-5" />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="hidden"
+                              onChange={(e) => {
+                                const files = Array.from(e.target.files || []);
+                                if (files.length) setServiceForm((p) => ({ ...p, newImageFiles: [...p.newImageFiles, ...files] }));
+                                e.target.value = '';
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                      <div>
                         <Label>Precio</Label>
                         <Input value={serviceForm.price} onChange={(e) => setServiceForm({ ...serviceForm, price: e.target.value })} placeholder="0.00" />
                       </div>
@@ -653,12 +692,19 @@ export default function MobilPage() {
                       <Button variant="outline" onClick={() => setServiceDialogOpen(false)}>Cancelar</Button>
                       <Button variant="brand" onClick={async () => {
                         try {
+                          // Upload any newly selected images, then keep existing + new.
+                          const uploadedImages: any[] = [];
+                          for (const file of serviceForm.newImageFiles) {
+                            const up = await uploadServiceImage(file);
+                            if (up) uploadedImages.push(up);
+                          }
                           const payload: any = {
                             title: serviceForm.title,
                             description: serviceForm.description,
                             price: serviceForm.price || null,
                             publishedOnMobile: serviceForm.publishedOnMobile,
                             iconName: serviceForm.iconName || null,
+                            serviceImages: [...serviceForm.images, ...uploadedImages],
                           };
                           if (editingServiceId) {
                             await updateService(editingServiceId, payload);
@@ -705,7 +751,7 @@ export default function MobilPage() {
                       <TableCell className="truncate">{s.description}</TableCell>
                       <TableCell>{s.price ?? '-'}</TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button size="sm" variant="outline" className="text-primary border-primary hover:bg-primary/10" onClick={() => { setEditingServiceId(s.id); setServiceForm({ title: s.title || '', description: s.description || '', price: s.price ?? '', publishedOnMobile: !!s.publishedOnMobile, iconName: s.iconName || '' }); setServiceDialogOpen(true); }}>
+                        <Button size="sm" variant="outline" className="text-primary border-primary hover:bg-primary/10" onClick={() => { setEditingServiceId(s.id); setServiceForm({ title: s.title || '', description: s.description || '', price: s.price ?? '', publishedOnMobile: !!s.publishedOnMobile, iconName: s.iconName || '', images: s.serviceImages || [], newImageFiles: [] }); setServiceDialogOpen(true); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button size="sm" variant="destructive" onClick={() => openDeleteConfirmation(s.id, s.title || 'este servicio', 'service')}>

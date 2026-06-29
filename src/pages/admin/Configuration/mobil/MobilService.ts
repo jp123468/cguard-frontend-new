@@ -91,6 +91,10 @@ export async function uploadBannerImage(file: File | null) {
   return uploadFile(file, 'bannerSuperiorAppImageUrl');
 }
 
+export async function uploadServiceImage(file: File | null) {
+  return uploadFile(file, 'serviceServiceImages');
+}
+
 export async function uploadCertificationImage(file: File | null) {
   return uploadFile(file, 'certificationImage');
 }
