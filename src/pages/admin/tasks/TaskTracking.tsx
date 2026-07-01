@@ -102,7 +102,7 @@ export default function TaskTracking() {
       },
     },
     { key: "priority", header: "Prioridad", render: (_v, r) => <span className="text-xs text-muted-foreground">{r.priority || "media"}</span> },
-    { key: "source", header: "Origen", render: (_v, r) => <span className="text-xs text-muted-foreground">{r.source === "client" ? "Cliente" : "Operación"}</span> },
+    { key: "source", header: "Origen", render: (_v, r) => <span className="text-xs text-muted-foreground">{r.source === "client" ? "Cliente" : r.source === "passdown" ? "Pase de turno" : "Operación"}</span> },
     { key: "dateToDoTheTask", header: "Fecha límite", render: (_v, r) => <span className="text-xs text-muted-foreground">{fmtDate(r.dateToDoTheTask)}</span> },
     { key: "dateCompletedTask", header: "Completada", render: (_v, r) => <span className="text-xs text-muted-foreground">{fmtDate(r.dateCompletedTask)}</span> },
   ];

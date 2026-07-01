@@ -36,7 +36,7 @@ export interface TaskRow {
   id: string;
   taskToDo: string;
   status: TaskStatus;
-  source: "client" | "staff" | null;
+  source: "client" | "staff" | "passdown" | null;
   priority: "alta" | "media" | "baja" | null;
   dateToDoTheTask: string;
   dateCompletedTask?: string | null;

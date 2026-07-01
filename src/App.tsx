@@ -111,6 +111,7 @@ import NominaExceptions from "./pages/admin/nomina/NominaExceptions"
 import NominaApprovals from "./pages/admin/nomina/NominaApprovals"
 import TaskApprovals from "./pages/admin/tasks/TaskApprovals"
 import TaskTracking from "./pages/admin/tasks/TaskTracking"
+import PassdownsPage from "./pages/admin/passdown/PassdownsPage"
 import NominaPayrollSummary from "./pages/admin/nomina/NominaPayrollSummary"
 import NominaSettings from "./pages/admin/nomina/NominaSettings"
 import Visitors from "./pages/admin/visitor-management/Visitors"
@@ -1215,6 +1216,7 @@ export default function App() {
               <Route path="/nomina/approvals" element={<ProtectedRoute><NominaApprovals /></ProtectedRoute>} />
               <Route path="/tasks" element={<ProtectedRoute><TaskTracking /></ProtectedRoute>} />
               <Route path="/tasks/approvals" element={<ProtectedRoute><TaskApprovals /></ProtectedRoute>} />
+              <Route path="/passdowns" element={<ProtectedRoute><PassdownsPage /></ProtectedRoute>} />
               <Route path="/nomina/payroll-summary" element={<ProtectedRoute><NominaPayrollSummary /></ProtectedRoute>} />
               <Route path="/nomina/settings" element={<ProtectedRoute><NominaSettings /></ProtectedRoute>} />
 
