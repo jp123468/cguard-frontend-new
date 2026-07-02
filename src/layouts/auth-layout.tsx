@@ -59,8 +59,7 @@ export default function AuthLayout({ children, title, variant = 'admin', subtitl
     <div className="min-h-screen w-full flex">
       {/* LADO IZQUIERDO — panel de marca oscuro */}
       <div
-        className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden"
-        style={{ background: "linear-gradient(145deg, #0F1923 0%, #1C2B3A 50%, #0F1923 100%)" }}
+        className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden bg-[linear-gradient(145deg,#0F1923_0%,#1C2B3A_50%,#0F1923_100%)] dark:bg-[linear-gradient(145deg,#0A0A0A_0%,#171717_55%,#0A0A0A_100%)]"
       >
         {/* Patrón de cuadrícula sutil */}
         <div
@@ -136,7 +135,7 @@ export default function AuthLayout({ children, title, variant = 'admin', subtitl
       </div>
 
       {/* LADO DERECHO — formulario */}
-      <div className="flex flex-1 flex-col items-center justify-center p-6 lg:p-12 bg-[#F8F7F4] dark:bg-slate-950 relative">
+      <div className="flex flex-1 flex-col items-center justify-center p-6 lg:p-12 bg-[#F8F7F4] dark:bg-[#0A0A0A] relative">
         {/* Logo solo en móvil */}
         <div className="mb-8 lg:hidden">
           <img src="/assets/logo/c-guard-logo.png" alt="C-Guard" className="h-12 object-contain dark:brightness-0 dark:invert" />
@@ -154,7 +153,7 @@ export default function AuthLayout({ children, title, variant = 'admin', subtitl
           </div>
 
           {/* Tarjeta del formulario */}
-          <div className="rounded-2xl bg-card dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-100 dark:border-white/5">
+          <div className="rounded-2xl bg-card dark:bg-[#171717] p-8 shadow-xl shadow-slate-200/60 dark:shadow-black/50 border border-slate-100 dark:border-white/10">
             {children}
           </div>
 

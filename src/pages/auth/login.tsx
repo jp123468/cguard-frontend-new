@@ -137,7 +137,7 @@ export default function Login() {
         <button
           type="button"
           onClick={() => handleSocialLogin("google")}
-          className="col-span-2 w-full flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-card py-3 text-sm font-medium text-foreground transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="col-span-2 w-full flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-card py-3 text-sm font-medium text-foreground transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115Z"/>
@@ -155,7 +155,7 @@ export default function Login() {
           <div className="w-full border-t border-slate-200 dark:border-white/10" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="bg-white/80 px-4 text-muted-foreground dark:bg-slate-900/80 dark:text-muted-foreground">o</span>
+          <span className="bg-white/80 px-4 text-muted-foreground dark:bg-[#171717] dark:text-muted-foreground">o</span>
         </div>
       </div>
 
@@ -173,7 +173,7 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
+              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
               autoComplete="email"
             />
           </div>
@@ -192,7 +192,7 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-12 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
+              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-12 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
               autoComplete="current-password"
             />
             <button
@@ -224,7 +224,7 @@ export default function Login() {
             <div className="w-full border-t border-slate-200 dark:border-white/10" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-white/80 px-4 text-muted-foreground dark:bg-slate-900/80 dark:text-muted-foreground">o</span>
+            <span className="bg-white/80 px-4 text-muted-foreground dark:bg-[#171717] dark:text-muted-foreground">o</span>
           </div>
         </div>
 
