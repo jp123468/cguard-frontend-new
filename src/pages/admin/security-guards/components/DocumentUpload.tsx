@@ -91,7 +91,7 @@ export default function DocumentUpload({
 
       {value ? (
         /* File selected state */
-        <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5">
+        <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#171717] px-3 py-2.5">
           {/* Preview thumbnail or icon */}
           <div className="flex-shrink-0">
             {value.previewUrl ? (
@@ -101,7 +101,7 @@ export default function DocumentUpload({
                 className="w-10 h-10 rounded object-cover border border-slate-200"
               />
             ) : (
-              <div className="w-10 h-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
+              <div className="w-10 h-10 rounded bg-slate-100 dark:bg-[#202020] flex items-center justify-center border border-slate-200 dark:border-white/10">
                 {fileIcon(value.file)}
               </div>
             )}
@@ -143,7 +143,7 @@ export default function DocumentUpload({
           onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
-          className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 hover:border-blue-400 hover:bg-blue-500/10 dark:hover:bg-blue-950/30 transition-colors cursor-pointer py-4 px-3 text-center select-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#171717] hover:border-blue-400 hover:bg-blue-500/10 dark:hover:bg-blue-950/30 transition-colors cursor-pointer py-4 px-3 text-center select-none focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <Upload className="w-5 h-5 text-muted-foreground" />
           <div>

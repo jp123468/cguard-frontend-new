@@ -39,7 +39,7 @@ export default function GuardInviteLayout({
       {/* LEFT — tenant brand panel */}
       <div
         className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden"
-        style={{ background: "linear-gradient(145deg, #0A0E16 0%, #1C2B3A 55%, #0A0E16 100%)" }}
+        style={{ background: "linear-gradient(145deg, #0A0E16 0%, #171717 55%, #0A0E16 100%)" }}
       >
         {/* grid pattern */}
         <div
@@ -109,7 +109,7 @@ export default function GuardInviteLayout({
       </div>
 
       {/* RIGHT — form */}
-      <div className="flex flex-1 flex-col items-center justify-center p-6 lg:p-12 bg-[#F8F7F4] dark:bg-slate-950 relative">
+      <div className="flex flex-1 flex-col items-center justify-center p-6 lg:p-12 bg-[#F8F7F4] dark:bg-[#0A0A0A] relative">
         {/* tenant brand on mobile */}
         <div className="mb-6 flex items-center gap-2 lg:hidden">
           {tenantLogoUrl ? (

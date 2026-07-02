@@ -568,7 +568,7 @@ export default function EditAdminUserPage() {
             </div>
 
             {canEditPerms && id && (
-              <div className="rounded-2xl border bg-card dark:bg-slate-800 p-4 shadow-sm">
+              <div className="rounded-2xl border bg-card dark:bg-[#202020] p-4 shadow-sm">
                 <button
                   type="button"
                   onClick={() => setPermsOpen((v) => !v)}

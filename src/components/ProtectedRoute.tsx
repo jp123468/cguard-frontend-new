@@ -52,7 +52,7 @@ function LoadingScreen() {
   }
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center gap-6 bg-[#F8F7F4] dark:bg-slate-950">
+    <div className="flex h-screen flex-col items-center justify-center gap-6 bg-[#F8F7F4] dark:bg-[#0A0A0A]">
       {tenantLogo && (
         <img
           src={tenantLogo}

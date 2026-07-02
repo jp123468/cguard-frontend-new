@@ -849,7 +849,7 @@ export default function ClientForm({
                         title={t('clients.form.addressSearch', 'Dirección')}
                         action={(
                             /* Mode toggle pills */
-                            <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-700 p-0.5 gap-0.5">
+                            <div className="flex items-center rounded-lg bg-slate-100 dark:bg-[#2a2a2a] p-0.5 gap-0.5">
                                 <button
                                     type="button"
                                     onClick={() => setShowAddressAutocomplete(true)}
@@ -1085,7 +1085,7 @@ export default function ClientForm({
                     <div className="cg-card cg-card-hover overflow-hidden">
                         <Accordion type="single" collapsible defaultValue="more">
                             <AccordionItem value="more" className="border-0">
-                                <AccordionTrigger className="px-5 py-3.5 bg-card border-b border-slate-200 dark:border-slate-700 hover:no-underline hover:bg-slate-50 [&[data-state=open]]:border-b [&[data-state=closed]]:border-b-0 rounded-none">
+                                <AccordionTrigger className="px-5 py-3.5 bg-card border-b border-slate-200 dark:border-white/10 hover:no-underline hover:bg-slate-50 [&[data-state=open]]:border-b [&[data-state=closed]]:border-b-0 rounded-none">
                                     <div className="flex items-center gap-2">
                                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
                                             <Globe className="h-4 w-4 text-primary" />
@@ -1157,7 +1157,7 @@ export default function ClientForm({
                             type="button"
                             disabled={form.formState.isSubmitting}
                             onClick={() => onCancel ? onCancel() : navigate('/clients')}
-                            className="min-w-28 bg-card text-foreground border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="min-w-28 bg-card text-foreground border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-[#2a2a2a] hover:text-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {t('profile.cancel', 'Cancelar')}
                         </Button>

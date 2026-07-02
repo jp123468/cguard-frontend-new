@@ -160,7 +160,7 @@ export default function ProfilePhotoCapture({ value, onChange, previewUrl }: Pro
       <div className="flex flex-col items-center gap-4">
         {/* Avatar circle */}
         <div className="relative">
-          <div className="w-32 h-32 rounded-full border-4 border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-md">
+          <div className="w-32 h-32 rounded-full border-4 border-slate-200 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-[#202020] flex items-center justify-center shadow-md">
             {currentPreview ? (
               <img
                 src={currentPreview}

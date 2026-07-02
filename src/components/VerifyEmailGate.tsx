@@ -80,12 +80,12 @@ export default function VerifyEmailGate() {
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[#0A0A0A] p-4 backdrop-blur-sm">
       <div
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="verify-email-title"
-        className="w-full max-w-md rounded-2xl bg-white p-7 shadow-2xl dark:bg-slate-900"
+        className="w-full max-w-md rounded-2xl bg-white p-7 shadow-2xl dark:bg-[#171717]"
       >
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <svg
@@ -136,7 +136,7 @@ export default function VerifyEmailGate() {
             type="button"
             onClick={resend}
             disabled={resending || cooldown > 0}
-            className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed dark:border-white/10 dark:text-slate-300 dark:hover:bg-[#202020]"
           >
             {cooldown > 0
               ? `Reenviar correo (${cooldown}s)`
