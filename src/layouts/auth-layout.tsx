@@ -59,7 +59,7 @@ export default function AuthLayout({ children, title, variant = 'admin', subtitl
     <div className="min-h-screen w-full flex">
       {/* LADO IZQUIERDO — panel de marca oscuro */}
       <div
-        className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden bg-[linear-gradient(145deg,#0F1923_0%,#1C2B3A_50%,#0F1923_100%)] dark:bg-[linear-gradient(145deg,#0A0A0A_0%,#171717_55%,#0A0A0A_100%)]"
+        className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden bg-[linear-gradient(145deg,#0A0A0A_0%,#171717_55%,#0A0A0A_100%)]"
       >
         {/* Patrón de cuadrícula sutil */}
         <div
