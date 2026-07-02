@@ -141,7 +141,7 @@ export default function AcceptInvitation() {
     <div className="min-h-screen w-full flex bg-background">
       {/* Left — branding */}
       <div className="relative hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between overflow-hidden p-12 xl:p-16"
-        style={{ background: "linear-gradient(145deg, #0F1923 0%, #1C2B3A 55%, #0F1923 100%)" }}>
+        style={{ background: "linear-gradient(145deg, #0A0A0A 0%, #171717 55%, #0A0A0A 100%)" }}>
         <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "linear-gradient(#C8860A 1px, transparent 1px), linear-gradient(90deg, #C8860A 1px, transparent 1px)", backgroundSize: "46px 46px" }} />
         <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary opacity-10 blur-3xl" />
         <div className="pointer-events-none absolute -left-32 bottom-0 h-[32rem] w-[32rem] rounded-full bg-[#F5C300] opacity-[0.06] blur-3xl" />

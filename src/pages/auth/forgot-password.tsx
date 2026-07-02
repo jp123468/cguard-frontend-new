@@ -62,7 +62,7 @@ export default function ForgotPassword() {
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
+              className="w-full rounded-lg border border-slate-200 bg-card py-3 pl-10 pr-4 text-foreground placeholder-slate-400 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary dark:focus:ring-primary/20"
               autoComplete="email"
             />
           </div>
@@ -87,7 +87,7 @@ export default function ForgotPassword() {
             <div className="w-full border-t border-slate-200 dark:border-white/10" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-white/80 px-4 text-muted-foreground dark:bg-slate-900/80 dark:text-muted-foreground">
+            <span className="bg-white/80 px-4 text-muted-foreground dark:bg-[#171717] dark:text-muted-foreground">
               {t('common.or', { defaultValue: 'or' })}
             </span>
           </div>

@@ -196,11 +196,11 @@ export default function ClientRegistration() {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen w-full flex bg-slate-50 dark:bg-[#0A0A0A]">
       {/* Left panel — tenant branding */}
       <div
         className="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 xl:p-16 relative overflow-hidden"
-        style={{ background: "linear-gradient(145deg, #0F1923 0%, #1C2B3A 50%, #0F1923 100%)" }}
+        style={{ background: "linear-gradient(145deg, #0A0A0A 0%, #171717 50%, #0A0A0A 100%)" }}
       >
         {/* Subtle grid pattern */}
         <div
@@ -288,7 +288,7 @@ export default function ClientRegistration() {
 
           {/* Finish: Mi Seguridad app + download links (clients don't use the web login) */}
           {done ? (
-            <FadeIn className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5 text-center">
+            <FadeIn className="rounded-2xl bg-white dark:bg-[#171717] p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5 text-center">
               <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary/12">
                 <CheckCircle2 className="h-9 w-9 text-primary" />
               </div>
@@ -298,7 +298,7 @@ export default function ClientRegistration() {
               </p>
 
               {/* App card */}
-              <div className="mt-6 flex items-center gap-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/40 p-4 text-left">
+              <div className="mt-6 flex items-center gap-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5/40 p-4 text-left">
                 <img src="/assets/logo/miseguridad.png" alt="Mi Seguridad" className="h-12 w-12 rounded-xl object-contain shrink-0" />
                 <div>
                   <p className="text-sm font-bold text-foreground">Mi Seguridad</p>
@@ -319,7 +319,7 @@ export default function ClientRegistration() {
               <p className="mt-5 text-xs text-muted-foreground">Inicia sesión en la app con el correo y la contraseña que acabas de crear.</p>
             </FadeIn>
           ) : (
-          <FadeIn className="rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5">
+          <FadeIn className="rounded-2xl bg-white dark:bg-[#171717] p-8 shadow-xl shadow-slate-200/60 dark:shadow-slate-900/60 border border-slate-200 dark:border-white/5">
             <form className="space-y-3" onSubmit={handleSubmit}>
               {inviteNotFound && (
                 <div className="rounded-md border border-yellow-300 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 p-3 text-sm text-yellow-800 dark:text-yellow-300">

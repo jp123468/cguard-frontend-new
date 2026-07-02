@@ -106,7 +106,7 @@ export default function ResetPassword() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t('auth.new_password_placeholder', { defaultValue: 'New password' })}
-              className="w-full h-12 rounded-xl border border-slate-200 bg-card px-4 pr-10 text-foreground transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white"
+              className="w-full h-12 rounded-xl border border-slate-200 bg-card px-4 pr-10 text-foreground transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-white"
               autoComplete="new-password"
               disabled={loading}
             />
@@ -137,7 +137,7 @@ export default function ResetPassword() {
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder={t('auth.confirm_password_placeholder', { defaultValue: 'Confirm password' })}
-              className="w-full h-12 rounded-xl border border-slate-200 bg-card px-4 pr-10 text-foreground transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/50 dark:text-white"
+              className="w-full h-12 rounded-xl border border-slate-200 bg-card px-4 pr-10 text-foreground transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-white"
               autoComplete="new-password"
               disabled={loading}
             />
