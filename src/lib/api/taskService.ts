@@ -32,6 +32,13 @@ export type TaskStatus =
   | "completed"
   | "cancelled";
 
+export interface TaskImage {
+  id: string;
+  downloadUrl?: string | null;
+  publicUrl?: string | null;
+  name?: string | null;
+}
+
 export interface TaskRow {
   id: string;
   taskToDo: string;
@@ -45,6 +52,10 @@ export interface TaskRow {
   clientAccountId?: string | null;
   taskBelongsToStationId?: string | null;
   taskBelongsToStation?: { id: string; stationName: string } | null;
+  /** Guard's completion photo(s). */
+  taskCompletedImage?: TaskImage[] | null;
+  /** Client's optional reference image(s) attached at creation. */
+  imageOptional?: TaskImage[] | null;
   createdAt: string;
 }
 

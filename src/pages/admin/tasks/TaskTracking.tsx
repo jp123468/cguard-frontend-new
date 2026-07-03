@@ -14,7 +14,7 @@ import {
 import { toast } from "sonner";
 import { CheckSquare, Plus, ListChecks } from "lucide-react";
 import { PageContainer, PageHeader, Section, SkeletonCards } from "@/components/kit";
-import taskService, { type TaskRow, type TaskStatus } from "@/lib/api/taskService";
+import taskService, { type TaskRow, type TaskStatus, type TaskImage } from "@/lib/api/taskService";
 
 function fmtDate(s?: string | null): string {
   if (!s) return "—";
@@ -222,6 +222,8 @@ export default function TaskTracking() {
                   <span className="whitespace-pre-wrap">{selected.approvalNotes}</span>
                 </DetailField>
               )}
+              <TaskImages label="Imagen de referencia" images={selected.imageOptional} />
+              <TaskImages label="Foto de finalización" images={selected.taskCompletedImage} />
             </div>
           )}
           <DialogFooter>
@@ -244,6 +246,28 @@ function DetailField({ label, children }: { label: string; children: ReactNode }
     <div className="flex flex-col gap-0.5">
       <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
       <div className="text-sm text-foreground">{children}</div>
+    </div>
+  );
+}
+
+function TaskImages({ label, images }: { label: string; images?: TaskImage[] | null }) {
+  const items = (images || []).map((f) => f.downloadUrl || f.publicUrl).filter(Boolean) as string[];
+  if (!items.length) return null;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className="flex flex-wrap gap-2">
+        {items.map((src, i) => (
+          <a key={i} href={src} target="_blank" rel="noreferrer" className="block">
+            <img
+              src={src}
+              alt={label}
+              loading="lazy"
+              className="h-24 w-24 rounded-md border border-border object-cover transition-opacity hover:opacity-80"
+            />
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
