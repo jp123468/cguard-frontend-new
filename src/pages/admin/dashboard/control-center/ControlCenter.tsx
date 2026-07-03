@@ -15,7 +15,6 @@ import { loadPrefs, savePrefs, type DashboardPrefs } from "./prefs";
 import { GlassCard, SectionHeader, StatusDot } from "./components/primitives";
 import { KpiCard } from "./components/KpiCard";
 import { OperationsMap } from "./components/OperationsMap";
-import { RevenuePanel } from "./components/RevenuePanel";
 import { ActivityFeed } from "./components/ActivityFeed";
 import { AreaChart } from "./components/AreaChart";
 import { Toolbar, type RangeKey } from "./components/Toolbar";
@@ -134,18 +133,14 @@ export default function ControlCenter() {
                 </div>
               </div>
 
-              {/* Revenue + trends */}
+              {/* Trends */}
               <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
-                <div className="lg:col-span-2"><RevenuePanel revenue={data.revenue} /></div>
                 <GlassCard className="overflow-hidden" onClick={() => navigate("/activities")} ariaLabel="Ver incidentes">
                   <SectionHeader title="Incidentes (tendencia)" icon={<AlertTriangle size={16} />} />
                   <div className="px-2 pb-3">
                     <AreaChart data={data.incidentsTrend} color="#ef4444" height={150} />
                   </div>
                 </GlassCard>
-              </div>
-
-              <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <GlassCard className="overflow-hidden" onClick={() => navigate("/analytics/reporting")} ariaLabel="Ver analítica de tiempo de respuesta">
                   <SectionHeader title="Tiempo de respuesta (min)" icon={<Timer size={16} />} />
                   <div className="px-2 pb-3"><AreaChart data={data.responseTrend} color="#38bdf8" height={150} valueSuffix=" min" /></div>
@@ -155,15 +150,6 @@ export default function ControlCenter() {
                   <div className="px-2 pb-3"><AreaChart data={data.acquisitionTrend} color={prefs.accent} height={150} /></div>
                 </GlassCard>
               </div>
-
-              {data.gaps.length > 0 && (
-                <GlassCard className="mt-5 p-4" hover={false}>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400/80">Pendientes de backend</p>
-                  <ul className="space-y-1 text-xs text-muted-foreground">
-                    {data.gaps.map((g, i) => <li key={i} className="flex gap-2"><span className="text-amber-400/60">•</span>{g}</li>)}
-                  </ul>
-                </GlassCard>
-              )}
             </>
           )}
         </div>
