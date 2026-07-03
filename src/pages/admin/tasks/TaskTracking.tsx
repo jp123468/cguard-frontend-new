@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, type ReactNode } from "react";
 import AppLayout from "@/layouts/app-layout";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,26 @@ export default function TaskTracking() {
   const [stations, setStations] = useState<Array<{ id: string; label: string }>>([]);
   const [form, setForm] = useState({ taskToDo: "", stationId: "", deadline: "", priority: "media" });
   const [saving, setSaving] = useState(false);
+
+  // Task detail dialog
+  const [selected, setSelected] = useState<TaskRow | null>(null);
+  const [acting, setActing] = useState(false);
+
+  const doApproval = async (kind: "approve" | "reject") => {
+    if (!selected) return;
+    setActing(true);
+    try {
+      if (kind === "approve") await taskService.approve(selected.id);
+      else await taskService.reject(selected.id);
+      toast.success(kind === "approve" ? "Tarea aprobada" : "Tarea rechazada");
+      setSelected(null);
+      load();
+    } catch (e: any) {
+      toast.error(e?.message || "Error");
+    } finally {
+      setActing(false);
+    }
+  };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -137,6 +157,7 @@ export default function TaskTracking() {
               <DataTable
                 columns={columns}
                 data={rows}
+                onRowClick={(r) => setSelected(r)}
                 emptyState={<div className="py-10 text-center text-sm text-muted-foreground">No hay tareas</div>}
               />
             )}
@@ -173,6 +194,56 @@ export default function TaskTracking() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Task detail */}
+      <Dialog open={!!selected} onOpenChange={(o) => { if (!o) setSelected(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Detalle de la tarea</DialogTitle></DialogHeader>
+          {selected && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tarea</p>
+                <p className="mt-0.5 whitespace-pre-wrap text-sm font-medium text-foreground">{selected.taskToDo}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <DetailField label="Estado">
+                  {(() => { const m = STATUS_META[selected.status] || STATUS_META.pending_approval; return <Badge className={`${m.cls} border-0`}>{m.label}</Badge>; })()}
+                </DetailField>
+                <DetailField label="Prioridad"><span className="capitalize">{selected.priority || "media"}</span></DetailField>
+                <DetailField label="Puesto">{selected.taskBelongsToStation?.stationName || "—"}</DetailField>
+                <DetailField label="Origen">{selected.source === "client" ? "Cliente" : selected.source === "passdown" ? "Pase de turno" : selected.source === "staff" ? "Operación" : "—"}</DetailField>
+                <DetailField label="Fecha límite">{fmtDate(selected.dateToDoTheTask)}</DetailField>
+                <DetailField label="Creada">{fmtDate(selected.createdAt)}</DetailField>
+                <DetailField label="¿Realizada?">{selected.wasItDone ? "Sí" : "No"}</DetailField>
+                <DetailField label="Completada">{fmtDate(selected.dateCompletedTask)}</DetailField>
+              </div>
+              {selected.approvalNotes && (
+                <DetailField label="Notas de aprobación">
+                  <span className="whitespace-pre-wrap">{selected.approvalNotes}</span>
+                </DetailField>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            {selected?.status === "pending_approval" && (
+              <>
+                <Button variant="outline" className="text-red-600" disabled={acting} onClick={() => doApproval("reject")}>Rechazar</Button>
+                <Button variant="brand" disabled={acting} onClick={() => doApproval("approve")}>{acting ? "…" : "Aprobar"}</Button>
+              </>
+            )}
+            <Button variant="outline" onClick={() => setSelected(null)} disabled={acting}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
+  );
+}
+
+function DetailField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className="text-sm text-foreground">{children}</div>
+    </div>
   );
 }
