@@ -2,6 +2,8 @@ import { useAuth } from "@/contexts/AuthContext"
 import { Navigate, useLocation } from "react-router-dom"
 import NoWorkspaceAccess from "./NoWorkspaceAccess"
 import VerifyEmailGate from "./VerifyEmailGate"
+import SubscriptionLockedScreen from "./SubscriptionLockedScreen"
+import { getBillingState } from "@/lib/entitlements"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -114,6 +116,27 @@ export default function ProtectedRoute({
     !isPlatformSuperadmin(user)
   ) {
     return <VerifyEmailGate />
+  }
+
+  // Bloqueo duro por suscripción (no aplica a superadmins de plataforma).
+  //  - suspended: retención administrativa → sin acceso, sin excepción.
+  //  - canceled: puede llegar a facturación para reactivar, así que dejamos
+  //    pasar la ruta de facturación; el resto se bloquea.
+  // Fail-open: sólo bloquea con un estado explícito (sesiones viejas sin estos
+  // campos nunca se bloquean).
+  if (!isPlatformSuperadmin(user)) {
+    const { billingStatus, suspendedAt } = getBillingState(user)
+    if (suspendedAt) {
+      return <SubscriptionLockedScreen variant="suspended" />
+    }
+    if (billingStatus === "canceled") {
+      const onBilling =
+        location.pathname.startsWith("/setting/billing") ||
+        location.pathname.startsWith("/billing")
+      if (!onBilling) {
+        return <SubscriptionLockedScreen variant="canceled" />
+      }
+    }
   }
 
   // Si todo está bien, mostrar el contenido protegido

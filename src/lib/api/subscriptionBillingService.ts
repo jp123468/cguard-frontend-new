@@ -17,6 +17,15 @@ export interface BillingQuote {
   netMonthlyCents: number;
 }
 
+export interface PlanResolution {
+  key: string | null;
+  name: string | null;
+  features: string[];
+  seatCap: number | null;
+  seatsRemaining: number | null;
+  overLimit: boolean;
+}
+
 export interface BillingSummary {
   status: string; // trialing | active | past_due | trial_expired | canceled
   trial: { endsAt: string | null; daysLeft: number; active: boolean; expired: boolean };
@@ -25,6 +34,7 @@ export interface BillingSummary {
   hasSubscription: boolean;
   quote: BillingQuote;
   trialDays: number;
+  plan?: PlanResolution;
 }
 
 export interface BillableUser {
