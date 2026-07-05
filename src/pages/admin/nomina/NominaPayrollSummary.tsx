@@ -25,6 +25,7 @@ interface SummaryRow {
   hourlyRate: number | null;
   daysWorked?: number;
   monthlySalary?: number | null;
+  role?: string;
 }
 
 function isoDay(d: Date) {
@@ -161,7 +162,20 @@ export default function NominaPayrollSummary() {
   };
 
   const columns: Column<any>[] = [
-    { key: "guardName", header: "Vigilante" },
+    {
+      key: "guardName",
+      header: "Vigilante",
+      render: (_v: any, r: SummaryRow) => (
+        <span className="inline-flex items-center gap-1.5">
+          {r.guardName}
+          {r.role === "supervisor" && (
+            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+              Supervisor
+            </span>
+          )}
+        </span>
+      ),
+    },
     { key: "shifts", header: "Turnos" },
     { key: "daysWorked", header: "Días trab.", render: (_v, r) => <span className="font-medium">{r.daysWorked ?? 0}</span> },
     { key: "regularHours", header: "H. regulares", render: (_v, r) => r.regularHours.toFixed(2) },
