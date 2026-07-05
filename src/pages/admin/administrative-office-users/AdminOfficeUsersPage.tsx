@@ -669,8 +669,16 @@ export default function AdminOfficeUsersPage() {
                   </tr>
                 ) : (
                   pagedRows.map((u, i) => (
-                    <tr key={u.id || u._id || u.raw?.id || `${currentPage}-${i}`} className="border-b">
-                      <td className="px-4 py-3"><Checkbox disabled={!canManageUsers || isUserAdmin(u)} checked={selectedUsers.includes(String(u.id || u._id || u.raw?.id))} onCheckedChange={(v) => handleSelectUser(String(u.id || u._id || u.raw?.id), Boolean(v))} /></td>
+                    <tr
+                      key={u.id || u._id || u.raw?.id || `${currentPage}-${i}`}
+                      className={`border-b ${normalizeRolesForUser(u.roles || u.role || u.rolesList || u._rolesDisplay).includes('securitysupervisor') ? 'cursor-pointer hover:bg-muted/40' : ''}`}
+                      onClick={() => {
+                        if (normalizeRolesForUser(u.roles || u.role || u.rolesList || u._rolesDisplay).includes('securitysupervisor')) {
+                          navigate(`/supervisors/${u.id || u._id || u.raw?.id}`);
+                        }
+                      }}
+                    >
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}><Checkbox disabled={!canManageUsers || isUserAdmin(u)} checked={selectedUsers.includes(String(u.id || u._id || u.raw?.id))} onCheckedChange={(v) => handleSelectUser(String(u.id || u._id || u.raw?.id), Boolean(v))} /></td>
                       <td className="px-4 py-3">{[u.firstName, u.lastName].filter(Boolean).join(" ") || u.name || "-"}</td>
                       <td className="px-4 py-3">{u.email || "-"}</td>
                       <td className="px-4 py-3">{
@@ -724,7 +732,7 @@ export default function AdminOfficeUsersPage() {
                           );
                         })()}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon"><EllipsisVertical className="h-5 w-5" /></Button>
