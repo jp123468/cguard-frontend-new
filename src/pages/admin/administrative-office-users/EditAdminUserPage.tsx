@@ -462,6 +462,13 @@ export default function EditAdminUserPage() {
           icon={<UserCog />}
           title={id ? t('adminOfficeUsers.editUser.breadcrumb.edit', { defaultValue: 'Editar Usuario' }) : t('adminOfficeUsers.editUser.breadcrumb.new', { defaultValue: 'Nuevo Usuario' })}
           subtitle={t('adminOfficeUsers.editUser.subtitle', { defaultValue: 'Actualiza la identidad, el nivel de acceso y los permisos del usuario' })}
+          actions={
+            id && selectedRoleSlug === 'securitysupervisor' ? (
+              <Button variant="outline" onClick={() => navigate(`/supervisors/${id}`)}>
+                {t('adminOfficeUsers.editUser.viewSupervisorProfile', { defaultValue: 'Ver perfil de supervisor' })}
+              </Button>
+            ) : undefined
+          }
         />
 
         <Section title={t('adminOfficeUsers.editUser.sectionTitle', { defaultValue: 'Datos del usuario' })} icon={<UserCog />}>

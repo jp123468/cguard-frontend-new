@@ -788,6 +788,11 @@ export default function AdminOfficeUsersPage() {
                               return (
                                 <>
                                   <DropdownMenuItem disabled={!hasPermission('userEdit')} onClick={() => { if (!hasPermission('userEdit')) return; navigate(`/back-office/edit/${u.id}`); }}>{t('adminOfficeUsers.rowActions.edit', { defaultValue: 'Editar' })}</DropdownMenuItem>
+                                  {normalizeRolesForUser(u.roles || u.role || u.rolesList || u._rolesDisplay).includes('securitysupervisor') && (
+                                    <DropdownMenuItem onClick={() => navigate(`/supervisors/${u.id}`)}>
+                                      {t('adminOfficeUsers.rowActions.supervisorProfile', { defaultValue: 'Perfil de supervisor' })}
+                                    </DropdownMenuItem>
+                                  )}
                                   <DropdownMenuItem disabled={!hasPermission('userEdit')}
                                     onClick={() => {
                                       if (!hasPermission('userEdit')) return;
