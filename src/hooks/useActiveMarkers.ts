@@ -100,9 +100,12 @@ export default function useActiveMarkers(pollInterval = 10000) {
 
         // Supervisor markers: from the supervisor listing, which returns each
         // supervisor's latitude/longitude (seeded at clock-in, refreshed by the
-        // app's live-ping) + isOnDuty. Cached + reused across poll ticks.
-        if (userMarkersCache.current === null) {
-          const supRes: any = await supervisorService.list().catch(() => null);
+        // app's live-ping) + isOnDuty. Fetched EVERY tick (small list) so a
+        // supervisor who just clocked in appears within the poll interval — no
+        // page refresh needed; the last good result is the fallback on error.
+        let userMarkers: Marker[] = userMarkersCache.current || [];
+        try {
+          const supRes: any = await supervisorService.list();
           const supRows = supRes && Array.isArray(supRes.rows) ? supRes.rows : Array.isArray(supRes) ? supRes : [];
           const fromSups: Marker[] = [];
           (supRows || []).forEach((s: any) => {
@@ -112,9 +115,9 @@ export default function useActiveMarkers(pollInterval = 10000) {
             if (lat == null || lng == null) return;
             fromSups.push({ id: `sup-${s.id}`, lat: Number(lat), lng: Number(lng), label: s.fullName || `Supervisor ${s.id}`, role: 'supervisor' });
           });
+          userMarkers = fromSups;
           userMarkersCache.current = fromSups;
-        }
-        const userMarkers: Marker[] = userMarkersCache.current;
+        } catch { /* keep last good markers */ }
 
         if (!mounted) return;
         const merged = [...guardMarkers, ...userMarkers];
