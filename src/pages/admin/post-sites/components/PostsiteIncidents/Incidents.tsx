@@ -127,8 +127,8 @@ export default function Incidents({ site }: { site?: any }) {
     try {
       const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
       if (!tenantId) throw new Error('Tenant missing');
-      await ApiService.put(`/tenant/${tenantId}/incident/${it.id}`, { data: { status: 'cerrado' } });
-      setIncidents((prev) => prev.map((p) => (p.id === it.id ? { ...p, status: 'cerrado' } : p)));
+      await ApiService.put(`/tenant/${tenantId}/incident/${it.id}`, { data: { status: 'cerrado', workStatus: 'closed' } });
+      setIncidents((prev) => prev.map((p) => (p.id === it.id ? { ...p, status: 'cerrado', workStatus: 'closed' } : p)));
       toast.success('Ticket cerrado');
     } catch (err) {
       console.error('Close ticket failed', err);
@@ -862,6 +862,15 @@ export default function Incidents({ site }: { site?: any }) {
                         <td className="px-4 py-3">
                           {
                             (() => {
+                              // Prefer the granular workStatus (a supervisor may
+                              // have set In-progress/Resolved); fall back to the
+                              // binary status.
+                              const ws = ((it as any).workStatus || '').toString();
+                              if (ws === 'inProgress') return <StatusBadge tone="amber">En progreso</StatusBadge>;
+                              if (ws === 'resolved') return <StatusBadge tone="green">Resuelto</StatusBadge>;
+                              if (ws === 'closed') return <StatusBadge tone="green">Cerrado</StatusBadge>;
+                              if (ws === 'open') return <StatusBadge tone="red">Abierto</StatusBadge>;
+
                               const s = (it.status || '').toString().toLowerCase();
                               if (s === 'cerrado' || s === 'closed') {
                                 return <StatusBadge tone="green">Cerrado</StatusBadge>;
