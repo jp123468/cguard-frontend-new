@@ -27,6 +27,7 @@ export interface SupervisorPosition {
   endTime: string | null;
   guardsNeeded: number;
   mobileStationId: string | null;
+  stationIds: string[];
   isActive: boolean;
   assignments: PositionAssignment[];
 }
@@ -39,6 +40,7 @@ export interface SupervisorPositionBody {
   startTime?: string;
   endTime?: string;
   guardsNeeded?: number;
+  stationIds?: string[];
 }
 
 const base = () => `/tenant/${tid()}/supervisor-positions`;

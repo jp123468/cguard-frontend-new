@@ -3,11 +3,12 @@ import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { MapPin, Plus, Radar, Clock, Users, X, Trash2 } from "lucide-react";
+import { MapPin, Plus, Radar, Clock, Users, X, Trash2, Building2, Check } from "lucide-react";
 import { PageContainer, PageHeader, Section, SkeletonCards, StatCard, Modal, StatusBadge } from "@/components/kit";
 import RotationStyleSelect from "@/components/schedule/RotationStyleSelect";
 import { supervisorPositionService, type SupervisorPosition } from "@/lib/api/supervisorPositionService";
 import { supervisorService, type Supervisor } from "@/lib/api/supervisorService";
+import { stationService } from "@/lib/api/stationService";
 
 const SCHEDULE_TYPES = [
   { value: "12h-day", label: "Diurno (12h)" },
@@ -28,11 +29,15 @@ function rotationSummary(p: SupervisorPosition): string {
 export default function SupervisorPositionsPage() {
   const [rows, setRows] = useState<SupervisorPosition[]>([]);
   const [sups, setSups] = useState<Supervisor[]>([]);
+  const [stations, setStations] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: "", zone: "", scheduleType: "24h", rotationStyleId: "", startTime: "07:00", endTime: "19:00", guardsNeeded: 2 });
+  const [form, setForm] = useState({ name: "", zone: "", scheduleType: "24h", rotationStyleId: "", startTime: "07:00", endTime: "19:00", guardsNeeded: 2, stationIds: [] as string[] });
   const [assignSel, setAssignSel] = useState<Record<string, string>>({});
+  const [stationEdit, setStationEdit] = useState<string | null>(null);
+
+  const stationName = (id: string) => stations.find((s) => s.id === id)?.name || id;
 
   const load = useCallback(() => {
     setLoading(true);
@@ -40,6 +45,19 @@ export default function SupervisorPositionsPage() {
   }, []);
   useEffect(load, [load]);
   useEffect(() => { supervisorService.list().then((r) => setSups(r.rows || [])).catch(() => {}); }, []);
+  useEffect(() => {
+    stationService.list({}, { limit: 300, offset: 0 })
+      .then((r) => setStations((r.rows || []).map((s: any) => ({ id: String(s.id), name: s.name || s.companyName || "—" }))))
+      .catch(() => setStations([]));
+  }, []);
+
+  const toggleStationOnPuesto = async (pos: SupervisorPosition, sid: string) => {
+    const next = pos.stationIds.includes(sid) ? pos.stationIds.filter((x) => x !== sid) : [...pos.stationIds, sid];
+    try {
+      const updated = await supervisorPositionService.update(pos.id, { stationIds: next });
+      setRows((prev) => prev.map((p) => (p.id === pos.id ? updated : p)));
+    } catch (e: any) { toast.error(e?.message || "No se pudo actualizar"); }
+  };
 
   const create = async () => {
     if (!form.name.trim()) { toast.error("El nombre es obligatorio"); return; }
@@ -49,10 +67,11 @@ export default function SupervisorPositionsPage() {
         name: form.name.trim(), zone: form.zone.trim() || undefined, scheduleType: form.scheduleType,
         rotationStyleId: form.rotationStyleId || undefined, startTime: form.startTime || undefined,
         endTime: form.endTime || undefined, guardsNeeded: Number(form.guardsNeeded) || 1,
+        stationIds: form.stationIds,
       });
       toast.success("Puesto creado");
       setOpen(false);
-      setForm({ name: "", zone: "", scheduleType: "24h", rotationStyleId: "", startTime: "07:00", endTime: "19:00", guardsNeeded: 2 });
+      setForm({ name: "", zone: "", scheduleType: "24h", rotationStyleId: "", startTime: "07:00", endTime: "19:00", guardsNeeded: 2, stationIds: [] });
       load();
     } catch (e: any) { toast.error(e?.message || "No se pudo crear"); } finally { setSaving(false); }
   };
@@ -136,6 +155,38 @@ export default function SupervisorPositionsPage() {
                     </select>
                     <Button variant="outline" size="sm" disabled={!assignSel[p.id]} onClick={() => assign(p.id)}>Asignar</Button>
                   </div>
+
+                  <div className="mt-4 border-t border-border/60 pt-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Estaciones bajo protección ({p.stationIds.length})</span>
+                      <button onClick={() => setStationEdit(stationEdit === p.id ? null : p.id)} className="text-xs font-medium text-primary hover:underline">
+                        {stationEdit === p.id ? "Listo" : "Editar"}
+                      </button>
+                    </div>
+                    {stationEdit === p.id ? (
+                      <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+                        {stations.length === 0 && <p className="text-xs text-muted-foreground">Cargando estaciones…</p>}
+                        {stations.map((s) => {
+                          const on = p.stationIds.includes(s.id);
+                          return (
+                            <button key={s.id} type="button" onClick={() => toggleStationOnPuesto(p, s.id)}
+                              className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition ${on ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}>
+                              <span className={`grid h-4 w-4 place-items-center rounded ${on ? "bg-primary text-primary-foreground" : "border border-border"}`}>{on && <Check className="h-3 w-3" />}</span>
+                              <Building2 className="h-3.5 w-3.5 text-muted-foreground" /><span className="truncate">{s.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : p.stationIds.length ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {p.stationIds.map((sid) => (
+                          <span key={sid} className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium"><Building2 className="h-3 w-3" />{stationName(sid)}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Ninguna. Usa “Editar” para asignar estaciones.</p>
+                    )}
+                  </div>
                 </Section>
               ))}
             </div>
@@ -169,6 +220,23 @@ export default function SupervisorPositionsPage() {
               <Input type="time" value={form.endTime} onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))} className="mt-1" /></label>
             <label className="text-[11px] uppercase tracking-wide text-muted-foreground">Supervisores/slot
               <Input type="number" min={1} value={form.guardsNeeded} onChange={(e) => setForm((f) => ({ ...f, guardsNeeded: Number(e.target.value) }))} className="mt-1" /></label>
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] uppercase tracking-wide text-muted-foreground">Estaciones bajo protección ({form.stationIds.length})</label>
+            <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-input p-1">
+              {stations.length === 0 && <p className="p-2 text-xs text-muted-foreground">Cargando estaciones…</p>}
+              {stations.map((s) => {
+                const on = form.stationIds.includes(s.id);
+                return (
+                  <button key={s.id} type="button"
+                    onClick={() => setForm((f) => ({ ...f, stationIds: on ? f.stationIds.filter((x) => x !== s.id) : [...f.stationIds, s.id] }))}
+                    className={`flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition ${on ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}>
+                    <span className={`grid h-4 w-4 place-items-center rounded ${on ? "bg-primary text-primary-foreground" : "border border-border"}`}>{on && <Check className="h-3 w-3" />}</span>
+                    <Building2 className="h-3.5 w-3.5" /><span className="truncate">{s.name}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </Modal>
