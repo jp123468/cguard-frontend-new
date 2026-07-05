@@ -10,8 +10,26 @@ import api from '@/lib/api';
 
 const GOLD = '#C8860A';
 
+// Notes API shape the page consumes. Defaults to the guard endpoints; a
+// supervisor route injects `notesApi` + `entityId` (+navKey/title) to reuse this
+// exact page against the supervisor's user-keyed notes. Guard usage passes none
+// of the new props, so its behaviour is unchanged.
+type NotesApi = {
+    list: (id: string) => Promise<any>;
+    create: (id: string, payload: any) => Promise<any>;
+};
+
 type Props = {
     guard?: any;
+    entityId?: string;
+    navKey?: string;
+    title?: string;
+    notesApi?: NotesApi;
+};
+
+const guardNotesApi: NotesApi = {
+    list: (id) => securityGuardService.getSecurityGuardNotes(id),
+    create: (id, payload) => securityGuardService.createSecurityGuardNote(id, payload),
 };
 
 // ── Small presentational helper ─────────────────────────────────────────────
@@ -51,7 +69,8 @@ function initials(name: string): string {
     return name.trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('') || '?';
 }
 
-export default function GuardNotes({ guard }: Props) {
+export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', title = 'guards.nav.notas', notesApi = guardNotesApi }: Props) {
+    const resolvedId: string | undefined = entityId ?? guard?.id;
     const actionRef = useRef<HTMLDivElement>(null);
     const [actionOpen, setActionOpen] = useState(false);
     const [actionSelection, setActionSelection] = useState<string>('default');
@@ -109,8 +128,8 @@ export default function GuardNotes({ guard }: Props) {
                     noteDate: formData.date,
                 };
 
-                if (!guard || !guard.id) {
-                    toast.error('Guard id missing');
+                if (!resolvedId) {
+                    toast.error('Id missing');
                     return;
                 }
 
@@ -152,7 +171,7 @@ export default function GuardNotes({ guard }: Props) {
                 const tenantId = localStorage.getItem('tenantId');
 
                 // Create the note first (without attachments). We'll create attachment metadata afterwards
-                const created = await securityGuardService.createSecurityGuardNote(guard.id, payload);
+                const created = await notesApi.create(resolvedId, payload);
 
                 // For each uploaded file, create an attachment record linked to the created note
                 if (tenantId && attachments.length > 0) {
@@ -195,19 +214,19 @@ export default function GuardNotes({ guard }: Props) {
     useEffect(() => {
         let mounted = true;
         (async () => {
-            if (!guard || !guard.id) return;
+            if (!resolvedId) return;
             try {
-                const resp: any = await securityGuardService.getSecurityGuardNotes(guard.id);
+                const resp: any = await notesApi.list(resolvedId);
                 // resp may be { rows, count } or an array
                 const items = resp?.rows ?? resp ?? [];
                 if (mounted) setNotesData(items);
             } catch (err) {
-                console.error('Failed to load guard notes', err);
+                console.error('Failed to load notes', err);
                 try { toast.error(t('guards.notes.loadError', { defaultValue: 'Error al cargar notas' })); } catch (e) {}
             }
         })();
         return () => { mounted = false; };
-    }, [guard?.id]);
+    }, [resolvedId]);
 
     const removeAttachment = (index: number) => {
         setFormData((prev) => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== index) }));
@@ -229,7 +248,7 @@ export default function GuardNotes({ guard }: Props) {
 
     return (
         <AppLayout>
-            <GuardsLayout navKey="keep-safe" title="guards.nav.notas">
+            <GuardsLayout navKey={navKey} title={title}>
                 <div className="mx-auto max-w-5xl space-y-6">
 
                     <Section

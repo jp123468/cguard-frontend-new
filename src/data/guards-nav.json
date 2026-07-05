@@ -31,7 +31,8 @@
         "items": [
           { "id": "sup-perfil", "label": "Perfil", "path": "/supervisors/:id/perfil" },
           { "id": "sup-dispositivo", "label": "Dispositivo", "path": "/supervisors/:id/dispositivo" },
-          { "id": "sup-indicadores", "label": "Indicadores", "path": "/supervisors/:id/indicadores" }
+          { "id": "sup-indicadores", "label": "Indicadores", "path": "/supervisors/:id/indicadores" },
+          { "id": "sup-notas", "label": "Notas", "path": "/supervisors/:id/notas" }
         ]
       }
     ]

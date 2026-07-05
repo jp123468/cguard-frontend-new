@@ -65,6 +65,7 @@ import NewSecurityGuardPage from "./pages/admin/security-guards/NewSecurityGuard
 import SupervisorsPage from "./pages/admin/supervisors/SupervisorsPage"
 import SupervisorDetailPage from "./pages/admin/supervisors/SupervisorDetailPage"
 import SupervisorKpisPage from "./pages/admin/supervisors/SupervisorKpisPage"
+import SupervisorNotesPage from "./pages/admin/supervisors/SupervisorNotesPage"
 import GuardRegistration from "./pages/guard/registration"
 import ClientRegistration from "./pages/client/registration"
 import AdminOfficeUsersPage from "./pages/admin/administrative-office-users/AdminOfficeUsersPage"
@@ -1222,6 +1223,7 @@ export default function App() {
               <Route path="/supervisors/:id/perfil" element={<ProtectedRoute><SupervisorDetailPage /></ProtectedRoute>} />
               <Route path="/supervisors/:id/dispositivo" element={<ProtectedRoute><GuardDispositivoPage navKey="supervisors" title="Dispositivo" /></ProtectedRoute>} />
               <Route path="/supervisors/:id/indicadores" element={<ProtectedRoute><SupervisorKpisPage /></ProtectedRoute>} />
+              <Route path="/supervisors/:id/notas" element={<ProtectedRoute><SupervisorNotesPage /></ProtectedRoute>} />
               <Route path="/tasks" element={<ProtectedRoute><TaskTracking /></ProtectedRoute>} />
               <Route path="/tasks/approvals" element={<ProtectedRoute><TaskApprovals /></ProtectedRoute>} />
               <Route path="/passdowns" element={<ProtectedRoute><PassdownsPage /></ProtectedRoute>} />
