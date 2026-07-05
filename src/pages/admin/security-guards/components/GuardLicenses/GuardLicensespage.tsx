@@ -19,8 +19,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+// Licenses data API the page consumes (id bound inside each method). Defaults to
+// the guard endpoints; a supervisor route injects `licensesApi` (+navKey/title)
+// to reuse this exact page against the supervisor's user-keyed licenses. Guard
+// usage passes none of the new props → unchanged behaviour.
+type LicensesApi = {
+  get: (licenseId: string) => Promise<any>;
+  list: (pg: { limit?: number; offset?: number }) => Promise<any>;
+  create: (payload: any) => Promise<any>;
+  update: (licenseId: string, payload: any) => Promise<any>;
+  remove: (ids: string[]) => Promise<any>;
+  download: (licenseId: string) => Promise<any>;
+};
+
 type Props = {
   guard?: any;
+  navKey?: string;
+  title?: string;
+  licensesApi?: LicensesApi;
 };
 
 const GOLD = '#C8860A';
@@ -51,9 +67,18 @@ const Field = ({ label, value }: { label: string; value: any }) => (
   </div>
 );
 
-export default function GuardLicenses({ guard }: Props) {
+export default function GuardLicenses({ guard, navKey = 'keep-safe', title = 'guards.nav.licencias', licensesApi }: Props) {
   const { id } = useParams();
   const { t } = useTranslation();
+  // Default (guard) API binds the route id; supervisor injects its own.
+  const api: LicensesApi = licensesApi ?? {
+    get: (licenseId) => securityGuardService.getSecurityGuardLicense(id as string, licenseId),
+    list: (pg) => securityGuardService.getSecurityGuardLicenses(id as string, pg),
+    create: (payload) => securityGuardService.createSecurityGuardLicense(id as string, payload),
+    update: (licenseId, payload) => securityGuardService.updateSecurityGuardLicense(id as string, licenseId, payload),
+    remove: (ids) => securityGuardService.destroySecurityGuardLicenses(id as string, ids),
+    download: (licenseId) => securityGuardService.downloadSecurityGuardLicenseReport(id as string, licenseId),
+  };
   const actionRef = useRef<HTMLDivElement>(null);
   const [actionOpen, setActionOpen] = useState(false);
   const [actionSelection, setActionSelection] = useState<string>(() => t('guards.licenses.action.default', { defaultValue: 'Action' }));
@@ -110,7 +135,7 @@ export default function GuardLicenses({ guard }: Props) {
     setDetailsOpen(true);
     setDetailsLoading(true);
     try {
-      const data = await securityGuardService.getSecurityGuardLicense(id as string, licenseId);
+      const data = await api.get(licenseId);
       setDetailsData(data || null);
     } catch (err) {
       console.error('Error loading license details', err);
@@ -146,8 +171,8 @@ export default function GuardLicenses({ guard }: Props) {
     if (!id) return;
     let mounted = true;
     setLoading(true);
-    securityGuardService
-      .getSecurityGuardLicenses(id as string, { limit, offset: (page - 1) * limit })
+    api
+      .list({ limit, offset: (page - 1) * limit })
       .then((data: any) => {
         if (!mounted) return;
         setLicenseData(data.rows || []);
@@ -170,7 +195,7 @@ export default function GuardLicenses({ guard }: Props) {
     if (!id) return;
     setLoading(true);
     try {
-      const data: any = await securityGuardService.getSecurityGuardLicenses(id as string, { limit: limitToUse, offset: (pageToUse - 1) * limitToUse });
+      const data: any = await api.list({ limit: limitToUse, offset: (pageToUse - 1) * limitToUse });
       setLicenseData(data.rows || []);
       setTotalCount(data.count || 0);
     } catch (err: any) {
@@ -234,7 +259,7 @@ export default function GuardLicenses({ guard }: Props) {
 
   const deleteRow = async (row: any) => {
     try {
-      await securityGuardService.destroySecurityGuardLicenses(id as string, [row.id]);
+      await api.remove([row.id]);
       toast.success(t('guards.licenses.toasts.deleted', { defaultValue: 'Deleted' }));
       await loadLicenses(1, limit);
     } catch {
@@ -245,7 +270,7 @@ export default function GuardLicenses({ guard }: Props) {
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
     try {
-      await securityGuardService.destroySecurityGuardLicenses(id as string, selectedIds);
+      await api.remove(selectedIds);
       toast.success(t('guards.licenses.toasts.deletedBulk', { defaultValue: 'Deleted' }));
       setSelectedIds([]);
       await loadLicenses(1, limit);
@@ -292,10 +317,10 @@ export default function GuardLicenses({ guard }: Props) {
       }
 
       if (currentLicense) {
-        await securityGuardService.updateSecurityGuardLicense(id as string, currentLicense, payload);
+        await api.update(currentLicense, payload);
         toast.success(t('guards.licenses.toasts.updated', { defaultValue: 'License updated' }));
       } else {
-        await securityGuardService.createSecurityGuardLicense(id as string, payload);
+        await api.create(payload);
         toast.success(t('guards.licenses.toasts.created', { defaultValue: 'License created' }));
       }
       setCurrentLicense('');
@@ -324,7 +349,7 @@ export default function GuardLicenses({ guard }: Props) {
 
   return (
     <AppLayout>
-      <GuardsLayout navKey="keep-safe" title="guards.nav.licencias">
+      <GuardsLayout navKey={navKey} title={title}>
         <div className="mx-auto max-w-5xl space-y-6">
           {/* ── HEADER / TOOLBAR ──────────────────────────────────────────────── */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -745,7 +770,7 @@ export default function GuardLicenses({ guard }: Props) {
                 <button onClick={async () => {
                   if (!detailsData) return;
                   try {
-                    const blob = await securityGuardService.downloadSecurityGuardLicenseReport(id as string, detailsData.id);
+                    const blob = await api.download(detailsData.id);
                     const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
                     const a = document.createElement('a');
                     a.href = url;
