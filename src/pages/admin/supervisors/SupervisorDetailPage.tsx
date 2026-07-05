@@ -5,11 +5,10 @@ import GuardsLayout from "@/layouts/GuardsLayout";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-  ArrowLeft, CalendarClock, Car, MapPin, Building2, User as UserIcon,
+  ArrowLeft, CalendarClock, Car, MapPin, User as UserIcon,
   Pencil, Mail, Phone, Check,
 } from "lucide-react";
 import { supervisorService, type Supervisor } from "@/lib/api/supervisorService";
-import { stationService } from "@/lib/api/stationService";
 
 const GOLD = "#C8860A";
 
@@ -80,11 +79,8 @@ export default function SupervisorDetailPage() {
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState<Record<string, any>>({});
-  const [assigned, setAssigned] = useState<string[]>([]);
-  const [stations, setStations] = useState<{ id: string; name: string }[]>([]);
 
   const setField = (k: string, v: any) => setForm((p) => ({ ...p, [k]: v }));
-  const toggleStation = (sid: string) => setAssigned((a) => (a.includes(sid) ? a.filter((x) => x !== sid) : [...a, sid]));
 
   const hydrate = (s: Supervisor) => {
     setSup(s);
@@ -94,7 +90,6 @@ export default function SupervisorDetailPage() {
       academicInstruction: s.academicInstruction ?? "", guardCredentials: s.guardCredentials ?? "",
       hiringContractDate: toDateInput(s.hiringContractDate), zone: s.zone ?? "", assignedVehicle: s.assignedVehicle ?? "",
     });
-    setAssigned(Array.isArray(s.assignedStationIds) ? s.assignedStationIds : []);
   };
 
   const load = useCallback(() => {
@@ -106,12 +101,6 @@ export default function SupervisorDetailPage() {
   }, [id]);
   useEffect(load, [load]);
 
-  useEffect(() => {
-    stationService.list({}, { limit: 300, offset: 0 })
-      .then((r) => setStations((r.rows || []).map((s: any) => ({ id: String(s.id), name: s.name || s.companyName || "—" }))))
-      .catch(() => setStations([]));
-  }, []);
-
   const beginEdit = () => { if (sup) hydrate(sup); setEditing(true); };
   const cancelEdit = () => { if (sup) hydrate(sup); setEditing(false); };
 
@@ -120,7 +109,6 @@ export default function SupervisorDetailPage() {
     try {
       const body: Record<string, any> = {};
       for (const k of Object.keys(form)) body[k] = form[k] === "" ? null : form[k];
-      body.assignedStationIds = assigned;
       const updated = await supervisorService.update(id, body);
       hydrate(updated);
       setEditing(false);
@@ -133,7 +121,6 @@ export default function SupervisorDetailPage() {
   };
 
   const onDuty = !!sup?.isOnDuty;
-  const stationName = (sid: string) => stations.find((s) => s.id === sid)?.name || sid;
 
   return (
     <AppLayout>
@@ -279,39 +266,6 @@ export default function SupervisorDetailPage() {
                         </>
                       )}
                     </div>
-                  </Section>
-
-                  <Section
-                    title="Estaciones asignadas"
-                    icon={<Building2 className="h-4 w-4" />}
-                    action={<span className="text-xs text-muted-foreground">{assigned.length}</span>}
-                  >
-                    <p className="mb-3 text-xs text-muted-foreground">Estaciones/sitios bajo la responsabilidad de este supervisor.</p>
-                    {editing ? (
-                      <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
-                        {stations.length === 0 && <p className="text-xs text-muted-foreground">Cargando estaciones…</p>}
-                        {stations.map((s) => {
-                          const on = assigned.includes(s.id);
-                          return (
-                            <button key={s.id} type="button" onClick={() => toggleStation(s.id)}
-                              className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition ${on ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}>
-                              <span className={`grid h-4 w-4 place-items-center rounded ${on ? "bg-primary text-primary-foreground" : "border border-border"}`}>{on && <Check className="h-3 w-3" />}</span>
-                              <span className="truncate">{s.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : assigned.length ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {assigned.map((sid) => (
-                          <span key={sid} className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
-                            <Building2 className="h-3 w-3" />{stationName(sid)}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Sin estaciones asignadas. Usa “Editar” para asignar.</p>
-                    )}
                   </Section>
                 </div>
               </div>

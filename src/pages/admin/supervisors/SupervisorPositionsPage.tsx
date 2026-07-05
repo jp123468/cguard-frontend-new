@@ -35,6 +35,7 @@ export default function SupervisorPositionsPage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", zone: "", scheduleType: "24h", rotationStyleId: "", startTime: "07:00", endTime: "19:00", guardsNeeded: 2, stationIds: [] as string[] });
   const [assignSel, setAssignSel] = useState<Record<string, string>>({});
+  const [offsetSel, setOffsetSel] = useState<Record<string, string>>({});
   const [stationEdit, setStationEdit] = useState<string | null>(null);
 
   const stationName = (id: string) => stations.find((s) => s.id === id)?.name || id;
@@ -80,9 +81,10 @@ export default function SupervisorPositionsPage() {
     const uid = assignSel[posId];
     if (!uid) return;
     try {
-      const updated = await supervisorPositionService.assign(posId, { supervisorUserId: uid });
+      const updated = await supervisorPositionService.assign(posId, { supervisorUserId: uid, platoonOffset: Number(offsetSel[posId] || 0) });
       setRows((prev) => prev.map((p) => (p.id === posId ? updated : p)));
       setAssignSel((s) => ({ ...s, [posId]: "" }));
+      setOffsetSel((s) => ({ ...s, [posId]: "" }));
       toast.success("Supervisor asignado");
     } catch (e: any) { toast.error(e?.message || "No se pudo asignar"); }
   };
@@ -140,12 +142,13 @@ export default function SupervisorPositionsPage() {
                     {p.assignments.map((a) => (
                       <span key={a.id} className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
                         <Users className="h-3 w-3" />{a.supervisorName || a.supervisorUserId}
+                        {a.platoonOffset ? <span className="rounded bg-primary/15 px-1 text-[10px] text-primary">desfase {a.platoonOffset}</span> : null}
                         <button onClick={() => unassign(p.id, a.id)} className="text-muted-foreground hover:text-red-600"><X className="h-3 w-3" /></button>
                       </span>
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <select value={assignSel[p.id] || ""} onChange={(e) => setAssignSel((s) => ({ ...s, [p.id]: e.target.value }))}
                       className="h-9 flex-1 rounded-md border border-input bg-background px-2 text-sm sm:max-w-xs">
                       <option value="">Asignar supervisor…</option>
@@ -153,8 +156,19 @@ export default function SupervisorPositionsPage() {
                         <option key={s.id} value={s.id}>{s.fullName}</option>
                       ))}
                     </select>
+                    <div className="flex items-center gap-1">
+                      <label className="text-xs text-muted-foreground">Desfase</label>
+                      <input type="number" min={0} value={offsetSel[p.id] ?? ""} placeholder="0"
+                        onChange={(e) => setOffsetSel((s) => ({ ...s, [p.id]: e.target.value }))}
+                        className="h-9 w-16 rounded-md border border-input bg-background px-2 text-sm" />
+                    </div>
                     <Button variant="outline" size="sm" disabled={!assignSel[p.id]} onClick={() => assign(p.id)}>Asignar</Button>
                   </div>
+                  {p.rotationStyle && (
+                    <p className="mt-1.5 text-[11px] text-muted-foreground">
+                      El desfase escalona la rotación. Para el turno opuesto (noche mientras otro está en día), usa <span className="font-medium text-foreground">{p.rotationStyle.dayShifts}</span>.
+                    </p>
+                  )}
 
                   <div className="mt-4 border-t border-border/60 pt-3">
                     <div className="mb-2 flex items-center justify-between">
