@@ -11,6 +11,11 @@ import {
 } from "@/components/kit";
 import { supervisorService, type Supervisor } from "@/lib/api/supervisorService";
 
+const WEEKDAYS = [
+  { n: 1, label: "Lun" }, { n: 2, label: "Mar" }, { n: 3, label: "Mié" },
+  { n: 4, label: "Jue" }, { n: 5, label: "Vie" }, { n: 6, label: "Sáb" }, { n: 0, label: "Dom" },
+];
+
 export default function SupervisorsPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<Supervisor[]>([]);
@@ -19,7 +24,9 @@ export default function SupervisorsPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     email: "", firstName: "", lastName: "", governmentId: "", phoneNumber: "", zone: "", assignedVehicle: "",
+    turnoStart: "", turnoEnd: "",
   });
+  const [turnoDays, setTurnoDays] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(() => {
@@ -49,10 +56,14 @@ export default function SupervisorsPage() {
         phoneNumber: form.phoneNumber.trim() || undefined,
         zone: form.zone.trim() || undefined,
         assignedVehicle: form.assignedVehicle.trim() || undefined,
+        turnoDays: turnoDays.length ? turnoDays : undefined,
+        turnoStart: form.turnoStart || undefined,
+        turnoEnd: form.turnoEnd || undefined,
       });
       toast.success("Supervisor creado y enviada la invitación");
       setOpen(false);
-      setForm({ email: "", firstName: "", lastName: "", governmentId: "", phoneNumber: "", zone: "", assignedVehicle: "" });
+      setForm({ email: "", firstName: "", lastName: "", governmentId: "", phoneNumber: "", zone: "", assignedVehicle: "", turnoStart: "", turnoEnd: "" });
+      setTurnoDays([]);
       navigate(`/supervisors/${sup.id}`);
     } catch (e: any) {
       toast.error(e?.message || "No se pudo crear el supervisor");
@@ -128,8 +139,38 @@ export default function SupervisorsPage() {
           <Input placeholder="Apellidos" value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} />
           <Input placeholder="Cédula / ID" value={form.governmentId} onChange={(e) => setForm((f) => ({ ...f, governmentId: e.target.value }))} />
           <Input placeholder="Teléfono" value={form.phoneNumber} onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))} />
-          <Input placeholder="Zona / sector" value={form.zone} onChange={(e) => setForm((f) => ({ ...f, zone: e.target.value }))} />
+          <Input placeholder="Zona / posición (p. ej. Aguila2)" value={form.zone} onChange={(e) => setForm((f) => ({ ...f, zone: e.target.value }))} />
           <Input placeholder="Vehículo asignado" value={form.assignedVehicle} onChange={(e) => setForm((f) => ({ ...f, assignedVehicle: e.target.value }))} />
+        </div>
+
+        <div className="mt-4 rounded-lg border border-border/60 bg-muted/30 p-3">
+          <p className="mb-2 text-sm font-medium text-foreground">Turno del supervisor</p>
+          <p className="mb-2 text-xs text-muted-foreground">Días y horario que el supervisor debe cumplir (opcional; también editable luego).</p>
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {WEEKDAYS.map((d) => {
+              const on = turnoDays.includes(d.n);
+              return (
+                <button
+                  key={d.n}
+                  type="button"
+                  onClick={() => setTurnoDays((prev) => (prev.includes(d.n) ? prev.filter((x) => x !== d.n) : [...prev, d.n]))}
+                  className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition ${on ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-accent"}`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="text-xs text-muted-foreground">
+              Entrada
+              <Input type="time" value={form.turnoStart} onChange={(e) => setForm((f) => ({ ...f, turnoStart: e.target.value }))} className="mt-1" />
+            </label>
+            <label className="text-xs text-muted-foreground">
+              Salida
+              <Input type="time" value={form.turnoEnd} onChange={(e) => setForm((f) => ({ ...f, turnoEnd: e.target.value }))} className="mt-1" />
+            </label>
+          </div>
         </div>
       </Modal>
     </AppLayout>

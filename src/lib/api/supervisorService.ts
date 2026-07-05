@@ -52,6 +52,10 @@ export interface CreateSupervisorBody {
   phoneNumber?: string;
   zone?: string;
   assignedVehicle?: string;
+  // Turno (recurring shift) set at creation — same fields the detail page edits.
+  turnoDays?: number[];
+  turnoStart?: string;
+  turnoEnd?: string;
 }
 
 export const supervisorService = {
