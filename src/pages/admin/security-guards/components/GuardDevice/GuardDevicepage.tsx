@@ -7,7 +7,10 @@ import GuardsLayout from '@/layouts/GuardsLayout';
 import { toast } from 'sonner';
 import guardDeviceService, { GuardDevice } from '@/lib/api/guardDeviceService';
 
-type Props = { guard?: any };
+// navKey/title default to the guard layout; a supervisor route can override them
+// to render the same device screen under the supervisor sidebar (the device
+// endpoint is user-keyed, so it works for any user id).
+type Props = { guard?: any; navKey?: string; title?: string };
 
 const GOLD = '#C8860A';
 
@@ -44,7 +47,7 @@ const Section = ({
   </div>
 );
 
-export default function GuardDevicePage({ guard }: Props) {
+export default function GuardDevicePage({ guard, navKey = 'keep-safe', title = 'guards.nav.dispositivo' }: Props) {
   const { id } = useParams();
   const { t } = useTranslation();
   const userId = guard?.userId || guard?.user?.id || (id as string);
@@ -92,7 +95,7 @@ export default function GuardDevicePage({ guard }: Props) {
 
   return (
     <AppLayout>
-      <GuardsLayout navKey="keep-safe" title="guards.nav.dispositivo">
+      <GuardsLayout navKey={navKey} title={title}>
         <div className="mx-auto max-w-5xl space-y-6 pb-12">
           {/* ── HERO ─────────────────────────────────────────────────────────── */}
           <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-muted/40 shadow-sm">

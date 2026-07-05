@@ -22,5 +22,18 @@
         ]
       }
     ]
+  },
+  "supervisors": {
+    "title": "Supervisor",
+    "sections": [
+      {
+        "label": "",
+        "items": [
+          { "id": "sup-perfil", "label": "Perfil", "path": "/supervisors/:id/perfil" },
+          { "id": "sup-dispositivo", "label": "Dispositivo", "path": "/supervisors/:id/dispositivo" },
+          { "id": "sup-indicadores", "label": "Indicadores", "path": "/supervisors/:id/indicadores" }
+        ]
+      }
+    ]
   }
 }

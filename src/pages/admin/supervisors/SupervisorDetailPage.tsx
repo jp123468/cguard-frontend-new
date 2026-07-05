@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
+import GuardsLayout from "@/layouts/GuardsLayout";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
@@ -146,7 +147,7 @@ export default function SupervisorDetailPage() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6">
+      <GuardsLayout navKey="supervisors" title="Perfil del supervisor">
         <div className="mx-auto max-w-5xl space-y-6 pb-24">
           <button onClick={() => navigate("/supervisors")} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Supervisores
@@ -350,7 +351,7 @@ export default function SupervisorDetailPage() {
             <div className="py-10 text-center text-sm text-muted-foreground">Supervisor no encontrado</div>
           )}
         </div>
-      </div>
+      </GuardsLayout>
     </AppLayout>
   );
 }
