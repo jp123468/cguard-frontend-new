@@ -30,8 +30,17 @@ export interface Supervisor {
   skills?: string[];
   zone?: string | null;
   assignedVehicle?: string | null;
+  // Turno config
+  turnoDays?: number[] | null;
+  turnoStart?: string | null;
+  turnoEnd?: string | null;
+  mobileStationId?: string | null;
+  // Live attendance
   isOnDuty: boolean;
   onDutySince?: string | null;
+  dutyStatus?: string | null;
+  dutyLateMinutes?: number;
+  dutyScheduledEnd?: string | null;
   createdAt?: string | null;
 }
 
