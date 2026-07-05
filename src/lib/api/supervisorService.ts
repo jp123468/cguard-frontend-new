@@ -35,6 +35,8 @@ export interface Supervisor {
   turnoStart?: string | null;
   turnoEnd?: string | null;
   mobileStationId?: string | null;
+  assignedStationIds?: string[] | null;
+  photoUrl?: string | null;
   // Live attendance
   isOnDuty: boolean;
   onDutySince?: string | null;
