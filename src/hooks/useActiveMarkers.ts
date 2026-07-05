@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import securityGuardService from '@/lib/api/securityGuardService';
 import userService from '@/lib/api/userService';
+import { supervisorService } from '@/lib/api/supervisorService';
 
 type Marker = { id: string; lat: number; lng: number; label?: string; role?: string };
 
@@ -97,23 +98,21 @@ export default function useActiveMarkers(pollInterval = 10000) {
           guardMarkers.push(...guardListCache.current);
         }
 
-        // Supervisor markers also come from a heavy 1000-row listing; cache the
-        // derived markers and reuse them across poll ticks (one-shot fetch).
+        // Supervisor markers: from the supervisor listing, which returns each
+        // supervisor's latitude/longitude (seeded at clock-in, refreshed by the
+        // app's live-ping) + isOnDuty. Cached + reused across poll ticks.
         if (userMarkersCache.current === null) {
-          const usersRes: any[] = await userService.listUsers({ limit: 1000, offset: 0 }).catch(() => []);
-          const fromUsers: Marker[] = [];
-          (usersRes || []).forEach((u: any) => {
-            const roles = (u.roles || u.role || u.rolesList || []).map ? (u.roles || u.role || u.rolesList) : (u.roles ?? u.role ?? []);
-            const rolesStr = Array.isArray(roles) ? roles.map((r: any) => (typeof r === 'string' ? r : (r && (r.name || r.role) ? (r.name || r.role) : '') )).join(',').toLowerCase() : String(roles).toLowerCase();
-            const isSupervisor = rolesStr.includes('supervisor');
-            const isOnDuty = (u.isOnDuty ?? u.onDuty ?? u.raw?.isOnDuty) ?? false;
-            if (!isSupervisor || !isOnDuty) return;
-            const coords = extractCoords(u) || extractCoords(u.raw) || null;
-            if (!coords) return;
-            const label = (u.name || u.fullName || u.firstName ? `${u.firstName} ${u.lastName || ''}`.trim() : `User ${u.id}`) as string;
-            fromUsers.push({ id: `user-${u.id}`, lat: coords.lat!, lng: coords.lng!, label, role: 'supervisor' });
+          const supRes: any = await supervisorService.list().catch(() => null);
+          const supRows = supRes && Array.isArray(supRes.rows) ? supRes.rows : Array.isArray(supRes) ? supRes : [];
+          const fromSups: Marker[] = [];
+          (supRows || []).forEach((s: any) => {
+            if (!s || !(s.isOnDuty ?? s.onDuty)) return;
+            const lat = s.latitude ?? s.lat ?? null;
+            const lng = s.longitude ?? s.lng ?? null;
+            if (lat == null || lng == null) return;
+            fromSups.push({ id: `sup-${s.id}`, lat: Number(lat), lng: Number(lng), label: s.fullName || `Supervisor ${s.id}`, role: 'supervisor' });
           });
-          userMarkersCache.current = fromUsers;
+          userMarkersCache.current = fromSups;
         }
         const userMarkers: Marker[] = userMarkersCache.current;
 
