@@ -1,0 +1,177 @@
+import { useCallback, useEffect, useState } from "react";
+import AppLayout from "@/layouts/app-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { MapPin, Plus, Radar, Clock, Users, X, Trash2 } from "lucide-react";
+import { PageContainer, PageHeader, Section, SkeletonCards, StatCard, Modal, StatusBadge } from "@/components/kit";
+import RotationStyleSelect from "@/components/schedule/RotationStyleSelect";
+import { supervisorPositionService, type SupervisorPosition } from "@/lib/api/supervisorPositionService";
+import { supervisorService, type Supervisor } from "@/lib/api/supervisorService";
+
+const SCHEDULE_TYPES = [
+  { value: "12h-day", label: "Diurno (12h)" },
+  { value: "12h-night", label: "Nocturno (12h)" },
+  { value: "24h", label: "24h (día/noche)" },
+  { value: "custom", label: "Personalizado" },
+];
+
+function rotationSummary(p: SupervisorPosition): string {
+  const r = p.rotationStyle;
+  if (!r) return "Sin rotación";
+  const parts = [`${r.dayShifts} día`];
+  if (r.nightShifts) parts.push(`${r.nightShifts} noche`);
+  parts.push(`${r.restDays} descanso`);
+  return `${r.name} · ${parts.join(" · ")}`;
+}
+
+export default function SupervisorPositionsPage() {
+  const [rows, setRows] = useState<SupervisorPosition[]>([]);
+  const [sups, setSups] = useState<Supervisor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ name: "", zone: "", scheduleType: "24h", rotationStyleId: "", startTime: "07:00", endTime: "19:00", guardsNeeded: 2 });
+  const [assignSel, setAssignSel] = useState<Record<string, string>>({});
+
+  const load = useCallback(() => {
+    setLoading(true);
+    supervisorPositionService.list().then((r) => setRows(r.rows || [])).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+  useEffect(load, [load]);
+  useEffect(() => { supervisorService.list().then((r) => setSups(r.rows || [])).catch(() => {}); }, []);
+
+  const create = async () => {
+    if (!form.name.trim()) { toast.error("El nombre es obligatorio"); return; }
+    setSaving(true);
+    try {
+      await supervisorPositionService.create({
+        name: form.name.trim(), zone: form.zone.trim() || undefined, scheduleType: form.scheduleType,
+        rotationStyleId: form.rotationStyleId || undefined, startTime: form.startTime || undefined,
+        endTime: form.endTime || undefined, guardsNeeded: Number(form.guardsNeeded) || 1,
+      });
+      toast.success("Puesto creado");
+      setOpen(false);
+      setForm({ name: "", zone: "", scheduleType: "24h", rotationStyleId: "", startTime: "07:00", endTime: "19:00", guardsNeeded: 2 });
+      load();
+    } catch (e: any) { toast.error(e?.message || "No se pudo crear"); } finally { setSaving(false); }
+  };
+
+  const assign = async (posId: string) => {
+    const uid = assignSel[posId];
+    if (!uid) return;
+    try {
+      const updated = await supervisorPositionService.assign(posId, { supervisorUserId: uid });
+      setRows((prev) => prev.map((p) => (p.id === posId ? updated : p)));
+      setAssignSel((s) => ({ ...s, [posId]: "" }));
+      toast.success("Supervisor asignado");
+    } catch (e: any) { toast.error(e?.message || "No se pudo asignar"); }
+  };
+
+  const unassign = async (posId: string, asgId: string) => {
+    try {
+      const updated = await supervisorPositionService.unassign(posId, asgId);
+      setRows((prev) => prev.map((p) => (p.id === posId ? updated : p)));
+    } catch (e: any) { toast.error(e?.message || "No se pudo quitar"); }
+  };
+
+  const removePos = async (posId: string) => {
+    if (!confirm("¿Eliminar este puesto?")) return;
+    try { await supervisorPositionService.remove(posId); setRows((prev) => prev.filter((p) => p.id !== posId)); }
+    catch (e: any) { toast.error(e?.message || "No se pudo eliminar"); }
+  };
+
+  const totalAssigned = rows.reduce((n, p) => n + p.assignments.length, 0);
+
+  return (
+    <AppLayout>
+      <div className="p-4 sm:p-6">
+        <PageContainer width="wide">
+          <PageHeader
+            icon={<MapPin />}
+            title="Puestos de supervisor"
+            subtitle="Configura los puestos (turno + rotación) y asigna supervisores. La rotación del puesto define el horario — el supervisor la sigue."
+            actions={<Button variant="brand" onClick={() => setOpen(true)}><Plus className="mr-2 h-4 w-4" /> Nuevo puesto</Button>}
+          />
+
+          <div className="mb-4 grid grid-cols-2 gap-3 sm:max-w-md">
+            <StatCard label="Puestos" value={rows.length} icon={<MapPin />} />
+            <StatCard label="Supervisores asignados" value={totalAssigned} icon={<Users />} accent="success" />
+          </div>
+
+          {loading ? (
+            <SkeletonCards count={3} />
+          ) : rows.length === 0 ? (
+            <Section title="Puestos"><div className="py-10 text-center text-sm text-muted-foreground">Aún no hay puestos. Crea el primero (p. ej. “Aguila2”).</div></Section>
+          ) : (
+            <div className="space-y-4">
+              {rows.map((p) => (
+                <Section key={p.id} title={p.name} icon={<MapPin />}
+                  action={<button onClick={() => removePos(p.id)} className="text-muted-foreground hover:text-red-600" title="Eliminar"><Trash2 className="h-4 w-4" /></button>}>
+                  <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+                    {p.zone && <StatusBadge tone="slate" dot={false}>{p.zone}</StatusBadge>}
+                    <StatusBadge tone="amber" dot={false}><Clock className="mr-1 inline h-3 w-3" />{p.startTime || "—"}–{p.endTime || "—"}</StatusBadge>
+                    <StatusBadge tone="green" dot={false}><Radar className="mr-1 inline h-3 w-3" />{rotationSummary(p)}</StatusBadge>
+                    <span className="text-muted-foreground">{p.scheduleType}</span>
+                  </div>
+
+                  <div className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground">Supervisores asignados</div>
+                  <div className="mb-3 flex flex-wrap gap-1.5">
+                    {p.assignments.length === 0 && <span className="text-sm text-muted-foreground">Ninguno</span>}
+                    {p.assignments.map((a) => (
+                      <span key={a.id} className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
+                        <Users className="h-3 w-3" />{a.supervisorName || a.supervisorUserId}
+                        <button onClick={() => unassign(p.id, a.id)} className="text-muted-foreground hover:text-red-600"><X className="h-3 w-3" /></button>
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <select value={assignSel[p.id] || ""} onChange={(e) => setAssignSel((s) => ({ ...s, [p.id]: e.target.value }))}
+                      className="h-9 flex-1 rounded-md border border-input bg-background px-2 text-sm sm:max-w-xs">
+                      <option value="">Asignar supervisor…</option>
+                      {sups.filter((s) => !p.assignments.some((a) => a.supervisorUserId === s.id)).map((s) => (
+                        <option key={s.id} value={s.id}>{s.fullName}</option>
+                      ))}
+                    </select>
+                    <Button variant="outline" size="sm" disabled={!assignSel[p.id]} onClick={() => assign(p.id)}>Asignar</Button>
+                  </div>
+                </Section>
+              ))}
+            </div>
+          )}
+        </PageContainer>
+      </div>
+
+      <Modal open={open} onOpenChange={setOpen} title="Nuevo puesto de supervisor" icon={<MapPin className="h-5 w-5" />}
+        description="Configura el turno y la rotación (día/noche). Los supervisores asignados siguen esta rotación."
+        footer={<><Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancelar</Button><Button variant="brand" onClick={create} disabled={saving}>{saving ? "Creando…" : "Crear puesto"}</Button></>}>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input placeholder="Nombre (p. ej. Aguila2) *" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+            <Input placeholder="Zona / sector" value={form.zone} onChange={(e) => setForm((f) => ({ ...f, zone: e.target.value }))} />
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] uppercase tracking-wide text-muted-foreground">Tipo de turno</label>
+            <select value={form.scheduleType} onChange={(e) => setForm((f) => ({ ...f, scheduleType: e.target.value }))}
+              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm">
+              {SCHEDULE_TYPES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] uppercase tracking-wide text-muted-foreground">Rotación</label>
+            <RotationStyleSelect scheduleType={form.scheduleType} value={form.rotationStyleId} onChange={(id) => setForm((f) => ({ ...f, rotationStyleId: id }))} />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <label className="text-[11px] uppercase tracking-wide text-muted-foreground">Entrada (día)
+              <Input type="time" value={form.startTime} onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))} className="mt-1" /></label>
+            <label className="text-[11px] uppercase tracking-wide text-muted-foreground">Salida (día)
+              <Input type="time" value={form.endTime} onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))} className="mt-1" /></label>
+            <label className="text-[11px] uppercase tracking-wide text-muted-foreground">Supervisores/slot
+              <Input type="number" min={1} value={form.guardsNeeded} onChange={(e) => setForm((f) => ({ ...f, guardsNeeded: Number(e.target.value) }))} className="mt-1" /></label>
+          </div>
+        </div>
+      </Modal>
+    </AppLayout>
+  );
+}

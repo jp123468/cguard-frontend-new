@@ -80,14 +80,10 @@ export default function SupervisorDetailPage() {
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState<Record<string, any>>({});
-  const [turnoDays, setTurnoDays] = useState<number[]>([]);
-  const [turnoStart, setTurnoStart] = useState("");
-  const [turnoEnd, setTurnoEnd] = useState("");
   const [assigned, setAssigned] = useState<string[]>([]);
   const [stations, setStations] = useState<{ id: string; name: string }[]>([]);
 
   const setField = (k: string, v: any) => setForm((p) => ({ ...p, [k]: v }));
-  const toggleDay = (n: number) => setTurnoDays((d) => (d.includes(n) ? d.filter((x) => x !== n) : [...d, n]));
   const toggleStation = (sid: string) => setAssigned((a) => (a.includes(sid) ? a.filter((x) => x !== sid) : [...a, sid]));
 
   const hydrate = (s: Supervisor) => {
@@ -98,9 +94,6 @@ export default function SupervisorDetailPage() {
       academicInstruction: s.academicInstruction ?? "", guardCredentials: s.guardCredentials ?? "",
       hiringContractDate: toDateInput(s.hiringContractDate), zone: s.zone ?? "", assignedVehicle: s.assignedVehicle ?? "",
     });
-    setTurnoDays(Array.isArray(s.turnoDays) ? s.turnoDays : []);
-    setTurnoStart(s.turnoStart || "");
-    setTurnoEnd(s.turnoEnd || "");
     setAssigned(Array.isArray(s.assignedStationIds) ? s.assignedStationIds : []);
   };
 
@@ -127,9 +120,6 @@ export default function SupervisorDetailPage() {
     try {
       const body: Record<string, any> = {};
       for (const k of Object.keys(form)) body[k] = form[k] === "" ? null : form[k];
-      body.turnoDays = turnoDays.length ? turnoDays : null;
-      body.turnoStart = turnoStart || null;
-      body.turnoEnd = turnoEnd || null;
       body.assignedStationIds = assigned;
       const updated = await supervisorService.update(id, body);
       hydrate(updated);
@@ -263,34 +253,13 @@ export default function SupervisorDetailPage() {
                     </div>
                   </Section>
 
-                  <Section title="Turno del supervisor" icon={<CalendarClock className="h-4 w-4" />}>
-                    <p className="mb-3 text-xs text-muted-foreground">
-                      Turno que el supervisor debe cumplir. Marca entrada/salida desde la app; la asistencia se mide contra esta ventana (llegada tarde y cierre automático).
+                  <Section title="Horario / Turno" icon={<CalendarClock className="h-4 w-4" />}>
+                    <p className="text-sm text-muted-foreground">
+                      El horario del supervisor proviene del <span className="font-medium text-foreground">puesto</span> al que está asignado — la rotación (día/noche) se configura en el puesto, no aquí.
                     </p>
-                    <div className="mb-4">
-                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">Días</div>
-                      <div className="flex flex-wrap gap-2">
-                        {WEEKDAYS.map((d) => {
-                          const on = turnoDays.includes(d.n);
-                          return (
-                            <button key={d.n} type="button" disabled={!editing} onClick={() => toggleDay(d.n)}
-                              className={`rounded-md border px-3 py-1.5 text-sm transition ${on ? "border-primary bg-primary/10 font-medium text-primary" : "border-border text-muted-foreground"} ${editing ? "hover:bg-muted" : "opacity-80 cursor-default"}`}>
-                              {d.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 sm:max-w-md">
-                      <div>
-                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Entrada</div>
-                        <Input type="time" value={turnoStart} disabled={!editing} onChange={(e) => setTurnoStart(e.target.value)} className="h-9 text-sm" />
-                      </div>
-                      <div>
-                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Salida</div>
-                        <Input type="time" value={turnoEnd} disabled={!editing} onChange={(e) => setTurnoEnd(e.target.value)} className="h-9 text-sm" />
-                      </div>
-                    </div>
+                    <a href="/supervisor-positions" className="mt-3 inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium hover:bg-muted">
+                      <MapPin className="h-4 w-4" /> Puestos de supervisor
+                    </a>
                   </Section>
                 </div>
 

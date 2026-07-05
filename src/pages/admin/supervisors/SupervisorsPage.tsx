@@ -94,9 +94,14 @@ export default function SupervisorsPage() {
             title="Supervisores"
             subtitle="Gestiona los supervisores de seguridad: perfil, zona, vehículo y estado en turno."
             actions={
-              <Button variant="brand" onClick={() => setOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Nuevo supervisor
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => navigate("/supervisor-positions")}>
+                  <MapPin className="mr-2 h-4 w-4" /> Puestos
+                </Button>
+                <Button variant="brand" onClick={() => setOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" /> Nuevo supervisor
+                </Button>
+              </div>
             }
           />
 

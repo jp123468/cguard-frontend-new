@@ -67,6 +67,7 @@ import SupervisorDetailPage from "./pages/admin/supervisors/SupervisorDetailPage
 import SupervisorKpisPage from "./pages/admin/supervisors/SupervisorKpisPage"
 import SupervisorNotesPage from "./pages/admin/supervisors/SupervisorNotesPage"
 import SupervisorLicensesPage from "./pages/admin/supervisors/SupervisorLicensesPage"
+import SupervisorPositionsPage from "./pages/admin/supervisors/SupervisorPositionsPage"
 import GuardRegistration from "./pages/guard/registration"
 import ClientRegistration from "./pages/client/registration"
 import AdminOfficeUsersPage from "./pages/admin/administrative-office-users/AdminOfficeUsersPage"
@@ -1220,6 +1221,7 @@ export default function App() {
               <Route path="/nomina/exceptions" element={<ProtectedRoute><NominaExceptions /></ProtectedRoute>} />
               <Route path="/nomina/approvals" element={<ProtectedRoute><NominaApprovals /></ProtectedRoute>} />
               <Route path="/supervisors" element={<ProtectedRoute><SupervisorsPage /></ProtectedRoute>} />
+              <Route path="/supervisor-positions" element={<ProtectedRoute><SupervisorPositionsPage /></ProtectedRoute>} />
               <Route path="/supervisors/:id" element={<ProtectedRoute><SupervisorDetailPage /></ProtectedRoute>} />
               <Route path="/supervisors/:id/perfil" element={<ProtectedRoute><SupervisorDetailPage /></ProtectedRoute>} />
               <Route path="/supervisors/:id/dispositivo" element={<ProtectedRoute><GuardDispositivoPage navKey="supervisors" title="Dispositivo" /></ProtectedRoute>} />
