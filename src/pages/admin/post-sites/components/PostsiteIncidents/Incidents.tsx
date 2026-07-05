@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApiService } from '@/services/api/apiService';
+import { supervisorService, type Supervisor } from '@/lib/api/supervisorService';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -55,6 +56,11 @@ export default function Incidents({ site }: { site?: any }) {
   const [dispatches, setDispatches] = useState<any[]>([]);
   const [loadingDispatches, setLoadingDispatches] = useState(false);
   const [assignedGuards, setAssignedGuards] = useState<any[]>([]);
+  // Dispatch-to-supervisor dialog state.
+  const [dispatchFor, setDispatchFor] = useState<any | null>(null);
+  const [sups, setSups] = useState<Supervisor[]>([]);
+  const [selSup, setSelSup] = useState<string>('');
+  const [dispatching, setDispatching] = useState(false);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
@@ -940,6 +946,12 @@ export default function Incidents({ site }: { site?: any }) {
                                 </div>
                               </DropdownMenuItem>
 
+                              <DropdownMenuItem onClick={async () => { setDispatchFor(it); setSelSup(''); try { const r = await supervisorService.list(); setSups(r.rows || []); } catch { setSups([]); } }}>
+                                <div className="flex items-center">
+                                  {t('incidents.dispatchToSupervisor', { defaultValue: 'Despachar a supervisor' })}
+                                </div>
+                              </DropdownMenuItem>
+
                               {!["cerrado", "closed"].includes(((it.status || it.estado || it.state || '').toString().toLowerCase())) && (
                                 <DropdownMenuItem onClick={() => handleCloseTicket(it)}>
                                   <div className="flex items-center">
@@ -1028,6 +1040,52 @@ export default function Incidents({ site }: { site?: any }) {
               <Button variant="secondary" onClick={() => setCreateOpen(false)}>{t('incidents.cancel') || 'Cancel'}</Button>
               <Button onClick={handleCreateDispatch} disabled={creating}>{creating ? (t('incidents.creating') || 'Creating...') : (t('incidents.create') || 'Create')}</Button>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dispatch an incident to a supervisor */}
+      <Dialog open={!!dispatchFor} onOpenChange={(o) => { if (!o) setDispatchFor(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{t('incidents.dispatchToSupervisor', { defaultValue: 'Despachar a supervisor' })}</DialogTitle></DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {t('incidents.dispatchHint', { defaultValue: 'El supervisor recibirá una notificación para aceptar y marcar en camino / en sitio.' })}
+            </p>
+            <select
+              value={selSup}
+              onChange={(e) => setSelSup(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">{t('incidents.selectSupervisor', { defaultValue: '— Selecciona un supervisor —' })}</option>
+              {sups.map((s) => (
+                <option key={s.id} value={s.id}>{s.fullName}{s.isOnDuty ? ' • en turno' : ''}</option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setDispatchFor(null)}>{t('incidents.cancel') || 'Cancelar'}</Button>
+            <Button
+              disabled={!selSup || dispatching}
+              onClick={async () => {
+                if (!selSup || !dispatchFor) return;
+                const tid = site?.tenantId || localStorage.getItem('tenantId') || '';
+                if (!tid) { toast.error('Tenant missing'); return; }
+                setDispatching(true);
+                try {
+                  await ApiService.post(`/tenant/${tid}/incident/${dispatchFor.id}/assign-supervisor`, { supervisorUserId: selSup });
+                  toast.success(t('incidents.dispatched', { defaultValue: 'Incidente despachado al supervisor' }));
+                  setIncidents((prev) => prev.map((p) => (p.id === dispatchFor.id ? { ...p, dispatchStatus: 'dispatched', assignedToUserId: selSup } : p)));
+                  setDispatchFor(null);
+                } catch (e: any) {
+                  toast.error(e?.message || 'No se pudo despachar');
+                } finally {
+                  setDispatching(false);
+                }
+              }}
+            >
+              {dispatching ? (t('incidents.dispatching', { defaultValue: 'Despachando…' }) as string) : (t('incidents.dispatch', { defaultValue: 'Despachar' }) as string)}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
