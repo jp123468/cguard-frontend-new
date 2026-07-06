@@ -24,6 +24,7 @@ import { useThemeContext } from "@/contexts/ThemeContext";
 import { useTranslation } from 'react-i18next';
 import { toast } from "sonner";
 import { alarmService } from "@/lib/api/alarmService";
+import { ApiService } from "@/services/api/apiService";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -177,13 +178,18 @@ export default function Header({
     }
   };
 
-  const handleFeedbackSubmit = () => {
+  const handleFeedbackSubmit = async () => {
     if (rating === 0) {
       toast.error(t('header.select_rating'));
       return;
     }
-    // NOTE: no feedback submit endpoint exists yet, so this is currently a
-    // local-only acknowledgement. Do not log the free-text feedback (PII).
+    // Persist to the backend (surfaced to superadmin). Best-effort — always thank.
+    try {
+      const tid = localStorage.getItem('tenantId');
+      if (tid) {
+        await ApiService.post(`/tenant/${tid}/feedback`, { rating, comment: feedbackText.trim() || undefined });
+      }
+    } catch { /* still acknowledge locally */ }
     toast.success(t('header.feedback_thanks'));
     setFeedbackOpen(false);
     setRating(0);
