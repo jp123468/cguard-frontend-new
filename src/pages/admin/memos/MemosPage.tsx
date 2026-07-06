@@ -17,6 +17,7 @@ import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActio
 import { Plus, Search, Eye, Trash, Filter, EllipsisVertical, FileDown, FileSpreadsheet, Megaphone, FileText } from "lucide-react";
 import { PageContainer, PageHeader, Section } from "@/components/kit";
 import { userService } from "@/lib/api/userService";
+import { useAuth } from "@/contexts/AuthContext";
 
 type MemoItem = {
   id: string;
@@ -31,6 +32,7 @@ type MemoItem = {
 };
 
 export default function MemosPage() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [memos, setMemos] = useState<MemoItem[]>([]);
   const [query, setQuery] = useState("");
@@ -208,16 +210,27 @@ export default function MemosPage() {
         wasAccepted,
       };
       const res = await ApiService.post(`/tenant/${tenantId}/memos`, { data: payload });
+      // The create endpoint returns guardName/createdBy as FK UUID strings, not
+      // {name} objects, so resolve human-readable names locally instead of running
+      // the UUID through normalizePerson (which would render the raw UUID).
+      const resolvedGuardName =
+        (res.guardName && typeof res.guardName === 'object')
+          ? normalizePerson(res.guardName)
+          : (guards.find((g) => String(g.id) === String(guardId))?.name || '-');
+      const currentUserName =
+        (res.createdBy && typeof res.createdBy === 'object')
+          ? normalizePerson(res.createdBy)
+          : ((user as any)?.fullName || (user as any)?.name || (user as any)?.email || '-');
       const newMemo: MemoItem = {
         id: res.id ?? String(Date.now()),
         subject: res.subject || payload.subject,
         content: res.content || payload.content,
         dateTime: res.dateTime || payload.dateTime,
         wasAccepted: res.wasAccepted ?? payload.wasAccepted,
-        guardName: normalizePerson(res.guardName),
+        guardName: resolvedGuardName,
         guardNameId: res.guardName?.id || res.guardNameId || guardId || null,
-        createdBy: normalizePerson(res.createdBy),
-        createdById: res.createdBy?.id || res.createdById || null,
+        createdBy: currentUserName,
+        createdById: (res.createdBy && typeof res.createdBy === 'object' ? res.createdBy.id : res.createdById) || (user as any)?.id || null,
       };
       setMemos((current) => [newMemo, ...current]);
       setCreateOpen(false);

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Building2 } from "lucide-react";
+import { Building2, Info } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
 import { PageContainer, PageHeader, Section } from "@/components/kit";
@@ -26,6 +26,13 @@ export default function DepartmentPage() {
             title="Departamentos"
             subtitle="Organiza tu operación en departamentos y asigna responsables."
           />
+          <div className="mb-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              La gestión de departamentos aún no está disponible. Esta sección es una
+              vista previa; la creación y edición se habilitarán próximamente.
+            </p>
+          </div>
           <Section>
         <DepartmentsTable
           rows={rows}
@@ -41,6 +48,7 @@ export default function DepartmentPage() {
           onEdit={(r) => { setEdit(r); setOpen(true); }}
           onToggleStatus={() => {}}
           onBulkDelete={() => {}}
+          createDisabled
         />
           </Section>
         <DepartmentDialog

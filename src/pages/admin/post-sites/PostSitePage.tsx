@@ -181,7 +181,10 @@ export default function PostSitePage() {
 
       const [data, clientsResponse] = await Promise.all([
         stationService.list(searchFilters, { limit, offset: (page - 1) * limit }),
-        clientService.getClients(),
+        // Fetch a high limit so every client is present in clientsMap below;
+        // otherwise tenants with more clients than the default page size get
+        // client:undefined on out-of-page rows → 'Cliente —'.
+        clientService.getClients(undefined, { limit: 1000, offset: 0 }),
       ]);
 
       // If we pulled data without backend category filter, apply it locally.

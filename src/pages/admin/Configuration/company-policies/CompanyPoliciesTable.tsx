@@ -39,11 +39,10 @@ const formatPolicyDate = (value?: string) => {
   return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString();
 };
 
-// NOTE: not yet wired to a backend policies endpoint — these are placeholder rows.
-const MOCK_POLICIES: Policy[] = [
-  { id: "1", title: "Política de Seguridad en Sitio", createdAt: new Date().toISOString(), status: "published" },
-  { id: "2", title: "Procedimiento de Reportes", createdAt: new Date().toISOString(), status: "draft" },
-];
+// NOTE: there is no backend policies endpoint yet. Rather than show fake rows or
+// fake "saves", this screen is gated as "Próximamente" (see FEATURE_AVAILABLE).
+const FEATURE_AVAILABLE = false;
+const POLICIES: Policy[] = [];
 
 export default function CompanyPoliciesTable() {
   const [query, setQuery] = useState("");
@@ -53,8 +52,8 @@ export default function CompanyPoliciesTable() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return MOCK_POLICIES;
-    return MOCK_POLICIES.filter((p) => p.title.toLowerCase().includes(q));
+    if (!q) return POLICIES;
+    return POLICIES.filter((p) => p.title.toLowerCase().includes(q));
   }, [query]);
 
   const allChecked = filtered.length > 0 && filtered.every((p) => checked[p.id]);
@@ -71,11 +70,13 @@ export default function CompanyPoliciesTable() {
     }
   };
 
-  const handleCreate = (data: PolicyForm) => {
+  // No backend endpoint yet — these are intentionally no-ops and the entry points
+  // that would call them are disabled while FEATURE_AVAILABLE is false.
+  const handleCreate = (_data: PolicyForm) => {
     setOpenNew(false);
   };
 
-  const handleDraft = (data: PolicyForm) => {
+  const handleDraft = (_data: PolicyForm) => {
     setOpenNew(false);
   };
 
@@ -90,13 +91,13 @@ export default function CompanyPoliciesTable() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem disabled={!Object.keys(checked).length}>
+              <DropdownMenuItem disabled={!FEATURE_AVAILABLE || !Object.keys(checked).length}>
                 Eliminar seleccionados
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={!Object.keys(checked).length}>
+              <DropdownMenuItem disabled={!FEATURE_AVAILABLE || !Object.keys(checked).length}>
                 Publicar seleccionados
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={!Object.keys(checked).length}>
+              <DropdownMenuItem disabled={!FEATURE_AVAILABLE || !Object.keys(checked).length}>
                 Mover a borrador
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -112,11 +113,23 @@ export default function CompanyPoliciesTable() {
             />
           </div>
 
-          <Button onClick={() => setOpenNew(true)} variant="brand" className="whitespace-nowrap px-6">
+          <Button
+            onClick={() => setOpenNew(true)}
+            disabled={!FEATURE_AVAILABLE}
+            variant="brand"
+            className="whitespace-nowrap px-6"
+            title={!FEATURE_AVAILABLE ? "Próximamente" : undefined}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Nueva Política de Empresa
           </Button>
         </div>
+
+        {!FEATURE_AVAILABLE && (
+          <div className="rounded-md border border-dashed bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+            Próximamente: la gestión de políticas de empresa aún no está disponible.
+          </div>
+        )}
 
         <div className="cg-card overflow-hidden p-0">
           <Table>
@@ -136,8 +149,12 @@ export default function CompanyPoliciesTable() {
                   <TableCell colSpan={3} className="p-0">
                     <EmptyState
                       icon={<Search />}
-                      title="No se encontraron resultados"
-                      description="No pudimos encontrar ningún elemento que coincida con su búsqueda"
+                      title={query.trim() ? "No se encontraron resultados" : "Aún no hay políticas"}
+                      description={
+                        query.trim()
+                          ? "No pudimos encontrar ningún elemento que coincida con su búsqueda"
+                          : "La gestión de políticas de empresa estará disponible próximamente."
+                      }
                       className="border-0"
                     />
                   </TableCell>

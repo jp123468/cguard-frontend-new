@@ -1,8 +1,10 @@
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import routeService from "@/lib/api/routeService";
 import { postSiteService } from '@/lib/api/postSiteService';
 import { Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { confirmDialog } from "@/components/ui/confirmDialog";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -29,7 +31,6 @@ import { PageContainer, PageHeader, Section, EmptyState, StatusBadge } from '@/c
 import RouteDetailModal from './RouteDetailModal';
 
 import {
-  routeFiltersSchema,
   type RouteFilters,
   defaultRouteFilters,
 } from "@/lib/validators/route-filters";
@@ -48,12 +49,31 @@ export default function RoutesPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [totalCount, setTotalCount] = useState<number>(0);
 
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkBusy, setBulkBusy] = useState<boolean>(false);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+
+  // Debounce the search box, then reset to the first page.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(id);
+  }, [searchInput]);
+
   useEffect(() => {
     let mounted = true;
+    // Selection references ids in the current view; drop it when the view changes.
+    setSelectedIds([]);
     (async () => {
       try {
         setLoading(true);
-        const resp = await routeService.list({ limit, offset: (page - 1) * limit });
+        const params: Record<string, any> = { limit, offset: (page - 1) * limit };
+        if (search) params['filter[name]'] = search;
+        const resp = await routeService.list(params);
         if (!mounted) return;
         const initialRows = resp.rows || [];
         setRows(initialRows);
@@ -105,16 +125,52 @@ export default function RoutesPage() {
     return () => {
       mounted = false;
     };
-  }, [limit, page]);
+  }, [limit, page, search, refreshKey]);
 
-  const aplicarFiltros = () => {
-    const parse = routeFiltersSchema.safeParse(filters);
-    if (!parse.success) {
-      console.error(parse.error.flatten());
+  const reload = () => setRefreshKey((k) => k + 1);
+
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(rows.map((r: any) => r.id).filter(Boolean));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const toggleSelectOne = (id: string, checked: boolean) => {
+    setSelectedIds((prev) =>
+      checked ? [...new Set([...prev, id])] : prev.filter((x) => x !== id),
+    );
+  };
+
+  const handleBulkAction = async (action: string) => {
+    // Only deletion is backed by the API; activar/inactivar have no server-side
+    // state on routes yet, so they are not offered.
+    if (action !== 'eliminar') return;
+    if (selectedIds.length === 0) {
+      toast.error('Selecciona al menos una ruta.');
       return;
     }
-    console.log("Aplicando filtros:", parse.data);
-    setOpenFilter(false);
+    if (
+      !(await confirmDialog({
+        title: 'Eliminar rutas',
+        message: `¿Eliminar ${selectedIds.length} ruta(s)? Esta acción no se puede deshacer.`,
+        confirmText: 'Eliminar',
+        tone: 'danger',
+      }))
+    )
+      return;
+    try {
+      setBulkBusy(true);
+      await routeService.destroy(selectedIds);
+      toast.success(`${selectedIds.length} ruta(s) eliminada(s).`);
+      setSelectedIds([]);
+      reload();
+    } catch (e: any) {
+      toast.error(String(e?.message || e?.toString() || 'No se pudieron eliminar las rutas'));
+    } finally {
+      setBulkBusy(false);
+    }
   };
 
   return (
@@ -149,13 +205,19 @@ export default function RoutesPage() {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <Select onValueChange={(v) => console.log("Acción:", v)}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Acción" />
+            <Select
+              value=""
+              disabled={selectedIds.length === 0 || bulkBusy}
+              onValueChange={(v) => handleBulkAction(v)}
+            >
+              <SelectTrigger className="w-44">
+                <SelectValue
+                  placeholder={
+                    selectedIds.length > 0 ? `Acción (${selectedIds.length})` : 'Acción'
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="activar">Activar</SelectItem>
-                <SelectItem value="inactivar">Inactivar</SelectItem>
                 <SelectItem value="eliminar">Eliminar</SelectItem>
               </SelectContent>
             </Select>
@@ -167,7 +229,8 @@ export default function RoutesPage() {
               <Input
                 className="w-72 pl-9"
                 placeholder="Buscar ruta"
-                onChange={(e) => console.log("buscar:", e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
               />
             </div>
 
@@ -225,9 +288,13 @@ export default function RoutesPage() {
                     </Select>
                   </div>
 
+                  <p className="text-xs text-muted-foreground">
+                    Los filtros por sector y estado estarán disponibles próximamente.
+                    Usa el buscador para filtrar rutas por nombre.
+                  </p>
                   <Button
                     className="w-full bg-primary text-white hover:bg-primary"
-                    onClick={aplicarFiltros}
+                    disabled
                   >
                     Filtro
                   </Button>
@@ -242,7 +309,11 @@ export default function RoutesPage() {
             <thead className="bg-muted/30">
               <tr className="border-b">
                 <th className="px-4 py-3">
-                  <Checkbox />
+                  <Checkbox
+                    checked={rows.length > 0 && selectedIds.length === rows.length}
+                    onCheckedChange={(v) => toggleSelectAll(v === true)}
+                    aria-label="Seleccionar todo"
+                  />
                 </th>
                 <th className="px-4 py-3 font-semibold">Nombre</th>
                 <th className="px-4 py-3 font-semibold">Puesto de seguridad</th>
@@ -269,7 +340,11 @@ export default function RoutesPage() {
               {rows.length > 0 && rows.map((r: any) => (
                 <tr key={r.id || r._id} className="border-b">
                   <td className="px-4 py-3">
-                    <Checkbox />
+                    <Checkbox
+                      checked={selectedIds.includes(r.id)}
+                      onCheckedChange={(v) => toggleSelectOne(r.id, v === true)}
+                      aria-label="Seleccionar ruta"
+                    />
                   </td>
                   <td className="px-4 py-3 font-medium">{r.name || r.title || r.routeName || '—'}</td>
                   <td className="px-4 py-3">{(() => {

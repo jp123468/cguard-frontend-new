@@ -23,14 +23,16 @@ const fmt = (d?: string) => { try { return new Date(d as string).toLocaleString(
 export default function AuditLogs() {
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [q, setQ] = useState("");
   const tid = () => localStorage.getItem("tenantId") || "";
 
   const load = () => {
     setLoading(true);
+    setError(false);
     ApiService.get(`/tenant/${tid()}/security/audit-logs?limit=300`)
       .then((r: any) => setRows(Array.isArray(r) ? r : (r?.rows ?? [])))
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
@@ -78,6 +80,18 @@ export default function AuditLogs() {
               <tbody>
                 {loading ? (
                   <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Cargando…</td></tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center">
+                      <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                        <AlertTriangle className="size-6 text-destructive" />
+                        <span>No se pudo cargar el registro de seguridad.</span>
+                        <button onClick={load} className="inline-flex items-center gap-1.5 rounded-lg border border-input px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted">
+                          <RefreshCw className="size-4" /> Reintentar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ) : filtered.length === 0 ? (
                   <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Sin registros.</td></tr>
                 ) : filtered.map((r) => {

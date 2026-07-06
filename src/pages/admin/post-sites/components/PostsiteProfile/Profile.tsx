@@ -397,9 +397,9 @@ export default function PostSiteProfile({ site }: { site?: any }) {
                                 </div>
 
                                 {/* Active guards grid */}
-                                {station.isActive && station.activeGuards.length > 0 && (
+                                {station.isActive && (station.activeGuards?.length ?? 0) > 0 && (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                                        {station.activeGuards.map((guard: any) => (
+                                        {station.activeGuards?.map((guard: any) => (
                                             <div key={guard.id} className="flex flex-col items-center gap-1.5 bg-emerald-500/10 border border-emerald-100 rounded-xl p-3">
                                                 {guard.photoUrl ? (
                                                     <img

@@ -188,6 +188,12 @@ export default function Incidents({ site }: { site?: any }) {
     }
   }, [incidents, limit]);
 
+  // Page count + footer must reflect the EFFECTIVE list (filtered or full), not
+  // always the unfiltered incidents — otherwise filtering overstates the pages.
+  useEffect(() => {
+    setTotalCount((filteredIncidents ?? incidents)?.length ?? 0);
+  }, [filteredIncidents, incidents]);
+
   // Load related dispatches (requests) for this post site — backend uses siteId
   useEffect(() => {
     let mounted = true;

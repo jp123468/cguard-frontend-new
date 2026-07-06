@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -29,14 +29,76 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Search, MoreVertical, Upload, FileDown, FileSpreadsheet, Printer, Mail, Car, Plus } from "lucide-react";
 import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
+import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirmDialog";
+import vehicleService from "@/lib/api/vehicleService";
+
+type VehicleRow = {
+    id: string;
+    year?: number | null;
+    make?: string | null;
+    model?: string | null;
+    color?: string | null;
+    licensePlate?: string | null;
+    ownership?: string | null;
+    vin?: string | null;
+    description?: string | null;
+};
+
+const emptyForm = {
+    year: "",
+    make: "",
+    model: "",
+    color: "",
+    licensePlate: "",
+    ownership: "empresa",
+    vin: "",
+    description: "",
+};
 
 export default function Vehicles() {
     const [perPage, setPerPage] = useState("25");
-    const [isAddOpen, setIsAddOpen] = useState(false);
-    const [visitor, setVisitor] = useState("");
-    const [visitorError, setVisitorError] = useState(false);
+    const [page, setPage] = useState(1);
+    const [rows, setRows] = useState<VehicleRow[]>([]);
+    const [count, setCount] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [search, setSearch] = useState("");
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-    const rows: Array<never> = [];
+    const [isAddOpen, setIsAddOpen] = useState(false);
+    const [form, setForm] = useState({ ...emptyForm });
+    const [errors, setErrors] = useState<Record<string, boolean>>({});
+    const [saving, setSaving] = useState(false);
+
+    const perPageNum = Number(perPage) || 25;
+
+    const load = async () => {
+        setLoading(true);
+        try {
+            const resp = await vehicleService.list({
+                limit: perPageNum,
+                offset: (page - 1) * perPageNum,
+            });
+            setRows((resp.rows as VehicleRow[]) || []);
+            setCount(resp.count || 0);
+        } catch (err) {
+            console.error("Error cargando vehículos", err);
+            toast.error("Error cargando vehículos");
+            setRows([]);
+            setCount(0);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        load();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, perPage]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [perPage]);
 
     const perPageText = useMemo(() => {
         if (perPage === "10") return "10";
@@ -44,15 +106,98 @@ export default function Vehicles() {
         return "50";
     }, [perPage]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // Client-side search over the loaded page (backend list has no text filter)
+    const visibleRows = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        if (!q) return rows;
+        return rows.filter((r) =>
+            [r.color, r.model, r.make, r.licensePlate, r.vin, String(r.year ?? "")]
+                .filter(Boolean)
+                .some((v) => String(v).toLowerCase().includes(q)),
+        );
+    }, [rows, search]);
+
+    const setField = (key: keyof typeof emptyForm, value: string) => {
+        setForm((prev) => ({ ...prev, [key]: value }));
+        if (errors[key]) setErrors((prev) => ({ ...prev, [key]: false }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!visitor) {
-            setVisitorError(true);
+        const nextErrors: Record<string, boolean> = {};
+        if (!form.make.trim()) nextErrors.make = true;
+        if (!form.color.trim()) nextErrors.color = true;
+        if (!form.licensePlate.trim()) nextErrors.licensePlate = true;
+        if (Object.keys(nextErrors).length > 0) {
+            setErrors(nextErrors);
             return;
         }
-        setVisitorError(false);
-        setIsAddOpen(false);
+
+        setSaving(true);
+        try {
+            await vehicleService.create({
+                name: `${form.make} ${form.model}`.trim(),
+                licensePlate: form.licensePlate.trim(),
+                year: form.year ? Number(form.year) : null,
+                make: form.make.trim(),
+                model: form.model.trim() || null,
+                color: form.color.trim(),
+                ownership: form.ownership,
+                vin: form.vin.trim() || null,
+                description: form.description.trim() || null,
+            });
+            toast.success("Vehículo creado");
+            setForm({ ...emptyForm });
+            setErrors({});
+            setIsAddOpen(false);
+            setPage(1);
+            await load();
+        } catch (err) {
+            console.error("Error creando vehículo", err);
+            toast.error(String((err as any)?.message || "Error creando vehículo"));
+        } finally {
+            setSaving(false);
+        }
     };
+
+    const toggleSelectAll = (checked: boolean) => {
+        setSelectedIds(checked ? visibleRows.map((r) => r.id) : []);
+    };
+
+    const toggleSelect = (id: string, checked: boolean) => {
+        setSelectedIds((prev) => (checked ? [...prev, id] : prev.filter((x) => x !== id)));
+    };
+
+    const handleBulkAction = async (action: string) => {
+        if (action !== "eliminar") return;
+        if (selectedIds.length === 0) {
+            toast.error("Selecciona al menos un vehículo");
+            return;
+        }
+        if (
+            !(await confirmDialog({
+                title: "Eliminar vehículos",
+                message: `¿Eliminar ${selectedIds.length} vehículo(s)? Esta acción no se puede deshacer.`,
+                confirmText: "Eliminar",
+                tone: "danger",
+            }))
+        )
+            return;
+
+        try {
+            await vehicleService.destroy(selectedIds);
+            toast.success("Vehículo(s) eliminado(s)");
+            setSelectedIds([]);
+            await load();
+        } catch (err) {
+            console.error("Error eliminando vehículos", err);
+            toast.error("Error eliminando vehículos");
+        }
+    };
+
+    const allSelected = visibleRows.length > 0 && selectedIds.length === visibleRows.length;
+    const start = count === 0 ? 0 : (page - 1) * perPageNum + 1;
+    const end = Math.min(page * perPageNum, count);
 
     return (
         <AppLayout>
@@ -71,7 +216,7 @@ export default function Vehicles() {
                     subtitle="Registro de vehículos de visitantes y de la empresa"
                     actions={
                         <>
-                            <Select onValueChange={(v) => console.log("Acción:", v)}>
+                            <Select value="" onValueChange={handleBulkAction}>
                                 <SelectTrigger className="w-36">
                                     <SelectValue placeholder="Acción" />
                                 </SelectTrigger>
@@ -97,7 +242,8 @@ export default function Vehicles() {
                                 <Input
                                     className="w-64 pl-9"
                                     placeholder="Buscar vehículo"
-                                    onChange={(e) => console.log("buscar:", e.target.value)}
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
                                 />
                             </div>
 
@@ -117,38 +263,74 @@ export default function Vehicles() {
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                         <div className="space-y-1.5">
                                             <Label>Año</Label>
-                                            <Input type="number" placeholder="e.g. 2024" />
+                                            <Input
+                                                type="number"
+                                                placeholder="e.g. 2024"
+                                                value={form.year}
+                                                onChange={(e) => setField("year", e.target.value)}
+                                            />
                                         </div>
                                         <div className="space-y-1.5">
                                             <Label>
                                                 Marca<span className="text-red-500">*</span>
                                             </Label>
-                                            <Input placeholder="e.g. Toyota" required />
+                                            <Input
+                                                placeholder="e.g. Toyota"
+                                                value={form.make}
+                                                onChange={(e) => setField("make", e.target.value)}
+                                                className={errors.make ? "border-red-500 focus-visible:ring-red-500" : ""}
+                                            />
+                                            {errors.make && (
+                                                <p className="text-xs text-red-500">Marca requerida</p>
+                                            )}
                                         </div>
                                     </div>
 
                                     <div className="space-y-1.5">
                                         <Label>Modelo</Label>
-                                        <Input placeholder="e.g. Corolla" />
+                                        <Input
+                                            placeholder="e.g. Corolla"
+                                            value={form.model}
+                                            onChange={(e) => setField("model", e.target.value)}
+                                        />
                                     </div>
 
                                     <div className="space-y-1.5">
                                         <Label>
                                             Color<span className="text-red-500">*</span>
                                         </Label>
-                                        <Input placeholder="e.g. Blanco" required />
+                                        <Input
+                                            placeholder="e.g. Blanco"
+                                            value={form.color}
+                                            onChange={(e) => setField("color", e.target.value)}
+                                            className={errors.color ? "border-red-500 focus-visible:ring-red-500" : ""}
+                                        />
+                                        {errors.color && (
+                                            <p className="text-xs text-red-500">Color requerido</p>
+                                        )}
                                     </div>
 
                                     <div className="space-y-1.5">
                                         <Label>
                                             Placa<span className="text-red-500">*</span>
                                         </Label>
-                                        <Input placeholder="Número de placa" required />
+                                        <Input
+                                            placeholder="Número de placa"
+                                            value={form.licensePlate}
+                                            onChange={(e) => setField("licensePlate", e.target.value)}
+                                            className={errors.licensePlate ? "border-red-500 focus-visible:ring-red-500" : ""}
+                                        />
+                                        {errors.licensePlate && (
+                                            <p className="text-xs text-red-500">Placa requerida</p>
+                                        )}
                                     </div>
 
                                     <div className="space-y-1.5">
                                         <Label>Propiedad</Label>
-                                        <Select defaultValue="empresa">
+                                        <Select
+                                            value={form.ownership}
+                                            onValueChange={(v) => setField("ownership", v)}
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Selecciona una opción" />
                                             </SelectTrigger>
@@ -162,7 +344,11 @@ export default function Vehicles() {
 
                                     <div className="space-y-1.5">
                                         <Label>Número VIN</Label>
-                                        <Input placeholder="Identificador del vehículo" />
+                                        <Input
+                                            placeholder="Identificador del vehículo"
+                                            value={form.vin}
+                                            onChange={(e) => setField("vin", e.target.value)}
+                                        />
                                     </div>
 
                                     <div className="space-y-1.5">
@@ -170,37 +356,9 @@ export default function Vehicles() {
                                         <Textarea
                                             rows={3}
                                             placeholder="Notas adicionales sobre el vehículo"
+                                            value={form.description}
+                                            onChange={(e) => setField("description", e.target.value)}
                                         />
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <Label>
-                                            Visitante<span className="text-red-500">*</span>
-                                        </Label>
-                                        <Select
-                                            value={visitor}
-                                            onValueChange={(value) => {
-                                                setVisitor(value);
-                                                setVisitorError(false);
-                                            }}
-                                        >
-                                            <SelectTrigger
-                                                className={
-                                                    visitorError
-                                                        ? "border-red-500 focus-visible:ring-red-500"
-                                                        : ""
-                                                }
-                                            >
-                                                <SelectValue placeholder="Selecciona un visitante" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="visitor-1">Visitante 1</SelectItem>
-                                                <SelectItem value="visitor-2">Visitante 2</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        {visitorError && (
-                                            <p className="text-xs text-red-500">Visitante requerido</p>
-                                        )}
                                     </div>
 
                                     <div className="flex justify-end gap-3 pt-4">
@@ -208,14 +366,16 @@ export default function Vehicles() {
                                             type="button"
                                             variant="outline"
                                             onClick={() => setIsAddOpen(false)}
+                                            disabled={saving}
                                         >
                                             Cancelar
                                         </Button>
                                         <Button
                                             type="submit"
                                             variant="brand"
+                                            disabled={saving}
                                         >
-                                            Enviar
+                                            {saving ? "Guardando…" : "Enviar"}
                                         </Button>
                                     </div>
                                 </form>
@@ -229,26 +389,29 @@ export default function Vehicles() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuItem className="flex items-center gap-2">
+                                <DropdownMenuItem disabled className="flex items-center gap-2">
                                     <Upload className="h-4 w-4" />
                                     <span>Importar vehículos</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="flex items-center gap-2">
+                                <DropdownMenuItem disabled className="flex items-center gap-2">
                                     <FileDown className="h-4 w-4" />
                                     <span>Exportar como PDF</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="flex items-center gap-2">
+                                <DropdownMenuItem disabled className="flex items-center gap-2">
                                     <FileSpreadsheet className="h-4 w-4" />
                                     <span>Exportar como Excel</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="flex items-center gap-2">
+                                <DropdownMenuItem disabled className="flex items-center gap-2">
                                     <Printer className="h-4 w-4" />
                                     <span>Imprimir</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="flex items-center gap-2">
+                                <DropdownMenuItem disabled className="flex items-center gap-2">
                                     <Mail className="h-4 w-4" />
                                     <span>Correo Electrónico</span>
                                 </DropdownMenuItem>
+                                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                                    Próximamente
+                                </div>
                             </DropdownMenuContent>
                         </DropdownMenu>
                         </div>
@@ -259,7 +422,10 @@ export default function Vehicles() {
                         <thead className="bg-muted/30">
                             <tr className="border-b">
                                 <th className="px-4 py-3">
-                                    <Checkbox />
+                                    <Checkbox
+                                        checked={allSelected}
+                                        onCheckedChange={(c) => toggleSelectAll(Boolean(c))}
+                                    />
                                 </th>
                                 <th className="px-4 py-3 font-semibold">Color</th>
                                 <th className="px-4 py-3 font-semibold">Modelo</th>
@@ -270,7 +436,14 @@ export default function Vehicles() {
                         </thead>
 
                         <tbody>
-                            {rows.length === 0 && (
+                            {loading && (
+                                <tr>
+                                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                                        Cargando…
+                                    </td>
+                                </tr>
+                            )}
+                            {!loading && visibleRows.length === 0 && (
                                 <tr>
                                     <td colSpan={6} className="py-8">
                                         <EmptyState
@@ -282,6 +455,22 @@ export default function Vehicles() {
                                     </td>
                                 </tr>
                             )}
+                            {!loading &&
+                                visibleRows.map((r) => (
+                                    <tr key={r.id} className="border-b last:border-0 hover:bg-muted/20">
+                                        <td className="px-4 py-3">
+                                            <Checkbox
+                                                checked={selectedIds.includes(r.id)}
+                                                onCheckedChange={(c) => toggleSelect(r.id, Boolean(c))}
+                                            />
+                                        </td>
+                                        <td className="px-4 py-3">{r.color || "—"}</td>
+                                        <td className="px-4 py-3">{r.model || "—"}</td>
+                                        <td className="px-4 py-3">{r.make || "—"}</td>
+                                        <td className="px-4 py-3">{r.year ?? "—"}</td>
+                                        <td className="px-4 py-3">{r.licensePlate || "—"}</td>
+                                    </tr>
+                                ))}
                         </tbody>
                     </table>
 
@@ -299,7 +488,27 @@ export default function Vehicles() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div>0 of 0</div>
+                        <div className="flex items-center gap-4">
+                            <span>{count === 0 ? "0 de 0" : `${start}–${end} de ${count}`}</span>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={page <= 1 || loading}
+                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                >
+                                    Anterior
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={page * perPageNum >= count || loading}
+                                    onClick={() => setPage((p) => p + 1)}
+                                >
+                                    Siguiente
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 </Section>

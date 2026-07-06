@@ -846,7 +846,7 @@ export default function Schedule() {
     setAiLoading(true);
     setAiRecommendation(null);
     try {
-      const [result] = await ApiService.post(`/tenant/${tenantId}/scheduler/ai-recommend`, { type: 'optimize' });
+      const result: any = await ApiService.post(`/tenant/${tenantId}/scheduler/ai-recommend`, { data: { type: 'optimize' } });
       const rec = result?.recommendation || result?.data?.recommendation || 'Sin respuesta';
       setAiRecommendation(rec);
     } catch (e: any) {

@@ -200,6 +200,7 @@ export default function EditAdminUserPage() {
         setClientOptions((clients as any).rows || []);
         } catch (err) {
         setClientOptions([]);
+        toast.error(t('adminOfficeUsers.editUser.errors.loadClientsError', { defaultValue: 'No se pudieron cargar los clientes' }));
       }
     })();
 
@@ -313,7 +314,15 @@ export default function EditAdminUserPage() {
 
         const postSiteSource = user.postSiteIds ?? user.postSites ?? user.assignedPostSites ?? [];
         const postSiteIds = Array.isArray(postSiteSource) ? postSiteSource.map((p: any) => (p && (p.id || p)) || p).filter(Boolean) : [];
-        if (clientIds && clientIds.length) setValue('clientIds', clientIds);
+        // SECURITY: seed prevClientIdsRef with the user's SAVED clientIds *before* they hydrate
+        // the form. The watchedClientIds effect diffs current vs prev to decide which sites to
+        // auto-add; if prev is empty on load, every saved client counts as "newly added" and its
+        // sites get unioned onto postSiteIds — silently over-granting access the admin never chose.
+        // Seeding prev = saved clientIds makes `added` empty on hydration, preserving saved postSiteIds.
+        if (clientIds && clientIds.length) {
+          prevClientIdsRef.current = clientIds;
+          setValue('clientIds', clientIds);
+        }
         if (postSiteIds && postSiteIds.length) setValue('postSiteIds', postSiteIds);
         } catch (err) {
         toast.error(t('adminOfficeUsers.editUser.errors.loadError', { defaultValue: 'No se pudo cargar la información del usuario' }));

@@ -30,6 +30,7 @@ type Props = {
   onEdit: (row: DepartmentRow) => void;
   onToggleStatus: (row: DepartmentRow) => void;
   onBulkDelete: (ids: string[]) => void;
+  createDisabled?: boolean;
 };
 
 export default function DepartmentsTable({
@@ -46,6 +47,7 @@ export default function DepartmentsTable({
   onEdit,
   onToggleStatus,
   onBulkDelete,
+  createDisabled = false,
 }: Props) {
   const from = Math.min((page - 1) * pageSize + 1, Math.max(total, 1));
   const to = Math.min(page * pageSize, total);
@@ -68,7 +70,12 @@ export default function DepartmentsTable({
             onChange={(e) => onQueryChange(e.target.value)}
           />
         </div>
-        <Button variant="brand" onClick={onCreate}>
+        <Button
+          variant="brand"
+          onClick={onCreate}
+          disabled={createDisabled}
+          title={createDisabled ? "Función no disponible por el momento" : undefined}
+        >
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Departamento
         </Button>
@@ -104,7 +111,7 @@ export default function DepartmentsTable({
                   <EmptyState
                     icon={<Search />}
                     title="No se encontraron resultados"
-                    description="Crea tu primer departamento para comenzar."
+                    description="La gestión de departamentos estará disponible próximamente."
                     className="border-0 py-12"
                   />
                 </TableCell>

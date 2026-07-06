@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import Breadcrumb from '@/components/ui/breadcrumb';
@@ -328,7 +328,7 @@ export default function GlobalInventoryPage() {
                   </tr>
                 ) : (
                   items.map((item) => (
-                    <>
+                    <Fragment key={item.id}>
                       <tr
                         key={item.id}
                         className={`hover:bg-muted/30 cursor-pointer transition-colors ${expandedId === item.id ? 'bg-blue-500/10' : ''}`}
@@ -448,7 +448,7 @@ export default function GlobalInventoryPage() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   ))
                 )}
               </tbody>

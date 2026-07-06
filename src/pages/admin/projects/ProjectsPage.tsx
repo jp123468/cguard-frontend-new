@@ -52,6 +52,7 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<ClientProject[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [page, setPage] = useState(1);
   const limit = 25;
 
@@ -69,6 +70,7 @@ export default function ProjectsPage() {
 
   const loadProjects = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const q = searchQuery.trim();
       const active = { ...filters, ...(q ? { name: q } : {}) };
@@ -80,6 +82,10 @@ export default function ProjectsPage() {
       setTotalCount(count);
     } catch (e: any) {
       console.error(e);
+      setLoadError(true);
+      setProjects([]);
+      setTotalCount(0);
+      toast.error('No se pudieron cargar los proyectos');
     } finally {
       setLoading(false);
     }
@@ -232,7 +238,24 @@ export default function ProjectsPage() {
               </tr>
             </thead>
             <tbody>
-              {!loading && projects.length === 0 && (
+              {!loading && loadError && (
+                <tr>
+                  <td colSpan={7} className="py-10">
+                    <EmptyState
+                      icon={<FolderKanban />}
+                      title="No se pudieron cargar los proyectos"
+                      description="Ocurrió un error al obtener la lista. Verifica tu conexión e inténtalo de nuevo."
+                      action={(
+                        <Button variant="outline" onClick={() => loadProjects()}>
+                          Reintentar
+                        </Button>
+                      )}
+                    />
+                  </td>
+                </tr>
+              )}
+
+              {!loading && !loadError && projects.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-10">
                     <EmptyState

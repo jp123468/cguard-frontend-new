@@ -7,6 +7,10 @@ import routeService from "@/lib/api/routeService";
 import { PageContainer, PageHeader, SkeletonCards, EmptyState } from "@/components/kit";
 import { Route as RouteIcon, AlertCircle } from "lucide-react";
 
+const _lpad = (n: number) => String(n).padStart(2, "0");
+function localDatePart(iso: string) { const d = new Date(iso); return `${d.getFullYear()}-${_lpad(d.getMonth() + 1)}-${_lpad(d.getDate())}`; }
+function localTimePart(iso: string) { const d = new Date(iso); return `${_lpad(d.getHours())}:${_lpad(d.getMinutes())}`; }
+
 export default function EditRoutePage() {
   const params = useParams<{ tenantId?: string; id?: string }>();
   const navigate = useNavigate();
@@ -55,10 +59,13 @@ export default function EditRoutePage() {
           name: route.name || '',
           description: route.description || '',
           continuous: route.continuous !== undefined ? route.continuous : true,
-          dateFrom: route.windowStart ? new Date(route.windowStart).toISOString().slice(0, 10) : '',
-          startTime: route.windowStart ? new Date(route.windowStart).toISOString().slice(11, 16) : '00:00',
-          dateTo: route.windowEnd ? new Date(route.windowEnd).toISOString().slice(0, 10) : '',
-          endTime: route.windowEnd ? new Date(route.windowEnd).toISOString().slice(11, 16) : '23:59',
+          // Prefill from LOCAL wall-clock (the create path builds windowStart from
+          // `${date}T${time}` local → UTC); using toISOString() here shifted the
+          // window by the tz offset on every save.
+          dateFrom: route.windowStart ? localDatePart(route.windowStart) : '',
+          startTime: route.windowStart ? localTimePart(route.windowStart) : '00:00',
+          dateTo: route.windowEnd ? localDatePart(route.windowEnd) : '',
+          endTime: route.windowEnd ? localTimePart(route.windowEnd) : '23:59',
           days: route.days || [],
           supervisorId,
           supervisorName,

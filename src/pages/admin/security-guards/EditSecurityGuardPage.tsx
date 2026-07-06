@@ -154,31 +154,26 @@ export default function EditSecurityGuardPage() {
     setError(null);
     (async () => {
       try {
-        // Merge fetched raw data with only the changed fields from the form so we don't
-        // accidentally overwrite server fields that the form doesn't include.
-        const base = fetchedData ? { ...fetchedData } : {};
+        // Build a CLEAN payload — ONLY the securityGuard fields the update endpoint
+        // whitelists (matching GuardProfile.save()). Spreading the whole fetched
+        // object (incl. nested guard/profileImage arrays) was silently dropped by
+        // the backend whitelist, so edits never persisted. Name/email/phone live on
+        // the linked USER identity and are not editable through this endpoint.
+        const payload: any = {
+          governmentId: orNull(form.governmentId),
+          address: orNull(form.address),
+          birthPlace: orNull(form.birthPlace),
+          guardCredentials: orNull(form.guardCredentials),
+          gender: orNull(form.gender),
+          bloodType: orNull(form.bloodType),
+          maritalStatus: orNull(form.maritalStatus),
+          academicInstruction: orNull(form.academicInstruction),
+        };
+        // Dates: only send when present (avoid clearing with empty string).
+        if (form.birthDate) payload.birthDate = form.birthDate;
+        if (form.hiringContractDate) payload.hiringContractDate = form.hiringContractDate;
 
-        // Update top-level fields from form
-        base.address = form.address ?? base.address;
-        base.birthDate = form.birthDate ?? base.birthDate;
-        base.birthPlace = form.birthPlace ?? base.birthPlace;
-        base.maritalStatus = orNull(form.maritalStatus);
-        base.bloodType = orNull(form.bloodType);
-        base.academicInstruction = orNull(form.academicInstruction);
-        base.hiringContractDate = form.hiringContractDate ?? base.hiringContractDate;
-        base.gender = orNull(form.gender);
-        base.governmentId = orNull(form.governmentId);
-        base.guardCredentials = form.guardCredentials ?? base.guardCredentials;
-
-        // Ensure nested guard object exists and update its fields
-        base.guard = { ...(base.guard || {}) };
-        base.guard.firstName = form.firstName ?? base.guard.firstName;
-        base.guard.lastName = form.lastName ?? base.guard.lastName;
-        // prefer explicit email/phoneNumber from form
-        if (typeof form.email === "string") base.guard.email = form.email;
-        if (typeof form.phoneNumber === "string") base.guard.phoneNumber = form.phoneNumber;
-
-        await securityGuardService.update(id!, base);
+        await securityGuardService.update(id!, payload);
         navigate("/security-guards");
       } catch (err: any) {
         const msg = err?.message || String(err);

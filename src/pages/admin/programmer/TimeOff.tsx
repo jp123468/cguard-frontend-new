@@ -171,6 +171,7 @@ export default function TimeOff() {
         endTime: form.endTime || undefined,
         reason: form.reason,
         guard: form.guard || undefined,
+        comment: form.comment || undefined,
         isPaid: form.isPaid,
       });
       await fetchRecords();

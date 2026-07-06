@@ -37,6 +37,7 @@ import { Search, Filter, EllipsisVertical, X, Edit, Trash2, Loader2, LayoutTempl
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
 import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirmDialog";
 import shiftTemplateService, {
   type ShiftTemplate,
   type ShiftTemplateInput,
@@ -179,6 +180,7 @@ export default function ShiftTemplates() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!(await confirmDialog({ title: "Eliminar plantilla", message: "¿Eliminar esta plantilla de turno?", confirmText: "Eliminar", tone: "danger" }))) return;
     try {
       await shiftTemplateService.remove(id);
       toast.success("Plantilla eliminada");

@@ -170,8 +170,12 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
 
                 const tenantId = localStorage.getItem('tenantId');
 
-                // Create the note first (without attachments). We'll create attachment metadata afterwards
+                // Create the note first (without attachments). We'll create attachment metadata afterwards.
+                // The create adapter may return the raw {messageCode,message,data} API wrapper,
+                // so unwrap to get the actual note object (and its real id).
                 const created = await notesApi.create(resolvedId, payload);
+                const createdNote = created?.data ?? created;
+                const noteId = createdNote?.id ?? created?.id;
 
                 // For each uploaded file, create an attachment record linked to the created note
                 if (tenantId && attachments.length > 0) {
@@ -186,7 +190,7 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                                 fileToken: up.fileToken || null,
                                 publicUrl: up.publicUrl || null,
                                 notableType: 'note',
-                                notableId: created.id,
+                                notableId: noteId,
                             };
 
                             await api.post(`/tenant/${tenantId}/attachments`, attPayload);
@@ -197,8 +201,8 @@ export default function GuardNotes({ guard, entityId, navKey = 'keep-safe', titl
                     }
                 }
 
-                // Backend returns the created note object
-                setNotesData((prev) => [created, ...prev]);
+                // Backend returns the created note object (unwrapped above)
+                setNotesData((prev) => [createdNote, ...prev]);
                 try { toast.success(t('guards.notes.noteCreated', { defaultValue: 'Nota creada correctamente' })); } catch (e) {}
                 setShowModal(false);
                 setFormData({ title: '', description: '', date: new Date().toISOString().split('T')[0], attachments: [] });

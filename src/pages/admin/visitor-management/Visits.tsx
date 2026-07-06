@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
-import { Search, Filter as FilterIcon, MoreVertical, FileDown, FileSpreadsheet, Printer, Mail, ClipboardList } from "lucide-react";
+import { useMemo, useState, useEffect, FormEvent } from "react";
+import { Search, Filter as FilterIcon, MoreVertical, FileDown, FileSpreadsheet, Printer, ClipboardList } from "lucide-react";
 import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -27,7 +27,13 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { tenantUserClientAccountsApi, tenantUserPostSiteApi } from '@/lib/api/tenantUserAssignments';
+import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirmDialog";
+import visitorLogService from "@/lib/api/visitorLogService";
+import { clientService } from "@/lib/api/clientService";
+import { postSiteService } from "@/lib/api/postSiteService";
+import securityGuardService from "@/lib/api/securityGuardService";
+import * as XLSX from "xlsx";
 
 type VisitsFilters = {
     clientId: string;
@@ -53,30 +59,314 @@ const defaultFilters: VisitsFilters = {
     perPage: "25",
 };
 
+// The lean visitor-log list returns association objects on `client`/`postSite`/`station`
+// (never plain strings), plus flat *Name fallbacks. Always extract a string — never
+// render the raw Sequelize object as a React child (React #31 crash).
+const clientDisplayName = (c: any) => {
+    if (!c) return "";
+    if (c.displayName) return c.displayName;
+    if (c.commercialName) return c.commercialName;
+    if (c.companyName) return c.companyName;
+    const first = c.name ?? c.firstName ?? "";
+    const last = c.lastName ?? "";
+    const joined = `${first} ${last}`.trim();
+    return joined || c.name || c.id || "";
+};
+
+const getClientLabel = (rec: any) => {
+    if (!rec) return "-";
+    if (rec.client && typeof rec.client === "object") return clientDisplayName(rec.client) || "-";
+    if (typeof rec.client === "string") return rec.client;
+    return rec.clientName || "-";
+};
+
+const getPostSiteLabel = (rec: any) => {
+    if (!rec) return "-";
+    if (rec.postSite && typeof rec.postSite === "object") {
+        return rec.postSite.companyName || rec.postSite.name || rec.postSite.postSiteName || "-";
+    }
+    if (rec.station && typeof rec.station === "object") {
+        return rec.station.stationName || rec.station.name || "-";
+    }
+    return rec.postSiteName || rec.stationName || "-";
+};
+
+const getVehicleLabel = (rec: any) => {
+    const plate = rec?.vehiclePlate || "";
+    const type = rec?.vehicleType || rec?.vehicleMakeModel || "";
+    if (plate && type) return `${plate} (${type})`;
+    return plate || type || "-";
+};
+
+const formatDateTime = (val: string | undefined | null) => {
+    if (!val) return "-";
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    return d.toLocaleString();
+};
+
+// Escape any user/server-supplied value before interpolating into print/PDF HTML.
+const escapeHtml = (val: unknown): string =>
+    String(val ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
 export default function Visits() {
     const [openFilter, setOpenFilter] = useState(false);
     const [filters, setFilters] = useState<VisitsFilters>(defaultFilters);
-    const [clientAssignments, setClientAssignments] = useState([]);
-    const [postSiteAssignments, setPostSiteAssignments] = useState([]);
 
-    // Cargar asignaciones al montar
+    const [rows, setRows] = useState<any[]>([]);
+    const [count, setCount] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [offset, setOffset] = useState(0);
+    const [search, setSearch] = useState("");
+    const [selected, setSelected] = useState<Record<string, boolean>>({});
+    const [action, setAction] = useState<string | undefined>(undefined);
+
+    // Filter dropdown data
+    const [clients, setClients] = useState<any[]>([]);
+    const [sites, setSites] = useState<any[]>([]);
+    const [guards, setGuards] = useState<any[]>([]);
+
+    const limit = useMemo(() => Number(filters.perPage) || 25, [filters.perPage]);
+
+    // Load clients for the filter dropdown on mount.
     useEffect(() => {
-        tenantUserClientAccountsApi.list().then(setClientAssignments);
-        tenantUserPostSiteApi.list().then(setPostSiteAssignments);
+        clientService
+            .getClients(undefined, { limit: 200, offset: 0 })
+            .then((resp: any) => setClients(resp?.rows || []))
+            .catch((e) => console.error("Failed to load clients", e));
     }, []);
 
-    const rows: Array<never> = [];
+    // When a client is selected, load its post sites + guards; clear dependents.
+    useEffect(() => {
+        if (!filters.clientId) {
+            setSites([]);
+            setGuards([]);
+            return;
+        }
+        postSiteService
+            .list({ clientId: filters.clientId }, { limit: 200, offset: 0 } as any)
+            .then((resp: any) => setSites(resp?.rows || []))
+            .catch((e) => console.error("Failed to load post sites", e));
+        securityGuardService
+            .list({ "filter[clientId]": filters.clientId, limit: 200, offset: 0 } as any)
+            .then((resp: any) => setGuards(Array.isArray(resp) ? resp : resp?.rows || []))
+            .catch((e) => console.error("Failed to load guards", e));
+        setFilters((s) => ({ ...s, siteId: "", guardId: "" }));
+    }, [filters.clientId]);
 
-    const aplicarFiltros = () => {
-        console.log("Aplicando filtros:", filters);
+    const buildDateRange = (): [string | null, string | null] | undefined => {
+        const start = filters.fromDate
+            ? new Date(`${filters.fromDate}T${filters.fromTime || "00:00"}:00`).toISOString()
+            : null;
+        const end = filters.toDate
+            ? new Date(`${filters.toDate}T${filters.toTime || "23:59"}:59`).toISOString()
+            : null;
+        if (!start && !end) return undefined;
+        return [start, end];
+    };
+
+    const fetchRows = async () => {
+        setLoading(true);
+        try {
+            const f: any = {};
+            const s = search.trim();
+            if (s) {
+                if (/^[0-9]+$/.test(s)) f.idNumber = s;
+                else f.query = s;
+            }
+            if (filters.clientId) f.clientId = filters.clientId;
+            if (filters.siteId) f.postSiteId = filters.siteId;
+            if (filters.guardId) f.guardId = filters.guardId;
+            f.archived = filters.showArchived;
+            const range = buildDateRange();
+            if (range) f.visitDateRange = range;
+
+            const resp = await visitorLogService.list(f, { limit, offset });
+            setRows(resp?.rows || []);
+            setCount(resp?.count || 0);
+            setSelected({});
+        } catch (e) {
+            console.error("Error fetching visits", e);
+            toast.error("No se pudieron cargar las visitas");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Debounced refetch on any query/filter/pagination change.
+    useEffect(() => {
+        const handle = setTimeout(() => {
+            fetchRows();
+        }, 300);
+        return () => clearTimeout(handle);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        search,
+        offset,
+        limit,
+        filters.clientId,
+        filters.siteId,
+        filters.guardId,
+        filters.fromDate,
+        filters.fromTime,
+        filters.toDate,
+        filters.toTime,
+        filters.showArchived,
+    ]);
+
+    const aplicarFiltros = (e?: FormEvent) => {
+        e?.preventDefault();
+        setOffset(0);
         setOpenFilter(false);
     };
 
-    const perPageText = useMemo(() => {
-        if (filters.perPage === "10") return "10";
-        if (filters.perPage === "25") return "25";
-        return "50";
-    }, [filters.perPage]);
+    const toggleSelect = (id: string) => setSelected((s) => ({ ...s, [id]: !s[id] }));
+    const selectAll = (checked: boolean) => {
+        if (!checked) return setSelected({});
+        const map: Record<string, boolean> = {};
+        rows.forEach((r) => (map[r.id] = true));
+        setSelected(map);
+    };
+
+    const selectedRows = () => {
+        const ids = Object.keys(selected).filter((k) => selected[k]);
+        return rows.filter((r) => ids.includes(String(r.id)));
+    };
+
+    const exportSubjects = () => {
+        const sel = selectedRows();
+        return sel.length ? sel : rows;
+    };
+
+    const handleDeleteSelected = async () => {
+        const ids = Object.keys(selected).filter((k) => selected[k]);
+        if (!ids.length) {
+            toast.error("No hay elementos seleccionados");
+            return;
+        }
+        if (
+            !(await confirmDialog({
+                title: "Eliminar visitas",
+                message: `¿Estás seguro de que deseas eliminar ${ids.length} registro(s)? Esta acción no se puede deshacer.`,
+                confirmText: "Eliminar",
+                tone: "danger",
+            }))
+        )
+            return;
+        try {
+            await visitorLogService.delete(ids);
+            toast.success("Registro(s) eliminado(s)");
+            fetchRows();
+        } catch (e) {
+            console.error("Error deleting visits", e);
+            toast.error("Error eliminando registro(s)");
+        }
+    };
+
+    const handleActionChange = (v: string | undefined) => {
+        setAction(undefined);
+        if (v === "eliminar") handleDeleteSelected();
+    };
+
+    const exportKeys = [
+        "Nombre",
+        "Vehículo",
+        "Hora de entrada",
+        "Hora de salida",
+        "Puesto de seguridad",
+    ];
+    const toExportRow = (r: any) => ({
+        Nombre: `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim(),
+        Vehículo: getVehicleLabel(r) === "-" ? "" : getVehicleLabel(r),
+        "Hora de entrada": formatDateTime(r.visitDate),
+        "Hora de salida": r.exitTime ? formatDateTime(r.exitTime) : "",
+        "Puesto de seguridad": getPostSiteLabel(r) === "-" ? "" : getPostSiteLabel(r),
+    });
+
+    const handleExportExcel = () => {
+        const subjects = exportSubjects();
+        if (!subjects.length) {
+            toast.error("No hay registros para exportar");
+            return;
+        }
+        try {
+            const data = subjects.map(toExportRow);
+            const worksheet = XLSX.utils.json_to_sheet(data, { header: exportKeys });
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Visitas");
+            const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+            const blob = new Blob([wbout], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `visitas_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error("Excel export failed", e);
+            toast.error("Error exportando a Excel");
+        }
+    };
+
+    const buildAndPrint = (title: string) => {
+        const subjects = exportSubjects();
+        if (!subjects.length) {
+            toast.error("No hay registros para imprimir");
+            return;
+        }
+        const headerCells = exportKeys.map((h) => `<th>${escapeHtml(h)}</th>`).join("");
+        const tableRows = subjects
+            .map(
+                (r) => `
+            <tr>
+                <td>${escapeHtml(`${r.firstName ?? ""} ${r.lastName ?? ""}`.trim())}</td>
+                <td>${escapeHtml(getVehicleLabel(r) === "-" ? "" : getVehicleLabel(r))}</td>
+                <td>${escapeHtml(formatDateTime(r.visitDate))}</td>
+                <td>${escapeHtml(r.exitTime ? formatDateTime(r.exitTime) : "")}</td>
+                <td>${escapeHtml(getPostSiteLabel(r) === "-" ? "" : getPostSiteLabel(r))}</td>
+            </tr>`,
+            )
+            .join("");
+        const html = `
+            <html>
+            <head>
+                <title>${escapeHtml(title)}</title>
+                <style>
+                    table{border-collapse:collapse;width:100%}
+                    th,td{border:1px solid #ccc;padding:6px;text-align:left}
+                    th{background:#f5f5f5}
+                </style>
+            </head>
+            <body>
+                <h2>${escapeHtml(title)}</h2>
+                <table>
+                    <thead><tr>${headerCells}</tr></thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </body>
+            </html>`;
+        const w = window.open("", "_blank");
+        if (w) {
+            w.document.write(html);
+            w.document.close();
+            w.focus();
+            setTimeout(() => w.print(), 500);
+        } else {
+            toast.error("No se pudo abrir ventana para imprimir");
+        }
+    };
+
+    const perPageText = useMemo(() => filters.perPage, [filters.perPage]);
+    const pageStart = count === 0 ? 0 : offset + 1;
+    const pageEnd = Math.min(offset + limit, count);
+    const allSelected = rows.length > 0 && rows.every((r) => selected[r.id]);
 
     return (
         <AppLayout>
@@ -94,7 +384,7 @@ export default function Visits() {
                     title="Visitas"
                     subtitle="Registro de entradas y salidas de visitantes"
                     actions={
-                        <Select onValueChange={(v) => console.log("Acción:", v)}>
+                        <Select value={action} onValueChange={handleActionChange}>
                             <SelectTrigger className="w-36">
                                 <SelectValue placeholder="Acción" />
                             </SelectTrigger>
@@ -115,7 +405,11 @@ export default function Visits() {
                             <Input
                                 className="w-64 pl-9"
                                 placeholder="Buscar registro de visitas"
-                                onChange={(e) => console.log("buscar:", e.target.value)}
+                                value={search}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setOffset(0);
+                                }}
                             />
                         </div>
 
@@ -132,9 +426,9 @@ export default function Visits() {
                                     <SheetTitle>Filtros</SheetTitle>
                                 </SheetHeader>
 
-                                <div className="mt-6 space-y-5">
+                                <form className="mt-6 space-y-5" onSubmit={aplicarFiltros}>
                                     <div className="space-y-2">
-                                        <Label className="text-xs">Cliente*</Label>
+                                        <Label className="text-xs">Cliente</Label>
                                         <Select
                                             value={filters.clientId}
                                             onValueChange={(v) =>
@@ -142,29 +436,36 @@ export default function Visits() {
                                             }
                                         >
                                             <SelectTrigger className="h-10 text-xs">
-                                                <SelectValue placeholder="central (+1 otro)" />
+                                                <SelectValue placeholder="Selecciona un cliente" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="central">central (+1 otro)</SelectItem>
-                                                <SelectItem value="cliente-2">Cliente 2</SelectItem>
+                                                {clients.map((c) => (
+                                                    <SelectItem key={c.id} value={c.id}>
+                                                        {clientDisplayName(c)}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label className="text-xs">Puesto de seguridad*</Label>
+                                        <Label className="text-xs">Puesto de seguridad</Label>
                                         <Select
                                             value={filters.siteId}
                                             onValueChange={(v) =>
                                                 setFilters((s) => ({ ...s, siteId: v }))
                                             }
+                                            disabled={sites.length === 0}
                                         >
                                             <SelectTrigger className="h-10 text-xs">
-                                                <SelectValue placeholder="Catolica (+2 otros)" />
+                                                <SelectValue placeholder="Selecciona un sitio" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="catolica">Catolica (+2 otros)</SelectItem>
-                                                <SelectItem value="site-2">Sitio 2</SelectItem>
+                                                {sites.map((p) => (
+                                                    <SelectItem key={p.id} value={p.id}>
+                                                        {p.companyName || p.name || String(p.id)}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -176,13 +477,17 @@ export default function Visits() {
                                             onValueChange={(v) =>
                                                 setFilters((s) => ({ ...s, guardId: v }))
                                             }
+                                            disabled={guards.length === 0}
                                         >
                                             <SelectTrigger className="h-10 text-xs">
                                                 <SelectValue placeholder="Selecciona un vigilante" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="guard-1">José Alejo Pinos</SelectItem>
-                                                <SelectItem value="guard-2">Vigilante 2</SelectItem>
+                                                {guards.map((g) => (
+                                                    <SelectItem key={g.id} value={g.id}>
+                                                        {g.fullName || g.displayName || g.name || g.id}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -200,7 +505,7 @@ export default function Visits() {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-xs">Hora*</Label>
+                                            <Label className="text-xs">Hora</Label>
                                             <Input
                                                 type="time"
                                                 className="h-10 text-xs"
@@ -225,7 +530,7 @@ export default function Visits() {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-xs">Hora*</Label>
+                                            <Label className="text-xs">Hora</Label>
                                             <Input
                                                 type="time"
                                                 className="h-10 text-xs"
@@ -256,14 +561,10 @@ export default function Visits() {
                                         </Label>
                                     </div>
 
-                                    <Button
-                                        variant="brand"
-                                        className="w-full"
-                                        onClick={aplicarFiltros}
-                                    >
+                                    <Button type="submit" variant="brand" className="w-full">
                                         Filtro
                                     </Button>
-                                </div>
+                                </form>
                             </SheetContent>
                         </Sheet>
 
@@ -274,25 +575,17 @@ export default function Visits() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuItem onClick={() => console.log("Exportar PDF")}>
+                                <DropdownMenuItem onClick={() => buildAndPrint("Visitas")}>
                                     <FileDown className="mr-2 h-4 w-4" />
                                     <span>Exportar como PDF</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() => console.log("Exportar Excel")}
-                                >
+                                <DropdownMenuItem onClick={handleExportExcel}>
                                     <FileSpreadsheet className="mr-2 h-4 w-4" />
                                     <span>Exportar como Excel</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => console.log("Imprimir")}>
+                                <DropdownMenuItem onClick={() => buildAndPrint("Visitas")}>
                                     <Printer className="mr-2 h-4 w-4" />
                                     <span>Imprimir</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() => console.log("Correo Electrónico")}
-                                >
-                                    <Mail className="mr-2 h-4 w-4" />
-                                    <span>Correo Electrónico</span>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -300,11 +593,15 @@ export default function Visits() {
                     }
                 >
                 <div className="overflow-hidden rounded-xl border">
+                    <div className="overflow-x-auto">
                     <table className="min-w-full border-collapse text-left text-sm">
                         <thead className="bg-muted/30">
                             <tr className="border-b">
                                 <th className="px-4 py-3">
-                                    <Checkbox />
+                                    <Checkbox
+                                        checked={allSelected}
+                                        onCheckedChange={(v) => selectAll(Boolean(v))}
+                                    />
                                 </th>
                                 <th className="px-4 py-3 font-semibold">Nombre</th>
                                 <th className="px-4 py-3 font-semibold">Vehículo</th>
@@ -317,7 +614,13 @@ export default function Visits() {
                         </thead>
 
                         <tbody>
-                            {rows.length === 0 && (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                                        Cargando...
+                                    </td>
+                                </tr>
+                            ) : rows.length === 0 ? (
                                 <tr>
                                     <td colSpan={8} className="py-8">
                                         <EmptyState
@@ -328,18 +631,42 @@ export default function Visits() {
                                         />
                                     </td>
                                 </tr>
+                            ) : (
+                                rows.map((r) => (
+                                    <tr key={r.id} className="border-b hover:bg-muted/40">
+                                        <td className="px-4 py-3">
+                                            <Checkbox
+                                                checked={!!selected[r.id]}
+                                                onCheckedChange={() => toggleSelect(r.id)}
+                                            />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {`${r.firstName ?? ""} ${r.lastName ?? ""}`.trim() || "-"}
+                                        </td>
+                                        <td className="px-4 py-3">{getVehicleLabel(r)}</td>
+                                        <td className="px-4 py-3">{formatDateTime(r.visitDate)}</td>
+                                        <td className="px-4 py-3">
+                                            {r.exitTime ? formatDateTime(r.exitTime) : "-"}
+                                        </td>
+                                        <td className="px-4 py-3">{getPostSiteLabel(r)}</td>
+                                        <td className="px-4 py-3">-</td>
+                                        <td className="px-4 py-3">-</td>
+                                    </tr>
+                                ))
                             )}
                         </tbody>
                     </table>
+                    </div>
 
                     <div className="flex items-center justify-between bg-muted/30 px-4 py-3 text-sm text-foreground/70">
                         <div className="flex items-center gap-2">
                             <span>Elementos por página</span>
                             <Select
                                 value={filters.perPage}
-                                onValueChange={(v) =>
-                                    setFilters((s) => ({ ...s, perPage: v }))
-                                }
+                                onValueChange={(v) => {
+                                    setFilters((s) => ({ ...s, perPage: v }));
+                                    setOffset(0);
+                                }}
                             >
                                 <SelectTrigger className="h-8 w-20">
                                     <SelectValue placeholder={perPageText} />
@@ -351,7 +678,29 @@ export default function Visits() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div>0 of 0</div>
+                        <div className="flex items-center gap-4">
+                            <span>
+                                {pageStart} - {pageEnd} de {count}
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={offset === 0}
+                                    onClick={() => setOffset(Math.max(0, offset - limit))}
+                                >
+                                    ◀
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={offset + limit >= count}
+                                    onClick={() => setOffset(offset + limit)}
+                                >
+                                    ▶
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 </Section>

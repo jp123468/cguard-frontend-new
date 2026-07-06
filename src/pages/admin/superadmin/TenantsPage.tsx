@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Search, Eye, Trash } from "lucide-react";
+import { Search, Eye, Trash, ChevronLeft, ChevronRight } from "lucide-react";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import MobileCardList from '@/components/responsive/MobileCardList';
@@ -64,6 +64,13 @@ export default function TenantsPage() {
   useEffect(() => {
     loadTenants();
   }, [page, limit, debouncedSearch]);
+
+  // Reset to first page whenever the (debounced) search changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
 
   // Modal state for tenant details
   const [modalOpen, setModalOpen] = useState(false);
@@ -141,7 +148,39 @@ export default function TenantsPage() {
         <div className="mt-4">
           <DataTable columns={columns} data={tenants} loading={loading} sortKey={undefined} sortDir={undefined} />
         </div>
-      
+
+        <div className="mt-4 flex items-center justify-end gap-3 text-sm text-muted-foreground">
+          <div>
+            {totalCount > 0
+              ? t('tenants.pagination.range', '{{start}} - {{end}} de {{total}}', {
+                  start: (page - 1) * limit + 1,
+                  end: Math.min(page * limit, totalCount),
+                  total: totalCount,
+                })
+              : t('tenants.pagination.emptyRange', '0 - 0 de 0')}
+          </div>
+          <div className="flex items-center">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              disabled={page === 1 || loading}
+              className="h-8 w-8 rounded-r-none"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              disabled={page >= totalPages || loading}
+              className="h-8 w-8 rounded-l-none border-l-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
         <Dialog open={modalOpen} onOpenChange={(v) => { if (!v) closeTenantModal(); setModalOpen(v); }}>
           <DialogContent>
             <DialogHeader>
