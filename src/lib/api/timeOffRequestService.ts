@@ -51,6 +51,7 @@ export interface TimeOffCreateInput {
   reason?: string;
   isPaid?: boolean;
   guard?: string; // userId
+  comment?: string;
 }
 
 const timeOffRequestService = {
