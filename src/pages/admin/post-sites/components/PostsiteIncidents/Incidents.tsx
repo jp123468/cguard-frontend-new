@@ -916,8 +916,7 @@ export default function Incidents({ site }: { site?: any }) {
                                   {t('incidents.actions.createDispatch') || 'Create Dispatch'}
                                 </div>
                               </DropdownMenuItem>
-                            </DropdownMenuContent>
-                            <DropdownMenuContent align="end" className="w-56">
+                            
                               <DropdownMenuItem onClick={() => handleViewDetails(it)}>
                                 <div className="flex items-center w-full">
                                   <Eye className="mr-2 h-4 w-4" />

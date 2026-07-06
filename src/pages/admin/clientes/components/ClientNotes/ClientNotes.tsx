@@ -245,7 +245,7 @@ export default function ClientNotes({ client }: Props) {
                             </tr>
                         </thead>
                         <tbody>
-                            {notesData.length === 0 ? (
+                            {filtered.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-4 py-8">
                                         <EmptyState
@@ -256,7 +256,7 @@ export default function ClientNotes({ client }: Props) {
                                     </td>
                                 </tr>
                             ) : (
-                                notesData.map((note) => (
+                                filtered.map((note) => (
                                     <tr key={note.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                                         <td className="px-4 py-3 text-sm text-foreground">
                                             <input

@@ -61,6 +61,9 @@ interface GuardOption { userId: string; fullName: string; }
 
 // ── component ────────────────────────────────────────────────────────────────
 
+// Radix <SelectItem> forbids an empty value; use a sentinel for "any vigilante".
+const SHIFT_EXCHANGE_ANY = "__any__";
+
 export default function ShiftExchange() {
   const [records, setRecords] = useState<ShiftExchangeRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -298,12 +301,12 @@ export default function ShiftExchange() {
 
                     <div className="grid gap-2">
                       <Label>Vigilante receptor (opcional)</Label>
-                      <Select value={form.toGuardId} onValueChange={(v) => setForm({ ...form, toGuardId: v })}>
+                      <Select value={form.toGuardId || SHIFT_EXCHANGE_ANY} onValueChange={(v) => setForm({ ...form, toGuardId: v === SHIFT_EXCHANGE_ANY ? "" : v })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Cualquier vigilante</SelectItem>
+                          <SelectItem value={SHIFT_EXCHANGE_ANY}>Cualquier vigilante</SelectItem>
                           {guards.map((g) => (
                             <SelectItem key={g.userId} value={g.userId}>{g.fullName}</SelectItem>
                           ))}

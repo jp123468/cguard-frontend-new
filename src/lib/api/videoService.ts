@@ -232,7 +232,7 @@ export const videoService = {
 
   // --- Events ---
   events(params?: { status?: string; cameraId?: string }): Promise<VideoEvent[]> {
-    return ApiService.get(`/tenant/${tid()}/video/events${qstr(params)}`);
+    return ApiService.get(`/tenant/${tid()}/video/events${qstr(params)}`).then((r: any) => (Array.isArray(r) ? r : r?.rows ?? []));
   },
   createEvent(body: Partial<VideoEvent>): Promise<VideoEvent> {
     return ApiService.post(`/tenant/${tid()}/video/event`, body);
@@ -246,7 +246,7 @@ export const videoService = {
 
   // --- Clips ---
   clips(params?: { cameraId?: string }): Promise<Clip[]> {
-    return ApiService.get(`/tenant/${tid()}/video/clips${qstr(params)}`);
+    return ApiService.get(`/tenant/${tid()}/video/clips${qstr(params)}`).then((r: any) => (Array.isArray(r) ? r : r?.rows ?? []));
   },
   createClip(body: { videoCameraId: string; startAt: string; endAt: string; label?: string }): Promise<Clip> {
     return ApiService.post(`/tenant/${tid()}/video/clip`, body);

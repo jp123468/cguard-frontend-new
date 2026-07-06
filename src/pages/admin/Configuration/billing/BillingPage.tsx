@@ -101,7 +101,7 @@ export default function BillingPage() {
           subtitle={t("billing.title", { defaultValue: "Estado de la suscripción" })}
           badges={!loading && data ? <StatusBadge tone={meta.tone}>{meta.label}</StatusBadge> : undefined}
         />
-        {loading || !data ? (
+        {loading || !data || !q ? (
           <div className="flex min-h-[30vh] items-center justify-center">
             <Loader2 className="animate-spin text-primary" size={28} />
           </div>

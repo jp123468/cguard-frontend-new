@@ -369,7 +369,7 @@ export function DispatchDetailsContent({ requestId }: { requestId?: string | nul
                     <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.incident_location') || 'Incident Location'}</td>
                     <td className="py-3 px-4 text-sm text-foreground">{requestPayload.location || requestPayload.incidentLocation || '-'}</td>
                     <td className="py-3 px-4 text-xs font-medium text-muted-foreground">{t('dispatcher.dispatcher_label') || 'Dispatcher'}</td>
-                    <td className="py-3 px-4 text-sm text-foreground">{(requestPayload.guardName && (requestPayload.guardName.fullName || requestPayload.guardName.name)) || requestPayload.guardName || '-'}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">{(typeof requestPayload.guardName === 'string' ? requestPayload.guardName : (requestPayload.guardName?.fullName || requestPayload.guardName?.name)) || '-'}</td>
                   </tr>
                 </tbody>
               </table>

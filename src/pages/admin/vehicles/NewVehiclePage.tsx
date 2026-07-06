@@ -81,7 +81,7 @@ export default function NewVehiclePage() {
               model: resp.model || '',
               color: resp.color || '',
               plate: resp.licensePlate || '',
-              initialMileage: resp.initialMileage ? String(resp.initialMileage) : '',
+              initialMileage: resp.initialMileage != null ? String(resp.initialMileage) : '',
               ownership: resp.ownership || 'propio',
               vin: resp.vin || '',
               description: resp.description || '',
