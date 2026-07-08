@@ -119,20 +119,23 @@ function doConnect() {
   );
   v.resume();
   installGestureResume();
-  // Join once the socket connects; keep retrying quietly.
+  // Keep the snapshot's `joined` reconciled with the engine. The LiveKit engine
+  // flips `joined` on the Connected event itself (connect == join), so the old
+  // "connected && !joined → call join()" gate NEVER fired — the room was live but
+  // the snapshot stayed joined:false, leaving the UI stuck on "Conectando…" with
+  // PTT disabled. We reconcile both directions so a drop/reconnect re-syncs too.
   if (joinTimer) clearInterval(joinTimer);
   joinTimer = setInterval(async () => {
     if (!vc) { clearInterval(joinTimer); joinTimer = null; return; }
-    if (vc.connected && !vc.joined) {
+    if (vc.joined && !snap.joined) {
       try {
-        const r = await vc.join();
+        const r = await vc.join(); // roster snapshot (LiveKit: connect already subscribed)
         set({ joined: true, roster: r.roster, speaker: r.speaker, hint: null });
       } catch {
-        set({ hint: "No se pudo unir al canal." });
+        set({ joined: true, hint: null }); // joined; roster fills via presence events
       }
-    } else if (vc.joined) {
-      clearInterval(joinTimer);
-      joinTimer = null;
+    } else if (!vc.joined && snap.joined) {
+      set({ joined: false });
     }
   }, 400);
 }
