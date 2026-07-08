@@ -44,28 +44,49 @@ export class ApiService {
 
     const url = `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
-    let response: Response;
-    try {
-      // Ensure credentials (cookies) are sent so backend session auth works
-      response = await fetch(url, { ...options, headers, credentials: 'include', cache: options.cache ?? 'no-store' });
-    } catch {
-      throw new ApiError("No se pudo conectar con el servidor.", 0, null);
-    }
+    // Transient-failure retry: ONLY for idempotent reads — retrying a
+    // POST/PATCH/DELETE risks a double submit. A dropped connection or a 502/503/504
+    // is almost always a brief backend/DB blip (e.g. connection-pool pressure); retry
+    // with a short backoff so a hiccup is invisible to the user instead of an error
+    // toast. (Backend now returns 503 — not 401 — on DB-infra failures, so this no
+    // longer risks masking a real logout.)
+    const method = String(options.method || "GET").toUpperCase();
+    const idempotent = method === "GET" || method === "HEAD";
+    const maxAttempts = idempotent ? 3 : 1;
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-    const contentType = response.headers.get("content-type") || "";
-    const isJson = contentType.includes("application/json");
-
+    let response!: Response;
     let data: any = null;
-    try {
-      if (response.status === 204 || response.status === 304) data = null;
-      else if (isJson) {
-        const text = await response.text();
-        data = text ? JSON.parse(text) : null;
-      } else {
-        data = await response.text().catch(() => null);
+    for (let attempt = 1; ; attempt++) {
+      try {
+        // Ensure credentials (cookies) are sent so backend session auth works
+        response = await fetch(url, { ...options, headers, credentials: 'include', cache: options.cache ?? 'no-store' });
+      } catch {
+        if (idempotent && attempt < maxAttempts) { await sleep(250 * attempt); continue; }
+        throw new ApiError("No se pudo conectar con el servidor.", 0, null);
       }
-    } catch {
+
+      const contentType = response.headers.get("content-type") || "";
+      const isJson = contentType.includes("application/json");
+
       data = null;
+      try {
+        if (response.status === 204 || response.status === 304) data = null;
+        else if (isJson) {
+          const text = await response.text();
+          data = text ? JSON.parse(text) : null;
+        } else {
+          data = await response.text().catch(() => null);
+        }
+      } catch {
+        data = null;
+      }
+
+      if (idempotent && attempt < maxAttempts && [502, 503, 504].includes(response.status)) {
+        await sleep(250 * attempt);
+        continue;
+      }
+      break;
     }
 
     if (!response.ok && response.status !== 304) {
