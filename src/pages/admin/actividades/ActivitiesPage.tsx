@@ -40,8 +40,8 @@ function visualFor(eventType: string): { Icon: typeof ActivityIcon; color: strin
   const t = (eventType || "").toLowerCase();
   if (t.startsWith("incident")) return { Icon: AlertTriangle, color: "#ef4444", cat: "incident" };
   if (t === "guard.late") return { Icon: AlertTriangle, color: "#f59e0b", cat: "incident" };
-  if (t === "guard.checkin") return { Icon: LogIn, color: "#22c55e", cat: "checkin" };
-  if (t === "guard.checkout") return { Icon: LogOut, color: "#64748b", cat: "checkin" };
+  if (t === "guard.checkin" || t === "supervisor.checkin") return { Icon: LogIn, color: "#22c55e", cat: "checkin" };
+  if (t === "guard.checkout" || t === "supervisor.checkout") return { Icon: LogOut, color: "#64748b", cat: "checkin" };
   if (t.startsWith("visitor")) return { Icon: UserCheck, color: "#38bdf8", cat: "visitor" };
   if (t.startsWith("patrol")) return { Icon: Route, color: t.includes("missed") ? "#f59e0b" : "#a855f7", cat: "patrol" };
   if (t.startsWith("shift")) return { Icon: CalendarClock, color: "#0ea5e9", cat: "shift" };
