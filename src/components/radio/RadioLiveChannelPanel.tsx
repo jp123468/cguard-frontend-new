@@ -67,7 +67,6 @@ export default function RadioLiveChannelPanel() {
     else if (r?.error) setHint(r.error);
   };
   const onPttDown = (e: React.PointerEvent) => {
-    if (someoneElseTalking) return;
     try { (e.currentTarget as any).setPointerCapture?.(e.pointerId); } catch { /* ignore */ }
     pressedRef.current = true;
     setHint(null);

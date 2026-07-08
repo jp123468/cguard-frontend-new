@@ -90,7 +90,7 @@ export default function RadioVoiceWidget() {
   };
 
   const onPttDown = async (e: React.PointerEvent) => {
-    if (!live || someoneElseTalking) return;
+    if (!live) return;
     try { (e.currentTarget as any).setPointerCapture?.(e.pointerId); } catch { /* ignore */ }
     pressedRef.current = true;
     radioResume();
