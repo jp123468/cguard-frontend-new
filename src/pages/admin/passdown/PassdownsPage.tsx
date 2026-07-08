@@ -89,7 +89,12 @@ export default function PassdownsPage() {
       key: "stationName",
       header: "Puesto",
       render: (_v, r) => (
-        <span className="font-medium text-foreground">{r.stationName || "—"}</span>
+        <span className="font-medium text-foreground flex items-center gap-1.5">
+          {r.stationName || ((r as any).channel === "supervisor" ? "Supervisión" : "—")}
+          {(r as any).channel === "supervisor" && (
+            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">Supervisor</span>
+          )}
+        </span>
       ),
     },
     {

@@ -55,6 +55,8 @@ export interface AttendanceRecord {
   punchOutLongitude?: number | null;
   guardName?: { id: string; fullName?: string; governmentId?: string } | null;
   stationName?: { id: string; stationName?: string; latitud?: string; longitud?: string; geofenceRadius?: number; geofencePolygon?: { lat: number; lng: number }[] | null } | null;
+  /** 'supervisor' for a supervisorShift folded into the list; else guard. */
+  role?: "guard" | "supervisor";
 }
 
 const attendanceService = {

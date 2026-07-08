@@ -151,8 +151,21 @@ export default function NominaRecords() {
   };
 
   const columns: Column<AttendanceRecord>[] = [
-    { key: "guard", header: "Vigilante", render: (_v, r) => r.guardName?.fullName || "—" },
-    { key: "station", header: "Puesto", render: (_v, r) => r.stationName?.stationName || "—" },
+    {
+      key: "guard",
+      header: "Vigilante",
+      render: (_v, r) => (
+        <span className="flex items-center gap-1.5">
+          {r.guardName?.fullName || "—"}
+          {r.role === "supervisor" && (
+            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">
+              Supervisor
+            </span>
+          )}
+        </span>
+      ),
+    },
+    { key: "station", header: "Puesto", render: (_v, r) => r.stationName?.stationName || (r.role === "supervisor" ? "Supervisión" : "—") },
     { key: "scheduledStart", header: "Programado", render: (_v, r) => `${fmtTime(r.scheduledStart)} – ${fmtTime(r.scheduledEnd)}` },
     {
       key: "punchInTime",
@@ -405,6 +418,12 @@ export default function NominaRecords() {
                 )}
 
                 <div className="flex flex-wrap gap-2 pt-2">
+                  {selected.role === "supervisor" && (
+                    <p className="w-full text-xs text-muted-foreground">
+                      Registro de supervisor — sin flujo de aprobación.
+                    </p>
+                  )}
+                  {selected.role !== "supervisor" && (
                   <Button
                     disabled={busy}
                     onClick={() => act(() => attendanceService.approve(selected.id), "Aprobado")}
@@ -412,6 +431,8 @@ export default function NominaRecords() {
                   >
                     Aprobar
                   </Button>
+                  )}
+                  {selected.role !== "supervisor" && (
                   <Button
                     disabled={busy}
                     variant="outline"
@@ -419,6 +440,8 @@ export default function NominaRecords() {
                   >
                     Rechazar
                   </Button>
+                  )}
+                  {selected.role !== "supervisor" && (
                   <Button
                     disabled={busy}
                     variant="outline"
@@ -435,6 +458,7 @@ export default function NominaRecords() {
                   >
                     Corregir
                   </Button>
+                  )}
                 </div>
               </div>
             </>
