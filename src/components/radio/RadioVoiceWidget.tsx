@@ -162,11 +162,11 @@ export default function RadioVoiceWidget() {
             onPointerUp={onPttUp}
             onPointerCancel={onPttUp}
             onContextMenu={(e) => e.preventDefault()}
-            disabled={!live || someoneElseTalking}
+            disabled={!live}
             style={{ touchAction: "none", WebkitUserSelect: "none", userSelect: "none" } as any}
             className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white transition-colors disabled:opacity-40 ${snap.talking ? "bg-red-500" : "bg-amber-500 hover:bg-amber-600"}`}
           >
-            <Mic size={18} /> {snap.talking ? "Transmitiendo…" : someoneElseTalking ? "Canal ocupado" : "Mantén para hablar"}
+            <Mic size={18} /> {snap.talking ? "Transmitiendo…" : "Mantén para hablar"}
           </button>
 
           {snap.hint && <p className="text-center text-[11px] text-red-600">{snap.hint}</p>}

@@ -1,83 +1,60 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Mic, Loader2, Users, Radio, LogOut, Volume2 } from "lucide-react";
-import { getAuthToken } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import { VoiceChannel, type VoiceMember, type VoiceSpeaker, type VoiceState } from "@/lib/voiceChannel";
-
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined) || "";
-const socketOrigin = () => { try { return new URL(API_URL || window.location.origin, window.location.origin).origin; } catch { return window.location.origin; } };
+import {
+  subscribeRadio,
+  getRadioSnapshot,
+  setRadioSelf,
+  setRadioOn,
+  radioStartTalk,
+  radioStopTalk,
+  radioResume,
+} from "@/lib/radioVoiceManager";
 
 /**
- * Dispatcher side of the open live channel (Canal abierto). The dispatcher opts
- * in with "Unirse" (a user gesture, needed to start audio), then can listen +
- * push-to-talk on the same tenant-wide channel the guards use.
+ * Dispatcher side of the open live channel (Canal abierto). This is a VIEW over
+ * the shared radioVoiceManager singleton — the SAME connection the floating
+ * widget uses. It must NOT open its own VoiceChannel: two LiveKit connections
+ * with the same identity (userId) kick each other and cause an endless
+ * connect→disconnect loop (the widget could never stay connected / talk). One
+ * connection, two views — like the worker app's RadioContext model.
  */
 export default function RadioLiveChannelPanel() {
   const { user } = useAuth();
   const myId = (user as any)?.id || (user as any)?._id;
 
-  const vcRef = useRef<VoiceChannel | null>(null);
-  const [joined, setJoined] = useState(false);
-  const [state, setState] = useState<VoiceState>("idle");
-  const [roster, setRoster] = useState<VoiceMember[]>([]);
-  const [speaker, setSpeaker] = useState<VoiceSpeaker>(null);
-  const [talking, setTalking] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [hint, setHint] = useState<string | null>(null);
-
-  useEffect(() => () => { vcRef.current?.disconnect(); vcRef.current = null; }, []);
-
-  const join = async () => {
-    setBusy(true);
-    setHint(null);
-    const tenantId = localStorage.getItem("tenantId") || "";
-    const vc = new VoiceChannel();
-    vcRef.current = vc;
-    vc.connect({ url: socketOrigin(), path: "/api/socket.io", token: getAuthToken() || "", tenantId, selfId: myId }, {
-      onState: setState,
-      onPresence: setRoster,
-      onSpeaker: setSpeaker,
-      onError: (m) => setHint(m),
-    });
-    vc.resume(); // within the click gesture → iOS/Safari will allow audio
-    // wait briefly for connect, then join
-    const start = Date.now();
-    const tick = setInterval(async () => {
-      if (vc.connected) {
-        clearInterval(tick);
-        try { const r = await vc.join(); setRoster(r.roster); setSpeaker(r.speaker); setJoined(true); }
-        catch { setHint("No se pudo unir al canal."); }
-        setBusy(false);
-      } else if (Date.now() - start > 6000) {
-        clearInterval(tick); setBusy(false); setHint("Sin conexión al canal.");
-      }
-    }, 300);
-  };
-
-  const leave = () => { vcRef.current?.disconnect(); vcRef.current = null; setJoined(false); setRoster([]); setSpeaker(null); setTalking(false); };
-
-  const someoneElseTalking = !!speaker && speaker.userId !== myId;
+  const snap = useSyncExternalStore(subscribeRadio, getRadioSnapshot);
+  const { state, joined, roster, speaker, talking, hint } = snap;
+  const busy = state === "connecting" && !joined;
+  const [localHint, setLocalHint] = useState<string | null>(null);
   const pressedRef = useRef(false);
 
+  useEffect(() => { setRadioSelf(myId); }, [myId]);
+
+  const join = () => { setRadioSelf(myId); radioResume(); setRadioOn(true); };
+  const leave = () => { setRadioOn(false); };
+
+  const someoneElseTalking = !!speaker && speaker.userId !== myId;
+
   const beginTalk = async () => {
-    const r = await vcRef.current?.startTalk();
-    if (!pressedRef.current) { vcRef.current?.stopTalk(); return; }
-    if (r?.ok) setTalking(true);
-    else if (r?.busyWith) setHint(`${r.busyWith} está hablando`);
-    else if (r?.error) setHint(r.error);
+    const r = await radioStartTalk();
+    if (!pressedRef.current) { radioStopTalk(); return; } // released mid-acquire
+    if (!r?.ok && r?.error && r.error !== "off") setLocalHint(r.error);
   };
   const onPttDown = (e: React.PointerEvent) => {
     try { (e.currentTarget as any).setPointerCapture?.(e.pointerId); } catch { /* ignore */ }
     pressedRef.current = true;
-    setHint(null);
+    setLocalHint(null);
+    radioResume();
     void beginTalk();
   };
   const onPttUp = (e: React.PointerEvent) => {
     try { (e.currentTarget as any).releasePointerCapture?.(e.pointerId); } catch { /* ignore */ }
     pressedRef.current = false;
-    vcRef.current?.stopTalk();
-    setTalking(false);
+    radioStopTalk();
   };
+
+  const shownHint = hint || localHint;
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -96,7 +73,7 @@ export default function RadioLiveChannelPanel() {
           <button onClick={join} disabled={busy} className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50">
             {busy ? <Loader2 size={15} className="animate-spin" /> : <Radio size={15} />} Unirse al canal
           </button>
-          {hint && <p className="text-[11px] text-red-600">{hint}</p>}
+          {shownHint && <p className="text-[11px] text-red-600">{shownHint}</p>}
         </div>
       ) : (
         <div className="space-y-3">
@@ -110,11 +87,10 @@ export default function RadioLiveChannelPanel() {
               onPointerUp={onPttUp}
               onPointerCancel={onPttUp}
               onContextMenu={(e) => e.preventDefault()}
-              disabled={someoneElseTalking}
               style={{ touchAction: "none", WebkitUserSelect: "none", userSelect: "none" } as any}
-              className={`flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition-colors disabled:opacity-40 ${talking ? "bg-red-500" : "bg-amber-500 hover:bg-amber-600"}`}
+              className={`flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition-colors ${talking ? "bg-red-500" : "bg-amber-500 hover:bg-amber-600"}`}
             >
-              <Mic size={18} /> {talking ? "Transmitiendo…" : someoneElseTalking ? "Ocupado" : "Mantén para hablar"}
+              <Mic size={18} /> {talking ? "Transmitiendo…" : "Mantén para hablar"}
             </button>
             <button onClick={leave} className="rounded-lg border border-border p-2.5 text-muted-foreground hover:bg-muted" title="Salir del canal"><LogOut size={16} /></button>
           </div>
@@ -130,7 +106,8 @@ export default function RadioLiveChannelPanel() {
               ))}
             </div>
           )}
-          {hint && <p className="text-[11px] text-red-600">{hint}</p>}
+          {someoneElseTalking && <p className="text-[11px] text-muted-foreground text-center">Puedes hablar cuando quieras — el canal permite hablar encima.</p>}
+          {shownHint && <p className="text-[11px] text-red-600">{shownHint}</p>}
         </div>
       )}
     </div>
