@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Loader2, CreditCard, Users, CheckCircle2, Clock, AlertTriangle, Sparkles, Wallet } from "lucide-react";
+import { Loader2, CreditCard, Users, CheckCircle2, Clock, AlertTriangle, Sparkles, Wallet, Download, ExternalLink, FileText, Receipt } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
-import { PageContainer, PageHeader, Section, StatCard, Stagger, StatusBadge } from "@/components/kit";
-import { subscriptionBillingService, BillingSummary, BillableUser } from "@/lib/api/subscriptionBillingService";
+import { PageContainer, PageHeader, Section, StatCard, Stagger, StatusBadge, EmptyState } from "@/components/kit";
+import { subscriptionBillingService, BillingSummary, BillableUser, PlatformInvoice } from "@/lib/api/subscriptionBillingService";
 
 function money(cents: number, currency = "USD") {
   // en-US → dot as decimal separator (e.g. $12.50), comma as thousands.
@@ -14,22 +14,35 @@ function money(cents: number, currency = "USD") {
 }
 
 type BadgeTone = "blue" | "green" | "red" | "orange" | "slate";
-const STATUS_META: Record<string, { label: string; tone: BadgeTone }> = {
-  trialing: { label: "Prueba gratuita", tone: "blue" },
-  active: { label: "Activo", tone: "green" },
-  past_due: { label: "Pago vencido", tone: "red" },
-  trial_expired: { label: "Prueba expirada", tone: "orange" },
-  canceled: { label: "Cancelado", tone: "slate" },
+const STATUS_TONE: Record<string, BadgeTone> = {
+  trialing: "blue",
+  active: "green",
+  past_due: "red",
+  trial_expired: "orange",
+  canceled: "slate",
+};
+
+const INVOICE_TONE: Record<string, BadgeTone> = {
+  paid: "green",
+  open: "orange",
+  draft: "slate",
+  void: "slate",
+  uncollectible: "red",
 };
 
 export default function BillingPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [data, setData] = useState<BillingSummary | null>(null);
   const [users, setUsers] = useState<BillableUser[]>([]);
+  const [invoices, setInvoices] = useState<PlatformInvoice[]>([]);
   const [showUsers, setShowUsers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+
+  const dateLocale = i18n.language?.startsWith("en") ? "en-US" : "es-ES";
+  const fmtDate = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleDateString(dateLocale, { day: "2-digit", month: "long", year: "numeric" }) : "—";
 
   const load = async () => {
     setLoading(true);
@@ -40,11 +53,16 @@ export default function BillingPage() {
     } finally {
       setLoading(false);
     }
-    // Non-blocking: the seat list is supplementary to the summary.
+    // Non-blocking: the seat list and invoice history are supplementary.
     try {
       setUsers(await subscriptionBillingService.users());
     } catch {
       /* ignore — summary already shows the seat count */
+    }
+    try {
+      setInvoices(await subscriptionBillingService.invoices());
+    } catch {
+      /* ignore — the section shows its empty state */
     }
   };
 
@@ -56,6 +74,12 @@ export default function BillingPage() {
       setTimeout(load, 3000);
     } else if (p.get("activated") === "cancel") {
       toast.info(t("billing.activateCancel", { defaultValue: "Activación cancelada" }));
+    }
+    // Drop the param so a refresh doesn't re-fire the toast.
+    if (p.has("activated")) {
+      p.delete("activated");
+      const qs = p.toString();
+      window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
     }
     // eslint-disable-next-line
   }, []);
@@ -87,10 +111,28 @@ export default function BillingPage() {
   };
 
   const status = data?.status || "trialing";
-  const meta = STATUS_META[status] || STATUS_META.trialing;
+  const statusLabels: Record<string, string> = {
+    trialing: t("billing.statusTrialing", { defaultValue: "Prueba gratuita" }),
+    active: t("billing.statusActive", { defaultValue: "Activo" }),
+    past_due: t("billing.statusPastDue", { defaultValue: "Pago vencido" }),
+    trial_expired: t("billing.statusTrialExpired", { defaultValue: "Prueba expirada" }),
+    canceled: t("billing.statusCanceled", { defaultValue: "Cancelado" }),
+  };
+  const invoiceStatusLabels: Record<string, string> = {
+    paid: t("billing.invStatusPaid", { defaultValue: "Pagada" }),
+    open: t("billing.invStatusOpen", { defaultValue: "Pendiente" }),
+    draft: t("billing.invStatusDraft", { defaultValue: "Borrador" }),
+    void: t("billing.invStatusVoid", { defaultValue: "Anulada" }),
+    uncollectible: t("billing.invStatusUncollectible", { defaultValue: "Incobrable" }),
+  };
+  const meta = {
+    label: statusLabels[status] || statusLabels.trialing,
+    tone: STATUS_TONE[status] || STATUS_TONE.trialing,
+  };
   const q = data?.quote;
   const currency = q?.currency || "USD";
   const isActive = status === "active";
+  const visibleInvoices = invoices.filter((inv) => inv.status !== "draft");
 
   return (
     <AppLayout>
@@ -134,7 +176,7 @@ export default function BillingPage() {
                         {data.trial.daysLeft > 0
                           ? t("billing.trialLeft", { defaultValue: "Te quedan {{n}} día(s) de prueba gratuita.", n: data.trial.daysLeft })
                           : t("billing.trialEndsToday", { defaultValue: "Tu prueba gratuita termina hoy." })}
-                        {data.trial.endsAt && ` (${new Date(data.trial.endsAt).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })})`}
+                        {data.trial.endsAt && ` (${fmtDate(data.trial.endsAt)})`}
                       </span>
                     </div>
                   )}
@@ -254,6 +296,58 @@ export default function BillingPage() {
                     {t("billing.feeNote", { defaultValue: "Los precios incluyen las comisiones de procesamiento de Stripe. Facturación mensual; el número de usuarios se ajusta automáticamente." })}
                   </p>
                 </div>
+              </Section>
+
+              {/* Invoice history */}
+              <Section title={t("billing.invoicesTitle", { defaultValue: "Historial de facturas" })} icon={<Receipt />}>
+                {visibleInvoices.length === 0 ? (
+                  <EmptyState
+                    icon={<FileText />}
+                    title={t("billing.invoicesEmptyTitle", { defaultValue: "Aún no hay facturas" })}
+                    description={t("billing.invoicesEmptyDesc", { defaultValue: "Cuando actives tu suscripción, tus facturas aparecerán aquí y podrás descargarlas en PDF." })}
+                  />
+                ) : (
+                  <div className="divide-y rounded-lg border">
+                    {visibleInvoices.map((inv) => (
+                      <div key={inv.id} className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-foreground">
+                              {inv.number || inv.stripeInvoiceId}
+                            </span>
+                            <StatusBadge tone={INVOICE_TONE[inv.status] || "slate"}>
+                              {invoiceStatusLabels[inv.status] || inv.status}
+                            </StatusBadge>
+                          </div>
+                          <div className="mt-0.5 text-xs text-muted-foreground">
+                            {fmtDate(inv.paidAt || inv.issuedAt)}
+                            {inv.linesSummary ? ` · ${inv.linesSummary}` : ""}
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className="text-sm font-semibold text-foreground">
+                            {money(inv.status === "paid" ? inv.amountPaidCents : inv.amountDueCents, (inv.currency || "usd").toUpperCase())}
+                          </span>
+                          {inv.hostedInvoiceUrl && (
+                            <Button asChild variant="ghost" size="sm" className="h-8 px-2">
+                              <a href={inv.hostedInvoiceUrl} target="_blank" rel="noopener noreferrer" title={t("billing.invoiceView", { defaultValue: "Ver factura" })}>
+                                <ExternalLink size={15} />
+                              </a>
+                            </Button>
+                          )}
+                          {inv.invoicePdfUrl && (
+                            <Button asChild variant="outline" size="sm" className="h-8">
+                              <a href={inv.invoicePdfUrl} target="_blank" rel="noopener noreferrer">
+                                <Download size={14} className="mr-1.5" />
+                                {t("billing.invoiceDownload", { defaultValue: "PDF" })}
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Section>
 
               {/* CTA */}

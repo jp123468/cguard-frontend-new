@@ -45,6 +45,23 @@ export interface BillableUser {
   status: string | null;
 }
 
+export interface PlatformInvoice {
+  id: string;
+  stripeInvoiceId: string;
+  number: string | null;
+  status: string; // draft | open | paid | void | uncollectible
+  amountDueCents: number;
+  amountPaidCents: number;
+  currency: string;
+  periodStart: string | null;
+  periodEnd: string | null;
+  hostedInvoiceUrl: string | null;
+  invoicePdfUrl: string | null;
+  linesSummary: string | null;
+  paidAt: string | null;
+  issuedAt: string | null;
+}
+
 export const subscriptionBillingService = {
   summary(): Promise<BillingSummary> {
     return ApiService.get(`/tenant/${tenantId()}/subscription/summary`);
@@ -60,6 +77,10 @@ export const subscriptionBillingService = {
   /** Returns a Stripe Customer Portal URL to add/update the card & manage autopay. */
   portal(): Promise<{ url: string }> {
     return ApiService.post(`/tenant/${tenantId()}/subscription/portal`, {});
+  },
+  /** Stripe invoice history (refreshed server-side), with hosted/PDF links. */
+  invoices(): Promise<PlatformInvoice[]> {
+    return ApiService.get(`/tenant/${tenantId()}/subscription/invoices`);
   },
 };
 

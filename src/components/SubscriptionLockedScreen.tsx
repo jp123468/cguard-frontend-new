@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Lock, Ban } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -15,6 +16,7 @@ export default function SubscriptionLockedScreen({
   variant: "canceled" | "suspended";
 }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { signOut } = useAuth() as any;
 
   const suspended = variant === "suspended";
@@ -31,12 +33,14 @@ export default function SubscriptionLockedScreen({
 
       <div className="max-w-md space-y-2">
         <h1 className="text-xl font-semibold text-foreground">
-          {suspended ? "Cuenta suspendida" : "Suscripción cancelada"}
+          {suspended
+            ? t("billing.lockedSuspendedTitle", { defaultValue: "Cuenta suspendida" })
+            : t("billing.lockedCanceledTitle", { defaultValue: "Suscripción cancelada" })}
         </h1>
         <p className="text-sm text-muted-foreground">
           {suspended
-            ? "El acceso a esta cuenta fue suspendido por el administrador de la plataforma. Contacta a soporte para reactivarla."
-            : "Tu suscripción fue cancelada. Reactívala para volver a usar la plataforma."}
+            ? t("billing.lockedSuspendedMsg", { defaultValue: "El acceso a esta cuenta fue suspendido por el administrador de la plataforma. Contacta a soporte para reactivarla." })
+            : t("billing.lockedCanceledMsg", { defaultValue: "Tu suscripción fue cancelada. Reactívala para volver a usar la plataforma." })}
         </p>
       </div>
 
@@ -46,7 +50,7 @@ export default function SubscriptionLockedScreen({
             onClick={() => navigate("/setting/billing")}
             className="rounded-md bg-[#f36a6d] px-4 py-2 text-sm font-semibold text-white hover:bg-[#e85b5f]"
           >
-            Reactivar suscripción
+            {t("billing.lockedReactivate", { defaultValue: "Reactivar suscripción" })}
           </button>
         )}
         <button
@@ -59,7 +63,7 @@ export default function SubscriptionLockedScreen({
           }}
           className="rounded-md border border-default-300 px-4 py-2 text-sm font-medium text-foreground hover:bg-default-100"
         >
-          Cerrar sesión
+          {t("billing.lockedSignOut", { defaultValue: "Cerrar sesión" })}
         </button>
       </div>
     </div>

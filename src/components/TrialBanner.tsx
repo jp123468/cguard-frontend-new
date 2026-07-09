@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Clock, AlertTriangle } from "lucide-react";
 import { subscriptionBillingService, BillingSummary } from "@/lib/api/subscriptionBillingService";
 
@@ -13,6 +14,7 @@ const TTL_MS = 5 * 60 * 1000;
  */
 export default function TrialBanner() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [summary, setSummary] = useState<BillingSummary | null>(null);
 
   useEffect(() => {
@@ -63,16 +65,16 @@ export default function TrialBanner() {
   if (summary.status === "trialing") {
     text =
       summary.trial.daysLeft > 0
-        ? `Prueba gratuita: te quedan ${summary.trial.daysLeft} día(s).`
-        : "Tu prueba gratuita termina hoy.";
+        ? t("billing.bannerTrialLeft", { defaultValue: "Prueba gratuita: te quedan {{n}} día(s).", n: summary.trial.daysLeft })
+        : t("billing.bannerTrialToday", { defaultValue: "Tu prueba gratuita termina hoy." });
   } else if (summary.status === "trial_expired") {
     cls = "bg-amber-500/10 text-amber-800 border-amber-200";
     icon = <AlertTriangle size={15} className="shrink-0" />;
-    text = "Tu prueba gratuita terminó. Activa tu suscripción para seguir usando la plataforma.";
+    text = t("billing.bannerExpired", { defaultValue: "Tu prueba gratuita terminó. Activa tu suscripción para seguir usando la plataforma." });
   } else if (summary.status === "past_due") {
     cls = "bg-red-500/10 text-red-800 border-red-200";
     icon = <AlertTriangle size={15} className="shrink-0" />;
-    text = "Tu último pago falló. Actualiza tu suscripción para mantener el servicio.";
+    text = t("billing.bannerPastDue", { defaultValue: "Tu último pago falló. Actualiza tu suscripción para mantener el servicio." });
   } else {
     return null;
   }
@@ -87,7 +89,7 @@ export default function TrialBanner() {
         onClick={go}
         className="shrink-0 rounded-md bg-[#f36a6d] px-3 py-1 text-xs font-semibold text-white hover:bg-[#e85b5f]"
       >
-        Activar suscripción
+        {t("billing.activate", { defaultValue: "Activar suscripción" })}
       </button>
     </div>
   );
