@@ -156,7 +156,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try { setAuthToken(token); } catch {}
 
     try {
-      const userData = await AuthService.getProfile();
+      // /auth/me can fail transiently (rate-limit 429, infra 5xx). Retry with
+      // backoff instead of settling at "no user" — that would bounce a valid
+      // session to /login and read as a random logout.
+      let userData: any;
+      for (let attempt = 1; ; attempt++) {
+        try {
+          userData = await AuthService.getProfile();
+          break;
+        } catch (err: any) {
+          const status = err?.status;
+          const transient = status === 429 || status === 502 || status === 503 || status === 504;
+          if (!transient || attempt >= 3) throw err;
+          await new Promise((r) => setTimeout(r, attempt * 8000));
+        }
+      }
 
       // If the user is a global superadmin, ensure they are not tenant-scoped:
       const isGlobalSuperadmin = (u: any) => {
