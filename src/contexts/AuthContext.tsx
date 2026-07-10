@@ -90,6 +90,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
+  // Cross-tab account sync. authToken/tenantId are single shared localStorage
+  // keys, so signing into ANOTHER account (e.g. a second company) in a second
+  // tab silently swaps this tab's credentials: its UI keeps the old tenant but
+  // requests carry the new account's token → the backend's tenant-membership
+  // guard 403s everything until the tab is refreshed (Seguridad B.A.S. /
+  // Ecuaseguridad tickets, 2026-07-09). Reload so the tab adopts the new
+  // session instead of dying in a 403 loop.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== 'authToken' && e.key !== 'tenantId') return;
+      if (e.oldValue === e.newValue) return;
+      try { window.location.reload(); } catch {}
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   // Expose a debug handle for quick inspection in the browser console.
   // SECURITY: never put the raw bearer token (or anything else sensitive) on this
   // global — any third-party script / XSS payload can read it with one property
