@@ -897,11 +897,13 @@ export default function Schedule() {
   const saveOverride = async (type: string, note?: string) => {
     if (!overrideTarget) return;
 
-    // Marking a day L on a fijo usually means "the real rotation is phased
-    // differently" (the generated 6-1 put the libre on the wrong weekday).
-    // Offer to re-anchor the WHOLE rotation from this libre onward instead of
-    // forcing the planner to hand-edit every week of the month. Declining
-    // keeps the old behavior: a one-day novedad.
+    // Marking L days on a fijo usually means "the real rotation is phased
+    // differently" (the generated pattern put the libres on the wrong days).
+    // A style knows how many libres its cycle has (6-1 → one L, 4-4-2 → L L),
+    // so the re-anchor popup only appears once the planner has placed the
+    // FULL consecutive rest block — a single L on a 2-libre style is
+    // ambiguous and just records the novedad with a hint. Each fijo
+    // recalculates independently (fijo 2 keeps its own libres).
     if (type === 'L' && overrideTarget.assignmentId) {
       const assignment = assignments.find(a => a.id === overrideTarget.assignmentId);
       const pos = assignment ? positionsById.get(assignment.positionId) : null;
@@ -910,36 +912,92 @@ export default function Schedule() {
       const rot = (station?.rotationStyleId ? rotationStylesById.get(station.rotationStyleId) : null) || assignment?.rotationStyle;
 
       if (isFijo && rot && rot.restDays > 0) {
-        const fecha = new Date(overrideTarget.date + 'T00:00:00').toLocaleDateString('es-ES', {
-          weekday: 'long', day: 'numeric', month: 'long',
-        });
-        const multiL = rot.restDays > 1;
-        const applyForward = await confirmDialog({
-          title: 'Ajustar la rotación desde este libre',
-          message:
-            `Marcaste el ${fecha} como Libre para ${overrideTarget.guardName}.\n\n` +
-            `¿Quieres que el patrón ${rot.name} continúe automáticamente tomando este libre como referencia` +
-            `${multiL ? ` (los ${rot.restDays} libres del ciclo empiezan ese día)` : ''}? ` +
-            `Se recalcularán los turnos futuros de este vigilante — no hace falta editar el resto del mes.\n\n` +
-            `«Solo este día» registra la novedad únicamente en esa fecha.`,
-          confirmText: 'Aplicar en adelante',
-          cancelText: 'Solo este día',
-        });
+        const dayMs = 86400000;
+        const toLocal = (s: string) => new Date(s + 'T00:00:00');
+        const fmt = (d: Date) =>
+          `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const fmtHuman = (s: string) =>
+          toLocal(s).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
-        if (applyForward) {
+        // This guard's L days = existing L novedades + the one being placed.
+        const lDays = new Set(
+          overrides
+            .filter(o => o.guardId === overrideTarget.guardId && o.type === 'L')
+            .map(o => o.date),
+        );
+        lDays.add(overrideTarget.date);
+
+        // Maximal consecutive run of L days containing the placed one.
+        let runStart = toLocal(overrideTarget.date);
+        while (lDays.has(fmt(new Date(runStart.getTime() - dayMs)))) runStart = new Date(runStart.getTime() - dayMs);
+        let runEnd = toLocal(overrideTarget.date);
+        while (lDays.has(fmt(new Date(runEnd.getTime() + dayMs)))) runEnd = new Date(runEnd.getTime() + dayMs);
+        const runLen = Math.round((runEnd.getTime() - runStart.getTime()) / dayMs) + 1;
+
+        if (runLen >= rot.restDays) {
+          // Full rest block specified → offer to re-anchor THIS fijo's cycle.
+          const blockStart = fmt(runStart);
+          const blockDates = Array.from({ length: rot.restDays }, (_, i) =>
+            fmt(new Date(runStart.getTime() + i * dayMs)),
+          );
+          const blockHuman =
+            rot.restDays === 1
+              ? `el ${fmtHuman(blockStart)}`
+              : `los libres del ${fmtHuman(blockDates[0])} al ${fmtHuman(blockDates[blockDates.length - 1])}`;
+
+          const applyForward = await confirmDialog({
+            title: 'Ajustar la rotación desde estos libres',
+            message:
+              `Marcaste ${blockHuman} para ${overrideTarget.guardName} — el bloque completo de descanso del patrón ${rot.name}.\n\n` +
+              `¿Quieres que la secuencia continúe automáticamente desde ahí (se recalculan solo los turnos futuros de este vigilante; los demás fijos no se tocan)?\n\n` +
+              `«Solo este día» registra la novedad únicamente en esa fecha.`,
+            confirmText: 'Aplicar en adelante',
+            cancelText: 'Solo este día',
+          });
+
+          if (applyForward) {
+            try {
+              await ApiService.post(`/tenant/${tenantId}/guard-assignment/${assignment!.id}/rephase`, {
+                data: { restStartDate: blockStart },
+              });
+              // The rotation itself now rests on these days — remove the
+              // hand-placed L novedades so the grid is driven by the pattern.
+              const redundant = overrides.filter(
+                o => o.guardId === overrideTarget.guardId && o.type === 'L' && blockDates.includes(o.date),
+              );
+              await Promise.all(
+                redundant.map(o =>
+                  ApiService.delete(`/tenant/${tenantId}/schedule-overrides/${o.id}`).catch(() => {}),
+                ),
+              );
+              toast.success(`Rotación ${rot.name} reajustada — la secuencia sigue desde estos libres`);
+              setOverrideTarget(null);
+              fetchAll();
+            } catch (e: any) {
+              toast.error(e?.data?.message || e?.message || 'No se pudo reajustar la rotación');
+            }
+            return;
+          }
+          // declined → fall through, save the single-day novedad as before
+        } else {
+          // Incomplete block (e.g. first L of a 4-4-2): record the novedad and
+          // hint how many consecutive libres remain to trigger the re-anchor.
           try {
-            await ApiService.post(`/tenant/${tenantId}/guard-assignment/${assignment!.id}/rephase`, {
-              data: { restStartDate: overrideTarget.date },
+            await ApiService.post(`/tenant/${tenantId}/schedule-overrides`, {
+              data: { guardId: overrideTarget.guardId, assignmentId: overrideTarget.assignmentId, date: overrideTarget.date, type, note },
             });
-            toast.success(`Rotación ${rot.name} reajustada — el patrón sigue desde este libre`);
+            const missing = rot.restDays - runLen;
+            toast.success(
+              `Novedad L registrada. Marca ${missing} libre${missing === 1 ? '' : 's'} consecutivo${missing === 1 ? '' : 's'} más y te propongo reajustar toda la secuencia ${rot.name}.`,
+              { duration: 6000 },
+            );
             setOverrideTarget(null);
             fetchAll();
           } catch (e: any) {
-            toast.error(e?.data?.message || e?.message || 'No se pudo reajustar la rotación');
+            toast.error(e?.message || 'Error');
           }
           return;
         }
-        // fall through → single-day override, as before
       }
     }
 
