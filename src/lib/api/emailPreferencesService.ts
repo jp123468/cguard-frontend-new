@@ -15,9 +15,16 @@ export interface EmailCatalogItem {
   eventType?: string;
 }
 
+export interface EmailBranding {
+  brandColor: string;
+  headerColor: string;
+}
+
 export interface EmailPreferencesResponse {
   catalog: EmailCatalogItem[];
   preferences: Record<string, boolean>;
+  branding?: EmailBranding;
+  logoUrl?: string | null;
 }
 
 export const emailPreferencesService = {
@@ -25,8 +32,20 @@ export const emailPreferencesService = {
     return ApiService.get(`/tenant/${tenantId()}/email-preferences`);
   },
 
-  update(preferences: Record<string, boolean>): Promise<EmailPreferencesResponse> {
-    return ApiService.put(`/tenant/${tenantId()}/email-preferences`, { data: { preferences } });
+  update(
+    preferences: Record<string, boolean>,
+    branding?: EmailBranding,
+  ): Promise<EmailPreferencesResponse> {
+    return ApiService.put(`/tenant/${tenantId()}/email-preferences`, {
+      data: { preferences, ...(branding ? { branding } : {}) },
+    });
+  },
+
+  /** Render a sample transactional email with DRAFT branding for live preview. */
+  preview(branding?: EmailBranding): Promise<{ html: string }> {
+    return ApiService.post(`/tenant/${tenantId()}/email-preferences/preview`, {
+      data: { ...(branding ? { branding } : {}) },
+    });
   },
 };
 
