@@ -150,6 +150,26 @@ export function useNotificationStream(
     socket.on('connect_error', () => {
       if (!destroyed) setConnected(false);
     });
+    // Single active session: a newer WEB sign-in on this account supersedes
+    // this browser. Verify against the server (never trust the event alone):
+    // an authenticated fetch with the superseded token returns 401
+    // auth.sessionSuperseded → clear token + land on /login immediately,
+    // instead of waiting for the user's next click. A same-tab/new-tab login
+    // shares localStorage, so the fetch succeeds there and nothing happens.
+    socket.on('session:superseded', (p: { channel?: string } | undefined) => {
+      if (destroyed || !p || p.channel !== 'web') return;
+      const tok = getAuthToken();
+      if (!tok) return;
+      fetch(`${API_URL}/auth/me`, { headers: { Authorization: `Bearer ${tok}` } })
+        .then((r) => {
+          if (r.status === 401 && !window.location.pathname.startsWith('/login')) {
+            try { window.localStorage.removeItem('authToken'); } catch { /* ignore */ }
+            try { window.location.replace('/login'); } catch { /* ignore */ }
+          }
+        })
+        .catch(() => { /* transient network error — the 401-on-next-request path still applies */ });
+    });
+
     socket.on('notification', (n: PlatformNotification) => {
       if (destroyed || !n || !n.id) return;
       addNotification(n, false); // list dedups by id internally

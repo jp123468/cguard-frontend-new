@@ -21,7 +21,10 @@ export interface AuthResponse {
 export class AuthService {
   static async signIn(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await ApiService.post('/auth/sign-in', credentials, { skipAuth: true })
+      // `app` tags the session channel for single-active-session enforcement:
+      // a second WEB login supersedes the previous browser session, while the
+      // mobile apps ('worker'/'supervisor') live on their own channels.
+      const response = await ApiService.post('/auth/sign-in', { ...credentials, app: 'web' }, { skipAuth: true })
       return response
     } catch (err: any) {
       const msg = err?.message || ''
