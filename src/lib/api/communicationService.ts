@@ -141,6 +141,13 @@ export const communicationService = {
     return ApiService.get(`/tenant/${tenantId()}/communications/wallet`);
   },
 
+  /** Stripe Checkout top-up — resolves with the hosted checkout URL. */
+  rechargeWallet(amountCents: number): Promise<{ url: string; id: string }> {
+    return ApiService.post(`/tenant/${tenantId()}/communications/wallet/recharge`, {
+      data: { amountCents },
+    });
+  },
+
   getLogs(filters: LogsFilters = {}): Promise<LogsResult> {
     return ApiService.get(
       `/tenant/${tenantId()}/communications/logs${buildQuery(filters)}`,

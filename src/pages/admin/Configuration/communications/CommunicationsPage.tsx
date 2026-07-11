@@ -13,6 +13,7 @@ import {
   Save,
   ListFilter,
   Radio,
+  Plus,
 } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
@@ -40,6 +41,7 @@ import {
   LogsResult,
 } from "@/lib/api/communicationService";
 
+const RECHARGE_PRESETS = [10, 25, 50, 100];
 const CHANNEL_OPTIONS = ["push", "whatsapp", "sms", "email"];
 const PROVIDER_OPTIONS = ["fcm", "meta", "twilio", "smtp"];
 const STATUS_OPTIONS = ["queued", "sent", "delivered", "read", "failed", "skipped"];
@@ -90,6 +92,7 @@ const CHANNEL_LABELS: Record<string, string> = {
   whatsapp: "WhatsApp",
   sms: "SMS",
   email: "Email",
+  wallet: "Recarga",
 };
 
 interface ToggleRowProps {
@@ -120,6 +123,10 @@ export default function CommunicationsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+
+  // Wallet recharge (Stripe Checkout)
+  const [rechargeAmount, setRechargeAmount] = useState<number>(25);
+  const [recharging, setRecharging] = useState(false);
 
   // Logs
   const [logsResult, setLogsResult] = useState<LogsResult | null>(null);
@@ -166,8 +173,49 @@ export default function CommunicationsPage() {
   useEffect(() => {
     loadConfig();
     loadLogs();
+    // Returning from Stripe Checkout: the webhook credits the wallet, so
+    // refresh shortly after landing back here.
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("recharge") === "success") {
+      toast.success(
+        t("comms.rechargeSuccess", {
+          defaultValue: "Pago recibido. Tu saldo se actualizará en unos segundos.",
+        }),
+      );
+      setTimeout(() => {
+        communicationService.getWallet().then(setWallet).catch(() => undefined);
+        loadLogs();
+      }, 4000);
+    } else if (params.get("recharge") === "cancel") {
+      toast.info(t("comms.rechargeCancel", { defaultValue: "Recarga cancelada" }));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const onRecharge = async () => {
+    const cents = Math.round(Number(rechargeAmount) * 100);
+    if (!Number.isFinite(cents) || cents < 500 || cents > 100000) {
+      toast.error(t("comms.amountError", { defaultValue: "Ingresa un monto entre $5 y $1000" }));
+      return;
+    }
+    setRecharging(true);
+    try {
+      const res = await communicationService.rechargeWallet(cents);
+      if (res?.url) {
+        window.location.href = res.url; // redirect to Stripe Checkout
+      } else {
+        toast.error(t("comms.rechargeError", { defaultValue: "No se pudo iniciar la recarga" }));
+      }
+    } catch (e: any) {
+      toast.error(
+        e?.data?.message ||
+          e?.message ||
+          t("comms.rechargeError", { defaultValue: "No se pudo iniciar la recarga" }),
+      );
+    } finally {
+      setRecharging(false);
+    }
+  };
 
   const patch = (key: keyof CommunicationSettings, value: any) => {
     setSettings((prev) => (prev ? { ...prev, [key]: value } : prev));
@@ -307,6 +355,49 @@ export default function CommunicationsPage() {
                   </span>
                 </div>
               )}
+
+              {/* Recharge */}
+              <Section title={t("comms.rechargeTitle", { defaultValue: "Recargar saldo" })} icon={<Wallet />}>
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    {RECHARGE_PRESETS.map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setRechargeAmount(p)}
+                        className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
+                          rechargeAmount === p
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border text-foreground hover:bg-muted/30"
+                        }`}
+                      >
+                        ${p}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-end gap-3">
+                    <div className="w-40">
+                      <Label className="text-xs">{t("comms.customAmount", { defaultValue: "Monto (USD)" })}</Label>
+                      <Input
+                        type="number"
+                        min={5}
+                        max={1000}
+                        value={rechargeAmount}
+                        onChange={(e) => setRechargeAmount(Number(e.target.value))}
+                      />
+                    </div>
+                    <Button variant="brand" onClick={onRecharge} disabled={recharging}>
+                      {recharging ? <Loader2 className="mr-2 animate-spin" size={16} /> : <Plus className="mr-2" size={16} />}
+                      {t("comms.recharge", { defaultValue: "Recargar" })}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("comms.rechargeHint", {
+                      defaultValue:
+                        "Pago seguro con tarjeta vía Stripe. El saldo se acredita automáticamente al confirmarse el pago y cubre WhatsApp y SMS enviados por la plataforma.",
+                    })}
+                  </p>
+                </div>
+              </Section>
 
               {/* Channels & toggles */}
               {settings && (
