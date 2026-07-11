@@ -20,6 +20,7 @@ import ProfileUser from "./pages/admin/Configuration/ProfileUserPage"
 import ProfileCompany from "./pages/admin/Configuration/ProfileCompanyPage"
 import Notification from "./pages/admin/Configuration/NotificationPage"
 import MobilPage from "./pages/admin/Configuration/mobil/MobilPage"
+import MobileHubPage from "./pages/admin/Configuration/mobile-hub/MobileHubPage"
 import { ArrowLeftCircle } from "lucide-react"
 import CompanyPoliciesPage from './pages/admin/Configuration/company-policies/CompanyPoliciesPage';
 import IncidentTypesPage from "./pages/admin/Configuration/types-incidents/IncidentTypePage"
@@ -1479,6 +1480,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <MobilPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting/mobile-hub"
+                element={
+                  <ProtectedRoute>
+                    <MobileHubPage />
                   </ProtectedRoute>
                 }
               />

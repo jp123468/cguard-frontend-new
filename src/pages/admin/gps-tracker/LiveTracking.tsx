@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import AppLayout from "@/layouts/app-layout";
 
 import { Button } from "@/components/ui/button";
@@ -18,28 +19,111 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Filter, MapPinned, MapPin } from "lucide-react";
+import { Filter, MapPinned, MapPin, Route as RouteIcon, CheckCircle2, Clock } from "lucide-react";
 import Breadcrumb from "@/components/ui/breadcrumb";
-import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
+import { PageContainer, PageHeader, Section, EmptyState, StatusBadge } from "@/components/kit";
+import routeService from "@/lib/api/routeService";
+import RouteTrackingMap, { type RouteStopMarker } from "./RouteTrackingMap";
 
-interface LiveTrackingRow {
-  id: string;
-  guardName: string;
-  site: string;
-  lastUpdate: string;
-  batteryStatus: string;
-  speedMph: number | null;
-  lastLocation: string;
+const DOW_NUM: Record<string, number> = {
+  sun: 0, sunday: 0, dom: 0, domingo: 0,
+  mon: 1, monday: 1, lun: 1, lunes: 1,
+  tue: 2, tuesday: 2, mar: 2, martes: 2,
+  wed: 3, wednesday: 3, mie: 3, "mié": 3, miercoles: 3, "miércoles": 3,
+  thu: 4, thursday: 4, jue: 4, jueves: 4,
+  fri: 5, friday: 5, vie: 5, viernes: 5,
+  sat: 6, saturday: 6, sab: 6, "sáb": 6, sabado: 6, "sábado": 6,
+};
+
+/** Whether a route is scheduled to run on the given weekday (no schedule = daily). */
+function scheduledOn(route: any, weekday: number): boolean {
+  let days = route.days;
+  if (typeof days === "string") { try { days = JSON.parse(days); } catch { days = null; } }
+  if (!Array.isArray(days) || days.length === 0) return true;
+  return days.some((d: any) => {
+    if (typeof d === "number") return d === weekday;
+    const n = DOW_NUM[String(d).toLowerCase().trim()];
+    return n === weekday;
+  });
 }
+
+const parseCoord = (v: any): number | null => {
+  if (v == null || v === "") return null;
+  const n = typeof v === "number" ? v : parseFloat(String(v).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+};
 
 export default function LiveTrackingPage() {
   const [openFilter, setOpenFilter] = useState(false);
-  const [mapType, setMapType] = useState("roadmap");
+  const [mapType, setMapType] = useState<"roadmap" | "satellite" | "hybrid" | "terrain">("roadmap");
   const [showGeofence, setShowGeofence] = useState(true);
 
-  // TODO: wire to the real live-tracking API. Until then the table renders the
-  // empty state. (`setRows` is retained for when the fetch is implemented.)
-  const [rows] = useState<LiveTrackingRow[]>([]);
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [routes, setRoutes] = useState<any[]>([]);
+  const [runs, setRuns] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [routeFilter, setRouteFilter] = useState<string>("all");
+  const [showAll, setShowAll] = useState(false);
+
+  const weekday = useMemo(() => new Date(`${date}T12:00:00`).getDay(), [date]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const [r, runRes] = await Promise.all([
+          routeService.list({ limit: 300 }),
+          routeService.runs(date).catch(() => []),
+        ]);
+        if (!mounted) return;
+        setRoutes(r?.rows ?? []);
+        setRuns(runRes || []);
+      } catch (e: any) {
+        if (mounted) toast.error(e?.message || "No se pudieron cargar las rutas");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [date]);
+
+  const isDone = (routeId: string) => runs.some((x) => x.routeId === routeId && x.status === "completed");
+
+  // Routes visible on the map/table: scheduled-today (or all), then the picked route.
+  const visibleRoutes = useMemo(() => {
+    let list = showAll ? routes : routes.filter((r) => scheduledOn(r, weekday));
+    if (routeFilter !== "all") list = list.filter((r) => String(r.id) === routeFilter);
+    return list;
+  }, [routes, showAll, weekday, routeFilter]);
+
+  // Flatten each route's points that carry valid coordinates into map markers.
+  const stops = useMemo<RouteStopMarker[]>(() => {
+    const out: RouteStopMarker[] = [];
+    visibleRoutes.forEach((route) => {
+      const done = isDone(route.id);
+      (route.points || []).forEach((p: any, idx: number) => {
+        const lat = parseCoord(p.lat);
+        const lng = parseCoord(p.lng);
+        if (lat == null || lng == null) return;
+        out.push({
+          id: `${route.id}:${p.id ?? p.siteId ?? idx}`,
+          routeId: String(route.id),
+          routeName: route.name || "Ruta",
+          siteName: p.siteName || p.address || p.siteId || `Parada ${idx + 1}`,
+          address: p.address || "",
+          lat,
+          lng,
+          order: p.order ?? idx + 1,
+          done,
+        });
+      });
+    });
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleRoutes, runs]);
+
+  const totalPoints = visibleRoutes.reduce((n, r) => n + (r.points?.length || 0), 0);
 
   return (
     <AppLayout>
@@ -54,80 +138,63 @@ export default function LiveTrackingPage() {
         <PageHeader
           icon={<MapPinned />}
           title="Seguimiento en vivo"
-          subtitle="Ubicación en tiempo real de tus vigilantes en servicio."
+          subtitle="Ubicación de las paradas de las rutas de patrulla y su estado del día."
           actions={
-            <Sheet open={openFilter} onOpenChange={setOpenFilter}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="text-primary border-primary/30"
-                >
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filtros
-                </Button>
-              </SheetTrigger>
-
-              <SheetContent side="right" className="w-[400px] sm:w-[460px]">
-                <SheetHeader>
-                  <SheetTitle>Filtros</SheetTitle>
-                </SheetHeader>
-
-                <div className="mt-6 space-y-5">
-                  <div className="space-y-2">
-                    <Label>Cliente*</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar cliente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="central">Central</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Puesto de seguridad*</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar sitio" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="catolica">Católica</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Vigilante*</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar vigilante" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="jose">José Alejo Pinos</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox />
-                    <span className="text-sm text-foreground">
-                      Mostrar datos archivados
-                    </span>
-                  </label>
-
-                  <Button
-                    className="w-full bg-primary hover:bg-primary/90 text-white"
-                    onClick={() => {
-                      // Aplica tus filtros reales aquí
-                      setOpenFilter(false);
-                    }}
-                  >
-                    Filtro
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+              />
+              <Sheet open={openFilter} onOpenChange={setOpenFilter}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="text-primary border-primary/30">
+                    <Filter className="mr-2 h-4 w-4" />
+                    Filtros
                   </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
+                </SheetTrigger>
+
+                <SheetContent side="right" className="w-[400px] sm:w-[460px]">
+                  <SheetHeader>
+                    <SheetTitle>Filtros</SheetTitle>
+                  </SheetHeader>
+
+                  <div className="mt-6 space-y-5">
+                    <div className="space-y-2">
+                      <Label>Ruta</Label>
+                      <Select value={routeFilter} onValueChange={setRouteFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Todas las rutas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas las rutas</SelectItem>
+                          {routes.map((r) => (
+                            <SelectItem key={r.id} value={String(r.id)}>
+                              {r.name || r.id}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox checked={showAll} onCheckedChange={(v) => setShowAll(Boolean(v))} />
+                      <span className="text-sm text-foreground">
+                        Mostrar todas las rutas (no solo las del día)
+                      </span>
+                    </label>
+
+                    <Button
+                      className="w-full bg-primary hover:bg-primary/90 text-white"
+                      onClick={() => setOpenFilter(false)}
+                    >
+                      Aplicar
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           }
         />
 
@@ -137,7 +204,7 @@ export default function LiveTrackingPage() {
             {/* Tipo de mapa */}
             <div>
               <p className="text-xs text-muted-foreground mb-1">Tipo de Mapa</p>
-              <Select value={mapType} onValueChange={setMapType}>
+              <Select value={mapType} onValueChange={(v) => setMapType(v as typeof mapType)}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Hoja de Ruta" />
                 </SelectTrigger>
@@ -158,55 +225,79 @@ export default function LiveTrackingPage() {
               />
               <span className="text-sm text-foreground">Mostrar Geovalla</span>
             </label>
+
+            <div className="ml-auto flex items-center gap-4 pb-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <RouteIcon className="h-3.5 w-3.5 text-[color:var(--primary)]" />
+                {visibleRoutes.length} rutas · {totalPoints} paradas
+              </span>
+            </div>
           </div>
 
           {/* Contenedor del mapa + tabla */}
           <div className="mt-4 border rounded-2xl overflow-hidden">
             {/* Mapa */}
-            <div className="w-full h-[380px] bg-muted">
-              {/* Aquí va tu componente de Google Maps */}
-            </div>
+            <RouteTrackingMap
+              stops={stops}
+              mapType={mapType}
+              showGeofence={showGeofence}
+              height={380}
+            />
 
             {/* Tabla debajo del mapa */}
             <table className="min-w-full text-sm text-left border-collapse">
               <thead className="bg-muted/30">
                 <tr className="border-b">
-                  <th className="px-4 py-3 font-semibold">Vigilante</th>
-                  <th className="px-4 py-3 font-semibold">
-                    Puesto de seguridad
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    Última Actualización
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    Estado de la Batería
-                  </th>
-                  <th className="px-4 py-3 font-semibold">Velocidad (MPH)</th>
-                  <th className="px-4 py-3 font-semibold">Última Ubicación</th>
+                  <th className="px-4 py-3 font-semibold">Ruta</th>
+                  <th className="px-4 py-3 font-semibold">Puesto de seguridad</th>
+                  <th className="px-4 py-3 font-semibold">Dirección</th>
+                  <th className="px-4 py-3 font-semibold">Parada</th>
+                  <th className="px-4 py-3 font-semibold">Pasadas</th>
+                  <th className="px-4 py-3 font-semibold">Estado</th>
                 </tr>
               </thead>
 
               <tbody>
-                {rows.length > 0 ? (
-                  rows.map((row) => (
-                    <tr key={row.id} className="border-b hover:bg-muted/30">
-                      <td className="px-4 py-3">{row.guardName}</td>
-                      <td className="px-4 py-3">{row.site}</td>
-                      <td className="px-4 py-3">{row.lastUpdate}</td>
-                      <td className="px-4 py-3">{row.batteryStatus}</td>
-                      <td className="px-4 py-3">
-                        {row.speedMph != null ? row.speedMph : "--"}
-                      </td>
-                      <td className="px-4 py-3">{row.lastLocation}</td>
-                    </tr>
-                  ))
+                {stops.length > 0 ? (
+                  stops.map((s) => {
+                    const route = visibleRoutes.find((r) => String(r.id) === s.routeId);
+                    const point = (route?.points || []).find(
+                      (p: any, idx: number) => `${route.id}:${p.id ?? p.siteId ?? idx}` === s.id,
+                    );
+                    return (
+                      <tr key={s.id} className="border-b hover:bg-muted/30">
+                        <td className="px-4 py-3">{s.routeName}</td>
+                        <td className="px-4 py-3">{s.siteName}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.address || "—"}</td>
+                        <td className="px-4 py-3">#{s.order}</td>
+                        <td className="px-4 py-3">
+                          {point?.scheduledHits != null ? point.scheduledHits : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          {s.done ? (
+                            <StatusBadge tone="green">
+                              <CheckCircle2 className="mr-1 h-3 w-3" /> Completada
+                            </StatusBadge>
+                          ) : (
+                            <StatusBadge tone="orange">
+                              <Clock className="mr-1 h-3 w-3" /> Pendiente
+                            </StatusBadge>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan={6} className="py-12">
                       <EmptyState
                         icon={<MapPin />}
-                        title="No se encontraron resultados"
-                        description="No pudimos encontrar ningún elemento que coincida con su búsqueda."
+                        title={loading ? "Cargando rutas…" : "No se encontraron paradas"}
+                        description={
+                          loading
+                            ? "Obteniendo las rutas de patrulla del día."
+                            : "No hay rutas con paradas geolocalizadas para esta fecha. Agrega ubicaciones a los puestos de la ruta para verlas aquí."
+                        }
                         className="border-0"
                       />
                     </td>

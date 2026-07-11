@@ -56,7 +56,7 @@ export interface AttendanceRecord {
   guardName?: { id: string; fullName?: string; governmentId?: string } | null;
   stationName?: { id: string; stationName?: string; latitud?: string; longitud?: string; geofenceRadius?: number; geofencePolygon?: { lat: number; lng: number }[] | null } | null;
   /** 'supervisor' for a supervisorShift folded into the list; else guard. */
-  role?: "guard" | "supervisor";
+  role?: "guard" | "supervisor" | "administrative";
 }
 
 const attendanceService = {
@@ -173,6 +173,22 @@ const attendanceService = {
   async clockOut(data: { latitude?: number; longitude?: number }) {
     const t = getTenantId();
     return unwrap(await api.post(`/tenant/${t}/guard/me/clock-out`, { data }));
+  },
+
+  // ── Staff (administrative/office) self-attendance — web time clock. Used when
+  //    the logged-in user is NOT a field guard but may punch their own timesheet. ──
+  /** Staff clock status + optional office-geofence config. */
+  async staffStatus() {
+    const t = getTenantId();
+    return unwrap(await api.get(`/tenant/${t}/staff/me`));
+  },
+  async staffClockIn(data: { latitude?: number; longitude?: number; selfiePhoto?: string; address?: string; battery?: number }) {
+    const t = getTenantId();
+    return unwrap(await api.post(`/tenant/${t}/staff/me/clock-in`, { data }));
+  },
+  async staffClockOut(data: { latitude?: number; longitude?: number; observations?: string }) {
+    const t = getTenantId();
+    return unwrap(await api.post(`/tenant/${t}/staff/me/clock-out`, { data }));
   },
 
   async getSettings() {

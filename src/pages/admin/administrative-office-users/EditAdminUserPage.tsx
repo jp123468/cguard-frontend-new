@@ -29,7 +29,7 @@ import { Command, CommandInput, CommandList, CommandGroup, CommandItem } from "@
 import { usePermissions } from "@/hooks/usePermissions";
 import UserPermissionOverrides, { Overrides } from "./UserPermissionOverrides";
 import { PageContainer, PageHeader, Section } from "@/components/kit";
-import { UserCog, ShieldCheck, ChevronDown, ChevronRight } from "lucide-react";
+import { UserCog, ShieldCheck, ChevronDown, ChevronRight, MapPin } from "lucide-react";
 
 function ClientMultiSelect({
   value,
@@ -140,6 +140,10 @@ export default function EditAdminUserPage() {
   const { hasPermission } = usePermissions();
   const canEditPerms = hasPermission('settingsEdit');
   const [overrides, setOverrides] = useState<Overrides>({ grant: [], deny: [] });
+  // Optional office location for administrative self-attendance (web time clock).
+  const [office, setOffice] = useState<{ address: string; lat: string; lng: string; radius: string }>({ address: "", lat: "", lng: "", radius: "150" });
+  const [officeSaving, setOfficeSaving] = useState(false);
+  const [officeOpen, setOfficeOpen] = useState(false);
   const [rolePermissions, setRolePermissions] = useState<string[]>([]);
   const [permsOpen, setPermsOpen] = useState(false);
   const [permQuery, setPermQuery] = useState("");
@@ -276,6 +280,13 @@ export default function EditAdminUserPage() {
         // map backend user to form fields as best-effort
         setValue('name', user.fullName || user.name || [user.firstName, user.lastName].filter(Boolean).join(' ') || '');
         setValue('email', user.email || '');
+        // Prefill the optional office location (self-attendance geofence).
+        setOffice({
+          address: user.officeAddress || "",
+          lat: user.officeLatitude != null ? String(user.officeLatitude) : "",
+          lng: user.officeLongitude != null ? String(user.officeLongitude) : "",
+          radius: user.officeGeofenceRadiusM != null ? String(user.officeGeofenceRadiusM) : "150",
+        });
         // Try to resolve accessLevel from several shapes, prefer tenant-scoped roles
         let roleCandidate: any = null;
         try {
@@ -401,6 +412,39 @@ export default function EditAdminUserPage() {
   }, [watchedClientIds]);
 
   const navigate = useNavigate();
+
+  const saveOfficeLocation = async (clear = false) => {
+    if (!id) return;
+    const tenantId = localStorage.getItem("tenantId") || "";
+    if (!tenantId) return;
+    setOfficeSaving(true);
+    try {
+      const data = clear
+        ? { officeLatitude: null, officeLongitude: null, officeGeofenceRadiusM: null, officeAddress: null }
+        : {
+            officeLatitude: office.lat.trim() === "" ? null : Number(office.lat),
+            officeLongitude: office.lng.trim() === "" ? null : Number(office.lng),
+            officeGeofenceRadiusM: office.radius.trim() === "" ? null : Number(office.radius),
+            officeAddress: office.address.trim() || null,
+          };
+      await ApiService.patch(`/tenant/${tenantId}/user/${id}`, { data });
+      if (clear) setOffice({ address: "", lat: "", lng: "", radius: "150" });
+      toast.success(clear ? "Ubicación de oficina eliminada" : "Ubicación de oficina guardada");
+    } catch (e: any) {
+      toast.error(e?.message || "No se pudo guardar la ubicación");
+    } finally {
+      setOfficeSaving(false);
+    }
+  };
+
+  const useCurrentLocationAsOffice = () => {
+    if (!navigator.geolocation) return toast.error("Geolocalización no disponible");
+    navigator.geolocation.getCurrentPosition(
+      (p) => setOffice((o) => ({ ...o, lat: String(p.coords.latitude), lng: String(p.coords.longitude) })),
+      (e) => toast.error(e.message || "No se pudo obtener la ubicación"),
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
 
   const onSubmit = async (values: NewAdminUserValues) => {
     try {
@@ -621,6 +665,59 @@ export default function EditAdminUserPage() {
                       onChange={setOverrides}
                       query={permQuery}
                     />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {id && (
+              <div className="rounded-2xl border bg-card dark:bg-[#202020] p-4 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setOfficeOpen((v) => !v)}
+                  className="flex w-full items-center justify-between text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary [&_svg]:size-5"><MapPin /></span>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold">Ubicación de oficina (asistencia)</div>
+                      <div className="text-xs text-muted-foreground">
+                        Opcional. Si la defines, el reloj de asistencia valida que el usuario marque desde su oficina.
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-muted-foreground [&_svg]:size-4">{officeOpen ? <ChevronDown /> : <ChevronRight />}</span>
+                </button>
+                {officeOpen && (
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Dirección (referencia)</label>
+                      <Input value={office.address} onChange={(e) => setOffice((o) => ({ ...o, address: e.target.value }))} placeholder="Ej. Oficina central, Av. Amazonas 123" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Latitud</label>
+                        <Input value={office.lat} onChange={(e) => setOffice((o) => ({ ...o, lat: e.target.value }))} placeholder="-0.1807" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Longitud</label>
+                        <Input value={office.lng} onChange={(e) => setOffice((o) => ({ ...o, lng: e.target.value }))} placeholder="-78.4678" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Radio (m)</label>
+                        <Input value={office.radius} onChange={(e) => setOffice((o) => ({ ...o, radius: e.target.value }))} placeholder="150" />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={useCurrentLocationAsOffice}>Usar mi ubicación actual</Button>
+                      <Button type="button" variant="brand" size="sm" disabled={officeSaving} onClick={() => saveOfficeLocation(false)}>
+                        {officeSaving ? "Guardando..." : "Guardar ubicación"}
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" disabled={officeSaving} onClick={() => saveOfficeLocation(true)}>Quitar</Button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Déjala vacía para permitir el marcaje sin geocerca. Puedes copiar las coordenadas desde Google Maps.
+                    </p>
                   </div>
                 )}
               </div>

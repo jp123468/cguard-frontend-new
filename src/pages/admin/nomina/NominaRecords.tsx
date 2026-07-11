@@ -162,10 +162,15 @@ export default function NominaRecords() {
               Supervisor
             </span>
           )}
+          {r.role === "administrative" && (
+            <span className="rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700 dark:bg-sky-500/15 dark:text-sky-400">
+              Administrativo
+            </span>
+          )}
         </span>
       ),
     },
-    { key: "station", header: "Puesto", render: (_v, r) => r.stationName?.stationName || (r.role === "supervisor" ? "Supervisión" : "—") },
+    { key: "station", header: "Puesto", render: (_v, r) => r.stationName?.stationName || (r.role === "supervisor" ? "Supervisión" : r.role === "administrative" ? "Oficina" : "—") },
     { key: "scheduledStart", header: "Programado", render: (_v, r) => `${fmtTime(r.scheduledStart)} – ${fmtTime(r.scheduledEnd)}` },
     {
       key: "punchInTime",
@@ -418,12 +423,14 @@ export default function NominaRecords() {
                 )}
 
                 <div className="flex flex-wrap gap-2 pt-2">
-                  {selected.role === "supervisor" && (
+                  {(selected.role === "supervisor" || selected.role === "administrative") && (
                     <p className="w-full text-xs text-muted-foreground">
-                      Registro de supervisor — sin flujo de aprobación.
+                      {selected.role === "administrative"
+                        ? "Registro administrativo — sin flujo de aprobación."
+                        : "Registro de supervisor — sin flujo de aprobación."}
                     </p>
                   )}
-                  {selected.role !== "supervisor" && (
+                  {selected.role !== "supervisor" && selected.role !== "administrative" && (
                   <Button
                     disabled={busy}
                     onClick={() => act(() => attendanceService.approve(selected.id), "Aprobado")}
@@ -432,7 +439,7 @@ export default function NominaRecords() {
                     Aprobar
                   </Button>
                   )}
-                  {selected.role !== "supervisor" && (
+                  {selected.role !== "supervisor" && selected.role !== "administrative" && (
                   <Button
                     disabled={busy}
                     variant="outline"
@@ -441,7 +448,7 @@ export default function NominaRecords() {
                     Rechazar
                   </Button>
                   )}
-                  {selected.role !== "supervisor" && (
+                  {selected.role !== "supervisor" && selected.role !== "administrative" && (
                   <Button
                     disabled={busy}
                     variant="outline"

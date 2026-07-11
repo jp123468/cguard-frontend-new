@@ -8,9 +8,14 @@ import { PageContainer, FadeIn, StatusBadge, EmptyState } from "@/components/kit
 
 interface Station { id: string; stationName?: string; name?: string }
 
+type Mode = "guard" | "staff" | "none";
+
 /**
- * Web Time Clock — kiosk-style punch for the logged-in guard, reusing the same
- * /guard/me clock-in/out API as the mobile app (geofence enforced server-side).
+ * Web Time Clock — kiosk-style punch for the logged-in user.
+ *  - Field guards → station-scoped guard punch (/guard/me, server geofence).
+ *  - Administrative/office staff (no securityGuard row) → self-punch
+ *    (/staff/me), with an optional per-user office geofence.
+ * Both land in Nómina › Registros de Asistencia.
  */
 export default function NominaTimeClock() {
   const [loading, setLoading] = useState(true);
@@ -18,20 +23,38 @@ export default function NominaTimeClock() {
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [stations, setStations] = useState<Station[]>([]);
   const [stationId, setStationId] = useState("");
-  const [notGuard, setNotGuard] = useState(false);
+  const [mode, setMode] = useState<Mode>("none");
+  const [office, setOffice] = useState<{ radiusM: number; address: string | null } | null>(null);
+
+  const tryStaff = async () => {
+    try {
+      const s: any = await attendanceService.staffStatus();
+      setIsClockedIn(!!s?.isClockedIn);
+      setOffice(s?.office ? { radiusM: s.office.radiusM, address: s.office.address } : null);
+      setMode("staff");
+    } catch {
+      setMode("none");
+    }
+  };
 
   const refresh = () => {
     setLoading(true);
     attendanceService
       .myStatus()
-      .then((d: any) => {
-        const sts: Station[] = d?.stations || [];
-        setStations(sts);
-        setIsClockedIn(!!d?.isClockedIn);
-        if (sts[0]) setStationId((prev) => prev || sts[0].id);
-        if (!d?.guard) setNotGuard(true);
+      .then(async (d: any) => {
+        if (d?.guard) {
+          // Field guard → station-scoped guard punch.
+          const sts: Station[] = d?.stations || [];
+          setStations(sts);
+          setIsClockedIn(!!d?.isClockedIn);
+          if (sts[0]) setStationId((prev) => prev || sts[0].id);
+          setMode("guard");
+        } else {
+          // Not a guard → try the administrative/office self-punch.
+          await tryStaff();
+        }
       })
-      .catch(() => setNotGuard(true))
+      .catch(tryStaff)
       .finally(() => setLoading(false));
   };
   useEffect(refresh, []);
@@ -47,11 +70,16 @@ export default function NominaTimeClock() {
     });
 
   const doClockIn = async () => {
-    if (!stationId) return toast.error("Selecciona un puesto");
+    if (mode === "guard" && !stationId) return toast.error("Selecciona un puesto");
     setBusy(true);
     try {
-      const coords = await getPosition();
-      const res: any = await attendanceService.clockIn({ stationId, ...coords });
+      // Guards require coords (server geofence). Staff: coords optional; still
+      // sent when available so an office geofence can validate them.
+      let coords: any = {};
+      try { coords = await getPosition(); } catch (e: any) { if (mode === "guard") throw e; }
+      const res: any = mode === "guard"
+        ? await attendanceService.clockIn({ stationId, ...coords })
+        : await attendanceService.staffClockIn(coords);
       if (res && res.success === false) {
         toast.error(res.message || "No se pudo marcar entrada");
       } else {
@@ -70,7 +98,9 @@ export default function NominaTimeClock() {
     try {
       let coords: any = {};
       try { coords = await getPosition(); } catch { /* GPS optional on out */ }
-      const res: any = await attendanceService.clockOut(coords);
+      const res: any = mode === "guard"
+        ? await attendanceService.clockOut(coords)
+        : await attendanceService.staffClockOut(coords);
       if (res && res.success === false) toast.error(res.message || "No se pudo marcar salida");
       else { toast.success("Salida registrada"); refresh(); }
     } catch (e: any) {
@@ -95,12 +125,12 @@ export default function NominaTimeClock() {
               <div className="cg-skeleton mx-auto h-4 w-1/2" />
               <div className="cg-skeleton mx-auto mt-6 h-12 w-full rounded-xl" />
             </div>
-          ) : notGuard ? (
+          ) : mode === "none" ? (
             <div className="mt-4">
               <EmptyState
                 icon={<UserX />}
-                title="Reloj para vigilantes"
-                description="Tu cuenta no tiene un perfil de vigilante asignado, por lo que no puedes marcar entrada/salida desde aquí."
+                title="Reloj de asistencia"
+                description="Tu cuenta no puede registrar asistencia desde aquí. Si eres personal administrativo y necesitas marcar tu horario, pide a un administrador que te habilite el reloj."
                 className="border-none py-6"
               />
             </div>
@@ -112,7 +142,7 @@ export default function NominaTimeClock() {
                 </StatusBadge>
               </div>
 
-              {!isClockedIn && (
+              {mode === "guard" && !isClockedIn && (
                 <div className="mt-5 text-left">
                   <label className="cg-eyebrow flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5" /> Puesto
@@ -130,6 +160,15 @@ export default function NominaTimeClock() {
                 </div>
               )}
 
+              {mode === "staff" && (
+                <p className="mt-4 text-xs text-muted-foreground">
+                  Registro de asistencia administrativa.
+                  {office
+                    ? ` Se valida tu ubicación contra tu oficina${office.address ? ` (${office.address})` : ""} (máx. ${office.radiusM} m).`
+                    : " Tu cuenta no tiene una oficina configurada, así que se registra sin geocerca."}
+                </p>
+              )}
+
               <div className="mt-6">
                 {isClockedIn ? (
                   <Button onClick={doClockOut} disabled={busy} className="w-full bg-red-600 hover:bg-red-700 text-white py-6 text-base">
@@ -137,15 +176,17 @@ export default function NominaTimeClock() {
                     Marcar salida
                   </Button>
                 ) : (
-                  <Button variant="brand" onClick={doClockIn} disabled={busy || !stationId} className="w-full py-6 text-base">
+                  <Button variant="brand" onClick={doClockIn} disabled={busy || (mode === "guard" && !stationId)} className="w-full py-6 text-base">
                     {busy ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
                     Marcar entrada
                   </Button>
                 )}
               </div>
-              <p className="mt-3 text-[11px] text-muted-foreground">
-                Se solicitará tu ubicación; la geocerca se valida en el servidor.
-              </p>
+              {mode === "guard" && (
+                <p className="mt-3 text-[11px] text-muted-foreground">
+                  Se solicitará tu ubicación; la geocerca se valida en el servidor.
+                </p>
+              )}
             </>
           )}
         </FadeIn>

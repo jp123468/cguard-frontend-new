@@ -37,7 +37,8 @@
           { "id": "preferencias-correo", "label": "Preferencias de Correo", "path": "/setting/email-preferences", "icon": "Mail", "desc": "Qué correos recibes y cuándo." },
           { "id": "comunicaciones", "label": "Comunicaciones", "path": "/setting/comunicaciones", "icon": "Radio", "desc": "Canales, WhatsApp, saldo y uso de mensajería." },
           { "id": "sms", "label": "Saldo SMS", "path": "/setting/sms", "icon": "MessageSquare", "desc": "Consumo y recarga de mensajes SMS." },
-          { "id": "mobil", "label": "App Móvil", "path": "/setting/mobil", "icon": "Smartphone", "desc": "Ajustes de la aplicación móvil." }
+          { "id": "mobil", "label": "App Móvil", "path": "/setting/mobil", "icon": "Smartphone", "desc": "Ajustes de la aplicación móvil." },
+          { "id": "mobile-hub", "label": "Hub Móvil del Equipo", "path": "/setting/mobile-hub", "icon": "TabletSmartphone", "desc": "Personaliza las apps del vigilante y supervisor." }
         ]
       },
       {

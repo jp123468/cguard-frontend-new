@@ -186,7 +186,11 @@
     "id": "patrulla",
     "name": "Patrulla vehicular",
     "icon": "Car",
-    "path": "/vehicle-patrol"
+    "expandable": true,
+    "subItems": [
+      { "id": "patrulla-board", "name": "Patrulla vehicular", "path": "/vehicle-patrol" },
+      { "id": "patrulla-live", "name": "Seguimiento en vivo", "path": "/live-tracking" }
+    ]
   },
   {
     "id": "mensajeria",
