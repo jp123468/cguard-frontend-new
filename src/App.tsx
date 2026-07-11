@@ -1,179 +1,179 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from "react-router-dom"
-import { useEffect } from "react"
+import { useEffect, lazy, Suspense } from "react"
 import ProtectedRoute, { PublicOnlyRoute } from "@/components/ProtectedRoute"
-import Login from "./pages/auth/login"
-import ForgotPassword from "./pages/auth/forgot-password"
-import ResetPassword from "./pages/auth/reset-password"
-import DashboardPage from "./pages/admin/dashboard/control-center/ControlCenter"
-import OperationsMapFull from "./pages/admin/dashboard/control-center/OperationsMapFull"
-import LanguagePage from "./pages/idioma/configuracion"
+import Login from "./pages/auth/login";
+import ForgotPassword from "./pages/auth/forgot-password";
+import ResetPassword from "./pages/auth/reset-password";
+const DashboardPage = lazy(() => import("./pages/admin/dashboard/control-center/ControlCenter"));
+const OperationsMapFull = lazy(() => import("./pages/admin/dashboard/control-center/OperationsMapFull"));
+const LanguagePage = lazy(() => import("./pages/idioma/configuracion"));
 import { AuthProvider, useAuth } from "./contexts/AuthContext"
 import { ThemeProvider } from "./contexts/ThemeContext"
 import { LanguageProvider } from "./contexts/LanguageContext"
 import "./i18n"
-import Register from "./pages/auth/register"
-import VerifyEmail from "./pages/auth/verify-email"
-import AcceptInvitation from "./pages/auth/accept-invitation"
+import Register from "./pages/auth/register";
+import VerifyEmail from "./pages/auth/verify-email";
+import AcceptInvitation from "./pages/auth/accept-invitation";
 import { ApiService } from '@/services/api/apiService';
 
-import ProfileUser from "./pages/admin/Configuration/ProfileUserPage"
-import ProfileCompany from "./pages/admin/Configuration/ProfileCompanyPage"
-import Notification from "./pages/admin/Configuration/NotificationPage"
-import MobilPage from "./pages/admin/Configuration/mobil/MobilPage"
-import MobileHubPage from "./pages/admin/Configuration/mobile-hub/MobileHubPage"
+const ProfileUser = lazy(() => import("./pages/admin/Configuration/ProfileUserPage"));
+const ProfileCompany = lazy(() => import("./pages/admin/Configuration/ProfileCompanyPage"));
+const Notification = lazy(() => import("./pages/admin/Configuration/NotificationPage"));
+const MobilPage = lazy(() => import("./pages/admin/Configuration/mobil/MobilPage"));
+const MobileHubPage = lazy(() => import("./pages/admin/Configuration/mobile-hub/MobileHubPage"));
 import { ArrowLeftCircle } from "lucide-react"
-import CompanyPoliciesPage from './pages/admin/Configuration/company-policies/CompanyPoliciesPage';
-import IncidentTypesPage from "./pages/admin/Configuration/types-incidents/IncidentTypePage"
-import LicenseTypePage from "./pages/admin/Configuration/types-licenses/LicensesTypePage"
-import DepartmentPage from "./pages/admin/Configuration/department/DepartmentPage"
-import SkillSetsPage from "./pages/admin/Configuration/skill-sets/SkillSetsPage"
-import UserRolesPage from "./pages/admin/Configuration/user-roles/UserRolesPage"
-import SettingsHome from "./pages/admin/Configuration/SettingsHome"
-import IntegrationsList from "./pages/admin/Configuration/integrations/IntegrationsList"
-import ProfileFieldsPage from "./pages/admin/Configuration/profile-fields/ProfileFieldsPage"
-import IntegrationDetail from "./pages/admin/Configuration/integrations/IntegrationDetail"
-import PayrollSettingsPage from "./pages/admin/Configuration/payroll/PayrollSettingsPage"
-import PasswordChangePage from "./pages/admin/Configuration/change-password/ChangePasswordPage"
-import PostingGlobalPage from './pages/admin/Configuration/posting-global/PostingGlobalPage';
-import DeveloperRequestsPage from "./pages/admin/Configuration/application-records/DeveloperRequestsPage"
-import ReportSettingsPage from "./pages/admin/Configuration/report-settings/ReportSettingsPage"
-import OtherSettingsPage from "./pages/admin/Configuration/other-settings/OtherSettingsPage"
-import GuardsGlobalSettingsPage from "./pages/admin/Configuration/guards-settings/GuardsGlobalSettingsPage"
-import RondasSettingsPage from "./pages/admin/Configuration/rondas-settings/RondasSettingsPage"
-import EmailPreferencesPage from "./pages/admin/Configuration/email-preferences/EmailPreferencesPage"
-import SmsBalancePage from "./pages/admin/Configuration/sms/SmsBalancePage"
-import CommunicationsPage from "./pages/admin/Configuration/communications/CommunicationsPage"
-import BillingPage from "./pages/admin/Configuration/billing/BillingPage"
-import DeveloperTokensPage from "./pages/admin/Configuration/developer-tokens/DeveloperTokensPage"
-import ActivitiesPage from "./pages/admin/actividades/ActivitiesPage"
-import ClientesPage from "./pages/admin/clientes/ClientsPage"
-import NewOrEditClientPage from "./pages/admin/clientes/NewOrEditClientPage"
-import ClientsDetails from "./pages/admin/clientes/ClientsDetails"
-import PostSitePage from "./pages/admin/post-sites/PostSitePage"
-import NewOrEditPostSitePage from "./pages/admin/post-sites/NewOrEditPostSitePage"
-import PostSiteDetailsPage from "./pages/admin/post-sites/PostSiteDetailsPage"
-import AddStationPage from "./pages/admin/post-sites/AddStationPage"
-import StationDetailPage from "./pages/admin/post-sites/station-detail/StationDetailPage"
-import GlobalInventoryPage from "./pages/admin/inventory/GlobalInventoryPage"
-import ProjectsPage from "./pages/admin/projects/ProjectsPage"
-import TrainingCoursesPage from "./pages/admin/training/TrainingCoursesPage"
-import TrainingCourseDetailPage from "./pages/admin/training/TrainingCourseDetailPage"
-import TrainingEnrollmentsPage from "./pages/admin/training/TrainingEnrollmentsPage"
-import TrainingCatalogPage from "./pages/admin/training/TrainingCatalogPage"
-import NewOrEditProjectPage from "./pages/admin/projects/NewOrEditProjectPage"
-import SecurityGuardsPage from "./pages/admin/security-guards/SecurityGuardsPage"
-import NewSecurityGuardPage from "./pages/admin/security-guards/NewSecurityGuardPage"
-import SupervisorsPage from "./pages/admin/supervisors/SupervisorsPage"
-import SupervisorDetailPage from "./pages/admin/supervisors/SupervisorDetailPage"
-import SupervisorKpisPage from "./pages/admin/supervisors/SupervisorKpisPage"
-import SupervisorNotesPage from "./pages/admin/supervisors/SupervisorNotesPage"
-import SupervisorLicensesPage from "./pages/admin/supervisors/SupervisorLicensesPage"
-import SupervisorPositionsPage from "./pages/admin/supervisors/SupervisorPositionsPage"
-import GuardRegistration from "./pages/guard/registration"
-import ClientRegistration from "./pages/client/registration"
-import AdminOfficeUsersPage from "./pages/admin/administrative-office-users/AdminOfficeUsersPage"
-import NewAdminUserPage from "./pages/admin/administrative-office-users/NewAdminUserPage"
-import EditAdminUserPage from "./pages/admin/administrative-office-users/EditAdminUserPage";
-import MessengerPage from "./pages/admin/messenger/MessengerPage"
-import RadioDispatch from "./pages/radio/RadioDispatch"
-import RadioDevices from "./pages/admin/radio/RadioDevices"
-import DispatcherPage from "./pages/admin/dispatcher/DispatcherPage"
-import CustomerRequests from "./pages/admin/requests/CustomerRequests"
-import GuardRatings from "./pages/admin/guard-ratings/GuardRatings"
-import NewDispatchPage from "./pages/admin/dispatcher/NewDispatchPage"
-import EditDispatchPage from "./pages/admin/dispatcher/EditDispatchPage"
-import VehiclesPage from "./pages/admin/vehicles/VehiclesPage"
-import DispatchDetailsPage from '@/pages/admin/dispatcher/DispatchDetailsPage';
-import DispatchPrintablePage from '@/pages/admin/dispatcher/DispatchPrintablePage';
-import DispatchPublicView from '@/pages/public/DispatchPublicView';
-import NewVehiclePage from "./pages/admin/vehicles/NewVehiclePage"
-import RoutesPage from "./pages/admin/routes/RoutesPage"
-import PatrullaBoardPage from "./pages/admin/vehicle-patrol/PatrullaBoardPage"
-import NewRoutePage from "./pages/admin/routes/NewRoutePage"
-import EditRoutePage from "./pages/admin/routes/EditRoutePage"
-import PatrolExecutionPage from "./pages/guard/PatrolExecutionPage"
-import LiveTrackingPage from "./pages/admin/gps-tracker/LiveTracking"
-import TrackingHistoryPage from "./pages/admin/gps-tracker/TrackingHistory"
-import Reports from "./pages/admin/Reports/Reports"
-import Reporting from "./pages/admin/analytics/Reporting"
-import Scheduling from "./pages/admin/analytics/Scheduling"
-import VideoMonitoring from "./pages/admin/video/VideoMonitoring"
-import VideoDevices from "./pages/admin/video/VideoDevices"
-import VideoRelaySites from "./pages/admin/video/VideoRelaySites"
-import VideoEvents from "./pages/admin/video/VideoEvents"
-import VideoSharedClip from "./pages/admin/video/VideoSharedClip"
-import AlarmQueue from "./pages/admin/alarm/AlarmQueue"
-import AlarmPanels from "./pages/admin/alarm/AlarmPanels"
-import AlarmSignals from "./pages/admin/alarm/AlarmSignals"
-import AlarmCaseDetail from "./pages/admin/alarm/AlarmCaseDetail"
-import AlarmReports from "./pages/admin/alarm/AlarmReports"
-import AlarmAnalytics from "./pages/admin/alarm/AlarmAnalytics"
-import AuditLogs from "./pages/admin/security/AuditLogs"
-import SystemLogs from "./pages/admin/security/SystemLogs"
-import LoginHistory from "./pages/admin/security/LoginHistory"
-import NominaDashboard from "./pages/admin/nomina/NominaDashboard"
-import NominaTimeClock from "./pages/admin/nomina/NominaTimeClock"
-import NominaRecords from "./pages/admin/nomina/NominaRecords"
-import NominaExceptions from "./pages/admin/nomina/NominaExceptions"
-import NominaApprovals from "./pages/admin/nomina/NominaApprovals"
-import TaskApprovals from "./pages/admin/tasks/TaskApprovals"
-import TaskTracking from "./pages/admin/tasks/TaskTracking"
-import PassdownsPage from "./pages/admin/passdown/PassdownsPage"
-import NominaPayrollSummary from "./pages/admin/nomina/NominaPayrollSummary"
-import NominaSettings from "./pages/admin/nomina/NominaSettings"
-import Visitors from "./pages/admin/visitor-management/Visitors"
-import Vehicles from "./pages/admin/visitor-management/Vehicles"
-import Visits from "./pages/admin/visitor-management/Visits"
-import PostSite from "./pages/admin/analytics/PostSite"
-import Guard from "./pages/admin/analytics/Guard"
-import TimeOff from "./pages/admin/programmer/TimeOff"
-import Schedule from "./pages/admin/programmer/Schedule"
-import ShiftExchange from "./pages/admin/programmer/ShiftExchange"
-import ShiftStatus from "./pages/admin/programmer/ShiftStatus"
-import ShiftTemplates from "./pages/admin/programmer/ShiftTemplates"
-import OpenShifts from "./pages/admin/programmer/OpenShifts"
-import CheckInOut from "./pages/admin/Reports/CheckInOut"
-import SiteTour from "./pages/admin/Reports/SiteTour"
-import Task from "./pages/admin/Reports/Task"
-import Dar from "./pages/admin/Reports/Dar"
-import VehiclePatrol from "./pages/admin/Reports/VehiclePatrol"
-import Checklist from "./pages/admin/Reports/Checklist"
-import PostKpi from "./pages/admin/Reports/PostKpi"
-import GuardKpi from "./pages/admin/Reports/GuardKpi"
-import Incident from "./pages/admin/Reports/Incident"
-import Passdown from "./pages/admin/Reports/Passdown"
-import WatchMode from "./pages/admin/Reports/WatchMode"
-import TourCheckPoint from "./pages/admin/Reports/TourCheckPoint"
-import GuardIdleLog from "./pages/admin/Reports/GuardIdleLog"
-import PanicButtonLog from "./pages/admin/Reports/PanicButtonLog"
-import GeoFenceLog from "./pages/admin/Reports/GeoFenceLog"
-import GuardDeviceFallReport from "./pages/admin/Reports/GuardDeviceFallReport"
-import PostOrderAck from "./pages/admin/Reports/PostOrderAck"
-import DocPolicyAck from "./pages/admin/Reports/DocPolicyAck"
-import License from "./pages/admin/Reports/License"
-import EditSecurityGuardPage from "./pages/admin/security-guards/EditSecurityGuardPage";
-import GuardOverview from "./pages/admin/security-guards/SegurityGuardsDetails";
-import GuardResumenPage from "./pages/admin/security-guards/components/GuardOverview/GuardOverviewPage";
-import GuardPerfilPage from "./pages/admin/security-guards/components/GuardProfile/GuardProfilepage";
-import GuardAvailabilityPage from "./pages/admin/security-guards/components/GuardAvailability/GuardAvailabilitypage";
-import GuardIndicadoresPage from "./pages/admin/security-guards/components/GuardKPIs/GuardKPIspage";
-import GuardDispositivoPage from "./pages/admin/security-guards/components/GuardDevice/GuardDevicepage";
-import GuardLicenciasPage from "./pages/admin/security-guards/components/GuardLicenses/GuardLicensespage";
-import GuardNotasPage from "./pages/admin/security-guards/components/GuardNotes/GuardNotespage";
-import GuardMemosPage from "./pages/admin/security-guards/components/GuardMemos/GuardMemosPage";
-import GuardRemindersPage from "./pages/admin/security-guards/components/GuardReminders/GuardRemindersPage";
-import GuardFilesPage from "./pages/admin/security-guards/components/GuardFiles/GuardFilesPage";
-import GuardAsignarSitiosPage from "./pages/admin/security-guards/components/GuardAssign-Sites/GuardAsignarSitiosPage";
-import GuardSkillsPage from "./pages/admin/security-guards/components/GuardSkills/GuardSkillsPage";
-import GuardDepartamentoPage from "./pages/admin/security-guards/components/GuardDepartment/GuardDepartamentoPage";
-import GuardConfiguracionPage from "./pages/admin/security-guards/components/GuardConfiguration/GuardConfiguracionPage";
+const CompanyPoliciesPage = lazy(() => import("./pages/admin/Configuration/company-policies/CompanyPoliciesPage"));
+const IncidentTypesPage = lazy(() => import("./pages/admin/Configuration/types-incidents/IncidentTypePage"));
+const LicenseTypePage = lazy(() => import("./pages/admin/Configuration/types-licenses/LicensesTypePage"));
+const DepartmentPage = lazy(() => import("./pages/admin/Configuration/department/DepartmentPage"));
+const SkillSetsPage = lazy(() => import("./pages/admin/Configuration/skill-sets/SkillSetsPage"));
+const UserRolesPage = lazy(() => import("./pages/admin/Configuration/user-roles/UserRolesPage"));
+const SettingsHome = lazy(() => import("./pages/admin/Configuration/SettingsHome"));
+const IntegrationsList = lazy(() => import("./pages/admin/Configuration/integrations/IntegrationsList"));
+const ProfileFieldsPage = lazy(() => import("./pages/admin/Configuration/profile-fields/ProfileFieldsPage"));
+const IntegrationDetail = lazy(() => import("./pages/admin/Configuration/integrations/IntegrationDetail"));
+const PayrollSettingsPage = lazy(() => import("./pages/admin/Configuration/payroll/PayrollSettingsPage"));
+const PasswordChangePage = lazy(() => import("./pages/admin/Configuration/change-password/ChangePasswordPage"));
+const PostingGlobalPage = lazy(() => import("./pages/admin/Configuration/posting-global/PostingGlobalPage"));
+const DeveloperRequestsPage = lazy(() => import("./pages/admin/Configuration/application-records/DeveloperRequestsPage"));
+const ReportSettingsPage = lazy(() => import("./pages/admin/Configuration/report-settings/ReportSettingsPage"));
+const OtherSettingsPage = lazy(() => import("./pages/admin/Configuration/other-settings/OtherSettingsPage"));
+const GuardsGlobalSettingsPage = lazy(() => import("./pages/admin/Configuration/guards-settings/GuardsGlobalSettingsPage"));
+const RondasSettingsPage = lazy(() => import("./pages/admin/Configuration/rondas-settings/RondasSettingsPage"));
+const EmailPreferencesPage = lazy(() => import("./pages/admin/Configuration/email-preferences/EmailPreferencesPage"));
+const SmsBalancePage = lazy(() => import("./pages/admin/Configuration/sms/SmsBalancePage"));
+const CommunicationsPage = lazy(() => import("./pages/admin/Configuration/communications/CommunicationsPage"));
+const BillingPage = lazy(() => import("./pages/admin/Configuration/billing/BillingPage"));
+const DeveloperTokensPage = lazy(() => import("./pages/admin/Configuration/developer-tokens/DeveloperTokensPage"));
+const ActivitiesPage = lazy(() => import("./pages/admin/actividades/ActivitiesPage"));
+const ClientesPage = lazy(() => import("./pages/admin/clientes/ClientsPage"));
+const NewOrEditClientPage = lazy(() => import("./pages/admin/clientes/NewOrEditClientPage"));
+const ClientsDetails = lazy(() => import("./pages/admin/clientes/ClientsDetails"));
+const PostSitePage = lazy(() => import("./pages/admin/post-sites/PostSitePage"));
+const NewOrEditPostSitePage = lazy(() => import("./pages/admin/post-sites/NewOrEditPostSitePage"));
+const PostSiteDetailsPage = lazy(() => import("./pages/admin/post-sites/PostSiteDetailsPage"));
+const AddStationPage = lazy(() => import("./pages/admin/post-sites/AddStationPage"));
+const StationDetailPage = lazy(() => import("./pages/admin/post-sites/station-detail/StationDetailPage"));
+const GlobalInventoryPage = lazy(() => import("./pages/admin/inventory/GlobalInventoryPage"));
+const ProjectsPage = lazy(() => import("./pages/admin/projects/ProjectsPage"));
+const TrainingCoursesPage = lazy(() => import("./pages/admin/training/TrainingCoursesPage"));
+const TrainingCourseDetailPage = lazy(() => import("./pages/admin/training/TrainingCourseDetailPage"));
+const TrainingEnrollmentsPage = lazy(() => import("./pages/admin/training/TrainingEnrollmentsPage"));
+const TrainingCatalogPage = lazy(() => import("./pages/admin/training/TrainingCatalogPage"));
+const NewOrEditProjectPage = lazy(() => import("./pages/admin/projects/NewOrEditProjectPage"));
+const SecurityGuardsPage = lazy(() => import("./pages/admin/security-guards/SecurityGuardsPage"));
+const NewSecurityGuardPage = lazy(() => import("./pages/admin/security-guards/NewSecurityGuardPage"));
+const SupervisorsPage = lazy(() => import("./pages/admin/supervisors/SupervisorsPage"));
+const SupervisorDetailPage = lazy(() => import("./pages/admin/supervisors/SupervisorDetailPage"));
+const SupervisorKpisPage = lazy(() => import("./pages/admin/supervisors/SupervisorKpisPage"));
+const SupervisorNotesPage = lazy(() => import("./pages/admin/supervisors/SupervisorNotesPage"));
+const SupervisorLicensesPage = lazy(() => import("./pages/admin/supervisors/SupervisorLicensesPage"));
+const SupervisorPositionsPage = lazy(() => import("./pages/admin/supervisors/SupervisorPositionsPage"));
+const GuardRegistration = lazy(() => import("./pages/guard/registration"));
+const ClientRegistration = lazy(() => import("./pages/client/registration"));
+const AdminOfficeUsersPage = lazy(() => import("./pages/admin/administrative-office-users/AdminOfficeUsersPage"));
+const NewAdminUserPage = lazy(() => import("./pages/admin/administrative-office-users/NewAdminUserPage"));
+const EditAdminUserPage = lazy(() => import("./pages/admin/administrative-office-users/EditAdminUserPage"));
+const MessengerPage = lazy(() => import("./pages/admin/messenger/MessengerPage"));
+const RadioDispatch = lazy(() => import("./pages/radio/RadioDispatch"));
+const RadioDevices = lazy(() => import("./pages/admin/radio/RadioDevices"));
+const DispatcherPage = lazy(() => import("./pages/admin/dispatcher/DispatcherPage"));
+const CustomerRequests = lazy(() => import("./pages/admin/requests/CustomerRequests"));
+const GuardRatings = lazy(() => import("./pages/admin/guard-ratings/GuardRatings"));
+const NewDispatchPage = lazy(() => import("./pages/admin/dispatcher/NewDispatchPage"));
+const EditDispatchPage = lazy(() => import("./pages/admin/dispatcher/EditDispatchPage"));
+const VehiclesPage = lazy(() => import("./pages/admin/vehicles/VehiclesPage"));
+const DispatchDetailsPage = lazy(() => import("@/pages/admin/dispatcher/DispatchDetailsPage"));
+const DispatchPrintablePage = lazy(() => import("@/pages/admin/dispatcher/DispatchPrintablePage"));
+const DispatchPublicView = lazy(() => import("@/pages/public/DispatchPublicView"));
+const NewVehiclePage = lazy(() => import("./pages/admin/vehicles/NewVehiclePage"));
+const RoutesPage = lazy(() => import("./pages/admin/routes/RoutesPage"));
+const PatrullaBoardPage = lazy(() => import("./pages/admin/vehicle-patrol/PatrullaBoardPage"));
+const NewRoutePage = lazy(() => import("./pages/admin/routes/NewRoutePage"));
+const EditRoutePage = lazy(() => import("./pages/admin/routes/EditRoutePage"));
+const PatrolExecutionPage = lazy(() => import("./pages/guard/PatrolExecutionPage"));
+const LiveTrackingPage = lazy(() => import("./pages/admin/gps-tracker/LiveTracking"));
+const TrackingHistoryPage = lazy(() => import("./pages/admin/gps-tracker/TrackingHistory"));
+const Reports = lazy(() => import("./pages/admin/Reports/Reports"));
+const Reporting = lazy(() => import("./pages/admin/analytics/Reporting"));
+const Scheduling = lazy(() => import("./pages/admin/analytics/Scheduling"));
+const VideoMonitoring = lazy(() => import("./pages/admin/video/VideoMonitoring"));
+const VideoDevices = lazy(() => import("./pages/admin/video/VideoDevices"));
+const VideoRelaySites = lazy(() => import("./pages/admin/video/VideoRelaySites"));
+const VideoEvents = lazy(() => import("./pages/admin/video/VideoEvents"));
+const VideoSharedClip = lazy(() => import("./pages/admin/video/VideoSharedClip"));
+const AlarmQueue = lazy(() => import("./pages/admin/alarm/AlarmQueue"));
+const AlarmPanels = lazy(() => import("./pages/admin/alarm/AlarmPanels"));
+const AlarmSignals = lazy(() => import("./pages/admin/alarm/AlarmSignals"));
+const AlarmCaseDetail = lazy(() => import("./pages/admin/alarm/AlarmCaseDetail"));
+const AlarmReports = lazy(() => import("./pages/admin/alarm/AlarmReports"));
+const AlarmAnalytics = lazy(() => import("./pages/admin/alarm/AlarmAnalytics"));
+const AuditLogs = lazy(() => import("./pages/admin/security/AuditLogs"));
+const SystemLogs = lazy(() => import("./pages/admin/security/SystemLogs"));
+const LoginHistory = lazy(() => import("./pages/admin/security/LoginHistory"));
+const NominaDashboard = lazy(() => import("./pages/admin/nomina/NominaDashboard"));
+const NominaTimeClock = lazy(() => import("./pages/admin/nomina/NominaTimeClock"));
+const NominaRecords = lazy(() => import("./pages/admin/nomina/NominaRecords"));
+const NominaExceptions = lazy(() => import("./pages/admin/nomina/NominaExceptions"));
+const NominaApprovals = lazy(() => import("./pages/admin/nomina/NominaApprovals"));
+const TaskApprovals = lazy(() => import("./pages/admin/tasks/TaskApprovals"));
+const TaskTracking = lazy(() => import("./pages/admin/tasks/TaskTracking"));
+const PassdownsPage = lazy(() => import("./pages/admin/passdown/PassdownsPage"));
+const NominaPayrollSummary = lazy(() => import("./pages/admin/nomina/NominaPayrollSummary"));
+const NominaSettings = lazy(() => import("./pages/admin/nomina/NominaSettings"));
+const Visitors = lazy(() => import("./pages/admin/visitor-management/Visitors"));
+const Vehicles = lazy(() => import("./pages/admin/visitor-management/Vehicles"));
+const Visits = lazy(() => import("./pages/admin/visitor-management/Visits"));
+const PostSite = lazy(() => import("./pages/admin/analytics/PostSite"));
+const Guard = lazy(() => import("./pages/admin/analytics/Guard"));
+const TimeOff = lazy(() => import("./pages/admin/programmer/TimeOff"));
+const Schedule = lazy(() => import("./pages/admin/programmer/Schedule"));
+const ShiftExchange = lazy(() => import("./pages/admin/programmer/ShiftExchange"));
+const ShiftStatus = lazy(() => import("./pages/admin/programmer/ShiftStatus"));
+const ShiftTemplates = lazy(() => import("./pages/admin/programmer/ShiftTemplates"));
+const OpenShifts = lazy(() => import("./pages/admin/programmer/OpenShifts"));
+const CheckInOut = lazy(() => import("./pages/admin/Reports/CheckInOut"));
+const SiteTour = lazy(() => import("./pages/admin/Reports/SiteTour"));
+const Task = lazy(() => import("./pages/admin/Reports/Task"));
+const Dar = lazy(() => import("./pages/admin/Reports/Dar"));
+const VehiclePatrol = lazy(() => import("./pages/admin/Reports/VehiclePatrol"));
+const Checklist = lazy(() => import("./pages/admin/Reports/Checklist"));
+const PostKpi = lazy(() => import("./pages/admin/Reports/PostKpi"));
+const GuardKpi = lazy(() => import("./pages/admin/Reports/GuardKpi"));
+const Incident = lazy(() => import("./pages/admin/Reports/Incident"));
+const Passdown = lazy(() => import("./pages/admin/Reports/Passdown"));
+const WatchMode = lazy(() => import("./pages/admin/Reports/WatchMode"));
+const TourCheckPoint = lazy(() => import("./pages/admin/Reports/TourCheckPoint"));
+const GuardIdleLog = lazy(() => import("./pages/admin/Reports/GuardIdleLog"));
+const PanicButtonLog = lazy(() => import("./pages/admin/Reports/PanicButtonLog"));
+const GeoFenceLog = lazy(() => import("./pages/admin/Reports/GeoFenceLog"));
+const GuardDeviceFallReport = lazy(() => import("./pages/admin/Reports/GuardDeviceFallReport"));
+const PostOrderAck = lazy(() => import("./pages/admin/Reports/PostOrderAck"));
+const DocPolicyAck = lazy(() => import("./pages/admin/Reports/DocPolicyAck"));
+const License = lazy(() => import("./pages/admin/Reports/License"));
+const EditSecurityGuardPage = lazy(() => import("./pages/admin/security-guards/EditSecurityGuardPage"));
+const GuardOverview = lazy(() => import("./pages/admin/security-guards/SegurityGuardsDetails"));
+const GuardResumenPage = lazy(() => import("./pages/admin/security-guards/components/GuardOverview/GuardOverviewPage"));
+const GuardPerfilPage = lazy(() => import("./pages/admin/security-guards/components/GuardProfile/GuardProfilepage"));
+const GuardAvailabilityPage = lazy(() => import("./pages/admin/security-guards/components/GuardAvailability/GuardAvailabilitypage"));
+const GuardIndicadoresPage = lazy(() => import("./pages/admin/security-guards/components/GuardKPIs/GuardKPIspage"));
+const GuardDispositivoPage = lazy(() => import("./pages/admin/security-guards/components/GuardDevice/GuardDevicepage"));
+const GuardLicenciasPage = lazy(() => import("./pages/admin/security-guards/components/GuardLicenses/GuardLicensespage"));
+const GuardNotasPage = lazy(() => import("./pages/admin/security-guards/components/GuardNotes/GuardNotespage"));
+const GuardMemosPage = lazy(() => import("./pages/admin/security-guards/components/GuardMemos/GuardMemosPage"));
+const GuardRemindersPage = lazy(() => import("./pages/admin/security-guards/components/GuardReminders/GuardRemindersPage"));
+const GuardFilesPage = lazy(() => import("./pages/admin/security-guards/components/GuardFiles/GuardFilesPage"));
+const GuardAsignarSitiosPage = lazy(() => import("./pages/admin/security-guards/components/GuardAssign-Sites/GuardAsignarSitiosPage"));
+const GuardSkillsPage = lazy(() => import("./pages/admin/security-guards/components/GuardSkills/GuardSkillsPage"));
+const GuardDepartamentoPage = lazy(() => import("./pages/admin/security-guards/components/GuardDepartment/GuardDepartamentoPage"));
+const GuardConfiguracionPage = lazy(() => import("./pages/admin/security-guards/components/GuardConfiguration/GuardConfiguracionPage"));
 import GuardAppLayout from "./layouts/GuardAppLayout";
-import GuardDashboard from "./pages/guard/dashboard/GuardDashboard";
-import GuardSchedulePage from "./pages/guard/dashboard/GuardSchedule";
-import GuardTimeOffPage from "./pages/guard/dashboard/GuardTimeOff";
-import MemosPage from "./pages/admin/memos/MemosPage";
-import StyleGuide from "./pages/StyleGuide";
-import TenantsPage from "./pages/admin/superadmin/TenantsPage";
+const GuardDashboard = lazy(() => import("./pages/guard/dashboard/GuardDashboard"));
+const GuardSchedulePage = lazy(() => import("./pages/guard/dashboard/GuardSchedule"));
+const GuardTimeOffPage = lazy(() => import("./pages/guard/dashboard/GuardTimeOff"));
+const MemosPage = lazy(() => import("./pages/admin/memos/MemosPage"));
+const StyleGuide = lazy(() => import("./pages/StyleGuide"));
+const TenantsPage = lazy(() => import("./pages/admin/superadmin/TenantsPage"));
 import RequireGlobalAdmin from "./components/RequireGlobalAdmin";
 
 import { ClientSelectionProvider } from "./contexts/ClientSelectionContext";
@@ -249,6 +249,7 @@ export default function App() {
       <AuthProvider>
         <ClientSelectionProvider>
           <BrowserRouter>
+            <Suspense fallback={<div style={{minHeight:"60vh",display:"flex",alignItems:"center",justifyContent:"center"}}><div className="animate-spin" aria-label="Cargando" style={{width:28,height:28,border:"3px solid var(--border,#e5e7eb)",borderTopColor:"var(--primary,#C8860A)",borderRadius:"50%"}}/></div>}>
             <Routes>
               {/* Enlace público de video compartido (cliente, sin login) */}
               <Route path="/video/shared/:token" element={<VideoSharedClip />} />
@@ -1710,6 +1711,7 @@ export default function App() {
               <Route path="*" element={<NotFound />} />
 
             </Routes>
+            </Suspense>
           </BrowserRouter>
         </ClientSelectionProvider>
       </AuthProvider>

@@ -48,6 +48,11 @@ export default defineConfig({
           "vendor-phone": ["libphonenumber-js"],
           // Notifications
           "vendor-toast": ["sonner"],
+          // Heavy, feature-specific libs — split out so they never sit in the
+          // initial entry. Combined with route-level React.lazy, these only
+          // download when a user actually opens radio / maps.
+          "vendor-livekit": ["livekit-client"],
+          "vendor-maps": ["leaflet", "react-leaflet"],
         },
       },
     },
