@@ -1,9 +1,15 @@
-import SectionBar from "@/components/section-bar";
-import SubSidebar from "@/components/sub-sidebar";
-import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
+/**
+ * Shared frame for every Configuración detail page. Instead of a second
+ * side menu next to the main app sidebar (two sidebars looked cluttered),
+ * the top bar carries a back button to the settings hub (/setting) plus the
+ * page title. navKey is kept for API compatibility with existing pages.
+ */
 export default function SettingsLayout({
-  navKey,
+  navKey: _navKey,
   title,
   children,
 }: {
@@ -11,68 +17,32 @@ export default function SettingsLayout({
   title: string;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth >= 1024 : true
-  );
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handleResize = () => setOpen(window.innerWidth >= 1024);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Al cambiar la opción (navKey) cerramos ambos en móvil; en desktop no modificamos
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.innerWidth < 1024) {
-      setOpen(false);
-    }
-  }, [navKey]);
-
-  const handleHamburger = () => setOpen((v) => !v);
+  const { t } = useTranslation();
 
   return (
     <div className="relative flex h-[calc(100vh-56px)] overflow-hidden bg-muted/20">
-      {/* Sidebar desktop */}
-      <aside
-        className={[
-          "hidden lg:block shrink-0 overflow-hidden bg-card transition-[width] duration-300",
-          open ? "w-64 border-r border-border/70 shadow-sm" : "w-0 border-transparent",
-        ].join(" ")}
-      >
-        {open && (
-          <div className="sticky top-0 h-full">
-            <SubSidebar navKey={navKey} heightOffset={0} className="h-full" />
-          </div>
-        )}
-      </aside>
-
-      {/* Columna principal */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <SectionBar title={title} onHamburger={handleHamburger} />
+        {/* Top bar: back to the settings hub + page title */}
+        <div className="sticky top-0 z-10 bg-card">
+          <div className="h-12 flex items-center gap-2 border-b border-border px-4">
+            <Link
+              to="/setting"
+              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 -ml-2 text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              aria-label={t("settings.backToSettings", { defaultValue: "Volver a Configuración" })}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t("settings.back", { defaultValue: "Configuración" })}
+            </Link>
+            <span className="text-border select-none" aria-hidden="true">/</span>
+            <div className="text-[15px] text-foreground font-medium truncate">{title}</div>
+          </div>
+        </div>
 
-        {/* ✅ scroll solo aquí */}
+        {/* Scroll container */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-6">{children}</div>
         </div>
       </div>
-
-      {/* Drawer móvil */}
-      <div
-        className={[
-          "fixed left-0 top-0 z-[60] w-64 h-screen bg-card border-r border-border/70 shadow-xl lg:hidden transform transition-transform duration-300",
-          open ? "translate-x-0" : "-translate-x-full",
-        ].join(" ")}
-      >
-        <SubSidebar navKey={navKey} heightOffset={0} className="h-full" />
-      </div>
-
-      {open && (
-        <div
-          className="fixed inset-0 z-[55] bg-black/40 backdrop-blur-sm lg:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
     </div>
   );
 }
