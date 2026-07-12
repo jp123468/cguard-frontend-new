@@ -1,0 +1,28 @@
+import { QueryClient } from "@tanstack/react-query";
+
+/**
+ * Shared react-query client for the CRM.
+ *
+ * The audit flagged that every navigation re-queried MySQL because the app had
+ * no client cache and defaulted fetches to `cache:'no-store'`. react-query caches
+ * resolved data in-memory, so re-visiting a page within `staleTime` serves
+ * instantly with zero network — independent of the underlying fetch cache mode.
+ *
+ * Defaults chosen for an operations console (data changes, but not sub-second):
+ *  · staleTime 30s   — re-navigating within 30s does NOT refetch.
+ *  · gcTime 5m       — keep unused data around briefly for back/forward.
+ *  · refetchOnWindowFocus false — no refetch storm when tabbing back in.
+ *  · retry 1         — one quiet retry; the fetch layer already retries GETs.
+ * Real-time views (live map, alarms) can opt into their own short staleTime or
+ * refetchInterval per-query.
+ */
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});

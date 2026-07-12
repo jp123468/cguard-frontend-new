@@ -64,7 +64,8 @@ type ClientFilters = {
   lastName?: string;
 };
 
-import { categoryService, type Category } from "@/lib/api/categoryService";
+import { type Category } from "@/lib/api/categoryService";
+import { useCategories } from "@/hooks/data";
 import CategoryManagerDialog from "@/components/categories/CategoryManagerDialog";
 import { BulkActionsSelect, type BulkAction } from "@/components/table/BulkActionsSelect";
 import { DataTable, type Column } from "@/components/table/DataTable";
@@ -120,7 +121,9 @@ export default function ClientesPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
-  const [categories, setCategories] = useState<Category[]>([]);
+  // Categories are cached + shared via react-query (was a re-fetch on every
+  // mount/navigation). loadCategories() below just refetches on demand.
+  const { data: categories = [] as Category[], refetch: refetchCategories } = useCategories("clientAccount");
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
@@ -196,27 +199,12 @@ export default function ClientesPage() {
     }
   };
 
+  // Backed by react-query (useCategories): refetch on demand. The initial load
+  // is handled by the hook with a 2-min staleTime, so navigating back to this
+  // page no longer re-queries categories every time.
   const loadCategories = async () => {
-    try {
-      const tenantId = localStorage.getItem('tenantId');
-      if (!tenantId) {
-        if (!tenantMissingNotifiedRef.current) {
-          toast.error("El usuario debe estar vinculado a una empresa para continuar");
-          tenantMissingNotifiedRef.current = true;
-        }
-        setCategories([]);
-        return;
-      }
-      const data = await categoryService.list({ filter: { module: "clientAccount" }, limit: 1000 });
-      setCategories(data.rows || []);
-    } catch (error) {
-      console.error("Error al cargar Sectores:", error);
-    }
+    await refetchCategories();
   };
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
 
   useEffect(() => {
     if (openCategorizeDialog) {
