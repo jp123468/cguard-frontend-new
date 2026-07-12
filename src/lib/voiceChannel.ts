@@ -19,9 +19,17 @@ import {
   RoomEvent,
   Track,
   ConnectionState,
+  setLogLevel,
   type RemoteTrack,
   type Participant,
 } from "livekit-client";
+
+// Quiet the LiveKit SDK's default `info` chatter (it narrates every connection
+// state change / signal connect / "connected to Livekit Server" — ~5 lines per
+// connect). We only want real warnings/errors in the console. This is cosmetic:
+// the radio connects exactly once (VoiceChannel is a singleton, guarded by
+// `if (vc) return`), so the volume was verbosity, not duplicate connections.
+try { setLogLevel("warn"); } catch { /* older SDKs: no-op */ }
 
 export type VoiceMember = { userId: string; name: string; role: string };
 export type VoiceSpeaker = { userId: string; name: string } | null;
