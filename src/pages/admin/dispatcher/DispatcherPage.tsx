@@ -119,6 +119,11 @@ export default function DispatcherPage() {
   const [forbiddenMessage, setForbiddenMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const searchTimeoutRef = useRef<any>(null);
+  // Shared monotonic guard across ALL row-loading paths (initial load, apply
+  // filters, clear filters, search, refresh). Each captures a ticket before its
+  // await and only applies its result if still the latest — so a slow filter
+  // response can't clobber a newer search's rows, and vice-versa.
+  const loadSeqRef = useRef(0);
   // Share modal state
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareTargetId, setShareTargetId] = useState<string | null>(null);
@@ -176,6 +181,7 @@ export default function DispatcherPage() {
     // options (clients/postSites) will be derived from loaded `rows`
 
     const loadRows = async () => {
+      const mine = ++loadSeqRef.current;
       setLoading(true);
       try {
         const tenantId = localStorage.getItem('tenantId');
@@ -187,6 +193,7 @@ export default function DispatcherPage() {
           url += `?status=${encodeURIComponent(String(filters.status))}`;
         }
         const resp = await api.get(url);
+        if (mine !== loadSeqRef.current) return; // superseded
         const payload = resp && resp.data ? resp.data : resp;
 
         let rowsData: any[] = [];
@@ -205,6 +212,7 @@ export default function DispatcherPage() {
         setRows(rowsData);
         setTotalCount(count);
       } catch (e: any) {
+        if (mine !== loadSeqRef.current) return;
         console.error('Error cargando Incidentes:', e);
         // detect 403 forbidden and surface a friendly UI state
         const status = e?.status || e?.response?.status || e?.data?.status || (e && e.statusCode);
@@ -218,12 +226,16 @@ export default function DispatcherPage() {
           setTotalCount(0);
         }
       } finally {
-        setLoading(false);
+        if (mine === loadSeqRef.current) setLoading(false);
       }
     };
 
     loadRows();
   }, []);
+
+  // Clear the search debounce on unmount so its callback can't setState after
+  // the page is gone.
+  useEffect(() => () => { if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current); }, []);
 
   // Fetch all requests once (no status) to derive full list of clients/sites
   useEffect(() => {
@@ -405,6 +417,7 @@ export default function DispatcherPage() {
     }
 
     setOpenFilter(false);
+    const mine = ++loadSeqRef.current;
     setLoading(true);
     try {
       const tenantId = localStorage.getItem('tenantId');
@@ -457,6 +470,7 @@ export default function DispatcherPage() {
       if (qs) url += `?${qs}`;
 
       const resp = await api.get(url);
+      if (mine !== loadSeqRef.current) return; // superseded
       const payload = resp && resp.data ? resp.data : resp;
 
       let rowsData: any[] = [];
@@ -474,9 +488,10 @@ export default function DispatcherPage() {
       setTotalCount(count);
       setPage(1);
     } catch (err) {
+      if (mine !== loadSeqRef.current) return;
       console.error('Error aplicando filtros:', err);
     } finally {
-      setLoading(false);
+      if (mine === loadSeqRef.current) setLoading(false);
     }
   };
 
@@ -500,14 +515,17 @@ export default function DispatcherPage() {
         else if (body && Array.isArray(body.rows)) rows = body.rows;
         else if (body && Array.isArray(body.data)) rows = body.data;
         if (Array.isArray(rows) && rows.length) {
-          const mapped = rows.map((s: any) => ({ id: s.id || s.stationId || s.uuid || s, name: s.name || s.stationName || s.displayName || s.label || s.address || (s.postSite && (s.postSite.businessName || s.postSite.name)) || String(s.id) }));
-          // Defensive filter: only keep stations that reference this post-site when possible
-          const filtered = mapped.filter((r: any) => {
-            const pid = (r && (r.postSiteId || r.post_site_id || r.postSite || r.post_site)) || null;
+          // Defensive filter on the RAW station rows (they carry postSiteId) —
+          // must run BEFORE mapping to {id,name}, or the reference is lost and the
+          // filter becomes a no-op (kept every station regardless of site).
+          const filtered = rows.filter((s: any) => {
+            const pid = (s && (s.postSiteId || s.post_site_id || (s.postSite && (s.postSite.id || s.postSite)) || s.post_site)) || null;
             if (!pid) return true; // can't determine, keep
             return String(pid) === String(siteToLoad);
           });
-          setStations(filtered.length ? filtered : mapped);
+          const source = filtered.length ? filtered : rows;
+          const mapped = source.map((s: any) => ({ id: s.id || s.stationId || s.uuid || s, name: s.name || s.stationName || s.displayName || s.label || s.address || (s.postSite && (s.postSite.businessName || s.postSite.name)) || String(s.id) }));
+          setStations(mapped);
           return;
         }
       } catch (e) {
@@ -554,6 +572,7 @@ export default function DispatcherPage() {
   const clearFilters = async () => {
     const newFilters: DispatcherFilters = { ...defaultDispatcherFilters, status: 'abierto' };
     setFilters(newFilters);
+    const mine = ++loadSeqRef.current;
     setLoading(true);
     try {
       const tenantId = localStorage.getItem('tenantId');
@@ -566,6 +585,7 @@ export default function DispatcherPage() {
       }
 
       const resp = await api.get(url);
+      if (mine !== loadSeqRef.current) return; // superseded
       const payload = resp && resp.data ? resp.data : resp;
 
       let rowsData: any[] = [];
@@ -583,9 +603,10 @@ export default function DispatcherPage() {
       setTotalCount(count);
       setPage(1);
     } catch (err) {
+      if (mine !== loadSeqRef.current) return;
       console.error('Error limpiando filtros:', err);
     } finally {
-      setLoading(false);
+      if (mine === loadSeqRef.current) setLoading(false);
     }
   };
 
@@ -678,6 +699,7 @@ export default function DispatcherPage() {
       setSelectedIds([]);
 
       // refresh rows using same logic as initial load
+      const mine = ++loadSeqRef.current;
       try {
         const resp = await api.get(`/tenant/${tenantId}/request`);
         const payload = resp && resp.data ? resp.data : resp;
@@ -693,8 +715,12 @@ export default function DispatcherPage() {
         // Client-side pagination: total derives from loaded rows.
         count = rowsData.length;
 
-        setRows(rowsData);
-        setTotalCount(count);
+        // Apply only if still the latest load (don't clobber a newer one), but
+        // let the delete toast below run regardless.
+        if (mine === loadSeqRef.current) {
+          setRows(rowsData);
+          setTotalCount(count);
+        }
       } catch (e) {
         console.error('Error recargando Incidentes:', e);
       }
@@ -1017,6 +1043,7 @@ export default function DispatcherPage() {
                     clearTimeout(searchTimeoutRef.current);
                   }
                   searchTimeoutRef.current = setTimeout(async () => {
+                    const mine = ++loadSeqRef.current;
                     try {
                       const tenantId = localStorage.getItem('tenantId');
                       if (!tenantId) return;
@@ -1071,6 +1098,7 @@ export default function DispatcherPage() {
                       if (qs) url += `?${qs}`;
 
                       const resp = await api.get(url);
+                      if (mine !== loadSeqRef.current) return; // superseded
                       const payload = resp && resp.data ? resp.data : resp;
 
                       let rowsData: any[] = [];
@@ -1088,9 +1116,10 @@ export default function DispatcherPage() {
                       setTotalCount(count);
                       setPage(1);
                     } catch (err) {
+                      if (mine !== loadSeqRef.current) return;
                       console.error('Error buscando Incidentes:', err);
                     } finally {
-                      setLoading(false);
+                      if (mine === loadSeqRef.current) setLoading(false);
                     }
                   }, 300);
                 }}
