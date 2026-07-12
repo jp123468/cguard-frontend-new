@@ -164,8 +164,13 @@ export default function ClientesPage() {
 
   // Ensure we only notify tenant-missing once per page lifecycle
   const tenantMissingNotifiedRef = useRef(false);
+  const loadClientsSeqRef = useRef(0);
 
   const loadClients = async () => {
+    // Monotonic guard: filters/page/sort changes fire overlapping loads (the
+    // setPage(1) effect + the load effect both react to filters); only the
+    // latest response may apply, else a slow earlier one clobbers newer rows.
+    const mine = ++loadClientsSeqRef.current;
     setLoading(true);
     try {
       const tenantId = localStorage.getItem('tenantId');
@@ -174,8 +179,7 @@ export default function ClientesPage() {
           toast.error("El usuario debe estar vinculado a una empresa para continuar");
           tenantMissingNotifiedRef.current = true;
         }
-        setClients([]);
-        setTotalCount(0);
+        if (mine === loadClientsSeqRef.current) { setClients([]); setTotalCount(0); }
         return;
       }
       const pagination: any = { limit, offset: (page - 1) * limit };
@@ -189,13 +193,15 @@ export default function ClientesPage() {
         },
         pagination
       );
+      if (mine !== loadClientsSeqRef.current) return; // superseded by a newer load
       setClients(data.rows);
       setTotalCount(data.count);
     } catch (error: any) {
+      if (mine !== loadClientsSeqRef.current) return;
       console.error(error);
       toast.error(getServerErrorMessage(error, t('clients.errorLoadingClients')));
     } finally {
-      setLoading(false);
+      if (mine === loadClientsSeqRef.current) setLoading(false);
     }
   };
 

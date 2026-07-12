@@ -14,6 +14,18 @@ import {
   Stagger,
 } from "@/components/kit";
 
+// Reports actually wired to live data (DataReport-backed). Everything else in
+// reports-config is still a shell, so those cards render disabled ("Próximamente")
+// instead of navigating to an empty page. Add an href here as each report ships.
+const READY_REPORT_HREFS = new Set<string>([
+  "/reports/check-in-out",
+  "/reports/site-tour",
+  "/reports/tasks",
+  "/reports/passdown",
+  "/reports/panic-button-log",
+  "/reports/geo-fence-log",
+]);
+
 interface ReportsProps {
   onNavigate?: (href: string) => void;
 }
@@ -136,19 +148,27 @@ const Reports: React.FC<ReportsProps> = ({ onNavigate }) => {
                 <Stagger className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {section.reports.map((report) => {
                     const Icon = iconForReport(report.id, section.id);
+                    // Only the reports actually wired to data are clickable; the
+                    // rest are shown disabled with a "Próximamente" badge instead
+                    // of navigating to an empty shell.
+                    const ready = READY_REPORT_HREFS.has(report.href);
                     return (
                       <button
                         key={report.id}
-                        onClick={() => go(report.href)}
-                        className={`group relative flex h-full w-full items-start gap-3.5 overflow-hidden rounded-2xl border border-border/40 bg-card p-4 text-left shadow-sm ring-1 ring-transparent transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${theme.ring}`}
+                        onClick={ready ? () => go(report.href) : undefined}
+                        disabled={!ready}
+                        aria-disabled={!ready}
+                        className={`group relative flex h-full w-full items-start gap-3.5 overflow-hidden rounded-2xl border border-border/40 bg-card p-4 text-left shadow-sm ring-1 ring-transparent transition-all duration-200 ${ready ? `hover:-translate-y-0.5 hover:shadow-lg ${theme.ring}` : "cursor-not-allowed opacity-55"}`}
                       >
-                        <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${theme.from} ${theme.to} ${theme.text} transition-transform duration-200 group-hover:scale-105`}>
+                        <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${theme.from} ${theme.to} ${theme.text} transition-transform duration-200 ${ready ? "group-hover:scale-105" : ""}`}>
                           <Icon size={20} />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-2">
                             <h3 className="text-sm font-semibold leading-snug text-foreground">{report.title}</h3>
-                            {(report.openCount !== undefined || report.closedCount !== undefined) && (
+                            {!ready ? (
+                              <StatusBadge tone="slate" dot={false} className="shrink-0 px-1.5 py-0.5 text-[10px]">Próximamente</StatusBadge>
+                            ) : (report.openCount !== undefined || report.closedCount !== undefined) && (
                               <div className="flex shrink-0 gap-1">
                                 {report.openCount !== undefined && (
                                   <StatusBadge tone="green" dot={false} className="px-1.5 py-0.5 text-[10px]">{report.openCount}</StatusBadge>
@@ -161,7 +181,7 @@ const Reports: React.FC<ReportsProps> = ({ onNavigate }) => {
                           </div>
                           <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{report.description}</p>
                         </div>
-                        <ArrowRight size={16} className="absolute bottom-3 right-3 text-muted-foreground/0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-muted-foreground/60" />
+                        {ready && <ArrowRight size={16} className="absolute bottom-3 right-3 text-muted-foreground/0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-muted-foreground/60" />}
                       </button>
                     );
                   })}
