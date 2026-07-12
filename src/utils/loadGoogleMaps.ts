@@ -31,8 +31,11 @@ export function loadGoogleMaps(): Promise<void> {
     }
 
     const script = document.createElement('script');
-    // Use stable release with places and marker libraries
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker`;
+    // Use stable release with places and marker libraries. `loading=async` is
+    // Google's recommended bootstrap hint (removes the "loaded without
+    // loading=async" console warning + defers the library work off the critical
+    // path); it pairs with the async/defer attributes below.
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&loading=async`;
     script.async = true;
     script.defer = true;
     script.onload = () => poll(resolve, reject);
