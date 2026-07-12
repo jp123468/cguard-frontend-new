@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import AppLayout from "@/layouts/app-layout";
 import { usePageTitle } from '@/hooks/usePageTitle';
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -106,6 +107,9 @@ export default function PostSitePage() {
   const [bulkKey, setBulkKey] = useState(0);
   const navigate = useNavigate();
   const { hasPermission } = usePermissions();
+  // Debounce the search box so we don't fire a full network load per keystroke.
+  const debouncedSearch = useDebouncedValue(searchQuery, 400);
+  const loadPostSitesSeqRef = useRef(0);
   // Sorting state (client-side for post sites list)
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
@@ -154,13 +158,16 @@ export default function PostSitePage() {
 
   // Load post sites
   const loadPostSites = async () => {
+    // Latest-wins: overlapping loads (page/limit/search/filter changes) must not
+    // let a slow earlier response clobber newer rows.
+    const mine = ++loadPostSitesSeqRef.current;
     setLoading(true);
     try {
       // Fetch post sites and clients in parallel so we can display client names
       // Build search filters: apply the query across name, email and phone
       // so backend can match any of these fields (more user-friendly).
       const searchFilters = { ...filters } as any;
-      const q = (searchQuery || "").trim().toLowerCase();
+      const q = (debouncedSearch || "").trim().toLowerCase();
       if (q) {
         // Only search by site/business name on the backend.
         // For better UX, also apply a client-side filter by site name
@@ -242,24 +249,26 @@ export default function PostSitePage() {
         });
       }
 
+      if (mine !== loadPostSitesSeqRef.current) return; // superseded by a newer load
       setPostSites(finalRows);
       setTotalCount(q ? finalRows.length : data.count);
     } catch (error: any) {
+      if (mine !== loadPostSitesSeqRef.current) return;
       console.error(error);
       // Do not show error toast; log instead
       console.warn(getServerErrorMessage(error, "Error al cargar Puestos de Vigilancia"));
     } finally {
-      setLoading(false);
+      if (mine === loadPostSitesSeqRef.current) setLoading(false);
     }
   };
 
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, filters]);
+  }, [debouncedSearch, filters]);
 
   useEffect(() => {
     loadPostSites();
-  }, [page, limit, searchQuery, filters]);
+  }, [page, limit, debouncedSearch, filters]);
 
   // Load filter options when sheet opens
   useEffect(() => {
