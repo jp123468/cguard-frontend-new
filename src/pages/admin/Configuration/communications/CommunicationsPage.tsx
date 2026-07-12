@@ -40,6 +40,7 @@ import {
   LogsFilters,
   LogsResult,
 } from "@/lib/api/communicationService";
+import WhatsAppBusinessCard from "./WhatsAppBusinessCard";
 
 const RECHARGE_PRESETS = [10, 25, 50, 100];
 const CHANNEL_OPTIONS = ["push", "whatsapp", "sms", "email"];
@@ -398,6 +399,9 @@ export default function CommunicationsPage() {
                   </p>
                 </div>
               </Section>
+
+              {/* WhatsApp Business (Meta Embedded Signup) */}
+              <WhatsAppBusinessCard />
 
               {/* Channels & toggles */}
               {settings && (

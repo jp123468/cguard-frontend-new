@@ -103,6 +103,45 @@ export interface LogsResult {
   totalPages: number;
 }
 
+/** Meta Embedded Signup config (non-secret, safe for the browser). */
+export interface WhatsAppEmbeddedConfig {
+  appId: string | null;
+  configId: string | null;
+  graphVersion: string;
+  configured: boolean;
+}
+
+export type WhatsAppConnectionState =
+  | "connected"
+  | "disconnected"
+  | "pending"
+  | "error";
+
+/** Per-tenant WhatsApp Business connection status (Embedded Signup). */
+export interface WhatsAppStatus {
+  connected: boolean;
+  status: WhatsAppConnectionState;
+  displayPhoneNumber: string | null;
+  businessName: string | null;
+  displayName: string | null;
+  qualityRating: string | null;
+  messagingLimit: string | null;
+  wabaId: string | null;
+  phoneNumberId: string | null;
+  connectedAt: string | null;
+  lastSyncAt: string | null;
+  tokenLast4: string | null;
+  embedded: WhatsAppEmbeddedConfig;
+}
+
+export interface WhatsAppCallbackPayload {
+  /** Authorization code returned by FB.login (response_type: 'code'). */
+  code: string;
+  /** Captured from the WA_EMBEDDED_SIGNUP session-info message (may be null). */
+  wabaId?: string | null;
+  phoneNumberId?: string | null;
+}
+
 export interface LogsFilters {
   channel?: string;
   provider?: string;
@@ -151,6 +190,42 @@ export const communicationService = {
   getLogs(filters: LogsFilters = {}): Promise<LogsResult> {
     return ApiService.get(
       `/tenant/${tenantId()}/communications/logs${buildQuery(filters)}`,
+    );
+  },
+
+  // ── WhatsApp Business (Meta Embedded Signup) ──────────────────────────────
+  // The tenant never handles tokens/secrets: the browser only receives the
+  // public app id + config id and posts back the one-time auth code.
+
+  whatsappStatus(): Promise<WhatsAppStatus> {
+    return ApiService.get(`/tenant/${tenantId()}/communications/whatsapp/status`);
+  },
+
+  whatsappConnect(): Promise<WhatsAppEmbeddedConfig> {
+    return ApiService.post(
+      `/tenant/${tenantId()}/communications/whatsapp/connect`,
+      {},
+    );
+  },
+
+  whatsappCallback(payload: WhatsAppCallbackPayload): Promise<WhatsAppStatus> {
+    return ApiService.post(
+      `/tenant/${tenantId()}/communications/whatsapp/callback`,
+      { data: payload },
+    );
+  },
+
+  whatsappDisconnect(): Promise<WhatsAppStatus> {
+    return ApiService.post(
+      `/tenant/${tenantId()}/communications/whatsapp/disconnect`,
+      {},
+    );
+  },
+
+  whatsappSyncTemplates(): Promise<{ ok: boolean }> {
+    return ApiService.post(
+      `/tenant/${tenantId()}/communications/whatsapp/sync-templates`,
+      {},
     );
   },
 };
