@@ -46,10 +46,11 @@ function useIsDark() {
   return dark;
 }
 
-/** Resolve the Google map style array from the app theme + the user override. */
-function mapStyles(isDark: boolean, mapTheme: DashboardPrefs["mapTheme"]) {
-  if (mapTheme === "roadmap") return isDark ? DARK_STYLE : undefined; // "estándar" still respects dark
-  return isDark ? DARK_STYLE : LIGHT_STYLE;
+/** The command center map is ALWAYS dark (a NOC/ops board reads as dark), so it
+ *  stays dark even when the app is in light mode. `styles` are ignored by Google
+ *  on satellite/hybrid map types, which is fine. */
+function mapStyles(_isDark: boolean, _mapTheme: DashboardPrefs["mapTheme"]) {
+  return DARK_STYLE;
 }
 
 function pinSvg(color: string, pulse: boolean, iconName?: string) {
@@ -98,7 +99,7 @@ export function OperationsMap({
         center: initCenter,
         zoom: defaultCenter?.zoom ?? 12, disableDefaultUI: true, gestureHandling: "greedy", clickableIcons: false,
         styles: mapStyles(isDark, prefs.mapTheme),
-        backgroundColor: isDark ? "#0b1020" : "#eef1f6",
+        backgroundColor: "#0b1020",
       });
       infoRef.current = new g.maps.InfoWindow();
       setReady(true);
@@ -112,7 +113,7 @@ export function OperationsMap({
     if (!ready || !mapRef.current) return;
     mapRef.current.setOptions({
       styles: mapStyles(isDark, prefs.mapTheme),
-      backgroundColor: isDark ? "#0b1020" : "#eef1f6",
+      backgroundColor: "#0b1020",
     });
   }, [isDark, prefs.mapTheme, ready]);
 
@@ -173,8 +174,23 @@ export function OperationsMap({
       if (!seen.has(id)) { markersRef.current[id].setMap(null); delete markersRef.current[id]; }
     });
 
-    if (any && !(mapRef.current as any).__fitted && entities.length > 1) {
-      mapRef.current.fitBounds(bounds, 64);
+    // Focus on the AREA OF OPERATIONS: frame the live entities (guards/stations)
+    // whenever any exist, instead of sitting on the wide company/IP default
+    // center. A single point can't be fit-bounded (it zooms to max), so center +
+    // a street-level zoom; multiple points fit their bounds with a max-zoom clamp
+    // so a tight cluster doesn't zoom in absurdly.
+    if (any && !(mapRef.current as any).__fitted) {
+      if (entities.length > 1) {
+        mapRef.current.fitBounds(bounds, 64);
+        g.maps.event.addListenerOnce(mapRef.current, "idle", () => {
+          if (mapRef.current && mapRef.current.getZoom && mapRef.current.getZoom() > 16) {
+            mapRef.current.setZoom(16);
+          }
+        });
+      } else {
+        mapRef.current.setCenter(bounds.getCenter());
+        mapRef.current.setZoom(15);
+      }
       (mapRef.current as any).__fitted = true;
     }
   }, [entities, prefs, ready, onSelect]);
