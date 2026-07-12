@@ -68,6 +68,8 @@ import { stationService, PostSite, PostSiteFilters } from "@/lib/api/stationServ
 import { useTranslation } from "react-i18next";
 import { clientService } from "@/lib/api/clientService";
 import { categoryService, type Category } from "@/lib/api/categoryService";
+import { queryClient } from "@/lib/queryClient";
+import { qk } from "@/hooks/data";
 import CategoryManagerDialog from "@/components/categories/CategoryManagerDialog";
 import CategoryAssignDialog from "@/components/categories/CategoryAssignDialog";
 import MobileCardList from '@/components/responsive/MobileCardList';
@@ -183,8 +185,14 @@ export default function PostSitePage() {
         stationService.list(searchFilters, { limit, offset: (page - 1) * limit }),
         // Fetch a high limit so every client is present in clientsMap below;
         // otherwise tenants with more clients than the default page size get
-        // client:undefined on out-of-page rows → 'Cliente —'.
-        clientService.getClients(undefined, { limit: 1000, offset: 0 }),
+        // client:undefined on out-of-page rows → 'Cliente —'. Cached via
+        // react-query so paging/searching stations doesn't re-pull all clients
+        // every time (the list barely changes).
+        queryClient.fetchQuery({
+          queryKey: qk.clients(undefined, { limit: 1000, offset: 0 }),
+          queryFn: () => clientService.getClients(undefined, { limit: 1000, offset: 0 }),
+          staleTime: 60_000,
+        }),
       ]);
 
       // If we pulled data without backend category filter, apply it locally.

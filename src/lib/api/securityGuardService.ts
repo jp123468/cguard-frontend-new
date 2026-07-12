@@ -112,6 +112,19 @@ export const securityGuardService = {
     return resp && (resp as any).data !== undefined ? (resp as any).data : resp;
   },
 
+  /** Walked GPS trail (breadcrumb polyline) for a guard over a time window. */
+  async trail(guardId: string, params?: { from?: string; to?: string; limit?: number }) {
+    const tenantId = getTenantId();
+    const qs = new URLSearchParams();
+    if (params?.from) qs.set("from", params.from);
+    if (params?.to) qs.set("to", params.to);
+    if (params?.limit) qs.set("limit", String(params.limit));
+    const q = qs.toString();
+    const resp = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/trail${q ? `?${q}` : ""}`);
+    const data = resp && (resp as any).data !== undefined ? (resp as any).data : resp;
+    return (data?.points || []) as Array<{ lat: number; lng: number; at: string; speed?: number; accuracy?: number; battery?: number }>;
+  },
+
   async export(format: "excel" | "pdf" | "csv", params?: Record<string, any>) {
     const tenantId = getTenantId();
     const qs = params ? `?${new URLSearchParams(params).toString()}&format=${format}` : `?format=${format}`;
