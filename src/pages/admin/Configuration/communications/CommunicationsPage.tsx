@@ -8,11 +8,8 @@ import {
   MessageCircle,
   Smartphone,
   AlertTriangle,
-  CheckCircle2,
-  XCircle,
   Save,
   ListFilter,
-  Radio,
   Plus,
 } from "lucide-react";
 
@@ -238,8 +235,8 @@ export default function CommunicationsPage() {
         default_country_code: settings.default_country_code,
         wallet_required_for_paid_channels: settings.wallet_required_for_paid_channels,
         low_balance_threshold: Number(settings.low_balance_threshold) || 0,
-        meta_phone_number_id: settings.meta_phone_number_id || null,
-        meta_business_account_id: settings.meta_business_account_id || null,
+        // meta_* identifiers are no longer managed here: tenants connect their
+        // own WhatsApp Business via the Embedded Signup card above.
       };
       const updated = await communicationService.updateSettings(payload);
       setSettings(updated);
@@ -257,16 +254,6 @@ export default function CommunicationsPage() {
       setSaving(false);
     }
   };
-
-  // Webhook readiness is derived from non-secret config the tenant controls.
-  const webhookReady = useMemo(() => {
-    if (!settings) return false;
-    return (
-      !!settings.whatsapp_enabled &&
-      !!settings.meta_phone_number_id &&
-      !!settings.meta_business_account_id
-    );
-  }, [settings]);
 
   const setFilter = (key: keyof LogsFilters, value: any) => {
     const next = { ...filters, [key]: value || undefined, page: 1 };
@@ -316,7 +303,7 @@ export default function CommunicationsPage() {
           <PageHeader
             icon={<MessageCircle />}
             title={t("settings.configuracion.comunicaciones", { defaultValue: "Comunicaciones" })}
-            subtitle={t("comms.walletHint", { defaultValue: "Saldo prepago para canales con costo (WhatsApp y SMS)." })}
+            subtitle={t("comms.walletHint", { defaultValue: "Saldo prepago para SMS. WhatsApp se factura directo a tu cuenta de Meta al conectarla." })}
             actions={
               !loading ? (
                 <Button variant="outline" size="sm" onClick={loadConfig}>
@@ -340,7 +327,7 @@ export default function CommunicationsPage() {
                   icon={<Wallet />}
                   accent={wallet?.belowThreshold ? "orange" : "primary"}
                   hint={t("comms.walletHint", {
-                    defaultValue: "Saldo prepago para canales con costo (WhatsApp y SMS).",
+                    defaultValue: "Saldo prepago para SMS. WhatsApp se factura directo a tu cuenta de Meta al conectarla.",
                   })}
                 />
               </Stagger>
@@ -410,7 +397,7 @@ export default function CommunicationsPage() {
                     <ToggleRow
                       title={t("comms.whatsappEnabled", { defaultValue: "Habilitar WhatsApp" })}
                       desc={t("comms.whatsappEnabledDesc", {
-                        defaultValue: "Envía mensajes vía Meta Cloud API (consume saldo).",
+                        defaultValue: "Envía mensajes desde tu propio WhatsApp Business (facturado por Meta a tu empresa).",
                       })}
                       checked={!!settings.whatsapp_enabled}
                       onChange={(v) => patch("whatsapp_enabled", v)}
@@ -532,67 +519,6 @@ export default function CommunicationsPage() {
                       checked={!!settings.wallet_required_for_paid_channels}
                       onChange={(v) => patch("wallet_required_for_paid_channels", v)}
                     />
-                  </div>
-                </Section>
-              )}
-
-              {/* Meta WhatsApp (non-secret) + webhook status */}
-              {settings && (
-                <Section
-                  title={t("comms.metaTitle", { defaultValue: "WhatsApp (Meta Cloud API)" })}
-                  icon={<Radio />}
-                  action={
-                    <StatusBadge tone={webhookReady ? "green" : "orange"}>
-                      {webhookReady
-                        ? t("comms.webhookReady", { defaultValue: "Configurado" })
-                        : t("comms.webhookPending", { defaultValue: "Pendiente" })}
-                    </StatusBadge>
-                  }
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 p-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        {webhookReady ? (
-                          <CheckCircle2 size={16} className="text-green-600" />
-                        ) : (
-                          <XCircle size={16} className="text-muted-foreground" />
-                        )}
-                        <span className="font-medium text-foreground">
-                          {t("comms.webhookStatus", { defaultValue: "Estado del webhook" })}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <Label className="text-xs">
-                          {t("comms.phoneNumberId", { defaultValue: "Phone Number ID" })}
-                        </Label>
-                        <Input
-                          value={settings.meta_phone_number_id || ""}
-                          onChange={(e) => patch("meta_phone_number_id", e.target.value)}
-                          placeholder="1234567890"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs">
-                          {t("comms.businessAccountId", {
-                            defaultValue: "Business Account ID",
-                          })}
-                        </Label>
-                        <Input
-                          value={settings.meta_business_account_id || ""}
-                          onChange={(e) => patch("meta_business_account_id", e.target.value)}
-                          placeholder="9876543210"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {t("comms.metaSecretsHint", {
-                        defaultValue:
-                          "El token de acceso y el secreto de la app se configuran de forma segura en la plataforma y nunca se muestran aquí.",
-                      })}
-                    </p>
                   </div>
                 </Section>
               )}
