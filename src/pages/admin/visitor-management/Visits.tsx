@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, FormEvent } from "react";
+import { useAsyncList } from "@/hooks/useAsyncList";
 import { Search, Filter as FilterIcon, MoreVertical, FileDown, FileSpreadsheet, Printer, ClipboardList } from "lucide-react";
 import { PageContainer, PageHeader, Section, EmptyState } from "@/components/kit";
 import AppLayout from "@/layouts/app-layout";
@@ -118,9 +119,6 @@ export default function Visits() {
     const [openFilter, setOpenFilter] = useState(false);
     const [filters, setFilters] = useState<VisitsFilters>(defaultFilters);
 
-    const [rows, setRows] = useState<any[]>([]);
-    const [count, setCount] = useState(0);
-    const [loading, setLoading] = useState(false);
     const [offset, setOffset] = useState(0);
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -170,9 +168,11 @@ export default function Visits() {
         return [start, end];
     };
 
-    const fetchRows = async () => {
-        setLoading(true);
-        try {
+    // Load via the shared async-list hook: debounced (one request per typing
+    // burst, not per keystroke), latest-response-wins (no stale overwrite), and
+    // unmount-safe. refetch() reloads after a mutation.
+    const { data, loading, refetch } = useAsyncList(
+        () => {
             const f: any = {};
             const s = search.trim();
             if (s) {
@@ -185,39 +185,23 @@ export default function Visits() {
             f.archived = filters.showArchived;
             const range = buildDateRange();
             if (range) f.visitDateRange = range;
-
-            const resp = await visitorLogService.list(f, { limit, offset });
-            setRows(resp?.rows || []);
-            setCount(resp?.count || 0);
-            setSelected({});
-        } catch (e) {
-            console.error("Error fetching visits", e);
-            toast.error("No se pudieron cargar las visitas");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Debounced refetch on any query/filter/pagination change.
-    useEffect(() => {
-        const handle = setTimeout(() => {
-            fetchRows();
-        }, 300);
-        return () => clearTimeout(handle);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        search,
-        offset,
-        limit,
-        filters.clientId,
-        filters.siteId,
-        filters.guardId,
-        filters.fromDate,
-        filters.fromTime,
-        filters.toDate,
-        filters.toTime,
-        filters.showArchived,
-    ]);
+            return visitorLogService.list(f, { limit, offset });
+        },
+        [
+            search, offset, limit,
+            filters.clientId, filters.siteId, filters.guardId,
+            filters.fromDate, filters.fromTime, filters.toDate, filters.toTime,
+            filters.showArchived,
+        ],
+        {
+            debounceMs: 300,
+            onError: (e) => { console.error("Error fetching visits", e); toast.error("No se pudieron cargar las visitas"); },
+        },
+    );
+    const rows: any[] = data?.rows || [];
+    const count = data?.count || 0;
+    // Clear row selection whenever a fresh page loads.
+    useEffect(() => { setSelected({}); }, [data]);
 
     const aplicarFiltros = (e?: FormEvent) => {
         e?.preventDefault();
@@ -261,7 +245,7 @@ export default function Visits() {
         try {
             await visitorLogService.delete(ids);
             toast.success("Registro(s) eliminado(s)");
-            fetchRows();
+            refetch();
         } catch (e) {
             console.error("Error deleting visits", e);
             toast.error("Error eliminando registro(s)");

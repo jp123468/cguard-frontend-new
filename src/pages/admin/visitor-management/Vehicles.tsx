@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useAsyncList } from "@/hooks/useAsyncList";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -59,10 +60,6 @@ const emptyForm = {
 export default function Vehicles() {
     const [perPage, setPerPage] = useState("25");
     const [page, setPage] = useState(1);
-    const loadSeqRef = useRef(0);
-    const [rows, setRows] = useState<VehicleRow[]>([]);
-    const [count, setCount] = useState(0);
-    const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -73,36 +70,16 @@ export default function Vehicles() {
 
     const perPageNum = Number(perPage) || 25;
 
-    const load = async () => {
-        // Monotonic request guard: changing perPage fires load() with the old
-        // page AND a setPage(1) that fires load() again — only the latest
-        // response may win, else the stale (overshot-offset → empty) one can
-        // clobber the fresh page-1 rows.
-        const mine = ++loadSeqRef.current;
-        setLoading(true);
-        try {
-            const resp = await vehicleService.list({
-                limit: perPageNum,
-                offset: (page - 1) * perPageNum,
-            });
-            if (mine !== loadSeqRef.current) return;
-            setRows((resp.rows as VehicleRow[]) || []);
-            setCount(resp.count || 0);
-        } catch (err) {
-            if (mine !== loadSeqRef.current) return;
-            console.error("Error cargando vehículos", err);
-            toast.error("Error cargando vehículos");
-            setRows([]);
-            setCount(0);
-        } finally {
-            if (mine === loadSeqRef.current) setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        load();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, perPage]);
+    // Shared async-list hook: latest-response-wins (changing perPage fires the
+    // old-page load AND a setPage(1) load — only the newest may apply) + unmount
+    // safe. refetch() after add/delete.
+    const { data, loading, refetch } = useAsyncList(
+        () => vehicleService.list({ limit: perPageNum, offset: (page - 1) * perPageNum }),
+        [page, perPageNum],
+        { onError: (err) => { console.error("Error cargando vehículos", err); toast.error("Error cargando vehículos"); } },
+    );
+    const rows: VehicleRow[] = (data?.rows as VehicleRow[]) || [];
+    const count = data?.count || 0;
 
     useEffect(() => {
         setPage(1);
@@ -159,7 +136,7 @@ export default function Vehicles() {
             setErrors({});
             setIsAddOpen(false);
             setPage(1);
-            await load();
+            refetch();
         } catch (err) {
             console.error("Error creando vehículo", err);
             toast.error(String((err as any)?.message || "Error creando vehículo"));
@@ -196,7 +173,7 @@ export default function Vehicles() {
             await vehicleService.destroy(selectedIds);
             toast.success("Vehículo(s) eliminado(s)");
             setSelectedIds([]);
-            await load();
+            refetch();
         } catch (err) {
             console.error("Error eliminando vehículos", err);
             toast.error("Error eliminando vehículos");

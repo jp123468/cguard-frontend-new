@@ -1,4 +1,5 @@
 import { useMemo, useState, FormEvent, useEffect } from "react";
+import { useAsyncList } from "@/hooks/useAsyncList";
 import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 
@@ -109,12 +110,9 @@ export default function Visitors() {
     const rows: Array<never> = [];
 
     // --- Visitor Logs (Bitácoras) integration ---
-    const [logs, setLogs] = useState<any[]>([]);
-    const [logsCount, setLogsCount] = useState(0);
     const [logsLimit, setLogsLimit] = useState(25);
     const [logsOffset, setLogsOffset] = useState(0);
     const [logsSearch, setLogsSearch] = useState("");
-    const [logsLoading, setLogsLoading] = useState(false);
     const [selectedLogs, setSelectedLogs] = useState<Record<string, boolean>>({});
     const [viewLogOpen, setViewLogOpen] = useState(false);
     const [selectedLog, setSelectedLog] = useState<any | null>(null);
@@ -487,40 +485,32 @@ export default function Visitors() {
         });
     };
 
-    const fetchLogs = async () => {
-        setLogsLoading(true);
-        try {
+    // Shared async-list hook: debounced (one request per typing burst),
+    // latest-response-wins, unmount-safe. refetch() reloads after a mutation.
+    const { data: logsData, loading: logsLoading, refetch: fetchLogs } = useAsyncList(
+        () => {
             const f: any = {};
-            // free-text search: prefer idNumber when numeric, otherwise lastName
             if (logsSearch) {
                 const s = String(logsSearch).trim();
-                if (!s) {
-                    // noop
-                } else if (/^[0-9]+$/.test(s)) {
-                    f.idNumber = s;
-                } else {
-                    // search both first and last name for non-numeric queries
-                    f.query = s;
-                }
+                if (/^[0-9]+$/.test(s)) f.idNumber = s;
+                else if (s) f.query = s;
             }
-
-            // apply filter controls
             if (filters.client) f.clientId = filters.client;
             if (filters.site) f.postSiteId = filters.site;
             if (filters.guard) f.guardId = filters.guard;
             if (filters.placeType) f.placeType = filters.placeType;
             if (filters.tag) f.tag = filters.tag;
             if (typeof filters.archived === 'boolean') f.archived = filters.archived;
-
-            const resp = await visitorLogService.list(f, { limit: logsLimit, offset: logsOffset });
-            setLogs(resp.rows || []);
-            setLogsCount(resp.count || 0);
-        } catch (err) {
-            console.error('Error fetching visitor logs', err);
-        } finally {
-            setLogsLoading(false);
-        }
-    };
+            return visitorLogService.list(f, { limit: logsLimit, offset: logsOffset });
+        },
+        [
+            logsSearch, logsLimit, logsOffset,
+            filters.client, filters.site, filters.guard, filters.placeType, filters.tag, filters.archived,
+        ],
+        { debounceMs: 300, onError: (err) => console.error('Error fetching visitor logs', err) },
+    );
+    const logs: any[] = logsData?.rows || [];
+    const logsCount = logsData?.count || 0;
 
     // when filter client changes, load postSites for that client
     useEffect(() => {
@@ -654,25 +644,6 @@ export default function Visitors() {
         load();
     }, []);
 
-    // Single consolidated effect: debounce on every query/filter/pagination change.
-    // Including the filter fields the fetch reads (client/site/guard/placeType/tag/archived)
-    // ensures filters apply on the same render instead of a render late, and removing the
-    // separate mount fetch avoids the redundant double initial request.
-    useEffect(() => {
-        const handle = setTimeout(() => { fetchLogs(); }, 300);
-        return () => clearTimeout(handle);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        logsSearch,
-        logsLimit,
-        logsOffset,
-        filters.client,
-        filters.site,
-        filters.guard,
-        filters.placeType,
-        filters.tag,
-        filters.archived,
-    ]);
 
     const perPageText = useMemo(() => {
         if (perPage === "10") return "10";
