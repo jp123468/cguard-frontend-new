@@ -46,6 +46,10 @@ export default function TrackingHistoryPage() {
     })();
   }, []);
 
+  // Clear the drawn trail when the selection changes so the map + CSV never show
+  // a previous guard's route under a new guard's name (the fetch is manual).
+  useEffect(() => { setPoints([]); setLoaded(false); }, [guardId, from, to]);
+
   const loadTrail = async () => {
     if (!guardId) { toast.error("Selecciona un vigilante"); return; }
     setLoading(true);

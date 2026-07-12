@@ -86,7 +86,10 @@ export default function PostSiteForm({ mode, id, clients = [], onSaved }: PostSi
         if (mode === "edit" && id) {
             loadPostSite(id);
         }
-    }, []);
+        // Depend on id/mode so reusing the form across a different :id reloads
+        // instead of keeping the previous site's values.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, mode]);
 
     const loadPostSite = async (siteId: string) => {
         try {

@@ -112,11 +112,16 @@ export default function MessengerPage({ scope = "operational" }: { scope?: "oper
   const onSelect = (c: Conversation) => { setSelected(c); setMessages([]); setMembersOpen(false); loadThread(c, true); };
 
   // Open a specific conversation when arrived via a notification (?conversation=<id>).
+  // Latch so it opens ONCE — otherwise the 12s poll (new `conversations` ref)
+  // re-ran this and force-jumped the user back to the URL conversation every
+  // tick, wiping whatever thread they'd opened.
+  const didAutoOpenRef = useRef(false);
   useEffect(() => {
+    if (didAutoOpenRef.current) return;
     const cid = new URLSearchParams(window.location.search).get("conversation");
-    if (!cid || !conversations.length || selected?.id === cid) return;
+    if (!cid || !conversations.length) return;
     const conv = conversations.find((c) => c.id === cid);
-    if (conv) onSelect(conv);
+    if (conv) { didAutoOpenRef.current = true; onSelect(conv); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversations]);
 

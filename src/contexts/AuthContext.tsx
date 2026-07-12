@@ -3,7 +3,9 @@ import { AuthService, LoginCredentials, SignUpData } from "../services/auth/auth
 import { setAuthToken, clearAuthToken } from "@/lib/api";
 import { setTenantId as setClientServiceTenantId, clearTenantId as clearClientServiceTenantId } from "@/lib/api/clientService";
 import { setTenantId as setCategoryTenantId } from "@/lib/api/categoryService";
+import { setTenantId as setStationServiceTenantId } from "@/lib/api/stationService";
 import { ApiError } from "../services/api/apiService";
+import { queryClient } from "@/lib/queryClient";
 
 interface User { id?: string; email: string; permissions?: string[]; [k: string]: any }
 interface AuthResult { success: boolean; error?: string; needVerification?: boolean }
@@ -126,9 +128,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (e) {}
   }, [user, permissions, isAdmin, tenantAdmin, loading]);
 
-  // Persist permissions and admin flags whenever they change
+  // Persist permissions and admin flags whenever they change — but NOT while
+  // logged out. signOut removes authToken first, so the state resets it fires
+  // here must not re-write (resurrect) the perm/admin keys it just deleted.
   useEffect(() => {
     try {
+      if (!localStorage.getItem('authToken')) return; // logged out → don't resurrect
       localStorage.setItem('userPermissions', JSON.stringify(permissions || []));
       localStorage.setItem('userIsAdmin', isAdmin ? 'true' : 'false');
       localStorage.setItem('userTenantAdmin', tenantAdmin ? 'true' : 'false');
@@ -360,11 +365,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try { await AuthService.signOut(); } catch {} finally {
+      // Remove the token FIRST so the persist effect (guarded on authToken) can't
+      // resurrect the perm/admin keys when the state resets below re-fire it.
       localStorage.removeItem("authToken");
-      try { localStorage.removeItem('userPermissions'); localStorage.removeItem('userIsAdmin'); localStorage.removeItem('userTenantAdmin'); localStorage.removeItem('tenantId'); localStorage.removeItem('tenantLogoUrl'); } catch {}
+      try {
+        localStorage.removeItem('userPermissions'); localStorage.removeItem('userIsAdmin');
+        localStorage.removeItem('userTenantAdmin'); localStorage.removeItem('tenantId');
+        localStorage.removeItem('tenantLogoUrl'); localStorage.removeItem('tenantName');
+      } catch {}
       try { clearAuthToken(); } catch {}
+      // Clear the tenant id cached inside the service singletons (localStorage
+      // alone isn't their source of truth once loaded).
+      try { clearClientServiceTenantId(); setCategoryTenantId(''); setStationServiceTenantId(''); } catch {}
+      // Flush the react-query cache so the NEXT login (an SPA nav, no page
+      // reload) can't be served the previous session's cached lists.
+      try { queryClient.clear(); } catch {}
+      // Reset ALL in-memory auth state — previously permissions/isAdmin lingered.
       setUser(null);
+      setPermissions([]);
+      setIsAdmin(false);
       setTenantAdmin(false);
+      setError(null);
     }
   };
 

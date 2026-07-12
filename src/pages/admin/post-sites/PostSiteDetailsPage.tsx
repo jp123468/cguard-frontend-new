@@ -41,6 +41,8 @@ export default function PostSiteDetailsPage() {
   useEffect(() => {
     if (!id) return;
     let mounted = true;
+    // Clear the previous site so switching :id A→B never shows A under B's URL.
+    setSite(null);
     const load = async () => {
       setLoading(true);
       setError(null);
@@ -56,7 +58,9 @@ export default function PostSiteDetailsPage() {
           }
         } catch (e) {}
       } catch (e: any) {
+        if (!mounted) return;
         console.error(e);
+        setSite(null);
         setError(e?.message || `${t('postsite.Details.unexpected', 'Unexpected error occurred')}`);
         toast.error(`${t('postsite.Details.unexpected', 'Unexpected error occurred')}`);
       } finally {

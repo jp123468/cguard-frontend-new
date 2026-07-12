@@ -75,8 +75,12 @@ export function useInfiniteAuditList<T>(opts: Options<T>): Result<T> {
           setItems([]); itemsRef.current = []; setTotal(0);
         }
       } finally {
-        if (reqId === reqIdRef.current) setLoading(false);
-        loadingRef.current = false;
+        // Only the CURRENT request may clear the shared flags — a superseded
+        // response finishing late must not unblock/relabel the newer one.
+        if (reqId === reqIdRef.current) {
+          setLoading(false);
+          loadingRef.current = false;
+        }
       }
     },
     // `total` is read above; endpoint/pageSize are stable per page instance.
@@ -89,6 +93,11 @@ export function useInfiniteAuditList<T>(opts: Options<T>): Result<T> {
     itemsRef.current = [];
     setItems([]);
     setTotal(0);
+    // Supersede any in-flight page load (so its late response is dropped instead
+    // of appending stale-filter rows) AND clear the in-flight guard so this
+    // reset load isn't swallowed by `if (loadingRef.current) return`.
+    reqIdRef.current++;
+    loadingRef.current = false;
     load(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);

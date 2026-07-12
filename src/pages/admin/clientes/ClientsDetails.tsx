@@ -28,6 +28,9 @@ export default function ClientsDetails() {
   useEffect(() => {
     if (!id) return;
     let mounted = true;
+    // Clear the previous client so switching :id A→B never shows A's data under
+    // B's URL, and a failed B load doesn't leave A stuck on screen.
+    setClient(null);
     setLoading(true);
     clientService
       .getClient(id)
@@ -36,7 +39,9 @@ export default function ClientsDetails() {
         setClient(data);
       })
       .catch((err) => {
+        if (!mounted) return;
         console.error('Error cargando cliente:', err);
+        setClient(null);
         toast.error('No se pudo cargar cliente');
       })
       .finally(() => {

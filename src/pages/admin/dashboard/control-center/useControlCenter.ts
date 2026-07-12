@@ -38,6 +38,7 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
     counts: {}, loading: true, error: null, gaps: [],
   });
   const sseRef = useRef<EventSource | null>(null);
+  const locSeqRef = useRef(0);
   const [tick, setTick] = useState(0);
   const refresh = useCallback(() => setTick((t) => t + 1), []);
 
@@ -186,7 +187,11 @@ export function useControlCenter(intervalSec = 15): ControlCenterData & { refres
   useEffect(() => {
     if (!tenantId()) return;
     const iv = setInterval(async () => {
+      // Monotonic guard: a slow poll must not overwrite a newer one's positions
+      // (markers were jumping backward / clocked-out guards reappearing).
+      const mine = ++locSeqRef.current;
       const active = await safe(securityGuardService.activeLocations(), null as any);
+      if (mine !== locSeqRef.current) return;
       const activeRows = rows(active);
       setState((s) => {
         const others = s.entities.filter((e) => e.kind !== "guard");
