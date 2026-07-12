@@ -122,6 +122,7 @@ const TaskApprovals = lazy(() => import("./pages/admin/tasks/TaskApprovals"));
 const TaskTracking = lazy(() => import("./pages/admin/tasks/TaskTracking"));
 const PassdownsPage = lazy(() => import("./pages/admin/passdown/PassdownsPage"));
 const NominaPayrollSummary = lazy(() => import("./pages/admin/nomina/NominaPayrollSummary"));
+const NominaRolDePagos = lazy(() => import("./pages/admin/nomina/NominaRolDePagos"));
 const NominaSettings = lazy(() => import("./pages/admin/nomina/NominaSettings"));
 const Visitors = lazy(() => import("./pages/admin/visitor-management/Visitors"));
 const Vehicles = lazy(() => import("./pages/admin/visitor-management/Vehicles"));
@@ -1237,6 +1238,7 @@ export default function App() {
               <Route path="/tasks/approvals" element={<ProtectedRoute><TaskApprovals /></ProtectedRoute>} />
               <Route path="/passdowns" element={<ProtectedRoute><PassdownsPage /></ProtectedRoute>} />
               <Route path="/nomina/payroll-summary" element={<ProtectedRoute><NominaPayrollSummary /></ProtectedRoute>} />
+              <Route path="/nomina/rol-de-pagos" element={<ProtectedRoute><NominaRolDePagos /></ProtectedRoute>} />
               <Route path="/nomina/settings" element={<ProtectedRoute><NominaSettings /></ProtectedRoute>} />
 
               {/* FIN NOMINA */}

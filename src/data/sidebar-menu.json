@@ -301,6 +301,11 @@
         "path": "/nomina/payroll-summary"
       },
       {
+        "id": "nomina-rol-de-pagos",
+        "name": "Rol de Pagos",
+        "path": "/nomina/rol-de-pagos"
+      },
+      {
         "id": "nomina-settings",
         "name": "Configuración de Asistencia",
         "path": "/nomina/settings"

@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Loader2, MessageSquare, Wallet, Plus, RefreshCw, AlertTriangle, CheckCircle2, Phone, Search } from "lucide-react";
+import { Loader2, MessageSquare, Wallet, Plus, RefreshCw, AlertTriangle, CheckCircle2, Phone, Search, ArrowRight } from "lucide-react";
 
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageContainer, PageHeader, Section, StatCard, Stagger, StatusBadge, EmptyState, Modal } from "@/components/kit";
+import { PageContainer, PageHeader, Section, StatusBadge, EmptyState, Modal } from "@/components/kit";
 import { smsAccountService, SmsAccount, SmsTransaction, AvailableNumber } from "@/lib/api/smsAccountService";
 
 const COUNTRIES = [
@@ -17,8 +18,6 @@ const COUNTRIES = [
   { code: "GB", label: "Reino Unido (+44)" },
   { code: "ES", label: "España (+34)" },
 ];
-
-const PRESETS = [10, 25, 50, 100];
 
 function money(cents: number, currency = "USD") {
   return new Intl.NumberFormat("es-EC", { style: "currency", currency }).format((cents || 0) / 100);
@@ -37,8 +36,6 @@ export default function SmsBalancePage() {
   const [transactions, setTransactions] = useState<SmsTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [provisioning, setProvisioning] = useState(false);
-  const [recharging, setRecharging] = useState(false);
-  const [amount, setAmount] = useState<number>(25);
 
   // Buy-number modal state
   const [buyOpen, setBuyOpen] = useState(false);
@@ -63,14 +60,6 @@ export default function SmsBalancePage() {
 
   useEffect(() => {
     load();
-    // Returning from Stripe checkout: refresh to reflect the new balance.
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("recharge") === "success") {
-      toast.success(t("sms.rechargeSuccess", { defaultValue: "Pago recibido. Tu saldo se actualizará en unos segundos." }));
-      setTimeout(load, 4000);
-    } else if (params.get("recharge") === "cancel") {
-      toast.info(t("sms.rechargeCancel", { defaultValue: "Recarga cancelada" }));
-    }
     // eslint-disable-next-line
   }, []);
 
@@ -84,27 +73,6 @@ export default function SmsBalancePage() {
       toast.error(e?.response?.data?.message || e?.message || t("sms.provisionError", { defaultValue: "No se pudo crear la subcuenta" }));
     } finally {
       setProvisioning(false);
-    }
-  };
-
-  const onRecharge = async () => {
-    const cents = Math.round(Number(amount) * 100);
-    if (!Number.isFinite(cents) || cents < 500 || cents > 100000) {
-      toast.error(t("sms.amountError", { defaultValue: "Ingresa un monto entre $5 y $1000" }));
-      return;
-    }
-    setRecharging(true);
-    try {
-      const res = await smsAccountService.recharge(cents);
-      if (res?.url) {
-        window.location.href = res.url; // redirect to Stripe Checkout
-      } else {
-        toast.error(t("sms.rechargeError", { defaultValue: "No se pudo iniciar la recarga" }));
-      }
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || e?.message || t("sms.rechargeError", { defaultValue: "No se pudo iniciar la recarga" }));
-    } finally {
-      setRecharging(false);
     }
   };
 
@@ -145,8 +113,6 @@ export default function SmsBalancePage() {
   };
 
   const currency = account?.currency || "USD";
-  const perSms = account ? account.pricePerSmsCents : 5;
-  const remainingSms = account && perSms > 0 ? Math.floor((account.balanceCents || 0) / perSms) : 0;
 
   return (
     <AppLayout>
@@ -170,22 +136,20 @@ export default function SmsBalancePage() {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Balance */}
-              <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <StatCard
-                  label={t("sms.balanceTitle", { defaultValue: "Saldo de mensajería SMS" })}
-                  value={money(account?.balanceCents || 0, currency)}
-                  icon={<Wallet />}
-                  accent="primary"
-                  hint={`${money(perSms, currency)} ${t("sms.perSms", { defaultValue: "por SMS" })}`}
-                />
-                <StatCard
-                  label={t("sms.messages", { defaultValue: "mensajes" })}
-                  value={`≈ ${remainingSms.toLocaleString("es-ES")}`}
-                  icon={<MessageSquare />}
-                  accent="green"
-                />
-              </Stagger>
+              {/* Balance moved to the unified communications wallet */}
+              <Section title={t("sms.balanceMovedTitle", { defaultValue: "El saldo de SMS ahora se gestiona en Comunicaciones" })} icon={<Wallet />}>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {t("sms.balanceMovedHint", { defaultValue: "Recarga tu saldo y revisa el consumo de SMS en la pestaña SMS de Comunicaciones." })}
+                  </p>
+                  <Button variant="brand" size="sm" asChild className="shrink-0">
+                    <Link to="/setting/comunicaciones">
+                      {t("sms.goToComms", { defaultValue: "Ir a Comunicaciones" })}
+                      <ArrowRight className="ml-1.5" size={14} />
+                    </Link>
+                  </Button>
+                </div>
+              </Section>
 
               {/* Subaccount status */}
               <Section title={t("sms.accountTitle", { defaultValue: "Cuenta de envío (Twilio)" })} icon={<MessageSquare />}>
@@ -193,7 +157,7 @@ export default function SmsBalancePage() {
                   {!account?.platformConfigured && (
                     <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-500/10 p-3 text-xs text-amber-700">
                       <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                      <span>{t("sms.notConfigured", { defaultValue: "La mensajería SMS aún no está habilitada en la plataforma. Puedes recargar saldo; el envío se activará en cuanto la plataforma habilite Twilio." })}</span>
+                      <span>{t("sms.notConfigured", { defaultValue: "La mensajería SMS aún no está habilitada en la plataforma. El envío se activará en cuanto la plataforma habilite Twilio." })}</span>
                     </div>
                   )}
 
@@ -237,46 +201,8 @@ export default function SmsBalancePage() {
                 </div>
               </Section>
 
-              {/* Recharge */}
-              <Section title={t("sms.rechargeTitle", { defaultValue: "Recargar saldo" })} icon={<Wallet />}>
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {PRESETS.map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => setAmount(p)}
-                        className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
-                          amount === p ? "border-primary bg-primary/10 text-primary" : "border-border text-foreground hover:bg-muted/30"
-                        }`}
-                      >
-                        ${p}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex items-end gap-3">
-                    <div className="w-40">
-                      <Label className="text-xs">{t("sms.customAmount", { defaultValue: "Monto (USD)" })}</Label>
-                      <Input
-                        type="number"
-                        min={5}
-                        max={1000}
-                        value={amount}
-                        onChange={(e) => setAmount(Number(e.target.value))}
-                      />
-                    </div>
-                    <Button variant="brand" onClick={onRecharge} disabled={recharging}>
-                      {recharging ? <Loader2 className="mr-2 animate-spin" size={16} /> : <Plus className="mr-2" size={16} />}
-                      {t("sms.recharge", { defaultValue: "Recargar" })}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("sms.rechargeHint", { defaultValue: "Pago seguro con tarjeta vía Stripe. El saldo se acredita automáticamente al confirmarse el pago." })}
-                  </p>
-                </div>
-              </Section>
-
               {/* Transactions */}
-              <Section title={t("sms.history", { defaultValue: "Movimientos" })} icon={<Wallet />}>
+              <Section title={t("sms.txHistory", { defaultValue: "Historial de transacciones" })} icon={<Wallet />}>
                 {transactions.length === 0 ? (
                   <EmptyState
                     icon={<Wallet />}

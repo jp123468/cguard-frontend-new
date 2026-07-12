@@ -40,10 +40,9 @@ export const smsAccountService = {
   provision(): Promise<{ account: SmsAccount }> {
     return ApiService.post(`/tenant/${tenantId()}/sms-account/provision`, {});
   },
-  /** Returns a Stripe Checkout URL to redirect to. */
-  recharge(amountCents: number): Promise<{ url: string; id: string }> {
-    return ApiService.post(`/tenant/${tenantId()}/sms-account/recharge`, { data: { amountCents } });
-  },
+  // recharge() removed: the legacy per-tenant SMS wallet is retired.
+  // Balance + Stripe recharge now live in the unified communications wallet
+  // (communicationService.rechargeWallet, /setting/comunicaciones).
   availableNumbers(params: { country?: string; areaCode?: string; contains?: string } = {}): Promise<{ numbers: AvailableNumber[] }> {
     const qs = new URLSearchParams(
       Object.entries(params).filter(([, v]) => !!v) as [string, string][],
