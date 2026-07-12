@@ -29,6 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PageContainer, PageHeader, Section, StatCard, Stagger, StatusBadge } from "@/components/kit";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   communicationService,
   CommunicationSettings,
@@ -293,6 +294,25 @@ export default function CommunicationsPage() {
 
   const currency = wallet?.currency || "USD";
 
+  // Shared save bar — rendered at the bottom of every settings tab.
+  const saveBar = settings ? (
+    <div className="flex items-center justify-end gap-3">
+      {dirty && (
+        <span className="text-xs text-amber-700">
+          {t("comms.unsaved", { defaultValue: "Cambios sin guardar" })}
+        </span>
+      )}
+      <Button variant="brand" onClick={onSave} disabled={saving || !dirty}>
+        {saving ? (
+          <Loader2 className="mr-2 animate-spin" size={16} />
+        ) : (
+          <Save className="mr-2" size={16} />
+        )}
+        {t("comms.save", { defaultValue: "Guardar cambios" })}
+      </Button>
+    </div>
+  ) : null;
+
   return (
     <AppLayout>
       <SettingsLayout
@@ -318,7 +338,20 @@ export default function CommunicationsPage() {
               <Loader2 className="animate-spin text-primary" size={28} />
             </div>
           ) : (
-            <div className="space-y-6">
+            <Tabs defaultValue="whatsapp" className="space-y-6">
+              <TabsList className="w-full justify-start">
+                <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+                <TabsTrigger value="sms">SMS</TabsTrigger>
+                <TabsTrigger value="preferencias">
+                  {t("comms.tabPrefs", { defaultValue: "Preferencias" })}
+                </TabsTrigger>
+                <TabsTrigger value="historial">
+                  {t("comms.tabHistory", { defaultValue: "Historial" })}
+                </TabsTrigger>
+              </TabsList>
+
+              {/* ── SMS: saldo prepago Twilio + recarga + alertas ─────────── */}
+              <TabsContent value="sms" className="space-y-6">
               {/* Wallet */}
               <Stagger className="grid grid-cols-1 gap-4">
                 <StatCard
@@ -381,27 +414,16 @@ export default function CommunicationsPage() {
                   <p className="text-xs text-muted-foreground">
                     {t("comms.rechargeHint", {
                       defaultValue:
-                        "Pago seguro con tarjeta vía Stripe. El saldo se acredita automáticamente al confirmarse el pago y cubre WhatsApp y SMS enviados por la plataforma.",
+                        "Pago seguro con tarjeta vía Stripe. El saldo se acredita automáticamente al confirmarse el pago y cubre los SMS enviados por la plataforma.",
                     })}
                   </p>
                 </div>
               </Section>
 
-              {/* WhatsApp Business (Meta Embedded Signup) */}
-              <WhatsAppBusinessCard />
-
-              {/* Channels & toggles */}
+              {/* SMS toggles */}
               {settings && (
-                <Section title={t("comms.channelsTitle", { defaultValue: "Canales y alertas" })} icon={<MessageCircle />}>
+                <Section title={t("comms.smsTitle", { defaultValue: "SMS (Twilio)" })} icon={<Smartphone />}>
                   <div className="divide-y">
-                    <ToggleRow
-                      title={t("comms.whatsappEnabled", { defaultValue: "Habilitar WhatsApp" })}
-                      desc={t("comms.whatsappEnabledDesc", {
-                        defaultValue: "Envía mensajes desde tu propio WhatsApp Business (facturado por Meta a tu empresa).",
-                      })}
-                      checked={!!settings.whatsapp_enabled}
-                      onChange={(v) => patch("whatsapp_enabled", v)}
-                    />
                     <ToggleRow
                       title={t("comms.smsFallback", { defaultValue: "SMS como respaldo" })}
                       desc={t("comms.smsFallbackDesc", {
@@ -409,28 +431,6 @@ export default function CommunicationsPage() {
                       })}
                       checked={!!settings.sms_enabled}
                       onChange={(v) => patch("sms_enabled", v)}
-                    />
-                    <ToggleRow
-                      title={t("comms.whatsappShiftReminders", {
-                        defaultValue: "Recordatorios de turno por WhatsApp",
-                      })}
-                      desc={t("comms.whatsappShiftRemindersDesc", {
-                        defaultValue: "Notifica turnos por WhatsApp si el vigilante no tiene push.",
-                      })}
-                      checked={!!settings.whatsapp_shift_reminders}
-                      onChange={(v) => patch("whatsapp_shift_reminders", v)}
-                      disabled={!settings.whatsapp_enabled}
-                    />
-                    <ToggleRow
-                      title={t("comms.whatsappIncidents", {
-                        defaultValue: "Incidentes por WhatsApp",
-                      })}
-                      desc={t("comms.whatsappIncidentsDesc", {
-                        defaultValue: "Alerta a supervisores y administradores por WhatsApp.",
-                      })}
-                      checked={!!settings.whatsapp_incidents}
-                      onChange={(v) => patch("whatsapp_incidents", v)}
-                      disabled={!settings.whatsapp_enabled}
                     />
                     <ToggleRow
                       title={t("comms.smsCritical", {
@@ -454,10 +454,91 @@ export default function CommunicationsPage() {
                       onChange={(v) => patch("critical_alert_sms_fallback", v)}
                       disabled={!settings.sms_enabled}
                     />
+                    <ToggleRow
+                      title={t("comms.walletRequired", {
+                        defaultValue: "Requerir saldo para canales con costo",
+                      })}
+                      desc={t("comms.walletRequiredDesc", {
+                        defaultValue: "Bloquea el envío de SMS cuando no hay saldo suficiente.",
+                      })}
+                      checked={!!settings.wallet_required_for_paid_channels}
+                      onChange={(v) => patch("wallet_required_for_paid_channels", v)}
+                    />
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label className="text-xs">
+                        {t("comms.lowThreshold", { defaultValue: "Umbral de saldo bajo (USD)" })}
+                      </Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={
+                          settings.low_balance_threshold != null
+                            ? settings.low_balance_threshold / 100
+                            : 0
+                        }
+                        onChange={(e) =>
+                          patch(
+                            "low_balance_threshold",
+                            Math.round(Number(e.target.value) * 100) || 0,
+                          )
+                        }
+                      />
+                    </div>
                   </div>
                 </Section>
               )}
+              {saveBar}
+              </TabsContent>
 
+              {/* ── WhatsApp: cuenta propia del tenant + alertas ─────────── */}
+              <TabsContent value="whatsapp" className="space-y-6">
+              {/* WhatsApp Business (Meta Embedded Signup) */}
+              <WhatsAppBusinessCard />
+
+              {settings && (
+                <Section title={t("comms.waTogglesTitle", { defaultValue: "Alertas por WhatsApp" })} icon={<MessageCircle />}>
+                  <div className="divide-y">
+                    <ToggleRow
+                      title={t("comms.whatsappEnabled", { defaultValue: "Habilitar WhatsApp" })}
+                      desc={t("comms.whatsappEnabledDesc", {
+                        defaultValue: "Envía mensajes desde tu propio WhatsApp Business (facturado por Meta a tu empresa).",
+                      })}
+                      checked={!!settings.whatsapp_enabled}
+                      onChange={(v) => patch("whatsapp_enabled", v)}
+                    />
+                    <ToggleRow
+                      title={t("comms.whatsappShiftReminders", {
+                        defaultValue: "Recordatorios de turno por WhatsApp",
+                      })}
+                      desc={t("comms.whatsappShiftRemindersDesc", {
+                        defaultValue: "Notifica turnos por WhatsApp si el vigilante no tiene push.",
+                      })}
+                      checked={!!settings.whatsapp_shift_reminders}
+                      onChange={(v) => patch("whatsapp_shift_reminders", v)}
+                      disabled={!settings.whatsapp_enabled}
+                    />
+                    <ToggleRow
+                      title={t("comms.whatsappIncidents", {
+                        defaultValue: "Incidentes por WhatsApp",
+                      })}
+                      desc={t("comms.whatsappIncidentsDesc", {
+                        defaultValue: "Alerta a supervisores y administradores por WhatsApp.",
+                      })}
+                      checked={!!settings.whatsapp_incidents}
+                      onChange={(v) => patch("whatsapp_incidents", v)}
+                      disabled={!settings.whatsapp_enabled}
+                    />
+                  </div>
+                </Section>
+              )}
+              {saveBar}
+              </TabsContent>
+
+              {/* ── Preferencias de enrutamiento ─────────────────────────── */}
+              <TabsContent value="preferencias" className="space-y-6">
               {/* OTP / routing preferences */}
               {settings && (
                 <Section title={t("comms.routingTitle", { defaultValue: "Preferencias de enrutamiento" })} icon={<Smartphone />}>
@@ -486,64 +567,15 @@ export default function CommunicationsPage() {
                           placeholder="+593"
                         />
                       </div>
-                      <div>
-                        <Label className="text-xs">
-                          {t("comms.lowThreshold", { defaultValue: "Umbral de saldo bajo (USD)" })}
-                        </Label>
-                        <Input
-                          type="number"
-                          min={0}
-                          step={1}
-                          value={
-                            settings.low_balance_threshold != null
-                              ? settings.low_balance_threshold / 100
-                              : 0
-                          }
-                          onChange={(e) =>
-                            patch(
-                              "low_balance_threshold",
-                              Math.round(Number(e.target.value) * 100) || 0,
-                            )
-                          }
-                        />
-                      </div>
                     </div>
-
-                    <ToggleRow
-                      title={t("comms.walletRequired", {
-                        defaultValue: "Requerir saldo para canales con costo",
-                      })}
-                      desc={t("comms.walletRequiredDesc", {
-                        defaultValue: "Bloquea WhatsApp/SMS cuando no hay saldo suficiente.",
-                      })}
-                      checked={!!settings.wallet_required_for_paid_channels}
-                      onChange={(v) => patch("wallet_required_for_paid_channels", v)}
-                    />
                   </div>
                 </Section>
               )}
+              {saveBar}
+              </TabsContent>
 
-              {/* Save bar */}
-              <div className="flex items-center justify-end gap-3">
-                {dirty && (
-                  <span className="text-xs text-amber-700">
-                    {t("comms.unsaved", { defaultValue: "Cambios sin guardar" })}
-                  </span>
-                )}
-                <Button
-                  variant="brand"
-                  onClick={onSave}
-                  disabled={saving || !dirty}
-                >
-                  {saving ? (
-                    <Loader2 className="mr-2 animate-spin" size={16} />
-                  ) : (
-                    <Save className="mr-2" size={16} />
-                  )}
-                  {t("comms.save", { defaultValue: "Guardar cambios" })}
-                </Button>
-              </div>
-
+              {/* ── Historial de uso ─────────────────────────────────────── */}
+              <TabsContent value="historial" className="space-y-6">
               {/* Usage / logs */}
               <Section title={t("comms.usageTitle", { defaultValue: "Historial de uso" })} icon={<ListFilter />}>
                 <div className="space-y-4">
@@ -765,7 +797,8 @@ export default function CommunicationsPage() {
                   )}
                 </div>
               </Section>
-            </div>
+              </TabsContent>
+            </Tabs>
           )}
         </PageContainer>
       </SettingsLayout>
