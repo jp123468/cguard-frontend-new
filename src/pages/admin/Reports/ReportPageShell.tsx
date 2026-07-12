@@ -56,6 +56,8 @@ function DefaultFilters() {
 export default function ReportPageShell({
   title, breadcrumb, description, icon: Icon, accent = "#C8860A",
   filters, children, empty, count = 0,
+  search: searchProp, onSearchChange,
+  onExportPdf, onExportExcel, onPrint, onEmail, exporting,
 }: {
   title: string;
   breadcrumb?: string;
@@ -66,9 +68,21 @@ export default function ReportPageShell({
   children?: ReactNode;
   empty?: { title?: string; message?: string };
   count?: number;
+  /** Controlled search (optional — falls back to local state). */
+  search?: string;
+  onSearchChange?: (v: string) => void;
+  /** Export actions — wired into the dropdown. Omitted actions are hidden. */
+  onExportPdf?: () => void;
+  onExportExcel?: () => void;
+  onPrint?: () => void;
+  onEmail?: () => void;
+  exporting?: boolean;
 }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [search, setSearch] = useState("");
+  const [localSearch, setLocalSearch] = useState("");
+  const search = searchProp !== undefined ? searchProp : localSearch;
+  const setSearch = (v: string) => (onSearchChange ? onSearchChange(v) : setLocalSearch(v));
+  const hasExport = !!(onExportPdf || onExportExcel || onPrint || onEmail);
 
   return (
     <AppLayout>
@@ -115,19 +129,29 @@ export default function ReportPageShell({
                 </SheetContent>
               </Sheet>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                    <MoreVertical className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem className="gap-2"><FileText className="h-4 w-4 text-muted-foreground" /> Exportar como PDF</DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2"><FileSpreadsheet className="h-4 w-4 text-muted-foreground" /> Exportar como Excel</DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2"><Printer className="h-4 w-4 text-muted-foreground" /> Imprimir</DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> Enviar por correo</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {hasExport && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" aria-label="Exportar" disabled={exporting}>
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {onExportPdf && (
+                      <DropdownMenuItem className="gap-2" onSelect={onExportPdf}><FileText className="h-4 w-4 text-muted-foreground" /> Exportar como PDF</DropdownMenuItem>
+                    )}
+                    {onExportExcel && (
+                      <DropdownMenuItem className="gap-2" onSelect={onExportExcel}><FileSpreadsheet className="h-4 w-4 text-muted-foreground" /> Exportar como Excel</DropdownMenuItem>
+                    )}
+                    {onPrint && (
+                      <DropdownMenuItem className="gap-2" onSelect={onPrint}><Printer className="h-4 w-4 text-muted-foreground" /> Imprimir</DropdownMenuItem>
+                    )}
+                    {onEmail && (
+                      <DropdownMenuItem className="gap-2" onSelect={onEmail}><Mail className="h-4 w-4 text-muted-foreground" /> Enviar por correo</DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </>
           }
         />
