@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { loadGoogleMaps } from "@/utils/loadGoogleMaps";
+import { mapIdIfConfigured } from "@/utils/mapMarker";
 import type { MapEntity, EntityKind } from "../types";
 import type { DashboardPrefs } from "../prefs";
 import { iconInnerSvg } from "../iconRegistry";
@@ -94,10 +95,14 @@ export function OperationsMap({
         ? { lat: defaultCenter.lat, lng: defaultCenter.lng }
         : first ? { lat: first.lat, lng: first.lng } : { lat: -0.18, lng: -78.46 };
       if (defaultCenter) appliedCenterRef.current = `${defaultCenter.lat},${defaultCenter.lng},${defaultCenter.zoom ?? 12}`;
+      // With a Cloud Map ID the appearance comes from the cloud-based map style
+      // (dark) and AdvancedMarkerElement is enabled; inline `styles` are ignored
+      // on such a map, so we omit them. Without a Map ID, keep the inline styles.
+      const mapId = mapIdIfConfigured();
       mapRef.current = new g.maps.Map(ref.current, {
         center: initCenter,
         zoom: defaultCenter?.zoom ?? 12, disableDefaultUI: true, gestureHandling: "greedy", clickableIcons: false,
-        styles: mapStyles(isDark, prefs.mapTheme),
+        ...(mapId ? { mapId } : { styles: mapStyles(isDark, prefs.mapTheme) }),
         backgroundColor: isDark ? "#0b1020" : "#eef1f6",
       });
       infoRef.current = new g.maps.InfoWindow();
@@ -107,9 +112,12 @@ export function OperationsMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // re-style live when the theme toggles or the user changes map theme
+  // re-style live when the theme toggles or the user changes map theme.
+  // No-op under a Cloud Map ID — the cloud style controls appearance and setting
+  // inline `styles` on a mapId map is ignored (and warns).
   useEffect(() => {
     if (!ready || !mapRef.current) return;
+    if (mapIdIfConfigured()) return;
     mapRef.current.setOptions({
       styles: mapStyles(isDark, prefs.mapTheme),
       backgroundColor: isDark ? "#0b1020" : "#eef1f6",
@@ -133,36 +141,57 @@ export function OperationsMap({
   useEffect(() => {
     if (!ready || !mapRef.current) return;
     const g = (window as any).google;
+    // Prefer AdvancedMarkerElement (needs a Cloud Map ID); fall back to the
+    // legacy Marker where a mapId isn't configured or the lib is missing.
+    const AME = g.maps.marker?.AdvancedMarkerElement;
+    const useAdvanced = !!(AME && mapIdIfConfigured());
     const seen = new Set<string>();
     const bounds = new g.maps.LatLngBounds();
     let any = false;
+
+    const iconUrl = (color: string, pulse: boolean, kind: EntityKind) =>
+      "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(pinSvg(color, pulse, prefs.pinIcons[kind]));
+    const buildContent = (url: string) => {
+      const img = document.createElement("img");
+      img.src = url; img.width = 44; img.height = 44;
+      img.style.cssText = "width:44px;height:44px;cursor:pointer";
+      return img;
+    };
 
     entities.forEach((e) => {
       seen.add(e.id);
       const color = (e.meta && (e.meta as any).color) || prefs.pinColors[e.kind] || prefs.statusColors[e.status] || "#d4a017";
       const pulse = e.kind === "guard" || e.kind === "supervisor" || e.status === "emergency" || e.status === "incident";
-      const icon = {
-        url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(pinSvg(color, pulse, prefs.pinIcons[e.kind])),
-        scaledSize: new g.maps.Size(44, 44), anchor: new g.maps.Point(22, 22),
+      const url = iconUrl(color, pulse, e.kind);
+      const openInfo = (anchor: any) => {
+        infoRef.current.setContent(
+          `<div class="cc-pop"><div style="font-weight:700;margin-bottom:2px">${escapeHtml(e.label)}</div>
+           <div style="opacity:.7">${KIND_LABEL[e.kind]}${e.sub ? " · " + escapeHtml(e.sub) : ""}</div>
+           <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
+             <span style="width:8px;height:8px;border-radius:9px;background:${color};display:inline-block"></span>
+             <span style="opacity:.8">${e.status}</span></div></div>`
+        );
+        infoRef.current.open(useAdvanced ? { map: mapRef.current, anchor } : mapRef.current, useAdvanced ? undefined : anchor);
+        onSelect?.(e);
       };
+
       let m = markersRef.current[e.id];
       if (!m) {
-        m = new g.maps.Marker({ map: mapRef.current, position: { lat: e.lat, lng: e.lng }, icon, title: e.label, zIndex: e.kind === "tenant" ? 999 : undefined });
-        m.addListener("click", () => {
-          infoRef.current.setContent(
-            `<div class="cc-pop"><div style="font-weight:700;margin-bottom:2px">${escapeHtml(e.label)}</div>
-             <div style="opacity:.7">${KIND_LABEL[e.kind]}${e.sub ? " · " + escapeHtml(e.sub) : ""}</div>
-             <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
-               <span style="width:8px;height:8px;border-radius:9px;background:${color};display:inline-block"></span>
-               <span style="opacity:.8">${e.status}</span></div></div>`
-          );
-          infoRef.current.open(mapRef.current, m);
-          onSelect?.(e);
-        });
+        if (useAdvanced) {
+          const content = buildContent(url);
+          m = new AME({ map: mapRef.current, position: { lat: e.lat, lng: e.lng }, title: e.label, content, zIndex: e.kind === "tenant" ? 999 : undefined });
+          content.addEventListener("click", () => openInfo(m));
+        } else {
+          m = new g.maps.Marker({ map: mapRef.current, position: { lat: e.lat, lng: e.lng }, icon: { url, scaledSize: new g.maps.Size(44, 44), anchor: new g.maps.Point(22, 22) }, title: e.label, zIndex: e.kind === "tenant" ? 999 : undefined });
+          m.addListener("click", () => openInfo(m));
+        }
         markersRef.current[e.id] = m;
+      } else if (useAdvanced) {
+        m.position = { lat: e.lat, lng: e.lng };
+        if (m.content && (m.content as HTMLImageElement).src !== undefined) (m.content as HTMLImageElement).src = url;
       } else {
         m.setPosition({ lat: e.lat, lng: e.lng });
-        m.setIcon(icon);
+        m.setIcon({ url, scaledSize: new g.maps.Size(44, 44), anchor: new g.maps.Point(22, 22) });
       }
       bounds.extend({ lat: e.lat, lng: e.lng });
       any = true;
@@ -170,7 +199,11 @@ export function OperationsMap({
 
     // remove stale markers
     Object.keys(markersRef.current).forEach((id) => {
-      if (!seen.has(id)) { markersRef.current[id].setMap(null); delete markersRef.current[id]; }
+      if (!seen.has(id)) {
+        const stale = markersRef.current[id];
+        if (useAdvanced) stale.map = null; else stale.setMap(null);
+        delete markersRef.current[id];
+      }
     });
 
     if (any && !(mapRef.current as any).__fitted && entities.length > 1) {
