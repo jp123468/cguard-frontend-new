@@ -10,22 +10,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+const NONE = "__none__";
+
 const schema = z.object({
   name: z.string().min(1, "Requerido"),
-  description: z.string().min(1, "Requerido"),
-  guardId: z.string().optional().nullable(),
+  description: z.string().optional(),
+  managerId: z.string().optional().nullable(),
 });
 
 export type DepartmentDialogValues = z.infer<typeof schema>;
 
-type GuardOption = { id: string; name: string };
+type ManagerOption = { id: string; name: string };
 
 type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   title?: string;
   defaultValues?: DepartmentDialogValues | null;
-  guards?: GuardOption[];
+  managers?: ManagerOption[];
+  saving?: boolean;
   onSubmit: (values: DepartmentDialogValues) => Promise<void> | void;
 };
 
@@ -34,18 +37,19 @@ export default function DepartmentDialog({
   onOpenChange,
   title = "Nuevo Departamento",
   defaultValues,
-  guards = [],
+  managers = [],
+  saving = false,
   onSubmit,
 }: Props) {
   const form = useForm<DepartmentDialogValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", description: "", guardId: undefined },
+    defaultValues: { name: "", description: "", managerId: null },
   });
 
   useEffect(() => {
     if (defaultValues) form.reset(defaultValues);
-    else form.reset({ name: "", description: "", guardId: undefined });
-  }, [defaultValues]);
+    else form.reset({ name: "", description: "", managerId: null });
+  }, [defaultValues, open]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
     await onSubmit(values);
@@ -56,7 +60,7 @@ export default function DepartmentDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      description="Formulario para crear o editar departamentos."
+      description="Los departamentos organizan a tu equipo interno (Operaciones, Talento Humano, Nómina…)."
       icon={<Building2 />}
     >
         <Form {...form}>
@@ -66,9 +70,9 @@ export default function DepartmentDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nombre</FormLabel>
+                  <FormLabel>Nombre*</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nombre*" {...field} />
+                    <Input placeholder="Ej. Operaciones" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -81,7 +85,12 @@ export default function DepartmentDialog({
                 <FormItem>
                   <FormLabel>Descripción</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Descripción*" rows={5} {...field} />
+                    <Textarea
+                      placeholder="Qué hace este departamento (opcional)"
+                      rows={4}
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -89,33 +98,39 @@ export default function DepartmentDialog({
             />
             <FormField
               control={form.control}
-              name="guardId"
+              name="managerId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Asignar Vigilante</FormLabel>
+                  <FormLabel>Responsable (opcional)</FormLabel>
                   <Select
-                    onValueChange={(v) => field.onChange(v || undefined)}
-                    defaultValue={field.value ?? undefined}
+                    onValueChange={(v) => field.onChange(v === NONE ? null : v)}
+                    value={field.value ?? NONE}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Asignar Vigilante" />
+                        <SelectValue placeholder="Sin responsable" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {guards.map((g) => (
-                        <SelectItem key={g.id} value={g.id}>
-                          {g.name}
+                      <SelectItem value={NONE}>Sin responsable</SelectItem>
+                      {managers.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Persona a cargo del departamento; recibirá escalamientos y aprobaciones en futuras versiones.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <div className="flex justify-end gap-2 border-t pt-4">
-              <Button type="submit" variant="brand">Guardar</Button>
+              <Button type="submit" variant="brand" disabled={saving}>
+                {saving ? "Guardando…" : "Guardar"}
+              </Button>
             </div>
           </form>
         </Form>

@@ -1,4 +1,5 @@
-import { MoreVertical, Plus, Search } from "lucide-react";
+import { useState } from "react";
+import { MoreVertical, Plus, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,8 +11,10 @@ import { StatusBadge, EmptyState, SkeletonBlock } from "@/components/kit";
 export type DepartmentRow = {
   id: string;
   name: string;
-  description?: string;
-  guardName?: string | null;
+  description?: string | null;
+  managerName?: string | null;
+  managerId?: string | null;
+  members?: number;
   status?: "active" | "inactive";
   createdAt?: string;
 };
@@ -29,8 +32,9 @@ type Props = {
   onCreate: () => void;
   onEdit: (row: DepartmentRow) => void;
   onToggleStatus: (row: DepartmentRow) => void;
+  onDelete: (row: DepartmentRow) => void;
   onBulkDelete: (ids: string[]) => void;
-  createDisabled?: boolean;
+  canEdit?: boolean;
 };
 
 export default function DepartmentsTable({
@@ -46,19 +50,41 @@ export default function DepartmentsTable({
   onCreate,
   onEdit,
   onToggleStatus,
+  onDelete,
   onBulkDelete,
-  createDisabled = false,
+  canEdit = true,
 }: Props) {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const from = Math.min((page - 1) * pageSize + 1, Math.max(total, 1));
   const to = Math.min(page * pageSize, total);
   const maxPage = Math.max(1, Math.ceil(total / pageSize));
+  const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+
+  const toggleAll = () => {
+    setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
+  };
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => onBulkDelete([])} disabled>
-            Eliminar
+          <Button
+            variant="outline"
+            onClick={() => {
+              onBulkDelete(Array.from(selected));
+              setSelected(new Set());
+            }}
+            disabled={!canEdit || selected.size === 0}
+          >
+            Eliminar{selected.size > 0 ? ` (${selected.size})` : ""}
           </Button>
         </div>
         <div className="relative flex-1 max-w-xl">
@@ -70,12 +96,7 @@ export default function DepartmentsTable({
             onChange={(e) => onQueryChange(e.target.value)}
           />
         </div>
-        <Button
-          variant="brand"
-          onClick={onCreate}
-          disabled={createDisabled}
-          title={createDisabled ? "Función no disponible por el momento" : undefined}
-        >
+        <Button variant="brand" onClick={onCreate} disabled={!canEdit}>
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Departamento
         </Button>
@@ -86,10 +107,11 @@ export default function DepartmentsTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[44px]">
-                <Checkbox checked={false} onCheckedChange={() => {}} />
+                <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
               </TableHead>
               <TableHead>Departamento</TableHead>
-              <TableHead>Vigilante Asignado</TableHead>
+              <TableHead>Responsable</TableHead>
+              <TableHead>Miembros</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead className="w-[56px]" />
             </TableRow>
@@ -97,7 +119,7 @@ export default function DepartmentsTable({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-6">
+                <TableCell colSpan={6} className="py-6">
                   <div className="space-y-3">
                     <SkeletonBlock className="h-4 w-1/3" />
                     <SkeletonBlock className="h-4 w-1/2" />
@@ -107,11 +129,11 @@ export default function DepartmentsTable({
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <EmptyState
                     icon={<Search />}
-                    title="No se encontraron resultados"
-                    description="La gestión de departamentos estará disponible próximamente."
+                    title="Sin departamentos"
+                    description='Crea el primero con "Nuevo Departamento" — por ejemplo Operaciones, Talento Humano o Nómina.'
                     className="border-0 py-12"
                   />
                 </TableCell>
@@ -120,10 +142,21 @@ export default function DepartmentsTable({
               rows.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell>
-                    <Checkbox checked={false} onCheckedChange={() => {}} />
+                    <Checkbox checked={selected.has(r.id)} onCheckedChange={() => toggleOne(r.id)} />
                   </TableCell>
-                  <TableCell className="font-medium">{r.name}</TableCell>
-                  <TableCell>{r.guardName ?? "—"}</TableCell>
+                  <TableCell>
+                    <div className="font-medium">{r.name}</div>
+                    {r.description ? (
+                      <div className="text-xs text-muted-foreground line-clamp-1">{r.description}</div>
+                    ) : null}
+                  </TableCell>
+                  <TableCell>{r.managerName ?? "—"}</TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1.5 text-sm">
+                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                      {r.members ?? 0}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     <StatusBadge tone={r.status === "inactive" ? "slate" : "green"}>
                       {r.status === "inactive" ? "Inactivo" : "Activo"}
@@ -132,14 +165,20 @@ export default function DepartmentsTable({
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" disabled={!canEdit}>
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuContent align="end" className="w-44">
                         <DropdownMenuItem onClick={() => onEdit(r)}>Editar</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onToggleStatus(r)}>
                           {r.status === "inactive" ? "Activar" : "Desactivar"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => onDelete(r)}
+                        >
+                          Eliminar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
