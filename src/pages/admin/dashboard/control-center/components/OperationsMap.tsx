@@ -46,11 +46,11 @@ function useIsDark() {
   return dark;
 }
 
-/** The command center map is ALWAYS dark (a NOC/ops board reads as dark), so it
- *  stays dark even when the app is in light mode. `styles` are ignored by Google
- *  on satellite/hybrid map types, which is fine. */
-function mapStyles(_isDark: boolean, _mapTheme: DashboardPrefs["mapTheme"]) {
-  return DARK_STYLE;
+/** Resolve the Google map style array from the app theme + the user override —
+ *  dark in dark mode, light in light mode. */
+function mapStyles(isDark: boolean, mapTheme: DashboardPrefs["mapTheme"]) {
+  if (mapTheme === "roadmap") return isDark ? DARK_STYLE : undefined; // "estándar" still respects dark
+  return isDark ? DARK_STYLE : LIGHT_STYLE;
 }
 
 function pinSvg(color: string, pulse: boolean, iconName?: string) {
@@ -99,7 +99,7 @@ export function OperationsMap({
         center: initCenter,
         zoom: defaultCenter?.zoom ?? 12, disableDefaultUI: true, gestureHandling: "greedy", clickableIcons: false,
         styles: mapStyles(isDark, prefs.mapTheme),
-        backgroundColor: "#0b1020",
+        backgroundColor: isDark ? "#0b1020" : "#eef1f6",
       });
       infoRef.current = new g.maps.InfoWindow();
       setReady(true);
@@ -113,7 +113,7 @@ export function OperationsMap({
     if (!ready || !mapRef.current) return;
     mapRef.current.setOptions({
       styles: mapStyles(isDark, prefs.mapTheme),
-      backgroundColor: "#0b1020",
+      backgroundColor: isDark ? "#0b1020" : "#eef1f6",
     });
   }, [isDark, prefs.mapTheme, ready]);
 
