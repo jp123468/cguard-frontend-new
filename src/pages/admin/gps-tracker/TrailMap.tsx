@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { loadGoogleMaps } from "@/utils/loadGoogleMaps";
+import { createMapMarker, mapIdIfConfigured } from "@/utils/mapMarker";
 
 export interface TrailPoint {
   lat: number;
@@ -25,7 +26,7 @@ export default function TrailMap({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
-  const overlaysRef = useRef<any[]>([]);
+  const overlaysRef = useRef<Array<() => void>>([]);
   const [ready, setReady] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -45,6 +46,9 @@ export default function TrailMap({
           gestureHandling: "greedy",
           clickableIcons: false,
           mapTypeId: mapType,
+          // Enables AdvancedMarkerElement when a Cloud Map ID is configured;
+          // TrailMap uses no inline styles, so a mapId is safe here.
+          ...(mapIdIfConfigured() ? { mapId: mapIdIfConfigured() } : {}),
         });
         setReady(true);
       })
@@ -62,7 +66,7 @@ export default function TrailMap({
     if (!ready || !mapRef.current) return;
     const g = (window as any).google;
 
-    overlaysRef.current.forEach((o) => o.setMap(null));
+    overlaysRef.current.forEach((remove) => remove());
     overlaysRef.current = [];
 
     const valid = points.filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
@@ -76,23 +80,15 @@ export default function TrailMap({
       strokeOpacity: 0.9,
       strokeWeight: 4,
     });
-    overlaysRef.current.push(line);
+    overlaysRef.current.push(() => line.setMap(null));
 
     const mk = (p: TrailPoint, color: string, label: string) => {
-      const m = new g.maps.Marker({
-        map: mapRef.current,
+      const handle = createMapMarker(mapRef.current, {
         position: { lat: p.lat, lng: p.lng },
         title: `${label} · ${new Date(p.at).toLocaleString("es-EC")}`,
-        icon: {
-          path: g.maps.SymbolPath.CIRCLE,
-          scale: 7,
-          fillColor: color,
-          fillOpacity: 1,
-          strokeColor: "#fff",
-          strokeWeight: 2,
-        },
+        color,
       });
-      overlaysRef.current.push(m);
+      overlaysRef.current.push(handle.remove);
     };
     mk(valid[0], "#1a8f66", "Inicio");
     mk(valid[valid.length - 1], "#cf3a3f", "Fin");

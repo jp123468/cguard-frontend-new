@@ -1131,6 +1131,10 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* The reports-config "General Incident report" card + "Ver todos"
+                  point here (plural); route them to the real incident report. */}
+              <Route path="/reports/incidents" element={<ProtectedRoute><Incident /></ProtectedRoute>} />
+              <Route path="/reports/incidents/general" element={<ProtectedRoute><Incident /></ProtectedRoute>} />
               <Route
                 path="/reports/passdown"
                 element={
