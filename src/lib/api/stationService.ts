@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { cachedFetch, invalidateEntity } from '@/lib/queryClient';
 import { PostSiteInput } from '@/lib/validators/post-site';
 
 export interface PostSite {
@@ -92,6 +93,8 @@ const getTenantId = (): string => {
 const stationService = {
   async list(filters: PostSiteFilters = {}, options: PaginationOptions = { limit: 25, offset: 0 }): Promise<PostSiteListResponse> {
     const tenantId = getTenantId();
+    // Read-through cache shared by the ~10 pages that list post-sites/stations.
+    return cachedFetch(["stations", tenantId, filters, options], async () => {
     const params = new URLSearchParams();
     if (filters.name) params.append('filter[name]', filters.name);
     if (filters.clientId) params.append('filter[clientId]', filters.clientId);
@@ -150,6 +153,7 @@ const stationService = {
       serviceType: r.serviceType ?? undefined,
     }));
     return { rows: mappedRows, count: data.count };
+    });
   },
 
   async get(id: string): Promise<any> {
@@ -189,6 +193,7 @@ const stationService = {
       serviceConfig: (payload as any).serviceConfig ?? undefined,
     };
     const { data } = await api.post(`/tenant/${tenantId}/post-site`, body);
+    invalidateEntity("stations");
     return data;
   },
 
@@ -236,12 +241,14 @@ const stationService = {
       serviceConfig: (payload as any).serviceConfig ?? existing.serviceConfig ?? undefined,
     };
     const { data } = await api.put(`/tenant/${tenantId}/post-site/${id}`, body);
+    invalidateEntity("stations");
     return data;
   },
 
   async delete(ids: string[]): Promise<void> {
     const tenantId = getTenantId();
     await api.delete(`/tenant/${tenantId}/post-site`, { data: { ids } });
+    invalidateEntity("stations");
   },
 
   async exportPDF(filters: PostSiteFilters = {}): Promise<Blob> {

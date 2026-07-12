@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { cachedFetch, invalidateEntity } from '@/lib/queryClient';
 
 export type Category = {
     id: string;
@@ -43,12 +44,14 @@ class CategoryService {
     async create(data: CategoryInput): Promise<Category> {
         const tenantId = getTenantId();
         const response = await api.post(`/tenant/${tenantId}/category`, data);
+        invalidateEntity("categories");
         return response.data;
     }
 
     async update(id: string, data: CategoryInput): Promise<Category> {
         const tenantId = getTenantId();
         const response = await api.put(`/tenant/${tenantId}/category/${id}`, data);
+        invalidateEntity("categories");
         return response.data;
     }
 
@@ -57,6 +60,7 @@ class CategoryService {
         await api.delete(`/tenant/${tenantId}/category`, {
             params: { ids },
         });
+        invalidateEntity("categories");
     }
 
     async findById(id: string): Promise<Category> {
@@ -75,8 +79,11 @@ class CategoryService {
         orderBy?: string;
     }): Promise<{ rows: Category[]; count: number }> {
         const tenantId = getTenantId();
-        const response = await api.get(`/tenant/${tenantId}/category`, { params, toast: { silentError: true } } as any);
-        return response.data;
+        // Reference data — rarely changes; cache 60s across all consumers.
+        return cachedFetch(["categories", tenantId, params ?? null], async () => {
+            const response = await api.get(`/tenant/${tenantId}/category`, { params, toast: { silentError: true } } as any);
+            return response.data;
+        }, 60_000);
     }
 
     async autocomplete(query: string, limit = 10): Promise<Array<{ id: string; label: string }>> {

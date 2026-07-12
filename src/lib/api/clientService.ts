@@ -1,4 +1,5 @@
 import api, { getAuthToken } from "../api";
+import { cachedFetch, invalidateEntity } from "@/lib/queryClient";
 import type {
     Client,
     ClientInput,
@@ -58,6 +59,10 @@ export const clientService = {
         pagination?: PaginationParams
     ): Promise<ClientListResponse> {
         const tenantId = getTenantId();
+        // Read-through cache: the 16 pages that list clients now share one
+        // cached result within staleTime instead of each re-querying MySQL on
+        // mount. Mutations below invalidate it.
+        return cachedFetch(["clients", tenantId, filters ?? null, pagination ?? null], async () => {
         const params = new URLSearchParams();
 
         // Add pagination
@@ -112,6 +117,7 @@ export const clientService = {
             });
         }
         return data;
+        });
     },
 
     /**
@@ -171,6 +177,7 @@ export const clientService = {
         const { data } = await api.post<any>(`/tenant/${tenantId}/client-account`,
             payload
         );
+        invalidateEntity("clients");
         // Mapear zipCode y addressComplement del backend a postalCode y addressLine2 del frontend en la respuesta
         return {
             ...data,
@@ -220,6 +227,7 @@ export const clientService = {
                 `/tenant/${tenantId}/client-account/${id}`,
                 payload
             );
+        invalidateEntity("clients");
         // Mapear zipCode y addressComplement del backend a postalCode y addressLine2 del frontend en la respuesta
         return {
             ...data,
@@ -272,6 +280,7 @@ export const clientService = {
         // Backend routes delete requests to the base path and expects ids via query or body.
         // axios supports sending a body with DELETE via the `data` config field.
         await api.delete(`/tenant/${tenantId}/client-account`, { data: { ids: [id] }, toast: { silentError: true } } as any);
+        invalidateEntity("clients");
     },
 
     /**
@@ -280,6 +289,7 @@ export const clientService = {
     async deleteClients(ids: string[]): Promise<void> {
         const tenantId = getTenantId();
         await api.post(`/tenant/${tenantId}/client-account/destroy-all`, { ids }, { toast: { silentError: true } });
+        invalidateEntity("clients");
     },
 
     /**
