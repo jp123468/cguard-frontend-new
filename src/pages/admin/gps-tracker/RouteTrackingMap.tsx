@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { loadGoogleMaps } from "@/utils/loadGoogleMaps";
-import { mapIdIfConfigured } from "@/utils/mapMarker";
 
 /** One plotted stop of a vehicle-patrol route (a point with valid coordinates). */
 export interface RouteStopMarker {
@@ -117,9 +116,6 @@ export default function RouteTrackingMap({
           : first
             ? { lat: first.lat, lng: first.lng }
             : { lat: -0.18, lng: -78.46 };
-        // Cloud Map ID → cloud dark style + AdvancedMarkerElement; inline styles
-        // are ignored on a mapId map so omit them. No Map ID → inline styles.
-        const mapId = mapIdIfConfigured();
         mapRef.current = new g.maps.Map(ref.current, {
           center: initCenter,
           zoom: defaultCenter?.zoom ?? 12,
@@ -128,7 +124,7 @@ export default function RouteTrackingMap({
           gestureHandling: "greedy",
           clickableIcons: false,
           mapTypeId: mapType,
-          ...(mapId ? { mapId } : { styles: styleFor(isDark) }),
+          styles: styleFor(isDark),
           backgroundColor: isDark ? "#0b1020" : "#eef1f6",
         });
         infoRef.current = new g.maps.InfoWindow();
@@ -139,14 +135,9 @@ export default function RouteTrackingMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // react to map-type + theme changes. Under a Cloud Map ID the cloud style owns
-  // appearance, so only the map type is applied (setting inline styles is ignored).
+  // react to map-type + theme changes
   useEffect(() => {
     if (!ready || !mapRef.current) return;
-    if (mapIdIfConfigured()) {
-      mapRef.current.setOptions({ mapTypeId: mapType });
-      return;
-    }
     mapRef.current.setOptions({
       mapTypeId: mapType,
       styles: styleFor(isDark),
@@ -159,11 +150,9 @@ export default function RouteTrackingMap({
   useEffect(() => {
     if (!ready || !mapRef.current) return;
     const g = (window as any).google;
-    const AME = g.maps.marker?.AdvancedMarkerElement;
-    const useAdvanced = !!(AME && mapIdIfConfigured());
 
     // clear previous overlays
-    markersRef.current.forEach((m) => { if (useAdvanced) m.map = null; else m.setMap(null); });
+    markersRef.current.forEach((m) => m.setMap(null));
     linesRef.current.forEach((l) => l.setMap(null));
     circlesRef.current.forEach((c) => c.setMap(null));
     markersRef.current = [];
@@ -187,8 +176,13 @@ export default function RouteTrackingMap({
       ordered.forEach((s, idx) => {
         const pos = { lat: s.lat, lng: s.lng };
         const color = s.done ? DONE_COLOR : PENDING_COLOR;
-        const url = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(pinSvg(color, String(idx + 1)));
-        const popup = () => {
+        const icon = {
+          url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(pinSvg(color, String(idx + 1))),
+          scaledSize: new g.maps.Size(40, 40),
+          anchor: new g.maps.Point(20, 20),
+        };
+        const marker = new g.maps.Marker({ map: mapRef.current, position: pos, icon, title: s.siteName });
+        marker.addListener("click", () => {
           infoRef.current.setContent(
             `<div style="min-width:160px"><div style="font-weight:700;margin-bottom:2px">${escapeHtml(s.siteName)}</div>
              <div style="opacity:.7;font-size:12px">${escapeHtml(s.routeName)} · parada ${idx + 1}</div>
@@ -197,18 +191,8 @@ export default function RouteTrackingMap({
                <span style="width:8px;height:8px;border-radius:9px;background:${color};display:inline-block"></span>
                <span style="opacity:.8">${s.done ? "Completada" : "Pendiente"}</span></div></div>`
           );
-        };
-        let marker: any;
-        if (useAdvanced) {
-          const img = document.createElement("img");
-          img.src = url; img.width = 40; img.height = 40;
-          img.style.cssText = "width:40px;height:40px;cursor:pointer";
-          marker = new AME({ map: mapRef.current, position: pos, title: s.siteName, content: img });
-          img.addEventListener("click", () => { popup(); infoRef.current.open({ map: mapRef.current, anchor: marker }); });
-        } else {
-          marker = new g.maps.Marker({ map: mapRef.current, position: pos, icon: { url, scaledSize: new g.maps.Size(40, 40), anchor: new g.maps.Point(20, 20) }, title: s.siteName });
-          marker.addListener("click", () => { popup(); infoRef.current.open(mapRef.current, marker); });
-        }
+          infoRef.current.open(mapRef.current, marker);
+        });
         markersRef.current.push(marker);
 
         if (showGeofence) {
