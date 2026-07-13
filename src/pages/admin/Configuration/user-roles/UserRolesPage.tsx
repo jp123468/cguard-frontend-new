@@ -331,6 +331,11 @@ export default function UserRolesPage() {
           onNew={onNew}
           onToggleExpand={toggleExpand}
           onEdit={onEdit}
+          onDelete={(r) => {
+            if (r.isDefault) return;
+            setPendingDeleteIds([r.id]);
+            setDeleteDialogOpen(true);
+          }}
           onBulkDelete={onBulkDelete}
           expandedRoleId={expandedRoleId}
           expandedContent={

@@ -51,6 +51,7 @@ type Props = {
   onNew: () => void;
   onToggleExpand?: (r: UserRoleRow) => void;
   onEdit: (r: UserRoleRow) => void;
+  onDelete: (r: UserRoleRow) => void;
   onBulkDelete: () => void;
   expandedRoleId?: string | null;
   expandedContent?: any;
@@ -70,6 +71,7 @@ export default function UserRolesTable({
   onNew,
   onToggleExpand,
   onEdit,
+  onDelete,
   onBulkDelete,
   expandedRoleId,
   expandedContent,
@@ -171,6 +173,13 @@ export default function UserRolesTable({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
                           <DropdownMenuItem disabled={!hasPermission('settingsEdit') || !!r.isDefault} onClick={() => { if (!hasPermission('settingsEdit') || !!r.isDefault) return; onEdit(r); }}>Editar</DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            disabled={!hasPermission('settingsEdit') || !!r.isDefault}
+                            onClick={() => { if (!hasPermission('settingsEdit') || !!r.isDefault) return; onDelete(r); }}
+                          >
+                            Eliminar
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
