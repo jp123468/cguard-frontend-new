@@ -153,7 +153,7 @@ export default function GuardsGlobalSettingsPage() {
                         <Section title="Supervisión en tiempo real" icon={<SatelliteDish />} contentClassName="divide-y divide-border/60">
                             <RuleRow
                                 title="Alerta de inactividad en turno"
-                                description="Avisa a los supervisores cuando un vigilante de servicio deja de reportar ubicación (teléfono apagado, sin señal o app cerrada). Es tu red de seguridad para saber que cada vigilante sigue activo en su puesto."
+                                description="Avisa a los supervisores cuando un vigilante o supervisor de servicio deja de reportar ubicación (teléfono apagado, sin señal o app cerrada). La alerta llega al panel, a las apps y por correo/SMS según tus canales de notificación."
                                 checked={cfg.inactivityAlert}
                                 onChange={(v) => set("inactivityAlert", v)}
                                 disabled={disabled}
