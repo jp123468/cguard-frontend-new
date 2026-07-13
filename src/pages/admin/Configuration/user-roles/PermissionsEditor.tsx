@@ -1,7 +1,8 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PERMISSIONS, groupPermissions } from "@/config/permissions";
-import { formatPermissionLabel, RESOURCE_LABELS } from "@/config/permissionLabels";
+import { formatPermissionLabel, getResourceLabel } from "@/config/permissionLabels";
 
 type Props = {
   value: string[];
@@ -14,6 +15,10 @@ type Props = {
 };
 
 export default function PermissionsEditor({ value, onChange, query = "", readOnly = false, lockedPermissions = [] }: Props) {
+  // Re-render (and re-filter) when the chosen language changes: labels come
+  // from locale-aware helpers, not static maps.
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
   const lockedSet = React.useMemo(() => new Set(lockedPermissions), [lockedPermissions]);
   const isLocked = (p: string) => lockedSet.has(p);
   const grouped = React.useMemo(() => groupPermissions(PERMISSIONS), []);
@@ -25,13 +30,13 @@ export default function PermissionsEditor({ value, onChange, query = "", readOnl
       const items = grouped[k].filter((p) => {
         const key = p.toLowerCase();
         const label = formatPermissionLabel(p).toLowerCase();
-        const groupLabel = (RESOURCE_LABELS[k] ?? k).toLowerCase();
+        const groupLabel = getResourceLabel(k).toLowerCase();
         return key.includes(q) || label.includes(q) || groupLabel.includes(q);
       });
       if (items.length) out[k] = items;
     }
     return out;
-  }, [grouped, query]);
+  }, [grouped, query, lang]);
 
   // ocultar grupos específicos (no mostrar en la UI)
   const HIDDEN_GROUPS = React.useMemo(() => new Set(["tenant", "plan"]), [] as unknown as string[]);
@@ -77,7 +82,7 @@ export default function PermissionsEditor({ value, onChange, query = "", readOnl
                   aria-expanded={!collapsed[group]}
                 >
                   <div className="flex items-center gap-2">
-                    <div className="text-sm font-semibold">{RESOURCE_LABELS[group] ?? group}</div>
+                    <div className="text-sm font-semibold">{getResourceLabel(group)}</div>
                     <div className="text-xs text-muted-foreground">{items.length} permisos</div>
                     <div className="text-sm text-muted-foreground">{collapsed[group] ? '►' : '▼'}</div>
                   </div>

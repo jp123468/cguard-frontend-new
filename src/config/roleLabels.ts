@@ -1,0 +1,109 @@
+import i18n from "@/i18n";
+
+/**
+ * Localized display names + descriptions for the BUILT-IN roles. The backend
+ * stores/returns raw identifiers ("operationsManager") and English seed
+ * descriptions; the UI must render them in the user's chosen language.
+ * Custom (tenant-created) roles are user-authored text and render as stored.
+ */
+type Localized = { es: string; en: string; pt: string };
+
+const ROLE_NAMES: Record<string, Localized> = {
+  admin: { es: "Administrador", en: "Administrator", pt: "Administrador" },
+  superadmin: { es: "Superadministrador", en: "Super Administrator", pt: "Superadministrador" },
+  customer: { es: "Cliente", en: "Customer", pt: "Cliente" },
+  securityguard: { es: "Vigilante", en: "Security Guard", pt: "Vigilante" },
+  securitysupervisor: { es: "Supervisor de Seguridad", en: "Security Supervisor", pt: "Supervisor de Segurança" },
+  operationsmanager: { es: "Gerente de Operaciones", en: "Operations Manager", pt: "Gerente de Operações" },
+  hrmanager: { es: "Gerente de RR.HH.", en: "HR Manager", pt: "Gerente de RH" },
+  dispatcher: { es: "Despachador", en: "Dispatcher", pt: "Despachante" },
+  clientaccountmanager: { es: "Gestor de Cuentas", en: "Client Account Manager", pt: "Gestor de Contas" },
+  administrativesupervisor: { es: "Supervisor Administrativo", en: "Administrative Supervisor", pt: "Supervisor Administrativo" },
+  administrativeassistant: { es: "Asistente Administrativo", en: "Administrative Assistant", pt: "Assistente Administrativo" },
+  secretary: { es: "Secretaría / Recepción", en: "Secretary / Reception", pt: "Secretária / Recepção" },
+};
+
+const ROLE_DESCRIPTIONS: Record<string, Localized> = {
+  admin: {
+    es: "Administrador del sistema — acceso completo",
+    en: "System administrator — full access",
+    pt: "Administrador do sistema — acesso completo",
+  },
+  superadmin: {
+    es: "Acceso global a la plataforma (interno)",
+    en: "Global platform access (internal)",
+    pt: "Acesso global à plataforma (interno)",
+  },
+  customer: {
+    es: "Cliente — acceso a sus servicios asignados",
+    en: "Customer — access to their assigned services",
+    pt: "Cliente — acesso aos serviços atribuídos",
+  },
+  securityguard: {
+    es: "Vigilante — rol operativo de campo",
+    en: "Security guard — operational field role",
+    pt: "Vigilante — função operacional de campo",
+  },
+  securitysupervisor: {
+    es: "Supervisa vigilantes e incidentes",
+    en: "Supervises guards and incidents",
+    pt: "Supervisiona vigilantes e incidentes",
+  },
+  operationsmanager: {
+    es: "Supervisa operaciones y clientes",
+    en: "Oversees operations and clients",
+    pt: "Supervisiona operações e clientes",
+  },
+  hrmanager: {
+    es: "Gestiona personal y certificaciones",
+    en: "Manages personnel and certifications",
+    pt: "Gerencia pessoal e certificações",
+  },
+  dispatcher: {
+    es: "Gestiona programación y turnos",
+    en: "Manages scheduling and shifts",
+    pt: "Gerencia programação e turnos",
+  },
+  clientaccountmanager: {
+    es: "Gestiona cuentas de clientes",
+    en: "Manages client accounts",
+    pt: "Gerencia contas de clientes",
+  },
+  administrativesupervisor: {
+    es: "Supervisa al personal administrativo y la oficina",
+    en: "Oversees administrative staff and office operations",
+    pt: "Supervisiona a equipe administrativa e o escritório",
+  },
+  administrativeassistant: {
+    es: "Apoyo de oficina y acceso administrativo",
+    en: "Office support and administrative access",
+    pt: "Apoio de escritório e acesso administrativo",
+  },
+  secretary: {
+    es: "Recepción, control de visitas y coordinación de oficina",
+    en: "Reception, visitor management, and office coordination",
+    pt: "Recepção, controle de visitas e coordenação do escritório",
+  },
+};
+
+/** Current UI language collapsed to the locales we ship (es/en/pt → else es). */
+export function uiLang(): "es" | "en" | "pt" {
+  const l = String(i18n.language || "es").slice(0, 2).toLowerCase();
+  return l === "en" || l === "pt" ? l : "es";
+}
+
+const keyOf = (slugOrName?: string) => String(slugOrName || "").toLowerCase().trim();
+
+/** Display name for a role; built-ins localize, custom roles render as stored. */
+export function roleDisplayName(slugOrName?: string): string {
+  const entry = ROLE_NAMES[keyOf(slugOrName)];
+  return entry ? entry[uiLang()] : String(slugOrName || "");
+}
+
+/** Display description; built-ins localize, custom roles keep their own text. */
+export function roleDisplayDescription(slugOrName?: string, fallback?: string): string {
+  const entry = ROLE_DESCRIPTIONS[keyOf(slugOrName)];
+  return entry ? entry[uiLang()] : (fallback || "");
+}
+
+export default { roleDisplayName, roleDisplayDescription, uiLang };

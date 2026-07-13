@@ -1,6 +1,6 @@
 import React from "react";
 import { PERMISSIONS, groupPermissions, ADMIN_FLOOR_PERMISSIONS } from "@/config/permissions";
-import { formatPermissionLabel, RESOURCE_LABELS } from "@/config/permissionLabels";
+import { formatPermissionLabel, getResourceLabel } from "@/config/permissionLabels";
 
 export type Overrides = { grant: string[]; deny: string[] };
 
@@ -41,7 +41,7 @@ export default function UserPermissionOverrides({
     for (const k of Object.keys(grouped)) {
       const items = grouped[k].filter((p) => {
         const label = formatPermissionLabel(p).toLowerCase();
-        const groupLabel = (RESOURCE_LABELS[k] ?? k).toLowerCase();
+        const groupLabel = getResourceLabel(k).toLowerCase();
         return p.toLowerCase().includes(q) || label.includes(q) || groupLabel.includes(q);
       });
       if (items.length) out[k] = items;
@@ -87,7 +87,7 @@ export default function UserPermissionOverrides({
           .filter((g) => !HIDDEN_GROUPS.has(g))
           .map((group) => (
             <div key={group} className="rounded-2xl border bg-card dark:bg-[#202020] p-4 shadow-sm">
-              <div className="text-sm font-semibold mb-3 tracking-tight">{RESOURCE_LABELS[group] ?? group}</div>
+              <div className="text-sm font-semibold mb-3 tracking-tight">{getResourceLabel(group)}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {filtered[group].map((p) => {
                   const st = stateOf(p);

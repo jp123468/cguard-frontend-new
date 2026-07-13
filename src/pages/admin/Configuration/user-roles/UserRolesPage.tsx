@@ -1,6 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { ApiService, ApiError } from "@/services/api/apiService";
+import { roleDisplayName, roleDisplayDescription, uiLang } from "@/config/roleLabels";
 
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/SettingsLayout";
@@ -23,6 +25,11 @@ const slugOf = (role: { slug?: string; name?: string; id?: string }) =>
   String(role.slug ?? role.name ?? role.id ?? '').toLowerCase();
 
 export default function UserRolesPage() {
+  // Built-in role names/descriptions come from the backend as raw English
+  // identifiers; render them via roleLabels in the chosen language and
+  // re-render when it changes.
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
   const [query, setQuery] = useState("");
   const [pageSize, setPageSize] = useState("25");
   const [open, setOpen] = useState(false);
@@ -89,11 +96,29 @@ export default function UserRolesPage() {
     return () => { mounted = false; };
   }, []);
 
+  // Localized presentation of the rows: built-in roles get translated
+  // name/description; custom roles keep their user-authored text.
+  const displayRows = useMemo(
+    () =>
+      rows.map((r) =>
+        r.isSystem
+          ? {
+              ...r,
+              name: roleDisplayName(r.slug || r.name),
+              description: roleDisplayDescription(r.slug || r.name, r.description),
+            }
+          : r,
+      ),
+    [rows, lang],
+  );
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => r.name.toLowerCase().includes(q));
-  }, [rows, query]);
+    if (!q) return displayRows;
+    return displayRows.filter(
+      (r) => r.name.toLowerCase().includes(q) || (r.slug || "").toLowerCase().includes(q),
+    );
+  }, [displayRows, query]);
 
   // Cap the rendered rows to the selected page size so the per-page control
   // is functional (this screen has no page navigation, so we show page 1).
@@ -211,7 +236,7 @@ export default function UserRolesPage() {
 
  
 
-  const pageLabel = `${paged.length === 0 ? 0 : 1} – ${paged.length} of ${filtered.length}`;
+  const pageLabel = `${paged.length === 0 ? 0 : 1} – ${paged.length} ${uiLang() === "en" ? "of" : "de"} ${filtered.length}`;
 
   const submit = async (data: UserRoleDialogValues) => {
     try {
