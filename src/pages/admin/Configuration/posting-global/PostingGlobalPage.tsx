@@ -172,7 +172,7 @@ export default function PostingGlobalPage() {
                                 <Link to="/setting/notifications" className="underline underline-offset-2">
                                     Configuración › Notificaciones
                                 </Link>{" "}
-                                (fila «Excepciones de asistencia»).
+                                (fila «Alertas de geovalla al entrar/salir»).
                             </p>
                         </Section>
 

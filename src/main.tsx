@@ -18,6 +18,20 @@ import "@/styles/glass.css";
 import { Toaster } from "sonner";
 import { ConfirmHost } from "@/components/ui/confirmDialog";
 
+// Stale-deploy recovery: after each publish the hashed chunk files change and
+// the old ones are deleted, so a tab loaded BEFORE the deploy 404s on its next
+// lazy-route import ("Failed to fetch dynamically imported module"). Vite
+// emits vite:preloadError for exactly this — reload once to pick up the new
+// build. The sessionStorage stamp (10s window) prevents a reload loop if the
+// failure is something else (e.g. offline).
+window.addEventListener("vite:preloadError", (event) => {
+  const last = Number(sessionStorage.getItem("chunkReloadAt") || 0);
+  if (Date.now() - last < 10_000) return; // already retried — let it surface
+  sessionStorage.setItem("chunkReloadAt", String(Date.now()));
+  event.preventDefault();
+  window.location.reload();
+});
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     {/* <BrowserRouter> */}
