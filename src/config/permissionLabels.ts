@@ -43,6 +43,37 @@ export const RESOURCE_LABELS: Record<string, string> = {
   deviceIdInformation: 'Dispositivos',
   insurance: 'Seguros',
   file: 'Archivos',
+  attendance: 'Asistencia (Nómina)',
+  attendanceSettings: 'Ajustes de asistencia',
+  timeOffRequest: 'Tiempo libre',
+  shiftTemplate: 'Plantillas de turno',
+  shiftExchangeRequest: 'Intercambio de turnos',
+  postSite: 'Sitios de servicio',
+  route: 'Rutas (patrulla vehicular)',
+  vehicle: 'Vehículos',
+  visitorLog: 'Control de visitas',
+  incidentType: 'Tipos de incidente',
+  licenseType: 'Tipos de licencia',
+  clientContact: 'Contactos de cliente',
+  note: 'Notas',
+  attachment: 'Adjuntos',
+  message: 'Mensajería',
+  inventoryItem: 'Ítems de inventario',
+  uniformInspection: 'Inspección de uniformes',
+  radioDevice: 'Radios IP',
+  radioCheck: 'Pase de novedades',
+  radioCheckSettings: 'Ajustes de pase de novedades',
+  trainingCourse: 'Cursos de entrenamiento',
+  trainingLesson: 'Lecciones de entrenamiento',
+  trainingEnrollment: 'Inscripciones a cursos',
+  trainingQuiz: 'Quiz de entrenamiento',
+  trainingCertificate: 'Certificados de entrenamiento',
+  quizBank: 'Banco de preguntas',
+  quizAttempt: 'Intentos de quiz',
+  backup: 'Cobertura de turnos',
+  backupEvent: 'Eventos de cobertura',
+  staffMe: 'Autoservicio del personal (app)',
+  supervisorMe: 'Autoservicio del supervisor (app)',
 };
 
 const RESOURCE_LABELS_EN: Record<string, string> = {
@@ -82,6 +113,37 @@ const RESOURCE_LABELS_EN: Record<string, string> = {
   deviceIdInformation: 'Devices',
   insurance: 'Insurance',
   file: 'Files',
+  attendance: 'Attendance (Payroll)',
+  attendanceSettings: 'Attendance settings',
+  timeOffRequest: 'Time off',
+  shiftTemplate: 'Shift templates',
+  shiftExchangeRequest: 'Shift exchanges',
+  postSite: 'Service sites',
+  route: 'Routes (vehicle patrol)',
+  vehicle: 'Vehicles',
+  visitorLog: 'Visitor log',
+  incidentType: 'Incident types',
+  licenseType: 'License types',
+  clientContact: 'Client contacts',
+  note: 'Notes',
+  attachment: 'Attachments',
+  message: 'Messaging',
+  inventoryItem: 'Inventory items',
+  uniformInspection: 'Uniform inspections',
+  radioDevice: 'IP radios',
+  radioCheck: 'Radio check',
+  radioCheckSettings: 'Radio check settings',
+  trainingCourse: 'Training courses',
+  trainingLesson: 'Training lessons',
+  trainingEnrollment: 'Course enrollments',
+  trainingQuiz: 'Training quizzes',
+  trainingCertificate: 'Training certificates',
+  quizBank: 'Question bank',
+  quizAttempt: 'Quiz attempts',
+  backup: 'Shift coverage',
+  backupEvent: 'Coverage events',
+  staffMe: 'Staff self-service (app)',
+  supervisorMe: 'Supervisor self-service (app)',
 };
 
 const RESOURCE_LABELS_PT: Record<string, string> = {
@@ -121,6 +183,37 @@ const RESOURCE_LABELS_PT: Record<string, string> = {
   deviceIdInformation: 'Dispositivos',
   insurance: 'Seguros',
   file: 'Arquivos',
+  attendance: 'Presença (Folha)',
+  attendanceSettings: 'Configurações de presença',
+  timeOffRequest: 'Folgas',
+  shiftTemplate: 'Modelos de turno',
+  shiftExchangeRequest: 'Troca de turnos',
+  postSite: 'Locais de serviço',
+  route: 'Rotas (patrulha veicular)',
+  vehicle: 'Veículos',
+  visitorLog: 'Controle de visitas',
+  incidentType: 'Tipos de incidente',
+  licenseType: 'Tipos de licença',
+  clientContact: 'Contatos de cliente',
+  note: 'Notas',
+  attachment: 'Anexos',
+  message: 'Mensagens',
+  inventoryItem: 'Itens de inventário',
+  uniformInspection: 'Inspeção de uniformes',
+  radioDevice: 'Rádios IP',
+  radioCheck: 'Chamada de rádio',
+  radioCheckSettings: 'Config. de chamada de rádio',
+  trainingCourse: 'Cursos de treinamento',
+  trainingLesson: 'Lições de treinamento',
+  trainingEnrollment: 'Inscrições em cursos',
+  trainingQuiz: 'Quiz de treinamento',
+  trainingCertificate: 'Certificados de treinamento',
+  quizBank: 'Banco de questões',
+  quizAttempt: 'Tentativas de quiz',
+  backup: 'Cobertura de turnos',
+  backupEvent: 'Eventos de cobertura',
+  staffMe: 'Autoatendimento do funcionário (app)',
+  supervisorMe: 'Autoatendimento do supervisor (app)',
 };
 
 export const ACTION_LABELS: Record<string, string> = {
@@ -133,6 +226,15 @@ export const ACTION_LABELS: Record<string, string> = {
   Export: 'Exportar',
   Restore: 'Restaurar',
   Archive: 'Archivar',
+  Approve: 'Aprobar',
+  Correct: 'Corregir',
+  Send: 'Enviar',
+  Manage: 'Gestionar',
+  Reply: 'Responder',
+  Complete: 'Completar',
+  Attempt: 'Rendir',
+  Confirm: 'Confirmar',
+  Volunteer: 'Ofrecerse a',
 };
 
 const ACTION_LABELS_EN: Record<string, string> = {
@@ -145,6 +247,15 @@ const ACTION_LABELS_EN: Record<string, string> = {
   Export: 'Export',
   Restore: 'Restore',
   Archive: 'Archive',
+  Approve: 'Approve',
+  Correct: 'Correct',
+  Send: 'Send',
+  Manage: 'Manage',
+  Reply: 'Reply to',
+  Complete: 'Complete',
+  Attempt: 'Take',
+  Confirm: 'Confirm',
+  Volunteer: 'Volunteer for',
 };
 
 const ACTION_LABELS_PT: Record<string, string> = {
@@ -157,7 +268,33 @@ const ACTION_LABELS_PT: Record<string, string> = {
   Export: 'Exportar',
   Restore: 'Restaurar',
   Archive: 'Arquivar',
+  Approve: 'Aprovar',
+  Correct: 'Corrigir',
+  Send: 'Enviar',
+  Manage: 'Gerenciar',
+  Reply: 'Responder',
+  Complete: 'Concluir',
+  Attempt: 'Fazer',
+  Confirm: 'Confirmar',
+  Volunteer: 'Voluntariar-se para',
 };
+
+// Permission ids with no action suffix (whole-feature switches): show a
+// descriptive label instead of the raw id.
+const SPECIAL_PERMISSION_LABELS: Record<string, Localized3> = {
+  staffMe: {
+    es: 'Acceso al autoservicio del personal',
+    en: 'Access staff self-service',
+    pt: 'Acesso ao autoatendimento do funcionário',
+  },
+  supervisorMe: {
+    es: 'Acceso a la app del supervisor',
+    en: 'Access the supervisor app',
+    pt: 'Acesso ao app do supervisor',
+  },
+};
+
+type Localized3 = { es: string; en: string; pt: string };
 
 function resourceMap(): Record<string, string> {
   const l = uiLang();
@@ -175,6 +312,8 @@ export function getResourceLabel(resourceKey: string): string {
 }
 
 export function formatPermissionLabel(permission: string) {
+  const special = SPECIAL_PERMISSION_LABELS[permission];
+  if (special) return special[uiLang()];
   // split suffix from resource
   const actions = actionMap();
   const suffixes = Object.keys(ACTION_LABELS).sort((a, b) => b.length - a.length);

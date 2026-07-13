@@ -32,7 +32,44 @@ export const PERMISSIONS: string[] = [
   "completionOfTutorialImport","completionOfTutorialCreate","completionOfTutorialEdit","completionOfTutorialDestroy","completionOfTutorialRead","completionOfTutorialAutocomplete",
   "deviceIdInformationImport","deviceIdInformationCreate","deviceIdInformationEdit","deviceIdInformationDestroy","deviceIdInformationRead","deviceIdInformationAutocomplete",
   "insuranceImport","insuranceCreate","insuranceEdit","insuranceDestroy","insuranceRead","insuranceAutocomplete",
-  "fileCreate","fileEdit","fileDestroy","fileRead"
+  "fileCreate","fileEdit","fileDestroy","fileRead",
+  // ── Nómina / asistencia ──
+  "attendanceRead","attendanceEdit","attendanceApprove","attendanceCorrect","attendanceDestroy",
+  "attendanceSettingsRead","attendanceSettingsEdit",
+  "timeOffRequestCreate","timeOffRequestRead","timeOffRequestEdit","timeOffRequestDestroy",
+  // ── Programador ──
+  "shiftTemplateCreate","shiftTemplateRead","shiftTemplateEdit","shiftTemplateDestroy",
+  "shiftExchangeRequestCreate","shiftExchangeRequestRead","shiftExchangeRequestEdit","shiftExchangeRequestDestroy",
+  // ── Sitios / operación ──
+  "postSiteCreate","postSiteRead","postSiteEdit","postSiteDestroy","postSiteAutocomplete",
+  "routeImport","routeCreate","routeEdit","routeDestroy","routeRead","routeAutocomplete",
+  "vehicleCreate","vehicleEdit","vehicleDestroy","vehicleRead","vehicleAutocomplete",
+  "visitorLogImport","visitorLogCreate","visitorLogEdit","visitorLogDestroy","visitorLogRead","visitorLogAutocomplete",
+  "incidentTypeImport","incidentTypeCreate","incidentTypeEdit","incidentTypeDestroy","incidentTypeRead","incidentTypeAutocomplete",
+  "licenseTypeCreate","licenseTypeEdit","licenseTypeDestroy","licenseTypeRead","licenseTypeAutocomplete",
+  // ── Clientes / colaboración ──
+  "clientContactCreate","clientContactEdit","clientContactDestroy","clientContactRead",
+  "noteCreate","noteEdit","noteDestroy","noteRead",
+  "attachmentCreate","attachmentEdit","attachmentDestroy","attachmentRead",
+  "messageRead","messageSend",
+  // ── Inventario / uniformes ──
+  "inventoryItemCreate","inventoryItemEdit","inventoryItemDestroy","inventoryItemRead",
+  "uniformInspectionCreate","uniformInspectionRead",
+  // ── Radio ──
+  "radioDeviceCreate","radioDeviceEdit","radioDeviceDestroy","radioDeviceRead",
+  "radioCheckRead","radioCheckReply","radioCheckManage",
+  "radioCheckSettingsRead","radioCheckSettingsEdit",
+  // ── Entrenamiento ──
+  "trainingCourseCreate","trainingCourseRead","trainingCourseEdit","trainingCourseDestroy",
+  "trainingLessonCreate","trainingLessonRead","trainingLessonEdit","trainingLessonDestroy","trainingLessonComplete",
+  "trainingEnrollmentCreate","trainingEnrollmentRead",
+  "trainingQuizAttempt","trainingCertificateRead",
+  "quizBankRead","quizBankManage",
+  "quizAttemptCreate","quizAttemptRead",
+  // ── Cobertura de turnos ──
+  "backupConfirm","backupVolunteer","backupEventRead",
+  // ── Autoservicio apps móviles ──
+  "staffMe","supervisorMe"
 ];
 
 // Admin "floor" — permissions that can never be removed from the admin role or
@@ -50,7 +87,8 @@ export const ADMIN_FLOOR_PERMISSIONS: string[] = [
 ];
 
 const ACTION_SUFFIXES = [
-  'Import','Create','Edit','Destroy','Read','Autocomplete','Export','Restore','Archive'
+  'Import','Create','Edit','Destroy','Read','Autocomplete','Export','Restore','Archive',
+  'Approve','Correct','Send','Manage','Reply','Complete','Attempt','Confirm','Volunteer',
 ];
 
 export function groupPermissions(perms: string[]) {
