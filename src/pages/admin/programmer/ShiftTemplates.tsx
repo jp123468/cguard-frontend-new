@@ -44,8 +44,16 @@ import shiftTemplateService, {
 } from "@/lib/api/shiftTemplateService";
 import { securityGuardService } from "@/lib/api/securityGuardService";
 import { postSiteService } from "@/lib/api/postSiteService";
+import departmentService from "@/lib/api/departmentService";
 
 const NONE = "__none__";
+
+// Legacy hardcoded values stored before departments became a real catalog
+// (Settings › Departamentos); shown so old templates don't render blank.
+const LEGACY_DEPARTMENTS: Record<string, string> = {
+  security: "Seguridad",
+  admin: "Administración",
+};
 
 const emptyForm = {
   templateName: "",
@@ -73,6 +81,16 @@ export default function ShiftTemplates() {
 
   const [guards, setGuards] = useState<{ id: string; name: string }[]>([]);
   const [postSites, setPostSites] = useState<{ id: string; name: string }[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
+
+  // Real department catalog (Settings › Departamentos). The template column
+  // stores the NAME string, so options are names, not ids.
+  useEffect(() => {
+    departmentService
+      .list()
+      .then((r) => setDepartments(r.rows.filter((d) => d.active).map((d) => d.name)))
+      .catch(() => {});
+  }, []);
 
   const [form, setForm] = useState({ ...emptyForm });
   const [filters, setFilters] = useState({ category: "" });
@@ -325,11 +343,23 @@ export default function ShiftTemplates() {
 
                     <div className="grid gap-2">
                       <Label>Departamento</Label>
-                      <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v })}>
+                      <Select
+                        value={form.department || NONE}
+                        onValueChange={(v) => setForm({ ...form, department: v === NONE ? "" : v })}
+                      >
                         <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="security">Seguridad</SelectItem>
-                          <SelectItem value="admin">Administración</SelectItem>
+                          <SelectItem value={NONE}>Sin departamento</SelectItem>
+                          {departments.map((name) => (
+                            <SelectItem key={name} value={name}>{name}</SelectItem>
+                          ))}
+                          {/* Keep the stored value selectable if it's a legacy
+                              id or a department later renamed/removed. */}
+                          {form.department && !departments.includes(form.department) && (
+                            <SelectItem value={form.department}>
+                              {LEGACY_DEPARTMENTS[form.department] || form.department}
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>

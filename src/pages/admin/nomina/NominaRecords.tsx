@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import attendanceService, { type AttendanceRecord } from "@/lib/api/attendanceService";
+import departmentService, { type Department } from "@/lib/api/departmentService";
 import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
 import { useFileUrl } from "@/lib/fileUrl";
 import { StatusBadge, fmtDateTime, fmtTime, fmtHours } from "./shared";
@@ -66,6 +67,8 @@ export default function NominaRecords() {
   const [rows, setRows] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [period, setPeriod] = useState<Period>("week");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
   const [selected, setSelected] = useState<AttendanceRecord | null>(null);
@@ -82,6 +85,7 @@ export default function NominaRecords() {
     attendanceService
       .list({
         "filter[status]": status || undefined,
+        "filter[departmentId]": departmentId || undefined,
         // Day/week/month window — sent as the backend's punchInTimeRange [start, end].
         "filter[punchInTimeRange][0]": rangeStart.toISOString(),
         "filter[punchInTimeRange][1]": rangeEnd.toISOString(),
@@ -91,8 +95,15 @@ export default function NominaRecords() {
       .then((r) => setRows(r.rows || []))
       .catch((e) => toast.error(e?.message || "Error al cargar registros"))
       .finally(() => setLoading(false));
-  }, [status, rangeStart, rangeEnd]);
+  }, [status, departmentId, rangeStart, rangeEnd]);
   useEffect(load, [load]);
+
+  useEffect(() => {
+    departmentService
+      .list()
+      .then((r) => setDepartments(r.rows.filter((d) => d.active)))
+      .catch(() => {});
+  }, []);
 
   // Export the current period's records to CSV (UTF-8 BOM so Excel reads accents).
   const exportCsv = () => {
@@ -268,6 +279,22 @@ export default function NominaRecords() {
                   ))}
                 </select>
               </div>
+              {/* Filtro de departamento (solo si el tenant creó departamentos) */}
+              {departments.length > 0 && (
+                <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5">
+                  <Filter className="size-4 text-muted-foreground" />
+                  <select
+                    value={departmentId}
+                    onChange={(e) => setDepartmentId(e.target.value)}
+                    className="bg-transparent text-sm outline-none"
+                  >
+                    <option value="">Todos los departamentos</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {/* Exportar */}
               <Button variant="outline" onClick={exportCsv} className="gap-2">
                 <Download className="size-4" /> Exportar
