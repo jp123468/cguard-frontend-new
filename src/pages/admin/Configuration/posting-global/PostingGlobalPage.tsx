@@ -135,14 +135,14 @@ export default function PostingGlobalPage() {
                     <PageHeader
                         icon={<ShieldCheck />}
                         title="Configuración Global de Puestos"
-                        subtitle="Reglas operativas aplicadas a todos los puestos de vigilancia del tenant."
+                        subtitle="Reglas operativas aplicadas a todos los puestos de vigilancia de tu empresa."
                     />
 
                     <div className="space-y-6">
                         <Section title="Rondas" icon={<RouteIcon />} contentClassName="divide-y divide-border/60">
                             <RuleRow
                                 title="Exigir turno activo para escanear rondas"
-                                description="El vigilante debe haber marcado su entrada para que un escaneo de punto de control cuente. Evita rondas registradas fuera de turno. Se aplica en el servidor."
+                                description="El vigilante debe haber marcado su entrada para que un escaneo de punto de control cuente. Evita rondas registradas fuera de turno."
                                 checked={rules.requireActiveShiftForRounds}
                                 onChange={(v) => set("requireActiveShiftForRounds", v)}
                                 disabled={!canEdit || loading}

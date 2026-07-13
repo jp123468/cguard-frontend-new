@@ -184,7 +184,7 @@ export default function NominaTimeClock() {
               </div>
               {mode === "guard" && (
                 <p className="mt-3 text-[11px] text-muted-foreground">
-                  Se solicitará tu ubicación; la geocerca se valida en el servidor.
+                  Se solicitará tu ubicación para confirmar que estás dentro del área del puesto.
                 </p>
               )}
             </>

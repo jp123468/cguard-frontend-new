@@ -726,7 +726,7 @@ export default function MobilPage() {
               </div>
             }
           >
-            <p className="text-sm text-muted-foreground">Lista de servicios del tenant. Estos son consumidos por la app móvil.</p>
+            <p className="text-sm text-muted-foreground">Lista de servicios de tu empresa. Se muestran en la app móvil.</p>
 
             <div>
               <Table className="table-fixed">

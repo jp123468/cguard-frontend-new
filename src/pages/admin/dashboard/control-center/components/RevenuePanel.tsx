@@ -32,7 +32,7 @@ export function RevenuePanel({ revenue }: { revenue: RevenueSeries }) {
           <div className="grid grid-cols-3 gap-2 px-4 pb-1">
             <Stat label="Acumulado 12m" value={money(revenue.total)} />
             <Stat label="Mes actual" value={money(last)} />
-            <Stat label="Pagado / Pend." value="—" hint="Falta endpoint de desglose pagado/pendiente" />
+            <Stat label="Pagado / Pend." value="—" hint="Disponible próximamente" />
           </div>
           <div className="px-2 pb-3">
             <AreaChart data={revenue.points} valuePrefix="$" />

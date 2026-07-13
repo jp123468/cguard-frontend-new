@@ -530,8 +530,8 @@ export default function VideoDevices() {
               )}
               {form.connectionMode === "relay" && (
                 <p className="sm:col-span-2 -mt-2 text-xs text-muted-foreground">
-                  La IP/host de abajo es la del DVR en su red local (la usa el relay del sitio). El servidor
-                  no la alcanza directamente; el relay empuja el video a la nube.
+                  La IP/host de abajo es la del DVR en la red local del sitio. El equipo relay instalado
+                  en el sitio se encarga de enviar el video a C-Guard Pro.
                 </p>
               )}
 

@@ -42,7 +42,7 @@ export function KpiCard({ kpi, icon: Icon, index = 0 }: { kpi: Kpi; icon?: Lucid
           </motion.span>
           {kpi.unit && <span className="mb-0.5 text-xs text-muted-foreground">{kpi.unit}</span>}
           {kpi.fallback && (
-            <span title={kpi.hint || "Sin datos en backend"} className="mb-1 ml-1 text-[9px] uppercase text-amber-400/80">s/d</span>
+            <span title={kpi.hint || "Sin datos disponibles"} className="mb-1 ml-1 text-[9px] uppercase text-amber-400/80">s/d</span>
           )}
         </div>
         <div className="mt-0.5 flex items-center justify-between">
