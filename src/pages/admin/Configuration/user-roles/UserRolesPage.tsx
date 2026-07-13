@@ -96,19 +96,16 @@ export default function UserRolesPage() {
     return () => { mounted = false; };
   }, []);
 
-  // Localized presentation of the rows: built-in roles get translated
-  // name/description; custom roles keep their user-authored text.
+  // Localized presentation of the rows. roleDisplayName/Description translate
+  // any name matching a known built-in slug (some tenants carry duplicate
+  // built-in rows without the isSystem flag) and pass custom names through.
   const displayRows = useMemo(
     () =>
-      rows.map((r) =>
-        r.isSystem
-          ? {
-              ...r,
-              name: roleDisplayName(r.slug || r.name),
-              description: roleDisplayDescription(r.slug || r.name, r.description),
-            }
-          : r,
-      ),
+      rows.map((r) => ({
+        ...r,
+        name: roleDisplayName(r.slug || r.name) || r.name,
+        description: roleDisplayDescription(r.slug || r.name, r.description),
+      })),
     [rows, lang],
   );
 
