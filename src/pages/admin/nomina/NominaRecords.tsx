@@ -9,7 +9,7 @@ import attendanceService, { type AttendanceRecord } from "@/lib/api/attendanceSe
 import departmentService, { type Department } from "@/lib/api/departmentService";
 import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
 import { useFileUrl } from "@/lib/fileUrl";
-import { StatusBadge, fmtDateTime, fmtTime, fmtHours } from "./shared";
+import { StatusBadge, ApprovalBadge, STATUS_META, approvalLabel, fmtDateTime, fmtTime, fmtHours } from "./shared";
 import { PageContainer, PageHeader, Section, EmptyState, SkeletonCards } from "@/components/kit";
 import { MapPin, ImageOff, ClipboardCheck, ClipboardList, Filter, Download, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -123,7 +123,7 @@ export default function NominaRecords() {
       r.hoursWorked ?? "", r.lateMinutes ?? 0, r.overtimeMinutes ?? 0,
       r.numberOfPatrolsDuringShift ?? 0, r.numberOfIncidentsDurindShift ?? 0,
       r.punchInOutsideGeofence ? "Sí" : "No",
-      r.status || "", r.approvalStatus || "",
+      STATUS_META[r.status]?.label || r.status || "", approvalLabel(r.approvalStatus),
     ]);
     const csv = [headers, ...body].map((row) => row.map(csvCell).join(",")).join("\r\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
@@ -375,8 +375,8 @@ export default function NominaRecords() {
 
                 <div className="flex items-center justify-between">
                   <StatusBadge status={selected.status} />
-                  <span className="text-xs text-muted-foreground">
-                    Aprobación: {selected.approvalStatus}
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    Aprobación: <ApprovalBadge status={selected.approvalStatus} />
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
