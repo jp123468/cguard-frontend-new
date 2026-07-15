@@ -49,6 +49,15 @@ export const EXCEPTION_LABEL: Record<string, string> = {
   correction_pending: "Corrección pendiente",
 };
 
+/** attendanceException.status → label + pill classes (open → resolved history). */
+export const EXC_STATUS_META: Record<string, { label: string; cls: string }> = {
+  open: { label: "Abierta", cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+  acknowledged: { label: "Reconocida", cls: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
+  resolved: { label: "Resuelta", cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+  approved: { label: "Aprobada", cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+  rejected: { label: "Rechazada", cls: "bg-red-500/15 text-red-600 dark:text-red-400" },
+};
+
 export const SEVERITY_META: Record<string, string> = {
   low: "bg-slate-400/15 text-slate-500",
   medium: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
