@@ -456,6 +456,7 @@ export default function NominaRecords() {
                           lat={Number(selected.punchInLatitude)}
                           lng={Number(selected.punchInLongitude)}
                           zoom={16}
+                          height="200px"
                           showGeofence={!selected.stationName?.geofencePolygon && !!selected.stationName?.geofenceRadius}
                           geofenceRadius={selected.stationName?.geofenceRadius || 100}
                           polygon={selected.stationName?.geofencePolygon || undefined}
@@ -484,6 +485,7 @@ export default function NominaRecords() {
                           lat={Number(selected.punchOutLatitude)}
                           lng={Number(selected.punchOutLongitude)}
                           zoom={16}
+                          height="200px"
                           showGeofence={!selected.stationName?.geofencePolygon && !!selected.stationName?.geofenceRadius}
                           geofenceRadius={selected.stationName?.geofenceRadius || 100}
                           polygon={selected.stationName?.geofencePolygon || undefined}
