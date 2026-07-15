@@ -192,14 +192,12 @@ export default function PostSitePage() {
         stationService.list(searchFilters, { limit, offset: (page - 1) * limit }),
         // Fetch a high limit so every client is present in clientsMap below;
         // otherwise tenants with more clients than the default page size get
-        // client:undefined on out-of-page rows → 'Cliente —'. Cached via
-        // react-query so paging/searching stations doesn't re-pull all clients
-        // every time (the list barely changes).
-        queryClient.fetchQuery({
-          queryKey: qk.clients(undefined, { limit: 1000, offset: 0 }),
-          queryFn: () => clientService.getClients(undefined, { limit: 1000, offset: 0 }),
-          staleTime: 60_000,
-        }),
+        // client:undefined on out-of-page rows → 'Cliente —'. getClients is
+        // already cached at the service layer (cachedFetch) — do NOT wrap it
+        // in another fetchQuery with the same key: react-query dedupes the
+        // inner call into the outer in-flight query and it awaits itself,
+        // hanging forever (the page rendered an empty list with no error).
+        clientService.getClients(undefined, { limit: 1000, offset: 0 }),
       ]);
 
       // If we pulled data without backend category filter, apply it locally.
