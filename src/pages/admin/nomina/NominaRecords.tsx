@@ -149,10 +149,16 @@ export default function NominaRecords() {
 
   const act = async (fn: () => Promise<any>, okMsg: string) => {
     setBusy(true);
+    const openId = selected?.id;
     try {
       await fn();
       toast.success(okMsg);
-      setSelected(null);
+      // Refresh the open record IN PLACE so its approval badge + action buttons
+      // reflect the new state immediately (previously the sheet closed, so an
+      // already-approved record kept offering "Aprobar" when reopened).
+      if (openId) {
+        try { setSelected(await attendanceService.find(openId)); } catch { setSelected(null); }
+      }
       load();
     } catch (e: any) {
       toast.error(e?.message || "Error");
@@ -449,49 +455,60 @@ export default function NominaRecords() {
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-2 pt-2">
-                  {(selected.role === "supervisor" || selected.role === "administrative") && (
+                <div className="flex flex-wrap items-center gap-2 pt-2">
+                  {selected.role === "supervisor" || selected.role === "administrative" ? (
                     <p className="w-full text-xs text-muted-foreground">
                       {selected.role === "administrative"
                         ? "Registro administrativo — sin flujo de aprobación."
                         : "Registro de supervisor — sin flujo de aprobación."}
                     </p>
-                  )}
-                  {selected.role !== "supervisor" && selected.role !== "administrative" && (
-                  <Button
-                    disabled={busy}
-                    onClick={() => act(() => attendanceService.approve(selected.id), "Aprobado")}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                  >
-                    Aprobar
-                  </Button>
-                  )}
-                  {selected.role !== "supervisor" && selected.role !== "administrative" && (
-                  <Button
-                    disabled={busy}
-                    variant="outline"
-                    onClick={() => act(() => attendanceService.reject(selected.id), "Rechazado")}
-                  >
-                    Rechazar
-                  </Button>
-                  )}
-                  {selected.role !== "supervisor" && selected.role !== "administrative" && (
-                  <Button
-                    disabled={busy}
-                    variant="outline"
-                    onClick={() => {
-                      const reason = window.prompt("Motivo de la corrección:");
-                      if (!reason) return;
-                      const value = window.prompt("Nueva hora de entrada (ISO, ej. 2026-06-06T13:00:00Z):", selected.punchInTime);
-                      if (!value) return;
-                      act(
-                        () => attendanceService.correct(selected.id, { field: "punchInTime", correctedValue: value, reason }),
-                        "Corrección enviada",
-                      );
-                    }}
-                  >
-                    Corregir
-                  </Button>
+                  ) : (
+                    <>
+                      {/* Once resolved, show the decision + who/when, and swap the
+                          buttons: the taken action is hidden, only the opposite one
+                          (to reverse) + Corregir remain — no more re-offering "Aprobar". */}
+                      {(selected.approvalStatus === "approved" || selected.approvalStatus === "rejected") && (
+                        <p className="w-full text-xs text-muted-foreground">
+                          {selected.approvalStatus === "approved" ? "Aprobado" : "Rechazado"}
+                          {(selected as any).approvedAt ? ` · ${fmtDateTime((selected as any).approvedAt)}` : ""}
+                          {" — puedes cambiar la decisión."}
+                        </p>
+                      )}
+                      {selected.approvalStatus !== "approved" && (
+                        <Button
+                          disabled={busy}
+                          onClick={() => act(() => attendanceService.approve(selected.id), "Aprobado")}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          Aprobar
+                        </Button>
+                      )}
+                      {selected.approvalStatus !== "rejected" && (
+                        <Button
+                          disabled={busy}
+                          variant="outline"
+                          onClick={() => act(() => attendanceService.reject(selected.id), "Rechazado")}
+                        >
+                          Rechazar
+                        </Button>
+                      )}
+                      <Button
+                        disabled={busy}
+                        variant="outline"
+                        onClick={() => {
+                          const reason = window.prompt("Motivo de la corrección:");
+                          if (!reason) return;
+                          const value = window.prompt("Nueva hora de entrada (ISO, ej. 2026-06-06T13:00:00Z):", selected.punchInTime);
+                          if (!value) return;
+                          act(
+                            () => attendanceService.correct(selected.id, { field: "punchInTime", correctedValue: value, reason }),
+                            "Corrección enviada",
+                          );
+                        }}
+                      >
+                        Corregir
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>
