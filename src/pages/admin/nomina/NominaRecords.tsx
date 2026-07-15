@@ -11,7 +11,7 @@ import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
 import { useFileUrl } from "@/lib/fileUrl";
 import { StatusBadge, ApprovalBadge, STATUS_META, approvalLabel, fmtDateTime, fmtTime, fmtHours } from "./shared";
 import { PageContainer, PageHeader, Section, EmptyState, SkeletonCards } from "@/components/kit";
-import { MapPin, ImageOff, ClipboardCheck, ClipboardList, Filter, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, ImageOff, ClipboardCheck, ClipboardList, Filter, Download, ChevronLeft, ChevronRight, LogIn, LogOut } from "lucide-react";
 
 const STATUS_OPTIONS = [
   "", "on_time", "late", "early_departure", "missed_clockout",
@@ -434,24 +434,69 @@ export default function NominaRecords() {
                   </div>
                 )}
 
-                {selected.punchInLatitude != null && selected.punchInLongitude != null && (
-                  <div className="overflow-hidden rounded-xl border border-border">
-                    <GoogleMapEmbed
-                      lat={Number(selected.punchInLatitude)}
-                      lng={Number(selected.punchInLongitude)}
-                      zoom={16}
-                      showGeofence={!selected.stationName?.geofencePolygon && !!selected.stationName?.geofenceRadius}
-                      geofenceRadius={selected.stationName?.geofenceRadius || 100}
-                      polygon={selected.stationName?.geofencePolygon || undefined}
-                      markers={[
-                        { id: "punch", lat: Number(selected.punchInLatitude), lng: Number(selected.punchInLongitude), label: "Marcación" },
-                      ]}
-                    />
-                    {selected.punchInOutsideGeofence && (
-                      <p className="bg-red-500/10 px-3 py-2 text-xs text-red-500">
-                        Marcación fuera de geocerca · {selected.punchInDistanceM ?? "?"} m del puesto
-                      </p>
+                {/* Location on the map for BOTH punches, captured at clock-in and
+                    clock-out. Each map is centered on the stored GPS of that punch. */}
+                {((selected.punchInLatitude != null && selected.punchInLongitude != null) ||
+                  (selected.punchOutLatitude != null && selected.punchOutLongitude != null)) && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      Ubicación
+                    </p>
+
+                    {/* Clock-in location */}
+                    {selected.punchInLatitude != null && selected.punchInLongitude != null && (
+                      <div className="overflow-hidden rounded-xl border border-border">
+                        <div className="flex items-center justify-between bg-muted/40 px-3 py-1.5 text-xs font-semibold text-foreground">
+                          <span className="flex items-center gap-1.5">
+                            <LogIn size={13} className="text-emerald-600" /> Entrada
+                          </span>
+                          <span className="font-normal text-muted-foreground">{fmtDateTime(selected.punchInTime)}</span>
+                        </div>
+                        <GoogleMapEmbed
+                          lat={Number(selected.punchInLatitude)}
+                          lng={Number(selected.punchInLongitude)}
+                          zoom={16}
+                          showGeofence={!selected.stationName?.geofencePolygon && !!selected.stationName?.geofenceRadius}
+                          geofenceRadius={selected.stationName?.geofenceRadius || 100}
+                          polygon={selected.stationName?.geofencePolygon || undefined}
+                          markers={[
+                            { id: "in", lat: Number(selected.punchInLatitude), lng: Number(selected.punchInLongitude), label: "Entrada" },
+                          ]}
+                        />
+                        {selected.punchInOutsideGeofence && (
+                          <p className="bg-red-500/10 px-3 py-2 text-xs text-red-500">
+                            Marcación fuera de geocerca · {selected.punchInDistanceM ?? "?"} m del puesto
+                          </p>
+                        )}
+                      </div>
                     )}
+
+                    {/* Clock-out location */}
+                    {selected.punchOutLatitude != null && selected.punchOutLongitude != null ? (
+                      <div className="overflow-hidden rounded-xl border border-border">
+                        <div className="flex items-center justify-between bg-muted/40 px-3 py-1.5 text-xs font-semibold text-foreground">
+                          <span className="flex items-center gap-1.5">
+                            <LogOut size={13} className="text-orange-600" /> Salida
+                          </span>
+                          <span className="font-normal text-muted-foreground">{fmtDateTime(selected.punchOutTime)}</span>
+                        </div>
+                        <GoogleMapEmbed
+                          lat={Number(selected.punchOutLatitude)}
+                          lng={Number(selected.punchOutLongitude)}
+                          zoom={16}
+                          showGeofence={!selected.stationName?.geofencePolygon && !!selected.stationName?.geofenceRadius}
+                          geofenceRadius={selected.stationName?.geofenceRadius || 100}
+                          polygon={selected.stationName?.geofencePolygon || undefined}
+                          markers={[
+                            { id: "out", lat: Number(selected.punchOutLatitude), lng: Number(selected.punchOutLongitude), label: "Salida" },
+                          ]}
+                        />
+                      </div>
+                    ) : selected.punchOutTime ? (
+                      <p className="rounded-xl border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                        Salida sin ubicación (marcación automática o GPS no disponible).
+                      </p>
+                    ) : null}
                   </div>
                 )}
 
