@@ -60,8 +60,8 @@ export default function NominaApprovals() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
-  const load = useCallback(() => {
-    setLoading(true);
+  const load = useCallback((opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     Promise.all([
       attendanceService
         .corrections({ "filter[status]": "pending", limit: 100 })
@@ -75,9 +75,17 @@ export default function NominaApprovals() {
         .clockInRequests({ status: "pending", limit: 100 })
         .then((r) => setCiRows(r.rows || []))
         .catch(() => {}),
-    ]).finally(() => setLoading(false));
+    ]).finally(() => { if (!opts?.silent) setLoading(false); });
   }, []);
-  useEffect(load, [load]);
+  useEffect(() => { load(); }, [load]);
+
+  // Live queue: the guard app polls its request every 6s, but this page used to
+  // load only on mount — a supervisor sitting here never saw newly-arriving
+  // requests. Refresh silently every 30s (no spinner, no flicker).
+  useEffect(() => {
+    const t = setInterval(() => load({ silent: true }), 30_000);
+    return () => clearInterval(t);
+  }, [load]);
 
   const decide = async (id: string, decision: "approved" | "rejected") => {
     setBusy(true);
