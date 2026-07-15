@@ -121,7 +121,11 @@ export default function NominaApprovals() {
   const ciColumns: Column<ClockInReqRow>[] = [
     { key: "guard", header: "Vigilante", render: (_v, r) => <span className="font-medium text-foreground">{r.guard?.fullName || "—"}</span> },
     { key: "station", header: "Puesto", render: (_v, r) => <span className="text-xs text-muted-foreground">{r.station?.stationName || "—"}</span> },
-    { key: "scheduledStart", header: "Inicio de turno", render: (_v, r) => <span className="text-xs text-muted-foreground">{r.scheduledStart ? fmtDateTime(r.scheduledStart) : "—"}</span> },
+    { key: "scheduledStart", header: "Inicio de turno", render: (_v, r) => (
+      r.scheduledStart
+        ? <span className="text-xs text-muted-foreground">{fmtDateTime(r.scheduledStart)}</span>
+        : <span className="text-xs text-muted-foreground">{fmtDateTime(r.createdAt)} <span className="opacity-60">(sin turno programado)</span></span>
+    ) },
     { key: "lateBy", header: "Retraso", render: (_v, r) => <span className="text-xs font-medium text-amber-600">{lateBy(r.scheduledStart, r.createdAt)}</span> },
     { key: "reason", header: "Motivo", render: (_v, r) => <span className="text-xs text-muted-foreground">{r.reason || "—"}</span> },
     { key: "createdAt", header: "Solicitado", render: (_v, r) => fmtDateTime(r.createdAt) },
