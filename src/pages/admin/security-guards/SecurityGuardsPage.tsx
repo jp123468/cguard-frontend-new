@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { invalidateEntity } from "@/lib/queryClient";
 import { useNavigate } from "react-router-dom";
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { PageHeader, StatCard, Stagger } from '@/components/kit';
@@ -304,6 +305,7 @@ export default function SecurityGuardsPage() {
       await api.post(`/tenant/${tenantId}/stations/${assignStationId}/assign-guard`, {
         data: { guardId: guardUserId, securityGuardId, stationId: assignStationId },
       });
+      invalidateEntity("stations");
       toast.success(t('guards.list.toasts.assigned', 'Vigilante asignado exitosamente'));
       setAssignDialogOpen(false);
       setAssignGuard(null);

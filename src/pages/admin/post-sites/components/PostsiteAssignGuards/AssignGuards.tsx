@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { invalidateEntity } from "@/lib/queryClient";
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { Search, ChevronDown, Plus, X, EllipsisVertical, Eye, Trash, Edit } from 'lucide-react';
 import MobileCardList from '@/components/responsive/MobileCardList';
@@ -247,6 +248,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                 await ApiService.delete(`/tenant/${tenantId}/guard-shift/${g.id}`).catch(() => {});
             } else {
                 await ApiService.delete(`/tenant/${tenantId}/post-site/${postSiteId}/guards/${g.id}`);
+      invalidateEntity("stations");
             }
             setAssignedGuards((prev) => prev.filter((x) => x.id !== g.id));
             toast.success(t('clients.assignGuards.assignmentRemoved', 'Assignment removed'));
@@ -1013,6 +1015,7 @@ export default function AssignGuards({ site }: { site?: any }) {
                                                         if (newStationStart) payload.startTimeInDay = newStationStart;
                                                         if (newStationEnd) payload.finishTimeInDay = newStationEnd;
                                                         const res = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
+      invalidateEntity("stations");
                                                         const created = (res && (res.data || res)) || res;
                                                         setStations(s => [created, ...s]);
                                                         setSelectedStation(created.id || created._id || created.stationId || null);

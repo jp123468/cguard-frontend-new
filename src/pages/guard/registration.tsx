@@ -433,7 +433,7 @@ export default function GuardRegistration() {
                 const uid = createdUser.id || createdUser._id || (createdUser.user && (createdUser.user.id || createdUser.user._id));
                 if (uid) {
                   // Update the user with password and mark email as verified to avoid login issues
-                  await userService.updateUser(String(uid), { password: password || undefined, emailVerified: true } as any);
+                  await userService.patchUser(String(uid), { password: password || undefined, emailVerified: true } as any);
                 }
               } catch (e) {
                 console.warn('[registration] could not update user credentials', e);

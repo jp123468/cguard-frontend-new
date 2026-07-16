@@ -26,9 +26,13 @@ export const userService = {
   async updateUser(id: string, data: Partial<UserUpdateData>) {
     const tenantId = getTenantId();
     const url = `/tenant/${tenantId}/user/${id}`;
+    // PUT, not PATCH: the PATCH route only accepts firstName/lastName/phone/
+    // office fields — name/email/role/clientIds/postSiteIds were silently
+    // dropped (admin-user edits never persisted). The PUT (userEdit) handles
+    // the full payload incl. roles/assignments/identity.
     // NOTE: do not log the payload/response — updateUser may carry credentials/PII.
     try {
-      const { data: resp } = await api.patch<any>(url, data);
+      const { data: resp } = await api.put<any>(url, data);
       return resp;
     } catch (err: any) {
       if (import.meta.env.DEV) {
@@ -43,6 +47,14 @@ export const userService = {
       }
       throw err;
     }
+  },
+
+  /** Legacy PATCH transport (firstName/lastName/phone/office fields only). */
+  async patchUser(id: string, data: Record<string, any>) {
+    const tenantId = getTenantId();
+    const url = `/tenant/${tenantId}/user/${id}`;
+    const { data: resp } = await api.patch<any>(url, data);
+    return resp;
   },
 
   async fetchUser(id: string): Promise<UserCurrent | null> {

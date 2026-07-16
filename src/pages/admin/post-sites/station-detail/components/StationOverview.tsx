@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { invalidateEntity } from "@/lib/queryClient";
 import { useTranslation } from 'react-i18next';
 import { MapPin, Clock, Users, Pencil, Check, Loader2 } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
@@ -137,6 +138,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
           clockInLateGraceMin: clockInLateGraceMin.trim() === '' ? null : Number(clockInLateGraceMin),
         },
       });
+      invalidateEntity("stations");
       toast.success('Tolerancia guardada');
       setEditing(false);
     } catch (e: any) {
@@ -201,6 +203,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
           geofencePolygon: polygon.length >= 3 ? polygon : null,
         },
       });
+      invalidateEntity("stations");
       toast.success('Ubicación y geocerca actualizadas');
     } catch (e: any) {
       toast.error(e?.message || 'Error al guardar la ubicación');

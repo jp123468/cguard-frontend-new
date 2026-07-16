@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { invalidateEntity } from "@/lib/queryClient";
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -688,6 +689,7 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
       const obj = await clientService.uploadFile(placeFile, 'businessInfoLogo');
       const tenantId = localStorage.getItem('tenantId') || '';
       await ApiService.put(`/tenant/${tenantId}/post-site/${postSiteId}`, { data: { logo: [obj] } });
+      invalidateEntity("stations");
     } catch {
       toast.error('La foto del sitio no se pudo guardar');
     }
@@ -699,7 +701,8 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
       const payload = buildPayload();
       if (isEdit) {
         await stationService.update(id!, payload as any);
-        try { await syncStationRecords(id!); } catch { toast.error('Cambios guardados, pero algunas estaciones fallaron'); }
+        try { await syncStationRecords(id!);
+      invalidateEntity("stations"); } catch { toast.error('Cambios guardados, pero algunas estaciones fallaron'); }
         try { await uploadSitePhoto(id!); } catch { /* already toasted inside */ }
         toast.success('Cambios guardados');
         setStep(6);
@@ -709,7 +712,8 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
       const newId = (data as any).id || (data as any).data?.id;
       setCreatedId(newId);
       if (newId) {
-        try { await syncStationRecords(newId); } catch { toast.error('El sitio fue creado pero algunas estaciones fallaron'); }
+        try { await syncStationRecords(newId);
+      invalidateEntity("stations"); } catch { toast.error('El sitio fue creado pero algunas estaciones fallaron'); }
         try { await uploadSitePhoto(newId); } catch { /* already toasted inside */ }
       }
       toast.success('Puesto de vigilancia creado');

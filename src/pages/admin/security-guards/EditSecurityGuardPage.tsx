@@ -154,12 +154,15 @@ export default function EditSecurityGuardPage() {
     setError(null);
     (async () => {
       try {
-        // Build a CLEAN payload — ONLY the securityGuard fields the update endpoint
-        // whitelists (matching GuardProfile.save()). Spreading the whole fetched
-        // object (incl. nested guard/profileImage arrays) was silently dropped by
-        // the backend whitelist, so edits never persisted. Name/email/phone live on
-        // the linked USER identity and are not editable through this endpoint.
+        // Build a CLEAN payload — ONLY fields the update endpoint handles.
+        // Identity fields (name/email/phone) now DO persist: the backend
+        // propagates them to the linked USER (single source of identity) and
+        // fans the change out to every denormalized copy.
         const payload: any = {
+          firstName: orNull(form.firstName),
+          lastName: orNull(form.lastName),
+          email: orNull(form.email),
+          phoneNumber: orNull(form.phoneNumber),
           governmentId: orNull(form.governmentId),
           address: orNull(form.address),
           birthPlace: orNull(form.birthPlace),

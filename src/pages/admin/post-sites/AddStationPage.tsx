@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { invalidateEntity } from "@/lib/queryClient";
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -186,6 +187,7 @@ export default function AddStationPage() {
         description: newDescription,
       } as any;
       const created: any = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
+      invalidateEntity("stations");
       const newStationId = created?.id || created?.data?.id || null;
       // Configure the station's horario through the scheduling engine (the same
       // endpoint Programador › Horario uses): this sets scheduleType, creates the

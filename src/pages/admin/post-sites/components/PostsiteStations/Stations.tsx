@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { invalidateEntity } from "@/lib/queryClient";
 import { useNavigate } from 'react-router-dom';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
@@ -391,6 +392,7 @@ export default function Stations({ site }: { site?: any }) {
         description: newDescription,
       } as any;
       const res = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
+      invalidateEntity("stations");
       const created = (res && (res.data || res)) || res;
       setStations(s => [created, ...s]);
       setNewName(''); setNewDescription(''); setStationSchedule(''); setNumberOfGuardsInStation('1'); setStartingTimeInDay(''); setFinishTimeInDay(''); setGeofenceRadius('100'); setGeofencePolygon([]);
@@ -408,6 +410,7 @@ export default function Stations({ site }: { site?: any }) {
     try {
       const tenantId = site?.tenantId || localStorage.getItem('tenantId') || '';
       await ApiService.delete(`/tenant/${tenantId}/station/${id}`);
+        invalidateEntity("stations");
       setStations(s => s.filter(x => x.id !== id));
       toast.success(t('postSites.stations.removed', 'Station removed'));
     } catch (err: any) {
@@ -462,6 +465,7 @@ export default function Stations({ site }: { site?: any }) {
       } else {
         // single delete
         await ApiService.delete(`/tenant/${tenantId}/station/${idOrIds}`);
+        invalidateEntity("stations");
         setStations(s => s.filter(x => x.id !== idOrIds));
         toast.success(t('postSites.stations.removed', 'Station removed'));
       }
