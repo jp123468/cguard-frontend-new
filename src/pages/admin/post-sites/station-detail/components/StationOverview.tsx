@@ -53,6 +53,16 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   const [turno, setTurno] = useState<TurnoType | ''>('');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
+  // Custom: hours each fijo works per day ('' = one fijo covers the whole window).
+  const [blockHours, setBlockHours] = useState('');
+  const winMin = (() => {
+    if (!customStart || !customEnd) return 0;
+    const toMin = (x: string) => { const [h, mm] = x.split(':').map((n) => parseInt(n, 10) || 0); return ((h % 24) * 60 + (mm % 60) + 1440) % 1440; };
+    const w = (toMin(customEnd) - toMin(customStart) + 1440) % 1440;
+    return w === 0 ? 1440 : w;
+  })();
+  const blocksOk = Number(blockHours) > 0 && winMin > 0 && winMin % (Number(blockHours) * 60) === 0;
+  const blockCount = blocksOk ? winMin / (Number(blockHours) * 60) : 1;
   const [rotationStyleId, setRotationStyleId] = useState('');
   const [savingHorario, setSavingHorario] = useState(false);
 
@@ -157,11 +167,14 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
     if (turno === 'custom' && (!customStart || !customEnd)) {
       toast.error('Define la hora de inicio y fin'); return;
     }
+    if (turno === 'custom' && blockHours && !blocksOk) {
+      toast.error('La duración del turno debe dividir exactamente la cobertura del puesto.'); return;
+    }
     const scheduleType = turnoToScheduleType(turno);
     const currentType = station.scheduleType || '';
     const unchangedType = scheduleType === currentType;
     const unchangedCustom = turno !== 'custom'
-      || (customStart === (station.startingTimeInDay || '') && customEnd === (station.finishTimeInDay || ''));
+      || (!blockHours && customStart === (station.startingTimeInDay || '') && customEnd === (station.finishTimeInDay || ''));
     const unchangedRotation = (rotationStyleId || '') === (station.rotationStyleId || '');
     if (unchangedType && unchangedCustom && unchangedRotation) { toast.info('El horario no cambió'); return; }
     if (!(await confirmDialog({ message: 'Cambiar el horario reconfigura los puestos del turno. Si hay vigilantes asignados a esta estación, deberán reasignarse. ¿Continuar?', confirmText: 'Continuar' }))) return;
@@ -174,6 +187,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
           rotationStyleId: rotationStyleId || undefined,
           startTime: turno === 'custom' ? customStart : undefined,
           endTime: turno === 'custom' ? customEnd : undefined,
+          blockHours: turno === 'custom' && blockHours ? Number(blockHours) : undefined,
         },
       });
       toast.success('Horario actualizado. Los puestos del turno se reconfiguraron.');
@@ -241,7 +255,13 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
               icon={<Users />}
               label="Fijos requeridos"
               accent="blue"
-              value={station.scheduleType === '24h' ? 2 : station.scheduleType ? 1 : '—'}
+              value={
+                station.scheduleType === '24h'
+                  ? 2
+                  : station.scheduleType === 'custom'
+                    ? (Number(station.numberOfGuardsInStation) || 1)
+                    : station.scheduleType ? 1 : '—'
+              }
             />
             {(lat || lng) && (
               <StatCard
@@ -332,6 +352,26 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
               <div>
                 <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Hora fin</label>
                 <input type="time" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Turno por vigilante</label>
+                <select value={blockHours} onChange={(e) => setBlockHours(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                  <option value="">Toda la jornada (1 fijo)</option>
+                  {[4, 6, 8, 12].map((h) => {
+                    const fits = winMin > 0 && winMin % (h * 60) === 0;
+                    const k = fits ? winMin / (h * 60) : 0;
+                    return (
+                      <option key={h} value={String(h)} disabled={!fits}>
+                        {h}h{fits ? ` → ${k} fijo${k > 1 ? 's' : ''}` : ' (no divide la cobertura)'}
+                      </option>
+                    );
+                  })}
+                </select>
+                {blocksOk && blockCount > 1 && (
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">
+                    {winMin / 60}h de cobertura en {blockCount} bloques consecutivos de {Number(blockHours)}h — {blockCount} fijos + sacafranco.
+                  </p>
+                )}
               </div>
             </div>
           )}

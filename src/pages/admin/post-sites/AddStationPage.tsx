@@ -60,9 +60,26 @@ const TURNO_OPTIONS: {
   { key: 'custom',   label: 'Personalizado',  sub: 'Define tus horas',  start: '',      end: '',      guards: 1, Icon: SlidersHorizontal },
 ];
 
+// Time helpers for the custom multi-block window (wraps midnight).
+const toMin = (hhmm: string) => {
+  const [h, m] = String(hhmm || '').split(':').map((n) => parseInt(n, 10) || 0);
+  return ((h % 24) * 60 + (m % 60) + 1440) % 1440;
+};
+const toHHMM = (min: number) => {
+  const mm = ((min % 1440) + 1440) % 1440;
+  return `${String(Math.floor(mm / 60)).padStart(2, '0')}:${String(mm % 60).padStart(2, '0')}`;
+};
+/** Coverage window length in minutes; '' inputs → 0. 00:00→00:00 = 24h. */
+function windowMinutes(start: string, end: string): number {
+  if (!start || !end) return 0;
+  const w = (toMin(end) - toMin(start) + 1440) % 1440;
+  return w === 0 ? 1440 : w;
+}
+
 // Build the station's stationSchedule jornadas (the turno) from the selected
-// type. This is what the horario/calendar reads as the required coverage.
-function buildJornadas(turnoType: TurnoType, start: string, end: string): any[] {
+// type. Custom with a per-guard block length emits ONE jornada PER BLOCK so
+// the horario/calendar reads the real per-vigilante coverage.
+function buildJornadas(turnoType: TurnoType, start: string, end: string, blockHours?: number): any[] {
   if (turnoType === '24h') {
     return [
       { tipo: 'Diurno',   startTime: '07:00', endTime: '19:00', guardsCount: '1', days: ALL_DAYS },
@@ -70,6 +87,20 @@ function buildJornadas(turnoType: TurnoType, start: string, end: string): any[] 
     ];
   }
   const tipo = turnoType === 'diurno' ? 'Diurno' : turnoType === 'nocturno' ? 'Nocturno' : 'Personalizado';
+  const win = windowMinutes(start, end);
+  if (turnoType === 'custom' && blockHours && win > 0 && win % (blockHours * 60) === 0) {
+    const blockMin = blockHours * 60;
+    const k = win / blockMin;
+    if (k > 1) {
+      return Array.from({ length: k }, (_, i) => ({
+        tipo: 'Personalizado',
+        startTime: toHHMM(toMin(start) + i * blockMin),
+        endTime: toHHMM(toMin(start) + (i + 1) * blockMin),
+        guardsCount: '1',
+        days: ALL_DAYS,
+      }));
+    }
+  }
   return [{ tipo, startTime: start, endTime: end, guardsCount: '1', days: ALL_DAYS }];
 }
 
@@ -95,8 +126,14 @@ export default function AddStationPage() {
   const [rotationStyleId, setRotationStyleId] = useState('');
   const [startingTimeInDay, setStartingTimeInDay] = useState('');
   const [finishTimeInDay, setFinishTimeInDay] = useState('');
+  // Custom: hours each fijo works per day ('' = one fijo covers the whole window).
+  const [blockHours, setBlockHours] = useState('');
 
-  const requiredGuards = turnoType === '24h' ? 2 : 1;
+  const customWindowMin = turnoType === 'custom' ? windowMinutes(startingTimeInDay, finishTimeInDay) : 0;
+  const customBlockMin = Number(blockHours) > 0 ? Number(blockHours) * 60 : 0;
+  const customBlocksOk = customBlockMin > 0 && customWindowMin > 0 && customWindowMin % customBlockMin === 0;
+  const customBlockCount = customBlocksOk ? customWindowMin / customBlockMin : 1;
+  const requiredGuards = turnoType === '24h' ? 2 : turnoType === 'custom' ? customBlockCount : 1;
 
   // Selecting a turno type presets its window; "custom" keeps the manual times.
   const selectTurno = (key: TurnoType) => {
@@ -158,13 +195,17 @@ export default function AddStationPage() {
       toast.error(t('postSites.stations.provideCustomTimes', 'Define la hora de inicio y fin'));
       return;
     }
+    if (turnoType === 'custom' && blockHours && !customBlocksOk) {
+      toast.error(t('postSites.stations.blockMismatch', 'La duración del turno debe dividir exactamente la cobertura del puesto.'));
+      return;
+    }
     setSaving(true);
     try {
       const latitud = site?.latitud || site?.latitude || '';
       const longitud = site?.longitud || site?.longitude || '';
       // The turno (horario) is stored as jornadas on stationSchedule so the
       // station's horario/calendar reads it as the required coverage.
-      const jornadas = buildJornadas(turnoType, startingTimeInDay, finishTimeInDay);
+      const jornadas = buildJornadas(turnoType, startingTimeInDay, finishTimeInDay, turnoType === 'custom' && blockHours ? Number(blockHours) : undefined);
       const stationStart = turnoType === '24h' ? '00:00' : startingTimeInDay;
       const stationEnd = turnoType === '24h' ? '23:59' : finishTimeInDay;
       const payload = {
@@ -201,6 +242,7 @@ export default function AddStationPage() {
               rotationStyleId: rotationStyleId || undefined,
               startTime: startingTimeInDay || undefined,
               endTime: finishTimeInDay || undefined,
+              blockHours: turnoType === 'custom' && blockHours ? Number(blockHours) : undefined,
             },
           });
         } catch (cfgErr: any) {
@@ -319,7 +361,7 @@ export default function AddStationPage() {
 
               {/* Times: editable for diurno / nocturno / custom */}
               {turnoType && turnoType !== '24h' && (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className={`grid grid-cols-1 gap-4 ${turnoType === 'custom' ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'}`}>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-foreground">{t('postSites.stations.form.startTime', 'Inicio')}</label>
                     <input type="time" value={startingTimeInDay} onChange={(e) => setStartingTimeInDay(e.target.value)} className={inputCls} />
@@ -328,14 +370,50 @@ export default function AddStationPage() {
                     <label className="mb-2 block text-sm font-medium text-foreground">{t('postSites.stations.form.endTime', 'Fin')}</label>
                     <input type="time" value={finishTimeInDay} onChange={(e) => setFinishTimeInDay(e.target.value)} className={inputCls} />
                   </div>
+                  {turnoType === 'custom' && (
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-foreground">{t('postSites.stations.form.blockHours', 'Turno por vigilante')}</label>
+                      <select value={blockHours} onChange={(e) => setBlockHours(e.target.value)} className={inputCls}>
+                        <option value="">{t('postSites.stations.form.wholeWindow', 'Toda la jornada (1 fijo)')}</option>
+                        {[4, 6, 8, 12].map((h) => {
+                          const fits = customWindowMin > 0 && customWindowMin % (h * 60) === 0;
+                          const k = fits ? customWindowMin / (h * 60) : 0;
+                          return (
+                            <option key={h} value={String(h)} disabled={!fits}>
+                              {h}h{fits ? ` → ${k} fijo${k > 1 ? 's' : ''}` : ' (no divide la cobertura)'}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-foreground">{t('postSites.stations.form.guards', 'Vigilantes')}</label>
                     <div className="flex h-[42px] items-center rounded-md border border-input bg-muted/40 px-3 text-sm">
                       <span className="font-semibold text-foreground">{requiredGuards} fijo{requiredGuards > 1 ? 's' : ''}</span>
-                      {jornadaType(startingTimeInDay, finishTimeInDay) && (
+                      {turnoType === 'custom' && customWindowMin > 0 ? (
+                        <span className="ml-auto text-[11px] text-muted-foreground">{customWindowMin / 60}h de cobertura</span>
+                      ) : jornadaType(startingTimeInDay, finishTimeInDay) ? (
                         <span className="ml-auto text-[11px] capitalize text-muted-foreground">{jornadaType(startingTimeInDay, finishTimeInDay)}</span>
-                      )}
+                      ) : null}
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Custom multi-block breakdown */}
+              {turnoType === 'custom' && customBlocksOk && customBlockCount > 1 && (
+                <div className="rounded-xl border border-input bg-muted/30 p-4 text-sm">
+                  <p className="mb-2 font-medium text-foreground">
+                    Cobertura {customWindowMin / 60}h — {customBlockCount} bloques de {Number(blockHours)}h
+                  </p>
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+                    {Array.from({ length: customBlockCount }, (_, i) => (
+                      <span key={i} className="inline-flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 text-primary" />
+                        Fijo {i + 1} · {toHHMM(toMin(startingTimeInDay) + i * customBlockMin)} – {toHHMM(toMin(startingTimeInDay) + (i + 1) * customBlockMin)}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
