@@ -88,8 +88,12 @@ export function targetForNotification(n: PlatformNotification): string {
   // ── Visitors.
   if (type.startsWith('visitor')) return '/visitors';
 
-  // ── Patrols / rounds.
-  if (type.startsWith('patrol')) return '/vehicle-patrol';
+  // ── Patrols / rounds. VEHICLE patrols are namespaced `patrol.vehicle_*`; every
+  // other patrol.* event (started/completed/missed) is a guard FOOT round (ronda /
+  // site tour), which lives on the rondas report — NOT the vehicle-patrol board.
+  if (type.startsWith('patrol')) {
+    return type.startsWith('patrol.vehicle') ? '/vehicle-patrol' : '/reports/site-tour';
+  }
 
   // ── Shifts / scheduling. Exchange requests → the exchange board; unassigned/open
   // shifts → the open-shifts board; anything else → the schedule.
