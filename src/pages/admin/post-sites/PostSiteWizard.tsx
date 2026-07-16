@@ -276,7 +276,7 @@ function JornadaRow({
   onChange: (d: Partial<JornadaDraft>) => void;
   onRemove: () => void;
 }) {
-  const style = JORNADA_STYLE[jornada.tipo];
+  const style = JORNADA_STYLE[jornada.tipo] ?? JORNADA_STYLE.personalizada;
   return (
     <div className={cn('flex items-center gap-2 rounded-lg border bg-card px-3 py-2 ring-1', style.ring)}>
       {/* Type badge */}
@@ -536,10 +536,21 @@ export default function PostSiteWizard({ clients = [], mode = 'create', id }: Wi
             try {
               const raw = r.stationSchedule;
               if (raw && typeof raw === 'string' && raw.trim().startsWith('[')) {
+                // Normalize the stored tipo: "Crear Estación" writes
+                // 'Diurno'/'Nocturno'/'Personalizado' while this wizard uses
+                // matutina/nocturna/sacafranco/personalizada — an unknown key
+                // crashed JORNADA_STYLE[tipo].ring and killed the whole editor.
+                const normTipo = (t: any): JornadaDraft['tipo'] => {
+                  const v = String(t || '').toLowerCase();
+                  if (v.startsWith('diur') || v.startsWith('matut')) return 'matutina';
+                  if (v.startsWith('noct')) return 'nocturna';
+                  if (v.startsWith('saca') || v === 'sf') return 'sacafranco';
+                  return 'personalizada';
+                };
                 jornadas = JSON.parse(raw).map((j: any, idx: number) => ({
                   id: String(idx),
                   nombre: j.nombre || j.tipo || '',
-                  tipo: j.tipo || 'personalizada',
+                  tipo: normTipo(j.tipo),
                   startTime: j.startTime || '',
                   endTime: j.endTime || '',
                   guardsCount: j.guardsCount || '1',
