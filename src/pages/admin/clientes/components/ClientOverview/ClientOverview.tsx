@@ -102,26 +102,29 @@ export default function ClientOverview({ client }: { client: any }) {
           navegación de 4-5 saltos que generaba quejas). */}
       <OperationTree client={client} />
 
+      {/* Actividad + ubicación lado a lado: los números primero (lo que el
+          operador consulta), el mapa como contexto — antes el mapa empujaba
+          todo bajo el pliegue. */}
       <Section title={t('clients.nav.overview') || 'Resumen'} icon={<MapPin />} className="hidden md:block">
-        <div className="mb-6">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Stagger className="grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">
+            <StatCard label={t('clients.overview.cards.postSites')} value={postSitesCount} icon={<Building2 />} accent="primary" />
+            <StatCard label={t('clients.overview.cards.guardsAssigned')} value={guardsAssigned} icon={<Users />} accent="blue" />
+            <StatCard label={t('clients.overview.cards.toursCompleted')} value={toursCompleted} icon={<Route />} accent="slate" />
+            <StatCard label={t('clients.overview.cards.tasksCompleted')} value={tasksCompleted} icon={<ClipboardCheck />} accent="blue" />
+            <StatCard label={t('clients.overview.cards.incidents')} value={incidents} icon={<AlertTriangle />} accent="orange" />
+            <StatCard label={t('clients.overview.cards.hoursWorked')} value={hoursWorked} icon={<Clock />} accent="red" />
+          </Stagger>
           {hasCoords ? (
-            <div className="overflow-hidden rounded-2xl border">
+            <div className="overflow-hidden rounded-2xl border min-h-[280px]">
               <IncidentMap lat={lat} lng={lng} label={client?.name || 'Client location'} />
             </div>
           ) : (
-            <div className="w-full h-64 flex items-center justify-center bg-muted/30 border border-dashed rounded-2xl text-muted-foreground">
-              No location data available
+            <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-dashed bg-muted/30 text-muted-foreground">
+              Sin ubicación registrada
             </div>
           )}
         </div>
-        <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <StatCard label={t('clients.overview.cards.postSites')} value={postSitesCount} icon={<Building2 />} accent="primary" />
-          <StatCard label={t('clients.overview.cards.guardsAssigned')} value={guardsAssigned} icon={<Users />} accent="blue" />
-          <StatCard label={t('clients.overview.cards.toursCompleted')} value={toursCompleted} icon={<Route />} accent="slate" />
-          <StatCard label={t('clients.overview.cards.tasksCompleted')} value={tasksCompleted} icon={<ClipboardCheck />} accent="blue" />
-          <StatCard label={t('clients.overview.cards.incidents')} value={incidents} icon={<AlertTriangle />} accent="orange" />
-          <StatCard label={t('clients.overview.cards.hoursWorked')} value={hoursWorked} icon={<Clock />} accent="red" />
-        </Stagger>
       </Section>
 
       <FadeIn className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-4">

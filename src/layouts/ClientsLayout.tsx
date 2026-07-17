@@ -72,13 +72,39 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
       <div className={sidebarClass}>
         <div className="h-full flex flex-col">
           <div className="bg-card border border-border rounded-md p-3 m-3 flex-1 overflow-hidden">
-            <div className="text-base font-semibold mb-3">{
-              client?.companyName
-                ? client.companyName
+            {(() => {
+              const displayName = client?.commercialName || client?.companyName
+                ? (client?.commercialName || client?.companyName)
                 : (client?.name || client?.firstName)
                   ? `${client?.name || client?.firstName}${(client?.lastName || client?.surname) ? ' ' + (client?.lastName || client?.surname) : ''}`
-                  : t(cfg?.title ?? title)
-            }</div>
+                  : t(cfg?.title ?? title);
+              const logo = Array.isArray(client?.logoUrl) ? client.logoUrl[0]?.downloadUrl : null;
+              let h = 0; const nm = String(displayName || '?');
+              for (let i = 0; i < nm.length; i++) h = (h * 31 + nm.charCodeAt(i)) >>> 0;
+              const hue = [28, 205, 150, 265, 340, 95, 180, 12][h % 8];
+              return (
+                <div className="mb-3 flex items-center gap-2.5">
+                  {logo ? (
+                    <img src={logo} alt="" className="h-9 w-9 shrink-0 rounded-lg border bg-white object-cover" />
+                  ) : (
+                    <div
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold"
+                      style={{ backgroundColor: `hsl(${hue} 70% 92%)`, color: `hsl(${hue} 60% 32%)` }}
+                    >
+                      {nm.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold leading-tight">{displayName}</div>
+                    {client?.active !== undefined && (
+                      <div className={`text-[11px] font-medium ${client.active ? 'text-emerald-600' : 'text-red-500'}`}>
+                        {client.active ? 'Activo' : 'Archivado'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
             <nav className="text-base">
               <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-3">
                 {cfg?.sections?.map((section: any, idx: number) => (
