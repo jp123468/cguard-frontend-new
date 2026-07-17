@@ -23,10 +23,13 @@ export default function RotationStyleSelect({
   scheduleType,
   value,
   onChange,
+  onStyleChange,
 }: {
   scheduleType: string;            // '24h' | '12h-day' | '12h-night' | 'custom'
   value: string;                   // rotationStyleId
   onChange: (id: string) => void;
+  /** Fires with the FULL selected style (or null) so callers can derive counts (e.g. alternation fijos = cycle/workDays). */
+  onStyleChange?: (style: RotationStyle | null) => void;
 }) {
   const tenantId = localStorage.getItem('tenantId') || '';
   const is24h = scheduleType === '24h';
@@ -66,6 +69,13 @@ export default function RotationStyleSelect({
     if (preferred) onChange(preferred.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [options, is24h]);
+
+  // Surface the selected style object to the parent (for derived counts).
+  useEffect(() => {
+    if (!onStyleChange) return;
+    onStyleChange(styles.find((s) => s.id === value) || null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, styles]);
 
   const describe = (s: RotationStyle) =>
     is24h

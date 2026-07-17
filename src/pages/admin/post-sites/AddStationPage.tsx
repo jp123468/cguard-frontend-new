@@ -128,12 +128,24 @@ export default function AddStationPage() {
   const [finishTimeInDay, setFinishTimeInDay] = useState('');
   // Custom: hours each fijo works per day ('' = one fijo covers the whole window).
   const [blockHours, setBlockHours] = useState('');
+  // Custom: how rest days are covered — 'sacafranco' (staggered rests + relief
+  // guard) or 'alternate' (fijos share each block phased so one always works,
+  // e.g. 24x24 = trabaja 1 / descansa 1 con 2 fijos, sin sacafranco).
+  const [restCoverage, setRestCoverage] = useState<'sacafranco' | 'alternate'>('sacafranco');
+  const [rotStyle, setRotStyle] = useState<{ dayShifts: number; nightShifts: number; restDays: number } | null>(null);
 
   const customWindowMin = turnoType === 'custom' ? windowMinutes(startingTimeInDay, finishTimeInDay) : 0;
   const customBlockMin = Number(blockHours) > 0 ? Number(blockHours) * 60 : 0;
   const customBlocksOk = customBlockMin > 0 && customWindowMin > 0 && customWindowMin % customBlockMin === 0;
   const customBlockCount = customBlocksOk ? customWindowMin / customBlockMin : 1;
-  const requiredGuards = turnoType === '24h' ? 2 : turnoType === 'custom' ? customBlockCount : 1;
+  // Alternation: fijos per block = cycle / workDays (must divide evenly).
+  const rotCycle = rotStyle ? (rotStyle.dayShifts || 0) + (rotStyle.nightShifts || 0) + (rotStyle.restDays || 0) : 0;
+  const rotWork = rotStyle ? (rotStyle.dayShifts || 0) + (rotStyle.nightShifts || 0) : 0;
+  const alternateOk = restCoverage !== 'alternate' || (rotWork > 0 && rotCycle % rotWork === 0);
+  const guardsPerBlock = turnoType === 'custom' && restCoverage === 'alternate' && alternateOk && rotWork > 0
+    ? rotCycle / rotWork
+    : 1;
+  const requiredGuards = turnoType === '24h' ? 2 : turnoType === 'custom' ? customBlockCount * guardsPerBlock : 1;
 
   // Selecting a turno type presets its window; "custom" keeps the manual times.
   const selectTurno = (key: TurnoType) => {
@@ -199,6 +211,10 @@ export default function AddStationPage() {
       toast.error(t('postSites.stations.blockMismatch', 'La duración del turno debe dividir exactamente la cobertura del puesto.'));
       return;
     }
+    if (turnoType === 'custom' && restCoverage === 'alternate' && !alternateOk) {
+      toast.error(t('postSites.stations.alternateMismatch', 'Para alternar sin sacafranco, el ciclo del patrón debe ser múltiplo de sus días de trabajo (ej. 1-1, 2-2).'));
+      return;
+    }
     setSaving(true);
     try {
       const latitud = site?.latitud || site?.latitude || '';
@@ -243,6 +259,7 @@ export default function AddStationPage() {
               startTime: startingTimeInDay || undefined,
               endTime: finishTimeInDay || undefined,
               blockHours: turnoType === 'custom' && blockHours ? Number(blockHours) : undefined,
+              restCoverage: turnoType === 'custom' ? restCoverage : undefined,
             },
           });
         } catch (cfgErr: any) {
@@ -355,7 +372,7 @@ export default function AddStationPage() {
               {/* Patrón de rotación — chosen here at the station; assigned guards inherit it. */}
               {turnoType && (
                 <div className="rounded-xl border border-input bg-card p-3">
-                  <RotationStyleSelect scheduleType={turnoToScheduleType(turnoType)} value={rotationStyleId} onChange={setRotationStyleId} />
+                  <RotationStyleSelect scheduleType={turnoToScheduleType(turnoType)} value={rotationStyleId} onChange={setRotationStyleId} onStyleChange={setRotStyle} />
                 </div>
               )}
 
@@ -374,16 +391,25 @@ export default function AddStationPage() {
                     <div>
                       <label className="mb-2 block text-sm font-medium text-foreground">{t('postSites.stations.form.blockHours', 'Turno por vigilante')}</label>
                       <select value={blockHours} onChange={(e) => setBlockHours(e.target.value)} className={inputCls}>
-                        <option value="">{t('postSites.stations.form.wholeWindow', 'Toda la jornada (1 fijo)')}</option>
-                        {[4, 6, 8, 12].map((h) => {
+                        <option value="">{t('postSites.stations.form.wholeWindow', 'Toda la jornada')}</option>
+                        {[4, 6, 8, 12, 24].map((h) => {
                           const fits = customWindowMin > 0 && customWindowMin % (h * 60) === 0;
                           const k = fits ? customWindowMin / (h * 60) : 0;
                           return (
                             <option key={h} value={String(h)} disabled={!fits}>
-                              {h}h{fits ? ` → ${k} fijo${k > 1 ? 's' : ''}` : ' (no divide la cobertura)'}
+                              {h}h{fits ? ` → ${k} bloque${k > 1 ? 's' : ''}` : ' (no divide la cobertura)'}
                             </option>
                           );
                         })}
+                      </select>
+                    </div>
+                  )}
+                  {turnoType === 'custom' && (
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-foreground">{t('postSites.stations.form.restCoverage', 'Cobertura de descansos')}</label>
+                      <select value={restCoverage} onChange={(e) => setRestCoverage(e.target.value as any)} className={inputCls}>
+                        <option value="sacafranco">{t('postSites.stations.form.withSf', 'Sacafranco cubre los descansos')}</option>
+                        <option value="alternate">{t('postSites.stations.form.alternate', 'Alternancia entre fijos (sin sacafranco)')}</option>
                       </select>
                     </div>
                   )}
@@ -401,11 +427,18 @@ export default function AddStationPage() {
                 </div>
               )}
 
-              {/* Custom multi-block breakdown */}
+              {/* Custom breakdown: blocks × alternation */}
+              {turnoType === 'custom' && restCoverage === 'alternate' && rotStyle && (
+                <p className={`rounded-md p-3 text-xs ${alternateOk ? 'bg-muted/30 text-muted-foreground' : 'bg-destructive/10 text-destructive'}`}>
+                  {alternateOk
+                    ? <>Patrón <strong>{rotWork}-{rotCycle - rotWork}</strong>: cada bloque lo comparten <strong>{guardsPerBlock} fijos alternando</strong> (uno trabaja mientras el otro descansa) — <strong>sin sacafranco</strong>. Total: {requiredGuards} fijo{requiredGuards > 1 ? 's' : ''}.</>
+                    : <>El patrón {rotWork}-{rotCycle - rotWork} no permite alternancia exacta: el ciclo ({rotCycle}) debe ser múltiplo de los días de trabajo ({rotWork}). Usa 1-1, 2-2, 3-3…</>}
+                </p>
+              )}
               {turnoType === 'custom' && customBlocksOk && customBlockCount > 1 && (
                 <div className="rounded-xl border border-input bg-muted/30 p-4 text-sm">
                   <p className="mb-2 font-medium text-foreground">
-                    Cobertura {customWindowMin / 60}h — {customBlockCount} bloques de {Number(blockHours)}h
+                    Cobertura {customWindowMin / 60}h — {customBlockCount} bloques de {Number(blockHours)}h{guardsPerBlock > 1 ? ` × ${guardsPerBlock} fijos alternando` : ''}
                   </p>
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
                     {Array.from({ length: customBlockCount }, (_, i) => (
@@ -430,7 +463,7 @@ export default function AddStationPage() {
                 </div>
               )}
 
-              {turnoType && (
+              {turnoType && (turnoType !== 'custom' || restCoverage !== 'alternate') && (
                 <p className="rounded-md bg-muted/30 p-3 text-xs text-muted-foreground">
                   <strong className="text-foreground/80">{requiredGuards} vigilante{requiredGuards > 1 ? 's' : ''} fijo{requiredGuards > 1 ? 's' : ''}</strong> en el puesto +{' '}
                   <strong className="text-foreground/80">1 sacafranco</strong> que cubre los días de descanso. El sacafranco salta entre

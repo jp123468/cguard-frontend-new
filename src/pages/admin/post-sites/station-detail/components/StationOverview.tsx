@@ -63,6 +63,12 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   })();
   const blocksOk = Number(blockHours) > 0 && winMin > 0 && winMin % (Number(blockHours) * 60) === 0;
   const blockCount = blocksOk ? winMin / (Number(blockHours) * 60) : 1;
+  const [restCoverage, setRestCoverage] = useState<'sacafranco' | 'alternate'>('sacafranco');
+  const [rotStyle, setRotStyle] = useState<{ dayShifts: number; nightShifts: number; restDays: number } | null>(null);
+  const rotCycle = rotStyle ? (rotStyle.dayShifts || 0) + (rotStyle.nightShifts || 0) + (rotStyle.restDays || 0) : 0;
+  const rotWork = rotStyle ? (rotStyle.dayShifts || 0) + (rotStyle.nightShifts || 0) : 0;
+  const alternateOk = restCoverage !== 'alternate' || (rotWork > 0 && rotCycle % rotWork === 0);
+  const guardsPerBlock = restCoverage === 'alternate' && alternateOk && rotWork > 0 ? rotCycle / rotWork : 1;
   const [rotationStyleId, setRotationStyleId] = useState('');
   const [savingHorario, setSavingHorario] = useState(false);
 
@@ -170,11 +176,14 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
     if (turno === 'custom' && blockHours && !blocksOk) {
       toast.error('La duración del turno debe dividir exactamente la cobertura del puesto.'); return;
     }
+    if (turno === 'custom' && restCoverage === 'alternate' && !alternateOk) {
+      toast.error('Para alternar sin sacafranco, el ciclo del patrón debe ser múltiplo de sus días de trabajo (ej. 1-1, 2-2).'); return;
+    }
     const scheduleType = turnoToScheduleType(turno);
     const currentType = station.scheduleType || '';
     const unchangedType = scheduleType === currentType;
     const unchangedCustom = turno !== 'custom'
-      || (!blockHours && customStart === (station.startingTimeInDay || '') && customEnd === (station.finishTimeInDay || ''));
+      || (!blockHours && restCoverage === 'sacafranco' && customStart === (station.startingTimeInDay || '') && customEnd === (station.finishTimeInDay || ''));
     const unchangedRotation = (rotationStyleId || '') === (station.rotationStyleId || '');
     if (unchangedType && unchangedCustom && unchangedRotation) { toast.info('El horario no cambió'); return; }
     if (!(await confirmDialog({ message: 'Cambiar el horario reconfigura los puestos del turno. Si hay vigilantes asignados a esta estación, deberán reasignarse. ¿Continuar?', confirmText: 'Continuar' }))) return;
@@ -188,6 +197,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
           startTime: turno === 'custom' ? customStart : undefined,
           endTime: turno === 'custom' ? customEnd : undefined,
           blockHours: turno === 'custom' && blockHours ? Number(blockHours) : undefined,
+          restCoverage: turno === 'custom' ? restCoverage : undefined,
         },
       });
       toast.success('Horario actualizado. Los puestos del turno se reconfiguraron.');
@@ -367,7 +377,21 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
                     );
                   })}
                 </select>
-                {blocksOk && blockCount > 1 && (
+              </div>
+              <div className="col-span-2">
+                <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Cobertura de descansos</label>
+                <select value={restCoverage} onChange={(e) => setRestCoverage(e.target.value as any)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                  <option value="sacafranco">Sacafranco cubre los descansos</option>
+                  <option value="alternate">Alternancia entre fijos (sin sacafranco)</option>
+                </select>
+                {restCoverage === 'alternate' && rotStyle && (
+                  <p className={`mt-1.5 text-[11px] ${alternateOk ? 'text-muted-foreground' : 'text-destructive'}`}>
+                    {alternateOk
+                      ? `Patrón ${rotWork}-${rotCycle - rotWork}: ${guardsPerBlock} fijos alternando por bloque, sin sacafranco. Total ${blockCount * guardsPerBlock} fijos.`
+                      : `El ciclo (${rotCycle}) debe ser múltiplo de los días de trabajo (${rotWork}). Usa 1-1, 2-2, 3-3…`}
+                  </p>
+                )}
+                {restCoverage === 'sacafranco' && blocksOk && blockCount > 1 && (
                   <p className="mt-1.5 text-[11px] text-muted-foreground">
                     {winMin / 60}h de cobertura en {blockCount} bloques consecutivos de {Number(blockHours)}h — {blockCount} fijos + sacafranco.
                   </p>
@@ -376,7 +400,7 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
             </div>
           )}
           {turno && (
-            <RotationStyleSelect scheduleType={turnoToScheduleType(turno)} value={rotationStyleId} onChange={setRotationStyleId} />
+            <RotationStyleSelect scheduleType={turnoToScheduleType(turno)} value={rotationStyleId} onChange={setRotationStyleId} onStyleChange={setRotStyle} />
           )}
           <div className="flex items-center justify-between gap-3">
             <p className="text-[11px] text-amber-600">Cambiar el horario reconfigura los puestos; los vigilantes asignados deberán reasignarse.</p>
