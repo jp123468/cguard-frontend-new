@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Loader2, UserPlus, Users, X, Repeat, Shield, RefreshCw, Trash2 } from 'lucide-react';
@@ -8,6 +8,7 @@ import { ApiService } from '@/services/api/apiService';
 import { Section, EmptyState, SkeletonCards, StatusBadge } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 import ShiftAssignModal from './ShiftAssignModal';
+import { localToday } from '@/lib/utils';
 
 type Props = { station: any; stationId: string; postSiteId: string };
 type PosType = 'fijo' | 'sacafranco';
@@ -86,6 +87,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
   const [assignType, setAssignType] = useState<PosType | null>(null);
   const [changeTarget, setChangeTarget] = useState<Assignment | null>(null);
   const [pickGuard, setPickGuard] = useState('');
+  const [assignStart, setAssignStart] = useState(() => localToday());
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -213,14 +215,14 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
     }
   };
 
-  const doAssign = async (guardUserId: string, type: PosType, positionId?: string | null) => {
+  const doAssign = async (guardUserId: string, type: PosType, positionId?: string | null, startDate?: string) => {
     const pid = positionId !== undefined ? positionId : await ensurePosition(type);
     await ApiService.post(`/tenant/${tenantId}/guard-assignment`, {
       guardId: guardUserId,
       stationId,
       positionId: pid || undefined,
       isRelief: type === 'sacafranco',
-      startDate: today(),
+      startDate: startDate || today(),
     });
   };
 
@@ -242,10 +244,10 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
         // so this stays in sync with Programador › Horario.
         await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${encodeURIComponent(changeTarget.assignmentId)}`);
         await deleteShifts(changeTarget.shiftIds);
-        await doAssign(pickGuard, changeTarget.type, changeTarget.positionId);
+        await doAssign(pickGuard, changeTarget.type, changeTarget.positionId, assignStart);
         toast.success(t('station.guards.changed', 'Vigilante actualizado'));
       } else if (assignType) {
-        await doAssign(pickGuard, assignType);
+        await doAssign(pickGuard, assignType, undefined, assignStart);
         toast.success(assignType === 'sacafranco'
           ? t('station.guards.sacaAdded', 'Sacafranco asignado')
           : t('station.guards.added', 'Vigilante asignado'));
@@ -277,9 +279,23 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
     }
   };
 
-  const openAssign = (type: PosType) => { setAssignType(type); setChangeTarget(null); setPickGuard(''); };
-  const openChange = (a: Assignment) => { setChangeTarget(a); setAssignType(null); setPickGuard(''); };
+  const openAssign = (type: PosType) => { setAssignType(type); setChangeTarget(null); setPickGuard(''); setAssignStart(localToday()); };
+  const openChange = (a: Assignment) => { setChangeTarget(a); setAssignType(null); setPickGuard(''); setAssignStart(localToday()); };
   const closeModal = () => { setAssignType(null); setChangeTarget(null); setPickGuard(''); };
+
+  // Alternation = a custom station with >=2 fijo positions SHARING one block
+  // (24x24 etc.). There the fijos cover the same block on opposite DAYS, so the
+  // operator picks each guard's start day and the backend phases the assignment
+  // to it — "empieza hoy" ⇒ trabaja hoy.
+  const isAlternation = useMemo(() => {
+    const fijos = (positions || []).filter((p: any) => (p.type || 'fijo') !== 'sacafranco');
+    const blocks = new Map<string, number>();
+    for (const p of fijos) {
+      const k = `${p.startTime || ''}|${p.endTime || ''}`;
+      blocks.set(k, (blocks.get(k) || 0) + 1);
+    }
+    return Array.from(blocks.values()).some((n) => n >= 2);
+  }, [positions]);
 
   const modalOpen = !!assignType || !!changeTarget;
   const modalIsSaca = assignType === 'sacafranco' || changeTarget?.type === 'sacafranco';
@@ -406,6 +422,23 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
                   <p className="mt-1.5 text-[11px] text-amber-600">{t('station.guards.allBusy', 'Todos los vigilantes ya tienen una asignación activa.')}</p>
                 )}
               </div>
+
+              {/* Alternation (24x24 etc.): the operator picks the day this guard
+                  starts working. The backend phases the rotation to it, so
+                  "empieza hoy" = trabaja hoy. Assign the partner starting the
+                  next day and they alternate automatically. */}
+              {!modalIsSaca && isAlternation && (
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t('station.guards.startDay', 'Primer día de turno')}</label>
+                  <input
+                    type="date"
+                    value={assignStart}
+                    onChange={(e) => setAssignStart(e.target.value)}
+                    className={selectCls}
+                  />
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">{t('station.guards.startDayHint', 'Este vigilante trabaja ese día y luego día por medio. Asigna a su relevo empezando al día siguiente.')}</p>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-2 border-t border-border/20 px-5 py-3">
