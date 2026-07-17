@@ -243,9 +243,11 @@ export default function AddStationPage() {
         clockInLateGraceMin: clockInLateGraceMin.trim() === '' ? null : Number(clockInLateGraceMin),
         description: newDescription,
       } as any;
-      const created: any = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
+      const createdSt: any = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
+      const adopted = (createdSt && (createdSt.adoptedTours || createdSt.data?.adoptedTours)) || 0;
+      if (adopted > 0) toast.success(`${adopted} ronda(s) del puesto anterior recuperada(s) en este puesto`);
       invalidateEntity("stations");
-      const newStationId = created?.id || created?.data?.id || null;
+      const newStationId = createdSt?.id || createdSt?.data?.id || null;
       // Configure the station's horario through the scheduling engine (the same
       // endpoint Programador › Horario uses): this sets scheduleType, creates the
       // turno positions and regenerates shifts, so assigned guards abide by it.

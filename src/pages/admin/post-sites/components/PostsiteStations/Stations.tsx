@@ -394,6 +394,8 @@ export default function Stations({ site }: { site?: any }) {
       const res = await ApiService.post(`/tenant/${tenantId}/station`, { data: payload });
       invalidateEntity("stations");
       const created = (res && (res.data || res)) || res;
+      const adopted = (created && created.adoptedTours) || 0;
+      if (adopted > 0) toast.success(`${adopted} ronda(s) del puesto anterior recuperada(s) en este puesto`);
       setStations(s => [created, ...s]);
       setNewName(''); setNewDescription(''); setStationSchedule(''); setNumberOfGuardsInStation('1'); setStartingTimeInDay(''); setFinishTimeInDay(''); setGeofenceRadius('100'); setGeofencePolygon([]);
       setShowNew(false);
