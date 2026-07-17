@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { autoInvalidateForMutation } from "@/lib/queryClient";
 const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:3001/api").replace(/\/+$/, "");
 
 export class ApiError extends Error {
@@ -128,6 +129,11 @@ export class ApiService {
       throw new ApiError(msg, response.status, fullResponse);
     }
 
+    // A successful mutation refreshes every cached list its URL touches so
+    // schedule/station/client edits never serve a stale copy.
+    if (!idempotent) {
+      try { autoInvalidateForMutation(method, endpoint); } catch { /* never break the response */ }
+    }
 
     return data;
   }

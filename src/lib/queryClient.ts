@@ -46,3 +46,30 @@ export function cachedFetch<T>(queryKey: unknown[], queryFn: () => Promise<T>, s
 export function invalidateEntity(entity: string): void {
   queryClient.invalidateQueries({ queryKey: [entity] });
 }
+
+/**
+ * Auto-invalidation for the read-through cache: EVERY successful mutating
+ * request (from either http client — lib/api axios or ApiService fetch)
+ * invalidates the cached entities its URL touches, so schedule/station/
+ * client edits refresh everywhere immediately instead of serving a stale
+ * copy for the rest of the staleTime window ("hice el cambio y sigue
+ * mostrando lo viejo"). Pages using the raw clients directly are covered
+ * without per-page invalidation calls.
+ */
+const URL_ENTITY_MAP: Array<[RegExp, string[]]> = [
+  // Anything that reshapes stations, turnos, or coverage → stations cache
+  // (the ["stations", …] keys back post-site AND station lists via stationService).
+  [/\/(station|stations|post-site|business-info|auto-positions|positions|guard-assignment|guard-assignments|shift|shifts|shift-template|shift-exchange|schedule-overrides?|rotation-styles?|scheduler)(\/|\?|$)/, ['stations']],
+  [/\/client-account(s)?(\/|\?|$)/, ['clients']],
+  [/\/category(\/|\?|$)/, ['categories']],
+];
+const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+export function autoInvalidateForMutation(method?: string | null, url?: string | null): void {
+  if (!MUTATING.has(String(method || '').toUpperCase())) return;
+  const u = String(url || '');
+  for (const [re, entities] of URL_ENTITY_MAP) {
+    if (re.test(u)) {
+      for (const e of entities) invalidateEntity(e);
+    }
+  }
+}

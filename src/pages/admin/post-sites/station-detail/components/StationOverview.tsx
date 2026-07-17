@@ -219,6 +219,9 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
         },
       });
       toast.success('Horario actualizado. Los puestos del turno se reconfiguraron.');
+      // Tell the Turnos tab to re-derive its coverage sketch from the new
+      // positions immediately (no manual reload / no stale day+night sketch).
+      try { window.dispatchEvent(new CustomEvent('station-horario-changed', { detail: { stationId } })); } catch { /* noop */ }
     } catch (e: any) {
       toast.error(e?.message || 'Error al actualizar el horario');
     } finally {

@@ -111,16 +111,34 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
     }
   };
 
-  // Load positions from scheduler API
+  // Load positions from scheduler API — positions are the source of truth for
+  // the coverage sketch, so they must re-fetch whenever the horario changes.
   const [positions, setPositions] = useState<any[]>([]);
-  useEffect(() => {
+  const loadPositions = useCallback(() => {
     if (!stationId || !tenantId) return;
     ApiService.get(`/tenant/${tenantId}/station/${stationId}/positions`)
       .then((res: any) => { setPositions(Array.isArray(res) ? res : (res?.rows ?? [])); })
       .catch(() => {});
   }, [stationId, tenantId]);
+  useEffect(() => { loadPositions(); }, [loadPositions]);
 
   useEffect(() => { loadShifts(); }, [stationId]);
+
+  // Auto-refresh the sketch when the horario/turnos of THIS station change
+  // (the editor broadcasts after /auto-positions succeeds) — no manual reload,
+  // no stale day+night sketch after switching a station to a custom turno.
+  useEffect(() => {
+    const onChanged = (e: Event) => {
+      const changedId = (e as CustomEvent)?.detail?.stationId;
+      if (!changedId || String(changedId) === String(stationId)) {
+        loadPositions();
+        loadShifts();
+      }
+    };
+    window.addEventListener('station-horario-changed', onChanged);
+    return () => window.removeEventListener('station-horario-changed', onChanged);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stationId, loadPositions]);
 
   // Jornadas = the TURNO the user defined on the station (its schedule). That is
   // the source of truth for what coverage is required; positions are just the
@@ -128,17 +146,48 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
   // fall back to positions when no explicit schedule exists.
   const jornadas: Jornada[] = useMemo(() => {
     const ALL_DAYS = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
-    const fijoCount = positions.filter((p: any) => (p.type || 'fijo') !== 'sacafranco').length;
-    const st = (station as any)?.scheduleType as string | undefined;
+    const fijos = positions.filter((p: any) => (p.type || 'fijo') !== 'sacafranco');
 
-    // Phase 3: the station's scheduleType is the AUTHORITATIVE coverage setup, so
-    // it drives the required jornadas. Only fall back to the legacy free-form
-    // stationSchedule JSON for 'custom' / unconfigured stations.
+    // UNIVERSAL SOURCE OF TRUTH = the station's fijo POSITIONS, grouped by their
+    // block (startTime|endTime). Each DISTINCT block is one required jornada
+    // needing ONE guard on duty at a time — fijos sharing a block are alternating
+    // (24x24 → one 24h block, 1 guard/day; NOT a phantom day+night split), while
+    // fijos in different blocks each need their own coverage (16h/2×8h → two
+    // 8h jornadas). This mirrors the backend's block-based gap engine, so the
+    // sketch matches whatever horario the tenant configured — any hours, any
+    // number of guards, with or without sacafranco.
+    const blockLabel = (start: string, end: string): string => {
+      const sh = parseInt(String(start).split(':')[0], 10) || 0;
+      const eh = parseInt(String(end).split(':')[0], 10) || 0;
+      let span = (eh - sh + 24) % 24; if (span === 0) span = 24;
+      if (span >= 23) return '24 horas';
+      return sh >= 18 || sh < 6 ? 'Nocturno' : 'Diurno';
+    };
+    if (fijos.length > 0) {
+      const blocks = new Map<string, { startTime: string; endTime: string }>();
+      for (const p of fijos) {
+        const startTime = p.startTime || '07:00';
+        const endTime = p.endTime || '19:00';
+        blocks.set(`${startTime}|${endTime}`, { startTime, endTime });
+      }
+      return Array.from(blocks.values())
+        .sort((a, b) => a.startTime.localeCompare(b.startTime))
+        .map((b) => ({
+          tipo: blockLabel(b.startTime, b.endTime),
+          startTime: b.startTime,
+          endTime: b.endTime,
+          guardsCount: 1,
+          days: ALL_DAYS,
+        }) as any);
+    }
+
+    // No positions yet: fall back to the station's scheduleType so an
+    // un-staffed station still shows its intended coverage.
+    const st = (station as any)?.scheduleType as string | undefined;
     if (st === '24h') {
-      const g = Math.max(1, Math.ceil((fijoCount || 2) / 2));
       return [
-        { tipo: 'Diurno', startTime: '07:00', endTime: '19:00', guardsCount: g, days: ALL_DAYS } as any,
-        { tipo: 'Nocturno', startTime: '19:00', endTime: '07:00', guardsCount: g, days: ALL_DAYS } as any,
+        { tipo: 'Diurno', startTime: '07:00', endTime: '19:00', guardsCount: 1, days: ALL_DAYS } as any,
+        { tipo: 'Nocturno', startTime: '19:00', endTime: '07:00', guardsCount: 1, days: ALL_DAYS } as any,
       ];
     }
     if (st === '12h-day' || st === '12h-night') {
@@ -147,12 +196,11 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
         tipo: isNight ? 'Nocturno' : 'Diurno',
         startTime: isNight ? '19:00' : '07:00',
         endTime: isNight ? '07:00' : '19:00',
-        guardsCount: Math.max(1, fijoCount || 1),
+        guardsCount: 1,
         days: ALL_DAYS,
       } as any];
     }
-
-    // Legacy / custom: explicit hand-edited stationSchedule JSON.
+    // Legacy custom: explicit hand-edited stationSchedule JSON.
     let parsed: any[] = [];
     try {
       const raw = station?.stationSchedule;
@@ -160,21 +208,7 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
       else if (raw && typeof raw === 'string' && raw.trim().startsWith('[')) parsed = JSON.parse(raw);
     } catch {}
     if (parsed.length > 0) {
-      return parsed.map(j => ({
-        ...j,
-        days: j.days || ALL_DAYS,
-        guardsCount: j.guardsCount || '1',
-      }));
-    }
-    // Last resort: derive from positions.
-    if (positions.length > 0) {
-      return positions.map(p => ({
-        tipo: p.name || p.type,
-        startTime: p.startTime || '07:00',
-        endTime: p.endTime || '19:00',
-        guardsCount: p.guardsNeeded || 1,
-        days: ALL_DAYS,
-      }));
+      return parsed.map(j => ({ ...j, days: j.days || ALL_DAYS, guardsCount: j.guardsCount || 1 }));
     }
     return [];
   }, [station, positions]);
@@ -248,14 +282,19 @@ export default function StationShifts({ station, stationId, postSiteId }: Props)
         if (!jornada.days.includes(dayKey)) return; // not an operating day for this jornada
         const guardsNeeded = parseInt(String(jornada.guardsCount)) || 1;
 
-        // Count assigned guards by attributing each shift to the day it STARTS
-        // (tenant tz) and matching its day/night class to the jornada. The old
-        // time-overlap math was broken for NIGHT shifts that cross midnight
-        // (e.g. 19:00→07:00 never "overlapped" an 18:00→06:00 window), so a guard
-        // assigned to a night station ALWAYS showed as "sin guardia asignado".
-        const jornadaNight = String(jornada.tipo || '').toLowerCase().includes('noct');
+        // Count assigned guards by attributing each shift (by its START day in
+        // tenant tz) to THIS jornada's block. A 24h/full-day block accepts any
+        // start; otherwise match the shift's start half (day/night) to the
+        // block's — robust for night shifts that cross midnight (19:00→07:00),
+        // which naive time-overlap missed.
+        const jStartH = parseInt(String(jornada.startTime || '07:00').split(':')[0], 10) || 0;
+        const jEndH = parseInt(String(jornada.endTime || '19:00').split(':')[0], 10) || 0;
+        let jSpan = (jEndH - jStartH + 24) % 24; if (jSpan === 0) jSpan = 24;
+        const isFullDay = jSpan >= 23;
+        const jornadaNight = jStartH >= 18 || jStartH < 6;
         const guardsAssigned = dayEvents.filter(ev => {
           if (dateKey(ev.start) !== dateStr) return false; // attribute to its start day
+          if (isFullDay) return true; // a 24h block is covered by any shift that day
           const startMin = minutesInTenantTz(ev.start);
           const evNight = startMin >= 18 * 60 || startMin < 6 * 60; // evening/pre-dawn start = night
           return jornadaNight ? evNight : !evNight;

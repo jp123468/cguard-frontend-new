@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance } from "axios"
 import { toast } from "sonner"
+import { autoInvalidateForMutation } from "@/lib/queryClient"
 
 const API_URL = import.meta.env.VITE_API_URL as string | undefined
 
@@ -134,6 +135,9 @@ api.interceptors.response.use(
     }
     const successMsg = response.config.toast?.success
     if (successMsg) toast.success(successMsg)
+    // A successful mutation refreshes every cached list its URL touches so
+    // schedule/station/client edits never serve a stale copy.
+    try { autoInvalidateForMutation(response.config?.method, response.config?.url) } catch { /* never break the response */ }
     return response
   },
   (error) => {
