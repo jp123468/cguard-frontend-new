@@ -1,3 +1,4 @@
+import { localToday } from '@/lib/utils';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, X, UserPlus, Repeat, CalendarRange } from 'lucide-react';
@@ -35,7 +36,7 @@ export default function ShiftAssignModal({ open, onClose, onSaved, station, stat
   const [saving, setSaving] = useState(false);
   // The rotation PHASE comes from the station position (staggered), not a date —
   // so we don't ask for one (no date input). Shifts simply begin today.
-  const [rotationStartDate, setRotationStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [rotationStartDate, setRotationStartDate] = useState(() => localToday());
   // Optional end date: assign the guard to the station only until this date (e.g.
   // temporary cover). Empty ⇒ indefinite. Backend already supports endDate.
   const [rotationEndDate, setRotationEndDate] = useState('');

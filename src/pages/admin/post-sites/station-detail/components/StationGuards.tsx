@@ -25,7 +25,13 @@ interface Assignment {
   shiftIds: string[];            // all of this guard's shift ids at the station
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+// LOCAL calendar date (not UTC): toISOString() rolls to the next day for
+// evening assignments in negative-UTC zones (Ecuador UTC-5 after 19:00), which
+// pushed "today's" shift to tomorrow. Use the operator's wall-clock date.
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 // Local YYYY-MM-DD key (don't use toISOString — it shifts by timezone).
 const dk = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

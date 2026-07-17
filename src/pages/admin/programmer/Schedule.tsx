@@ -1,3 +1,4 @@
+import { localToday } from '@/lib/utils';
 import { useState, useEffect, useMemo, useCallback } from "react";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
@@ -154,7 +155,7 @@ export default function Schedule() {
   const [assignGuard, setAssignGuard] = useState('');
   // Rotation phase comes from the station position, not a date — default to today
   // (no date input shown; reset to today on modal open).
-  const [assignStartDate, setAssignStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [assignStartDate, setAssignStartDate] = useState(() => localToday());
   const [assignOffset, setAssignOffset] = useState(0);
   const [assignSaving, setAssignSaving] = useState(false);
   const [coverage, setCoverage] = useState<any>(null); // real coverage of live schedule

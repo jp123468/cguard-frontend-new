@@ -14,7 +14,8 @@ function localDateKey(iso: string): string {
   return `${g('year')}-${g('month')}-${g('day')}`;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+import { localToday } from '@/lib/utils';
+const today = () => localToday();
 
 interface Candidate { id: string; name: string; busy: Set<string>; freeForGaps: number; busyOnGaps: number; }
 
