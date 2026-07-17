@@ -56,7 +56,14 @@ export default function AssignGuards({ site }: { site?: any }) {
         ApiService.get(`/tenant/${tenantId}/security-guard?limit=999&_=${ts}`, { toast: { silentError: true } } as any).catch(() => []),
       ]);
 
-      const stations = Array.isArray(stRes) ? stRes : (stRes?.rows ?? []);
+      const stationsRaw = Array.isArray(stRes) ? stRes : (stRes?.rows ?? []);
+      // HARD isolation: only keep stations that ACTUALLY belong to this site.
+      // The /post-site/:id/stations endpoint currently ignores its postSiteId
+      // filter and returns tenant-wide stations, which leaked other clients'
+      // guards into this roster — never trust it, re-filter by postSiteId here.
+      const stations = stationsRaw.filter(
+        (s: any) => String(s.postSiteId || s.post_site_id || '') === String(postSiteId),
+      );
       const stationById = new Map<string, string>();
       for (const s of stations) {
         stationById.set(String(s.id || s.stationId), s.stationName || s.name || s.station_name || '—');
