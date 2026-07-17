@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { invalidateEntity } from "@/lib/queryClient";
 import { useTranslation } from 'react-i18next';
-import { MapPin, Clock, Users, Pencil, Check, Loader2 } from 'lucide-react';
+import { MapPin, Clock, Users, Pencil, Check, Loader2, Activity, LogIn, LogOut, ShieldCheck } from 'lucide-react';
+import IncidentMap from '@/components/IncidentMap/IncidentMap';
+import { StatusBadge } from '@/components/kit';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { confirmDialog } from '@/components/ui/confirmDialog';
@@ -81,6 +83,22 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   const [polygon, setPolygon] = useState<PolyPoint[]>([]);
   // Human-readable address for the station coords (reverse-geocoded for display).
   const [stationAddress, setStationAddress] = useState('');
+  // Actividad reciente de la estación (marcaciones) — alimenta cobertura en
+  // vivo + la lista de actividad del modo lectura.
+  const [recentShifts, setRecentShifts] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    if (!stationId) return;
+    let alive = true;
+    const tenantId = localStorage.getItem('tenantId') || '';
+    ApiService.get(`/tenant/${tenantId}/guard-shift?filter[stationName]=${encodeURIComponent(stationId)}&limit=15&orderBy=punchInTime_DESC`)
+      .then((res: any) => {
+        if (!alive) return;
+        setRecentShifts((res && (res.rows || res.data?.rows)) || []);
+      })
+      .catch(() => alive && setRecentShifts([]));
+    return () => { alive = false; };
+  }, [stationId]);
 
   useEffect(() => {
     const la = station?.latitud ?? station?.latitude;
@@ -239,64 +257,156 @@ export default function StationOverview({ station, stationId, postSiteId }: Prop
   // ── READ MODE ──
   if (!editing) {
     const turnoInfo = TURNO_LABELS.find((o) => o.key === scheduleTypeToTurno(station.scheduleType));
+    const fijos =
+      station.scheduleType === '24h'
+        ? 2
+        : station.scheduleType === 'custom'
+          ? (Number(station.numberOfGuardsInStation) || 1)
+          : station.scheduleType ? 1 : 0;
+    const rows = recentShifts || [];
+    const openNow = rows.filter((r: any) => !r.punchOutTime);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const todayCount = rows.filter((r: any) => r.punchInTime && new Date(r.punchInTime) >= today).length;
+    const STATUS_TONE: Record<string, { label: string; tone: 'green' | 'orange' | 'red' | 'slate' | 'primary' }> = {
+      on_time: { label: 'A tiempo', tone: 'green' },
+      late: { label: 'Tarde', tone: 'orange' },
+      early_departure: { label: 'Salida temprana', tone: 'orange' },
+      missed_clockout: { label: 'Sin salida', tone: 'red' },
+      no_call_no_show: { label: 'No asistió', tone: 'red' },
+      overtime: { label: 'Horas extra', tone: 'primary' },
+      pending_review: { label: 'En revisión', tone: 'slate' },
+    };
+    const fmtHM = (d: any) => (d ? new Date(d).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : null);
+    const fmtDay = (d: any) => (d ? new Date(d).toLocaleDateString('es', { day: '2-digit', month: 'short' }) : '');
+    const guardHue = (nm: string) => { let h = 0; for (let i = 0; i < nm.length; i++) h = (h * 31 + nm.charCodeAt(i)) >>> 0; return [205, 150, 265, 28, 340, 95, 180, 12][h % 8]; };
+
     return (
       <div className="space-y-4">
-        <Section
-          icon={<MapPin />}
-          title={name}
-          action={
-            <button
-              onClick={() => setEditing(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground"
-              title="Editar horario"
-            >
-              <Pencil size={14} /> Editar
-            </button>
-          }
-        >
-          <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <StatCard
-              icon={<Clock />}
-              label="Horario del turno"
-              value={turnoInfo ? turnoInfo.label : 'Sin configurar'}
-              hint={turnoInfo ? turnoInfo.sub : 'Edita para asignar el turno'}
-            />
-            <StatCard
-              icon={<Users />}
-              label="Fijos requeridos"
-              accent="blue"
-              value={
-                station.scheduleType === '24h'
-                  ? 2
-                  : station.scheduleType === 'custom'
-                    ? (Number(station.numberOfGuardsInStation) || 1)
-                    : station.scheduleType ? 1 : '—'
-              }
-            />
-            {(lat || lng) && (
-              <StatCard
-                icon={<MapPin />}
-                label="Ubicación"
-                accent="green"
-                value={stationAddress || `${lat}, ${lng}`}
-                className="sm:col-span-2"
-              />
-            )}
-          </Stagger>
-        </Section>
+        {/* Cobertura de un vistazo */}
+        <Stagger className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard
+            icon={<ShieldCheck />}
+            label="De turno ahora"
+            accent={openNow.length ? 'green' : 'red'}
+            value={recentShifts === null ? '…' : openNow.length}
+            hint={openNow.length ? openNow.map((r: any) => r.guardName?.fullName || 'Vigilante').join(', ') : 'Nadie fichado'}
+          />
+          <StatCard icon={<Users />} label="Fijos requeridos" accent="blue" value={fijos || '—'} />
+          <StatCard icon={<Activity />} label="Marcaciones hoy" value={recentShifts === null ? '…' : todayCount} />
+          <StatCard
+            icon={<Clock />}
+            label="Horario"
+            accent="primary"
+            value={turnoInfo ? turnoInfo.label : 'Sin configurar'}
+            hint={turnoInfo ? turnoInfo.sub : 'Usa Editar para asignarlo'}
+          />
+        </Stagger>
 
-        {/* Assigned guards */}
-        {assignedGuards.length > 0 && (
-          <Section icon={<Users />} title="Vigilantes Asignados">
-            <ul className="divide-y divide-border/20">
-              {assignedGuards.slice(0, 8).map((g: any, i: number) => {
-                const gname = g.fullName || g.name || `${g.firstName || ''} ${g.lastName || ''}`.trim() || g.email || '-';
-                return <li key={g.id || i} className="py-2 text-sm text-foreground">{gname}</li>;
-              })}
-            </ul>
-            {assignedGuards.length > 8 && (
-              <div className="text-xs text-muted-foreground mt-2">+{assignedGuards.length - 8} más</div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          {/* Actividad reciente */}
+          <Section
+            icon={<Activity />}
+            title="Actividad reciente"
+            action={
+              <button
+                onClick={() => setEditing(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-muted/40 hover:text-foreground"
+                title="Editar horario, tolerancias y ubicación"
+              >
+                <Pencil size={14} /> Editar puesto
+              </button>
+            }
+          >
+            {recentShifts === null ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">Cargando…</div>
+            ) : rows.length === 0 ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                Aún no hay marcaciones en este puesto.
+              </div>
+            ) : (
+              <ul className="divide-y divide-border/40">
+                {rows.slice(0, 8).map((r: any) => {
+                  const gname = r.guardName?.fullName || 'Vigilante';
+                  const st = STATUS_TONE[r.status];
+                  return (
+                    <li key={r.id} className="flex items-center gap-3 py-2.5">
+                      <span
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                        style={{ backgroundColor: `hsl(${guardHue(gname)} 65% 88%)`, color: `hsl(${guardHue(gname)} 55% 30%)` }}
+                      >
+                        {gname.charAt(0).toUpperCase()}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{gname}</p>
+                        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><LogIn className="h-3 w-3 text-emerald-500" />{fmtDay(r.punchInTime)} {fmtHM(r.punchInTime)}</span>
+                          {r.punchOutTime ? (
+                            <span className="flex items-center gap-1"><LogOut className="h-3 w-3 text-red-400" />{fmtHM(r.punchOutTime)}</span>
+                          ) : (
+                            <span className="font-medium text-emerald-600 dark:text-emerald-400">en turno</span>
+                          )}
+                        </p>
+                      </div>
+                      {st && <StatusBadge tone={st.tone}>{st.label}</StatusBadge>}
+                    </li>
+                  );
+                })}
+              </ul>
             )}
+          </Section>
+
+          {/* Ubicación + geocerca (solo lectura; editar via Editar puesto) */}
+          <Section icon={<MapPin />} title="Ubicación y geocerca">
+            {(lat || lng) ? (
+              <>
+                <div className="mb-3 overflow-hidden rounded-2xl border">
+                  <IncidentMap lat={Number(lat)} lng={Number(lng)} label={name} />
+                </div>
+                <p className="text-sm text-muted-foreground">{stationAddress || `${lat}, ${lng}`}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Geocerca:{' '}
+                  {Array.isArray(station.geofencePolygon) && station.geofencePolygon.length >= 3
+                    ? `polígono de ${station.geofencePolygon.length} puntos`
+                    : `radio de ${station.geofenceRadius || 100} m`}
+                </p>
+              </>
+            ) : (
+              <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed bg-muted/30 text-sm text-muted-foreground">
+                Sin ubicación configurada
+                <button onClick={() => setEditing(true)} className="text-primary underline underline-offset-2">
+                  Definir ubicación
+                </button>
+              </div>
+            )}
+          </Section>
+        </div>
+
+        {/* Vigilantes asignados */}
+        {assignedGuards.length > 0 && (
+          <Section icon={<Users />} title={`Vigilantes asignados (${assignedGuards.length})`}>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {assignedGuards.map((g: any, i: number) => {
+                const gname = g.fullName || g.name || `${g.firstName || ''} ${g.lastName || ''}`.trim() || g.email || '-';
+                const onNow = openNow.some((r: any) => (r.guardName?.fullName || '') === gname);
+                return (
+                  <div key={g.id || i} className="flex items-center gap-2.5 rounded-xl border bg-card px-3 py-2">
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                      style={{ backgroundColor: `hsl(${guardHue(gname)} 65% 88%)`, color: `hsl(${guardHue(gname)} 55% 30%)` }}
+                    >
+                      {gname.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{gname}</span>
+                    {onNow && (
+                      <span className="relative flex h-2.5 w-2.5" title="De turno ahora">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </Section>
         )}
       </div>
