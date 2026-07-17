@@ -246,6 +246,8 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
       }
       closeModal();
       load();
+      // Let the site-level roster (and any other listener) refresh.
+      try { window.dispatchEvent(new CustomEvent('assignments:changed')); } catch { /* noop */ }
     } catch (e: any) {
       toast.error(e?.message || t('station.guards.assignFailed', 'No se pudo asignar'));
     } finally {
@@ -262,6 +264,7 @@ export default function StationGuards({ station, stationId, postSiteId }: Props)
       // Remove their shifts so they disappear from the Turnos tab too.
       await deleteShifts(a.shiftIds);
       setRows((rs) => rs.filter((x) => x.id !== a.id));
+      try { window.dispatchEvent(new CustomEvent('assignments:changed')); } catch { /* noop */ }
       toast.success(t('station.guards.removed', 'Vigilante removido del puesto y de los turnos'));
     } catch (e: any) {
       toast.error(e?.message || t('station.guards.removeFailed', 'No se pudo quitar'));
