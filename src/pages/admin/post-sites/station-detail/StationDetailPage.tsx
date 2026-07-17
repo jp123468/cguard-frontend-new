@@ -6,6 +6,7 @@ import { Loader2, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, FadeIn } from '@/components/kit';
 import StationOverview from './components/StationOverview';
+import StationHero from './components/StationHero';
 import StationVisitors from './components/StationVisitors';
 import StationGuards from './components/StationGuards';
 import StationShifts from './components/StationShifts';
@@ -90,7 +91,15 @@ export default function StationDetailPage() {
             description={error}
           />
         ) : (
-          <FadeIn className="space-y-4">{renderTab()}</FadeIn>
+          <FadeIn className="space-y-4">
+            <StationHero
+              station={station}
+              stationId={stationId || ''}
+              postSiteId={postSiteId || ''}
+              onRenamed={(n) => setStation((prev: any) => ({ ...prev, stationName: n, name: n }))}
+            />
+            {renderTab()}
+          </FadeIn>
         )}
       </div>
     </StationLayout>
