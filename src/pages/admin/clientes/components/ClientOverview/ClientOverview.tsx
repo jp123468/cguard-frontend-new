@@ -5,6 +5,7 @@ import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { clientService } from '@/lib/api/clientService';
 import MobileCardList from '@/components/responsive/MobileCardList';
 import { Section, StatCard, Field, Stagger, FadeIn } from '@/components/kit';
+import OperationTree from './OperationTree';
 import { MapPin, Users, Route, ClipboardCheck, AlertTriangle, Clock, Building2, Phone } from 'lucide-react';
 
 export default function ClientOverview({ client }: { client: any }) {
@@ -97,6 +98,10 @@ export default function ClientOverview({ client }: { client: any }) {
           )}
         />
       </div>
+      {/* Operación: sitios → estaciones con enlaces directos (mata la
+          navegación de 4-5 saltos que generaba quejas). */}
+      <OperationTree client={client} />
+
       <Section title={t('clients.nav.overview') || 'Resumen'} icon={<MapPin />} className="hidden md:block">
         <div className="mb-6">
           {hasCoords ? (

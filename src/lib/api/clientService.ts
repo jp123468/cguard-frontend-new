@@ -592,6 +592,25 @@ export const clientService = {
     /**
      * Get aggregated overview for a client (postSitesCount, assignedCount, onsiteCount, toursLast7Days, tasksLast7Days, incidentsLast7Days, hoursLoggedSeconds)
      */
+    /** Card-view metadata: signed logo + site/station counts per client id. */
+    async getCardMeta(ids: string[]): Promise<Record<string, { logoUrl: string | null; sites: number; stations: number }>> {
+        if (!ids.length) return {};
+        const tenantId = getTenantId();
+        const { data: resp } = await api.get<any>(
+            `/tenant/${tenantId}/client-account/card-meta?ids=${ids.join(",")}`,
+            { toast: { silentError: true } } as any,
+        );
+        return resp?.data || resp || {};
+    },
+
+    /** Full operation tree (sites with their stations + loose stations). */
+    async getOperation(clientId: string): Promise<{ sites: any[]; looseStations: any[] }> {
+        const tenantId = getTenantId();
+        const { data: resp } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/operation`);
+        const payload = resp?.data || resp || {};
+        return { sites: payload.sites || [], looseStations: payload.looseStations || [] };
+    },
+
     async getClientOverview(clientId: string) {
         const tenantId = getTenantId();
         const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/overview`, { toast: { silentError: true } } as any);

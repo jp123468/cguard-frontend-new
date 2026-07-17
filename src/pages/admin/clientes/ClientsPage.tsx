@@ -51,6 +51,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { clientService } from "@/lib/api/clientService";
+import ClientCardsGrid, { type ClientCardMeta } from "./components/ClientCardsGrid";
+import { LayoutGrid, List as ListIcon } from "lucide-react";
 type Client = any;
 
 type ClientFilters = {
@@ -131,6 +133,28 @@ export default function ClientesPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filters, setFilters] = useState<ClientFilters>({ active: true });
   const [bulkKey, setBulkKey] = useState(0);
+  // Vista Cards ⇄ Lista (persistida). Cards por defecto: es la experiencia
+  // renovada; la lista queda a un clic para power users.
+  const [viewMode, setViewMode] = useState<"cards" | "list">(
+    () => (localStorage.getItem("clients.viewMode") as "cards" | "list") || "cards",
+  );
+  const [cardMeta, setCardMeta] = useState<Record<string, ClientCardMeta>>({});
+
+  useEffect(() => {
+    localStorage.setItem("clients.viewMode", viewMode);
+  }, [viewMode]);
+
+  // Meta de tarjetas (logo firmado + conteos) por lote, solo en vista cards.
+  useEffect(() => {
+    if (viewMode !== "cards" || !clients.length) return;
+    const missing = clients.map((c) => c.id).filter((id) => !(id in cardMeta));
+    if (!missing.length) return;
+    clientService
+      .getCardMeta(missing)
+      .then((m) => setCardMeta((prev) => ({ ...prev, ...m })))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, clients]);
   // Sorting state
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
@@ -817,6 +841,28 @@ export default function ClientesPage() {
                   </SheetContent>
                 </Sheet>
 
+                {/* Toggle vista Cards / Lista */}
+                <div className="hidden md:inline-flex items-center rounded-xl border bg-card p-0.5">
+                  <Button
+                    variant={viewMode === "cards" ? "brand" : "ghost"}
+                    size="sm"
+                    className="h-8 px-2.5"
+                    aria-label="Vista de tarjetas"
+                    onClick={() => setViewMode("cards")}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "list" ? "brand" : "ghost"}
+                    size="sm"
+                    className="h-8 px-2.5"
+                    aria-label="Vista de lista"
+                    onClick={() => setViewMode("list")}
+                  >
+                    <ListIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="border w-12 md:w-auto flex items-center justify-center">
@@ -834,6 +880,15 @@ export default function ClientesPage() {
         </div>
 
         <div className="mt-4 md:block hidden">
+          {viewMode === "cards" ? (
+            <ClientCardsGrid
+              clients={clients}
+              meta={cardMeta}
+              loading={loading}
+              onOpen={(c) => navigate(`/clients/${c.id}/overview`)}
+              rowActions={rowActions}
+            />
+          ) : (
           <DataTable<Client>
             columns={columns}
             data={clients}
@@ -866,8 +921,11 @@ export default function ClientesPage() {
               </div>
             }
           />
+          )}
 
-          <div className="flex items-center justify-between px-4 py-3 text-sm text-foreground/70 bg-muted/30 border-x border-b rounded-b-lg">
+          <div className={viewMode === "cards"
+            ? "mt-4 flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3 text-sm text-foreground/70"
+            : "flex items-center justify-between px-4 py-3 text-sm text-foreground/70 bg-muted/30 border-x border-b rounded-b-lg"}>
             <div className="flex items-center gap-2">
               <span>{t('clients.pagination.itemsPerPage')}</span>
                 <Select
