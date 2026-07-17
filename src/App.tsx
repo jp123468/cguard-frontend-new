@@ -51,7 +51,6 @@ const ActivitiesPage = lazy(() => import("./pages/admin/actividades/ActivitiesPa
 const ClientesPage = lazy(() => import("./pages/admin/clientes/ClientsPage"));
 const NewOrEditClientPage = lazy(() => import("./pages/admin/clientes/NewOrEditClientPage"));
 const ClientsDetails = lazy(() => import("./pages/admin/clientes/ClientsDetails"));
-const PostSitePage = lazy(() => import("./pages/admin/post-sites/PostSitePage"));
 const NewOrEditPostSitePage = lazy(() => import("./pages/admin/post-sites/NewOrEditPostSitePage"));
 const PostSiteDetailsPage = lazy(() => import("./pages/admin/post-sites/PostSiteDetailsPage"));
 const AddStationPage = lazy(() => import("./pages/admin/post-sites/AddStationPage"));
@@ -541,14 +540,10 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/post-sites"
-                element={
-                  <ProtectedRoute>
-                    <PostSitePage />
-                  </ProtectedRoute>
-                }
-              />
+              {/* "Sitios de servicio" listing retired — sites/stations are now
+                  managed from Clientes. Redirect old links there. Detail routes
+                  (/post-sites/:id/...) stay: stations are reached via Clientes. */}
+              <Route path="/post-sites" element={<Navigate to="/clients" replace />} />
               <Route
                 path="/post-sites/new"
                 element={

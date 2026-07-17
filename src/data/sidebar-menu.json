@@ -19,12 +19,6 @@
     "path": "/clients"
   },
   {
-    "id": "sitios-publicacion",
-    "name": "Sitios de Servicio",
-    "icon": "Building2",
-    "path": "/post-sites"
-  },
-  {
     "id": "inventario",
     "name": "Inventario",
     "icon": "Package",
