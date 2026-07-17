@@ -135,7 +135,7 @@ export default function StationHero({
                                 className="flex items-center gap-1 rounded-full border bg-card px-2.5 py-1 hover:border-primary/50 hover:text-primary"
                             >
                                 <Building2 className="h-3 w-3" />
-                                {site.companyName || "Sitio"}
+                                {site.businessName || site.companyName || "Sitio"}
                             </Link>
                         )}
                     </div>
