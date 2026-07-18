@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import clientsNav from '@/data/clients-nav.json';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Calendar, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { postSiteService } from '@/lib/api/postSiteService';
 
@@ -67,16 +67,32 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
         )}
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{displayName}</h1>
-          {client?.active !== undefined && (
-            <span className={`text-xs font-medium ${client.active ? 'text-emerald-600' : 'text-red-500'}`}>
-              {client.active ? t('common.active', 'Activo') : t('common.archived', 'Archivado')}
-            </span>
-          )}
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+            {client?.active !== undefined && (
+              <span className={`inline-flex items-center gap-1 font-medium ${client.active ? 'text-emerald-600' : 'text-red-500'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${client.active ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                {client.active ? t('common.active', 'Activo') : t('common.archived', 'Archivado')}
+              </span>
+            )}
+            {client?.personType && (
+              <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-muted-foreground">
+                {client.personType === 'PJ' ? t('clients.corporate', 'Cliente corporativo') : t('clients.individual', 'Cliente particular')}
+              </span>
+            )}
+            {client?.contractDate && (
+              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                <Calendar className="h-3.5 w-3.5" /> {t('clients.contractStart', 'Inicio de contrato')}: {new Date(client.contractDate).toLocaleDateString()}
+              </span>
+            )}
+          </div>
         </div>
         {client?.id && (
           <div className="flex shrink-0 items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate('/post-sites/new')}>
-              <Plus className="mr-1 h-4 w-4" /> {t('clients.hero.newSite', 'Nuevo sitio')}
+              <Plus className="mr-1 h-4 w-4" /> {t('clients.hero.newSite', 'Nueva sede')}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/dispatch-tickets/new')}>
+              <AlertTriangle className="mr-1 h-4 w-4" /> {t('clients.newIncident', 'Crear incidente')}
             </Button>
             <Button variant="brand" size="sm" onClick={() => navigate(`/clients/edit/${client.id}`)}>
               <Pencil className="mr-1 h-4 w-4" /> {t('common.edit', 'Editar')}

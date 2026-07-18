@@ -651,7 +651,7 @@
       "files": "Archivos",
       "notes": "Notas",
       "overview": "Resumen",
-      "postSites": "Sitios de servicio",
+      "postSites": "Sedes",
       "profile": "Perfil",
       "projects": "Proyectos",
       "title": "Clientes",
@@ -774,7 +774,7 @@
         "guardsAssigned": "Vigilantes asignados",
         "hoursWorked": "Horas trabajadas (últimos 7 días)",
         "incidents": "Informes de Incidentes (últimos 7 días)",
-        "postSites": "Sitios activos",
+        "postSites": "Sedes activas",
         "tasksCompleted": "Tareas completadas (últimos 7 días)",
         "toursCompleted": "Recorridos completados (últimos 7 días)"
       },
@@ -4671,7 +4671,7 @@
         "guardsAssigned": "Vigilantes asignados",
         "hoursWorked": "Horas trabajadas (últimos 7 días)",
         "incidents": "Informes de incidentes",
-        "postSites": "Sitios de servicio",
+        "postSites": "Sedes",
         "tasksCompleted": "Tareas completadas (últimos 7 días)",
         "toursCompleted": "Recorridos completados (últimos 7 días)"
       },
