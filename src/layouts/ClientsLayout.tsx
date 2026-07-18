@@ -2,7 +2,8 @@ import { ReactNode, useEffect, useState } from 'react';
 import clientsNav from '@/data/clients-nav.json';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { postSiteService } from '@/lib/api/postSiteService';
 
 type Props = {
@@ -64,7 +65,7 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
             {nm.charAt(0).toUpperCase()}
           </div>
         )}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{displayName}</h1>
           {client?.active !== undefined && (
             <span className={`text-xs font-medium ${client.active ? 'text-emerald-600' : 'text-red-500'}`}>
@@ -72,6 +73,16 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
             </span>
           )}
         </div>
+        {client?.id && (
+          <div className="flex shrink-0 items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/post-sites/new')}>
+              <Plus className="mr-1 h-4 w-4" /> {t('clients.hero.newSite', 'Nuevo sitio')}
+            </Button>
+            <Button variant="brand" size="sm" onClick={() => navigate(`/clients/edit/${client.id}`)}>
+              <Pencil className="mr-1 h-4 w-4" /> {t('common.edit', 'Editar')}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Horizontal tab strip */}
