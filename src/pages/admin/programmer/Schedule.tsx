@@ -1725,7 +1725,20 @@ export default function Schedule() {
                 tabIndex={0}
                 className="flex-1 min-w-0 overflow-auto outline-none select-none bg-card border border-border/40 rounded-xl shadow-sm"
               >
-                <div style={{ minWidth: gridMinWidth }}>
+                <div className="relative" style={{ minWidth: gridMinWidth }}>
+                  {/* Today guide: a full-height vertical line framing today's
+                      column across every row (under the frozen header/column). */}
+                  {(() => {
+                    const [ty, tm, td] = todayStr.split('-').map(Number);
+                    const idx = dayIndexOf(ty, tm, td);
+                    if (idx < 0 || idx >= monthDays.length) return null;
+                    return (
+                      <div className="absolute inset-y-0 pointer-events-none z-[15]" style={{ left: 240 + idx * 44, width: 44 }}>
+                        <div className="absolute inset-y-0 left-0 w-[2.5px] rounded-full bg-primary/80 shadow-[0_0_6px_rgba(200,134,10,0.45)]" />
+                        <div className="absolute inset-y-0 right-0 w-[2.5px] rounded-full bg-primary/35" />
+                      </div>
+                    );
+                  })()}
                   {/* Header row (frozen) */}
                   <div className="grid sticky top-0 z-30 border-b border-border/30" style={{ gridTemplateColumns: gridCols }}>
                     <div className="px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-r border-border/20 sticky left-0 z-40 bg-card">
