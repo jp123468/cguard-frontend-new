@@ -1865,7 +1865,15 @@ export default function Schedule() {
                                 <div className="flex-1 min-w-0">
                                   <div className="text-xs font-medium text-foreground truncate">{pos.name}</div>
                                   <div className="text-[10px] text-muted-foreground">
-                                    {station.scheduleType === '12h-night' ? '19:00 – 07:00' : station.scheduleType === '24h' ? '24 Horas' : '07:00 – 19:00'}
+                                    {(() => {
+                                      // Real hours come from the POSITION (custom blocks carry
+                                      // their own window; start==end wraps the full day).
+                                      if (station.scheduleType === '24h') return '24 Horas';
+                                      const st5 = (pos.startTime || '').slice(0, 5);
+                                      const en5 = (pos.endTime || '').slice(0, 5);
+                                      if (st5 && en5) return st5 === en5 ? `${st5} → ${en5} · 24h` : `${st5} – ${en5}`;
+                                      return station.scheduleType === '12h-night' ? '19:00 – 07:00' : '07:00 – 19:00';
+                                    })()}
                                   </div>
                                 </div>
                                 {/* Assigned guard names — draggable to MOVE to another puesto */}
