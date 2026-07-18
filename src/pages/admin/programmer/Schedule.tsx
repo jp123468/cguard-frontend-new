@@ -686,6 +686,25 @@ export default function Schedule() {
     const stFijos = assignments.filter(a =>
       a.stationId === station.id && !a.isRelief && positionsById.get(a.positionId)?.type === 'fijo');
     const day = new Date(dateStr + 'T00:00:00');
+
+    // GUARD: the SF only covers FREE days. If the puesto's fijo is working
+    // that day (real shift or active rotation, and no absence novedad freeing
+    // it), refuse — the day must be released first.
+    const ABSENCES = ['V', 'PM', 'F', 'L'];
+    const occupiedBy = assignments
+      .filter(a => a.positionId === pos.id)
+      .find(a => {
+        const ov = getOverride(a.guardId, dateStr);
+        if (ov) return !ABSENCES.includes(ov.type); // absence novedad = day freed
+        const s = shiftByGuardDate.get(`${a.guardId}|${dateStr}`);
+        if (s && s.stationId === station.id) return true;
+        return isWorkDay(a, day) !== 'rest';
+      });
+    if (occupiedBy) {
+      const nm = occupiedBy.guard ? `${occupiedBy.guard.firstName || ''} ${occupiedBy.guard.lastName || ''}`.trim() : 'el fijo';
+      toast.error(`Ese día ${nm} está de turno en este puesto. Primero libera el día (novedad de Libre/Vacaciones/Permiso, o elimina el turno con clic derecho) y luego arrastra el sacafranco.`);
+      return;
+    }
     const covered = new Set<string>();
     for (const a of stFijos) {
       const w = isWorkDay(a, day);
