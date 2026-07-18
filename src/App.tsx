@@ -476,6 +476,17 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+              {['contract', 'coverage', 'staff', 'operations', 'incidents', 'reports', 'documents', 'billing'].map((seg) => (
+                <Route
+                  key={seg}
+                  path={`/clients/:id/${seg}`}
+                  element={
+                    <ProtectedRoute>
+                      <ClientsDetails />
+                    </ProtectedRoute>
+                  }
+                />
+              ))}
               <Route
                 path="/projects"
                 element={

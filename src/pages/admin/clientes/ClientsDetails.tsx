@@ -13,9 +13,10 @@ import ClientPortal from './components/ClientPortal/ClientPortal';
 import ClientUserAccess from './components/ClientUserAccess/ClientUserAccess';
 import ClientEmailReports from './components/ClientEmailReports/ClientEmailReports';
 import ClientProjects from './components/ClientProjects/ClientProjects';
+import ClientTabPlaceholder from './components/ClientTabPlaceholder';
 import { toast } from 'sonner';
 import { SkeletonCards, EmptyState, FadeIn } from '@/components/kit';
-import { Building2 } from 'lucide-react';
+import { Building2, FileText, LayoutGrid, Users, Target, AlertTriangle, BarChart3, File, DollarSign } from 'lucide-react';
 
 export default function ClientsDetails() {
   const { id } = useParams();
@@ -56,15 +57,23 @@ export default function ClientsDetails() {
     const parts = location.pathname.split('/').filter(Boolean);
     const last = parts[parts.length - 1];
     // if last part matches known tabs, set it; otherwise default to overview
-    const allowed = ['overview', 'profile', 'contacts', 'notes', 'files', 'post-sites', 'portal', 'user-access', 'email-reports', 'projects'];
+    const allowed = ['overview', 'profile', 'contacts', 'notes', 'files', 'post-sites', 'portal', 'user-access', 'email-reports', 'projects', 'contract', 'coverage', 'staff', 'operations', 'incidents', 'reports', 'documents', 'billing'];
     if (allowed.includes(last)) {
-      // normalize post-sites -> postSites and user-access -> userAccess
+      // normalize URL segments -> internal tab keys
       const map: any = {
         'post-sites': 'postSites',
         'user-access': 'userAccess',
         'email-reports': 'emailReports',
         'portal': 'clientPortal',
         'projects': 'projects',
+        'contract': 'contrato',
+        'coverage': 'coverage',
+        'staff': 'staff',
+        'operations': 'operations',
+        'incidents': 'incidents',
+        'reports': 'reports',
+        'documents': 'documents',
+        'billing': 'billing',
       };
       setActiveTab(map[last] || last);
     } else {
@@ -128,6 +137,14 @@ export default function ClientsDetails() {
               {activeTab === 'userAccess' && <ClientUserAccess client={client} />}
               {activeTab === 'emailReports' && <ClientEmailReports client={client} />}
               {activeTab === 'projects' && <ClientProjects client={client} />}
+              {activeTab === 'contrato' && <ClientTabPlaceholder title="Contrato y servicios" icon={<FileText />} description="Aquí irá el contrato del cliente y los servicios contratados." />}
+              {activeTab === 'coverage' && <ClientTabPlaceholder title="Puestos y cobertura" icon={<LayoutGrid />} description="Aquí irá el detalle de puestos y su cobertura." />}
+              {activeTab === 'staff' && <ClientTabPlaceholder title="Personal asignado" icon={<Users />} description="Aquí irá el personal asignado a este cliente." />}
+              {activeTab === 'operations' && <ClientTabPlaceholder title="Operaciones" icon={<Target />} description="Aquí irá la operación en vivo del cliente." />}
+              {activeTab === 'incidents' && <ClientTabPlaceholder title="Incidentes" icon={<AlertTriangle />} description="Aquí irán los incidentes del cliente." />}
+              {activeTab === 'reports' && <ClientTabPlaceholder title="Reportes" icon={<BarChart3 />} description="Aquí irán los reportes del cliente." />}
+              {activeTab === 'documents' && <ClientTabPlaceholder title="Documentos" icon={<File />} description="Aquí irán los documentos del cliente." />}
+              {activeTab === 'billing' && <ClientTabPlaceholder title="Facturación" icon={<DollarSign />} description="Aquí irá la facturación del cliente." />}
             </>
           ) : (
             <FadeIn>

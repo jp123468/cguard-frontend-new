@@ -5,7 +5,14 @@ import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import {
   Plus, Pencil, Calendar, AlertTriangle, FileText, UserCog, Clock as ClockIcon,
   Building2, Users, UserRound, Route as RouteIcon, Clock, ShieldCheck, Shield, ChevronRight,
+  Home, MapPin, Contact, LayoutGrid, Target, BarChart3, File, DollarSign, Briefcase,
+  IdCard, StickyNote, Folder, KeyRound, Mail,
 } from 'lucide-react';
+
+const TAB_ICONS: Record<string, any> = {
+  Home, MapPin, Contact, FileText, LayoutGrid, Users, Target, AlertTriangle,
+  BarChart3, File, DollarSign, Building2, Briefcase, IdCard, StickyNote, Folder, KeyRound, Mail,
+};
 import { Button } from '@/components/ui/button';
 import { clientService } from '@/lib/api/clientService';
 
@@ -56,7 +63,7 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
     return () => { mounted = false; };
   }, [client?.id]);
 
-  const hiddenIds = ['profile', 'notes', 'files', 'clientPortal', 'userAccess', 'emailReports'];
+  const hiddenIds = ['profile', 'notes', 'files', 'userAccess', 'emailReports'];
   const resolvePathWithId = (path: string) => (id && path.includes(':id') ? path.replace(':id', id) : path);
   const items: any[] = (cfg?.sections || []).flatMap((s: any) => s.items || []).filter((it: any) => !hiddenIds.includes(it.id));
 
@@ -169,8 +176,10 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
             const path = resolvePathWithId(it.path);
             const active = location.pathname === path;
             const badge = it.id === 'postSites' ? ov?.postSitesCount : undefined;
+            const Icon = it.icon ? TAB_ICONS[it.icon] : null;
             return (
               <Link key={it.id} to={path} className={`relative flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 text-sm font-medium transition-colors ${active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                {Icon && <Icon className="h-4 w-4" />}
                 {t(it.label)}
                 {typeof badge === 'number' && badge > 0 && (
                   <span className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold ${active ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>{badge}</span>
