@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { invalidateEntity } from "@/lib/queryClient";
 import { useNavigate } from "react-router-dom";
 import MobileCardList from '@/components/responsive/MobileCardList';
+import GuardCardsGrid, { type GuardCardAction } from './GuardCardsGrid';
 import { PageHeader, StatCard, Stagger } from '@/components/kit';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import AppLayout from "@/layouts/app-layout";
@@ -61,6 +62,8 @@ import {
   ShieldCheck,
   Clock,
   Users,
+  LayoutGrid,
+  List as ListIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as XLSX from 'xlsx';
@@ -146,6 +149,11 @@ export default function SecurityGuardsPage() {
   usePageTitle('Vigilantes de Seguridad');
   const { hasPermission } = usePermissions();
   const [openFilter, setOpenFilter] = useState(false);
+  // Vista Tarjetas ⇄ Lista (persistida). Tarjetas por defecto, como en Clientes.
+  const [viewMode, setViewMode] = useState<"cards" | "list">(
+    () => (localStorage.getItem("guards.viewMode") as "cards" | "list") || "cards",
+  );
+  useEffect(() => { localStorage.setItem("guards.viewMode", viewMode); }, [viewMode]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGuards, setSelectedGuards] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -518,6 +526,39 @@ export default function SecurityGuardsPage() {
   const pendingCount = useMemo(() => guards.filter(g => g.status === "Pendiente").length, [guards]);
   const archivedCount = useMemo(() => guards.filter(g => g.status === "Archivado").length, [guards]);
 
+  // Acciones del menú de cada tarjeta (mismos handlers que la tabla).
+  const guardCardActions = useCallback((guard: any): GuardCardAction[] => {
+    const realId = guard.raw?.id || guard.id;
+    const acts: GuardCardAction[] = [];
+    if (hasPermission('securityGuardRead')) {
+      acts.push({ label: 'Ver detalles', icon: <Eye className="h-4 w-4" />, onClick: () => navigate(`/guards/${realId}/overview`) });
+    }
+    if (hasPermission('securityGuardEdit') && guard.status !== 'Archivado') {
+      acts.push({ label: 'Asignar a estación', icon: <ShieldCheck className="h-4 w-4" />, onClick: () => { setAssignGuard(guard); setAssignStationId(''); setAssignDialogOpen(true); } });
+      acts.push({
+        label: 'Restablecer contraseña', icon: <KeyRound className="h-4 w-4" />, onClick: async () => {
+          try {
+            const r: any = await securityGuardService.sendPasswordReset(realId);
+            try { if (r?.link) await navigator.clipboard.writeText(r.link); } catch {}
+            const via = [r?.emailed && 'correo', r?.pushed && 'push'].filter(Boolean).join(' + ');
+            toast.success(`Enlace de restablecimiento ${via ? `enviado por ${via} y ` : ''}copiado al portapapeles`);
+          } catch (err: any) { toast.error(err?.message || 'No se pudo restablecer la contraseña'); }
+        },
+      });
+    }
+    if (hasPermission('securityGuardEdit')) {
+      if (guard.status === 'Archivado') {
+        acts.push({ label: 'Restaurar', icon: <RotateCw className="h-4 w-4" />, onClick: () => { setGuardToRestore(guard); setRestoreDialogOpen(true); } });
+      } else {
+        acts.push({ label: 'Archivar', icon: <Archive className="h-4 w-4" />, onClick: () => { setGuardToArchive(guard); setArchiveDialogOpen(true); } });
+      }
+    }
+    if (hasPermission('securityGuardDestroy')) {
+      acts.push({ label: 'Remover', icon: <Trash className="h-4 w-4" />, destructive: true, onClick: () => { setGuardToDelete(guard); setDeleteDialogOpen(true); } });
+    }
+    return acts;
+  }, [hasPermission, navigate]);
+
   return (
     <AppLayout>
       {/* Page Header */}
@@ -781,6 +822,16 @@ export default function SecurityGuardsPage() {
                 </SheetContent>
               </Sheet>
 
+              {/* Toggle vista Tarjetas / Lista (desktop) */}
+              <div className="hidden md:inline-flex items-center rounded-xl border bg-card p-0.5">
+                <Button variant={viewMode === "cards" ? "brand" : "ghost"} size="sm" className="h-8 px-2.5" aria-label="Vista de tarjetas" onClick={() => setViewMode("cards")}>
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button variant={viewMode === "list" ? "brand" : "ghost"} size="sm" className="h-8 px-2.5" aria-label="Vista de lista" onClick={() => setViewMode("list")}>
+                  <ListIcon className="h-4 w-4" />
+                </Button>
+              </div>
+
               {/* Menú superior (exportar/importar) */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -809,6 +860,17 @@ export default function SecurityGuardsPage() {
           <div className="mt-4 border rounded-lg overflow-hidden">
             <div className="mt-2">
               <div className="md:block hidden">
+                {viewMode === "cards" ? (
+                  <GuardCardsGrid
+                    guards={paginatedGuards}
+                    stationByUserId={stationByUserId}
+                    loading={false}
+                    selectedIds={selectedGuards}
+                    onSelect={handleSelectGuard}
+                    onOpen={(g) => { const realId = g.raw?.id || g.id; navigate(`/guards/${realId}/overview`); }}
+                    actions={guardCardActions}
+                  />
+                ) : (
                 <table className="min-w-full text-sm text-left border-collapse">
               <thead className="bg-muted/30">
                 <tr className="border-b">
@@ -1138,6 +1200,7 @@ export default function SecurityGuardsPage() {
                 )}
               </tbody>
                 </table>
+                )}
               </div>
 
               <div className="md:hidden">
