@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Clock, Loader2, MapPin, Trash2, User, X } from 'lucide-react';
+import { Clock, Loader2, MapPin, Pencil, Trash2, User, X } from 'lucide-react';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
 import { confirmDialog } from '@/components/ui/confirmDialog';
+import ContextMenu, { CtxMenuState } from './ContextMenu';
 
 /**
- * Semana/Día timeline for Programador › Horario, Google-Calendar style: DAYS
- * are COLUMNS across the top, HOURS run vertically down the left gutter
- * (tenant wall-clock). Drag on the canvas to DRAW a work block — you can drag
- * DIAGONALLY into the next day's column (07:00 → 07:00 next day = a 24h
- * turno); overnight blocks render split at midnight like any calendar. The
- * modal picks the estación + vigilante and creates a real ad-hoc `shift`
- * (same backend as the station "Turno único"), so it coexists with the
- * rotation engine and shows everywhere.
+ * Semana/Día timeline for Programador › Horario, Google-Calendar style with a
+ * PUESTO sub-axis: DAYS are the top-level COLUMNS and inside each day there is
+ * one SUB-COLUMN per estación (the "subclasificación"). HOURS run vertically
+ * down the frozen left gutter (tenant wall-clock). Drag on a sub-column to
+ * DRAW a work block for THAT estación — you can drag diagonally into the next
+ * day (07:00 → 07:00 = 24h turno); overnight blocks split at midnight.
+ * Right-click a block for Editar / Duplicar / Eliminar. Blocks are real
+ * ad-hoc `shift` rows (same backend as the station "Turno único").
  */
 
 // ─── Types (structural copies of Schedule.tsx shapes) ───────────────────────
@@ -108,14 +109,26 @@ const wallStrToDate = (s: string, tz?: string): Date | null => {
   return wallToDate(+m[1], +m[2], +m[3], +m[4] * 60 + +m[5], tz);
 };
 
+const shiftWallStr = (iso: string, tz?: string): string => {
+  const w = dateToWall(new Date(iso), tz);
+  return `${w.dateStr}T${pad2(Math.floor(w.minutes / 60))}:${pad2(w.minutes % 60)}`;
+};
+
+const addDaysToWallStr = (s: string, n: number): string => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(.+)$/.exec(s);
+  if (!m) return s;
+  const d = new Date(+m[1], +m[2] - 1, +m[3] + n);
+  return `${fmtDate(d)}T${m[4]}`;
+};
+
 const minLabel = (abs: number) => `${pad2(Math.floor((((abs % 1440) + 1440) % 1440) / 60))}:${pad2(abs % 60)}`;
 
-// A shift (or the draw preview) split into per-day-column segments.
+// A shift (or the draw preview) split into per-day segments.
 interface Segment {
   dayIdx: number;
   top: number;    // minutes into that day
   bottom: number; // minutes into that day
-  first: boolean; // first segment of the block (rounded top, carries the label)
+  first: boolean;
   last: boolean;
 }
 
@@ -146,41 +159,61 @@ export default function ScheduleTimeline({
   const totalMin = dayCount * 1440;
   const bodyH = 24 * hourH;
   const GUTTER_W = 56;
-  const COL_W = view === 'day' ? 300 : 168;
-  const canvasW = dayCount * COL_W;
+  const stationCount = Math.max(1, stations.length);
+  // Sub-column per estación inside each day (the puesto sub-axis).
+  const SUBCOL_W = view === 'day' ? 170 : 120;
+  const dayW = stationCount * SUBCOL_W;
+  const canvasW = dayCount * dayW;
+  const HEADER_H = 46;
   const firstDayStr = fmtDate(days[0]);
+
+  const stationIndexById = useMemo(() => {
+    const m = new Map<string, number>();
+    stations.forEach((s, i) => m.set(s.id, i));
+    return m;
+  }, [stations]);
+
+  const stationById = useMemo(() => {
+    const m = new Map<string, Station>();
+    for (const s of stations) m.set(s.id, s);
+    return m;
+  }, [stations]);
 
   const absOfWall = useCallback((w: { dateStr: string; minutes: number }): number => {
     const dd = (Date.parse(w.dateStr + 'T00:00:00Z') - Date.parse(firstDayStr + 'T00:00:00Z')) / DAY_MS;
     return dd * 1440 + w.minutes;
   }, [firstDayStr]);
 
-  // Shift segments per day column + greedy lane packing within each column.
-  const columns = useMemo(() => {
-    const cols: { seg: Segment; shift: ShiftRecord; lane: number }[][] = Array.from({ length: dayCount }, () => []);
+  // Shift segments per (day, station) cell-column + greedy lane packing inside each.
+  const cells = useMemo(() => {
+    const m = new Map<string, { items: { seg: Segment; shift: ShiftRecord; lane: number }[]; lanes: number }>();
     for (const s of shifts) {
       if (!s.startTime || !s.endTime) continue;
+      const si = stationIndexById.get(s.stationId);
+      if (si == null) continue;
       const a = absOfWall(dateToWall(new Date(s.startTime), tz));
       const b = absOfWall(dateToWall(new Date(s.endTime), tz));
       for (const seg of segmentize(a, b, dayCount)) {
-        cols[seg.dayIdx].push({ seg, shift: s, lane: 0 });
+        const key = `${seg.dayIdx}:${si}`;
+        if (!m.has(key)) m.set(key, { items: [], lanes: 1 });
+        m.get(key)!.items.push({ seg, shift: s, lane: 0 });
       }
     }
-    const laneCounts = cols.map(col => {
-      col.sort((x, y) => x.seg.top - y.seg.top || x.seg.bottom - y.seg.bottom);
+    for (const cell of m.values()) {
+      cell.items.sort((x, y) => x.seg.top - y.seg.top || x.seg.bottom - y.seg.bottom);
       const laneEnds: number[] = [];
-      for (const item of col) {
+      for (const item of cell.items) {
         let lane = laneEnds.findIndex(end => end <= item.seg.top);
         if (lane === -1) { lane = laneEnds.length; laneEnds.push(0); }
         laneEnds[lane] = item.seg.bottom;
         item.lane = lane;
       }
-      return Math.max(1, laneEnds.length);
-    });
-    return { cols, laneCounts };
-  }, [shifts, absOfWall, tz, dayCount]);
+      cell.lanes = Math.max(1, laneEnds.length);
+    }
+    return m;
+  }, [shifts, stationIndexById, absOfWall, tz, dayCount]);
 
-  // "Now" marker (only inside today's column).
+  // "Now" marker (only inside today's day band).
   const now = useMemo(() => {
     const w = dateToWall(new Date(), tz);
     const di = days.findIndex(d => fmtDate(d) === w.dateStr);
@@ -188,29 +221,30 @@ export default function ScheduleTimeline({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days, tz, shifts]); // shifts changes ~= a refresh tick
 
-  // ─── Drag-to-draw (diagonal across day columns allowed) ──────────────────
+  // ─── Drag-to-draw (station comes from the anchor's sub-column) ──────────
 
-  const [draft, setDraft] = useState<{ anchor: number; head: number } | null>(null);
+  const [draft, setDraft] = useState<{ stationId: string; anchor: number; head: number } | null>(null);
   const draftRectRef = useRef<DOMRect | null>(null);
-  // Render-time mirror so mouseup can read the final draft OUTSIDE a state
-  // updater (side effects inside updaters double-fire under StrictMode).
   const draftStateRef = useRef(draft);
   draftStateRef.current = draft;
 
-  // clientX/Y inside the canvas → absolute minutes from range start.
-  const pointToAbs = useCallback((clientX: number, clientY: number, rect: DOMRect): number => {
-    const di = Math.max(0, Math.min(dayCount - 1, Math.floor((clientX - rect.left) / COL_W)));
+  const pointTo = useCallback((clientX: number, clientY: number, rect: DOMRect): { abs: number; stationIdx: number } => {
+    const xIn = Math.max(0, Math.min(canvasW - 1, clientX - rect.left));
+    const di = Math.max(0, Math.min(dayCount - 1, Math.floor(xIn / dayW)));
+    const si = Math.max(0, Math.min(stationCount - 1, Math.floor((xIn - di * dayW) / SUBCOL_W)));
     const rawMin = (clientY - rect.top) / pxPerMin;
     const min = Math.max(0, Math.min(1440, Math.round(rawMin / snapStep) * snapStep));
-    return di * 1440 + min;
-  }, [dayCount, COL_W, pxPerMin, snapStep]);
+    return { abs: di * 1440 + min, stationIdx: si };
+  }, [canvasW, dayCount, dayW, stationCount, SUBCOL_W, pxPerMin, snapStep]);
 
   const beginDraw = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     draftRectRef.current = rect;
-    const abs = pointToAbs(e.clientX, e.clientY, rect);
-    setDraft({ anchor: abs, head: abs });
+    const { abs, stationIdx } = pointTo(e.clientX, e.clientY, rect);
+    const st = stations[stationIdx];
+    if (!st) return;
+    setDraft({ stationId: st.id, anchor: abs, head: abs });
   };
 
   useEffect(() => {
@@ -220,7 +254,7 @@ export default function ScheduleTimeline({
       if (!rect) return;
       setDraft(prev => {
         if (!prev) return prev;
-        let head = pointToAbs(e.clientX, e.clientY, rect);
+        let head = pointTo(e.clientX, e.clientY, rect).abs;
         // A shift can't exceed 24h (backend rule) — clamp the draw live.
         head = Math.max(prev.anchor - 1440, Math.min(prev.anchor + 1440, head));
         return { ...prev, head };
@@ -232,7 +266,7 @@ export default function ScheduleTimeline({
       if (prev) {
         const a = Math.min(prev.anchor, prev.head);
         const b = Math.max(prev.anchor, prev.head);
-        if (b - a >= 30) openBlockModal(a, b, '', '');
+        if (b - a >= 30) openBlockModal(a, b, '', prev.stationId);
       }
     };
     window.addEventListener('mousemove', onMove);
@@ -242,13 +276,12 @@ export default function ScheduleTimeline({
       window.removeEventListener('mouseup', onUp);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft !== null, pointToAbs]);
+  }, [draft !== null, pointTo]);
 
-  // ─── Create-block modal ──────────────────────────────────────────────────
+  // ─── Create / edit block modal ───────────────────────────────────────────
 
-  const [blockModal, setBlockModal] = useState<{ stationId: string; startStr: string; endStr: string; guardId: string } | null>(null);
+  const [blockModal, setBlockModal] = useState<{ stationId: string; startStr: string; endStr: string; guardId: string; editingId?: string } | null>(null);
   const [blockSaving, setBlockSaving] = useState(false);
-  const lastStationRef = useRef(''); // remember the last used estación between draws
 
   const absToWallStr = useCallback((abs: number): string => {
     const dayDate = addDays(days[0], Math.floor(abs / 1440));
@@ -258,10 +291,30 @@ export default function ScheduleTimeline({
 
   const openBlockModal = (aAbs: number, bAbs: number, guardId: string, stationId: string) => {
     setBlockModal({
-      stationId: stationId || lastStationRef.current || (stations.length === 1 ? stations[0].id : ''),
+      stationId: stationId || (stations.length === 1 ? stations[0].id : ''),
       startStr: absToWallStr(aAbs),
       endStr: absToWallStr(bAbs),
       guardId,
+    });
+  };
+
+  const openEditModal = (s: ShiftRecord) => {
+    setBlockModal({
+      stationId: s.stationId,
+      startStr: shiftWallStr(s.startTime, tz),
+      endStr: shiftWallStr(s.endTime, tz),
+      guardId: s.guardId,
+      editingId: s.id,
+    });
+  };
+
+  const openDuplicateModal = (s: ShiftRecord) => {
+    // Same station/guard/hours, next day — adjust anything in the modal.
+    setBlockModal({
+      stationId: s.stationId,
+      startStr: addDaysToWallStr(shiftWallStr(s.startTime, tz), 1),
+      endStr: addDaysToWallStr(shiftWallStr(s.endTime, tz), 1),
+      guardId: s.guardId,
     });
   };
 
@@ -274,46 +327,58 @@ export default function ScheduleTimeline({
     if (!start || !end) { toast.error('Fechas inválidas'); return; }
     if (end <= start) { toast.error('El fin debe ser posterior al inicio'); return; }
     if (end.getTime() - start.getTime() > 24 * 3600000) { toast.error('Un turno no puede durar más de 24 horas'); return; }
-    const station = stations.find(s => s.id === blockModal.stationId);
+    const station = stationById.get(blockModal.stationId);
     setBlockSaving(true);
     try {
-      // Same semantics as the station "Turno único": clear this guard's
-      // overlapping shifts first so the drawn block replaces, not duplicates.
-      const overlapping = shifts.filter(s =>
-        s.guardId === blockModal.guardId &&
-        new Date(s.startTime) < end && new Date(s.endTime) > start,
-      );
-      if (overlapping.length) {
-        await ApiService.delete(`/tenant/${tenantId}/shift?ids=${overlapping.map(s => s.id).join(',')}`).catch(() => {});
+      if (blockModal.editingId) {
+        await ApiService.put(`/tenant/${tenantId}/shift/${blockModal.editingId}`, {
+          data: {
+            startTime: start.toISOString(),
+            endTime: end.toISOString(),
+            station: blockModal.stationId,
+            guard: blockModal.guardId,
+            postSiteId: station?.postSiteId,
+          },
+        });
+        toast.success('Turno actualizado');
+      } else {
+        // Same semantics as the station "Turno único": clear this guard's
+        // overlapping shifts first so the drawn block replaces, not duplicates.
+        const overlapping = shifts.filter(s =>
+          s.guardId === blockModal.guardId &&
+          new Date(s.startTime) < end && new Date(s.endTime) > start,
+        );
+        if (overlapping.length) {
+          await ApiService.delete(`/tenant/${tenantId}/shift?ids=${overlapping.map(s => s.id).join(',')}`).catch(() => {});
+        }
+        await ApiService.post(`/tenant/${tenantId}/shift`, {
+          data: {
+            startTime: start.toISOString(),
+            endTime: end.toISOString(),
+            station: blockModal.stationId,
+            guard: blockModal.guardId,
+            postSiteId: station?.postSiteId,
+          },
+        });
+        toast.success(overlapping.length ? 'Turno creado (reemplazó turnos solapados)' : 'Turno creado');
       }
-      await ApiService.post(`/tenant/${tenantId}/shift`, {
-        data: {
-          startTime: start.toISOString(),
-          endTime: end.toISOString(),
-          station: blockModal.stationId,
-          guard: blockModal.guardId,
-          postSiteId: station?.postSiteId,
-        },
-      });
-      lastStationRef.current = blockModal.stationId;
-      toast.success(overlapping.length ? 'Turno creado (reemplazó turnos solapados)' : 'Turno creado');
       setBlockModal(null);
       onChanged();
     } catch (e: any) {
-      toast.error(e?.data?.message || e?.message || 'Error al crear turno');
+      toast.error(e?.data?.message || e?.message || 'Error al guardar el turno');
     } finally {
       setBlockSaving(false);
     }
   };
 
-  // ─── Block detail / delete ───────────────────────────────────────────────
+  // ─── Block detail / delete / context menu ────────────────────────────────
 
   const [detail, setDetail] = useState<ShiftRecord | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null);
 
-  const deleteShift = async () => {
-    if (!detail) return;
-    const isEngine = !!detail.positionId;
+  const deleteShift = async (target: ShiftRecord) => {
+    const isEngine = !!target.positionId;
     const ok = await confirmDialog({
       title: 'Eliminar turno',
       message: isEngine
@@ -325,7 +390,7 @@ export default function ScheduleTimeline({
     if (!ok) return;
     setDeleting(true);
     try {
-      await ApiService.delete(`/tenant/${tenantId}/shift/${detail.id}`);
+      await ApiService.delete(`/tenant/${tenantId}/shift/${target.id}`);
       toast.success('Turno eliminado');
       setDetail(null);
       onChanged();
@@ -336,29 +401,39 @@ export default function ScheduleTimeline({
     }
   };
 
-  // Drop a guard chip (dragged from the side panel) onto the canvas → prefilled block.
+  const openBlockCtx = (e: React.MouseEvent, s: ShiftRecord) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCtxMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        { label: 'Editar turno…', onClick: () => openEditModal(s) },
+        { label: 'Duplicar (día siguiente)…', onClick: () => openDuplicateModal(s) },
+        { label: 'Ver detalle', onClick: () => setDetail(s) },
+        { label: '—' },
+        { label: 'Eliminar turno', danger: true, onClick: () => void deleteShift(s) },
+      ],
+    });
+  };
+
+  // Drop a guard chip (from the side panel) onto a sub-column → prefilled block.
   const onCanvasDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const guardId = e.dataTransfer.getData('guardId');
     if (!guardId) return;
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const start = pointToAbs(e.clientX, e.clientY, rect);
-    openBlockModal(start, Math.min(totalMin, start + 12 * 60), guardId, '');
+    const { abs, stationIdx } = pointTo(e.clientX, e.clientY, rect);
+    openBlockModal(abs, Math.min(totalMin, abs + 12 * 60), guardId, stations[stationIdx]?.id || '');
   };
 
   // ─── Render helpers ──────────────────────────────────────────────────────
-
-  const stationById = useMemo(() => {
-    const m = new Map<string, Station>();
-    for (const s of stations) m.set(s.id, s);
-    return m;
-  }, [stations]);
 
   const guardLabelOf = (s: ShiftRecord) =>
     s.guard ? `${s.guard.firstName || ''} ${s.guard.lastName || ''}`.trim() : (guardsPool.find(g => g.id === s.guardId)?.label || '?');
 
   const dayTint = (day: Date): string | null => {
-    if (fmtDate(day) === todayStr) return 'rgba(200,134,10,0.08)';
+    if (fmtDate(day) === todayStr) return 'rgba(200,134,10,0.07)';
     if (day.getDay() === 0) return 'rgba(239,68,68,0.04)';
     return null;
   };
@@ -370,36 +445,46 @@ export default function ScheduleTimeline({
     return b > a ? segmentize(a, b, dayCount) : [];
   }, [draft, dayCount]);
 
+  const draftStationIdx = draft ? (stationIndexById.get(draft.stationId) ?? 0) : 0;
+
   const inputCls = 'w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20';
 
   return (
     <>
       <div className="flex-1 min-w-0 overflow-auto select-none bg-card border border-border/40 rounded-xl shadow-sm">
         <div style={{ minWidth: GUTTER_W + canvasW }}>
-          {/* ─── Frozen header: day columns ─── */}
+          {/* ─── Frozen header: days row + estación sub-columns row ─── */}
           <div className="sticky top-0 z-30 border-b border-border/30 bg-card">
-            <div className="flex" style={{ height: 40 }}>
+            <div className="flex" style={{ height: HEADER_H }}>
               <div className="sticky left-0 z-40 shrink-0 bg-card border-r border-border/20 flex items-center justify-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide" style={{ width: GUTTER_W }}>
                 Hora
               </div>
-              {days.map((day, di) => {
-                const isToday = fmtDate(day) === todayStr;
-                return (
-                  <div key={di} className={`shrink-0 border-r border-border/20 px-3 py-1.5 overflow-hidden ${isToday ? 'border-b-[3px] border-b-primary bg-primary/5' : ''}`} style={{ width: COL_W }}>
-                    <div className={`text-xs font-semibold truncate ${isToday ? 'text-primary' : 'text-foreground'}`}>
-                      {DAYS_ES[day.getDay()]} {day.getDate()}
-                      {view === 'day' && di === 1 && <span className="ml-1 text-[9px] font-normal text-muted-foreground">(siguiente)</span>}
+              <div className="relative" style={{ width: canvasW }}>
+                {days.map((day, di) => {
+                  const isToday = fmtDate(day) === todayStr;
+                  return (
+                    <div key={di} className={`absolute top-0 bottom-0 border-r border-border/30 ${isToday ? 'bg-primary/5' : ''}`} style={{ left: di * dayW, width: dayW }}>
+                      <div className={`px-2 pt-0.5 text-[11px] font-semibold truncate ${isToday ? 'text-primary' : 'text-foreground'}`}>
+                        {DAYS_ES[day.getDay()]} {day.getDate()} <span className="font-normal text-muted-foreground">{day.toLocaleDateString('es', { month: 'short' })}</span>
+                        {view === 'day' && di === 1 && <span className="ml-1 text-[9px] font-normal text-muted-foreground">(siguiente)</span>}
+                      </div>
+                      {/* Estación sub-columns */}
+                      <div className="absolute left-0 right-0 bottom-0 flex" style={{ height: 22 }}>
+                        {stations.map(st => (
+                          <div key={st.id} className="shrink-0 border-r border-border/15 last:border-r-0 px-1.5 flex items-center overflow-hidden" style={{ width: SUBCOL_W }} title={st.stationName}>
+                            <span className="text-[9px] font-medium text-muted-foreground truncate">{st.stationName}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {isToday && <div className="absolute left-0 right-0 bottom-0 h-[2px] bg-primary" />}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {day.toLocaleDateString('es', { month: 'short' })}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {/* ─── Body: hour gutter (frozen left) + day-columns canvas ─── */}
+          {/* ─── Body: hour gutter (frozen left) + canvas ─── */}
           <div className="flex">
             {/* Hour axis */}
             <div className="sticky left-0 z-20 shrink-0 bg-card border-r border-border/20 relative" style={{ width: GUTTER_W, height: bodyH }}>
@@ -417,7 +502,7 @@ export default function ScheduleTimeline({
               )}
             </div>
 
-            {/* Canvas: one drawing surface spanning all day columns */}
+            {/* Canvas */}
             <div
               className="relative cursor-crosshair"
               style={{
@@ -429,45 +514,47 @@ export default function ScheduleTimeline({
               onDragOver={e => e.preventDefault()}
               onDrop={onCanvasDrop}
             >
-              {/* Day column tints + separators. Today gets a tall vertical
-                  accent bar on each side of its column so it pops at a glance. */}
+              {/* Day bands (tint + today bars) and estación sub-column separators */}
               {days.map((day, di) => {
                 const tint = dayTint(day);
                 const isToday = fmtDate(day) === todayStr;
                 return (
                   <div key={di} className="pointer-events-none">
                     <div
-                      className="absolute top-0 bottom-0 border-r border-border/30"
-                      style={{ left: di * COL_W, width: COL_W, backgroundColor: tint || undefined }}
+                      className="absolute top-0 bottom-0 border-r border-border/40"
+                      style={{ left: di * dayW, width: dayW, backgroundColor: tint || undefined }}
                     />
+                    {stations.slice(0, -1).map((st, si) => (
+                      <div key={st.id} className="absolute top-0 bottom-0 border-r border-border/15" style={{ left: di * dayW + (si + 1) * SUBCOL_W, width: 0 }} />
+                    ))}
                     {isToday && (
                       <>
-                        <div className="absolute top-0 bottom-0 w-[3px] bg-primary/70 rounded-full" style={{ left: di * COL_W }} />
-                        <div className="absolute top-0 bottom-0 w-[3px] bg-primary/70 rounded-full" style={{ left: (di + 1) * COL_W - 3 }} />
+                        <div className="absolute top-0 bottom-0 w-[3px] bg-primary/70 rounded-full" style={{ left: di * dayW }} />
+                        <div className="absolute top-0 bottom-0 w-[3px] bg-primary/70 rounded-full" style={{ left: (di + 1) * dayW - 3 }} />
                       </>
                     )}
                   </div>
                 );
               })}
 
-              {/* Now line (today's column only) */}
+              {/* Now line (today's band only) */}
               {now && (
                 <div
                   className="absolute h-[2px] bg-primary/80 pointer-events-none z-10"
-                  style={{ top: now.minutes * pxPerMin, left: now.dayIdx * COL_W, width: COL_W }}
+                  style={{ top: now.minutes * pxPerMin, left: now.dayIdx * dayW, width: dayW }}
                 />
               )}
 
-              {/* Shift block segments */}
-              {columns.cols.map((col, di) => {
-                const lanes = columns.laneCounts[di];
-                const laneW = (COL_W - 8) / lanes;
-                return col.map(({ seg, shift: s, lane }) => {
+              {/* Shift block segments, per (day, estación) cell-column */}
+              {Array.from(cells.entries()).map(([key, cell]) => {
+                const [diStr, siStr] = key.split(':');
+                const di = Number(diStr), si = Number(siStr);
+                const laneW = (SUBCOL_W - 8) / cell.lanes;
+                return cell.items.map(({ seg, shift: s, lane }) => {
                   const color = guardColorMap[s.guardId] || '#888';
                   const isEngine = !!s.positionId;
                   const h = (seg.bottom - seg.top) * pxPerMin;
                   const name = guardLabelOf(s);
-                  const stName = stationById.get(s.stationId)?.stationName || '';
                   const startW = dateToWall(new Date(s.startTime), tz);
                   const endW = dateToWall(new Date(s.endTime), tz);
                   const timeLbl = `${minLabel(startW.minutes)}–${minLabel(endW.minutes)}`;
@@ -478,25 +565,23 @@ export default function ScheduleTimeline({
                       style={{
                         top: seg.top * pxPerMin,
                         height: Math.max(8, h - 1),
-                        left: di * COL_W + 4 + lane * laneW,
+                        left: di * dayW + si * SUBCOL_W + 4 + lane * laneW,
                         width: laneW - 2,
                         backgroundColor: `${color}${isEngine ? '14' : '26'}`,
                         borderColor: `${color}66`,
                         ...(seg.first ? { borderTop: `3px solid ${color}` } : {}),
                       }}
-                      title={`${name} · ${stName} · ${timeLbl}${isEngine ? ' · generado por rotación' : ' · turno manual'}`}
+                      title={`${name} · ${timeLbl}${isEngine ? ' · generado por rotación' : ' · turno manual'} — clic: detalle · clic derecho: opciones`}
                       onMouseDown={e => e.stopPropagation()}
                       onClick={() => setDetail(s)}
+                      onContextMenu={e => openBlockCtx(e, s)}
                     >
                       {seg.first && h > 20 && (
                         <span className="block text-[9px] font-semibold truncate" style={{ color }}>
                           {name.split(' ')[0]}
                         </span>
                       )}
-                      {seg.first && h > 36 && (
-                        <span className="block text-[8px] text-muted-foreground truncate">{stName}</span>
-                      )}
-                      {seg.first && h > 52 && (
+                      {seg.first && h > 38 && (
                         <span className="block text-[8px] text-muted-foreground truncate">{timeLbl}</span>
                       )}
                     </div>
@@ -504,7 +589,7 @@ export default function ScheduleTimeline({
                 });
               })}
 
-              {/* Draw preview (segments, may span midnight into the next column) */}
+              {/* Draw preview (in the anchor's estación sub-column) */}
               {draftSegs.map(seg => (
                 <div
                   key={`draft-${seg.dayIdx}`}
@@ -512,8 +597,8 @@ export default function ScheduleTimeline({
                   style={{
                     top: seg.top * pxPerMin,
                     height: (seg.bottom - seg.top) * pxPerMin,
-                    left: seg.dayIdx * COL_W + 3,
-                    width: COL_W - 6,
+                    left: seg.dayIdx * dayW + draftStationIdx * SUBCOL_W + 3,
+                    width: SUBCOL_W - 6,
                   }}
                 >
                   {seg.first && draft && (
@@ -528,16 +613,19 @@ export default function ScheduleTimeline({
         </div>
       </div>
 
-      {/* ─── Create-block modal ─── */}
+      {ctxMenu && <ContextMenu menu={ctxMenu} onClose={() => setCtxMenu(null)} />}
+
+      {/* ─── Create / edit block modal ─── */}
       {blockModal && (() => {
         const start = wallStrToDate(blockModal.startStr, tz);
         const end = wallStrToDate(blockModal.endStr, tz);
         const hours = start && end && end > start ? (end.getTime() - start.getTime()) / 3600000 : 0;
+        const editing = !!blockModal.editingId;
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setBlockModal(null)}>
             <div className="bg-card border border-border/30 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
               <div className="px-5 py-4 border-b border-border/20 flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-foreground">Nuevo bloque de trabajo</h4>
+                <h4 className="text-sm font-semibold text-foreground">{editing ? 'Editar turno' : 'Nuevo bloque de trabajo'}</h4>
                 <button onClick={() => setBlockModal(null)} className="p-1.5 rounded-lg hover:bg-muted/30 text-muted-foreground"><X size={15} /></button>
               </div>
               <div className="p-5 space-y-4">
@@ -589,9 +677,11 @@ export default function ScheduleTimeline({
                     <option value="">Seleccionar vigilante...</option>
                     {guardsPool.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
                   </select>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Si el vigilante tiene turnos que se solapan con este bloque, se reemplazan.
-                  </p>
+                  {!editing && (
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Si el vigilante tiene turnos que se solapan con este bloque, se reemplazan.
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="px-5 py-3 border-t border-border/20 flex items-center justify-end gap-2">
@@ -601,7 +691,7 @@ export default function ScheduleTimeline({
                   disabled={blockSaving || !blockModal.guardId || !blockModal.stationId || hours <= 0 || hours > 24}
                   className="px-5 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 transition-all shadow-sm"
                 >
-                  {blockSaving ? <Loader2 size={14} className="animate-spin" /> : 'Crear turno'}
+                  {blockSaving ? <Loader2 size={14} className="animate-spin" /> : (editing ? 'Guardar cambios' : 'Crear turno')}
                 </button>
               </div>
             </div>
@@ -642,15 +732,23 @@ export default function ScheduleTimeline({
                   {isEngine ? 'Generado por la rotación de la estación (puede regenerarse si lo eliminas).' : 'Turno manual (bloque dibujado o turno único).'}
                 </div>
               </div>
-              <div className="px-5 py-3 border-t border-border/20 flex items-center justify-between">
+              <div className="px-5 py-3 border-t border-border/20 flex items-center justify-between gap-2">
                 <button
-                  onClick={deleteShift}
+                  onClick={() => void deleteShift(detail)}
                   disabled={deleting}
                   className="px-3 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-500/10 disabled:opacity-50 transition-all flex items-center gap-1.5"
                 >
-                  {deleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} Eliminar turno
+                  {deleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} Eliminar
                 </button>
-                <button onClick={() => setDetail(null)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-all">Cerrar</button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setDetail(null); openEditModal(detail); }}
+                    className="px-3 py-2 rounded-xl text-xs font-semibold text-primary hover:bg-primary/10 transition-all flex items-center gap-1.5"
+                  >
+                    <Pencil size={13} /> Editar
+                  </button>
+                  <button onClick={() => setDetail(null)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-all">Cerrar</button>
+                </div>
               </div>
             </div>
           </div>

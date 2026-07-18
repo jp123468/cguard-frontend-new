@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { confirmDialog } from "@/components/ui/confirmDialog";
 import ScheduleTimeline, { dateToWall, wallToDate } from "./ScheduleTimeline";
 import RotationStyleSelect from "@/components/schedule/RotationStyleSelect";
+import ContextMenu, { CtxItem, CtxMenuState } from "./ContextMenu";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -140,8 +141,6 @@ const tzToday = (): string => {
   return localToday();
 };
 
-const monthKeyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-
 const addDays = (d: Date, n: number): Date => {
   const r = new Date(d);
   r.setDate(r.getDate() + n);
@@ -218,6 +217,11 @@ export default function Schedule() {
   const [view, setView] = useState<ViewMode>(savedView.v === 'week' || savedView.v === 'day' ? savedView.v : 'month');
   const [panelOpen, setPanelOpen] = useState<boolean>(savedView.panel ?? true);
   const [sfSectionOpen, setSfSectionOpen] = useState<boolean>(savedView.sf ?? false);
+  // Month label in the toolbar follows the SCROLL position of the year canvas.
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    const [y, mo] = tzToday().split('-').map(Number);
+    return new Date(y, mo - 1, 1);
+  });
 
   // Assignment form
   const [showAssignForm, setShowAssignForm] = useState(false);
@@ -258,16 +262,19 @@ export default function Schedule() {
 
   // ─── Data Loading ─────────────────────────────────────────────────────────
 
+  // The Mes sheet is a CONTINUOUS canvas of the WHOLE current year: frozen
+  // date header on top + frozen station column on the left, free horizontal
+  // scroll through every day — "sin límite", capped at the current year.
+  const todayYear = useMemo(() => Number(tzToday().slice(0, 4)), []);
   const monthDays = useMemo(() => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
     const days: Date[] = [];
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i));
+    const d = new Date(todayYear, 0, 1);
+    while (d.getFullYear() === todayYear) {
+      days.push(new Date(d));
+      d.setDate(d.getDate() + 1);
     }
     return days;
-  }, [currentDate]);
+  }, [todayYear]);
 
   // Visible days for the Semana/Día timeline. Día shows 48h (the chosen day +
   // the next) so a block can be DRAWN across midnight — e.g. 07:00 → 07:00.
@@ -277,10 +284,10 @@ export default function Schedule() {
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
   }, [view, currentDate]);
 
-  // Fetch range follows the view (±1 day padding on the timeline so overnight
-  // shift tails/heads at the range edges are included).
-  const startDateStr = view === 'month' ? fmtDate(monthDays[0]) : fmtDate(addDays(timelineDays[0], -1));
-  const endDateStr = view === 'month' ? fmtDate(monthDays[monthDays.length - 1]) : fmtDate(addDays(timelineDays[timelineDays.length - 1], 1));
+  // Fetch range follows the view: the year canvas loads the whole current
+  // year; the timeline pads ±1 day so overnight shift tails are included.
+  const startDateStr = view === 'month' ? `${todayYear}-01-01` : fmtDate(addDays(timelineDays[0], -1));
+  const endDateStr = view === 'month' ? `${todayYear}-12-31` : fmtDate(addDays(timelineDays[timelineDays.length - 1], 1));
 
   const fetchAll = useCallback(async (opts?: { silent?: boolean }) => {
     // After the first load every refetch is SILENT: the grid stays mounted so
@@ -364,15 +371,16 @@ export default function Schedule() {
     return s;
   }, [assignments, positionsById]);
 
-  // `${guardId}|${dateStr}` (tenant tz) → that SF guard's real shift that day.
-  const sfShiftByGuardDate = useMemo(() => {
+  // `${guardId}|${dateStr}` (tenant tz) → that guard's real shift that day.
+  // SF cells read it for coverage; the right-click menu reads it for any guard.
+  const shiftByGuardDate = useMemo(() => {
     const m = new Map<string, ShiftRecord>();
     for (const s of shifts) {
-      if (!s.startTime || !reliefGuardIds.has(s.guardId)) continue;
+      if (!s.startTime) continue;
       m.set(`${s.guardId}|${dateToWall(new Date(s.startTime), tzName).dateStr}`, s);
     }
     return m;
-  }, [shifts, reliefGuardIds, tzName]);
+  }, [shifts, tzName]);
 
   const getPositionsForStation = useCallback((stationId: string) =>
     positions.filter(p => p.stationId === stationId && p.type !== 'sacafranco'), [positions]);
@@ -498,7 +506,7 @@ export default function Schedule() {
     // station), libre otherwise. No rotation math — the SF is manual now.
     byGuard.forEach((data, guardId) => {
       monthDays.forEach(day => {
-        const shift = sfShiftByGuardDate.get(`${guardId}|${fmtDate(day)}`);
+        const shift = shiftByGuardDate.get(`${guardId}|${fmtDate(day)}`);
         if (shift) {
           data.availability.push({ date: day, status: 'covering', stationName: stationsById.get(shift.stationId)?.stationName || 'Cobertura' });
         } else {
@@ -508,7 +516,7 @@ export default function Schedule() {
     });
 
     return Array.from(byGuard.values());
-  }, [assignments, positionsById, stationsById, sfShiftByGuardDate, monthDays]);
+  }, [assignments, positionsById, stationsById, shiftByGuardDate, monthDays]);
 
   // Map: `${stationId}-${dateStr}` → SF guard(s) ACTUALLY covering there that
   // day (real shifts only — shows on the fijo's L cell as "SF").
@@ -729,6 +737,84 @@ export default function Schedule() {
     } catch (e: any) {
       toast.error(e?.data?.message || e?.message || 'Error al eliminar');
     }
+  };
+
+  // ─── Right-click menu on the year canvas ─────────────────────────────────
+
+  const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null);
+
+  const duplicateShiftNextDay = async (s: ShiftRecord) => {
+    try {
+      const start = new Date(new Date(s.startTime).getTime() + 86400000);
+      const end = new Date(new Date(s.endTime).getTime() + 86400000);
+      await ApiService.post(`/tenant/${tenantId}/shift`, {
+        data: { startTime: start.toISOString(), endTime: end.toISOString(), station: s.stationId, guard: s.guardId, postSiteId: stationsById.get(s.stationId)?.postSiteId },
+      });
+      toast.success('Turno duplicado al día siguiente');
+      fetchAll({ silent: true });
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || 'Error al duplicar');
+    }
+  };
+
+  const deleteDayShift = async (s: ShiftRecord) => {
+    const msg = s.positionId
+      ? '¿Eliminar el turno de este día? Fue generado por la rotación y puede regenerarse al reoptimizar o reasignar.'
+      : '¿Eliminar el turno de este día?';
+    if (!(await confirmDialog({ title: 'Eliminar turno', message: msg, confirmText: 'Eliminar', tone: 'danger' }))) return;
+    try {
+      await ApiService.delete(`/tenant/${tenantId}/shift/${s.id}`);
+      toast.success('Turno eliminado');
+      fetchAll({ silent: true });
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || 'Error al eliminar');
+    }
+  };
+
+  const openCellCtx = (e: React.MouseEvent, station: Station, pos: StationPosition, posAssignments: GuardAssignment[], dateStr: string) => {
+    e.preventDefault();
+    const items: CtxItem[] = [];
+    for (const a of posAssignments) {
+      const s = shiftByGuardDate.get(`${a.guardId}|${dateStr}`);
+      if (s && s.stationId === station.id) {
+        const nm = a.guard?.firstName || 'vigilante';
+        items.push({ label: `Editar turno de ${nm} (vista Día)…`, onClick: () => jumpToDay(dateStr) });
+        items.push({ label: 'Duplicar turno al día siguiente', onClick: () => void duplicateShiftNextDay(s) });
+        items.push({ label: 'Eliminar turno de este día', danger: true, onClick: () => void deleteDayShift(s) });
+        items.push({ label: '—' });
+      }
+    }
+    if (posAssignments.length) {
+      const a = posAssignments[0];
+      const guardName = a.guard ? `${a.guard.firstName || ''} ${a.guard.lastName || ''}`.trim() : 'Vigilante';
+      items.push({ label: 'Registrar novedad…', onClick: () => setOverrideTarget({ guardId: a.guardId, guardName, date: dateStr, assignmentId: a.id }) });
+      const ov = getOverride(a.guardId, dateStr);
+      if (ov) items.push({ label: `Quitar novedad (${ov.type})`, danger: true, onClick: () => void removeOverride(ov.id) });
+    } else {
+      items.push({ label: 'Asignar vigilante…', onClick: () => openAssignForm(station.id, pos.id, dateStr) });
+    }
+    setCtxMenu({ x: e.clientX, y: e.clientY, items });
+  };
+
+  const openSfCtx = (e: React.MouseEvent, pos: StationPosition, sfGuard: GuardAssignment | null, dateStr: string) => {
+    e.preventDefault();
+    const items: CtxItem[] = [];
+    if (sfGuard) {
+      const covShift = shiftByGuardDate.get(`${sfGuard.guardId}|${dateStr}`);
+      if (covShift) {
+        items.push({ label: 'Editar cobertura (vista Día)…', onClick: () => jumpToDay(dateStr) });
+        items.push({ label: 'Duplicar al día siguiente', onClick: () => void duplicateShiftNextDay(covShift) });
+        items.push({ label: 'Quitar cobertura', danger: true, onClick: () => void removeSfCoverage(covShift) });
+        items.push({ label: '—' });
+      }
+      const gName = sfGuard.guard ? `${sfGuard.guard.firstName || ''} ${sfGuard.guard.lastName || ''}`.trim() : 'Sacafranco';
+      items.push({ label: 'Registrar novedad…', onClick: () => setOverrideTarget({ guardId: sfGuard.guardId, guardName: gName, date: dateStr, assignmentId: sfGuard.id }) });
+      const ov = getOverride(sfGuard.guardId, dateStr);
+      if (ov) items.push({ label: `Quitar novedad (${ov.type})`, danger: true, onClick: () => void removeOverride(ov.id) });
+    } else {
+      items.push({ label: 'Asignar sacafranco…', onClick: () => openAssignForm(pos.stationId, pos.id, dateStr) });
+    }
+    setCtxMenu({ x: e.clientX, y: e.clientY, items });
   };
 
   const handleDrop = (e: React.DragEvent, stationId: string, positionId: string, dateStr?: string) => {
@@ -1191,22 +1277,52 @@ export default function Schedule() {
 
   // ─── Navigation ───────────────────────────────────────────────────────────
 
+  // The whole Horario is capped to the CURRENT year (the user's "máximo el año
+  // de hoy") — the year canvas covers it entirely; week/day anchors clamp.
+  const clampToYear = useCallback((d: Date) => {
+    const min = new Date(todayYear, 0, 1);
+    const max = new Date(todayYear, 11, 31);
+    return d < min ? min : d > max ? max : d;
+  }, [todayYear]);
+
+  const gridScrollRef = useRef<HTMLDivElement>(null);
+
+  const dayIndexOf = useCallback((y: number, mo1: number, d: number) =>
+    Math.round((new Date(y, mo1 - 1, d).getTime() - new Date(todayYear, 0, 1).getTime()) / 86400000), [todayYear]);
+
+  const scrollMonthTo = useCallback((monthIdx0: number) => {
+    const m = Math.max(0, Math.min(11, monthIdx0));
+    const idx = dayIndexOf(todayYear, m + 1, 1);
+    gridScrollRef.current?.scrollTo({ left: Math.max(0, idx * 44), behavior: 'smooth' });
+    setVisibleMonth(new Date(todayYear, m, 1));
+  }, [dayIndexOf, todayYear]);
+
   const nav = useCallback((dir: number) => {
     setSel(null);
+    if (view === 'month') { scrollMonthTo(visibleMonth.getMonth() + dir); return; }
     setCurrentDate(prev => {
       const d = new Date(prev);
-      if (view === 'month') { d.setMonth(d.getMonth() + dir); d.setDate(1); }
-      else if (view === 'week') d.setDate(d.getDate() + dir * 7);
-      else d.setDate(d.getDate() + dir);
-      return d;
+      d.setDate(d.getDate() + (view === 'week' ? dir * 7 : dir));
+      return clampToYear(d);
     });
-  }, [view]);
+  }, [view, visibleMonth, scrollMonthTo, clampToYear]);
 
   const goToday = useCallback(() => {
     setSel(null);
     const [y, mo, d] = tzToday().split('-').map(Number);
-    setCurrentDate(new Date(y, mo - 1, d));
-  }, []);
+    setCurrentDate(clampToYear(new Date(y, mo - 1, d)));
+    if (view === 'month') {
+      gridScrollRef.current?.scrollTo({ left: Math.max(0, (dayIndexOf(y, mo, d) - 3) * 44), behavior: 'smooth' });
+      setVisibleMonth(new Date(y, mo - 1, 1));
+    }
+  }, [view, clampToYear, dayIndexOf]);
+
+  // Right-click "Editar" from the year canvas jumps to that day in vista Día.
+  const jumpToDay = useCallback((dateStr: string) => {
+    const [y, mo, d] = dateStr.split('-').map(Number);
+    setCurrentDate(clampToYear(new Date(y, mo - 1, d)));
+    setView('day');
+  }, [clampToYear]);
 
   // ─── Keyboard (spreadsheet mode) ─────────────────────────────────────────
 
@@ -1256,7 +1372,6 @@ export default function Schedule() {
 
   // ─── View persistence (month + scroll + panels) ──────────────────────────
 
-  const gridScrollRef = useRef<HTMLDivElement>(null);
   const scrollSaveRaf = useRef(0);
   const restoredRef = useRef(false);
 
@@ -1266,12 +1381,12 @@ export default function Schedule() {
     if (!restoredRef.current) return;
     const el = gridScrollRef.current;
     try {
-      // When the month sheet isn't mounted (week/day view) keep its last saved
+      // When the year canvas isn't mounted (week/day view) keep its last saved
       // scroll instead of clobbering it with zeros.
       let prev: any = {};
       try { prev = JSON.parse(sessionStorage.getItem(VIEW_KEY) || 'null') || {}; } catch { /* ignore */ }
       sessionStorage.setItem(VIEW_KEY, JSON.stringify({
-        m: monthKeyOf(currentDate),
+        yr: todayYear,
         a: fmtDate(currentDate),
         v: view,
         sl: el ? el.scrollLeft : (prev.sl || 0),
@@ -1280,25 +1395,41 @@ export default function Schedule() {
         panel: panelOpen,
       }));
     } catch { /* storage full/blocked */ }
-  }, [currentDate, view, sfSectionOpen, panelOpen]);
+  }, [currentDate, view, sfSectionOpen, panelOpen, todayYear]);
 
   const onGridScroll = () => {
     cancelAnimationFrame(scrollSaveRaf.current);
-    scrollSaveRaf.current = requestAnimationFrame(persistView);
+    scrollSaveRaf.current = requestAnimationFrame(() => {
+      persistView();
+      // Toolbar month label follows the leftmost visible day of the canvas.
+      const el = gridScrollRef.current;
+      if (el && view === 'month') {
+        const idx = Math.max(0, Math.min(monthDays.length - 1, Math.round((el.scrollLeft + 60) / 44)));
+        const d = monthDays[idx];
+        if (d && (d.getMonth() !== visibleMonth.getMonth() || d.getFullYear() !== visibleMonth.getFullYear())) {
+          setVisibleMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+        }
+      }
+    });
   };
 
   useEffect(() => { persistView(); }, [persistView]);
 
-  // Restore the saved scroll position ONCE, after the first data render.
+  // Restore the saved scroll ONCE after the first data render; first visit
+  // lands on today's column.
   useLayoutEffect(() => {
     if (loading || restoredRef.current) return;
     restoredRef.current = true;
     try {
       const saved = JSON.parse(sessionStorage.getItem(VIEW_KEY) || 'null');
       const el = gridScrollRef.current;
-      if (saved && el && saved.m === monthKeyOf(currentDate)) {
+      if (!el) return;
+      if (saved && saved.yr === todayYear && (saved.sl || saved.st)) {
         el.scrollLeft = saved.sl || 0;
         el.scrollTop = saved.st || 0;
+      } else {
+        const [y, mo, d] = tzToday().split('-').map(Number);
+        el.scrollLeft = Math.max(0, (dayIndexOf(y, mo, d) - 3) * 44);
       }
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1321,8 +1452,8 @@ export default function Schedule() {
   }, [loading, bannerVisible, coverage]);
 
   const monthLabel = useMemo(() => {
-    return currentDate.toLocaleDateString('es', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
-  }, [currentDate]);
+    return visibleMonth.toLocaleDateString('es', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
+  }, [visibleMonth]);
 
   const rangeLabel = useMemo(() => {
     if (view === 'month') return monthLabel;
@@ -1364,6 +1495,7 @@ export default function Schedule() {
         onMouseEnter={() => hoverCellSelect(pos.id, dayIdx)}
         onDragOver={e => e.preventDefault()}
         onDrop={e => handleDrop(e, station.id, pos.id, dateStr)}
+        onContextMenu={e => openCellCtx(e, station, pos, posAssignments, dateStr)}
       >
         {posAssignments.length === 0 ? (
           (() => {
@@ -1842,6 +1974,7 @@ export default function Schedule() {
                                   onMouseEnter: () => hoverCellSelect(pos.id, dayIdx),
                                   onDragOver: (e: React.DragEvent) => e.preventDefault(),
                                   onDrop: (e: React.DragEvent) => handleDrop(e, pos.stationId, pos.id, dateStr),
+                                  onContextMenu: (e: React.MouseEvent) => openSfCtx(e, pos, posAssignments[0] || null, dateStr),
                                 };
 
                                 // Novedades (typed or via modal) also show on SF rows.
@@ -1869,7 +2002,7 @@ export default function Schedule() {
                                   setOverrideTarget({ guardId: sfGuard.guardId, guardName: gName, date: dateStr, assignmentId: sfGuard.id });
                                 };
 
-                                const covShift = sfGuard ? sfShiftByGuardDate.get(`${sfGuard.guardId}|${dateStr}`) : undefined;
+                                const covShift = sfGuard ? shiftByGuardDate.get(`${sfGuard.guardId}|${dateStr}`) : undefined;
 
                                 if (!covShift) {
                                   // Libre. Assigned SF days are DRAGGABLE — drop them on a
@@ -2164,7 +2297,7 @@ export default function Schedule() {
               {view === 'month' ? (
                 <>
                   <span className="font-medium text-foreground/70">{selInfo || 'Clic en una celda para seleccionar'}</span>
-                  <span className="hidden md:inline">Arrastra para seleccionar rango · Escribe <b>D N L V F P 2</b> para novedad · <b>Supr</b> borra · <b>Enter</b>/doble clic abre detalle · Arrastra un día <b>L del sacafranco</b> sobre un L del puesto para cubrirlo · <b>Re/Av Pág</b> cambia mes</span>
+                  <span className="hidden md:inline"><b>Clic derecho</b>: editar/duplicar/eliminar turno y novedades · Escribe <b>D N L V F P 2</b> para novedad · <b>Supr</b> borra · Arrastra un día <b>L del sacafranco</b> sobre un L del puesto para cubrirlo · <b>Re/Av Pág</b> cambia mes</span>
                 </>
               ) : (
                 <span className="font-medium text-foreground/70">
@@ -2189,6 +2322,8 @@ export default function Schedule() {
           </>
         )}
       </div>
+
+      {ctxMenu && <ContextMenu menu={ctxMenu} onClose={() => setCtxMenu(null)} />}
 
       {/* ─── Assignment Modal ─────────────────────────────────────────────── */}
       {showAssignForm && (
