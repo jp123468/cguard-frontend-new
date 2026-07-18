@@ -14,6 +14,7 @@ import ClientUserAccess from './components/ClientUserAccess/ClientUserAccess';
 import ClientEmailReports from './components/ClientEmailReports/ClientEmailReports';
 import ClientProjects from './components/ClientProjects/ClientProjects';
 import ClientContract from './components/ClientContract/ClientContract';
+import ClientCoverage from './components/ClientCoverage/ClientCoverage';
 import ClientTabPlaceholder from './components/ClientTabPlaceholder';
 import { toast } from 'sonner';
 import { SkeletonCards, EmptyState, FadeIn } from '@/components/kit';
@@ -139,7 +140,7 @@ export default function ClientsDetails() {
               {activeTab === 'emailReports' && <ClientEmailReports client={client} />}
               {activeTab === 'projects' && <ClientProjects client={client} />}
               {activeTab === 'contrato' && <ClientContract client={client} />}
-              {activeTab === 'coverage' && <ClientTabPlaceholder title="Puestos y cobertura" icon={<LayoutGrid />} description="Aquí irá el detalle de puestos y su cobertura." />}
+              {activeTab === 'coverage' && <ClientCoverage client={client} />}
               {activeTab === 'staff' && <ClientTabPlaceholder title="Personal asignado" icon={<Users />} description="Aquí irá el personal asignado a este cliente." />}
               {activeTab === 'operations' && <ClientTabPlaceholder title="Operaciones" icon={<Target />} description="Aquí irá la operación en vivo del cliente." />}
               {activeTab === 'incidents' && <ClientTabPlaceholder title="Incidentes" icon={<AlertTriangle />} description="Aquí irán los incidentes del cliente." />}

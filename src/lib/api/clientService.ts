@@ -617,6 +617,22 @@ export const clientService = {
         return data;
     },
 
+    // ----- Puestos y cobertura --------------------------------------------
+    async getClientCoverage(clientId: string, opts: { postSiteId?: string; horizonMin?: number } = {}) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams();
+        if (opts.postSiteId) params.set('postSiteId', opts.postSiteId);
+        if (opts.horizonMin) params.set('horizonMin', String(opts.horizonMin));
+        const qs = params.toString() ? `?${params.toString()}` : '';
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/coverage${qs}`, { toast: { silentError: true } } as any);
+        return data?.data ?? data;
+    },
+    async setStationLocation(stationId: string, coords: { lat: number; lng: number; geofenceRadius?: number }) {
+        const tenantId = getTenantId();
+        const { data } = await api.patch<any>(`/tenant/${tenantId}/station/${stationId}/location`, { latitud: coords.lat, longitud: coords.lng, geofenceRadius: coords.geofenceRadius });
+        return data?.data ?? data;
+    },
+
     // ----- Contrato y servicios -------------------------------------------
     async getClientContract(clientId: string) {
         const tenantId = getTenantId();
