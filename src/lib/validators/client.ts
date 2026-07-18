@@ -99,6 +99,10 @@ export const clientSchema = z
         .string()
         .optional()
         .or(z.literal("")),
+    contractEndDate: z.string().optional().or(z.literal("")),
+    riskLevel: z.string().optional().or(z.literal("")),
+    code: z.string().trim().max(50, "Máximo 50 caracteres").optional().or(z.literal("")),
+    accountExecutiveId: z.string().optional().or(z.literal("")),
     // Tipo de persona (Persona Natural / Persona Jurídica)
     personType: z.enum(['PN', 'PJ']).optional(),
     // RUC o Cédula: opcional

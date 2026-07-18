@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { clientService } from '@/lib/api/clientService';
-import { Section, StatCard, Stagger, EmptyState } from '@/components/kit';
+import { Section, EmptyState } from '@/components/kit';
 import {
   MapPin, Users, Building2, Shield, AlertTriangle, Route as RouteIcon, Clock,
   UserRound, Phone, Mail, ChevronRight, Bell, Activity, FileCheck, ShieldCheck,
@@ -70,10 +70,6 @@ export default function ClientOverview({ client }: { client: any }) {
   const isPJ = client?.personType === 'PJ';
   const primary = contacts[0] || null;
 
-  const hoursWorked = (() => {
-    const s = Number(ov.hoursLoggedSeconds || 0);
-    return `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}`;
-  })();
 
   // Per-site rollups for the "Estado de sedes" table.
   const siteRows = sites.map((s) => {
@@ -97,29 +93,10 @@ export default function ClientOverview({ client }: { client: any }) {
   if (ov.incidentsLast7Days > 0) alerts.push({ icon: <AlertTriangle />, label: t('clients.overview.alerts.openIncidents', 'Incidentes recientes'), sub: `${ov.incidentsLast7Days} ${t('clients.overview.alerts.last7', 'en los últimos 7 días')}`, tone: 'att' });
   if (ov.projectsCount > 0) alerts.push({ icon: <FileCheck />, label: t('clients.overview.alerts.projects', 'Proyectos activos'), sub: `${ov.projectsCount} ${t('clients.overview.alerts.inProgress', 'en curso')}`, tone: 'info' });
 
-  const kpis = [
-    { label: t('clients.overview.cards.postSites', 'Sedes activas'), value: ov.postSitesCount, icon: <Building2 />, accent: 'primary', to: `${base}/post-sites` },
-    { label: t('clients.overview.cards.stations', 'Estaciones'), value: ov.stationsCount, icon: <Shield />, accent: 'blue', to: `${base}/post-sites` },
-    { label: t('clients.overview.cards.guardsAssigned', 'Vigilantes asignados'), value: ov.assignedCount, icon: <Users />, accent: 'green' },
-    { label: t('clients.overview.cards.onsite', 'En turno ahora'), value: ov.onsiteCount, icon: <UserRound />, accent: 'green' },
-    { label: t('clients.overview.cards.incidents', 'Incidentes (7 días)'), value: ov.incidentsLast7Days, icon: <AlertTriangle />, accent: 'orange' },
-    { label: t('clients.overview.cards.toursCompleted', 'Rondas (7 días)'), value: ov.toursLast7Days, icon: <RouteIcon />, accent: 'slate' },
-    { label: t('clients.overview.cards.hoursWorked', 'Horas (7 días)'), value: hoursWorked, icon: <Clock />, accent: 'red' },
-    { label: t('clients.overview.cards.contract', 'Contrato'), value: client?.active ? t('common.active', 'Activo') : t('common.archived', 'Inactivo'), icon: <ShieldCheck />, accent: client?.active ? 'green' : 'slate' },
-  ] as any[];
 
   return (
-    <div ref={containerRef} className="space-y-6">
-      {/* KPI row */}
-      <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {kpis.map((c, i) => (
-          <button key={i} onClick={() => c.to && navigate(c.to)} className={`text-left ${c.to ? 'cursor-pointer' : 'cursor-default'}`}>
-            <StatCard label={c.label} value={c.value} icon={c.icon} accent={c.accent} />
-          </button>
-        ))}
-      </Stagger>
-
-      {/* Two columns: operations (map + sites table) · alerts + activity */}
+    <div ref={containerRef} className="space-y-5">
+      {/* Two columns: operations (map + sites table) · contact + alerts + activity */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
           <Section title={t('clients.overview.opsMap', 'Mapa de operaciones')} icon={<MapPin />}>

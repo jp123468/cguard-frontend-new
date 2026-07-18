@@ -46,6 +46,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Info, User, Mail, Phone, Tag, Globe, Building2, Upload, X, Image, Loader2, UserPlus, Trash2, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Section, Stagger } from "@/components/kit";
+import { userService } from "@/lib/api/userService";
 
 export type Category = { id: string; name: string };
 
@@ -93,6 +94,22 @@ export default function ClientForm({
     };
     const [redirecting, setRedirecting] = useState(false);
     const [categories, setCategories] = useState<Category[]>(initialCategories || []);
+    const [execUsers, setExecUsers] = useState<{ id: string; label: string }[]>([]);
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const rows = await userService.listUsers({ limit: 500 });
+                if (!mounted) return;
+                const opts = (Array.isArray(rows) ? rows : []).map((u: any) => ({
+                    id: String(u.id || u.userId || ''),
+                    label: u.fullName || [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || '—',
+                })).filter((o) => o.id);
+                setExecUsers(opts);
+            } catch { /* ignore */ }
+        })();
+        return () => { mounted = false; };
+    }, []);
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [showAddressAutocomplete, setShowAddressAutocomplete] = useState(true);
 
@@ -116,6 +133,10 @@ export default function ClientForm({
             documentNumber: "",
             commercialName: "",
             contractDate: "",
+            contractEndDate: "",
+            riskLevel: "",
+            code: "",
+            accountExecutiveId: "",
             email: "",
             phoneNumber: defaultPhonePrefix,
             address: "",
@@ -189,6 +210,10 @@ export default function ClientForm({
                         documentNumber: (data as any)?.documentNumber ?? '',
                         commercialName: (data as any)?.commercialName ?? '',
                         contractDate: (data as any)?.contractDate ? String((data as any).contractDate).slice(0, 10) : '',
+                        contractEndDate: (data as any)?.contractEndDate ? String((data as any).contractEndDate).slice(0, 10) : '',
+                        riskLevel: (data as any)?.riskLevel ?? '',
+                        code: (data as any)?.code ?? '',
+                        accountExecutiveId: (data as any)?.accountExecutiveId ?? '',
                         email: data.email ?? "",
                         phoneNumber: data.phoneNumber ?? "",
                         address: data.address ?? "",
@@ -274,6 +299,10 @@ export default function ClientForm({
         if ((values as any).documentNumber !== undefined) basePayload.documentNumber = (values as any).documentNumber;
         if ((values as any).commercialName !== undefined) basePayload.commercialName = (values as any).commercialName || null;
         if ((values as any).contractDate !== undefined) basePayload.contractDate = (values as any).contractDate || null;
+        if ((values as any).contractEndDate !== undefined) basePayload.contractEndDate = (values as any).contractEndDate || null;
+        if ((values as any).riskLevel !== undefined) basePayload.riskLevel = (values as any).riskLevel || null;
+        if ((values as any).code !== undefined) basePayload.code = (values as any).code || null;
+        if ((values as any).accountExecutiveId !== undefined) basePayload.accountExecutiveId = (values as any).accountExecutiveId || null;
         if (values.addressLine2 !== undefined) basePayload.addressLine2 = values.addressLine2;
         if (values.postalCode !== undefined) basePayload.postalCode = values.postalCode;
         if (values.city !== undefined) basePayload.city = values.city;
@@ -598,6 +627,66 @@ export default function ClientForm({
                                                     {...field}
                                                     value={typeof field.value === "string" ? field.value : ""}
                                                 />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField<ClientInput>
+                                    control={form.control}
+                                    name={"contractEndDate" as any}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.form.contractEndDate', 'Fin de contrato')}<span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span></FormLabel>
+                                            <FormControl>
+                                                <input type="date" className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === "string" ? field.value : ""} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField<ClientInput>
+                                    control={form.control}
+                                    name={"code" as any}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.form.code', 'Código de cliente')}<span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span></FormLabel>
+                                            <FormControl>
+                                                <input type="text" placeholder="CLI-0001" className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === "string" ? field.value : ""} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField<ClientInput>
+                                    control={form.control}
+                                    name={"riskLevel" as any}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.form.riskLevel', 'Nivel de riesgo')}<span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span></FormLabel>
+                                            <FormControl>
+                                                <select className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === "string" ? field.value : ""}>
+                                                    <option value="">{t('clients.form.selectRisk', 'Sin definir')}</option>
+                                                    <option value="Bajo">{t('clients.risk.low', 'Bajo')}</option>
+                                                    <option value="Medio">{t('clients.risk.medium', 'Medio')}</option>
+                                                    <option value="Alto">{t('clients.risk.high', 'Alto')}</option>
+                                                </select>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField<ClientInput>
+                                    control={form.control}
+                                    name={"accountExecutiveId" as any}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.accountExec', 'Ejecutivo responsable')}<span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span></FormLabel>
+                                            <FormControl>
+                                                <select className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === "string" ? field.value : ""}>
+                                                    <option value="">{t('clients.form.selectExec', 'Sin asignar')}</option>
+                                                    {execUsers.map((u) => <option key={u.id} value={u.id}>{u.label}</option>)}
+                                                </select>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
