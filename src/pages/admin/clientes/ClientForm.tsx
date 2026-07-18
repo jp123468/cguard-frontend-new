@@ -301,7 +301,11 @@ export default function ClientForm({
         basePayload.legalRepLastName = (values as any).lastName || null;
         if ((values as any).legalRepEmail !== undefined) basePayload.legalRepEmail = (values as any).legalRepEmail || null;
         if ((values as any).legalRepPhone !== undefined) basePayload.legalRepPhone = (values as any).legalRepPhone || null;
-        if ((values as any).legalRepDocument !== undefined) basePayload.legalRepDocument = (values as any).legalRepDocument || null;
+        // Persona natural: the rep's cédula IS the client documentNumber; persona
+        // jurídica has a separate rep cédula field.
+        basePayload.legalRepDocument = ((values as any).personType === 'PJ'
+          ? (values as any).legalRepDocument
+          : (values as any).documentNumber) || null;
         if (values.addressLine2 !== undefined) basePayload.addressLine2 = values.addressLine2;
         if (values.postalCode !== undefined) basePayload.postalCode = values.postalCode;
         if (values.city !== undefined) basePayload.city = values.city;
@@ -447,12 +451,75 @@ export default function ClientForm({
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                   <Stagger className="space-y-5">
 
-                    {/* ── Section 1: Personal Info ─────────────────────────── */}
+                    {/* ── Section 1: Tipo de cliente + Representante legal ──── */}
                     <Section
                         icon={<User />}
-                        title={personType === 'PJ' ? t('clients.form.legalRep', 'Representante legal') : t('clients.form.personalInfo', 'Información personal')}
+                        title={t('clients.form.legalRep', 'Representante legal')}
                         contentClassName="space-y-4"
                     >
+                            {/* Tipo de cliente arriba */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField<ClientInput>
+                                    control={form.control}
+                                    name={"personType" as any}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
+                                                {t('clients.form.clientType', 'Tipo de cliente')} <span className="text-primary">*</span>
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Select value={String(field.value || 'PN')} onValueChange={(v) => field.onChange(v)}>
+                                                    <SelectTrigger className="h-10 rounded-lg border-slate-200 dark:border-slate-600 focus:border-primary focus:ring-primary/20">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="PN">{t('clients.form.personNatural', 'Persona natural (Cédula)')}</SelectItem>
+                                                        <SelectItem value="PJ">{t('clients.form.personJuridica', 'Persona jurídica (RUC)')}</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField<ClientInput>
+                                    control={form.control}
+                                    name={"documentNumber" as any}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
+                                                {personType === 'PJ' ? t('clients.form.ruc', 'RUC de la empresa') : t('clients.form.cedula', 'Cédula')} <span className="text-primary">*</span>
+                                            </FormLabel>
+                                            <FormControl>
+                                                <input
+                                                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                                                    {...field}
+                                                    value={typeof field.value === 'string' ? field.value : ''}
+                                                    maxLength={personType === 'PJ' ? 13 : 10}
+                                                    onChange={(e) => field.onChange((e.target.value || '').replace(/\D/g, ''))}
+                                                    onBlur={() => {
+                                                        const digits = (field.value || '').toString().replace(/\D/g, '');
+                                                        if (personType === 'PN') {
+                                                            if (digits.length !== 10 || !validateCedulaOrRuc(digits)) form.setError('documentNumber' as any, { type: 'manual', message: t('clients.validation.cedula_invalid') });
+                                                            else form.clearErrors('documentNumber' as any);
+                                                        } else {
+                                                            if (digits.length !== 13 || !validateCedulaOrRuc(digits)) form.setError('documentNumber' as any, { type: 'manual', message: t('clients.validation.ruc_invalid') });
+                                                            else form.clearErrors('documentNumber' as any);
+                                                        }
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <p className="flex items-center gap-2 pt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                <UserRound className="h-3.5 w-3.5 text-primary" /> {t('clients.legalRep.title', 'Datos del representante legal')}
+                            </p>
+
+                            {/* Representante legal: nombre + apellido (requeridos) */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField<ClientInput>
                                     control={form.control}
@@ -510,71 +577,31 @@ export default function ClientForm({
                                 />
                             </div>
 
+                            {/* Contacto personal del representante (requerido) */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField<ClientInput>
-                                    control={form.control}
-                                    name={"personType" as any}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
-                                                {t('clients.form.personType', 'Tipo de persona')}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <Select value={String(field.value || 'PN')} onValueChange={(v) => field.onChange(v)}>
-                                                    <SelectTrigger className="h-10 rounded-lg border-slate-200 dark:border-slate-600 focus:border-primary focus:ring-primary/20">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="PN">{t('clients.form.personNatural', 'Persona natural (Cédula)')}</SelectItem>
-                                                        <SelectItem value="PJ">{t('clients.form.personJuridica', 'Persona jurídica (RUC)')}</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField<ClientInput>
-                                    control={form.control}
-                                    name={"documentNumber" as any}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
-                                                {personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <input
-                                                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
-                                                    {...field}
-                                                    value={typeof field.value === 'string' ? field.value : ''}
-                                                    maxLength={personType === 'PJ' ? 13 : 10}
-                                                    onChange={(e) => {
-                                                        const digits = (e.target.value || '').replace(/\D/g, '');
-                                                        field.onChange(digits);
-                                                    }}
-                                                    onBlur={() => {
-                                                        const val = (field.value || '').toString().trim();
-                                                        const digits = val.replace(/\D/g, '');
-                                                        if (personType === 'PN') {
-                                                            if (digits.length !== 10 || !validateCedulaOrRuc(digits)) {
-                                                                form.setError('documentNumber' as any, { type: 'manual', message: t('clients.validation.cedula_invalid') });
-                                                            } else {
-                                                                form.clearErrors('documentNumber' as any);
-                                                            }
-                                                        } else {
-                                                            if (digits.length !== 13 || !validateCedulaOrRuc(digits)) {
-                                                                form.setError('documentNumber' as any, { type: 'manual', message: t('clients.validation.ruc_invalid') });
-                                                            } else {
-                                                                form.clearErrors('documentNumber' as any);
-                                                            }
-                                                        }
-                                                    }}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                <FormField<ClientInput> control={form.control} name={"legalRepPhone" as any} render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.phone', 'Teléfono personal')} <span className="text-primary">*</span></FormLabel>
+                                    <FormControl><input type="tel" className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )} />
+                                <FormField<ClientInput> control={form.control} name={"legalRepEmail" as any} render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.email', 'Correo electrónico personal')} <span className="text-primary">*</span></FormLabel>
+                                    <FormControl><input type="email" className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )} />
+                                {personType === 'PJ' && (
+                                  <FormField<ClientInput> control={form.control} name={"legalRepDocument" as any} render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.document', 'Cédula del representante')} <span className="text-primary">*</span></FormLabel>
+                                      <FormControl><input inputMode="numeric" maxLength={10} className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} onChange={(e) => field.onChange((e.target.value || '').replace(/\D/g, ''))} /></FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )} />
+                                )}
                             </div>
                     </Section>
 
@@ -675,38 +702,6 @@ export default function ClientForm({
                                         </FormItem>
                                     )}
                                 />
-                            </div>
-
-                            {/* ── Datos del representante legal (el Nombre/Apellido de arriba) ── */}
-                            <div className="mt-2 rounded-xl border border-border/60 bg-muted/20 p-4">
-                              <div className="mb-1 flex items-center gap-2">
-                                <UserRound className="h-4 w-4 text-primary" />
-                                <p className="text-sm font-semibold text-foreground">{t('clients.legalRep.title', 'Datos del representante legal')}</p>
-                              </div>
-                              <p className="mb-3 text-xs text-muted-foreground">{t('clients.legalRep.hint', 'El nombre y apellido son los de arriba. Agrega sus datos personales de contacto (distintos de los de la empresa).')}</p>
-                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <FormField<ClientInput> control={form.control} name={"legalRepDocument" as any} render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.document', 'Número de cédula')}</FormLabel>
-                                    <FormControl><input inputMode="numeric" maxLength={10} className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} onChange={(e) => field.onChange((e.target.value || '').replace(/\D/g, ''))} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )} />
-                                <FormField<ClientInput> control={form.control} name={"legalRepPhone" as any} render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.phone', 'Teléfono personal')}</FormLabel>
-                                    <FormControl><input type="tel" className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )} />
-                                <FormField<ClientInput> control={form.control} name={"legalRepEmail" as any} render={({ field }) => (
-                                  <FormItem className="md:col-span-2">
-                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.email', 'Correo electrónico personal')}</FormLabel>
-                                    <FormControl><input type="email" className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )} />
-                              </div>
                             </div>
 
                             {/* Logo & Place Picture uploads */}
