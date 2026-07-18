@@ -617,6 +617,48 @@ export const clientService = {
         return data;
     },
 
+    // ----- Contrato y servicios -------------------------------------------
+    async getClientContract(clientId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/contract`, { toast: { silentError: true } } as any);
+        return data?.data ?? data;
+    },
+    async updateClientContract(clientId: string, payload: any) {
+        const tenantId = getTenantId();
+        const { data } = await api.patch<any>(`/tenant/${tenantId}/client-account/${clientId}/contract`, payload);
+        return data?.data ?? data;
+    },
+    async createContractService(clientId: string, payload: any) {
+        const tenantId = getTenantId();
+        const { data } = await api.post<any>(`/tenant/${tenantId}/client-account/${clientId}/contract-services`, payload);
+        return data?.data ?? data;
+    },
+    async updateContractService(clientId: string, serviceId: string, payload: any) {
+        const tenantId = getTenantId();
+        const { data } = await api.put<any>(`/tenant/${tenantId}/client-account/${clientId}/contract-services/${serviceId}`, payload);
+        return data?.data ?? data;
+    },
+    async deleteContractService(clientId: string, serviceId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.delete<any>(`/tenant/${tenantId}/client-account/${clientId}/contract-services/${serviceId}`);
+        return data?.data ?? data;
+    },
+    async createContractRenewal(clientId: string, payload: any) {
+        const tenantId = getTenantId();
+        const { data } = await api.post<any>(`/tenant/${tenantId}/client-account/${clientId}/contract-renewals`, payload);
+        return data?.data ?? data;
+    },
+    async updateContractRenewal(clientId: string, renewalId: string, payload: any) {
+        const tenantId = getTenantId();
+        const { data } = await api.put<any>(`/tenant/${tenantId}/client-account/${clientId}/contract-renewals/${renewalId}`, payload);
+        return data?.data ?? data;
+    },
+    async deleteContractRenewal(clientId: string, renewalId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.delete<any>(`/tenant/${tenantId}/client-account/${clientId}/contract-renewals/${renewalId}`);
+        return data?.data ?? data;
+    },
+
     /**
      * Send (or re-send) a client portal invitation email to the user linked to this client.
      * userId is the user id stored on the clientAccount (client.userId)
