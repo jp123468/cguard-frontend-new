@@ -527,7 +527,7 @@ export default function ClientForm({
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
-                                                {t('clients.form.name', 'Nombre')} <span className="text-primary">*</span>
+                                                {t('clients.form.name', 'Nombre')}
                                             </FormLabel>
                                             <FormControl>
                                                 <input
@@ -554,7 +554,7 @@ export default function ClientForm({
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">
-                                                {t('clients.form.lastName', 'Apellidos')} <span className="text-primary">*</span>
+                                                {t('clients.form.lastName', 'Apellidos')}
                                             </FormLabel>
                                             <FormControl>
                                                 <input
