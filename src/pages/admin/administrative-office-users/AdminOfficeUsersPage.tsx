@@ -39,7 +39,14 @@ import {
   Send,
   Archive,
   Users,
+  LayoutGrid,
+  List as ListIcon,
+  Pencil,
+  RotateCw,
+  Trash,
+  UserCog,
 } from "lucide-react";
+import AdminUserCardsGrid, { type AdminUserCardAction } from "./AdminUserCardsGrid";
 import { PageContainer, PageHeader, Section, StatusBadge, EmptyState } from "@/components/kit";
 import { toast } from "sonner";
 import { useTranslation } from 'react-i18next';
@@ -62,6 +69,11 @@ function useDebounced<T>(value: T, delay = 400) {
 export default function AdminOfficeUsersPage() {
   const { t } = useTranslation();
   const [openFilter, setOpenFilter] = useState(false);
+  // Vista Tarjetas ⇄ Lista (persistida). Tarjetas por defecto, como en Clientes/Vigilantes.
+  const [viewMode, setViewMode] = useState<"cards" | "list">(
+    () => (localStorage.getItem("adminUsers.viewMode") as "cards" | "list") || "cards",
+  );
+  useEffect(() => { localStorage.setItem("adminUsers.viewMode", viewMode); }, [viewMode]);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [filterClient, setFilterClient] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
@@ -468,6 +480,33 @@ export default function AdminOfficeUsersPage() {
     }
   };
 
+  // Acciones del menú de cada tarjeta (mismos handlers/estados que la tabla).
+  const userCardActions = (u: any): AdminUserCardAction[] => {
+    const status = (u.status || "").toString().toLowerCase();
+    const acts: AdminUserCardAction[] = [];
+    if (status === "invited" || status === "pending") {
+      acts.push({ label: 'Reenviar invitación', icon: <Send className="h-4 w-4" />, disabled: !hasPermission('userEdit'), onClick: () => { setSelectedUserToAct(u); setResendDialogOpen(true); } });
+      acts.push({ label: 'Suspender', icon: <Archive className="h-4 w-4" />, disabled: !hasPermission('userEdit'), onClick: () => { setSelectedUserToAct(u); handleSuspendUser(u); } });
+    } else if (status === "archived" || status === "archivado") {
+      acts.push({ label: 'Restaurar', icon: <RotateCw className="h-4 w-4" />, disabled: !hasPermission('userEdit'), onClick: () => { setSelectedUserToAct(u); setRestoreDialogOpen(true); } });
+      acts.push({ label: 'Eliminar', icon: <Trash className="h-4 w-4" />, destructive: true, disabled: !hasPermission('userDestroy'), onClick: () => { setSelectedUserToAct(u); setDeleteDialogOpen(true); } });
+    } else {
+      acts.push({ label: 'Editar', icon: <Pencil className="h-4 w-4" />, disabled: !hasPermission('userEdit'), onClick: () => navigate(`/back-office/edit/${u.id}`) });
+      if (normalizeRolesForUser(u.roles || u.role || u.rolesList || u._rolesDisplay).includes('securitysupervisor')) {
+        acts.push({ label: 'Perfil de supervisor', icon: <UserCog className="h-4 w-4" />, onClick: () => navigate(`/supervisors/${u.id}`) });
+      }
+      if (!isUserAdmin(u)) {
+        acts.push({ label: 'Suspender', icon: <Archive className="h-4 w-4" />, disabled: !hasPermission('userEdit'), onClick: () => { setSelectedUserToAct(u); handleSuspendUser(u); } });
+      }
+    }
+    return acts;
+  };
+
+  const openUser = (u: any) => {
+    if (normalizeRolesForUser(u.roles || u.role || u.rolesList || u._rolesDisplay).includes('securitysupervisor')) { navigate(`/supervisors/${u.id}`); return; }
+    if (hasPermission('userEdit')) navigate(`/back-office/edit/${u.id}`);
+  };
+
   return (
     <AppLayout>
       <Breadcrumb
@@ -614,6 +653,16 @@ export default function AdminOfficeUsersPage() {
               </SheetContent>
             </Sheet>
 
+            {/* Toggle vista Tarjetas / Lista (desktop) */}
+            <div className="hidden md:inline-flex items-center rounded-xl border bg-card p-0.5">
+              <Button variant={viewMode === "cards" ? "brand" : "ghost"} size="sm" className="h-8 px-2.5" aria-label="Vista de tarjetas" onClick={() => setViewMode("cards")}>
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button variant={viewMode === "list" ? "brand" : "ghost"} size="sm" className="h-8 px-2.5" aria-label="Vista de lista" onClick={() => setViewMode("list")}>
+                <ListIcon className="h-4 w-4" />
+              </Button>
+            </div>
+
             {/* Menú superior (export/import) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -640,6 +689,17 @@ export default function AdminOfficeUsersPage() {
         {/* Tabla */}
         <div className="mt-4 overflow-hidden rounded-xl border">
           <div className="md:block hidden">
+            {viewMode === "cards" ? (
+              <AdminUserCardsGrid
+                users={pagedRows}
+                loading={false}
+                selectedIds={selectedUsers}
+                canSelect={(u) => canManageUsers && !isUserAdmin(u)}
+                onSelect={handleSelectUser}
+                onOpen={openUser}
+                actions={userCardActions}
+              />
+            ) : (
             <table className="min-w-full border-collapse text-left text-sm">
               <thead className="bg-muted/30">
                 <tr className="border-b">
@@ -821,6 +881,7 @@ export default function AdminOfficeUsersPage() {
                 )}
               </tbody>
             </table>
+            )}
           </div>
 
           <div className="md:hidden">
