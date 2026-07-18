@@ -111,7 +111,7 @@ export default function ClientOverview({ client }: { client: any }) {
   return (
     <div ref={containerRef} className="space-y-6">
       {/* KPI row */}
-      <Stagger className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
+      <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {kpis.map((c, i) => (
           <button key={i} onClick={() => c.to && navigate(c.to)} className={`text-left ${c.to ? 'cursor-pointer' : 'cursor-default'}`}>
             <StatCard label={c.label} value={c.value} icon={c.icon} accent={c.accent} />
