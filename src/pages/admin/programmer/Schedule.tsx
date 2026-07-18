@@ -676,9 +676,16 @@ export default function Schedule() {
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  // Drop an SF's día onto a puesto cell → create the REAL coverage shift there.
-  // The half (D/N) follows what the station is missing that day; the SF's own
-  // row shows the same D/N because it reads these shifts.
+  // Drop an SF's día onto a puesto cell → open the COVERAGE modal: prefilled
+  // with what the station is missing that day (the suggestion), but fully
+  // editable — D, N, 24h or any custom window. The SF has no rotation; every
+  // coverage is placed and shaped by hand.
+  const [sfCover, setSfCover] = useState<{
+    sfGuardId: string; sfName: string; station: Station; dateStr: string;
+    startStr: string; endStr: string; suggested: string;
+  } | null>(null);
+  const [sfCoverSaving, setSfCoverSaving] = useState(false);
+
   const placeSfCoverage = async (station: Station, pos: StationPosition, dateStr: string, sfGuardId: string) => {
     const stFijos = assignments.filter(a =>
       a.stationId === station.id && !a.isRelief && positionsById.get(a.positionId)?.type === 'fijo');
@@ -723,23 +730,50 @@ export default function Schedule() {
       const half = req.filter(h => !covered.has(h))[0] || req[0];
       if (half === 'night') { startMin = 19 * 60; endMin = 7 * 60; endNextDay = true; code = 'N'; }
     }
-    const [y, mo, d] = dateStr.split('-').map(Number);
+    // Open the coverage modal prefilled with the suggestion — the user shapes
+    // the final turno (D / N / 24h / custom hours) before anything is created.
+    const hhmm = (m: number) => `${String(Math.floor(((m % 1440) + 1440) % 1440 / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+    const g = guardsPool.find(x => x.id === sfGuardId);
+    const sfName = g?.label || assignments.find(a => a.guardId === sfGuardId)?.guard?.firstName || 'Sacafranco';
+    setSfCover({
+      sfGuardId,
+      sfName,
+      station,
+      dateStr,
+      startStr: hhmm(startMin),
+      endStr: hhmm(endMin),
+      suggested: `${code} · ${hhmm(startMin)} – ${hhmm(endMin)}${endNextDay || endMin <= startMin ? ' (día siguiente)' : ''}`,
+    });
+  };
+
+  const saveSfCover = async () => {
+    if (!sfCover) return;
+    const toMin = (x: string) => { const [h, mm] = x.split(':').map(n => parseInt(n, 10) || 0); return (h % 24) * 60 + (mm % 60); };
+    const startMin = toMin(sfCover.startStr);
+    let endMin = toMin(sfCover.endStr);
+    const nextDay = endMin <= startMin; // wraps midnight (equal = full 24h)
+    if (nextDay) endMin += 1440;
+    const [y, mo, d] = sfCover.dateStr.split('-').map(Number);
     const start = wallToDate(y, mo, d, startMin, tzName);
-    const end = wallToDate(y, mo, d, (endNextDay ? 1440 : 0) + endMin, tzName);
+    const end = wallToDate(y, mo, d, endMin, tzName);
+    setSfCoverSaving(true);
     try {
       // Replace the SF's overlapping shifts (same rule as the turno único).
       const overlapping = shifts.filter(s =>
-        s.guardId === sfGuardId && new Date(s.startTime) < end && new Date(s.endTime) > start);
+        s.guardId === sfCover.sfGuardId && new Date(s.startTime) < end && new Date(s.endTime) > start);
       if (overlapping.length) {
         await ApiService.delete(`/tenant/${tenantId}/shift?ids=${overlapping.map(s => s.id).join(',')}`).catch(() => {});
       }
       await ApiService.post(`/tenant/${tenantId}/shift`, {
-        data: { startTime: start.toISOString(), endTime: end.toISOString(), station: station.id, guard: sfGuardId, postSiteId: station.postSiteId },
+        data: { startTime: start.toISOString(), endTime: end.toISOString(), station: sfCover.station.id, guard: sfCover.sfGuardId, postSiteId: sfCover.station.postSiteId },
       });
-      toast.success(`Sacafranco cubre ${station.stationName} (${code})`);
+      toast.success(`Sacafranco cubre ${sfCover.station.stationName}`);
+      setSfCover(null);
       fetchAll({ silent: true });
     } catch (e: any) {
       toast.error(e?.data?.message || e?.message || 'Error al asignar la cobertura');
+    } finally {
+      setSfCoverSaving(false);
     }
   };
 
@@ -1342,7 +1376,7 @@ export default function Schedule() {
 
   // ─── Keyboard (spreadsheet mode) ─────────────────────────────────────────
 
-  const modalOpen = showAssignForm || !!configStation || !!overrideTarget || !!proposalData;
+  const modalOpen = showAssignForm || !!configStation || !!overrideTarget || !!proposalData || !!sfCover;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -2364,6 +2398,86 @@ export default function Schedule() {
       </div>
 
       {ctxMenu && <ContextMenu menu={ctxMenu} onClose={() => setCtxMenu(null)} />}
+
+      {/* ─── SF coverage modal (drop an SF día on a puesto → shape the turno) ── */}
+      {sfCover && (() => {
+        const toMin = (x: string) => { const [h, mm] = x.split(':').map(n => parseInt(n, 10) || 0); return (h % 24) * 60 + (mm % 60); };
+        const sMin = toMin(sfCover.startStr);
+        const eMinRaw = toMin(sfCover.endStr);
+        const nextDay = eMinRaw <= sMin;
+        const durH = ((nextDay ? eMinRaw + 1440 : eMinRaw) - sMin) / 60;
+        const quick = (start: string, end: string) => setSfCover(m => m ? { ...m, startStr: start, endStr: end } : m);
+        const fechaHuman = new Date(sfCover.dateStr + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setSfCover(null)}>
+            <div className="bg-card border border-border/30 rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+              <div className="px-5 py-4 border-b border-border/20 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground">Cubrir con sacafranco</h4>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {sfCover.sfName} → {sfCover.station.stationName} · {fechaHuman}
+                  </p>
+                </div>
+                <button onClick={() => setSfCover(null)} className="p-1.5 rounded-lg hover:bg-muted/30 text-muted-foreground"><X size={15} /></button>
+              </div>
+              <div className="p-5 space-y-4">
+                <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2">
+                  <p className="text-[11px] text-emerald-600">
+                    Sugerido según lo que falta ese día: <b>{sfCover.suggested}</b>
+                  </p>
+                </div>
+                {/* Quick shapes */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'Diurno', sub: '07–19', s: '07:00', e: '19:00' },
+                    { label: 'Nocturno', sub: '19–07', s: '19:00', e: '07:00' },
+                    { label: '24 horas', sub: '07→07', s: '07:00', e: '07:00' },
+                  ].map(q => {
+                    const active = sfCover.startStr === q.s && sfCover.endStr === q.e;
+                    return (
+                      <button
+                        key={q.label}
+                        onClick={() => quick(q.s, q.e)}
+                        className={`px-2 py-2 rounded-xl border text-center transition-all ${active ? 'border-primary bg-primary/10 text-primary' : 'border-border/40 text-foreground hover:border-primary/40'}`}
+                      >
+                        <div className="text-xs font-semibold">{q.label}</div>
+                        <div className="text-[10px] text-muted-foreground">{q.sub}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Custom hours */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Inicio</label>
+                    <input type="time" value={sfCover.startStr} onChange={e => setSfCover(m => m ? { ...m, startStr: e.target.value } : m)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Fin</label>
+                    <input type="time" value={sfCover.endStr} onChange={e => setSfCover(m => m ? { ...m, endStr: e.target.value } : m)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                  <Clock size={12} />
+                  Duración: <b className="text-foreground">{durH % 1 === 0 ? durH : durH.toFixed(1)}h</b>
+                  {nextDay && <span>· termina al día siguiente</span>}
+                  <span>· hora de la empresa</span>
+                </p>
+              </div>
+              <div className="px-5 py-3 border-t border-border/20 flex items-center justify-end gap-2">
+                <button onClick={() => setSfCover(null)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-all">Cancelar</button>
+                <button
+                  onClick={saveSfCover}
+                  disabled={sfCoverSaving || durH <= 0 || durH > 24}
+                  className="px-5 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-40 transition-all shadow-sm"
+                >
+                  {sfCoverSaving ? <Loader2 size={14} className="animate-spin" /> : 'Cubrir puesto'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ─── Assignment Modal ─────────────────────────────────────────────── */}
       {showAssignForm && (
