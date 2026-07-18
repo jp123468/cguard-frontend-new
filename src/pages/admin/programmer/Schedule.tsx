@@ -34,6 +34,7 @@ import { ApiService } from "@/services/api/apiService";
 import { toast } from "sonner";
 import { confirmDialog } from "@/components/ui/confirmDialog";
 import ScheduleTimeline from "./ScheduleTimeline";
+import RotationStyleSelect from "@/components/schedule/RotationStyleSelect";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -227,14 +228,33 @@ export default function Schedule() {
   const [moveFrom, setMoveFrom] = useState<GuardAssignment | null>(null); // drag-move source
   const [coverage, setCoverage] = useState<any>(null); // real coverage of live schedule
 
-  // Configure station form
+  // Configure station form — SAME model as the station-page "Horario del
+  // turno" editor (StationOverview): custom window + turno por vigilante +
+  // cobertura de descansos (sacafranco | alternancia 24x24). Same
+  // /auto-positions payload so both screens configure identically.
   const [configStation, setConfigStation] = useState<Station | null>(null);
   const [configType, setConfigType] = useState('24h');
   const [configRotation, setConfigRotation] = useState('');
   const [configSaving, setConfigSaving] = useState(false);
-  const [customDays, setCustomDays] = useState(5);
-  const [customNights, setCustomNights] = useState(0);
-  const [customRest, setCustomRest] = useState(2);
+  const [cfgStart, setCfgStart] = useState('07:00');
+  const [cfgEnd, setCfgEnd] = useState('07:00');
+  const [cfgBlockHours, setCfgBlockHours] = useState(''); // '' = whole window per fijo
+  const [cfgRestCoverage, setCfgRestCoverage] = useState<'sacafranco' | 'alternate'>('sacafranco');
+  const [cfgRotStyle, setCfgRotStyle] = useState<{ dayShifts: number; nightShifts: number; restDays: number } | null>(null);
+
+  // Window math (mirrors StationOverview): wraps midnight; start==end → 24h.
+  const cfgWinMin = useMemo(() => {
+    if (!cfgStart || !cfgEnd) return 0;
+    const toMin = (x: string) => { const [h, mm] = x.split(':').map(n => parseInt(n, 10) || 0); return ((h % 24) * 60 + (mm % 60) + 1440) % 1440; };
+    const w = (toMin(cfgEnd) - toMin(cfgStart) + 1440) % 1440;
+    return w === 0 ? 1440 : w;
+  }, [cfgStart, cfgEnd]);
+  const cfgBlocksOk = Number(cfgBlockHours) > 0 && cfgWinMin > 0 && cfgWinMin % (Number(cfgBlockHours) * 60) === 0;
+  const cfgBlockCount = cfgBlocksOk ? cfgWinMin / (Number(cfgBlockHours) * 60) : 1;
+  const cfgRotCycle = cfgRotStyle ? (cfgRotStyle.dayShifts || 0) + (cfgRotStyle.nightShifts || 0) + (cfgRotStyle.restDays || 0) : 0;
+  const cfgRotWork = cfgRotStyle ? (cfgRotStyle.dayShifts || 0) + (cfgRotStyle.nightShifts || 0) : 0;
+  const cfgAlternateOk = cfgRestCoverage !== 'alternate' || !cfgRotStyle || (cfgRotWork > 0 && cfgRotCycle % cfgRotWork === 0);
+  const cfgGuardsPerBlock = cfgRestCoverage === 'alternate' && cfgAlternateOk && cfgRotWork > 0 ? cfgRotCycle / cfgRotWork : 1;
 
   // ─── Data Loading ─────────────────────────────────────────────────────────
 
@@ -846,48 +866,46 @@ export default function Schedule() {
     setConfigStation(station);
     setConfigType(station.scheduleType || '24h');
     setConfigRotation(station.rotationStyleId || '');
-    setCustomDays(5);
-    setCustomNights(0);
-    setCustomRest(2);
-    // Auto-select recommended rotation if no rotation set
-    if (!station.rotationStyleId) {
-      const recommended = station.scheduleType === '24h'
-        ? rotationStyles.find(r => r.name === '4-4-2')
-        : rotationStyles.find(r => r.name === '5-2');
-      if (recommended) setConfigRotation(recommended.id);
-    }
+    setCfgStart('07:00');
+    setCfgEnd('07:00');
+    setCfgBlockHours('');
+    setCfgRestCoverage('sacafranco');
+    setCfgRotStyle(null);
+    // The overview payload doesn't carry the custom window/coverage — fetch the
+    // station detail (best-effort) so the modal opens with the current values.
+    ApiService.get(`/tenant/${tenantId}/station/${station.id}`)
+      .then((res: any) => {
+        const s = res?.data ?? res ?? {};
+        if (s.startingTimeInDay) setCfgStart(String(s.startingTimeInDay).slice(0, 5));
+        if (s.finishTimeInDay) setCfgEnd(String(s.finishTimeInDay).slice(0, 5));
+        if (s.restCoverage === 'alternate') setCfgRestCoverage('alternate');
+      })
+      .catch(() => { /* defaults stand */ });
   };
-
-  const filteredRotationStyles = useMemo(() => {
-    if (configType === '24h') return rotationStyles.filter(r => r.nightShifts > 0);
-    if (configType === '12h-day' || configType === '12h-night') return rotationStyles.filter(r => r.nightShifts === 0);
-    return [];
-  }, [configType, rotationStyles]);
-
-  // Recommended rotation for current config type
-  const recommendedRotationId = useMemo(() => {
-    const name = configType === '24h' ? '4-4-2' : '5-2';
-    return rotationStyles.find(r => r.name === name)?.id || '';
-  }, [configType, rotationStyles]);
 
   const saveStationConfig = async () => {
     if (!configStation) return;
-    setConfigSaving(true);
-    try {
-      let rotationId = configRotation;
-      if (configType === 'custom') {
-        // Create a custom rotation style first
-        const res = await ApiService.post(`/tenant/${tenantId}/rotation-styles`, {
-          data: { name: `${customDays}-${customNights > 0 ? customNights + '-' : ''}${customRest}`, dayShifts: customDays, nightShifts: customNights, restDays: customRest },
-        });
-        rotationId = res?.id;
-      } else if (!rotationId) {
-        toast.error('Seleccione un estilo de rotación');
-        setConfigSaving(false);
+    if (configType === 'custom') {
+      if (!cfgStart || !cfgEnd) { toast.error('Define la hora de inicio y fin'); return; }
+      if (cfgBlockHours && !cfgBlocksOk) { toast.error('La duración del turno debe dividir exactamente la cobertura del puesto.'); return; }
+      if (cfgRestCoverage === 'alternate' && !cfgAlternateOk) {
+        toast.error('Para alternar sin sacafranco, el ciclo del patrón debe ser múltiplo de sus días de trabajo (ej. 1-1, 2-2).');
         return;
       }
+    }
+    if (!(await confirmDialog({ message: 'Cambiar el horario reconfigura los puestos del turno. Si hay vigilantes asignados a esta estación, deberán reasignarse. ¿Continuar?', confirmText: 'Continuar' }))) return;
+    setConfigSaving(true);
+    try {
+      // Same payload as the station-page editor — one engine, two doors.
       await ApiService.post(`/tenant/${tenantId}/station/${configStation.id}/auto-positions`, {
-        data: { scheduleType: configType, rotationStyleId: rotationId },
+        data: {
+          scheduleType: configType,
+          rotationStyleId: configRotation || undefined, // alternate + none → engine seeds 1-1
+          startTime: configType === 'custom' ? cfgStart : undefined,
+          endTime: configType === 'custom' ? cfgEnd : undefined,
+          blockHours: configType === 'custom' && cfgBlockHours ? Number(cfgBlockHours) : undefined,
+          restCoverage: configType === 'custom' ? cfgRestCoverage : undefined,
+        },
       });
       toast.success('Estación configurada');
       setConfigStation(null);
@@ -2319,7 +2337,7 @@ export default function Schedule() {
       {/* ─── Configure Station Modal ─────────────────────────────────────── */}
       {configStation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setConfigStation(null)}>
-          <div className="bg-card border border-border/30 rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+          <div className="bg-card border border-border/30 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-border/20 flex items-center justify-between">
               <h4 className="text-sm font-semibold text-foreground">Configurar: {configStation.stationName}</h4>
               <button onClick={() => setConfigStation(null)} className="p-1.5 rounded-lg hover:bg-muted/30 text-muted-foreground"><X size={15} /></button>
@@ -2331,11 +2349,11 @@ export default function Schedule() {
                   { value: '24h', label: '24 Horas', desc: 'Fijo 1 + Fijo 2 + Sacafranco' },
                   { value: '12h-day', label: '12h Diurno', desc: 'Fijo 1 (día) + Sacafranco' },
                   { value: '12h-night', label: '12h Nocturno', desc: 'Fijo 1 (noche) + Sacafranco' },
-                  { value: 'custom', label: 'Personalizado', desc: 'Rotación custom (días/noches/libre)' },
+                  { value: 'custom', label: 'Personalizado', desc: 'Ventana propia, bloques, 24×24…' },
                 ].map(opt => (
                   <button
                     key={opt.value}
-                    onClick={() => { setConfigType(opt.value); setConfigRotation(''); }}
+                    onClick={() => { setConfigType(opt.value); setConfigRotation(''); setCfgRotStyle(null); }}
                     className={`p-3 rounded-xl border text-left transition-all ${configType === opt.value ? 'bg-primary/10 border-primary' : 'border-border/40 hover:border-border'}`}
                   >
                     <div className={`text-sm font-medium ${configType === opt.value ? 'text-primary' : 'text-foreground'}`}>{opt.label}</div>
@@ -2344,60 +2362,72 @@ export default function Schedule() {
                 ))}
               </div>
 
-              {configType !== 'custom' && (
-                <>
-                  <label className="block text-[11px] font-medium text-muted-foreground mb-2 uppercase tracking-wide">Estilo de rotación</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {filteredRotationStyles.map(r => (
-                      <button
-                        key={r.id}
-                        onClick={() => setConfigRotation(r.id)}
-                        className={`px-2 py-2 rounded-lg text-xs font-medium border transition-all relative ${configRotation === r.id ? 'bg-primary/10 border-primary text-primary' : r.id === recommendedRotationId ? 'border-emerald-500/50 text-emerald-600 bg-emerald-500/5' : 'border-border/40 text-muted-foreground hover:border-border'}`}
-                      >
-                        {r.name}
-                        {r.id === recommendedRotationId && <span className="absolute -top-1.5 -right-1 text-[7px] bg-emerald-500 text-white px-1 rounded">REC</span>}
-                      </button>
-                    ))}
-                  </div>
-                  {configRotation && (() => {
-                    const rot = rotationStyles.find(r => r.id === configRotation);
-                    if (!rot) return null;
-                    return (
-                      <p className="text-[11px] text-muted-foreground">
-                        {rot.nightShifts > 0
-                          ? `${rot.dayShifts} días, ${rot.nightShifts} noches, ${rot.restDays} descanso`
-                          : `${rot.dayShifts} días trabajo, ${rot.restDays} descanso`
-                        }
-                      </p>
-                    );
-                  })()}
-                </>
-              )}
               {configType === 'custom' && (
-                <>
-                  <label className="block text-[11px] font-medium text-muted-foreground mb-2 uppercase tracking-wide">Rotación personalizada</label>
-                  <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-3">
+                  {/* Quick preset: classic 24×24 alternation (no libres, no SF) */}
+                  <button
+                    type="button"
+                    onClick={() => { setCfgStart('07:00'); setCfgEnd('07:00'); setCfgBlockHours(''); setCfgRestCoverage('alternate'); setConfigRotation(''); setCfgRotStyle(null); }}
+                    className={`w-full px-3 py-2 rounded-xl border text-left transition-all ${cfgRestCoverage === 'alternate' && cfgWinMin === 1440 && !cfgBlockHours ? 'border-primary bg-primary/10' : 'border-border/40 hover:border-primary/40'}`}
+                  >
+                    <div className="text-xs font-semibold text-foreground">Preset 24×24 (alternancia diaria)</div>
+                    <div className="text-[10px] text-muted-foreground">Un fijo trabaja las 24h, el otro va al día siguiente. Sin libres, sin sacafranco.</div>
+                  </button>
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] text-muted-foreground mb-1">Días</label>
-                      <input type="number" min={0} max={30} value={customDays} onChange={e => setCustomDays(Number(e.target.value))} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background text-center focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                      <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Hora inicio</label>
+                      <input type="time" value={cfgStart} onChange={e => setCfgStart(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-muted-foreground mb-1">Noches</label>
-                      <input type="number" min={0} max={30} value={customNights} onChange={e => setCustomNights(Number(e.target.value))} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background text-center focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-muted-foreground mb-1">Descanso</label>
-                      <input type="number" min={0} max={30} value={customRest} onChange={e => setCustomRest(Number(e.target.value))} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background text-center focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+                      <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Hora fin</label>
+                      <input type="time" value={cfgEnd} onChange={e => setCfgEnd(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
                     </div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    {customNights > 0
-                      ? `${customDays} días, ${customNights} noches, ${customRest} descanso`
-                      : `${customDays} días trabajo, ${customRest} descanso`
-                    }
-                  </p>
-                </>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Turno por vigilante</label>
+                    <select value={cfgBlockHours} onChange={e => setCfgBlockHours(e.target.value)} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                      <option value="">Toda la jornada (1 fijo{cfgWinMin === 1440 ? ' · 24h' : ''})</option>
+                      {[4, 6, 8, 12].map(h => {
+                        const fits = cfgWinMin > 0 && cfgWinMin % (h * 60) === 0;
+                        const k = fits ? cfgWinMin / (h * 60) : 0;
+                        return (
+                          <option key={h} value={String(h)} disabled={!fits}>
+                            {h}h{fits ? ` → ${k} fijo${k > 1 ? 's' : ''}` : ' (no divide la cobertura)'}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Cobertura de descansos</label>
+                    <select value={cfgRestCoverage} onChange={e => setCfgRestCoverage(e.target.value as 'sacafranco' | 'alternate')} className="w-full px-3 py-2 border border-border/40 rounded-lg text-sm bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                      <option value="sacafranco">Sacafranco cubre los descansos</option>
+                      <option value="alternate">Alternancia entre fijos (sin sacafranco)</option>
+                    </select>
+                    {cfgRestCoverage === 'alternate' && (
+                      <p className={`mt-1.5 text-[11px] ${cfgAlternateOk ? 'text-muted-foreground' : 'text-red-500'}`}>
+                        {!cfgRotStyle
+                          ? 'Sin patrón elegido se usa 1-1: cada fijo trabaja su bloque completo y alterna con el siguiente, sin libres.'
+                          : cfgAlternateOk
+                            ? `Patrón ${cfgRotWork}-${cfgRotCycle - cfgRotWork}: ${cfgGuardsPerBlock} fijos alternando por bloque, sin sacafranco. Total ${cfgBlockCount * cfgGuardsPerBlock} fijos.`
+                            : `El ciclo (${cfgRotCycle}) debe ser múltiplo de los días de trabajo (${cfgRotWork}). Usa 1-1, 2-2, 3-3…`}
+                      </p>
+                    )}
+                    {cfgRestCoverage === 'sacafranco' && cfgBlocksOk && cfgBlockCount > 1 && (
+                      <p className="mt-1.5 text-[11px] text-muted-foreground">
+                        {cfgWinMin / 60}h de cobertura en {cfgBlockCount} bloques consecutivos de {Number(cfgBlockHours)}h — {cfgBlockCount} fijos + sacafranco.
+                      </p>
+                    )}
+                  </div>
+                </div>
               )}
+
+              <RotationStyleSelect
+                scheduleType={configType}
+                value={configRotation}
+                onChange={setConfigRotation}
+                onStyleChange={setCfgRotStyle}
+              />
             </div>
             <div className="px-5 py-3 border-t border-border/20 flex items-center justify-end gap-2">
               <button onClick={() => setConfigStation(null)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground">Cancelar</button>
