@@ -147,6 +147,14 @@ const addDays = (d: Date, n: number): Date => {
   return r;
 };
 
+// Days since the 2024-01-01 rotation epoch (matches backend getGlobalEpoch).
+// MUST use UTC arithmetic: subtracting LOCAL midnights and flooring loses a
+// day in DST timezones (929 days − 1h → floor 928), which shifted the whole
+// painted rotation by one day for any viewer outside a fixed-offset zone —
+// the "puse que empieza hoy y se refleja mañana" bug.
+const dseOf = (d: Date): number =>
+  Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(2024, 0, 1)) / 86400000);
+
 type ViewMode = 'month' | 'week' | 'day';
 
 const VIEW_KEY = 'programador.horario.view';
@@ -423,10 +431,7 @@ export default function Schedule() {
       // Sacafranco follows its OWN rotation using global epoch (Jan 1)
       const sfCycle = rot.dayShifts + rot.nightShifts + rot.restDays;
       if (sfCycle === 0) return 'rest';
-      const epoch = new Date(2024, 0, 1); // fixed rotation anchor (matches backend getGlobalEpoch)
-      const target = new Date(date);
-      target.setHours(0, 0, 0, 0);
-      const sfDiff = Math.floor((target.getTime() - epoch.getTime()) / (24 * 60 * 60 * 1000));
+      const sfDiff = dseOf(date); // DST-safe day index (matches backend getGlobalEpoch)
       const sfAdj = ((sfDiff - (assignment.platoonOffset || 0)) % sfCycle + sfCycle) % sfCycle;
       if (sfAdj < rot.dayShifts) return 'day';
       if (sfAdj < rot.dayShifts + rot.nightShifts) return 'night';
@@ -436,11 +441,7 @@ export default function Schedule() {
     // ─── FIJO LOGIC ─── Guard rotates work/rest following the station rotation
     // Uses GLOBAL EPOCH (Jan 1) for consistent sequential pattern across all stations
     const cycleLength = rot.dayShifts + rot.nightShifts + rot.restDays;
-    const epoch = new Date(2024, 0, 1); // fixed rotation anchor (matches backend getGlobalEpoch)
-    const target = new Date(date);
-    target.setHours(0, 0, 0, 0);
-    const diffMs = target.getTime() - epoch.getTime();
-    const daysSinceEpoch = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    const daysSinceEpoch = dseOf(date); // DST-safe day index (matches backend getGlobalEpoch)
     const adjustedDay = ((daysSinceEpoch - assignment.platoonOffset) % cycleLength + cycleLength) % cycleLength;
 
     // For 24H positions: distinguish day/night phases
@@ -462,11 +463,7 @@ export default function Schedule() {
     const cycleLength = rot.dayShifts + rot.nightShifts + rot.restDays;
     if (cycleLength === 0) return 'rest';
 
-    const epoch = new Date(2024, 0, 1); // fixed rotation anchor (matches backend getGlobalEpoch)
-    const target = new Date(date);
-    target.setHours(0, 0, 0, 0);
-    const diffMs = target.getTime() - epoch.getTime();
-    const daysSinceEpoch = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    const daysSinceEpoch = dseOf(date); // DST-safe day index (matches backend getGlobalEpoch)
     // Use position's platoonOffset (station-defined) to stagger positions
     const offset = position.platoonOffset ?? position.sortOrder ?? 0;
     const adjustedDay = ((daysSinceEpoch - offset) % cycleLength + cycleLength) % cycleLength;
