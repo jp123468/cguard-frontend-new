@@ -1404,7 +1404,7 @@ export default function Schedule() {
       <div
         key={dayIdx}
         id={`hc-${pos.id}-${dayIdx}`}
-        className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-primary/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}${cellSelCls(pos.id, dayIdx)}`}
+        className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[36px] flex ${isToday ? 'bg-primary/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}${cellSelCls(pos.id, dayIdx)}`}
         onMouseDown={e => { if (e.button === 0) startCellSelect(pos.id, dayIdx, e.shiftKey); }}
         onMouseEnter={() => hoverCellSelect(pos.id, dayIdx)}
         onDragOver={e => e.preventDefault()}
@@ -1416,7 +1416,7 @@ export default function Schedule() {
             const slotStatus = getSlotStatus(station.id, pos, day);
             if (slotStatus === 'rest') {
               return (
-                <div className="h-[20px] rounded bg-muted/20 border border-dashed border-border/30 flex items-center justify-center cursor-pointer" title="Slot libre (sin vigilante — doble clic para asignar)" onDoubleClick={() => openAssignForm(station.id, pos.id, dateStr)}>
+                <div className="flex-1 rounded bg-muted/20 border border-dashed border-border/30 flex items-center justify-center cursor-pointer" title="Slot libre (sin vigilante — doble clic para asignar)" onDoubleClick={() => openAssignForm(station.id, pos.id, dateStr)}>
                   <span className="text-[10px] font-bold text-muted-foreground/40">L</span>
                 </div>
               );
@@ -1430,13 +1430,13 @@ export default function Schedule() {
             const bg = code === 'N' ? 'bg-indigo-500/8 border-indigo-500/20' : 'bg-sky-500/8 border-sky-500/20';
             const textColor = code === 'N' ? 'text-indigo-400/50' : 'text-sky-500/50';
             return (
-              <div className={`h-[20px] rounded border border-dashed flex items-center justify-center cursor-pointer ${bg}`} title={`Slot ${code} (sin vigilante — doble clic para asignar)`} onDoubleClick={() => openAssignForm(station.id, pos.id, dateStr)}>
+              <div className={`flex-1 rounded border border-dashed flex items-center justify-center cursor-pointer ${bg}`} title={`Slot ${code} (sin vigilante — doble clic para asignar)`} onDoubleClick={() => openAssignForm(station.id, pos.id, dateStr)}>
                 <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
               </div>
             );
           })()
         ) : (
-          <div className="space-y-0.5">
+          <div className="flex-1 flex flex-col gap-0.5">
             {posAssignments.map(assignment => {
               const guardName = assignment.guard
                 ? `${assignment.guard.firstName || ''} ${assignment.guard.lastName || ''}`.trim()
@@ -1451,7 +1451,7 @@ export default function Schedule() {
                 return (
                   <div
                     key={assignment.id}
-                    className={`h-[20px] rounded flex items-center justify-center cursor-pointer ${s.bg}`}
+                    className={`flex-1 min-h-[18px] rounded flex items-center justify-center cursor-pointer ${s.bg}`}
                     style={{ borderLeft: `2px solid ${color}` }}
                     title={`${guardName} — ${oType}${override.note ? ': ' + override.note : ''} (doble clic para editar)`}
                     onDoubleClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
@@ -1474,7 +1474,7 @@ export default function Schedule() {
                 return (
                   <div
                     key={assignment.id}
-                    className={`h-[20px] rounded flex items-center justify-center cursor-pointer relative ${sfLabel ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-muted/30 hover:bg-muted/50'}`}
+                    className={`flex-1 min-h-[18px] rounded flex items-center justify-center cursor-pointer relative ${sfLabel ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-muted/30 hover:bg-muted/50'}`}
                     title={`${guardName} — Libre${sfTooltip ? ` · Cubre: ${sfTooltip}` : ' (sin cobertura)'}`}
                     onDoubleClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
                   >
@@ -1503,7 +1503,7 @@ export default function Schedule() {
               return (
                 <div
                   key={assignment.id}
-                  className={`h-[20px] rounded flex items-center justify-center cursor-pointer hover:opacity-80 ${bg}`}
+                  className={`flex-1 min-h-[18px] rounded flex items-center justify-center cursor-pointer hover:opacity-80 ${bg}`}
                   style={{ borderLeft: `2px solid ${color}` }}
                   title={`${guardName} — ${code === 'N' ? 'Nocturno' : 'Diurno'} (doble clic para novedad)`}
                   onDoubleClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
@@ -1879,7 +1879,7 @@ export default function Schedule() {
                                 const isToday = dateStr === todayStr;
                                 const isSunday = day.getDay() === 0;
                                 const cov = sfPreview.get(`${pos.id}-${dateStr}`);
-                                const cellBase = `border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-primary/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}${cellSelCls(pos.id, dayIdx)}`;
+                                const cellBase = `border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[36px] flex ${isToday ? 'bg-primary/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}${cellSelCls(pos.id, dayIdx)}`;
                                 const cellProps = {
                                   id: `hc-${pos.id}-${dayIdx}`,
                                   onMouseDown: (e: React.MouseEvent) => { if (e.button === 0) startCellSelect(pos.id, dayIdx, e.shiftKey); },
@@ -1897,7 +1897,7 @@ export default function Schedule() {
                                   return (
                                     <div key={dayIdx} {...cellProps} className={cellBase}>
                                       <div
-                                        className={`h-[20px] rounded flex items-center justify-center cursor-pointer ${s.bg}`}
+                                        className={`flex-1 rounded flex items-center justify-center cursor-pointer ${s.bg}`}
                                         title={`${gName} — ${override.type}${override.note ? ': ' + override.note : ''} (doble clic para editar)`}
                                         onDoubleClick={() => setOverrideTarget({ guardId: sfGuard.guardId, guardName: gName, date: dateStr, assignmentId: sfGuard.id })}
                                       >
@@ -1918,7 +1918,7 @@ export default function Schedule() {
                                   return (
                                     <div key={dayIdx} {...cellProps} className={cellBase}>
                                       <div
-                                        className={`h-[20px] rounded flex items-center justify-center cursor-pointer ${assigned ? 'bg-muted/30' : 'bg-muted/20 border border-dashed border-border/30'}`}
+                                        className={`flex-1 rounded flex items-center justify-center cursor-pointer ${assigned ? 'bg-muted/30' : 'bg-muted/20 border border-dashed border-border/30'}`}
                                         onDoubleClick={openSfDetail}
                                       >
                                         <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
@@ -1934,7 +1934,7 @@ export default function Schedule() {
                                 return (
                                   <div key={dayIdx} {...cellProps} className={cellBase}>
                                     <div
-                                      className={`h-[20px] rounded flex flex-col items-center justify-center cursor-pointer ${bg} ${assigned ? '' : 'border border-dashed border-border/30'}`}
+                                      className={`flex-1 rounded flex flex-col items-center justify-center cursor-pointer ${bg} ${assigned ? '' : 'border border-dashed border-border/30'}`}
                                       title={`Cubre: ${stationsById.get(cov.stationId)?.stationName || ''}`}
                                       onDoubleClick={openSfDetail}
                                     >

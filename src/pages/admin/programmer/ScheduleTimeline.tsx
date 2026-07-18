@@ -5,12 +5,13 @@ import { toast } from 'sonner';
 import { confirmDialog } from '@/components/ui/confirmDialog';
 
 /**
- * Semana/Día timeline for Programador › Horario: one row per estación, X axis
- * = hours (tenant wall-clock). Drag on an empty area to DRAW a work block
- * (turno) of any shape — e.g. 07:00 of one day to 07:00 of the next — then
- * pick the vigilante in the modal. Creates a real ad-hoc `shift` (same
- * backend as the station "Turno único"), so it coexists with the rotation
- * engine and shows everywhere.
+ * Semana/Día timeline for Programador › Horario, calendar-style: the TIME axis
+ * runs VERTICALLY on the left (hours going down, tenant wall-clock) and each
+ * estación is a COLUMN. Drag vertically on an empty area of a column to DRAW a
+ * work block (turno) of any shape — e.g. 07:00 of one day down to 07:00 of the
+ * next — then pick the vigilante in the modal. Creates a real ad-hoc `shift`
+ * (same backend as the station "Turno único"), so it coexists with the
+ * rotation engine and shows everywhere.
  */
 
 // ─── Types (structural copies of Schedule.tsx shapes) ───────────────────────
@@ -113,12 +114,15 @@ const minLabel = (abs: number) => `${pad2(Math.floor((((abs % 1440) + 1440) % 14
 export default function ScheduleTimeline({
   tenantId, view, days, stations, shifts, guardsPool, guardColorMap, tz, todayStr, onChanged,
 }: Props) {
-  const hourW = view === 'day' ? 44 : 16;
-  const pxPerMin = hourW / 60;
+  // Vertical scale: px per HOUR going down.
+  const hourH = view === 'day' ? 40 : 8;
+  const pxPerMin = hourH / 60;
   const snapStep = view === 'day' ? 30 : 60;
   const totalMin = days.length * 1440;
-  const totalW = totalMin * pxPerMin;
-  const LABEL_W = 200;
+  const totalH = totalMin * pxPerMin;
+  const GUTTER_W = 64;   // left time axis
+  const COL_W = 168;     // one column per estación
+  const HEADER_H = 44;
   const firstDayStr = fmtDate(days[0]);
 
   const absOfWall = useCallback((w: { dateStr: string; minutes: number }): number => {
@@ -126,8 +130,8 @@ export default function ScheduleTimeline({
     return dd * 1440 + w.minutes;
   }, [firstDayStr]);
 
-  // Blocks per station with greedy lane packing (overlaps stack instead of hiding).
-  const rowsByStation = useMemo(() => {
+  // Blocks per station with greedy lane packing (overlaps sit side-by-side).
+  const colsByStation = useMemo(() => {
     const m = new Map<string, { blocks: { shift: ShiftRecord; a: number; b: number; lane: number }[]; lanes: number }>();
     for (const st of stations) m.set(st.id, { blocks: [], lanes: 1 });
     for (const s of shifts) {
@@ -159,7 +163,13 @@ export default function ScheduleTimeline({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [absOfWall, tz, totalMin, shifts]); // shifts changes ~= a refresh tick
 
-  // ─── Drag-to-draw ────────────────────────────────────────────────────────
+  // Hour tick marks down the gutter (skip 0h — the day label sits there).
+  const tickHours = useMemo(() => {
+    if (view === 'day') return Array.from({ length: 23 }, (_, i) => i + 1);
+    return [6, 12, 18];
+  }, [view]);
+
+  // ─── Drag-to-draw (vertical) ─────────────────────────────────────────────
 
   const [draft, setDraft] = useState<{ stationId: string; anchor: number; head: number } | null>(null);
   const draftRectRef = useRef<DOMRect | null>(null);
@@ -177,7 +187,7 @@ export default function ScheduleTimeline({
     if (e.button !== 0) return;
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     draftRectRef.current = rect;
-    const min = snap((e.clientX - rect.left) / pxPerMin);
+    const min = snap((e.clientY - rect.top) / pxPerMin);
     setDraft({ stationId, anchor: min, head: min });
   };
 
@@ -188,7 +198,7 @@ export default function ScheduleTimeline({
       if (!rect) return;
       setDraft(prev => {
         if (!prev) return prev;
-        let head = snap((e.clientX - rect.left) / pxPerMin);
+        let head = snap((e.clientY - rect.top) / pxPerMin);
         // A shift can't exceed 24h (backend rule) — clamp the draw live.
         head = Math.max(prev.anchor - 1440, Math.min(prev.anchor + 1440, head));
         return { ...prev, head };
@@ -296,28 +306,23 @@ export default function ScheduleTimeline({
     }
   };
 
-  // Drop a guard chip (dragged from the side panel) onto a row → prefilled block.
-  const onRowDrop = (e: React.DragEvent, stationId: string) => {
+  // Drop a guard chip (dragged from the side panel) onto a column → prefilled block.
+  const onColDrop = (e: React.DragEvent, stationId: string) => {
     e.preventDefault();
     const guardId = e.dataTransfer.getData('guardId');
     if (!guardId) return;
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const start = snap((e.clientX - rect.left) / pxPerMin);
+    const start = snap((e.clientY - rect.top) / pxPerMin);
     openBlockModal(stationId, start, Math.min(totalMin, start + 12 * 60), guardId);
   };
 
   // ─── Render helpers ──────────────────────────────────────────────────────
-
-  const LANE_H = 26;
-  const rowHeight = (lanes: number) => Math.max(44, lanes * LANE_H + 10);
 
   const dayTint = (day: Date): string | null => {
     if (fmtDate(day) === todayStr) return 'rgba(200,134,10,0.06)';
     if (day.getDay() === 0) return 'rgba(239,68,68,0.04)';
     return null;
   };
-
-  const tickHours = view === 'day' ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23] : [0, 6, 12, 18];
 
   const guardLabelOf = (s: ShiftRecord) =>
     s.guard ? `${s.guard.firstName || ''} ${s.guard.lastName || ''}`.trim() : (guardsPool.find(g => g.id === s.guardId)?.label || '?');
@@ -327,96 +332,104 @@ export default function ScheduleTimeline({
   return (
     <>
       <div className="flex-1 min-w-0 overflow-auto select-none bg-card border border-border/40 rounded-xl shadow-sm">
-        <div style={{ minWidth: LABEL_W + totalW }}>
-          {/* ─── Frozen header: day labels + hour ticks ─── */}
+        <div style={{ minWidth: GUTTER_W + stations.length * COL_W }}>
+          {/* ─── Frozen header: station columns ─── */}
           <div className="sticky top-0 z-30 border-b border-border/30 bg-card">
-            <div className="flex">
-              <div className="sticky left-0 z-40 shrink-0 bg-card border-r border-border/20 px-4 flex items-center text-xs font-semibold text-muted-foreground uppercase tracking-wide" style={{ width: LABEL_W }}>
-                Estación
+            <div className="flex" style={{ height: HEADER_H }}>
+              <div className="sticky left-0 z-40 shrink-0 bg-card border-r border-border/20 flex items-center justify-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide" style={{ width: GUTTER_W }}>
+                Hora
               </div>
-              <div className="relative" style={{ width: totalW, height: 46 }}>
-                {days.map((day, di) => {
-                  const isToday = fmtDate(day) === todayStr;
-                  return (
-                    <div
-                      key={di}
-                      className="absolute top-0 bottom-0 border-r border-border/30"
-                      style={{ left: di * 1440 * pxPerMin, width: 1440 * pxPerMin }}
-                    >
-                      <div className={`px-2 pt-1 text-[11px] font-semibold truncate ${isToday ? 'text-primary' : 'text-foreground'}`}>
-                        {DAYS_ES[day.getDay()]} {day.getDate()}
-                        {view === 'day' && di === 1 && <span className="ml-1 text-[9px] font-normal text-muted-foreground">(día siguiente)</span>}
-                      </div>
-                      <div className="relative h-[18px]">
-                        {tickHours.map(h => (
-                          <span
-                            key={h}
-                            className="absolute text-[8px] text-muted-foreground"
-                            style={{ left: h * 60 * pxPerMin + 2 }}
-                          >
-                            {pad2(h)}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-                {nowAbs != null && (
-                  <div className="absolute top-0 bottom-0 w-px bg-primary z-10" style={{ left: nowAbs * pxPerMin }} />
-                )}
-              </div>
+              {stations.map(st => (
+                <div key={st.id} className="shrink-0 border-r border-border/20 px-3 py-1.5 overflow-hidden" style={{ width: COL_W }}>
+                  <div className="text-xs font-semibold text-foreground truncate">{st.stationName}</div>
+                  <div className="text-[10px] text-muted-foreground truncate">
+                    {st.scheduleType ? st.scheduleType.replace('-', ' ').toUpperCase() : 'Sin configurar'}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* ─── Station rows ─── */}
-          {stations.map(station => {
-            const row = rowsByStation.get(station.id) || { blocks: [], lanes: 1 };
-            const h = rowHeight(row.lanes);
-            const rowDraft = draft && draft.stationId === station.id ? draft : null;
-            const dA = rowDraft ? Math.min(rowDraft.anchor, rowDraft.head) : 0;
-            const dB = rowDraft ? Math.max(rowDraft.anchor, rowDraft.head) : 0;
-
-            return (
-              <div key={station.id} className="flex border-b border-border/15 last:border-b-0">
-                {/* Frozen label */}
-                <div className="sticky left-0 z-20 shrink-0 bg-card border-r border-border/20 px-4 py-2 flex flex-col justify-center" style={{ width: LABEL_W, minHeight: h }}>
-                  <div className="text-xs font-semibold text-foreground truncate">{station.stationName}</div>
-                  <div className="text-[10px] text-muted-foreground">
-                    {station.scheduleType ? station.scheduleType.replace('-', ' ').toUpperCase() : 'Sin configurar'}
+          {/* ─── Body: time gutter (frozen left) + one column per estación ─── */}
+          <div className="flex">
+            {/* Time axis */}
+            <div className="sticky left-0 z-20 shrink-0 bg-card border-r border-border/20 relative" style={{ width: GUTTER_W, height: totalH }}>
+              {days.map((day, di) => {
+                const top = di * 1440 * pxPerMin;
+                const isToday = fmtDate(day) === todayStr;
+                return (
+                  <div key={di}>
+                    {/* Day label at the day boundary */}
+                    <div className="absolute left-0 right-0 border-t border-border/40 px-1.5 pt-0.5" style={{ top }}>
+                      <span className={`text-[10px] font-bold ${isToday ? 'text-primary' : 'text-foreground'}`}>
+                        {DAYS_ES[day.getDay()]} {day.getDate()}
+                      </span>
+                      {view === 'day' && di === 1 && (
+                        <span className="block text-[8px] leading-tight text-muted-foreground">(siguiente)</span>
+                      )}
+                    </div>
+                    {/* Hour ticks */}
+                    {tickHours.map(h => (
+                      <span
+                        key={h}
+                        className="absolute right-1.5 text-[9px] text-muted-foreground -translate-y-1/2"
+                        style={{ top: top + h * 60 * pxPerMin }}
+                      >
+                        {pad2(h)}:00
+                      </span>
+                    ))}
                   </div>
-                </div>
+                );
+              })}
+              {nowAbs != null && (
+                <div className="absolute left-0 right-0 h-px bg-primary z-10" style={{ top: nowAbs * pxPerMin }} />
+              )}
+            </div>
 
-                {/* Canvas */}
+            {/* Station columns */}
+            {stations.map(station => {
+              const col = colsByStation.get(station.id) || { blocks: [], lanes: 1 };
+              const laneW = (COL_W - 6) / col.lanes;
+              const colDraft = draft && draft.stationId === station.id ? draft : null;
+              const dA = colDraft ? Math.min(colDraft.anchor, colDraft.head) : 0;
+              const dB = colDraft ? Math.max(colDraft.anchor, colDraft.head) : 0;
+
+              return (
                 <div
-                  className="relative cursor-crosshair"
+                  key={station.id}
+                  className="relative shrink-0 border-r border-border/15 cursor-crosshair"
                   style={{
-                    width: totalW,
-                    height: h,
-                    backgroundImage: `repeating-linear-gradient(to right, rgba(128,128,128,0.10) 0, rgba(128,128,128,0.10) 1px, transparent 1px, transparent ${hourW}px)`,
+                    width: COL_W,
+                    height: totalH,
+                    backgroundImage: `repeating-linear-gradient(to bottom, rgba(128,128,128,0.10) 0, rgba(128,128,128,0.10) 1px, transparent 1px, transparent ${hourH}px)`,
                   }}
                   onMouseDown={e => beginDraw(e, station.id)}
                   onDragOver={e => e.preventDefault()}
-                  onDrop={e => onRowDrop(e, station.id)}
+                  onDrop={e => onColDrop(e, station.id)}
                 >
-                  {/* Day tints + boundaries */}
+                  {/* Day tints + boundaries (horizontal bands) */}
                   {days.map((day, di) => {
                     const tint = dayTint(day);
                     return (
-                      <div key={di} className="absolute top-0 bottom-0 pointer-events-none border-r border-border/30" style={{ left: di * 1440 * pxPerMin, width: 1440 * pxPerMin, backgroundColor: tint || undefined }} />
+                      <div
+                        key={di}
+                        className="absolute left-0 right-0 pointer-events-none border-t border-border/40"
+                        style={{ top: di * 1440 * pxPerMin, height: 1440 * pxPerMin, backgroundColor: tint || undefined }}
+                      />
                     );
                   })}
 
                   {/* Now line */}
                   {nowAbs != null && (
-                    <div className="absolute top-0 bottom-0 w-px bg-primary/70 pointer-events-none" style={{ left: nowAbs * pxPerMin }} />
+                    <div className="absolute left-0 right-0 h-px bg-primary/70 pointer-events-none" style={{ top: nowAbs * pxPerMin }} />
                   )}
 
                   {/* Shift blocks */}
-                  {row.blocks.map(blk => {
+                  {col.blocks.map(blk => {
                     const s = blk.shift;
                     const color = guardColorMap[s.guardId] || '#888';
                     const isEngine = !!s.positionId;
-                    const w = (blk.b - blk.a) * pxPerMin;
+                    const h = (blk.b - blk.a) * pxPerMin;
                     const name = guardLabelOf(s);
                     const startW = dateToWall(new Date(s.startTime), tz);
                     const endW = dateToWall(new Date(s.endTime), tz);
@@ -424,34 +437,37 @@ export default function ScheduleTimeline({
                     return (
                       <div
                         key={s.id}
-                        className={`absolute rounded-md px-1.5 flex items-center gap-1 overflow-hidden cursor-pointer transition-all hover:brightness-110 ${isEngine ? 'border border-dashed' : 'border'}`}
+                        className={`absolute rounded-md px-1.5 py-0.5 overflow-hidden cursor-pointer transition-all hover:brightness-110 ${isEngine ? 'border border-dashed' : 'border'}`}
                         style={{
-                          left: blk.a * pxPerMin,
-                          width: Math.max(6, w - 2),
-                          top: 5 + blk.lane * LANE_H,
-                          height: LANE_H - 4,
+                          top: blk.a * pxPerMin,
+                          height: Math.max(8, h - 2),
+                          left: 3 + blk.lane * laneW,
+                          width: laneW - 2,
                           backgroundColor: `${color}${isEngine ? '14' : '26'}`,
                           borderColor: `${color}66`,
-                          borderLeft: `3px solid ${color}`,
+                          borderTop: `3px solid ${color}`,
                         }}
                         title={`${name} · ${timeLbl}${isEngine ? ' · generado por rotación' : ' · turno manual'}`}
                         onMouseDown={e => e.stopPropagation()}
                         onClick={() => setDetail(s)}
                       >
-                        {w > 56 && (
-                          <span className="text-[9px] font-semibold truncate" style={{ color }}>
-                            {name.split(' ')[0]}{w > 110 ? ` · ${timeLbl}` : ''}
+                        {h > 22 && (
+                          <span className="block text-[9px] font-semibold truncate" style={{ color }}>
+                            {name.split(' ')[0]}
                           </span>
+                        )}
+                        {h > 38 && (
+                          <span className="block text-[8px] text-muted-foreground truncate">{timeLbl}</span>
                         )}
                       </div>
                     );
                   })}
 
                   {/* Draw preview */}
-                  {rowDraft && dB > dA && (
+                  {colDraft && dB > dA && (
                     <div
-                      className="absolute top-1 bottom-1 rounded-md bg-primary/20 border-2 border-primary/60 pointer-events-none flex items-center justify-center"
-                      style={{ left: dA * pxPerMin, width: (dB - dA) * pxPerMin }}
+                      className="absolute left-1 right-1 rounded-md bg-primary/20 border-2 border-primary/60 pointer-events-none flex items-center justify-center"
+                      style={{ top: dA * pxPerMin, height: (dB - dA) * pxPerMin }}
                     >
                       <span className="text-[9px] font-bold text-primary whitespace-nowrap px-1">
                         {minLabel(dA)} – {minLabel(dB)} · {((dB - dA) / 60).toFixed(1).replace('.0', '')}h
@@ -459,9 +475,9 @@ export default function ScheduleTimeline({
                     </div>
                   )}
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
 
           {stations.length === 0 && (
             <div className="py-16 text-center text-sm text-muted-foreground">No hay estaciones.</div>
