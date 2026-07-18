@@ -617,6 +617,16 @@ export const clientService = {
         return data;
     },
 
+    // ----- Personal asignado ----------------------------------------------
+    async getClientPersonnel(clientId: string, opts: { sedeId?: string; role?: string; estado?: string; turno?: string; q?: string; page?: number; perPage?: number } = {}) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams();
+        Object.entries(opts).forEach(([k, v]) => { if (v !== undefined && v !== '' && v !== null) params.set(k, String(v)); });
+        const qs = params.toString() ? `?${params.toString()}` : '';
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/personnel${qs}`, { toast: { silentError: true } } as any);
+        return data?.data ?? data;
+    },
+
     // ----- Puestos y cobertura --------------------------------------------
     async getClientCoverage(clientId: string, opts: { postSiteId?: string; horizonMin?: number } = {}) {
         const tenantId = getTenantId();
