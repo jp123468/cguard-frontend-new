@@ -617,6 +617,26 @@ export const clientService = {
         return data;
     },
 
+    // ----- Incidentes -----------------------------------------------------
+    async getClientIncidentsBoard(clientId: string, opts: { from?: string; to?: string; q?: string; sedeId?: string; puestoId?: string; tipo?: string; estado?: string; prioridad?: string; page?: number; perPage?: number } = {}) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams();
+        Object.entries(opts).forEach(([k, v]) => { if (v !== undefined && v !== '' && v !== null) params.set(k, String(v)); });
+        const qs = params.toString() ? `?${params.toString()}` : '';
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/incidents-board${qs}`, { toast: { silentError: true } } as any);
+        return data?.data ?? data;
+    },
+    async getIncidentEvidence(clientId: string, incidentId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/incident/${incidentId}/evidence`, { toast: { silentError: true } } as any);
+        return (data?.data ?? data)?.items || [];
+    },
+    async updateIncidentStatus(clientId: string, incidentId: string, workStatus: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.patch<any>(`/tenant/${tenantId}/client-account/${clientId}/incident/${incidentId}/status`, { workStatus });
+        return data?.data ?? data;
+    },
+
     // ----- Personal asignado ----------------------------------------------
     async getClientPersonnel(clientId: string, opts: { sedeId?: string; role?: string; estado?: string; turno?: string; q?: string; page?: number; perPage?: number } = {}) {
         const tenantId = getTenantId();

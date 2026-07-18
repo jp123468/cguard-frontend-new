@@ -16,10 +16,11 @@ import ClientProjects from './components/ClientProjects/ClientProjects';
 import ClientContract from './components/ClientContract/ClientContract';
 import ClientCoverage from './components/ClientCoverage/ClientCoverage';
 import ClientStaff from './components/ClientStaff/ClientStaff';
+import ClientIncidents from './components/ClientIncidents/ClientIncidents';
 import ClientTabPlaceholder from './components/ClientTabPlaceholder';
 import { toast } from 'sonner';
 import { SkeletonCards, EmptyState, FadeIn } from '@/components/kit';
-import { Building2, AlertTriangle, BarChart3, File } from 'lucide-react';
+import { Building2, BarChart3, File } from 'lucide-react';
 
 export default function ClientsDetails() {
   const { id } = useParams();
@@ -141,7 +142,7 @@ export default function ClientsDetails() {
               {activeTab === 'contrato' && <ClientContract client={client} />}
               {activeTab === 'coverage' && <ClientCoverage client={client} />}
               {activeTab === 'staff' && <ClientStaff client={client} />}
-              {activeTab === 'incidents' && <ClientTabPlaceholder title="Incidentes" icon={<AlertTriangle />} description="Aquí irán los incidentes del cliente." />}
+              {activeTab === 'incidents' && <ClientIncidents client={client} />}
               {activeTab === 'reports' && <ClientTabPlaceholder title="Reportes" icon={<BarChart3 />} description="Aquí irán los reportes del cliente." />}
               {activeTab === 'documents' && <ClientTabPlaceholder title="Documentos" icon={<File />} description="Aquí irán los documentos del cliente." />}
             </>
