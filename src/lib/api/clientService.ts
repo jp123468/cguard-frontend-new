@@ -617,6 +617,39 @@ export const clientService = {
         return data;
     },
 
+    // ----- Reportes -------------------------------------------------------
+    async getClientReports(clientId: string, opts: { from?: string; to?: string; q?: string; page?: number; perPage?: number } = {}) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams();
+        Object.entries(opts).forEach(([k, v]) => { if (v !== undefined && v !== '' && v !== null) params.set(k, String(v)); });
+        const qs = params.toString() ? `?${params.toString()}` : '';
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/reports${qs}`, { toast: { silentError: true } } as any);
+        return data?.data ?? data;
+    },
+    async exportClientReport(clientId: string, type: string, from?: string, to?: string) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams({ type });
+        if (from) params.set('from', from);
+        if (to) params.set('to', to);
+        const resp = await api.get<Blob>(`/tenant/${tenantId}/client-account/${clientId}/reports-export?${params.toString()}`, { responseType: 'blob' } as any);
+        const blob = resp.data as any;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `reporte-${type}.csv`;
+        document.body.appendChild(a); a.click(); a.remove();
+        window.URL.revokeObjectURL(url);
+    },
+    async createReportSchedule(clientId: string, payload: { name: string; type: string; frequency: string }) {
+        const tenantId = getTenantId();
+        const { data } = await api.post<any>(`/tenant/${tenantId}/client-account/${clientId}/report-schedules`, payload);
+        return data?.data ?? data;
+    },
+    async deleteReportSchedule(clientId: string, scheduleId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.delete<any>(`/tenant/${tenantId}/client-account/${clientId}/report-schedules/${scheduleId}`);
+        return data?.data ?? data;
+    },
+
     // ----- Documentos -----------------------------------------------------
     async getClientDocuments(clientId: string, opts: { q?: string; category?: string; type?: string; page?: number; perPage?: number } = {}) {
         const tenantId = getTenantId();
