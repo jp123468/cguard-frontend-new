@@ -617,6 +617,27 @@ export const clientService = {
         return data;
     },
 
+    // ----- Documentos -----------------------------------------------------
+    async getClientDocuments(clientId: string, opts: { q?: string; category?: string; type?: string; page?: number; perPage?: number } = {}) {
+        const tenantId = getTenantId();
+        const params = new URLSearchParams();
+        Object.entries(opts).forEach(([k, v]) => { if (v !== undefined && v !== '' && v !== null) params.set(k, String(v)); });
+        const qs = params.toString() ? `?${params.toString()}` : '';
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/documents${qs}`, { toast: { silentError: true } } as any);
+        return data?.data ?? data;
+    },
+    async createClientDocument(clientId: string, payload: { name: string; mimeType: string; sizeInBytes: number; storageId: string; privateUrl?: string | null; publicUrl?: string | null; fileToken?: string | null; category?: string | null }) {
+        const tenantId = getTenantId();
+        const body = { ...payload, notableType: 'clientAccount', notableId: clientId };
+        const { data } = await api.post<any>(`/tenant/${tenantId}/attachments`, body);
+        return data?.data ?? data;
+    },
+    async deleteClientDocument(attachmentId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.delete<any>(`/tenant/${tenantId}/attachments/${attachmentId}`);
+        return data?.data ?? data;
+    },
+
     // ----- Incidentes -----------------------------------------------------
     async getClientIncidentsBoard(clientId: string, opts: { from?: string; to?: string; q?: string; sedeId?: string; puestoId?: string; tipo?: string; estado?: string; prioridad?: string; page?: number; perPage?: number } = {}) {
         const tenantId = getTenantId();
