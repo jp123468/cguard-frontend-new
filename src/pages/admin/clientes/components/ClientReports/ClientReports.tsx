@@ -155,14 +155,21 @@ export default function ClientReports({ client }: { client: any }) {
         {kpis.map((k) => <Kpi key={k.key} k={k} icon={KPI_ICONS[k.key] || <FileBarChart />} />)}
         <div className="cg-card p-4">
           <div className="mb-1 text-xs text-muted-foreground">Cumplimiento de puestos</div>
-          <div className="flex items-center gap-2">
-            <Donut segments={[{ value: cumplimiento.cumplidos || 0, color: '#2563eb' }, { value: cumplimiento.parciales || 0, color: '#f59e0b' }, { value: cumplimiento.incumplidos || 0, color: '#ef4444' }].filter((s) => s.value > 0)} centerTop={`${cumplimiento.pct ?? 0}%`} centerBottom="Cumplim." />
-            <div className="space-y-1 text-xs">
-              <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-blue-600" />Cumplidos <b className="ml-auto">{cumplimiento.cumplidosPct ?? 0}%</b></div>
-              <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" />Parciales <b className="ml-auto">{cumplimiento.parcialesPct ?? 0}%</b></div>
-              <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-500" />Incumplidos <b className="ml-auto">{cumplimiento.incumplidosPct ?? 0}%</b></div>
+          {cumplimiento.hasData === false ? (
+            <div className="flex items-center gap-2">
+              <Donut segments={[]} centerTop="—" centerBottom="Sin datos" />
+              <p className="text-xs text-muted-foreground">No hay turnos programados ni asistencias en el período.</p>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Donut segments={[{ value: cumplimiento.cumplidos || 0, color: '#2563eb' }, { value: cumplimiento.parciales || 0, color: '#f59e0b' }, { value: cumplimiento.incumplidos || 0, color: '#ef4444' }].filter((s) => s.value > 0)} centerTop={`${cumplimiento.pct ?? 0}%`} centerBottom="Cumplim." />
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-blue-600" />Cumplidos <b className="ml-auto">{cumplimiento.cumplidosPct ?? 0}%</b></div>
+                <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" />Parciales <b className="ml-auto">{cumplimiento.parcialesPct ?? 0}%</b></div>
+                <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-500" />Incumplidos <b className="ml-auto">{cumplimiento.incumplidosPct ?? 0}%</b></div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
