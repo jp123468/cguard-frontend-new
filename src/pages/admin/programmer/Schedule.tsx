@@ -1,5 +1,6 @@
 import { localToday } from '@/lib/utils';
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { getTenantTimezone } from '@/utils/tenantLocation';
+import { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from "react";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,6 @@ import {
   Sparkles,
   Zap,
   Sun,
-  Moon,
   AlertTriangle,
   Bot,
   ArrowRight,
@@ -25,10 +25,11 @@ import {
   MinusCircle,
   RefreshCw,
   MapPin,
+  CalendarDays,
+  PanelRightClose,
+  PanelRightOpen,
 } from "lucide-react";
-import Breadcrumb from "@/components/ui/breadcrumb";
-import { PageContainer, PageHeader, StatusBadge } from "@/components/kit";
-import { CalendarDays } from "lucide-react";
+import { StatusBadge } from "@/components/kit";
 import { ApiService } from "@/services/api/apiService";
 import { toast } from "sonner";
 import { confirmDialog } from "@/components/ui/confirmDialog";
@@ -105,6 +106,15 @@ interface ScheduleOverride {
   note?: string;
 }
 
+// A selectable grid row = one puesto (fijo or sacafranco) with its assignments.
+interface SelRow {
+  key: string; // position id
+  station: Station | null;
+  pos: StationPosition;
+  assignments: GuardAssignment[];
+  isSf: boolean;
+}
+
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -114,6 +124,23 @@ const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 // UTC (all of LATAM), causing wrong-month queries and off-by-one cell/override matching.
 const fmtDate = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// Today's YYYY-MM-DD in the COMPANY timezone (cached by AppLayout). The
+// operator may be in a different zone than the operation — the horario always
+// runs on company wall-clock.
+const tzToday = (): string => {
+  const tz = getTenantTimezone();
+  if (tz) {
+    try {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    } catch { /* bad cached tz → device time */ }
+  }
+  return localToday();
+};
+
+const monthKeyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+
+const VIEW_KEY = 'programador.horario.view';
 
 const POSITION_COLORS: Record<string, { bg: string; border: string; text: string; icon: any }> = {
   fijo: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-600', icon: Sun },
@@ -125,10 +152,29 @@ const GUARD_COLORS = [
   '#EC4899', '#06B6D4', '#F59E0B', '#8B5CF6', '#14B8A6',
 ];
 
+const OVERRIDE_STYLES: Record<string, { bg: string; text: string }> = {
+  V: { bg: 'bg-purple-500/20', text: 'text-purple-400' },
+  PM: { bg: 'bg-orange-500/20', text: 'text-orange-400' },
+  F: { bg: 'bg-red-500/20', text: 'text-red-400' },
+  '24': { bg: 'bg-amber-500/15', text: 'text-amber-500' },
+  D: { bg: 'bg-sky-500/15', text: 'text-sky-500' },
+  N: { bg: 'bg-indigo-500/15', text: 'text-indigo-400' },
+  L: { bg: 'bg-muted/30', text: 'text-muted-foreground/50' },
+};
+
+// Keyboard → novedad code (spreadsheet typing).
+const KEY_CODES: Record<string, string> = { d: 'D', n: 'N', l: 'L', v: 'V', f: 'F', p: 'PM', '2': '24' };
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function Schedule() {
   const tenantId = localStorage.getItem('tenantId') || '';
+
+  // Saved view (month + scroll + panels) so edits/reloads bring you back to the
+  // exact same spot instead of jumping to the top.
+  const savedView = useMemo(() => {
+    try { return JSON.parse(sessionStorage.getItem(VIEW_KEY) || 'null') || {}; } catch { return {}; }
+  }, []);
 
   // Data
   const [stations, setStations] = useState<Station[]>([]);
@@ -139,25 +185,32 @@ export default function Schedule() {
   const [rotationStyles, setRotationStyles] = useState<RotationStyle[]>([]);
   const [guardsPool, setGuardsPool] = useState<GuardOption[]>([]);
   const [staffing, setStaffing] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);       // initial load only
+  const [refreshing, setRefreshing] = useState(false); // silent refetches (grid stays mounted)
+  const hasLoadedRef = useRef(false);
 
   // View state
   const [currentDate, setCurrentDate] = useState(() => {
-    const d = new Date();
-    d.setDate(1);
-    d.setHours(0, 0, 0, 0);
-    return d;
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(VIEW_KEY) || 'null');
+      if (saved?.m) {
+        const [y, mo] = String(saved.m).split('-').map(Number);
+        if (y && mo) return new Date(y, mo - 1, 1);
+      }
+    } catch { /* fall through */ }
+    const [y, mo] = tzToday().split('-').map(Number);
+    return new Date(y, mo - 1, 1);
   });
+  const [panelOpen, setPanelOpen] = useState<boolean>(savedView.panel ?? true);
+  const [sfSectionOpen, setSfSectionOpen] = useState<boolean>(savedView.sf ?? false);
 
   // Assignment form
   const [showAssignForm, setShowAssignForm] = useState(false);
   const [assignTarget, setAssignTarget] = useState<{ stationId: string; positionId: string } | null>(null);
   const [assignGuard, setAssignGuard] = useState('');
-  // Rotation phase comes from the station position, not a date — default to today
-  // (no date input shown; reset to today on modal open).
-  const [assignStartDate, setAssignStartDate] = useState(() => localToday());
-  const [assignOffset, setAssignOffset] = useState(0);
+  const [assignStartDate, setAssignStartDate] = useState(() => tzToday());
   const [assignSaving, setAssignSaving] = useState(false);
+  const [moveFrom, setMoveFrom] = useState<GuardAssignment | null>(null); // drag-move source
   const [coverage, setCoverage] = useState<any>(null); // real coverage of live schedule
 
   // Configure station form
@@ -185,8 +238,11 @@ export default function Schedule() {
   const startDateStr = fmtDate(monthDays[0]);
   const endDateStr = fmtDate(monthDays[monthDays.length - 1]);
 
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
+  const fetchAll = useCallback(async (opts?: { silent?: boolean }) => {
+    // After the first load every refetch is SILENT: the grid stays mounted so
+    // the scroll position (and selection context) survives every save.
+    const silent = opts?.silent ?? hasLoadedRef.current;
+    if (silent) setRefreshing(true); else setLoading(true);
     try {
       const [overviewRes, rotRes, guardsRes, staffingRes, coverageRes] = await Promise.all([
         ApiService.get(`/tenant/${tenantId}/scheduler/overview?startDate=${startDateStr}&endDate=${endDateStr}`),
@@ -217,11 +273,12 @@ export default function Schedule() {
         const sd = staffingRes?.data || staffingRes;
         setStaffing(sd);
       }
+      hasLoadedRef.current = true;
     } catch (e: any) {
       console.error('[Scheduler] fetch error', e);
       toast.error('Error al cargar horario');
     } finally {
-      setLoading(false);
+      if (silent) setRefreshing(false); else setLoading(false);
     }
   }, [tenantId, startDateStr, endDateStr]);
 
@@ -248,17 +305,6 @@ export default function Schedule() {
     for (const p of positions) m.set(p.id, p);
     return m;
   }, [positions]);
-
-  // `${positionId}-${dateStr}` → shift for that day (avoids per-cell shifts.find scan).
-  // Key uses the raw startTime date slice to match the previous .find() semantics exactly.
-  const shiftsByPositionDate = useMemo(() => {
-    const m = new Map<string, ShiftRecord>();
-    for (const s of shifts) {
-      if (!s.positionId || !s.startTime) continue;
-      m.set(`${s.positionId}-${s.startTime.slice(0, 10)}`, s);
-    }
-    return m;
-  }, [shifts]);
 
   // Sacafranco PREVIEW (mirrors the backend STRICT 4-4-2 model): every SF runs a
   // real day→night→rest rotation (its platoonOffset = the planned SF offset). On
@@ -331,11 +377,11 @@ export default function Schedule() {
     return map;
   }, [positions, stationsById, rotationStylesById, monthDays]);
 
-  const getPositionsForStation = (stationId: string) =>
-    positions.filter(p => p.stationId === stationId && p.type !== 'sacafranco');
+  const getPositionsForStation = useCallback((stationId: string) =>
+    positions.filter(p => p.stationId === stationId && p.type !== 'sacafranco'), [positions]);
 
-  const getAssignmentsForPosition = (positionId: string) =>
-    assignments.filter(a => a.positionId === positionId);
+  const getAssignmentsForPosition = useCallback((positionId: string) =>
+    assignments.filter(a => a.positionId === positionId), [assignments]);
 
   const guardColorMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -411,7 +457,6 @@ export default function Schedule() {
     const cycleLength = rot.dayShifts + rot.nightShifts + rot.restDays;
     if (cycleLength === 0) return 'rest';
 
-    // Use Jan 1 of current year as epoch for consistent pattern display
     const epoch = new Date(2024, 0, 1); // fixed rotation anchor (matches backend getGlobalEpoch)
     const target = new Date(date);
     target.setHours(0, 0, 0, 0);
@@ -627,24 +672,103 @@ export default function Schedule() {
     return map;
   }, [stationAlerts]);
 
+  const getOverride = useCallback((guardId: string, dateStr: string): ScheduleOverride | undefined =>
+    overrides.find(o => o.guardId === guardId && String(o.date).slice(0, 10) === dateStr), [overrides]);
+
+  // ─── Spreadsheet selection model ─────────────────────────────────────────
+  // Rows (in visual order) that can hold a selection: every puesto row.
+
+  const selectableRows = useMemo<SelRow[]>(() => {
+    const rows: SelRow[] = [];
+    for (const st of stations) {
+      for (const pos of getPositionsForStation(st.id)) {
+        rows.push({ key: pos.id, station: st, pos, assignments: getAssignmentsForPosition(pos.id), isSf: false });
+      }
+    }
+    if (sfSectionOpen) {
+      for (const pos of positions.filter(p => p.type === 'sacafranco')) {
+        rows.push({ key: pos.id, station: stationsById.get(pos.stationId) || null, pos, assignments: getAssignmentsForPosition(pos.id), isSf: true });
+      }
+    }
+    return rows;
+  }, [stations, positions, sfSectionOpen, stationsById, getPositionsForStation, getAssignmentsForPosition]);
+
+  const rowIndexByKey = useMemo(() => {
+    const m = new Map<string, number>();
+    selectableRows.forEach((r, i) => m.set(r.key, i));
+    return m;
+  }, [selectableRows]);
+
+  // Selection: anchor (ar/ac) + focus (fr/fc) as indices into selectableRows / monthDays.
+  const [sel, setSel] = useState<{ ar: number; ac: number; fr: number; fc: number } | null>(null);
+  const mouseSelRef = useRef(false);
+
+  const selBounds = useMemo(() => sel ? {
+    r1: Math.min(sel.ar, sel.fr), r2: Math.max(sel.ar, sel.fr),
+    c1: Math.min(sel.ac, sel.fc), c2: Math.max(sel.ac, sel.fc),
+  } : null, [sel]);
+
+  const cellSelCls = useCallback((rowKey: string, c: number): string => {
+    if (!selBounds || !sel) return '';
+    const r = rowIndexByKey.get(rowKey);
+    if (r == null || r < selBounds.r1 || r > selBounds.r2 || c < selBounds.c1 || c > selBounds.c2) return '';
+    const isFocus = r === sel.fr && c === sel.fc;
+    return isFocus ? ' ring-2 ring-inset ring-primary bg-primary/10' : ' ring-1 ring-inset ring-primary/40 bg-primary/5';
+  }, [selBounds, sel, rowIndexByKey]);
+
+  const startCellSelect = useCallback((rowKey: string, c: number, shift: boolean) => {
+    const r = rowIndexByKey.get(rowKey);
+    if (r == null) return;
+    setSel(prev => (shift && prev) ? { ...prev, fr: r, fc: c } : { ar: r, ac: c, fr: r, fc: c });
+    if (!shift) mouseSelRef.current = true;
+  }, [rowIndexByKey]);
+
+  const hoverCellSelect = useCallback((rowKey: string, c: number) => {
+    if (!mouseSelRef.current) return;
+    const r = rowIndexByKey.get(rowKey);
+    if (r == null) return;
+    setSel(prev => prev ? { ...prev, fr: r, fc: c } : prev);
+  }, [rowIndexByKey]);
+
+  useEffect(() => {
+    const up = () => { mouseSelRef.current = false; };
+    window.addEventListener('mouseup', up);
+    return () => window.removeEventListener('mouseup', up);
+  }, []);
+
+  const scrollCellIntoView = useCallback((rowKey: string, c: number) => {
+    requestAnimationFrame(() => {
+      document.getElementById(`hc-${rowKey}-${c}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    });
+  }, []);
+
   // ─── Actions ──────────────────────────────────────────────────────────────
 
-  const openAssignForm = (stationId: string, positionId: string) => {
+  const openAssignForm = (stationId: string, positionId: string, dateStr?: string) => {
     setAssignTarget({ stationId, positionId });
     setAssignGuard('');
-    setAssignStartDate(fmtDate(new Date()));
-    setAssignOffset(0);
+    setAssignStartDate(dateStr || tzToday());
+    setMoveFrom(null);
     setShowAssignForm(true);
   };
 
-  const handleDrop = (e: React.DragEvent, stationId: string, positionId: string) => {
+  const onGuardDragStart = (e: React.DragEvent, guardId: string, fromAssignment?: GuardAssignment) => {
+    e.dataTransfer.setData('guardId', guardId);
+    if (fromAssignment) e.dataTransfer.setData('fromAssignmentId', fromAssignment.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, stationId: string, positionId: string, dateStr?: string) => {
     e.preventDefault();
     const guardId = e.dataTransfer.getData('guardId');
     if (!guardId) return;
+    const fromId = e.dataTransfer.getData('fromAssignmentId') || '';
+    const from = fromId ? assignments.find(a => a.id === fromId) || null : null;
+    if (from && from.positionId === positionId) return; // dropped back on its own puesto
+    setMoveFrom(from);
     setAssignTarget({ stationId, positionId });
     setAssignGuard(guardId);
-    setAssignStartDate(fmtDate(new Date()));
-    setAssignOffset(0);
+    setAssignStartDate(dateStr || tzToday());
     setShowAssignForm(true);
   };
 
@@ -656,20 +780,25 @@ export default function Schedule() {
     const isSacafranco = positions.find(p => p.id === assignTarget.positionId)?.type === 'sacafranco';
     setAssignSaving(true);
     try {
+      // Drag-move: free the guard from their current puesto first (one active
+      // rotation per vigilante), then create the new assignment.
+      if (moveFrom) {
+        await ApiService.delete(`/tenant/${tenantId}/guard-assignment/${moveFrom.id}`);
+      }
       await ApiService.post(`/tenant/${tenantId}/guard-assignment`, {
         data: {
           guardId: assignGuard,
           stationId: assignTarget.stationId,
           positionId: assignTarget.positionId,
           startDate: assignStartDate,
-          platoonOffset: assignOffset,
           isRelief: isSacafranco,
           // No rotationStyleId here — the guard INHERITS the station's patrón de
           // rotación (resolved server-side in assignmentService from station.rotationStyleId).
         },
       });
-      toast.success('Vigilante asignado');
+      toast.success(moveFrom ? 'Vigilante movido de puesto' : 'Vigilante asignado');
       setShowAssignForm(false);
+      setMoveFrom(null);
       fetchAll();
     } catch (e: any) {
       toast.error(e?.data?.message || e?.message || 'Error al asignar');
@@ -888,24 +1017,22 @@ export default function Schedule() {
     }
   };
 
-  // Schedule overrides
+  // Schedule overrides (novedades)
   const [overrideTarget, setOverrideTarget] = useState<{ guardId: string; guardName: string; date: string; assignmentId?: string } | null>(null);
-  const [sfSectionOpen, setSfSectionOpen] = useState(false); // SF section collapsed by default
 
-  const getOverride = (guardId: string, dateStr: string): ScheduleOverride | undefined =>
-    overrides.find(o => o.guardId === guardId && o.date === dateStr);
-
-  const saveOverride = async (type: string, note?: string) => {
-    if (!overrideTarget) return;
-
+  const performOverrideSave = useCallback(async (
+    target: { guardId: string; guardName: string; date: string; assignmentId?: string },
+    type: string,
+    note?: string,
+  ) => {
     // Marking an L on a fijo usually means "the real rotation is phased
     // differently" (the generated pattern put the libres on the wrong days).
     // The style already knows how many libres its cycle has (6-1 → 1, 4-4-2 →
     // 2), so ONE click is enough: the day you click becomes the START of the
     // rest block and it auto-extends `restDays` forward. We offer to re-anchor
     // THIS fijo's whole rotation from there — no need to place each L by hand.
-    if (type === 'L' && overrideTarget.assignmentId) {
-      const assignment = assignments.find(a => a.id === overrideTarget.assignmentId);
+    if (type === 'L' && target.assignmentId) {
+      const assignment = assignments.find(a => a.id === target.assignmentId);
       const pos = assignment ? positionsById.get(assignment.positionId) : null;
       const isFijo = !!assignment && !(pos?.type === 'sacafranco' || assignment.isRelief);
       const station = assignment ? stationsById.get(assignment.stationId) : null;
@@ -918,11 +1045,11 @@ export default function Schedule() {
           `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         const fmtHuman = (s: string) =>
           toLocal(s).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-        const guardId = overrideTarget.guardId;
-        const assignmentId = overrideTarget.assignmentId;
+        const guardId = target.guardId;
+        const assignmentId = target.assignmentId;
 
         // The clicked day starts the rest block; it spans `restDays` forward.
-        const blockStart = overrideTarget.date;
+        const blockStart = target.date;
         const blockDates = Array.from({ length: rot.restDays }, (_, i) =>
           fmt(new Date(toLocal(blockStart).getTime() + i * dayMs)),
         );
@@ -935,7 +1062,7 @@ export default function Schedule() {
           title: 'Ajustar la rotación desde este libre',
           message:
             `El puesto usa el patrón ${rot.name}${rot.restDays > 1 ? ` (${rot.restDays} libres seguidos)` : ''}. ` +
-            `¿Quieres que ${overrideTarget.guardName} descanse ${blockHuman} y la secuencia continúe automáticamente desde ahí?\n\n` +
+            `¿Quieres que ${target.guardName} descanse ${blockHuman} y la secuencia continúe automáticamente desde ahí?\n\n` +
             `Se recalculan solo los turnos futuros de este vigilante — los demás no se tocan.\n\n` +
             `«Solo este día» registra únicamente una novedad de libre en esa fecha.`,
           confirmText: 'Aplicar en adelante',
@@ -975,7 +1102,7 @@ export default function Schedule() {
 
     try {
       await ApiService.post(`/tenant/${tenantId}/schedule-overrides`, {
-        data: { guardId: overrideTarget.guardId, assignmentId: overrideTarget.assignmentId, date: overrideTarget.date, type, note },
+        data: { guardId: target.guardId, assignmentId: target.assignmentId, date: target.date, type, note },
       });
       toast.success(`Novedad ${type} registrada`);
       setOverrideTarget(null);
@@ -983,7 +1110,7 @@ export default function Schedule() {
     } catch (e: any) {
       toast.error(e?.message || 'Error');
     }
-  };
+  }, [assignments, positionsById, stationsById, rotationStylesById, tenantId, fetchAll]);
 
   const removeOverride = async (id: string) => {
     try {
@@ -996,63 +1123,410 @@ export default function Schedule() {
     }
   };
 
+  // ─── Spreadsheet batch edits (typed codes / delete over a range) ─────────
+
+  const cellsInSelection = useCallback((): { row: SelRow; dateStr: string }[] => {
+    if (!selBounds) return [];
+    const cells: { row: SelRow; dateStr: string }[] = [];
+    for (let r = selBounds.r1; r <= selBounds.r2; r++) {
+      const row = selectableRows[r];
+      if (!row || !row.assignments.length) continue;
+      for (let c = selBounds.c1; c <= selBounds.c2 && c < monthDays.length; c++) {
+        cells.push({ row, dateStr: fmtDate(monthDays[c]) });
+      }
+    }
+    return cells;
+  }, [selBounds, selectableRows, monthDays]);
+
+  const applyCodeToSelection = useCallback(async (type: string) => {
+    const cells = cellsInSelection();
+    if (!cells.length) {
+      toast.info('Selecciona celdas de un puesto con vigilante asignado');
+      return;
+    }
+    // Single cell + L on a fijo → keep the full "rephase from this libre" flow.
+    if (cells.length === 1 && type === 'L') {
+      const { row, dateStr } = cells[0];
+      const a = row.assignments[0];
+      const guardName = a.guard ? `${a.guard.firstName || ''} ${a.guard.lastName || ''}`.trim() : 'Vigilante';
+      await performOverrideSave({ guardId: a.guardId, guardName, date: dateStr, assignmentId: a.id }, type);
+      return;
+    }
+    // Optimistic: paint the cells immediately, then upsert in batch and
+    // silently re-sync. The grid never unmounts, so you stay where you are.
+    const now = Date.now();
+    setOverrides(prev => {
+      const drop = new Set(cells.flatMap(({ row, dateStr }) => row.assignments.map(a => `${a.guardId}|${dateStr}`)));
+      const kept = prev.filter(o => !drop.has(`${o.guardId}|${String(o.date).slice(0, 10)}`));
+      const added: ScheduleOverride[] = [];
+      cells.forEach(({ row, dateStr }, i) =>
+        row.assignments.forEach((a, j) =>
+          added.push({ id: `tmp-${now}-${i}-${j}`, guardId: a.guardId, assignmentId: a.id, date: dateStr, type })));
+      return [...kept, ...added];
+    });
+    const jobs = cells.flatMap(({ row, dateStr }) => row.assignments.map(a =>
+      ApiService.post(`/tenant/${tenantId}/schedule-overrides`, {
+        data: { guardId: a.guardId, assignmentId: a.id, date: dateStr, type },
+      })));
+    const results = await Promise.allSettled(jobs);
+    const failed = results.filter(r => r.status === 'rejected').length;
+    if (failed) toast.error(`${failed} novedad(es) no se pudieron guardar`);
+    else toast.success(`Novedad ${type} aplicada (${jobs.length})`);
+    fetchAll({ silent: true });
+  }, [cellsInSelection, performOverrideSave, tenantId, fetchAll]);
+
+  const clearSelectedCells = useCallback(async () => {
+    const cells = cellsInSelection();
+    if (!cells.length) return;
+    const victims: ScheduleOverride[] = [];
+    for (const { row, dateStr } of cells) {
+      for (const a of row.assignments) {
+        const o = getOverride(a.guardId, dateStr);
+        if (o) victims.push(o);
+      }
+    }
+    if (!victims.length) return;
+    const victimIds = new Set(victims.map(v => v.id));
+    setOverrides(prev => prev.filter(o => !victimIds.has(o.id)));
+    await Promise.allSettled(
+      victims
+        .filter(v => !String(v.id).startsWith('tmp-'))
+        .map(v => ApiService.delete(`/tenant/${tenantId}/schedule-overrides/${v.id}`)),
+    );
+    toast.success(`${victims.length} novedad(es) eliminadas`);
+    fetchAll({ silent: true });
+  }, [cellsInSelection, getOverride, tenantId, fetchAll]);
+
+  const openNovedadForFocus = useCallback(() => {
+    if (!sel) return;
+    const row = selectableRows[sel.fr];
+    if (!row || !row.assignments.length) {
+      if (row) openAssignForm(row.pos.stationId, row.pos.id, fmtDate(monthDays[sel.fc]));
+      return;
+    }
+    const a = row.assignments[0];
+    const guardName = a.guard ? `${a.guard.firstName || ''} ${a.guard.lastName || ''}`.trim() : 'Vigilante';
+    setOverrideTarget({ guardId: a.guardId, guardName, date: fmtDate(monthDays[sel.fc]), assignmentId: a.id });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sel, selectableRows, monthDays]);
+
   // ─── Navigation ───────────────────────────────────────────────────────────
 
-  const nav = (dir: number) => {
+  const nav = useCallback((dir: number) => {
+    setSel(null);
     setCurrentDate(prev => {
       const d = new Date(prev);
       d.setMonth(d.getMonth() + dir);
       d.setDate(1);
       return d;
     });
+  }, []);
+
+  const goToday = useCallback(() => {
+    setSel(null);
+    const [y, mo] = tzToday().split('-').map(Number);
+    setCurrentDate(new Date(y, mo - 1, 1));
+  }, []);
+
+  // ─── Keyboard (spreadsheet mode) ─────────────────────────────────────────
+
+  const modalOpen = showAssignForm || !!configStation || !!overrideTarget || !!proposalData;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      if (modalOpen) return;
+      if (e.key === 'PageDown') { e.preventDefault(); nav(1); return; }
+      if (e.key === 'PageUp') { e.preventDefault(); nav(-1); return; }
+      if (!sel) return;
+
+      const move = (dr: number, dc: number, extend: boolean) => {
+        setSel(prev => {
+          if (!prev) return prev;
+          const r = Math.max(0, Math.min(selectableRows.length - 1, prev.fr + dr));
+          const c = Math.max(0, Math.min(monthDays.length - 1, prev.fc + dc));
+          const row = selectableRows[r];
+          if (row) scrollCellIntoView(row.key, c);
+          return extend ? { ...prev, fr: r, fc: c } : { ar: r, ac: c, fr: r, fc: c };
+        });
+      };
+
+      switch (e.key) {
+        case 'ArrowRight': e.preventDefault(); move(0, 1, e.shiftKey); return;
+        case 'ArrowLeft': e.preventDefault(); move(0, -1, e.shiftKey); return;
+        case 'ArrowDown': e.preventDefault(); move(1, 0, e.shiftKey); return;
+        case 'ArrowUp': e.preventDefault(); move(-1, 0, e.shiftKey); return;
+        case 'Home': e.preventDefault(); move(0, -monthDays.length, e.shiftKey); return;
+        case 'End': e.preventDefault(); move(0, monthDays.length, e.shiftKey); return;
+        case 'Escape': setSel(null); return;
+        case 'Enter': e.preventDefault(); openNovedadForFocus(); return;
+        case 'Delete':
+        case 'Backspace': e.preventDefault(); void clearSelectedCells(); return;
+        default: {
+          if (e.metaKey || e.ctrlKey || e.altKey) return;
+          const code = KEY_CODES[e.key.toLowerCase()];
+          if (code) { e.preventDefault(); void applyCodeToSelection(code); }
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sel, modalOpen, selectableRows, monthDays, nav, openNovedadForFocus, clearSelectedCells, applyCodeToSelection, scrollCellIntoView]);
+
+  // ─── View persistence (month + scroll + panels) ──────────────────────────
+
+  const gridScrollRef = useRef<HTMLDivElement>(null);
+  const scrollSaveRaf = useRef(0);
+  const restoredRef = useRef(false);
+
+  const persistView = useCallback(() => {
+    // Don't write until the saved scroll has been restored — the mount-time
+    // persist would otherwise clobber the saved position with 0/0.
+    if (!restoredRef.current) return;
+    const el = gridScrollRef.current;
+    try {
+      sessionStorage.setItem(VIEW_KEY, JSON.stringify({
+        m: monthKeyOf(currentDate),
+        sl: el?.scrollLeft ?? 0,
+        st: el?.scrollTop ?? 0,
+        sf: sfSectionOpen,
+        panel: panelOpen,
+      }));
+    } catch { /* storage full/blocked */ }
+  }, [currentDate, sfSectionOpen, panelOpen]);
+
+  const onGridScroll = () => {
+    cancelAnimationFrame(scrollSaveRaf.current);
+    scrollSaveRaf.current = requestAnimationFrame(persistView);
   };
 
-  const goToday = () => {
-    const d = new Date();
-    d.setDate(1);
-    d.setHours(0, 0, 0, 0);
-    setCurrentDate(d);
-  };
+  useEffect(() => { persistView(); }, [persistView]);
+
+  // Restore the saved scroll position ONCE, after the first data render.
+  useLayoutEffect(() => {
+    if (loading || restoredRef.current) return;
+    restoredRef.current = true;
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(VIEW_KEY) || 'null');
+      const el = gridScrollRef.current;
+      if (saved && el && saved.m === monthKeyOf(currentDate)) {
+        el.scrollLeft = saved.sl || 0;
+        el.scrollTop = saved.st || 0;
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
+
+  // ─── Immersive height: fill the viewport below the app header ────────────
+
+  const shellRef = useRef<HTMLDivElement>(null);
+  const [shellTop, setShellTop] = useState(140);
+  // Content above the sheet can change height (onboarding banner appears/
+  // disappears, coverage badge loads) — re-measure whenever those flip.
+  const bannerVisible = !loading && stations.length > 0 && (positions.length === 0 || assignments.length === 0);
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (shellRef.current) setShellTop(Math.round(shellRef.current.getBoundingClientRect().top));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [loading, bannerVisible, coverage]);
 
   const monthLabel = useMemo(() => {
     return currentDate.toLocaleDateString('es', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
   }, [currentDate]);
 
-  const todayStr = fmtDate(new Date());
+  const todayStr = tzToday();
+  const gridCols = `240px repeat(${monthDays.length}, 44px)`;
+  const gridMinWidth = 240 + monthDays.length * 44;
+
+  const selInfo = useMemo(() => {
+    if (!sel || !selBounds) return null;
+    const row = selectableRows[sel.fr];
+    if (!row) return null;
+    const count = (selBounds.r2 - selBounds.r1 + 1) * (selBounds.c2 - selBounds.c1 + 1);
+    const guard = row.assignments[0]?.guard;
+    const who = guard ? `${guard.firstName || ''} ${guard.lastName || ''}`.trim() : 'sin vigilante';
+    return `${count} celda${count === 1 ? '' : 's'} · ${row.station?.stationName || ''} — ${row.pos.name} (${who})`;
+  }, [sel, selBounds, selectableRows]);
+
+  // ─── Cell renderers ──────────────────────────────────────────────────────
+
+  const renderFijoCell = (station: Station, pos: StationPosition, posAssignments: GuardAssignment[], day: Date, dayIdx: number) => {
+    const dateStr = fmtDate(day);
+    const isToday = dateStr === todayStr;
+    const isSunday = day.getDay() === 0;
+
+    return (
+      <div
+        key={dayIdx}
+        id={`hc-${pos.id}-${dayIdx}`}
+        className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-primary/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}${cellSelCls(pos.id, dayIdx)}`}
+        onMouseDown={e => { if (e.button === 0) startCellSelect(pos.id, dayIdx, e.shiftKey); }}
+        onMouseEnter={() => hoverCellSelect(pos.id, dayIdx)}
+        onDragOver={e => e.preventDefault()}
+        onDrop={e => handleDrop(e, station.id, pos.id, dateStr)}
+      >
+        {posAssignments.length === 0 ? (
+          (() => {
+            // Show rotation pattern even without a guard assigned
+            const slotStatus = getSlotStatus(station.id, pos, day);
+            if (slotStatus === 'rest') {
+              return (
+                <div className="h-[20px] rounded bg-muted/20 border border-dashed border-border/30 flex items-center justify-center cursor-pointer" title="Slot libre (sin vigilante — doble clic para asignar)" onDoubleClick={() => openAssignForm(station.id, pos.id, dateStr)}>
+                  <span className="text-[10px] font-bold text-muted-foreground/40">L</span>
+                </div>
+              );
+            }
+            // Use STATION scheduleType to determine D vs N label
+            const is24hSlot = station.scheduleType === '24h';
+            const isNightSlot = station.scheduleType === '12h-night';
+            const code = is24hSlot
+              ? (slotStatus === 'night' ? 'N' : 'D')
+              : isNightSlot ? 'N' : 'D';
+            const bg = code === 'N' ? 'bg-indigo-500/8 border-indigo-500/20' : 'bg-sky-500/8 border-sky-500/20';
+            const textColor = code === 'N' ? 'text-indigo-400/50' : 'text-sky-500/50';
+            return (
+              <div className={`h-[20px] rounded border border-dashed flex items-center justify-center cursor-pointer ${bg}`} title={`Slot ${code} (sin vigilante — doble clic para asignar)`} onDoubleClick={() => openAssignForm(station.id, pos.id, dateStr)}>
+                <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
+              </div>
+            );
+          })()
+        ) : (
+          <div className="space-y-0.5">
+            {posAssignments.map(assignment => {
+              const guardName = assignment.guard
+                ? `${assignment.guard.firstName || ''} ${assignment.guard.lastName || ''}`.trim()
+                : '?';
+              const color = guardColorMap[assignment.guardId] || '#666';
+              const override = getOverride(assignment.guardId, dateStr);
+
+              // If there's an override, show it instead of calculated rotation
+              if (override) {
+                const oType = override.type;
+                const s = OVERRIDE_STYLES[oType] || { bg: 'bg-muted/30', text: 'text-foreground' };
+                return (
+                  <div
+                    key={assignment.id}
+                    className={`h-[20px] rounded flex items-center justify-center cursor-pointer ${s.bg}`}
+                    style={{ borderLeft: `2px solid ${color}` }}
+                    title={`${guardName} — ${oType}${override.note ? ': ' + override.note : ''} (doble clic para editar)`}
+                    onDoubleClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
+                  >
+                    <span className={`text-[10px] font-bold ${s.text}`}>{oType}</span>
+                  </div>
+                );
+              }
+
+              const workStatus = isWorkDay(assignment, day);
+              // Determine display label based on STATION scheduleType
+              const is24h = station.scheduleType === '24h';
+              const isNightPos = station.scheduleType === '12h-night';
+
+              if (workStatus === 'rest') {
+                const coverKey = `${station.id}-${dateStr}`;
+                const coveringSfs = sfStationCoverage.get(coverKey) || [];
+                const sfLabel = coveringSfs.length > 0 ? coveringSfs[0].name : '';
+                const sfTooltip = coveringSfs.length > 0 ? coveringSfs.map(s => s.fullName).join(', ') : '';
+                return (
+                  <div
+                    key={assignment.id}
+                    className={`h-[20px] rounded flex items-center justify-center cursor-pointer relative ${sfLabel ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-muted/30 hover:bg-muted/50'}`}
+                    title={`${guardName} — Libre${sfTooltip ? ` · Cubre: ${sfTooltip}` : ' (sin cobertura)'}`}
+                    onDoubleClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
+                  >
+                    {sfLabel ? (
+                      <span className="text-[8px] font-bold text-emerald-600">{sfLabel}</span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
+                    )}
+                  </div>
+                );
+              }
+
+              // For 24H: show D/N based on rotation phase
+              // For 12H DAY: always D
+              // For 12H NIGHT: always N
+              const code = is24h
+                ? (workStatus === 'night' ? 'N' : 'D')
+                : isNightPos ? 'N' : 'D';
+              const bg = code === 'N'
+                ? 'bg-indigo-500/15'
+                : is24h ? 'bg-amber-500/15' : 'bg-sky-500/15';
+              const textColor = code === 'N'
+                ? 'text-indigo-400'
+                : is24h ? 'text-amber-500' : 'text-sky-500';
+
+              return (
+                <div
+                  key={assignment.id}
+                  className={`h-[20px] rounded flex items-center justify-center cursor-pointer hover:opacity-80 ${bg}`}
+                  style={{ borderLeft: `2px solid ${color}` }}
+                  title={`${guardName} — ${code === 'N' ? 'Nocturno' : 'Diurno'} (doble clic para novedad)`}
+                  onDoubleClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
+                >
+                  <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <AppLayout>
-      <Breadcrumb items={[{ label: "Panel de control", path: "/dashboard" }, { label: "Horario" }]} />
-
-      <PageContainer width="wide" className="px-4 lg:px-6">
-        {/* Header */}
-        <PageHeader
-          icon={<CalendarDays />}
-          title="Programador de Horarios"
-          subtitle="Rotaciones, coberturas y asignación de vigilantes por puesto."
-          badges={coverage && typeof coverage.coveredPct === 'number' ? (
-            (() => {
-              const ok = (coverage.gapCount || 0) === 0;
-              return (
-                <StatusBadge tone={ok ? 'green' : 'red'} dot={false}>
-                  {ok ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
-                  Cobertura {coverage.coveredPct}%
-                  {(coverage.gapCount || 0) > 0 && <span>· {coverage.gapCount} sin cubrir</span>}
-                </StatusBadge>
-              );
-            })()
-          ) : undefined}
-          actions={(
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => nav(-1)}><ChevronLeft size={16} /></Button>
-              <Button variant="outline" size="sm" onClick={goToday}>Hoy</Button>
-              <span className="text-sm font-medium text-foreground min-w-[150px] text-center">{monthLabel}</span>
-              <Button variant="outline" size="sm" onClick={() => nav(1)}><ChevronRight size={16} /></Button>
+      <div className="px-3 lg:px-4 pt-2 pb-2 flex flex-col">
+        {/* ─── Compact toolbar ─── */}
+        <div className="flex items-center gap-2 flex-wrap pb-2">
+          <div className="flex items-center gap-2 mr-1">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <CalendarDays size={16} className="text-primary" />
             </div>
-          )}
-        />
+            <div className="leading-tight">
+              <div className="text-sm font-bold text-foreground">Horario</div>
+              <div className="text-[10px] text-muted-foreground hidden sm:block">Programador de rotaciones y coberturas</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="sm" onClick={() => nav(-1)} title="Mes anterior (Re Pág)"><ChevronLeft size={16} /></Button>
+            <Button variant="outline" size="sm" onClick={goToday}>Hoy</Button>
+            <span className="text-sm font-medium text-foreground min-w-[130px] text-center">{monthLabel}</span>
+            <Button variant="outline" size="sm" onClick={() => nav(1)} title="Mes siguiente (Av Pág)"><ChevronRight size={16} /></Button>
+          </div>
+
+          {coverage && typeof coverage.coveredPct === 'number' && (() => {
+            const ok = (coverage.gapCount || 0) === 0;
+            return (
+              <StatusBadge tone={ok ? 'green' : 'red'} dot={false}>
+                {ok ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
+                Cobertura {coverage.coveredPct}%
+                {(coverage.gapCount || 0) > 0 && <span>· {coverage.gapCount} sin cubrir</span>}
+              </StatusBadge>
+            );
+          })()}
+
+          {refreshing && <Loader2 size={14} className="animate-spin text-muted-foreground" />}
+
+          <div className="flex-1" />
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPanelOpen(v => !v)}
+            className="gap-1.5"
+            title={panelOpen ? 'Ocultar panel lateral' : 'Mostrar panel (vigilantes, IA, personal)'}
+          >
+            {panelOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
+            <span className="hidden md:inline">Panel</span>
+          </Button>
+        </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -1065,727 +1539,618 @@ export default function Schedule() {
           </div>
         ) : (
           <>
-          {/* ─── Onboarding CTA: stations exist but unconfigured ─── */}
-          {(positions.length === 0 || assignments.length === 0) && (
-            <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl p-4 lg:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
-              <div className="flex items-start gap-3 flex-1">
-                <div className="shrink-0 w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                  <Sparkles size={20} className="text-primary" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-foreground">Tus estaciones aún no tienen horario</h3>
+            {/* ─── Onboarding CTA: stations exist but unconfigured ─── */}
+            {(positions.length === 0 || assignments.length === 0) && (
+              <div className="mb-2 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl px-4 py-2.5 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-start gap-3 flex-1">
+                  <Sparkles size={18} className="text-primary shrink-0 mt-0.5" />
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Tienes {stations.length} estaciones sin puestos ni vigilantes asignados. Genera la asignación automática para crear los puestos de cada estación, asignar vigilantes por cercanía y escalonar los turnos (sacafrancos incluidos).
+                    <span className="font-bold text-foreground">Tus estaciones aún no tienen horario. </span>
+                    Genera la asignación automática para crear los puestos, asignar vigilantes por cercanía y escalonar los turnos (sacafrancos incluidos).
                   </p>
                 </div>
-              </div>
-              <button
-                onClick={runAutoAssign}
-                disabled={autoAssigning}
-                className="shrink-0 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                {autoAssigning ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
-                {autoAssigning ? 'Asignando...' : 'Generar asignación automática'}
-              </button>
-            </div>
-          )}
-          <div className="flex gap-4">
-            {/* ─── Left Sidebar Panel ─── */}
-            <div className="w-[260px] shrink-0 space-y-3 hidden xl:block">
-              {/* AI Auto-Assign */}
-              <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles size={16} className="text-primary" />
-                  <h3 className="text-sm font-bold text-foreground">Asignación AI</h3>
-                </div>
-                <p className="text-[11px] text-muted-foreground mb-3">
-                  Asigna vigilantes automáticamente por cercanía, configura rotaciones óptimas y programa sacafrancos.
-                </p>
-                <button
-                  onClick={generateDraft}
-                  disabled={proposalLoading}
-                  className="w-full px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
-                >
-                  {proposalLoading ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
-                  {proposalLoading ? 'Generando borrador...' : 'Generar borrador de horario'}
-                </button>
-                <p className="mt-1 mb-3 text-[10px] text-muted-foreground">
-                  Calcula el horario propuesto y muestra los cambios antes de aplicar. No modifica nada hasta que publiques.
-                </p>
                 <button
                   onClick={runAutoAssign}
                   disabled={autoAssigning}
-                  className="w-full px-4 py-2 bg-background border border-input text-foreground rounded-xl text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                  className="shrink-0 px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2 whitespace-nowrap"
                 >
-                  {autoAssigning ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
-                  {autoAssigning ? 'Asignando...' : 'Auto-asignar puestos vacíos'}
+                  {autoAssigning ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
+                  {autoAssigning ? 'Asignando...' : 'Generar asignación automática'}
                 </button>
-                {autoResult && (
-                  <div className="mt-3 p-2 bg-background/60 rounded-lg space-y-1">
-                    <div className="text-[11px] text-foreground font-medium">Resultado:</div>
-                    <div className="text-[10px] text-muted-foreground">• {autoResult.titularesAssigned} titulares asignados</div>
-                    <div className="text-[10px] text-muted-foreground">• {autoResult.sacafrancosAssigned} sacafrancos asignados</div>
-                    <div className="text-[10px] text-muted-foreground">• {autoResult.unassignedRemaining} vigilantes sin asignar</div>
-                  </div>
-                )}
-                <button
-                  onClick={runOptimizeSacafrancos}
-                  disabled={autoAssigning}
-                  className="w-full mt-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
-                >
-                  <Shield size={12} />
-                  Optimizar Sacafrancos
-                </button>
-                <button
-                  onClick={runGeocode}
-                  disabled={geocoding}
-                  className="w-full mt-2 px-4 py-2 bg-background border border-input text-foreground rounded-xl text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                  title="Geolocaliza las direcciones de los vigilantes para asignar por cercanía real"
-                >
-                  {geocoding ? <Loader2 size={12} className="animate-spin" /> : <MapPin size={12} />}
-                  {geocoding ? 'Geolocalizando...' : 'Geolocalizar vigilantes'}
-                </button>
-                <button
-                  onClick={runAiRecommend}
-                  disabled={aiLoading}
-                  className="w-full mt-2 px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
-                >
-                  {aiLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                  {aiLoading ? 'Analizando...' : 'Recomendación IA'}
-                </button>
-                {aiRecommendation && (
-                  <div className="mt-3 p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg max-h-[300px] overflow-y-auto">
-                    <div className="text-[10px] font-semibold text-purple-600 mb-1"><Bot className="inline h-3 w-3 mr-1" />Recomendación IA:</div>
-                    <div className="text-[10px] text-foreground/80 whitespace-pre-wrap leading-relaxed">{aiRecommendation}</div>
-                  </div>
-                )}
               </div>
+            )}
 
-              {/* Stats summary */}
-              <div className="bg-card border border-border/40 rounded-xl p-4 space-y-2">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Personal Necesario</h3>
-                {staffing ? (
-                  <>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="bg-amber-500/10 rounded-lg p-2 text-center">
-                        <div className="text-lg font-bold text-amber-600">{staffing.fijosNeeded || 0}</div>
-                        <div className="text-[9px] text-muted-foreground">Fijos</div>
-                      </div>
-                      <div className="bg-emerald-500/10 rounded-lg p-2 text-center">
-                        <div className="text-lg font-bold text-emerald-500">{staffing.sacafrancosNeeded || 0}</div>
-                        <div className="text-[9px] text-muted-foreground">Sacafrancos</div>
-                      </div>
-                      <div className="bg-sky-500/10 rounded-lg p-2 text-center">
-                        <div className="text-lg font-bold text-sky-500">{staffing.totalGuardsNeeded || 0}</div>
-                        <div className="text-[9px] text-muted-foreground">Total</div>
-                      </div>
+            {/* ─── Sheet + side panel fill the rest of the viewport ─── */}
+            <div ref={shellRef} className="flex gap-2 min-h-0" style={{ height: `calc(100vh - ${shellTop + 8}px)`, minHeight: 320 }}>
+              {/* ─── The sheet ─── */}
+              <div
+                ref={gridScrollRef}
+                onScroll={onGridScroll}
+                tabIndex={0}
+                className="flex-1 min-w-0 overflow-auto outline-none select-none bg-card border border-border/40 rounded-xl shadow-sm"
+              >
+                <div style={{ minWidth: gridMinWidth }}>
+                  {/* Header row (frozen) */}
+                  <div className="grid sticky top-0 z-30 border-b border-border/30" style={{ gridTemplateColumns: gridCols }}>
+                    <div className="px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-r border-border/20 sticky left-0 z-40 bg-card">
+                      Estación / Puesto
                     </div>
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <div className="bg-muted/20 rounded-lg p-2 text-center">
-                        <div className="text-sm font-bold text-foreground">{staffing.currentFijoGuards || 0}<span className="text-muted-foreground font-normal">/{staffing.fijosNeeded || 0}</span></div>
-                        <div className="text-[9px] text-muted-foreground">Fijos asignados</div>
-                      </div>
-                      <div className="bg-muted/20 rounded-lg p-2 text-center">
-                        <div className="text-sm font-bold text-foreground">{staffing.currentSfGuards || 0}<span className="text-muted-foreground font-normal">/{staffing.sacafrancosNeeded || 0}</span></div>
-                        <div className="text-[9px] text-muted-foreground">SF asignados</div>
-                      </div>
-                    </div>
-                    {/* Hiring recommendation */}
-                    {((staffing.fijosNeeded - (staffing.currentFijoGuards || 0)) > 0 || (staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)) > 0) && (
-                      <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-2 space-y-1">
-                        <div className="text-[10px] font-semibold text-red-600"><AlertTriangle className="inline h-3 w-3 mr-1" />Contratar:</div>
-                        {(staffing.fijosNeeded - (staffing.currentFijoGuards || 0)) > 0 && (
-                          <div className="text-[10px] text-red-500">{staffing.fijosNeeded - (staffing.currentFijoGuards || 0)} fijos más</div>
-                        )}
-                        {(staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)) > 0 && (
-                          <div className="text-[10px] text-red-500">{staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)} sacafrancos más</div>
-                        )}
-                      </div>
-                    )}
-                    {staffing.sfRotation && (
-                      <div className="text-[10px] text-muted-foreground pt-1 border-t border-border/20">
-                        Rotación SF: <span className="font-semibold text-foreground">{staffing.sfRotation.name}</span> ({staffing.sfRotation.dayShifts}D-{staffing.sfRotation.nightShifts}N-{staffing.sfRotation.restDays}L)
-                      </div>
-                    )}
-                    <div className="text-[10px] text-muted-foreground">
-                      Demanda pico: <span className="font-semibold text-foreground">{staffing.peakDemand}</span> estaciones simultáneas
-                    </div>
-
-                    {stationAlerts.length > 0 && (
-                      <div className="pt-2 border-t border-border/20 space-y-1.5">
-                        <div className="flex items-center gap-1 text-[10px] font-semibold text-red-600">
-                          <AlertTriangle size={11} />
-                          Alertas por estación ({stationAlerts.length})
-                        </div>
-                        <div className="max-h-[160px] overflow-y-auto space-y-1 pr-1">
-                          {stationAlerts.map(alert => (
-                            <div key={alert.stationId} className="text-[10px] bg-red-500/5 border border-red-500/20 rounded px-2 py-1">
-                              <div className="font-medium text-foreground truncate">{alert.stationName}</div>
-                              {alert.missingFijoCount > 0 && (
-                                <div className="text-red-500">• {alert.missingFijoCount} fijo(s) sin vigilante</div>
-                              )}
-                              {alert.sfUncoveredDays > 0 && (
-                                <div className="text-red-500">• {alert.sfUncoveredDays} día(s) L sin SF cubriendo</div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-muted/20 rounded-lg p-2 text-center">
-                      <div className="text-lg font-bold text-foreground">{stations.length}</div>
-                      <div className="text-[9px] text-muted-foreground">Estaciones</div>
-                    </div>
-                    <div className="bg-muted/20 rounded-lg p-2 text-center">
-                      <div className="text-lg font-bold text-foreground">{assignments.length}</div>
-                      <div className="text-[9px] text-muted-foreground">Asignados</div>
-                    </div>
-                  </div>
-                )}
-                {/* Coverage */}
-                {(() => {
-                  const fijoPositions = positions.filter(p => p.type !== 'sacafranco');
-                  const covered = fijoPositions.filter(p => assignments.some(a => a.positionId === p.id)).length;
-                  const pct = fijoPositions.length > 0 ? Math.round((covered / fijoPositions.length) * 100) : 0;
-                  return (
-                    <div className="pt-2 border-t border-border/20">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] text-muted-foreground">Cobertura Fijos</span>
-                        <span className="text-[10px] font-semibold text-foreground">{pct}%</span>
-                      </div>
-                      <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
-                      </div>
-                      <div className="text-[9px] text-muted-foreground mt-1">{covered}/{fijoPositions.length} posiciones cubiertas</div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* Sacafrancos mini panel */}
-              {sacafrancoData.length > 0 && (
-                <div className="bg-card border border-emerald-500/20 rounded-xl p-3">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Shield size={12} className="text-emerald-500" />
-                    <h3 className="text-[11px] font-semibold text-foreground">Sacafrancos ({sacafrancoData.length})</h3>
-                  </div>
-                  <div className="space-y-1.5">
-                    {sacafrancoData.slice(0, 5).map(sf => {
-                      const name = sf.guard ? `${sf.guard.firstName || ''} ${sf.guard.lastName || ''}`.trim().split(' ').slice(0, 2).join(' ') : '?';
-                      const availDays = sf.availability.filter(a => a.status === 'available').length;
+                    {monthDays.map((day, i) => {
+                      const isToday = fmtDate(day) === todayStr;
+                      const isSunday = day.getDay() === 0;
                       return (
-                        <div key={sf.guard?.id} className="flex items-center justify-between py-1 px-2 rounded bg-muted/20">
-                          <span className="text-[10px] text-foreground font-medium truncate max-w-[120px]">{name}</span>
-                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${availDays > 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-600'}`}>
-                            {availDays} disp
-                          </span>
+                        <div key={i} className="relative px-0.5 py-1.5 text-center border-r border-border/20 last:border-r-0 bg-card">
+                          {/* Tint as an overlay: the cell itself stays OPAQUE so grid
+                              content never shows through the frozen header. */}
+                          {(isToday || isSunday) && (
+                            <div className={`absolute inset-0 pointer-events-none ${isToday ? 'bg-primary/10' : 'bg-red-500/5'}`} />
+                          )}
+                          <div className="relative text-[9px] font-medium text-muted-foreground uppercase">{DAYS_ES[day.getDay()]}</div>
+                          <div className={`relative text-xs font-semibold mt-0.5 ${isToday ? 'text-primary' : 'text-foreground'}`}>
+                            {day.getDate()}
+                          </div>
                         </div>
                       );
                     })}
-                    {sacafrancoData.length > 5 && (
-                      <div className="text-[9px] text-muted-foreground text-center">+{sacafrancoData.length - 5} más</div>
-                    )}
                   </div>
-                </div>
-              )}
-            </div>
 
-            {/* ─── Main Content ─── */}
-            <div className="flex-1 min-w-0 space-y-4">
-            {/* Schedule Grid */}
-            <div className="bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm overflow-x-auto">
-              {/* Header row */}
-              <div className="grid border-b border-border/30 bg-muted/20" style={{ gridTemplateColumns: `240px repeat(${monthDays.length}, 44px)` }}>
-                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-r border-border/20 sticky left-0 z-10 bg-muted/95 backdrop-blur-sm">
-                  Estación / Posición
-                </div>
-                {monthDays.map((day, i) => {
-                  const isToday = fmtDate(day) === todayStr;
-                  const isSunday = day.getDay() === 0;
-                  return (
-                    <div key={i} className={`px-0.5 py-2 text-center border-r border-border/20 last:border-r-0 ${isToday ? 'bg-primary/5' : ''} ${isSunday ? 'bg-red-500/5' : ''}`}>
-                      <div className="text-[9px] font-medium text-muted-foreground uppercase">{DAYS_ES[day.getDay()]}</div>
-                      <div className={`text-xs font-semibold mt-0.5 ${isToday ? 'text-primary' : 'text-foreground'}`}>
-                        {day.getDate()}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                  {/* Station rows */}
+                  {stations.map(station => {
+                    const stationPositions = getPositionsForStation(station.id);
+                    const hasPositions = stationPositions.length > 0;
+                    const stationAlert = stationAlertByStationId.get(station.id);
 
-              {/* Station rows */}
-              {stations.map(station => {
-                const stationPositions = getPositionsForStation(station.id);
-                const hasPositions = stationPositions.length > 0;
-                const stationAlert = stationAlertByStationId.get(station.id);
-
-                return (
-                  <div key={station.id} className="border-b border-border/20 last:border-b-0">
-                    {/* Station header */}
-                    <div className="grid bg-muted/10" style={{ gridTemplateColumns: `240px repeat(${monthDays.length}, 44px)` }}>
-                      <div className="px-4 py-2.5 flex items-center gap-2 border-r border-border/20 sticky left-0 z-10 bg-muted/95 backdrop-blur-sm">
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-foreground truncate">{station.stationName}</div>
-                          <div className="text-[11px] text-muted-foreground">
-                            {station.scheduleType ? station.scheduleType.replace('-', ' ').toUpperCase() : 'Sin configurar'}
-                          </div>
-                          {stationAlert && (
-                            <div className="mt-1 flex items-center gap-1 flex-wrap">
-                              {stationAlert.missingFijoCount > 0 && (
-                                <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/30 text-red-600 font-medium">
-                                  <AlertTriangle size={9} />
-                                  {stationAlert.missingFijoCount} fijo(s) faltan
-                                </span>
-                              )}
-                              {stationAlert.sfUncoveredDays > 0 && (
-                                <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-700 font-medium">
-                                  <AlertTriangle size={9} />
-                                  {stationAlert.sfUncoveredDays} L sin SF
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        {!hasPositions && (
-                          <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => configureStation(station)}>
-                            Configurar
-                          </Button>
-                        )}
-                        {hasPositions && (
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => configureStation(station)}
-                              className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
-                              title="Reconfigurar estación"
-                            >
-                              <Clock size={14} />
-                            </button>
-                            <button
-                              onClick={() => addPosition(station.id)}
-                              className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
-                              title="Agregar posición sacafranco"
-                            >
-                              <Plus size={14} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      {monthDays.map((_, i) => (
-                        <div key={i} className="border-r border-border/10 last:border-r-0" />
-                      ))}
-                    </div>
-
-                    {/* Position rows */}
-                    {stationPositions.map(pos => {
-                      const posAssignments = getAssignmentsForPosition(pos.id);
-                      const colors = POSITION_COLORS[pos.type] || POSITION_COLORS.fijo;
-                      const Icon = colors.icon;
-
-                      return (
-                        <div key={pos.id} className="grid border-t border-border/10" style={{ gridTemplateColumns: `240px repeat(${monthDays.length}, 44px)` }}>
-                          {/* Position label */}
-                          <div className="px-4 py-2 flex items-center gap-2 border-r border-border/20 sticky left-0 z-10 bg-card backdrop-blur-sm">
-                            <div className={`w-6 h-6 rounded flex items-center justify-center ${colors.bg}`}>
-                              <Icon size={12} className={colors.text} />
-                            </div>
+                    return (
+                      <div key={station.id} className="border-b border-border/20 last:border-b-0">
+                        {/* Station header */}
+                        <div className="grid bg-muted/10" style={{ gridTemplateColumns: gridCols }}>
+                          <div className="px-4 py-2 flex items-center gap-2 border-r border-border/20 sticky left-0 z-20 bg-card">
                             <div className="flex-1 min-w-0">
-                              <div className="text-xs font-medium text-foreground truncate">{pos.name}</div>
-                              <div className="text-[10px] text-muted-foreground">
-                                {station.scheduleType === '12h-night' ? '19:00 – 07:00' : station.scheduleType === '24h' ? '24 Horas' : '07:00 – 19:00'}
-                              </div>
+                              <div className="text-sm font-semibold text-foreground truncate">{station.stationName}</div>
+                              <button
+                                onClick={() => configureStation(station)}
+                                className="text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                                title="Cambiar tipo de horario / rotación"
+                              >
+                                {station.scheduleType ? station.scheduleType.replace('-', ' ').toUpperCase() : 'Sin configurar'}
+                              </button>
+                              {stationAlert && (
+                                <div className="mt-1 flex items-center gap-1 flex-wrap">
+                                  {stationAlert.missingFijoCount > 0 && (
+                                    <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/30 text-red-600 font-medium">
+                                      <AlertTriangle size={9} />
+                                      {stationAlert.missingFijoCount} fijo(s) faltan
+                                    </span>
+                                  )}
+                                  {stationAlert.sfUncoveredDays > 0 && (
+                                    <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-700 font-medium">
+                                      <AlertTriangle size={9} />
+                                      {stationAlert.sfUncoveredDays} L sin SF
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                            {/* Assigned guard names */}
-                            {posAssignments.length > 0 && (
-                              <div className="flex flex-col gap-0.5">
-                                {posAssignments.map(a => {
-                                  const name = a.guard ? `${a.guard.firstName || ''} ${a.guard.lastName || ''}`.trim().split(' ')[0] : '?';
-                                  const color = guardColorMap[a.guardId] || '#666';
-                                  return (
-                                    <button
-                                      key={a.id}
-                                      onClick={() => removeAssignment(a.id)}
-                                      className="text-[9px] font-medium px-1.5 py-0.5 rounded"
-                                      style={{ backgroundColor: `${color}20`, color }}
-                                      title={`${a.guard?.firstName} ${a.guard?.lastName} — Click para remover`}
-                                    >
-                                      {name} ×
-                                    </button>
-                                  );
-                                })}
-                              </div>
+                            {!hasPositions && (
+                              <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => configureStation(station)}>
+                                Configurar
+                              </Button>
                             )}
-                            {posAssignments.length === 0 && (
+                            {hasPositions && (
                               <div className="flex items-center gap-1">
                                 <button
-                                  onClick={() => openAssignForm(station.id, pos.id)}
-                                  className="p-1 rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
-                                  title="Asignar vigilante"
+                                  onClick={() => configureStation(station)}
+                                  className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                                  title="Reconfigurar estación (tipo de horario y rotación)"
                                 >
-                                  <Plus size={12} />
+                                  <Clock size={14} />
                                 </button>
                                 <button
-                                  onClick={() => deletePosition(station.id, pos.id)}
-                                  className="p-1 rounded-md hover:bg-red-500/10 text-muted-foreground/50 hover:text-red-500 transition-colors"
-                                  title="Eliminar posición"
+                                  onClick={() => addPosition(station.id)}
+                                  className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                                  title="Agregar posición sacafranco"
                                 >
-                                  <X size={11} />
+                                  <Plus size={14} />
                                 </button>
                               </div>
                             )}
                           </div>
+                          {monthDays.map((_, i) => (
+                            <div key={i} className="border-r border-border/10 last:border-r-0" />
+                          ))}
+                        </div>
 
-                          {/* Day cells */}
-                          {monthDays.map((day, dayIdx) => {
-                            const dateStr = fmtDate(day);
-                            const isToday = dateStr === todayStr;
-                            const isSunday = day.getDay() === 0;
+                        {/* Position rows */}
+                        {stationPositions.map(pos => {
+                          const posAssignments = getAssignmentsForPosition(pos.id);
+                          const colors = POSITION_COLORS[pos.type] || POSITION_COLORS.fijo;
+                          const Icon = colors.icon;
 
-                            return (
+                          return (
+                            <div key={pos.id} className="grid border-t border-border/10" style={{ gridTemplateColumns: gridCols }}>
+                              {/* Position label */}
                               <div
-                                key={dayIdx}
-                                className={`border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-primary/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`}
+                                className="px-4 py-2 flex items-center gap-2 border-r border-border/20 sticky left-0 z-20 bg-card"
                                 onDragOver={e => e.preventDefault()}
                                 onDrop={e => handleDrop(e, station.id, pos.id)}
                               >
-                                {posAssignments.length === 0 ? (
-                                  (() => {
-                                    // Show rotation pattern even without a guard assigned
-                                    const slotStatus = getSlotStatus(station.id, pos, day);
-                                    if (pos.type === 'sacafranco') {
-                                      // Sacafranco follows its own D/N/L rotation (same calc as fijo using position offset)
-                                      if (slotStatus === 'rest') {
-                                        return (
-                                          <div className="h-[20px] rounded bg-muted/20 border border-dashed border-border/30 flex items-center justify-center cursor-pointer" title="Sacafranco — Libre" onClick={() => openAssignForm(station.id, pos.id)}>
-                                            <span className="text-[10px] font-bold text-muted-foreground/40">L</span>
-                                          </div>
-                                        );
-                                      }
-                                      const sfCode = slotStatus === 'night' ? 'N' : 'D';
-                                      const sfBg = slotStatus === 'night' ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-emerald-500/10 border-emerald-500/30';
-                                      const sfText = slotStatus === 'night' ? 'text-indigo-400/60' : 'text-emerald-500/60';
+                                <div className={`w-6 h-6 rounded flex items-center justify-center ${colors.bg}`}>
+                                  <Icon size={12} className={colors.text} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs font-medium text-foreground truncate">{pos.name}</div>
+                                  <div className="text-[10px] text-muted-foreground">
+                                    {station.scheduleType === '12h-night' ? '19:00 – 07:00' : station.scheduleType === '24h' ? '24 Horas' : '07:00 – 19:00'}
+                                  </div>
+                                </div>
+                                {/* Assigned guard names — draggable to MOVE to another puesto */}
+                                {posAssignments.length > 0 && (
+                                  <div className="flex flex-col gap-0.5">
+                                    {posAssignments.map(a => {
+                                      const name = a.guard ? `${a.guard.firstName || ''} ${a.guard.lastName || ''}`.trim().split(' ')[0] : '?';
+                                      const color = guardColorMap[a.guardId] || '#666';
                                       return (
-                                        <div className={`h-[20px] rounded border border-dashed flex items-center justify-center cursor-pointer ${sfBg}`} title={`Sacafranco — ${sfCode} (sin vigilante)`} onClick={() => openAssignForm(station.id, pos.id)}>
-                                          <span className={`text-[10px] font-bold ${sfText}`}>{sfCode}</span>
-                                        </div>
-                                      );
-                                    }
-                                    // Fijo position: show D/N/L pattern
-                                    if (slotStatus === 'rest') {
-                                      return (
-                                        <div className="h-[20px] rounded bg-muted/20 border border-dashed border-border/30 flex items-center justify-center cursor-pointer" title="Slot libre (sin vigilante asignado)" onClick={() => openAssignForm(station.id, pos.id)}>
-                                          <span className="text-[10px] font-bold text-muted-foreground/40">L</span>
-                                        </div>
-                                      );
-                                    }
-                                    // Use STATION scheduleType to determine D vs N label
-                                    const is24hSlot = station.scheduleType === '24h';
-                                    const isNightSlot = station.scheduleType === '12h-night';
-                                    const code = is24hSlot
-                                      ? (slotStatus === 'night' ? 'N' : 'D')
-                                      : isNightSlot ? 'N' : 'D';
-                                    const bg = code === 'N' ? 'bg-indigo-500/8 border-indigo-500/20' : 'bg-sky-500/8 border-sky-500/20';
-                                    const textColor = code === 'N' ? 'text-indigo-400/50' : 'text-sky-500/50';
-                                    return (
-                                      <div className={`h-[20px] rounded border border-dashed flex items-center justify-center cursor-pointer ${bg}`} title={`Slot ${code} (sin vigilante asignado — click para asignar)`} onClick={() => openAssignForm(station.id, pos.id)}>
-                                        <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
-                                      </div>
-                                    );
-                                  })()
-                                ) : (
-                                  <div className="space-y-0.5">
-                                    {posAssignments.map(assignment => {
-                                      const guardName = assignment.guard
-                                        ? `${assignment.guard.firstName || ''} ${assignment.guard.lastName || ''}`.trim()
-                                        : '?';
-                                      const color = guardColorMap[assignment.guardId] || '#666';
-                                      const override = getOverride(assignment.guardId, dateStr);
-
-                                      // If there's an override, show it instead of calculated rotation
-                                      if (override) {
-                                        const oType = override.type;
-                                        const oStyles: Record<string, { bg: string; text: string }> = {
-                                          V: { bg: 'bg-purple-500/20', text: 'text-purple-400' },
-                                          PM: { bg: 'bg-orange-500/20', text: 'text-orange-400' },
-                                          F: { bg: 'bg-red-500/20', text: 'text-red-400' },
-                                          '24': { bg: 'bg-amber-500/15', text: 'text-amber-500' },
-                                          D: { bg: 'bg-sky-500/15', text: 'text-sky-500' },
-                                          N: { bg: 'bg-indigo-500/15', text: 'text-indigo-400' },
-                                          L: { bg: 'bg-muted/30', text: 'text-muted-foreground/50' },
-                                        };
-                                        const s = oStyles[oType] || { bg: 'bg-muted/30', text: 'text-foreground' };
-                                        return (
-                                          <div
-                                            key={assignment.id}
-                                            className={`h-[20px] rounded flex items-center justify-center cursor-pointer ${s.bg}`}
-                                            style={{ borderLeft: `2px solid ${color}` }}
-                                            title={`${guardName} — ${oType}${override.note ? ': ' + override.note : ''} (click para editar)`}
-                                            onClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
-                                          >
-                                            <span className={`text-[10px] font-bold ${s.text}`}>{oType}</span>
-                                          </div>
-                                        );
-                                      }
-
-                                      const workStatus = isWorkDay(assignment, day);
-                                      // Determine display label based on STATION scheduleType
-                                      const is24h = station.scheduleType === '24h';
-                                      const isNightPos = station.scheduleType === '12h-night';
-
-                                      if (workStatus === 'rest') {
-                                        const coverKey = `${station.id}-${dateStr}`;
-                                        const coveringSfs = sfStationCoverage.get(coverKey) || [];
-                                        const sfLabel = coveringSfs.length > 0 ? coveringSfs[0].name : '';
-                                        const sfTooltip = coveringSfs.length > 0 ? coveringSfs.map(s => s.fullName).join(', ') : '';
-                                        return (
-                                          <div
-                                            key={assignment.id}
-                                            className={`h-[20px] rounded flex items-center justify-center cursor-pointer relative ${sfLabel ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-muted/30 hover:bg-muted/50'}`}
-                                            title={`${guardName} — Libre${sfTooltip ? ` · Cubre: ${sfTooltip}` : ' (sin cobertura)'}`}
-                                            onClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
-                                          >
-                                            {sfLabel ? (
-                                              <span className="text-[8px] font-bold text-emerald-600">{sfLabel}</span>
-                                            ) : (
-                                              <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
-                                            )}
-                                          </div>
-                                        );
-                                      }
-
-                                      // For 24H: show D/N based on rotation phase
-                                      // For 12H DAY: always D
-                                      // For 12H NIGHT: always N
-                                      const code = is24h
-                                        ? (workStatus === 'night' ? 'N' : 'D')
-                                        : isNightPos ? 'N' : 'D';
-                                      const bg = code === 'N'
-                                        ? 'bg-indigo-500/15'
-                                        : is24h ? 'bg-amber-500/15' : 'bg-sky-500/15';
-                                      const textColor = code === 'N'
-                                        ? 'text-indigo-400'
-                                        : is24h ? 'text-amber-500' : 'text-sky-500';
-
-                                      return (
-                                        <div
-                                          key={assignment.id}
-                                          className={`h-[20px] rounded flex items-center justify-center cursor-pointer hover:opacity-80 ${bg}`}
-                                          style={{ borderLeft: `2px solid ${color}` }}
-                                          title={`${guardName} — ${code === 'N' ? 'Nocturno' : (code as string) === '24' ? '24 Horas' : 'Diurno'} (click para novedad)`}
-                                          onClick={() => setOverrideTarget({ guardId: assignment.guardId, guardName, date: dateStr, assignmentId: assignment.id })}
+                                        <button
+                                          key={a.id}
+                                          draggable
+                                          onDragStart={e => onGuardDragStart(e, a.guardId, a)}
+                                          onClick={() => removeAssignment(a.id)}
+                                          className="text-[9px] font-medium px-1.5 py-0.5 rounded cursor-grab active:cursor-grabbing"
+                                          style={{ backgroundColor: `${color}20`, color }}
+                                          title={`${a.guard?.firstName} ${a.guard?.lastName} — Arrastra para mover · Clic para remover`}
                                         >
-                                          <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
-                                        </div>
+                                          {name} ×
+                                        </button>
                                       );
                                     })}
                                   </div>
                                 )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-
-                    {/* No positions configured */}
-                    {!hasPositions && (
-                      <div className="grid border-t border-border/10" style={{ gridTemplateColumns: `240px repeat(${monthDays.length}, 44px)` }}>
-                        <div className="col-span-full px-4 py-4 text-center">
-                          <p className="text-xs text-muted-foreground mb-2">Esta estación no tiene posiciones configuradas</p>
-                          <Button size="sm" variant="outline" className="text-xs" onClick={() => configureStation(station)}>
-                            Configurar posiciones
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* ─── Sacafrancos Section ─── */}
-              {(() => {
-                const sfPositions = positions.filter(p => p.type === 'sacafranco');
-                if (sfPositions.length === 0) return null;
-                return (
-                  <div className="border-t-2 border-emerald-500/30">
-                    {/* SF Header - clickable to expand/collapse */}
-                    <div className="grid bg-emerald-500/5 cursor-pointer" style={{ gridTemplateColumns: `240px repeat(${monthDays.length}, 44px)` }} onClick={() => setSfSectionOpen(!sfSectionOpen)}>
-                      <div className="px-4 py-2.5 flex items-center gap-2 border-r border-border/20 sticky left-0 z-10 bg-emerald-500/5 backdrop-blur-sm">
-                        <Shield size={14} className="text-emerald-500" />
-                        <div className="flex-1">
-                          <div className="text-sm font-semibold text-emerald-600">Sacafrancos</div>
-                          <div className="text-[10px] text-muted-foreground">{sfPositions.length} posiciones {sfSectionOpen ? '▾' : '▸ (click para expandir)'}</div>
-                        </div>
-                      </div>
-                      {monthDays.map((_, i) => <div key={i} className="border-r border-border/10 last:border-r-0" />)}
-                    </div>
-
-                    {/* SF Position rows — only if expanded */}
-                    {sfSectionOpen && sfPositions.map(pos => {
-                      const posAssignments = getAssignmentsForPosition(pos.id);
-                      return (
-                        <div key={pos.id} className="grid border-t border-border/10" style={{ gridTemplateColumns: `240px repeat(${monthDays.length}, 44px)` }}>
-                          {/* SF label */}
-                          <div className="px-4 py-2 flex items-center gap-2 border-r border-border/20 sticky left-0 z-10 bg-card backdrop-blur-sm">
-                            <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-500/10">
-                              <Shield size={12} className="text-emerald-500" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-xs font-medium text-foreground truncate">{pos.name}</div>
-                              <div className="text-[10px] text-muted-foreground">{pos.startTime} – {pos.endTime}</div>
-                            </div>
-                            {posAssignments.length > 0 && posAssignments[0]?.guard && (
-                              <button
-                                onClick={() => removeAssignment(posAssignments[0].id)}
-                                className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600"
-                                title="Click para remover"
-                              >
-                                {posAssignments[0].guard.firstName?.split(' ')[0]} ×
-                              </button>
-                            )}
-                            {posAssignments.length === 0 && (
-                              <button
-                                onClick={() => openAssignForm(pos.stationId, pos.id)}
-                                className="p-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors"
-                                title="Asignar vigilante sacafranco"
-                              >
-                                <Plus size={12} />
-                              </button>
-                            )}
-                          </div>
-
-                          {/* Day cells — gap-driven chain preview (same for assigned/unassigned) */}
-                          {monthDays.map((day, dayIdx) => {
-                            const dateStr = fmtDate(day);
-                            const isToday = dateStr === todayStr;
-                            const isSunday = day.getDay() === 0;
-                            const assigned = posAssignments.length > 0;
-                            const cov = sfPreview.get(`${pos.id}-${dateStr}`);
-                            const cellBase = `border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-primary/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}`;
-
-                            if (!cov) {
-                              // Rest day (no gap for this SF). Unassigned → clickable to assign.
-                              return (
-                                <div key={dayIdx} className={cellBase}>
-                                  <div
-                                    className={`h-[20px] rounded flex items-center justify-center ${assigned ? 'bg-muted/30' : 'bg-muted/20 border border-dashed border-border/30 cursor-pointer'}`}
-                                    onClick={assigned ? undefined : () => openAssignForm(pos.stationId, pos.id)}
-                                  >
-                                    <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
+                                {posAssignments.length === 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => openAssignForm(station.id, pos.id)}
+                                      className="p-1 rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+                                      title="Asignar vigilante"
+                                    >
+                                      <Plus size={12} />
+                                    </button>
+                                    <button
+                                      onClick={() => deletePosition(station.id, pos.id)}
+                                      className="p-1 rounded-md hover:bg-red-500/10 text-muted-foreground/50 hover:text-red-500 transition-colors"
+                                      title="Eliminar posición"
+                                    >
+                                      <X size={11} />
+                                    </button>
                                   </div>
-                                </div>
-                              );
-                            }
-
-                            const code = cov.half === 'night' ? 'N' : 'D';
-                            const stName = stationsById.get(cov.stationId)?.stationName?.slice(0, 3) || '';
-                            const bg = cov.half === 'night' ? 'bg-indigo-500/15' : 'bg-emerald-500/15';
-                            const textColor = cov.half === 'night' ? 'text-indigo-400' : 'text-emerald-500';
-                            return (
-                              <div key={dayIdx} className={cellBase}>
-                                <div
-                                  className={`h-[20px] rounded flex flex-col items-center justify-center ${bg} ${assigned ? '' : 'border border-dashed border-border/30 cursor-pointer'}`}
-                                  title={`Cubre: ${stationsById.get(cov.stationId)?.stationName || ''}`}
-                                  onClick={assigned ? undefined : () => openAssignForm(pos.stationId, pos.id)}
-                                >
-                                  <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
-                                  {stName && <span className="text-[7px] text-muted-foreground leading-none">{stName}</span>}
-                                </div>
+                                )}
                               </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </div>
 
-            {/* Unassigned Guards Pool */}
-            <div className="bg-card border border-border/40 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Users size={16} className="text-muted-foreground" />
-                <h3 className="text-sm font-semibold text-foreground">Vigilantes disponibles</h3>
-                <span className="text-xs text-muted-foreground">({unassignedGuards.length})</span>
-              </div>
-              {unassignedGuards.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Todos los vigilantes están asignados.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {unassignedGuards.map(g => (
-                    <div
-                      key={g.id}
-                      className="px-3 py-1.5 rounded-lg bg-muted/30 border border-border/30 text-xs font-medium text-foreground cursor-grab hover:border-primary/40 hover:bg-primary/5 transition-all active:cursor-grabbing"
-                      draggable
-                      onDragStart={(e) => { e.dataTransfer.setData('guardId', g.id); }}
-                    >
-                      {g.label}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                              {/* Day cells */}
+                              {monthDays.map((day, dayIdx) => renderFijoCell(station, pos, posAssignments, day, dayIdx))}
+                            </div>
+                          );
+                        })}
 
-            {/* Sacafrancos Panel */}
-            {sacafrancoData.length > 0 && (
-              <div className="bg-card border border-emerald-500/30 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Shield size={16} className="text-emerald-500" />
-                  <h3 className="text-sm font-semibold text-foreground">Sacafrancos</h3>
-                  <span className="text-xs text-muted-foreground">({sacafrancoData.length})</span>
-                </div>
-                <div className="space-y-3">
-                  {sacafrancoData.map(sf => {
-                    const name = sf.guard ? `${sf.guard.firstName || ''} ${sf.guard.lastName || ''}`.trim() : '?';
-                    const availDays = sf.availability.filter(a => a.status === 'available').length;
-                    const coverDays = sf.availability.filter(a => a.status === 'covering').length;
-                    const stationsCovering = [...new Set(sf.assignments.map(a => stations.find(s => s.id === a.stationId)?.stationName).filter(Boolean))];
-
-                    return (
-                      <div key={sf.guard?.id || Math.random()} className="border border-border/30 rounded-lg p-3 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-foreground">{name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-medium">{availDays} disp</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 font-medium">{coverDays} cubre</span>
-                          </div>
-                        </div>
-                        {stationsCovering.length > 0 && (
-                          <div className="text-[10px] text-muted-foreground">
-                            Cubre: {stationsCovering.join(', ')}
+                        {/* No positions configured */}
+                        {!hasPositions && (
+                          <div className="grid border-t border-border/10" style={{ gridTemplateColumns: gridCols }}>
+                            <div className="col-span-full px-4 py-4 text-center">
+                              <p className="text-xs text-muted-foreground mb-2">Esta estación no tiene posiciones configuradas</p>
+                              <Button size="sm" variant="outline" className="text-xs" onClick={() => configureStation(station)}>
+                                Configurar posiciones
+                              </Button>
+                            </div>
                           </div>
                         )}
-                        {/* Monthly summary */}
-                        <div className="flex items-center gap-2 text-[10px]">
-                          <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 border border-amber-500/30">
-                            {sf.availability.filter(a => a.status === 'covering').length}d cubriendo
-                          </span>
-                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-dashed border-emerald-500/30">
-                            {sf.availability.filter(a => a.status === 'available').length}d disponible
-                          </span>
-                        </div>
                       </div>
                     );
                   })}
+
+                  {/* ─── Sacafrancos Section ─── */}
+                  {(() => {
+                    const sfPositions = positions.filter(p => p.type === 'sacafranco');
+                    if (sfPositions.length === 0) return null;
+                    return (
+                      <div className="border-t-2 border-emerald-500/30">
+                        {/* SF Header - clickable to expand/collapse */}
+                        <div className="grid cursor-pointer" style={{ gridTemplateColumns: gridCols }} onClick={() => setSfSectionOpen(!sfSectionOpen)}>
+                          <div className="px-4 py-2.5 flex items-center gap-2 border-r border-border/20 sticky left-0 z-20 bg-card">
+                            <Shield size={14} className="text-emerald-500" />
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-emerald-600">Sacafrancos</div>
+                              <div className="text-[10px] text-muted-foreground">{sfPositions.length} posiciones {sfSectionOpen ? '▾' : '▸ (clic para expandir)'}</div>
+                            </div>
+                          </div>
+                          {monthDays.map((_, i) => <div key={i} className="border-r border-border/10 last:border-r-0 bg-emerald-500/5" />)}
+                        </div>
+
+                        {/* SF Position rows — only if expanded */}
+                        {sfSectionOpen && sfPositions.map(pos => {
+                          const posAssignments = getAssignmentsForPosition(pos.id);
+                          const assigned = posAssignments.length > 0;
+                          return (
+                            <div key={pos.id} className="grid border-t border-border/10" style={{ gridTemplateColumns: gridCols }}>
+                              {/* SF label */}
+                              <div
+                                className="px-4 py-2 flex items-center gap-2 border-r border-border/20 sticky left-0 z-20 bg-card"
+                                onDragOver={e => e.preventDefault()}
+                                onDrop={e => handleDrop(e, pos.stationId, pos.id)}
+                              >
+                                <div className="w-6 h-6 rounded flex items-center justify-center bg-emerald-500/10">
+                                  <Shield size={12} className="text-emerald-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs font-medium text-foreground truncate">{pos.name}</div>
+                                  <div className="text-[10px] text-muted-foreground">{pos.startTime} – {pos.endTime}</div>
+                                </div>
+                                {assigned && posAssignments[0]?.guard && (
+                                  <button
+                                    draggable
+                                    onDragStart={e => onGuardDragStart(e, posAssignments[0].guardId, posAssignments[0])}
+                                    onClick={() => removeAssignment(posAssignments[0].id)}
+                                    className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 cursor-grab active:cursor-grabbing"
+                                    title="Arrastra para mover · Clic para remover"
+                                  >
+                                    {posAssignments[0].guard.firstName?.split(' ')[0]} ×
+                                  </button>
+                                )}
+                                {!assigned && (
+                                  <button
+                                    onClick={() => openAssignForm(pos.stationId, pos.id)}
+                                    className="p-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors"
+                                    title="Asignar vigilante sacafranco"
+                                  >
+                                    <Plus size={12} />
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Day cells — gap-driven chain preview (same for assigned/unassigned) */}
+                              {monthDays.map((day, dayIdx) => {
+                                const dateStr = fmtDate(day);
+                                const isToday = dateStr === todayStr;
+                                const isSunday = day.getDay() === 0;
+                                const cov = sfPreview.get(`${pos.id}-${dateStr}`);
+                                const cellBase = `border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[44px] ${isToday ? 'bg-primary/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}${cellSelCls(pos.id, dayIdx)}`;
+                                const cellProps = {
+                                  id: `hc-${pos.id}-${dayIdx}`,
+                                  onMouseDown: (e: React.MouseEvent) => { if (e.button === 0) startCellSelect(pos.id, dayIdx, e.shiftKey); },
+                                  onMouseEnter: () => hoverCellSelect(pos.id, dayIdx),
+                                  onDragOver: (e: React.DragEvent) => e.preventDefault(),
+                                  onDrop: (e: React.DragEvent) => handleDrop(e, pos.stationId, pos.id, dateStr),
+                                };
+
+                                // Novedades (typed or via modal) also show on SF rows.
+                                const sfGuard = assigned ? posAssignments[0] : null;
+                                const override = sfGuard ? getOverride(sfGuard.guardId, dateStr) : undefined;
+                                if (override && sfGuard) {
+                                  const s = OVERRIDE_STYLES[override.type] || { bg: 'bg-muted/30', text: 'text-foreground' };
+                                  const gName = sfGuard.guard ? `${sfGuard.guard.firstName || ''} ${sfGuard.guard.lastName || ''}`.trim() : '?';
+                                  return (
+                                    <div key={dayIdx} {...cellProps} className={cellBase}>
+                                      <div
+                                        className={`h-[20px] rounded flex items-center justify-center cursor-pointer ${s.bg}`}
+                                        title={`${gName} — ${override.type}${override.note ? ': ' + override.note : ''} (doble clic para editar)`}
+                                        onDoubleClick={() => setOverrideTarget({ guardId: sfGuard.guardId, guardName: gName, date: dateStr, assignmentId: sfGuard.id })}
+                                      >
+                                        <span className={`text-[10px] font-bold ${s.text}`}>{override.type}</span>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+
+                                const openSfDetail = () => {
+                                  if (!sfGuard) { openAssignForm(pos.stationId, pos.id, dateStr); return; }
+                                  const gName = sfGuard.guard ? `${sfGuard.guard.firstName || ''} ${sfGuard.guard.lastName || ''}`.trim() : '?';
+                                  setOverrideTarget({ guardId: sfGuard.guardId, guardName: gName, date: dateStr, assignmentId: sfGuard.id });
+                                };
+
+                                if (!cov) {
+                                  // Rest day (no gap for this SF). Unassigned → doble clic to assign.
+                                  return (
+                                    <div key={dayIdx} {...cellProps} className={cellBase}>
+                                      <div
+                                        className={`h-[20px] rounded flex items-center justify-center cursor-pointer ${assigned ? 'bg-muted/30' : 'bg-muted/20 border border-dashed border-border/30'}`}
+                                        onDoubleClick={openSfDetail}
+                                      >
+                                        <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+
+                                const code = cov.half === 'night' ? 'N' : 'D';
+                                const stName = stationsById.get(cov.stationId)?.stationName?.slice(0, 3) || '';
+                                const bg = cov.half === 'night' ? 'bg-indigo-500/15' : 'bg-emerald-500/15';
+                                const textColor = cov.half === 'night' ? 'text-indigo-400' : 'text-emerald-500';
+                                return (
+                                  <div key={dayIdx} {...cellProps} className={cellBase}>
+                                    <div
+                                      className={`h-[20px] rounded flex flex-col items-center justify-center cursor-pointer ${bg} ${assigned ? '' : 'border border-dashed border-border/30'}`}
+                                      title={`Cubre: ${stationsById.get(cov.stationId)?.stationName || ''}`}
+                                      onDoubleClick={openSfDetail}
+                                    >
+                                      <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
+                                      {stName && <span className="text-[7px] text-muted-foreground leading-none">{stName}</span>}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
-            )}
+
+              {/* ─── Side panel (former left sidebar + guard pool, now collapsible) ─── */}
+              {panelOpen && (
+                <aside className="w-[280px] shrink-0 overflow-y-auto space-y-3 pr-0.5">
+                  {/* Vigilantes disponibles — drag them onto the sheet */}
+                  <div className="bg-card border border-border/40 rounded-xl p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users size={14} className="text-muted-foreground" />
+                      <h3 className="text-xs font-semibold text-foreground">Vigilantes disponibles</h3>
+                      <span className="text-[10px] text-muted-foreground">({unassignedGuards.length})</span>
+                    </div>
+                    {unassignedGuards.length === 0 ? (
+                      <p className="text-[11px] text-muted-foreground">Todos los vigilantes están asignados.</p>
+                    ) : (
+                      <>
+                        <p className="text-[10px] text-muted-foreground mb-2">Arrastra un vigilante a un puesto del horario.</p>
+                        <div className="flex flex-wrap gap-1.5 max-h-[180px] overflow-y-auto">
+                          {unassignedGuards.map(g => (
+                            <div
+                              key={g.id}
+                              className="px-2.5 py-1 rounded-lg bg-muted/30 border border-border/30 text-[11px] font-medium text-foreground cursor-grab hover:border-primary/40 hover:bg-primary/5 transition-all active:cursor-grabbing"
+                              draggable
+                              onDragStart={(e) => onGuardDragStart(e, g.id)}
+                            >
+                              {g.label}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* AI / herramientas */}
+                  <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles size={14} className="text-primary" />
+                      <h3 className="text-xs font-bold text-foreground">Herramientas</h3>
+                    </div>
+                    <button
+                      onClick={generateDraft}
+                      disabled={proposalLoading}
+                      className="w-full px-3 py-2 bg-primary text-white rounded-xl text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
+                    >
+                      {proposalLoading ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
+                      {proposalLoading ? 'Generando borrador...' : 'Generar borrador de horario'}
+                    </button>
+                    <p className="mt-1 mb-2 text-[10px] text-muted-foreground">
+                      Muestra los cambios antes de aplicar. No modifica nada hasta que publiques.
+                    </p>
+                    <button
+                      onClick={runAutoAssign}
+                      disabled={autoAssigning}
+                      className="w-full px-3 py-2 bg-background border border-input text-foreground rounded-xl text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                    >
+                      {autoAssigning ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
+                      {autoAssigning ? 'Asignando...' : 'Auto-asignar puestos vacíos'}
+                    </button>
+                    {autoResult && (
+                      <div className="mt-2 p-2 bg-background/60 rounded-lg space-y-1">
+                        <div className="text-[11px] text-foreground font-medium">Resultado:</div>
+                        <div className="text-[10px] text-muted-foreground">• {autoResult.titularesAssigned} titulares asignados</div>
+                        <div className="text-[10px] text-muted-foreground">• {autoResult.sacafrancosAssigned} sacafrancos asignados</div>
+                        <div className="text-[10px] text-muted-foreground">• {autoResult.unassignedRemaining} vigilantes sin asignar</div>
+                      </div>
+                    )}
+                    <button
+                      onClick={runOptimizeSacafrancos}
+                      disabled={autoAssigning}
+                      className="w-full mt-2 px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
+                    >
+                      <Shield size={12} />
+                      Optimizar Sacafrancos
+                    </button>
+                    <button
+                      onClick={runGeocode}
+                      disabled={geocoding}
+                      className="w-full mt-2 px-3 py-2 bg-background border border-input text-foreground rounded-xl text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                      title="Geolocaliza las direcciones de los vigilantes para asignar por cercanía real"
+                    >
+                      {geocoding ? <Loader2 size={12} className="animate-spin" /> : <MapPin size={12} />}
+                      {geocoding ? 'Geolocalizando...' : 'Geolocalizar vigilantes'}
+                    </button>
+                    <button
+                      onClick={runAiRecommend}
+                      disabled={aiLoading}
+                      className="w-full mt-2 px-3 py-2 bg-purple-600 text-white rounded-xl text-xs font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"
+                    >
+                      {aiLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                      {aiLoading ? 'Analizando...' : 'Recomendación IA'}
+                    </button>
+                    {aiRecommendation && (
+                      <div className="mt-2 p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg max-h-[240px] overflow-y-auto">
+                        <div className="text-[10px] font-semibold text-purple-600 mb-1"><Bot className="inline h-3 w-3 mr-1" />Recomendación IA:</div>
+                        <div className="text-[10px] text-foreground/80 whitespace-pre-wrap leading-relaxed">{aiRecommendation}</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Personal necesario */}
+                  <div className="bg-card border border-border/40 rounded-xl p-3 space-y-2">
+                    <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Personal Necesario</h3>
+                    {staffing ? (
+                      <>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="bg-amber-500/10 rounded-lg p-2 text-center">
+                            <div className="text-lg font-bold text-amber-600">{staffing.fijosNeeded || 0}</div>
+                            <div className="text-[9px] text-muted-foreground">Fijos</div>
+                          </div>
+                          <div className="bg-emerald-500/10 rounded-lg p-2 text-center">
+                            <div className="text-lg font-bold text-emerald-500">{staffing.sacafrancosNeeded || 0}</div>
+                            <div className="text-[9px] text-muted-foreground">Sacafrancos</div>
+                          </div>
+                          <div className="bg-sky-500/10 rounded-lg p-2 text-center">
+                            <div className="text-lg font-bold text-sky-500">{staffing.totalGuardsNeeded || 0}</div>
+                            <div className="text-[9px] text-muted-foreground">Total</div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <div className="bg-muted/20 rounded-lg p-2 text-center">
+                            <div className="text-sm font-bold text-foreground">{staffing.currentFijoGuards || 0}<span className="text-muted-foreground font-normal">/{staffing.fijosNeeded || 0}</span></div>
+                            <div className="text-[9px] text-muted-foreground">Fijos asignados</div>
+                          </div>
+                          <div className="bg-muted/20 rounded-lg p-2 text-center">
+                            <div className="text-sm font-bold text-foreground">{staffing.currentSfGuards || 0}<span className="text-muted-foreground font-normal">/{staffing.sacafrancosNeeded || 0}</span></div>
+                            <div className="text-[9px] text-muted-foreground">SF asignados</div>
+                          </div>
+                        </div>
+                        {/* Hiring recommendation */}
+                        {((staffing.fijosNeeded - (staffing.currentFijoGuards || 0)) > 0 || (staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)) > 0) && (
+                          <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-2 space-y-1">
+                            <div className="text-[10px] font-semibold text-red-600"><AlertTriangle className="inline h-3 w-3 mr-1" />Contratar:</div>
+                            {(staffing.fijosNeeded - (staffing.currentFijoGuards || 0)) > 0 && (
+                              <div className="text-[10px] text-red-500">{staffing.fijosNeeded - (staffing.currentFijoGuards || 0)} fijos más</div>
+                            )}
+                            {(staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)) > 0 && (
+                              <div className="text-[10px] text-red-500">{staffing.sacafrancosNeeded - (staffing.currentSfGuards || 0)} sacafrancos más</div>
+                            )}
+                          </div>
+                        )}
+                        {staffing.sfRotation && (
+                          <div className="text-[10px] text-muted-foreground pt-1 border-t border-border/20">
+                            Rotación SF: <span className="font-semibold text-foreground">{staffing.sfRotation.name}</span> ({staffing.sfRotation.dayShifts}D-{staffing.sfRotation.nightShifts}N-{staffing.sfRotation.restDays}L)
+                          </div>
+                        )}
+                        <div className="text-[10px] text-muted-foreground">
+                          Demanda pico: <span className="font-semibold text-foreground">{staffing.peakDemand}</span> estaciones simultáneas
+                        </div>
+
+                        {stationAlerts.length > 0 && (
+                          <div className="pt-2 border-t border-border/20 space-y-1.5">
+                            <div className="flex items-center gap-1 text-[10px] font-semibold text-red-600">
+                              <AlertTriangle size={11} />
+                              Alertas por estación ({stationAlerts.length})
+                            </div>
+                            <div className="max-h-[160px] overflow-y-auto space-y-1 pr-1">
+                              {stationAlerts.map(alert => (
+                                <div key={alert.stationId} className="text-[10px] bg-red-500/5 border border-red-500/20 rounded px-2 py-1">
+                                  <div className="font-medium text-foreground truncate">{alert.stationName}</div>
+                                  {alert.missingFijoCount > 0 && (
+                                    <div className="text-red-500">• {alert.missingFijoCount} fijo(s) sin vigilante</div>
+                                  )}
+                                  {alert.sfUncoveredDays > 0 && (
+                                    <div className="text-red-500">• {alert.sfUncoveredDays} día(s) L sin SF cubriendo</div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-muted/20 rounded-lg p-2 text-center">
+                          <div className="text-lg font-bold text-foreground">{stations.length}</div>
+                          <div className="text-[9px] text-muted-foreground">Estaciones</div>
+                        </div>
+                        <div className="bg-muted/20 rounded-lg p-2 text-center">
+                          <div className="text-lg font-bold text-foreground">{assignments.length}</div>
+                          <div className="text-[9px] text-muted-foreground">Asignados</div>
+                        </div>
+                      </div>
+                    )}
+                    {/* Coverage */}
+                    {(() => {
+                      const fijoPositions = positions.filter(p => p.type !== 'sacafranco');
+                      const covered = fijoPositions.filter(p => assignments.some(a => a.positionId === p.id)).length;
+                      const pct = fijoPositions.length > 0 ? Math.round((covered / fijoPositions.length) * 100) : 0;
+                      return (
+                        <div className="pt-2 border-t border-border/20">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] text-muted-foreground">Cobertura Fijos</span>
+                            <span className="text-[10px] font-semibold text-foreground">{pct}%</span>
+                          </div>
+                          <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className="text-[9px] text-muted-foreground mt-1">{covered}/{fijoPositions.length} posiciones cubiertas</div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Sacafrancos summary */}
+                  {sacafrancoData.length > 0 && (
+                    <div className="bg-card border border-emerald-500/20 rounded-xl p-3">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Shield size={12} className="text-emerald-500" />
+                        <h3 className="text-[11px] font-semibold text-foreground">Sacafrancos ({sacafrancoData.length})</h3>
+                      </div>
+                      <div className="space-y-1.5">
+                        {sacafrancoData.map(sf => {
+                          const name = sf.guard ? `${sf.guard.firstName || ''} ${sf.guard.lastName || ''}`.trim() : '?';
+                          const availDays = sf.availability.filter(a => a.status === 'available').length;
+                          const coverDays = sf.availability.filter(a => a.status === 'covering').length;
+                          const stationsCovering = [...new Set(sf.assignments.map(a => stationsById.get(a.stationId)?.stationName).filter(Boolean))];
+                          return (
+                            <div key={sf.guard?.id || name} className="py-1.5 px-2 rounded bg-muted/20 space-y-0.5">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[10px] text-foreground font-medium truncate">{name}</span>
+                                <span className="flex items-center gap-1 shrink-0">
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-emerald-500/10 text-emerald-500">{availDays} disp</span>
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded font-medium bg-amber-500/10 text-amber-600">{coverDays} cubre</span>
+                                </span>
+                              </div>
+                              {stationsCovering.length > 0 && (
+                                <div className="text-[9px] text-muted-foreground truncate">Cubre: {stationsCovering.join(', ')}</div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </aside>
+              )}
             </div>
-          </div>
+
+            {/* ─── Sheet hint bar ─── */}
+            <div className="flex items-center gap-3 flex-wrap pt-1.5 text-[10px] text-muted-foreground">
+              <span className="font-medium text-foreground/70">{selInfo || 'Clic en una celda para seleccionar'}</span>
+              <span className="hidden md:inline">Arrastra para seleccionar rango · Flechas mueven · Escribe <b>D N L V F P 2</b> para novedad (P=permiso, 2=24h) · <b>Supr</b> borra · <b>Enter</b>/doble clic abre detalle · <b>Re/Av Pág</b> cambia mes</span>
+              <span className="flex-1" />
+              <span className="hidden lg:flex items-center gap-1.5">
+                {[
+                  { c: 'D', cls: 'bg-sky-500/15 text-sky-500' },
+                  { c: 'N', cls: 'bg-indigo-500/15 text-indigo-400' },
+                  { c: 'L', cls: 'bg-muted/40 text-muted-foreground' },
+                  { c: 'V', cls: 'bg-purple-500/15 text-purple-400' },
+                  { c: 'PM', cls: 'bg-orange-500/15 text-orange-400' },
+                  { c: 'F', cls: 'bg-red-500/15 text-red-400' },
+                  { c: '24', cls: 'bg-amber-500/15 text-amber-500' },
+                ].map(x => (
+                  <span key={x.c} className={`px-1.5 py-0.5 rounded font-bold ${x.cls}`}>{x.c}</span>
+                ))}
+              </span>
+            </div>
           </>
         )}
-      </PageContainer>
+      </div>
 
       {/* ─── Assignment Modal ─────────────────────────────────────────────── */}
       {showAssignForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowAssignForm(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => { setShowAssignForm(false); setMoveFrom(null); }}>
           <div className="bg-card border border-border/30 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-border/20 flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-foreground">Asignar Vigilante a Posición</h4>
-              <button onClick={() => setShowAssignForm(false)} className="p-1.5 rounded-lg hover:bg-muted/30 text-muted-foreground"><X size={15} /></button>
+              <h4 className="text-sm font-semibold text-foreground">{moveFrom ? 'Mover Vigilante de Puesto' : 'Asignar Vigilante a Posición'}</h4>
+              <button onClick={() => { setShowAssignForm(false); setMoveFrom(null); }} className="p-1.5 rounded-lg hover:bg-muted/30 text-muted-foreground"><X size={15} /></button>
             </div>
             <div className="p-5 space-y-4">
               {/* Position info */}
@@ -1802,15 +2167,24 @@ export default function Schedule() {
                 );
               })()}
 
+              {/* Drag-move notice */}
+              {moveFrom && (
+                <div className="px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10">
+                  <p className="text-[11px] text-amber-700">
+                    Se moverá desde <span className="font-semibold">{stationsById.get(moveFrom.stationId)?.stationName || 'su puesto actual'}</span> — sus turnos futuros allí se eliminan.
+                  </p>
+                </div>
+              )}
+
               {/* Guard */}
               <div>
                 <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Vigilante</label>
                 {(() => {
                   // A vigilante can hold only ONE active rotation (fijo OR sacafranco).
                   // Drop everyone already assigned from the options so it's impossible
-                  // to pick an occupied vigilante.
+                  // to pick an occupied vigilante — except the one being MOVED here.
                   const occupiedIds = new Set(assignments.map(a => a.guardId));
-                  const availableGuards = guardsPool.filter(g => !occupiedIds.has(g.id));
+                  const availableGuards = guardsPool.filter(g => !occupiedIds.has(g.id) || g.id === assignGuard);
 
                   return (
                     <select value={assignGuard} onChange={e => setAssignGuard(e.target.value)} className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none">
@@ -1828,6 +2202,19 @@ export default function Schedule() {
                 )}
               </div>
 
+              {/* Start date: bounds when shifts begin (and sets the phase on
+                  alternation stations). Defaults to the day you dropped on. */}
+              <div>
+                <label className="block text-[11px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Primer día de turno</label>
+                <input
+                  type="date"
+                  value={assignStartDate}
+                  onChange={e => setAssignStartDate(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border/40 rounded-xl text-sm bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">Los turnos se generan desde esta fecha (hora de la empresa).</p>
+              </div>
+
               {/* The patrón de rotación is set on the STATION (Sitios › Estación ›
                   Horario del turno) and inherited here — not chosen per guard. */}
               {(() => {
@@ -1841,14 +2228,11 @@ export default function Schedule() {
                   </div>
                 );
               })()}
-
-              {/* No start date: the rotation phase comes from the station position
-                  (staggered day/night), not a date. Shifts begin today. */}
             </div>
             <div className="px-5 py-3 border-t border-border/20 flex items-center justify-end gap-2">
-              <button onClick={() => setShowAssignForm(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-all">Cancelar</button>
+              <button onClick={() => { setShowAssignForm(false); setMoveFrom(null); }} className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-all">Cancelar</button>
               <button onClick={saveAssignment} disabled={assignSaving || !assignGuard} className="px-5 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 transition-all shadow-sm">
-                {assignSaving ? <Loader2 size={14} className="animate-spin" /> : 'Asignar'}
+                {assignSaving ? <Loader2 size={14} className="animate-spin" /> : (moveFrom ? 'Mover' : 'Asignar')}
               </button>
             </div>
           </div>
@@ -1968,7 +2352,7 @@ export default function Schedule() {
               ].map(opt => (
                 <button
                   key={opt.type}
-                  onClick={() => saveOverride(opt.type)}
+                  onClick={() => performOverrideSave(overrideTarget, opt.type)}
                   className={`px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all hover:scale-105 ${opt.color}`}
                 >
                   {opt.type} — {opt.label}

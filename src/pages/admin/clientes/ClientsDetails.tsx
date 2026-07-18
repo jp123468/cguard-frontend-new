@@ -19,7 +19,7 @@ import ClientStaff from './components/ClientStaff/ClientStaff';
 import ClientTabPlaceholder from './components/ClientTabPlaceholder';
 import { toast } from 'sonner';
 import { SkeletonCards, EmptyState, FadeIn } from '@/components/kit';
-import { Building2, FileText, LayoutGrid, Users, Target, AlertTriangle, BarChart3, File, DollarSign } from 'lucide-react';
+import { Building2, AlertTriangle, BarChart3, File } from 'lucide-react';
 
 export default function ClientsDetails() {
   const { id } = useParams();
@@ -60,7 +60,7 @@ export default function ClientsDetails() {
     const parts = location.pathname.split('/').filter(Boolean);
     const last = parts[parts.length - 1];
     // if last part matches known tabs, set it; otherwise default to overview
-    const allowed = ['overview', 'profile', 'contacts', 'notes', 'files', 'post-sites', 'portal', 'user-access', 'email-reports', 'projects', 'contract', 'coverage', 'staff', 'operations', 'incidents', 'reports', 'documents', 'billing'];
+    const allowed = ['overview', 'profile', 'contacts', 'notes', 'files', 'post-sites', 'portal', 'user-access', 'email-reports', 'projects', 'contract', 'coverage', 'staff', 'incidents', 'reports', 'documents'];
     if (allowed.includes(last)) {
       // normalize URL segments -> internal tab keys
       const map: any = {
@@ -72,11 +72,9 @@ export default function ClientsDetails() {
         'contract': 'contrato',
         'coverage': 'coverage',
         'staff': 'staff',
-        'operations': 'operations',
         'incidents': 'incidents',
         'reports': 'reports',
         'documents': 'documents',
-        'billing': 'billing',
       };
       setActiveTab(map[last] || last);
     } else {
@@ -143,11 +141,9 @@ export default function ClientsDetails() {
               {activeTab === 'contrato' && <ClientContract client={client} />}
               {activeTab === 'coverage' && <ClientCoverage client={client} />}
               {activeTab === 'staff' && <ClientStaff client={client} />}
-              {activeTab === 'operations' && <ClientTabPlaceholder title="Operaciones" icon={<Target />} description="Aquí irá la operación en vivo del cliente." />}
               {activeTab === 'incidents' && <ClientTabPlaceholder title="Incidentes" icon={<AlertTriangle />} description="Aquí irán los incidentes del cliente." />}
               {activeTab === 'reports' && <ClientTabPlaceholder title="Reportes" icon={<BarChart3 />} description="Aquí irán los reportes del cliente." />}
               {activeTab === 'documents' && <ClientTabPlaceholder title="Documentos" icon={<File />} description="Aquí irán los documentos del cliente." />}
-              {activeTab === 'billing' && <ClientTabPlaceholder title="Facturación" icon={<DollarSign />} description="Aquí irá la facturación del cliente." />}
             </>
           ) : (
             <FadeIn>

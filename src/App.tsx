@@ -476,7 +476,7 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              {['contract', 'coverage', 'staff', 'operations', 'incidents', 'reports', 'documents', 'billing'].map((seg) => (
+              {['contract', 'coverage', 'staff', 'incidents', 'reports', 'documents'].map((seg) => (
                 <Route
                   key={seg}
                   path={`/clients/:id/${seg}`}
