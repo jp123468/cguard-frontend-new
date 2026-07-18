@@ -295,8 +295,10 @@ export default function ClientForm({
         if ((values as any).contractEndDate !== undefined) basePayload.contractEndDate = (values as any).contractEndDate || null;
         if ((values as any).riskLevel !== undefined) basePayload.riskLevel = (values as any).riskLevel || null;
         if ((values as any).code !== undefined) basePayload.code = (values as any).code || null;
-        if ((values as any).legalRepFirstName !== undefined) basePayload.legalRepFirstName = (values as any).legalRepFirstName || null;
-        if ((values as any).legalRepLastName !== undefined) basePayload.legalRepLastName = (values as any).legalRepLastName || null;
+        // The legal rep's name IS the top Nombre/Apellido — mirror them so the
+        // legalRep* columns stay consistent (no duplicate inputs).
+        basePayload.legalRepFirstName = (values as any).name || null;
+        basePayload.legalRepLastName = (values as any).lastName || null;
         if ((values as any).legalRepEmail !== undefined) basePayload.legalRepEmail = (values as any).legalRepEmail || null;
         if ((values as any).legalRepPhone !== undefined) basePayload.legalRepPhone = (values as any).legalRepPhone || null;
         if ((values as any).legalRepDocument !== undefined) basePayload.legalRepDocument = (values as any).legalRepDocument || null;
@@ -675,28 +677,14 @@ export default function ClientForm({
                                 />
                             </div>
 
-                            {/* ── Representante legal (persona, distinta de la empresa) ── */}
+                            {/* ── Datos del representante legal (el Nombre/Apellido de arriba) ── */}
                             <div className="mt-2 rounded-xl border border-border/60 bg-muted/20 p-4">
-                              <div className="mb-3 flex items-center gap-2">
+                              <div className="mb-1 flex items-center gap-2">
                                 <UserRound className="h-4 w-4 text-primary" />
-                                <p className="text-sm font-semibold text-foreground">{t('clients.legalRep.title', 'Representante legal / Ejecutivo responsable')}</p>
+                                <p className="text-sm font-semibold text-foreground">{t('clients.legalRep.title', 'Datos del representante legal')}</p>
                               </div>
-                              <p className="mb-3 text-xs text-muted-foreground">{t('clients.legalRep.hint', 'La persona de contacto responsable de la cuenta — sus datos personales, distintos de los de la empresa.')}</p>
+                              <p className="mb-3 text-xs text-muted-foreground">{t('clients.legalRep.hint', 'El nombre y apellido son los de arriba. Agrega sus datos personales de contacto (distintos de los de la empresa).')}</p>
                               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <FormField<ClientInput> control={form.control} name={"legalRepFirstName" as any} render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.firstName', 'Nombre')}</FormLabel>
-                                    <FormControl><input className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )} />
-                                <FormField<ClientInput> control={form.control} name={"legalRepLastName" as any} render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.lastName', 'Apellido')}</FormLabel>
-                                    <FormControl><input className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )} />
                                 <FormField<ClientInput> control={form.control} name={"legalRepDocument" as any} render={({ field }) => (
                                   <FormItem>
                                     <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.document', 'Número de cédula')}</FormLabel>

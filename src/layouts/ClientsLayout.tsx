@@ -145,8 +145,10 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
                   <span className="inline-flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {t('clients.contractStart', 'Inicio de contrato')}: <span className="text-foreground">{fmtD(client.contractDate)}</span></span>
                 )}
                 {(() => {
-                  const rep = `${client?.legalRepFirstName || ''} ${client?.legalRepLastName || ''}`.trim()
-                    || (client?.personType !== 'PJ' ? `${client?.name || ''} ${client?.lastName || ''}`.trim() : '');
+                  // Only meaningful for a persona jurídica (the company title ≠ the
+                  // rep person). For a persona natural the client IS the person.
+                  if (client?.personType !== 'PJ') return null;
+                  const rep = `${client?.legalRepFirstName || client?.name || ''} ${client?.legalRepLastName || client?.lastName || ''}`.trim();
                   return rep ? (
                     <span className="inline-flex items-center gap-1.5"><UserCog className="h-3.5 w-3.5" /> {t('clients.accountExec', 'Representante legal')}: <span className="text-foreground">{rep}</span></span>
                   ) : null;
