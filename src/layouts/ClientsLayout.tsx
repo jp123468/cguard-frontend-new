@@ -1,8 +1,8 @@
-import React, { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import clientsNav from '@/data/clients-nav.json';
 import { useTranslation } from 'react-i18next';
-import { Link, useParams, useLocation } from 'react-router-dom';
-import { Menu } from 'lucide-react';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { postSiteService } from '@/lib/api/postSiteService';
 
 type Props = {
@@ -12,189 +12,115 @@ type Props = {
   client?: any;
 };
 
+/**
+ * Client detail shell — a compact identity header + a horizontal TAB strip
+ * (replaces the old vertical secondary sidebar, which duplicated navigation
+ * and pushed the content into a narrow column). Sub-pages render below the tabs.
+ */
 export default function ClientsLayout({ navKey, title, children, client }: Props) {
   const { t } = useTranslation();
-  const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
-  const [isLargeScreen, setIsLargeScreen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
   const [postSitesCount, setPostSitesCount] = useState<number | undefined>(undefined);
   const cfg: any = (clientsNav as any)[navKey] || null;
   const { id } = useParams();
   const location = useLocation();
-  // Temporarily hide these client nav items visually
+  const navigate = useNavigate();
+
+  // Sub-pages not yet part of the streamlined flow — hidden from the tabs.
   const hiddenIds = ['notes', 'files', 'clientPortal', 'userAccess', 'emailReports'];
 
-  const getActiveLabel = () => {
-    if (!cfg || !cfg.sections) return null;
-    for (const section of cfg.sections) {
-      if (!section.items) continue;
-      for (const it of section.items) {
-        const resolvedPath = resolvePathWithId(it.path);
-        if (location.pathname === resolvedPath) return t(it.label);
-      }
-    }
-    return null;
-  };
+  const resolvePathWithId = (path: string) => (id && path.includes(':id') ? path.replace(':id', id) : path);
 
-  const resolvePathWithId = (path: string) => {
-    if (id && path.includes(':id')) {
-      return path.replace(':id', id);
-    }
-    return path;
-  };
+  const items: any[] = (cfg?.sections || []).flatMap((s: any) => s.items || []).filter((it: any) => !hiddenIds.includes(it.id));
 
-  // Keep sidebar responsive: auto-open on large screens, auto-close on small screens
-  useEffect(() => {
-    const onResize = () => {
-      const large = window.innerWidth >= 768;
-      setIsLargeScreen(large);
-      if (large) setSidebarOpen(true);
-      else setSidebarOpen(false);
-    };
-    try {
-      onResize();
-      window.addEventListener('resize', onResize);
-    } catch (e) {}
-    return () => { try { window.removeEventListener('resize', onResize); } catch (e) {} };
-  }, []);
+  const displayName = client?.commercialName || client?.companyName
+    ? (client?.commercialName || client?.companyName)
+    : (client?.name || client?.firstName)
+      ? `${client?.name || client?.firstName}${(client?.lastName || client?.surname) ? ' ' + (client?.lastName || client?.surname) : ''}`
+      : t(cfg?.title ?? title ?? 'clients.nav.title');
+  const logo = Array.isArray(client?.logoUrl) ? client.logoUrl[0]?.downloadUrl : null;
+  let h = 0; const nm = String(displayName || '?');
+  for (let i = 0; i < nm.length; i++) h = (h * 31 + nm.charCodeAt(i)) >>> 0;
+  const hue = [28, 205, 150, 265, 340, 95, 180, 12][h % 8];
 
-  // Scrolling is handled by Consumers to avoid hook ordering problems during HMR.
-
-    const sidebarClass = isLargeScreen
-      ? `shrink-0 transition-all duration-300 ${sidebarOpen ? 'w-64 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`
-      : `${sidebarOpen ? 'fixed inset-y-0 left-0 w-64 z-40' : 'hidden'}`;
-
-    return (
-    <div className="flex gap-4 h-[calc(100vh-64px)] overflow-hidden">
-      {!isLargeScreen && sidebarOpen && (
-        <div className="fixed inset-0 bg-black/30 z-30" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      <div className={sidebarClass}>
-        <div className="h-full flex flex-col">
-          <div className="bg-card border border-border rounded-md p-3 m-3 flex-1 overflow-hidden">
-            {(() => {
-              const displayName = client?.commercialName || client?.companyName
-                ? (client?.commercialName || client?.companyName)
-                : (client?.name || client?.firstName)
-                  ? `${client?.name || client?.firstName}${(client?.lastName || client?.surname) ? ' ' + (client?.lastName || client?.surname) : ''}`
-                  : t(cfg?.title ?? title);
-              const logo = Array.isArray(client?.logoUrl) ? client.logoUrl[0]?.downloadUrl : null;
-              let h = 0; const nm = String(displayName || '?');
-              for (let i = 0; i < nm.length; i++) h = (h * 31 + nm.charCodeAt(i)) >>> 0;
-              const hue = [28, 205, 150, 265, 340, 95, 180, 12][h % 8];
-              return (
-                <div className="mb-3 flex items-center gap-2.5">
-                  {logo ? (
-                    <img src={logo} alt="" className="h-9 w-9 shrink-0 rounded-lg border bg-white object-cover" />
-                  ) : (
-                    <div
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold"
-                      style={{ backgroundColor: `hsl(${hue} 70% 92%)`, color: `hsl(${hue} 60% 32%)` }}
-                    >
-                      {nm.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold leading-tight">{displayName}</div>
-                    {client?.active !== undefined && (
-                      <div className={`text-[11px] font-medium ${client.active ? 'text-emerald-600' : 'text-red-500'}`}>
-                        {client.active ? 'Activo' : 'Archivado'}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-            <nav className="text-base">
-              <div className="max-h-[calc(100vh-120px)] overflow-y-auto pr-3">
-                {cfg?.sections?.map((section: any, idx: number) => (
-                  <div key={idx} className="mb-0 pb-0">
-                    {section.label ? <div className="text-xs text-muted-foreground uppercase mb-3">{section.label}</div> : null}
-                    <ul className="divide-y">
-                      {section.items?.map((it: any) => {
-                        const resolvedPath = resolvePathWithId(it.path);
-                        const isActive = location.pathname === resolvedPath;
-                        const initialBadge = it.id === 'postSites'
-                          ? (client?.postSites?.length ?? client?.postSiteIds?.length ?? client?.postSitesCount ?? undefined)
-                          : undefined;
-                        const badgeCount = it.id === 'postSites' ? (postSitesCount ?? initialBadge ?? 0) : undefined;
-                        // If this item is in the hidden list, render nothing.
-                        // (Previously emitted an HTML comment via dangerouslySetInnerHTML,
-                        // which is an unnecessary XSS sink and serves no purpose.)
-                        if (hiddenIds.includes(it.id)) {
-                          return null;
-                        }
-
-                        return (
-                          <li key={it.id} className="bg-card">
-                            <Link
-                              to={resolvedPath}
-                              className={`flex items-center justify-between px-4 py-3 text-sm ${isActive ? 'bg-primary/10 text-primary font-medium' : 'text-foreground hover:bg-accent'} `}
-                            >
-                              <span className="text-sm">{t(it.label)}</span>
-                              {typeof badgeCount === 'number' && (
-                                <span className="ml-3 inline-flex items-center justify-center min-w-[20px] h-6 px-2 text-sm font-semibold rounded-md bg-primary text-white">{badgeCount}</span>
-                              )}
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </nav>
+  return (
+    <div className="mx-auto flex h-[calc(100vh-64px)] w-full max-w-[1400px] flex-col gap-4 overflow-hidden px-4 pt-4">
+      {/* Identity header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate('/clients')}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          title={t('common.back', 'Volver') as string}
+          aria-label={t('common.back', 'Volver') as string}
+        >
+          <ArrowLeft size={18} />
+        </button>
+        {logo ? (
+          <img src={logo} alt="" className="h-11 w-11 shrink-0 rounded-xl border bg-white object-cover" />
+        ) : (
+          <div
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-bold"
+            style={{ backgroundColor: `hsl(${hue} 70% 92%)`, color: `hsl(${hue} 60% 32%)` }}
+          >
+            {nm.charAt(0).toUpperCase()}
           </div>
+        )}
+        <div className="min-w-0">
+          <h1 className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground">{displayName}</h1>
+          {client?.active !== undefined && (
+            <span className={`text-xs font-medium ${client.active ? 'text-emerald-600' : 'text-red-500'}`}>
+              {client.active ? t('common.active', 'Activo') : t('common.archived', 'Archivado')}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Fetch post sites count if needed */}
+      {/* Horizontal tab strip */}
+      <div className="-mb-px overflow-x-auto">
+        <nav className="flex min-w-max items-center gap-1 border-b border-border">
+          {items.map((it) => {
+            const path = resolvePathWithId(it.path);
+            const active = location.pathname === path;
+            const badge = it.id === 'postSites' ? postSitesCount : undefined;
+            return (
+              <Link
+                key={it.id}
+                to={path}
+                className={`relative flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 text-sm font-medium transition-colors ${
+                  active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {t(it.label)}
+                {typeof badge === 'number' && badge > 0 && (
+                  <span className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold ${active ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
+                    {badge}
+                  </span>
+                )}
+                {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" />}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
       {client?.id && (
         <FetchPostSitesCount clientId={client.id} initial={client?.postSites?.length ?? client?.postSiteIds?.length ?? client?.postSitesCount} onCount={(c: number) => setPostSitesCount(c)} />
       )}
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="bg-card border-b border-border rounded-md p-4 mb-4 flex items-center justify-between sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-muted-foreground hover:text-foreground p-1"
-              title={sidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
-            >
-              <Menu
-                size={20}
-                className={`transition-transform duration-300 ${sidebarOpen ? 'rotate-0' : '-rotate-90'}`}
-              />
-            </button>
-            <div className="text-sm font-medium text-foreground">{getActiveLabel() || (title ? t(title) : '')}</div>
-          </div>
-          <div className="text-sm text-muted-foreground"></div>
-        </div>
-
-        <div className="flex-1 overflow-auto pb-6">{children}</div>
-      </div>
+      <div className="flex-1 overflow-auto pb-6">{children}</div>
     </div>
   );
 }
-
-  
 
 function FetchPostSitesCount({ clientId, initial, onCount }: { clientId: string; initial?: number; onCount: (c: number) => void }) {
   useEffect(() => {
     let mounted = true;
     async function load() {
       try {
-        // If initial is provided and > 0, prefer it
-        if (typeof initial === 'number' && initial > 0) {
-          onCount(initial);
-          return;
-        }
+        if (typeof initial === 'number' && initial > 0) { onCount(initial); return; }
         const resp = await postSiteService.list({ clientId }, { limit: 1, offset: 0 });
         if (!mounted) return;
         onCount(resp.count || 0);
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) { /* ignore */ }
     }
     load();
     return () => { mounted = false; };
