@@ -43,10 +43,9 @@ import {
     CategoryOption,
 } from "@/components/categories/CategorySelect";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info, User, Mail, Phone, Tag, Globe, Building2, Upload, X, Image, Loader2, UserPlus, Trash2, MapPin } from "lucide-react";
+import { Info, User, Mail, Phone, Tag, Globe, Building2, Upload, X, Image, Loader2, UserPlus, Trash2, MapPin, UserRound } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Section, Stagger } from "@/components/kit";
-import { userService } from "@/lib/api/userService";
 
 export type Category = { id: string; name: string };
 
@@ -94,22 +93,6 @@ export default function ClientForm({
     };
     const [redirecting, setRedirecting] = useState(false);
     const [categories, setCategories] = useState<Category[]>(initialCategories || []);
-    const [execUsers, setExecUsers] = useState<{ id: string; label: string }[]>([]);
-    useEffect(() => {
-        let mounted = true;
-        (async () => {
-            try {
-                const rows = await userService.listUsers({ limit: 500 });
-                if (!mounted) return;
-                const opts = (Array.isArray(rows) ? rows : []).map((u: any) => ({
-                    id: String(u.id || u.userId || ''),
-                    label: u.fullName || [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || '—',
-                })).filter((o) => o.id);
-                setExecUsers(opts);
-            } catch { /* ignore */ }
-        })();
-        return () => { mounted = false; };
-    }, []);
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [showAddressAutocomplete, setShowAddressAutocomplete] = useState(true);
 
@@ -137,6 +120,11 @@ export default function ClientForm({
             riskLevel: "",
             code: "",
             accountExecutiveId: "",
+            legalRepFirstName: "",
+            legalRepLastName: "",
+            legalRepEmail: "",
+            legalRepPhone: "",
+            legalRepDocument: "",
             email: "",
             phoneNumber: defaultPhonePrefix,
             address: "",
@@ -214,6 +202,11 @@ export default function ClientForm({
                         riskLevel: (data as any)?.riskLevel ?? '',
                         code: (data as any)?.code ?? '',
                         accountExecutiveId: (data as any)?.accountExecutiveId ?? '',
+                        legalRepFirstName: (data as any)?.legalRepFirstName ?? '',
+                        legalRepLastName: (data as any)?.legalRepLastName ?? '',
+                        legalRepEmail: (data as any)?.legalRepEmail ?? '',
+                        legalRepPhone: (data as any)?.legalRepPhone ?? '',
+                        legalRepDocument: (data as any)?.legalRepDocument ?? '',
                         email: data.email ?? "",
                         phoneNumber: data.phoneNumber ?? "",
                         address: data.address ?? "",
@@ -302,7 +295,11 @@ export default function ClientForm({
         if ((values as any).contractEndDate !== undefined) basePayload.contractEndDate = (values as any).contractEndDate || null;
         if ((values as any).riskLevel !== undefined) basePayload.riskLevel = (values as any).riskLevel || null;
         if ((values as any).code !== undefined) basePayload.code = (values as any).code || null;
-        if ((values as any).accountExecutiveId !== undefined) basePayload.accountExecutiveId = (values as any).accountExecutiveId || null;
+        if ((values as any).legalRepFirstName !== undefined) basePayload.legalRepFirstName = (values as any).legalRepFirstName || null;
+        if ((values as any).legalRepLastName !== undefined) basePayload.legalRepLastName = (values as any).legalRepLastName || null;
+        if ((values as any).legalRepEmail !== undefined) basePayload.legalRepEmail = (values as any).legalRepEmail || null;
+        if ((values as any).legalRepPhone !== undefined) basePayload.legalRepPhone = (values as any).legalRepPhone || null;
+        if ((values as any).legalRepDocument !== undefined) basePayload.legalRepDocument = (values as any).legalRepDocument || null;
         if (values.addressLine2 !== undefined) basePayload.addressLine2 = values.addressLine2;
         if (values.postalCode !== undefined) basePayload.postalCode = values.postalCode;
         if (values.city !== undefined) basePayload.city = values.city;
@@ -676,22 +673,52 @@ export default function ClientForm({
                                         </FormItem>
                                     )}
                                 />
-                                <FormField<ClientInput>
-                                    control={form.control}
-                                    name={"accountExecutiveId" as any}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.accountExec', 'Ejecutivo responsable')}<span className="ml-2 text-[10px] font-normal text-muted-foreground normal-case tracking-normal">{t('clients.form.optional', 'Opcional')}</span></FormLabel>
-                                            <FormControl>
-                                                <select className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === "string" ? field.value : ""}>
-                                                    <option value="">{t('clients.form.selectExec', 'Sin asignar')}</option>
-                                                    {execUsers.map((u) => <option key={u.id} value={u.id}>{u.label}</option>)}
-                                                </select>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            </div>
+
+                            {/* ── Representante legal (persona, distinta de la empresa) ── */}
+                            <div className="mt-2 rounded-xl border border-border/60 bg-muted/20 p-4">
+                              <div className="mb-3 flex items-center gap-2">
+                                <UserRound className="h-4 w-4 text-primary" />
+                                <p className="text-sm font-semibold text-foreground">{t('clients.legalRep.title', 'Representante legal / Ejecutivo responsable')}</p>
+                              </div>
+                              <p className="mb-3 text-xs text-muted-foreground">{t('clients.legalRep.hint', 'La persona de contacto responsable de la cuenta — sus datos personales, distintos de los de la empresa.')}</p>
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <FormField<ClientInput> control={form.control} name={"legalRepFirstName" as any} render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.firstName', 'Nombre')}</FormLabel>
+                                    <FormControl><input className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )} />
+                                <FormField<ClientInput> control={form.control} name={"legalRepLastName" as any} render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.lastName', 'Apellido')}</FormLabel>
+                                    <FormControl><input className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )} />
+                                <FormField<ClientInput> control={form.control} name={"legalRepDocument" as any} render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.document', 'Número de cédula')}</FormLabel>
+                                    <FormControl><input inputMode="numeric" maxLength={10} className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} onChange={(e) => field.onChange((e.target.value || '').replace(/\D/g, ''))} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )} />
+                                <FormField<ClientInput> control={form.control} name={"legalRepPhone" as any} render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.phone', 'Teléfono personal')}</FormLabel>
+                                    <FormControl><input type="tel" className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )} />
+                                <FormField<ClientInput> control={form.control} name={"legalRepEmail" as any} render={({ field }) => (
+                                  <FormItem className="md:col-span-2">
+                                    <FormLabel className="text-xs font-medium text-foreground/70 uppercase tracking-wide">{t('clients.legalRep.email', 'Correo electrónico personal')}</FormLabel>
+                                    <FormControl><input type="email" className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" {...field} value={typeof field.value === 'string' ? field.value : ''} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )} />
+                              </div>
                             </div>
 
                             {/* Logo & Place Picture uploads */}

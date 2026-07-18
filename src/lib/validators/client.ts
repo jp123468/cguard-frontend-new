@@ -103,6 +103,12 @@ export const clientSchema = z
     riskLevel: z.string().optional().or(z.literal("")),
     code: z.string().trim().max(50, "Máximo 50 caracteres").optional().or(z.literal("")),
     accountExecutiveId: z.string().optional().or(z.literal("")),
+    // Representante legal (persona) — separado de la empresa.
+    legalRepFirstName: z.string().trim().max(150).optional().or(z.literal("")),
+    legalRepLastName: z.string().trim().max(150).optional().or(z.literal("")),
+    legalRepEmail: z.string().trim().max(200).optional().or(z.literal("")),
+    legalRepPhone: z.string().trim().max(30).optional().or(z.literal("")),
+    legalRepDocument: z.string().trim().max(20).optional().or(z.literal("")),
     // Tipo de persona (Persona Natural / Persona Jurídica)
     personType: z.enum(['PN', 'PJ']).optional(),
     // RUC o Cédula: opcional
