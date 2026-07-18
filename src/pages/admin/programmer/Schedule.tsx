@@ -1868,7 +1868,9 @@ export default function Schedule() {
                                     {(() => {
                                       // Real hours come from the POSITION (custom blocks carry
                                       // their own window; start==end wraps the full day).
-                                      if (station.scheduleType === '24h') return '24 Horas';
+                                      // A 24h STATION is covered by two fijos doing 12h each,
+                                      // swapping day/night — label the fijo, not the station.
+                                      if (station.scheduleType === '24h') return 'Turnos de 12h · D/N rotativo';
                                       const st5 = (pos.startTime || '').slice(0, 5);
                                       const en5 = (pos.endTime || '').slice(0, 5);
                                       if (st5 && en5) return st5 === en5 ? `${st5} → ${en5} · 24h` : `${st5} – ${en5}`;
