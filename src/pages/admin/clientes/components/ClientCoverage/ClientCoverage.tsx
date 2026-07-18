@@ -314,7 +314,8 @@ export default function ClientCoverage({ client }: { client: any }) {
                   <GoogleMapEmbed
                     lat={mapCenter?.lat}
                     lng={mapCenter?.lng}
-                    zoom={18}
+                    zoom={20}
+                    focusZoom={21}
                     mapType={mapType}
                     markers={mapMarkers}
                     centerRequest={centerReq}

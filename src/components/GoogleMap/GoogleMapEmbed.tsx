@@ -38,6 +38,7 @@ export default function GoogleMapEmbed({
   onMapClick,
   onReady,
   polygon,
+  focusZoom,
 }: {
   lat?: number;
   lng?: number;
@@ -68,6 +69,8 @@ export default function GoogleMapEmbed({
   enableClickToSet?: boolean;
   onMapClick?: (lat: number, lng: number) => void;
   onReady?: () => void;
+  /** When centerRequest fires, also zoom to this level (closer focus). */
+  focusZoom?: number;
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<any>(null);
@@ -554,6 +557,13 @@ export default function GoogleMapEmbed({
       const center = { lat, lng };
 
       mapInstance.current.panTo(center);
+      // Zoom closer when a focus level is requested (e.g. selecting a puesto).
+      if (typeof focusZoom === "number") {
+        try {
+          const cur = mapInstance.current.getZoom?.() ?? 0;
+          if (cur < focusZoom) mapInstance.current.setZoom(focusZoom);
+        } catch {}
+      }
       if (markerRef.current) markerRef.current.position = center;
       if (showGeofence && circleRef.current)
         circleRef.current.setCenter(center);
