@@ -33,6 +33,11 @@ function hueFor(name: string): number {
 function nameOf(u: any): string {
     return u.fullName || [u.firstName, u.lastName].filter(Boolean).join(" ") || u.name || u.email || "—";
 }
+function photoOf(u: any): string | null {
+    const a = u.avatars ?? u.avatar ?? u.profileImage;
+    const f = Array.isArray(a) ? a[0] : a;
+    return (f?.downloadUrl || f?.publicUrl || (typeof f === "string" ? f : null)) || u.photoUrl || null;
+}
 function rolesOf(u: any): string {
     if (u._rolesDisplay) return u._rolesDisplay;
     const roles = u.roles ?? u.role ?? [];
@@ -79,6 +84,7 @@ export default function AdminUserCardsGrid({
                 const hue = hueFor(name);
                 const st = statusOf(u);
                 const roles = rolesOf(u);
+                const photo = photoOf(u);
                 const acts = actions(u).filter((a) => !a.disabled);
                 return (
                     <div
@@ -94,9 +100,13 @@ export default function AdminUserCardsGrid({
                             <div onClick={(e) => e.stopPropagation()} className="pt-0.5">
                                 <Checkbox disabled={!canSelect(u)} checked={selectedIds.includes(id)} onCheckedChange={(v) => onSelect(id, Boolean(v))} aria-label={`Seleccionar ${name}`} />
                             </div>
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold" style={{ backgroundColor: `hsl(${hue} 70% 92%)`, color: `hsl(${hue} 60% 32%)` }}>
-                                {name.charAt(0).toUpperCase()}
-                            </div>
+                            {photo ? (
+                                <img src={photo} alt={name} loading="lazy" className="h-12 w-12 shrink-0 rounded-full border object-cover bg-muted" />
+                            ) : (
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold" style={{ backgroundColor: `hsl(${hue} 70% 92%)`, color: `hsl(${hue} 60% 32%)` }}>
+                                    {name.charAt(0).toUpperCase()}
+                                </div>
+                            )}
                             <div className="min-w-0 flex-1">
                                 <p className="truncate font-semibold leading-tight group-hover:text-primary">{name}</p>
                                 <div className="mt-1"><StatusBadge tone={st.tone}>{st.label}</StatusBadge></div>

@@ -65,6 +65,8 @@ export default function GuardCardsGrid({
                 const hue = hueFor(name);
                 const userId = g.raw?.guard?.id || g.raw?.guardId || g.raw?.userId || "";
                 const station = stationByUserId[userId] || null;
+                const pi = g.raw?.profileImage;
+                const photo = Array.isArray(pi) ? (pi[0]?.downloadUrl || pi[0]?.publicUrl || null) : (pi?.downloadUrl || pi?.publicUrl || (typeof pi === "string" ? pi : null)) || g.raw?.photoUrl || null;
                 const acts = actions(g);
                 const tone = STATUS_TONE[g.status] || "slate";
                 return (
@@ -81,12 +83,16 @@ export default function GuardCardsGrid({
                             <div onClick={(e) => e.stopPropagation()} className="pt-0.5">
                                 <Checkbox checked={selectedIds.includes(g.id)} onCheckedChange={(v) => onSelect(g.id, Boolean(v))} aria-label={`Seleccionar ${name}`} />
                             </div>
-                            <div
-                                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold"
-                                style={{ backgroundColor: `hsl(${hue} 70% 92%)`, color: `hsl(${hue} 60% 32%)` }}
-                            >
-                                {name.charAt(0).toUpperCase()}
-                            </div>
+                            {photo ? (
+                                <img src={photo} alt={name} loading="lazy" className="h-12 w-12 shrink-0 rounded-full border object-cover bg-muted" />
+                            ) : (
+                                <div
+                                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold"
+                                    style={{ backgroundColor: `hsl(${hue} 70% 92%)`, color: `hsl(${hue} 60% 32%)` }}
+                                >
+                                    {name.charAt(0).toUpperCase()}
+                                </div>
+                            )}
                             <div className="min-w-0 flex-1">
                                 <p className="truncate font-semibold leading-tight group-hover:text-primary">{name}</p>
                                 <div className="mt-1"><StatusBadge tone={tone}>{g.status}</StatusBadge></div>
