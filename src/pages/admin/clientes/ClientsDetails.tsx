@@ -5,7 +5,6 @@ import MobileCardList from '@/components/responsive/MobileCardList';
 import ClientsLayout from '@/layouts/ClientsLayout';
 import { clientService } from '@/lib/api/clientService';
 import ClientOverview from './components/ClientOverview/ClientOverview';
-import ClientProfile from './components/ClientProfile/ClientProfile';
 import ClientContacts from './components/ClientContacts/ClientContacts';
 import ClientNotes from './components/ClientNotes/ClientNotes';
 import ClientFiles from './components/ClientFiles/ClientFiles';
@@ -120,8 +119,7 @@ export default function ClientsDetails() {
             <SkeletonCards count={4} className="p-1" />
           ) : client ? (
             <>
-              {activeTab === 'overview' && <ClientOverview client={client} />}
-              {activeTab === 'profile' && <ClientProfile client={client} />}
+              {(activeTab === 'overview' || activeTab === 'profile') && <ClientOverview client={client} />}
               {activeTab === 'contacts' && <ClientContacts client={client} />}
               {activeTab === 'notes' && <ClientNotes client={client} />}
               {activeTab === 'files' && <ClientFiles client={client} />}

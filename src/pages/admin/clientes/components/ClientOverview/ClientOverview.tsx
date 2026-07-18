@@ -4,11 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import IncidentMap from '@/components/IncidentMap/IncidentMap';
 import { clientService } from '@/lib/api/clientService';
+import { categoryService } from '@/lib/api/categoryService';
 import { Section, StatCard, Field, Stagger, FadeIn } from '@/components/kit';
 import OperationTree from './OperationTree';
 import {
   MapPin, Users, Route as RouteIcon, ClipboardCheck, AlertTriangle, Clock,
-  Building2, Phone, Shield, Briefcase, ChevronRight, Mail, Globe,
+  Building2, Phone, Shield, Briefcase, ChevronRight,
 } from 'lucide-react';
 
 type Overview = {
@@ -41,6 +42,10 @@ export default function ClientOverview({ client }: { client: any }) {
     hoursLoggedSeconds: 0,
   });
 
+  const [categoryNames, setCategoryNames] = useState<string[]>(
+    Array.isArray(client?.categoryNames) ? client.categoryNames.map(String) : [],
+  );
+
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -54,6 +59,27 @@ export default function ClientOverview({ client }: { client: any }) {
     })();
     return () => { mounted = false; };
   }, [client?.id]);
+
+  // Resolve category ids → names (Sectores) — merged in from the old Perfil tab.
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const ids = Array.isArray(client?.categoryIds) ? client.categoryIds : [];
+      if (!ids.length) return;
+      try {
+        const resp = await categoryService.list({ filter: { module: 'clientAccount' }, limit: 1000 });
+        const map = new Map<string, string>();
+        (resp.rows || []).forEach((c: any) => map.set(String(c.id), c.name || ''));
+        const names = ids.map((id: any) => map.get(String(id)) || '').filter(Boolean);
+        if (mounted && names.length) setCategoryNames(names);
+      } catch { /* keep fallback */ }
+    })();
+    return () => { mounted = false; };
+  }, [client?.id]);
+
+  const fullAddress = [client?.address, client?.addressLine2, [client?.city, client?.postalCode].filter(Boolean).join(' '), client?.country]
+    .map((x) => (x ? String(x).trim() : '')).filter(Boolean).join(', ');
+  const sectores = categoryNames.length ? categoryNames.join(', ') : '—';
 
   const hoursWorked = (() => {
     const s = Number(ov.hoursLoggedSeconds || 0);
@@ -105,37 +131,38 @@ export default function ClientOverview({ client }: { client: any }) {
       {/* Operación: sitios → estaciones con enlaces directos. */}
       <OperationTree client={client} />
 
-      {/* Info + ubicación */}
+      {/* Ficha del cliente (Resumen + Perfil fusionados) + ubicación */}
       <FadeIn className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Section title={t('clients.overview.generalInfo.title', 'Información general')} icon={<Building2 />}>
           <div className="space-y-3">
             <Field label={t('clients.overview.generalInfo.clientName', 'Cliente')} value={`${client?.name || '—'} ${client?.lastName || ''}`.trim()} />
+            {client?.commercialName && (
+              <Field label={t('clients.form.commercialName', 'Nombre comercial')} value={client.commercialName} />
+            )}
             <Field
               label={t('clients.form.personType', 'Tipo de persona')}
               value={client?.personType === 'PJ' ? t('clients.form.personJuridica', 'Persona jurídica (RUC)') : t('clients.form.personNatural', 'Persona natural (Cédula)')}
             />
             <Field
               label={client?.personType === 'PJ' ? t('clients.form.ruc', 'RUC') : t('clients.form.cedula', 'Cédula')}
-              value={client?.documentNumber}
+              value={client?.documentNumber || '—'}
             />
-            <Field label={t('clients.overview.generalInfo.address', 'Dirección')} value={client?.address} />
+            <Field label={t('clients.form.categories', 'Sectores')} value={sectores} />
             <Field label={t('clients.overview.generalInfo.addedOn', 'Cliente desde')} value={addedOn} />
           </div>
         </Section>
 
-        <Section title={t('clients.overview.contactDetails.title', 'Contacto')} icon={<Phone />}>
+        <Section title={t('clients.overview.contactDetails.title', 'Contacto y dirección')} icon={<Phone />}>
           <div className="space-y-3">
-            <Field label={t('clients.overview.contactDetails.phoneNumber', 'Teléfono')} value={client?.phoneNumber} />
-            <Field label={t('clients.overview.contactDetails.fax', 'Teléfono fijo')} value={client?.landline || client?.faxNumber || client?.fax} />
-            <Field label={t('clients.overview.contactDetails.email', 'Correo')} value={client?.email} />
-            <Field label={t('clients.overview.contactDetails.website', 'Sitio web')} value={client?.website} />
+            <Field label={t('clients.overview.contactDetails.phoneNumber', 'Teléfono')} value={client?.phoneNumber || '—'} />
+            <Field label={t('clients.overview.contactDetails.fax', 'Teléfono fijo')} value={client?.landline || client?.faxNumber || client?.fax || '—'} />
+            <Field label={t('clients.overview.contactDetails.email', 'Correo')} value={client?.email || '—'} />
+            <Field label={t('clients.overview.contactDetails.website', 'Sitio web')} value={client?.website || '—'} />
+            <Field label={t('clients.form.address', 'Dirección')} value={fullAddress || '—'} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2 border-t border-border/50 pt-4">
             <Link to={`${base}/contacts`} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent">
               {t('clients.nav.contacts', 'Contactos')} <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
-            <Link to={`${base}/profile`} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent">
-              {t('clients.nav.profile', 'Perfil')} <ChevronRight className="h-3.5 w-3.5" />
             </Link>
             <Link to={`${base}/projects`} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent">
               {t('clients.nav.projects', 'Proyectos')} <ChevronRight className="h-3.5 w-3.5" />
@@ -149,7 +176,8 @@ export default function ClientOverview({ client }: { client: any }) {
               <IncidentMap lat={lat} lng={lng} label={client?.name || 'Client location'} />
             </div>
           ) : (
-            <div className="flex h-[240px] items-center justify-center rounded-xl border border-dashed bg-muted/30 text-sm text-muted-foreground">
+            <div className="flex h-[240px] flex-col items-center justify-center gap-1 rounded-xl border border-dashed bg-muted/30 text-sm text-muted-foreground">
+              <MapPin className="h-5 w-5 opacity-50" />
               {t('clients.overview.noLocation', 'Sin ubicación registrada')}
             </div>
           )}

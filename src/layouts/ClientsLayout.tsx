@@ -26,8 +26,8 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Sub-pages not yet part of the streamlined flow — hidden from the tabs.
-  const hiddenIds = ['notes', 'files', 'clientPortal', 'userAccess', 'emailReports'];
+  // Hidden from the tabs. 'profile' is merged INTO 'overview' (Resumen).
+  const hiddenIds = ['profile', 'notes', 'files', 'clientPortal', 'userAccess', 'emailReports'];
 
   const resolvePathWithId = (path: string) => (id && path.includes(':id') ? path.replace(':id', id) : path);
 
