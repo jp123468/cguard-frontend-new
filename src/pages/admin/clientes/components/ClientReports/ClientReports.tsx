@@ -243,7 +243,7 @@ export default function ClientReports({ client }: { client: any }) {
           <EmptyState icon={<FileText className="h-5 w-5" />} title="Sin reportes" description="Aún no hay reportes operativos generados para este cliente en el período." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[720px] text-sm">
               <thead><tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <th className="px-2 py-2 font-medium">Nombre del reporte</th><th className="px-2 py-2 font-medium">Tipo</th><th className="px-2 py-2 font-medium">Sede / Puesto</th><th className="px-2 py-2 font-medium">Generado por</th><th className="px-2 py-2 font-medium">Generado el</th><th className="px-2 py-2 font-medium">Formato</th>
               </tr></thead>

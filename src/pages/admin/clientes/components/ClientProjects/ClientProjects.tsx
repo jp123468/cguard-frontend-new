@@ -115,8 +115,8 @@ export default function ClientProjects({ client }: Props) {
             }
           />
         ) : (
-          <div className="border rounded-xl overflow-hidden">
-            <table className="min-w-full text-sm text-left">
+          <div className="border rounded-xl overflow-x-auto">
+            <table className="min-w-[640px] w-full text-sm text-left">
               <thead className="bg-muted/30">
                 <tr className="border-b">
                   <th className="px-4 py-3 font-semibold">Proyecto</th>

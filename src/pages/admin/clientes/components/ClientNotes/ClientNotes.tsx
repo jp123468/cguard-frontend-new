@@ -189,7 +189,7 @@ export default function ClientNotes({ client }: Props) {
     return (
         <div ref={containerRef}>
             <Section title={t('clients.nav.notes', 'Notas')} icon={<FileText />}>
-                <div className="flex items-center justify-between gap-4 mb-6">
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
                     <div className="relative" ref={actionRef}>
                         <button
                             onClick={() => setActionOpen(!actionOpen)}
@@ -328,7 +328,7 @@ export default function ClientNotes({ client }: Props) {
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center" onClick={handleCloseModal}>
                     <div className="absolute inset-0 bg-black opacity-30" onClick={handleCloseModal} />
-                    <div className="w-full sm:w-96 bg-card rounded-t-lg sm:rounded-md shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                    <div className="w-full sm:w-96 max-h-[90vh] bg-card rounded-t-lg sm:rounded-md shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-card">
                             <h2 className="text-lg font-semibold text-foreground">{t('clients.notes.form.Title', 'Add New Note')}</h2>
                         </div>

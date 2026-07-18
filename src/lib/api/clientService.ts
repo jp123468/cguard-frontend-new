@@ -617,6 +617,18 @@ export const clientService = {
         return data;
     },
 
+    // ----- Accesos (usuarios con acceso a la app/portal) ------------------
+    async getClientAccessUsers(clientId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.get<any>(`/tenant/${tenantId}/client-account/${clientId}/access-users`, { toast: { silentError: true } } as any);
+        return (data?.data ?? data)?.users || [];
+    },
+    async revokeClientAccess(clientId: string, pivotId: string) {
+        const tenantId = getTenantId();
+        const { data } = await api.delete<any>(`/tenant/${tenantId}/client-account/${clientId}/access-users/${pivotId}`);
+        return data?.data ?? data;
+    },
+
     // ----- Reportes -------------------------------------------------------
     async getClientReports(clientId: string, opts: { from?: string; to?: string; q?: string; page?: number; perPage?: number } = {}) {
         const tenantId = getTenantId();

@@ -33,7 +33,7 @@ import { StatusBadge } from "@/components/kit";
 import { ApiService } from "@/services/api/apiService";
 import { toast } from "sonner";
 import { confirmDialog } from "@/components/ui/confirmDialog";
-import ScheduleTimeline from "./ScheduleTimeline";
+import ScheduleTimeline, { dateToWall, wallToDate } from "./ScheduleTimeline";
 import RotationStyleSelect from "@/components/schedule/RotationStyleSelect";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -350,76 +350,29 @@ export default function Schedule() {
     return m;
   }, [positions]);
 
-  // Sacafranco PREVIEW (mirrors the backend STRICT 4-4-2 model): every SF runs a
-  // real day→night→rest rotation (its platoonOffset = the planned SF offset). On
-  // a day-block day it covers a DAY gap; on a night-block day a NIGHT gap; it
-  // rests otherwise — never a night then a day next morning. When >1 SF, they
-  // split the day's same-half gaps by index.
-  const sfPreview = useMemo(() => {
-    const map = new Map<string, { half: 'day' | 'night'; stationId: string }>();
-    if (!monthDays.length) return map;
-    const epoch = new Date(2024, 0, 1);
-    const reqHalves = (st?: string | null): ('day' | 'night')[] =>
-      st === '24h' ? ['day', 'night'] : st === '12h-night' ? ['night'] : ['day'];
-    const covHalf = (st: string | null | undefined, status: 'day' | 'night' | 'rest'): 'day' | 'night' | null =>
-      status === 'rest' ? null : st === '12h-day' ? 'day' : st === '12h-night' ? 'night' : (status === 'night' ? 'night' : 'day');
+  // MANUAL SACAFRANCO: nothing is auto-scheduled for an SF. Their month starts
+  // all-libre; coverage exists ONLY where a REAL shift exists — placed by
+  // dragging the SF's día onto a puesto's L cell (creates an ad-hoc shift), or
+  // in bulk via the explicit "Optimizar Sacafrancos" action.
+  const tzName = getTenantTimezone();
 
-    const fijoByStation = new Map<string, StationPosition[]>();
-    const sfList: StationPosition[] = [];
-    for (const p of positions) {
-      if (p.type === 'fijo') {
-        if (!fijoByStation.has(p.stationId)) fijoByStation.set(p.stationId, []);
-        fijoByStation.get(p.stationId)!.push(p);
-      } else if (p.type === 'sacafranco') {
-        sfList.push(p);
-      }
+  const reliefGuardIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const a of assignments) {
+      if (a.isRelief || positionsById.get(a.positionId)?.type === 'sacafranco') s.add(a.guardId);
     }
-    sfList.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-    if (sfList.length === 0) return map;
+    return s;
+  }, [assignments, positionsById]);
 
-    // SF rotation is 4-4-2 (day 4, night 4, rest 2).
-    const sfStatus = (dse: number, off: number): 'day' | 'night' | 'rest' => {
-      const adj = ((dse - off) % 10 + 10) % 10;
-      return adj < 4 ? 'day' : adj < 8 ? 'night' : 'rest';
-    };
-    const gapsOn = (dse: number): { stationId: string; half: 'day' | 'night' }[] => {
-      const gaps: { stationId: string; half: 'day' | 'night' }[] = [];
-      for (const [stId, fijos] of fijoByStation) {
-        const st = stationsById.get(stId);
-        if (!st?.rotationStyleId) continue;
-        const rot = rotationStylesById.get(st.rotationStyleId);
-        if (!rot) continue;
-        const cov = new Set<string>();
-        for (const f of fijos) {
-          const c = rot.dayShifts + rot.nightShifts + rot.restDays;
-          if (c <= 0) continue;
-          const adj = ((dse - (f.platoonOffset || 0)) % c + c) % c;
-          const status = adj < rot.dayShifts ? 'day' : adj < rot.dayShifts + rot.nightShifts ? 'night' : 'rest';
-          const h = covHalf(st.scheduleType, status);
-          if (h) cov.add(h);
-        }
-        for (const h of reqHalves(st.scheduleType)) if (!cov.has(h)) gaps.push({ stationId: stId, half: h });
-      }
-      return gaps;
-    };
-
-    for (const day of monthDays) {
-      const dse = Math.floor((new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime() - epoch.getTime()) / 86400000);
-      const dateStr = fmtDate(day);
-      const gaps = gapsOn(dse);
-      const dayGaps = gaps.filter((g) => g.half === 'day').sort((a, b) => a.stationId.localeCompare(b.stationId));
-      const nightGaps = gaps.filter((g) => g.half === 'night').sort((a, b) => a.stationId.localeCompare(b.stationId));
-      for (let i = 0; i < sfList.length; i++) {
-        const off = sfList[i].platoonOffset || 0;
-        const st = sfStatus(dse, off);
-        if (st === 'rest') continue;
-        const pool = st === 'day' ? dayGaps : nightGaps;
-        const pick = pool[i]; // SFs split same-half gaps by index
-        if (pick) map.set(`${sfList[i].id}-${dateStr}`, pick);
-      }
+  // `${guardId}|${dateStr}` (tenant tz) → that SF guard's real shift that day.
+  const sfShiftByGuardDate = useMemo(() => {
+    const m = new Map<string, ShiftRecord>();
+    for (const s of shifts) {
+      if (!s.startTime || !reliefGuardIds.has(s.guardId)) continue;
+      m.set(`${s.guardId}|${dateToWall(new Date(s.startTime), tzName).dateStr}`, s);
     }
-    return map;
-  }, [positions, stationsById, rotationStylesById, monthDays]);
+    return m;
+  }, [shifts, reliefGuardIds, tzName]);
 
   const getPositionsForStation = useCallback((stationId: string) =>
     positions.filter(p => p.stationId === stationId && p.type !== 'sacafranco'), [positions]);
@@ -541,125 +494,40 @@ export default function Schedule() {
       byGuard.get(a.guardId)!.assignments.push(a);
     });
 
-    // For each sacafranco, compute daily status using their OWN rotation
-    byGuard.forEach((data) => {
-      const primaryAssignment = data.assignments[0]; // Use first assignment for rotation info
-      // The patrón de rotación lives on the STATION (assignment.rotationStyle is
-      // null by design), so resolve it from the station — reading the assignment
-      // relation skipped every sacafranco, so none rendered in the Programador.
-      const sfStation = stationsById.get(primaryAssignment?.stationId);
-      const rot = (sfStation?.rotationStyleId ? rotationStylesById.get(sfStation.rotationStyleId) : null) || primaryAssignment?.rotationStyle;
-      if (!rot) return;
-
-      const sfCycle = rot.dayShifts + rot.nightShifts + rot.restDays;
-      if (sfCycle === 0) return;
-
-      // Fixed rotation anchor — must match backend getGlobalEpoch (2024-01-01)
-      const epoch = new Date(2024, 0, 1);
-
+    // Daily status from REAL shifts only: covering where a shift exists (any
+    // station), libre otherwise. No rotation math — the SF is manual now.
+    byGuard.forEach((data, guardId) => {
       monthDays.forEach(day => {
-        const target = new Date(day);
-        target.setHours(0, 0, 0, 0);
-        const sfDiff = Math.floor((target.getTime() - epoch.getTime()) / (24 * 60 * 60 * 1000));
-        const sfAdj = ((sfDiff - (primaryAssignment.platoonOffset || 0)) % sfCycle + sfCycle) % sfCycle;
-        if (sfAdj >= rot.dayShifts + rot.nightShifts) {
-          // Rest day
-          data.availability.push({ date: day, status: 'available' });
+        const shift = sfShiftByGuardDate.get(`${guardId}|${fmtDate(day)}`);
+        if (shift) {
+          data.availability.push({ date: day, status: 'covering', stationName: stationsById.get(shift.stationId)?.stationName || 'Cobertura' });
         } else {
-          // Work day — find which station has a fijo resting
-          let coveringStation: string | undefined;
-          for (const asgn of data.assignments) {
-            const station = stationsById.get(asgn.stationId);
-            const stationFijos = assignments.filter(ma =>
-              ma.stationId === asgn.stationId && !ma.isRelief &&
-              positionsById.get(ma.positionId)?.type === 'fijo'
-            );
-            for (const mainA of stationFijos) {
-              const mainRot = (station?.rotationStyleId ? rotationStylesById.get(station.rotationStyleId) : null) || mainA.rotationStyle;
-              if (!mainRot) continue;
-              const mainCycle = mainRot.dayShifts + mainRot.nightShifts + mainRot.restDays;
-              const daysSince = Math.floor((target.getTime() - epoch.getTime()) / (24 * 60 * 60 * 1000));
-              const adj = ((daysSince - (mainA.platoonOffset || 0)) % mainCycle + mainCycle) % mainCycle;
-              if (adj >= mainRot.dayShifts + mainRot.nightShifts) {
-                coveringStation = station?.stationName || 'Estación';
-                break;
-              }
-            }
-            if (coveringStation) break;
-          }
-          data.availability.push({ date: day, status: 'covering', stationName: coveringStation || 'Cobertura' });
+          data.availability.push({ date: day, status: 'available' });
         }
       });
     });
 
     return Array.from(byGuard.values());
-  }, [assignments, positionsById, stationsById, rotationStylesById, monthDays]);
+  }, [assignments, positionsById, stationsById, sfShiftByGuardDate, monthDays]);
 
-  // Map: `${stationId}-${dateStr}` → covering SF guard name(s)
-  // Algorithm: on each day, match working SFs to stations that have fijos resting
+  // Map: `${stationId}-${dateStr}` → SF guard(s) ACTUALLY covering there that
+  // day (real shifts only — shows on the fijo's L cell as "SF").
   const sfStationCoverage = useMemo(() => {
     const map = new Map<string, { name: string; fullName: string }[]>();
-
-    // Pre-compute: which stations have fijos resting on each day
-    const stationRestDays = new Map<string, string[]>(); // dateStr → [stationId, ...]
-    const fijoAssigns = assignments.filter(a => {
-      const pos = positionsById.get(a.positionId);
-      return pos?.type === 'fijo' && !a.isRelief;
-    });
-
-    for (const day of monthDays) {
-      const dateStr = fmtDate(day);
-      const stationsNeeding: string[] = [];
-      // Group fijo assignments by station
-      const byStation = new Map<string, GuardAssignment[]>();
-      for (const a of fijoAssigns) {
-        if (!byStation.has(a.stationId)) byStation.set(a.stationId, []);
-        byStation.get(a.stationId)!.push(a);
-      }
-      // Check each station: does any fijo rest today?
-      for (const [stId, stAssigns] of byStation) {
-        const anyResting = stAssigns.some(a => isWorkDay(a, day) === 'rest');
-        if (anyResting) stationsNeeding.push(stId);
-      }
-      stationRestDays.set(dateStr, stationsNeeding);
+    for (const s of shifts) {
+      if (!s.startTime || !reliefGuardIds.has(s.guardId)) continue;
+      const dateStr = dateToWall(new Date(s.startTime), tzName).dateStr;
+      const key = `${s.stationId}-${dateStr}`;
+      const g = s.guard;
+      const fullName = g
+        ? `${g.firstName || ''} ${g.lastName || ''}`.trim()
+        : (guardsPool.find(x => x.id === s.guardId)?.label || 'SF');
+      const initials = g ? `${g.firstName?.[0] || ''}${g.lastName?.[0] || ''}`.toUpperCase() : 'SF';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push({ name: initials || 'SF', fullName });
     }
-
-    // Pre-compute: which SFs are working on each day
-    for (const day of monthDays) {
-      const dateStr = fmtDate(day);
-      const stationsNeeding = stationRestDays.get(dateStr) || [];
-      if (stationsNeeding.length === 0) continue;
-
-      // Get working SFs for this day
-      const workingSfs: { name: string; fullName: string }[] = [];
-      for (const sf of sacafrancoData) {
-        if (!sf.guard) continue;
-        const entry = sf.availability.find(a => {
-          const d = a.date instanceof Date ? fmtDate(a.date) : String(a.date).slice(0, 10);
-          return d === dateStr;
-        });
-        if (entry?.status === 'covering') {
-          workingSfs.push({
-            name: `${sf.guard.firstName?.[0] || ''}${sf.guard.lastName?.[0] || ''}`.toUpperCase(),
-            fullName: `${sf.guard.firstName || ''} ${sf.guard.lastName || ''}`.trim(),
-          });
-        }
-      }
-
-      // Assign SFs to stations round-robin
-      for (let i = 0; i < stationsNeeding.length; i++) {
-        const stId = stationsNeeding[i];
-        const key = `${stId}-${dateStr}`;
-        if (workingSfs.length > 0) {
-          const sfIdx = i % workingSfs.length;
-          if (!map.has(key)) map.set(key, []);
-          map.get(key)!.push(workingSfs[sfIdx]);
-        }
-      }
-    }
-
     return map;
-  }, [sacafrancoData, assignments, positionsById, monthDays, isWorkDay]);
+  }, [shifts, reliefGuardIds, tzName, guardsPool]);
 
   // Per-station alerts for uncovered fijo slots and SF rest-day coverage gaps.
   const localStationAlerts = useMemo(() => {
@@ -797,13 +665,82 @@ export default function Schedule() {
   };
 
   const onGuardDragStart = (e: React.DragEvent, guardId: string, fromAssignment?: GuardAssignment) => {
+    mouseSelRef.current = false; // a native drag never fires the mouseup that ends cell-selection
     e.dataTransfer.setData('guardId', guardId);
     if (fromAssignment) e.dataTransfer.setData('fromAssignmentId', fromAssignment.id);
     e.dataTransfer.effectAllowed = 'move';
   };
 
+  // Drop an SF's día onto a puesto cell → create the REAL coverage shift there.
+  // The half (D/N) follows what the station is missing that day; the SF's own
+  // row shows the same D/N because it reads these shifts.
+  const placeSfCoverage = async (station: Station, pos: StationPosition, dateStr: string, sfGuardId: string) => {
+    const stFijos = assignments.filter(a =>
+      a.stationId === station.id && !a.isRelief && positionsById.get(a.positionId)?.type === 'fijo');
+    const day = new Date(dateStr + 'T00:00:00');
+    const covered = new Set<string>();
+    for (const a of stFijos) {
+      const w = isWorkDay(a, day);
+      if (w === 'rest') continue;
+      if (station.scheduleType === '12h-day') covered.add('day');
+      else if (station.scheduleType === '12h-night') covered.add('night');
+      else covered.add(w === 'night' ? 'night' : 'day');
+    }
+    let startMin = 7 * 60, endMin = 19 * 60, endNextDay = false, code = 'D';
+    if (station.scheduleType === 'custom' && pos.startTime && pos.endTime) {
+      // Custom blocks carry their real hours on the position (24x24 → start==end).
+      const toMin = (x: string) => { const [h, mm] = x.split(':').map(n => parseInt(n, 10) || 0); return (h % 24) * 60 + (mm % 60); };
+      startMin = toMin(pos.startTime);
+      endMin = toMin(pos.endTime);
+      endNextDay = endMin <= startMin; // wraps midnight (full 24h when equal)
+      code = startMin >= 18 * 60 || startMin < 6 * 60 ? 'N' : 'D';
+    } else {
+      const req: string[] = station.scheduleType === '24h' ? ['day', 'night'] : station.scheduleType === '12h-night' ? ['night'] : ['day'];
+      const half = req.filter(h => !covered.has(h))[0] || req[0];
+      if (half === 'night') { startMin = 19 * 60; endMin = 7 * 60; endNextDay = true; code = 'N'; }
+    }
+    const [y, mo, d] = dateStr.split('-').map(Number);
+    const start = wallToDate(y, mo, d, startMin, tzName);
+    const end = wallToDate(y, mo, d, (endNextDay ? 1440 : 0) + endMin, tzName);
+    try {
+      // Replace the SF's overlapping shifts (same rule as the turno único).
+      const overlapping = shifts.filter(s =>
+        s.guardId === sfGuardId && new Date(s.startTime) < end && new Date(s.endTime) > start);
+      if (overlapping.length) {
+        await ApiService.delete(`/tenant/${tenantId}/shift?ids=${overlapping.map(s => s.id).join(',')}`).catch(() => {});
+      }
+      await ApiService.post(`/tenant/${tenantId}/shift`, {
+        data: { startTime: start.toISOString(), endTime: end.toISOString(), station: station.id, guard: sfGuardId, postSiteId: station.postSiteId },
+      });
+      toast.success(`Sacafranco cubre ${station.stationName} (${code})`);
+      fetchAll({ silent: true });
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || 'Error al asignar la cobertura');
+    }
+  };
+
+  const removeSfCoverage = async (shift: ShiftRecord) => {
+    const stName = stationsById.get(shift.stationId)?.stationName || 'la estación';
+    if (!(await confirmDialog({ title: 'Quitar cobertura', message: `¿Quitar la cobertura del sacafranco en ${stName} ese día? Se elimina el turno.`, confirmText: 'Quitar', tone: 'danger' }))) return;
+    try {
+      await ApiService.delete(`/tenant/${tenantId}/shift/${shift.id}`);
+      toast.success('Cobertura eliminada');
+      fetchAll({ silent: true });
+    } catch (e: any) {
+      toast.error(e?.data?.message || e?.message || 'Error al eliminar');
+    }
+  };
+
   const handleDrop = (e: React.DragEvent, stationId: string, positionId: string, dateStr?: string) => {
     e.preventDefault();
+    // An SF día dropped on a puesto cell = place coverage (not an assignment).
+    const sfCoverGuardId = e.dataTransfer.getData('sfCoverGuardId');
+    if (sfCoverGuardId) {
+      const st = stationsById.get(stationId);
+      const pos = positionsById.get(positionId);
+      if (st && pos && pos.type !== 'sacafranco' && dateStr) void placeSfCoverage(st, pos, dateStr, sfCoverGuardId);
+      return;
+    }
     const guardId = e.dataTransfer.getData('guardId');
     if (!guardId) return;
     const fromId = e.dataTransfer.getData('fromAssignmentId') || '';
@@ -1891,12 +1828,13 @@ export default function Schedule() {
                                 )}
                               </div>
 
-                              {/* Day cells — gap-driven chain preview (same for assigned/unassigned) */}
+                              {/* Day cells — REAL shifts only: all L until coverage is
+                                  placed (drag the SF's L onto a puesto's L) or the
+                                  optimizer generates it. */}
                               {monthDays.map((day, dayIdx) => {
                                 const dateStr = fmtDate(day);
                                 const isToday = dateStr === todayStr;
                                 const isSunday = day.getDay() === 0;
-                                const cov = sfPreview.get(`${pos.id}-${dateStr}`);
                                 const cellBase = `border-r border-border/10 last:border-r-0 px-0.5 py-0.5 min-h-[36px] flex ${isToday ? 'bg-primary/3' : ''} ${isSunday ? 'bg-red-500/3' : ''}${cellSelCls(pos.id, dayIdx)}`;
                                 const cellProps = {
                                   id: `hc-${pos.id}-${dayIdx}`,
@@ -1931,12 +1869,22 @@ export default function Schedule() {
                                   setOverrideTarget({ guardId: sfGuard.guardId, guardName: gName, date: dateStr, assignmentId: sfGuard.id });
                                 };
 
-                                if (!cov) {
-                                  // Rest day (no gap for this SF). Unassigned → doble clic to assign.
+                                const covShift = sfGuard ? sfShiftByGuardDate.get(`${sfGuard.guardId}|${dateStr}`) : undefined;
+
+                                if (!covShift) {
+                                  // Libre. Assigned SF days are DRAGGABLE — drop them on a
+                                  // puesto's L cell to place the coverage there.
                                   return (
                                     <div key={dayIdx} {...cellProps} className={cellBase}>
                                       <div
-                                        className={`flex-1 rounded flex items-center justify-center cursor-pointer ${assigned ? 'bg-muted/30' : 'bg-muted/20 border border-dashed border-border/30'}`}
+                                        draggable={assigned}
+                                        onDragStart={assigned && sfGuard ? (e) => {
+                                          mouseSelRef.current = false;
+                                          e.dataTransfer.setData('sfCoverGuardId', sfGuard.guardId);
+                                          e.dataTransfer.effectAllowed = 'copy';
+                                        } : undefined}
+                                        className={`flex-1 rounded flex items-center justify-center ${assigned ? 'bg-muted/30 cursor-grab active:cursor-grabbing hover:bg-emerald-500/10' : 'bg-muted/20 border border-dashed border-border/30 cursor-pointer'}`}
+                                        title={assigned ? 'Libre — arrastra este día sobre un L de un puesto para cubrirlo' : 'Sin vigilante — doble clic para asignar sacafranco'}
                                         onDoubleClick={openSfDetail}
                                       >
                                         <span className="text-[10px] font-bold text-muted-foreground/50">L</span>
@@ -1945,19 +1893,22 @@ export default function Schedule() {
                                   );
                                 }
 
-                                const code = cov.half === 'night' ? 'N' : 'D';
-                                const stName = stationsById.get(cov.stationId)?.stationName?.slice(0, 3) || '';
-                                const bg = cov.half === 'night' ? 'bg-indigo-500/15' : 'bg-emerald-500/15';
-                                const textColor = cov.half === 'night' ? 'text-indigo-400' : 'text-emerald-500';
+                                // Real coverage that day → D/N by the shift's start hour.
+                                const startMin = dateToWall(new Date(covShift.startTime), tzName).minutes;
+                                const isNightCov = startMin >= 18 * 60 || startMin < 6 * 60;
+                                const code = isNightCov ? 'N' : 'D';
+                                const covStName = stationsById.get(covShift.stationId)?.stationName || '';
+                                const bg = isNightCov ? 'bg-indigo-500/15' : 'bg-emerald-500/15';
+                                const textColor = isNightCov ? 'text-indigo-400' : 'text-emerald-500';
                                 return (
                                   <div key={dayIdx} {...cellProps} className={cellBase}>
                                     <div
-                                      className={`flex-1 rounded flex flex-col items-center justify-center cursor-pointer ${bg} ${assigned ? '' : 'border border-dashed border-border/30'}`}
-                                      title={`Cubre: ${stationsById.get(cov.stationId)?.stationName || ''}`}
-                                      onDoubleClick={openSfDetail}
+                                      className={`flex-1 rounded flex flex-col items-center justify-center cursor-pointer ${bg}`}
+                                      title={`Cubre: ${covStName} — doble clic para quitar la cobertura`}
+                                      onDoubleClick={() => removeSfCoverage(covShift)}
                                     >
                                       <span className={`text-[10px] font-bold ${textColor}`}>{code}</span>
-                                      {stName && <span className="text-[7px] text-muted-foreground leading-none">{stName}</span>}
+                                      {covStName && <span className="text-[7px] text-muted-foreground leading-none">{covStName.slice(0, 3)}</span>}
                                     </div>
                                   </div>
                                 );
@@ -2213,7 +2164,7 @@ export default function Schedule() {
               {view === 'month' ? (
                 <>
                   <span className="font-medium text-foreground/70">{selInfo || 'Clic en una celda para seleccionar'}</span>
-                  <span className="hidden md:inline">Arrastra para seleccionar rango · Flechas mueven · Escribe <b>D N L V F P 2</b> para novedad (P=permiso, 2=24h) · <b>Supr</b> borra · <b>Enter</b>/doble clic abre detalle · <b>Re/Av Pág</b> cambia mes</span>
+                  <span className="hidden md:inline">Arrastra para seleccionar rango · Escribe <b>D N L V F P 2</b> para novedad · <b>Supr</b> borra · <b>Enter</b>/doble clic abre detalle · Arrastra un día <b>L del sacafranco</b> sobre un L del puesto para cubrirlo · <b>Re/Av Pág</b> cambia mes</span>
                 </>
               ) : (
                 <span className="font-medium text-foreground/70">

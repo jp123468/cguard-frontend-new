@@ -181,7 +181,7 @@ export default function ClientStaff({ client }: { client: any }) {
             <EmptyState icon={<Users className="h-5 w-5" />} title="Sin personal" description="No hay personal que coincida con los filtros para este cliente." />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[720px] text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
                     <th className="px-2 py-2 font-medium">Personal</th>

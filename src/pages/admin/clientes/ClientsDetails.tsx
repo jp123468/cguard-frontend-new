@@ -7,11 +7,9 @@ import { clientService } from '@/lib/api/clientService';
 import ClientOverview from './components/ClientOverview/ClientOverview';
 import ClientContacts from './components/ClientContacts/ClientContacts';
 import ClientNotes from './components/ClientNotes/ClientNotes';
-import ClientFiles from './components/ClientFiles/ClientFiles';
 import ClientPostSites from './components/ClientPostSites/ClientPostSites';
 import ClientPortal from './components/ClientPortal/ClientPortal';
 import ClientUserAccess from './components/ClientUserAccess/ClientUserAccess';
-import ClientEmailReports from './components/ClientEmailReports/ClientEmailReports';
 import ClientProjects from './components/ClientProjects/ClientProjects';
 import ClientContract from './components/ClientContract/ClientContract';
 import ClientCoverage from './components/ClientCoverage/ClientCoverage';
@@ -135,11 +133,11 @@ export default function ClientsDetails() {
               {(activeTab === 'overview' || activeTab === 'profile') && <ClientOverview client={client} />}
               {activeTab === 'contacts' && <ClientContacts client={client} />}
               {activeTab === 'notes' && <ClientNotes client={client} />}
-              {activeTab === 'files' && <ClientFiles client={client} />}
+              {activeTab === 'files' && <ClientDocuments client={client} />}
               {activeTab === 'postSites' && <ClientPostSites client={client} />}
               {activeTab === 'clientPortal' && <ClientPortal client={client} />}
               {activeTab === 'userAccess' && <ClientUserAccess client={client} />}
-              {activeTab === 'emailReports' && <ClientEmailReports client={client} />}
+              {activeTab === 'emailReports' && <ClientReports client={client} />}
               {activeTab === 'projects' && <ClientProjects client={client} />}
               {activeTab === 'contrato' && <ClientContract client={client} />}
               {activeTab === 'coverage' && <ClientCoverage client={client} />}

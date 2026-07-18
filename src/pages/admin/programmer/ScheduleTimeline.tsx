@@ -86,7 +86,7 @@ function tzOffsetMs(date: Date, tz?: string): number {
 }
 
 /** Interpret a wall-clock (calendar day + minutes) IN the tenant tz → real instant. */
-function wallToDate(y: number, mo: number, d: number, minutes: number, tz?: string): Date {
+export function wallToDate(y: number, mo: number, d: number, minutes: number, tz?: string): Date {
   if (!tz) return new Date(y, mo - 1, d, 0, minutes);
   const utcGuess = Date.UTC(y, mo - 1, d, 0, minutes);
   // Two-pass offset correction (handles DST edges; trivial for fixed-offset zones).
@@ -96,7 +96,7 @@ function wallToDate(y: number, mo: number, d: number, minutes: number, tz?: stri
 }
 
 /** A real instant → tenant wall-clock {calendar day, minutes into the day}. */
-function dateToWall(date: Date, tz?: string): { dateStr: string; minutes: number } {
+export function dateToWall(date: Date, tz?: string): { dateStr: string; minutes: number } {
   if (!tz) return { dateStr: fmtDate(date), minutes: date.getHours() * 60 + date.getMinutes() };
   const shifted = new Date(date.getTime() + tzOffsetMs(date, tz));
   return { dateStr: shifted.toISOString().slice(0, 10), minutes: shifted.getUTCHours() * 60 + shifted.getUTCMinutes() };

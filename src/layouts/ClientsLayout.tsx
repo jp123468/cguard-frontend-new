@@ -164,7 +164,7 @@ export default function ClientsLayout({ navKey, title, children, client }: Props
               <Button variant="outline" size="sm" onClick={() => navigate(`/clients/edit/${client.id}`)}><Pencil className="mr-1 h-4 w-4" /> {t('clients.editClient', 'Editar cliente')}</Button>
               <Button variant="outline" size="sm" onClick={() => navigate('/post-sites/new')}><Plus className="mr-1 h-4 w-4" /> {t('clients.hero.newSite', 'Crear sede')}</Button>
               <Button variant="outline" size="sm" onClick={() => navigate('/dispatch-tickets/new')}><AlertTriangle className="mr-1 h-4 w-4" /> {t('clients.newIncident', 'Crear incidente')}</Button>
-              <Button variant="brand" size="sm" onClick={() => navigate(`${base}/email-reports`)}><FileText className="mr-1 h-4 w-4" /> {t('clients.generateReport', 'Generar reporte')}</Button>
+              <Button variant="brand" size="sm" onClick={() => navigate(`${base}/reports`)}><FileText className="mr-1 h-4 w-4" /> {t('clients.generateReport', 'Generar reporte')}</Button>
             </div>
           )}
         </div>
