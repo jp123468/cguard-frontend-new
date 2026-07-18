@@ -33,6 +33,7 @@ import { StatusBadge } from "@/components/kit";
 import { ApiService } from "@/services/api/apiService";
 import { toast } from "sonner";
 import { confirmDialog } from "@/components/ui/confirmDialog";
+import ScheduleTimeline from "./ScheduleTimeline";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -140,6 +141,14 @@ const tzToday = (): string => {
 
 const monthKeyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
+const addDays = (d: Date, n: number): Date => {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+};
+
+type ViewMode = 'month' | 'week' | 'day';
+
 const VIEW_KEY = 'programador.horario.view';
 
 const POSITION_COLORS: Record<string, { bg: string; border: string; text: string; icon: any }> = {
@@ -193,14 +202,19 @@ export default function Schedule() {
   const [currentDate, setCurrentDate] = useState(() => {
     try {
       const saved = JSON.parse(sessionStorage.getItem(VIEW_KEY) || 'null');
+      if (saved?.a) {
+        const [y, mo, d] = String(saved.a).split('-').map(Number);
+        if (y && mo && d) return new Date(y, mo - 1, d);
+      }
       if (saved?.m) {
         const [y, mo] = String(saved.m).split('-').map(Number);
         if (y && mo) return new Date(y, mo - 1, 1);
       }
     } catch { /* fall through */ }
-    const [y, mo] = tzToday().split('-').map(Number);
-    return new Date(y, mo - 1, 1);
+    const [y, mo, d] = tzToday().split('-').map(Number);
+    return new Date(y, mo - 1, d);
   });
+  const [view, setView] = useState<ViewMode>(savedView.v === 'week' || savedView.v === 'day' ? savedView.v : 'month');
   const [panelOpen, setPanelOpen] = useState<boolean>(savedView.panel ?? true);
   const [sfSectionOpen, setSfSectionOpen] = useState<boolean>(savedView.sf ?? false);
 
@@ -235,8 +249,18 @@ export default function Schedule() {
     return days;
   }, [currentDate]);
 
-  const startDateStr = fmtDate(monthDays[0]);
-  const endDateStr = fmtDate(monthDays[monthDays.length - 1]);
+  // Visible days for the Semana/Día timeline. Día shows 48h (the chosen day +
+  // the next) so a block can be DRAWN across midnight — e.g. 07:00 → 07:00.
+  const timelineDays = useMemo(() => {
+    if (view === 'day') return [currentDate, addDays(currentDate, 1)];
+    const start = addDays(currentDate, -((currentDate.getDay() + 6) % 7)); // Monday
+    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  }, [view, currentDate]);
+
+  // Fetch range follows the view (±1 day padding on the timeline so overnight
+  // shift tails/heads at the range edges are included).
+  const startDateStr = view === 'month' ? fmtDate(monthDays[0]) : fmtDate(addDays(timelineDays[0], -1));
+  const endDateStr = view === 'month' ? fmtDate(monthDays[monthDays.length - 1]) : fmtDate(addDays(timelineDays[timelineDays.length - 1], 1));
 
   const fetchAll = useCallback(async (opts?: { silent?: boolean }) => {
     // After the first load every refetch is SILENT: the grid stays mounted so
@@ -1216,16 +1240,17 @@ export default function Schedule() {
     setSel(null);
     setCurrentDate(prev => {
       const d = new Date(prev);
-      d.setMonth(d.getMonth() + dir);
-      d.setDate(1);
+      if (view === 'month') { d.setMonth(d.getMonth() + dir); d.setDate(1); }
+      else if (view === 'week') d.setDate(d.getDate() + dir * 7);
+      else d.setDate(d.getDate() + dir);
       return d;
     });
-  }, []);
+  }, [view]);
 
   const goToday = useCallback(() => {
     setSel(null);
-    const [y, mo] = tzToday().split('-').map(Number);
-    setCurrentDate(new Date(y, mo - 1, 1));
+    const [y, mo, d] = tzToday().split('-').map(Number);
+    setCurrentDate(new Date(y, mo - 1, d));
   }, []);
 
   // ─── Keyboard (spreadsheet mode) ─────────────────────────────────────────
@@ -1286,15 +1311,21 @@ export default function Schedule() {
     if (!restoredRef.current) return;
     const el = gridScrollRef.current;
     try {
+      // When the month sheet isn't mounted (week/day view) keep its last saved
+      // scroll instead of clobbering it with zeros.
+      let prev: any = {};
+      try { prev = JSON.parse(sessionStorage.getItem(VIEW_KEY) || 'null') || {}; } catch { /* ignore */ }
       sessionStorage.setItem(VIEW_KEY, JSON.stringify({
         m: monthKeyOf(currentDate),
-        sl: el?.scrollLeft ?? 0,
-        st: el?.scrollTop ?? 0,
+        a: fmtDate(currentDate),
+        v: view,
+        sl: el ? el.scrollLeft : (prev.sl || 0),
+        st: el ? el.scrollTop : (prev.st || 0),
         sf: sfSectionOpen,
         panel: panelOpen,
       }));
     } catch { /* storage full/blocked */ }
-  }, [currentDate, sfSectionOpen, panelOpen]);
+  }, [currentDate, view, sfSectionOpen, panelOpen]);
 
   const onGridScroll = () => {
     cancelAnimationFrame(scrollSaveRaf.current);
@@ -1337,6 +1368,16 @@ export default function Schedule() {
   const monthLabel = useMemo(() => {
     return currentDate.toLocaleDateString('es', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
   }, [currentDate]);
+
+  const rangeLabel = useMemo(() => {
+    if (view === 'month') return monthLabel;
+    const fmt = (d: Date) => d.toLocaleDateString('es', { day: 'numeric', month: 'short' });
+    if (view === 'week') {
+      const a = timelineDays[0], b = timelineDays[timelineDays.length - 1];
+      return `${fmt(a)} – ${fmt(b)} ${b.getFullYear()}`;
+    }
+    return currentDate.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' }).replace(/^./, c => c.toUpperCase());
+  }, [view, monthLabel, timelineDays, currentDate]);
 
   const todayStr = tzToday();
   const gridCols = `240px repeat(${monthDays.length}, 44px)`;
@@ -1495,10 +1536,23 @@ export default function Schedule() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <Button variant="outline" size="sm" onClick={() => nav(-1)} title="Mes anterior (Re Pág)"><ChevronLeft size={16} /></Button>
+            <Button variant="outline" size="sm" onClick={() => nav(-1)} title="Anterior (Re Pág)"><ChevronLeft size={16} /></Button>
             <Button variant="outline" size="sm" onClick={goToday}>Hoy</Button>
-            <span className="text-sm font-medium text-foreground min-w-[130px] text-center">{monthLabel}</span>
-            <Button variant="outline" size="sm" onClick={() => nav(1)} title="Mes siguiente (Av Pág)"><ChevronRight size={16} /></Button>
+            <span className="text-sm font-medium text-foreground min-w-[130px] text-center">{rangeLabel}</span>
+            <Button variant="outline" size="sm" onClick={() => nav(1)} title="Siguiente (Av Pág)"><ChevronRight size={16} /></Button>
+          </div>
+
+          {/* View switcher: Mes = spreadsheet · Semana/Día = draw-a-block timeline */}
+          <div className="flex items-center rounded-lg border border-border/40 overflow-hidden">
+            {([['month', 'Mes'], ['week', 'Semana'], ['day', 'Día']] as [ViewMode, string][]).map(([v, label]) => (
+              <button
+                key={v}
+                onClick={() => { setView(v); setSel(null); }}
+                className={`px-3 py-1.5 text-xs font-semibold transition-colors ${view === v ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {coverage && typeof coverage.coveredPct === 'number' && (() => {
@@ -1562,7 +1616,21 @@ export default function Schedule() {
 
             {/* ─── Sheet + side panel fill the rest of the viewport ─── */}
             <div ref={shellRef} className="flex gap-2 min-h-0" style={{ height: `calc(100vh - ${shellTop + 8}px)`, minHeight: 320 }}>
-              {/* ─── The sheet ─── */}
+              {/* ─── Mes = spreadsheet sheet · Semana/Día = draw-a-block timeline ─── */}
+              {view !== 'month' ? (
+                <ScheduleTimeline
+                  tenantId={tenantId}
+                  view={view}
+                  days={timelineDays}
+                  stations={stations}
+                  shifts={shifts}
+                  guardsPool={guardsPool}
+                  guardColorMap={guardColorMap}
+                  tz={getTenantTimezone()}
+                  todayStr={todayStr}
+                  onChanged={() => fetchAll({ silent: true })}
+                />
+              ) : (
               <div
                 ref={gridScrollRef}
                 onScroll={onGridScroll}
@@ -1884,6 +1952,7 @@ export default function Schedule() {
                   })()}
                 </div>
               </div>
+              )}
 
               {/* ─── Side panel (former left sidebar + guard pool, now collapsible) ─── */}
               {panelOpen && (
@@ -2123,10 +2192,18 @@ export default function Schedule() {
 
             {/* ─── Sheet hint bar ─── */}
             <div className="flex items-center gap-3 flex-wrap pt-1.5 text-[10px] text-muted-foreground">
-              <span className="font-medium text-foreground/70">{selInfo || 'Clic en una celda para seleccionar'}</span>
-              <span className="hidden md:inline">Arrastra para seleccionar rango · Flechas mueven · Escribe <b>D N L V F P 2</b> para novedad (P=permiso, 2=24h) · <b>Supr</b> borra · <b>Enter</b>/doble clic abre detalle · <b>Re/Av Pág</b> cambia mes</span>
+              {view === 'month' ? (
+                <>
+                  <span className="font-medium text-foreground/70">{selInfo || 'Clic en una celda para seleccionar'}</span>
+                  <span className="hidden md:inline">Arrastra para seleccionar rango · Flechas mueven · Escribe <b>D N L V F P 2</b> para novedad (P=permiso, 2=24h) · <b>Supr</b> borra · <b>Enter</b>/doble clic abre detalle · <b>Re/Av Pág</b> cambia mes</span>
+                </>
+              ) : (
+                <span className="font-medium text-foreground/70">
+                  Arrastra sobre la fila de una estación para <b>dibujar un bloque de trabajo</b> (p. ej. 07:00 → 07:00 del día siguiente) · Clic en un bloque: detalle / eliminar · Suelta un vigilante del panel sobre la línea · <b>Re/Av Pág</b> cambia {view === 'week' ? 'de semana' : 'de día'}
+                </span>
+              )}
               <span className="flex-1" />
-              <span className="hidden lg:flex items-center gap-1.5">
+              {view === 'month' && <span className="hidden lg:flex items-center gap-1.5">
                 {[
                   { c: 'D', cls: 'bg-sky-500/15 text-sky-500' },
                   { c: 'N', cls: 'bg-indigo-500/15 text-indigo-400' },
@@ -2138,7 +2215,7 @@ export default function Schedule() {
                 ].map(x => (
                   <span key={x.c} className={`px-1.5 py-0.5 rounded font-bold ${x.cls}`}>{x.c}</span>
                 ))}
-              </span>
+              </span>}
             </div>
           </>
         )}
