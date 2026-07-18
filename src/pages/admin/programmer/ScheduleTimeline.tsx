@@ -123,6 +123,25 @@ const addDaysToWallStr = (s: string, n: number): string => {
 
 const minLabel = (abs: number) => `${pad2(Math.floor((((abs % 1440) + 1440) % 1440) / 60))}:${pad2(abs % 60)}`;
 
+/** Middle-button (rueda) drag-to-pan for a scroll container. */
+export const startPan = (e: React.MouseEvent, el: HTMLElement | null) => {
+  if (e.button !== 1 || !el) return;
+  e.preventDefault(); // suppress the browser's middle-click autoscroll/paste
+  const sx = e.clientX, sy = e.clientY, sl = el.scrollLeft, st = el.scrollTop;
+  const move = (ev: MouseEvent) => {
+    el.scrollLeft = sl - (ev.clientX - sx);
+    el.scrollTop = st - (ev.clientY - sy);
+  };
+  const up = () => {
+    window.removeEventListener('mousemove', move);
+    window.removeEventListener('mouseup', up);
+    document.body.style.cursor = '';
+  };
+  window.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', up);
+  document.body.style.cursor = 'grabbing';
+};
+
 // A shift (or the draw preview) split into per-day segments.
 interface Segment {
   dayIdx: number;
@@ -449,9 +468,15 @@ export default function ScheduleTimeline({
 
   const inputCls = 'w-full rounded-xl border border-border/40 bg-background px-3 py-2.5 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20';
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   return (
     <>
-      <div className="flex-1 min-w-0 overflow-auto select-none bg-card border border-border/40 rounded-xl shadow-sm">
+      <div
+        ref={scrollRef}
+        className="flex-1 min-w-0 overflow-auto select-none bg-card border border-border/40 rounded-xl shadow-sm"
+        onMouseDown={e => startPan(e, scrollRef.current)}
+      >
         <div style={{ minWidth: GUTTER_W + canvasW }}>
           {/* ─── Frozen header: days row + estación sub-columns row ─── */}
           <div className="sticky top-0 z-30 border-b border-border/30 bg-card">
@@ -572,7 +597,7 @@ export default function ScheduleTimeline({
                         ...(seg.first ? { borderTop: `3px solid ${color}` } : {}),
                       }}
                       title={`${name} · ${timeLbl}${isEngine ? ' · generado por rotación' : ' · turno manual'} — clic: detalle · clic derecho: opciones`}
-                      onMouseDown={e => e.stopPropagation()}
+                      onMouseDown={e => { if (e.button === 0) e.stopPropagation(); }}
                       onClick={() => setDetail(s)}
                       onContextMenu={e => openBlockCtx(e, s)}
                     >

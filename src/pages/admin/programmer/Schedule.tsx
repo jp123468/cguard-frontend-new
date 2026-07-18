@@ -33,7 +33,7 @@ import { StatusBadge } from "@/components/kit";
 import { ApiService } from "@/services/api/apiService";
 import { toast } from "sonner";
 import { confirmDialog } from "@/components/ui/confirmDialog";
-import ScheduleTimeline, { dateToWall, wallToDate } from "./ScheduleTimeline";
+import ScheduleTimeline, { dateToWall, wallToDate, startPan } from "./ScheduleTimeline";
 import RotationStyleSelect from "@/components/schedule/RotationStyleSelect";
 import ContextMenu, { CtxItem, CtxMenuState } from "./ContextMenu";
 
@@ -1721,6 +1721,7 @@ export default function Schedule() {
               <div
                 ref={gridScrollRef}
                 onScroll={onGridScroll}
+                onMouseDown={e => startPan(e, gridScrollRef.current)}
                 tabIndex={0}
                 className="flex-1 min-w-0 overflow-auto outline-none select-none bg-card border border-border/40 rounded-xl shadow-sm"
               >
