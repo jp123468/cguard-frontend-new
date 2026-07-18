@@ -418,7 +418,16 @@ export default function GoogleMapEmbed({
           let mk: any;
 
           {
-            const color = m.role === "supervisor" ? "#2563eb" : "#059669";
+            const color =
+              m.role === "supervisor"
+                ? "#2563eb"
+                : m.role === "warn"
+                  ? "#f97316"
+                  : m.role === "crit"
+                    ? "#ef4444"
+                    : m.role === "muted"
+                      ? "#94a3b8"
+                      : "#059669";
             const dot = document.createElement("div");
 
             dot.style.cssText = `width:14px;height:14px;background:${color};border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);`;
@@ -451,7 +460,10 @@ export default function GoogleMapEmbed({
     });
 
     markersRef.current = existing;
-  }, [markers]);
+    // `ready` is a dependency so this re-runs once the async map init finishes —
+    // otherwise a markers list present on first render is dropped (map not ready
+    // yet) and never re-applied, leaving the map pin-less.
+  }, [markers, ready]);
 
   useEffect(() => {
     const google = (window as any).google;
