@@ -42,10 +42,12 @@ export default function StationLayout({ title, children, station }: Props) {
     location.pathname === path || location.pathname.startsWith(path + '/');
 
   // Breadcrumb chain — Clientes › {Cliente} › {Sede} › {Estación} › {Pestaña}.
-  const client = station?.stationOrigin;
+  // The owning client comes from the sede (postSite.clientAccount); stationOrigin
+  // is a legacy/optional direct link and is often null.
   const site = station?.postSite;
-  const clientId = client?.id;
-  const clientName = client?.commercialName || client?.name || null;
+  const client = site?.clientAccount || station?.stationOrigin;
+  const clientId = client?.id || site?.clientAccountId || null;
+  const clientName = client?.commercialName || client?.name || client?.companyName || null;
   const siteName = site?.businessName || site?.companyName || site?.name || t('postSites.postsite', 'Sede');
   const stationName = station?.stationName || station?.name || t('station.details.station', 'Estación');
   const activeItem = items.find((it) => isActive(it.path)) || items[0];
