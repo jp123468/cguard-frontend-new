@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clientService } from '@/lib/api/clientService';
+import { postSiteService } from '@/lib/api/postSiteService';
 import GoogleMapEmbed from '@/components/GoogleMap/GoogleMapEmbed';
 import { Section, EmptyState } from '@/components/kit';
+import { confirmDialog } from '@/components/ui/confirmDialog';
+import { toast } from 'sonner';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import {
   Building2, Search, MapPin, Users, Clock, BarChart3, ChevronLeft, ChevronRight,
+  MoreVertical, Pencil, Trash2, ExternalLink, LocateFixed,
 } from 'lucide-react';
 
 type Sede = {
@@ -99,6 +106,24 @@ export default function ClientPostSites({ client }: { client: any }) {
   }, [sedes, query, estado, ciudad]);
 
   const selected = sedes.find((s) => s.id === selectedId) || null;
+
+  const deleteSede = async (s: Sede) => {
+    const ok = await confirmDialog({
+      title: 'Eliminar sede',
+      message: `¿Eliminar la sede "${s.name}"? Sus estaciones, horarios y asignaciones dejarán de estar disponibles.`,
+      confirmText: 'Eliminar',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await postSiteService.delete([s.id]);
+      setSedes((prev) => prev.filter((x) => x.id !== s.id));
+      if (selectedId === s.id) setSelectedId(null);
+      toast.success('Sede eliminada');
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo eliminar la sede');
+    }
+  };
   const risk = client?.riskLevel || '';
   const mapMarkers = filtered.filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
     .map((s) => ({ id: s.id, lat: s.lat!, lng: s.lng!, label: s.name, role: markerRole(s) }));
@@ -141,23 +166,29 @@ export default function ClientPostSites({ client }: { client: any }) {
                     <th className="py-2 pr-3 font-medium">Ciudad</th>
                     {risk && <th className="py-2 pr-3 font-medium">Riesgo</th>}
                     <th className="py-2 pr-3 font-medium">Guardias</th>
-                    <th className="py-2 pr-3 font-medium">Puestos</th>
+                    <th className="py-2 pr-3 font-medium">Estaciones</th>
                     <th className="py-2 pr-3 font-medium">Estado</th>
                     <th className="py-2 pr-3 font-medium">Cobertura</th>
+                    <th className="py-2 pr-1 font-medium" aria-label="Acciones" />
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((s, i) => (
                     <tr
                       key={s.id}
-                      onClick={() => setSelectedId(s.id)}
+                      onClick={() => navigate(`/post-sites/${s.id}`)}
+                      title="Abrir el detalle de la sede"
                       className={`cursor-pointer border-b border-border/40 last:border-0 ${selectedId === s.id ? 'bg-primary/5' : 'hover:bg-accent/40'}`}
                     >
                       <td className="py-2.5 pr-3">
                         <div className="flex items-center gap-2.5">
-                          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${
-                            markerRole(s) === 'ok' ? 'bg-emerald-500' : markerRole(s) === 'warn' ? 'bg-orange-500' : markerRole(s) === 'crit' ? 'bg-red-500' : 'bg-slate-400'
-                          }`}>{i + 1}</span>
+                          {/* Numbered pin: selects for the map/side panel (does NOT navigate) */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSelectedId(s.id); }}
+                            title="Ver en el mapa"
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white transition-transform hover:scale-110 ${
+                              markerRole(s) === 'ok' ? 'bg-emerald-500' : markerRole(s) === 'warn' ? 'bg-orange-500' : markerRole(s) === 'crit' ? 'bg-red-500' : 'bg-slate-400'
+                            }`}>{i + 1}</button>
                           {s.thumb ? (
                             <img src={s.thumb} alt="" className="h-8 w-8 shrink-0 rounded-lg border object-cover" />
                           ) : (
@@ -186,6 +217,40 @@ export default function ClientPostSites({ client }: { client: any }) {
                             </div>
                           </div>
                         ) : <span className="text-muted-foreground">—</span>}
+                      </td>
+                      <td className="py-2.5 pr-1 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                              title="Acciones"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => navigate(`/post-sites/${s.id}`)}>
+                              <ExternalLink className="mr-2 h-3.5 w-3.5" /> Abrir sede
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/post-sites/${s.id}/overview`)}>
+                              <BarChart3 className="mr-2 h-3.5 w-3.5" /> Dashboard de la sede
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setSelectedId(s.id)}>
+                              <LocateFixed className="mr-2 h-3.5 w-3.5" /> Ver en el mapa
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => navigate(`/post-sites/${s.id}/edit`)}>
+                              <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-red-500 focus:text-red-500"
+                              onClick={() => void deleteSede(s)}
+                            >
+                              <Trash2 className="mr-2 h-3.5 w-3.5" /> Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   ))}
@@ -256,7 +321,7 @@ export default function ClientPostSites({ client }: { client: any }) {
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <Stat icon={<Building2 className="h-4 w-4" />} label="Puestos" value={selected.stations} />
+                <Stat icon={<Building2 className="h-4 w-4" />} label="Estaciones" value={selected.stations} />
                 <Stat icon={<Users className="h-4 w-4" />} label="Guardias asignados" value={`${selected.guards} / ${selected.required}`} />
                 <Stat icon={<BarChart3 className="h-4 w-4" />} label="Cobertura" value={`${selected.coverage}%`} />
                 <Stat icon={<Clock className="h-4 w-4" />} label="Zona horaria" value={tz || '—'} />
