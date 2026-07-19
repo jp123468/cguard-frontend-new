@@ -48,22 +48,6 @@ function Donut({ segments, total }: { segments: Array<{ value: number; color: st
   );
 }
 
-function Kpi({ icon, value, label, sub, accent = 'primary', onClick }: any) {
-  const ACC: Record<string, string> = {
-    primary: 'bg-primary/12 text-primary', green: 'bg-emerald-500/12 text-emerald-600',
-    orange: 'bg-orange-500/12 text-orange-600', red: 'bg-red-500/12 text-red-600',
-    blue: 'bg-blue-500/12 text-blue-600', slate: 'bg-muted text-muted-foreground',
-  };
-  return (
-    <div className="cg-card p-4">
-      <div className={`mb-2 grid h-9 w-9 place-items-center rounded-xl ${ACC[accent]} [&_svg]:size-4`}>{icon}</div>
-      <div className="flex items-baseline gap-1.5"><span className="font-display text-2xl font-bold leading-tight">{value}</span>{sub}</div>
-      <div className="text-xs text-muted-foreground truncate">{label}</div>
-      {onClick && <button onClick={onClick} className="mt-1 text-xs font-medium text-primary hover:underline">Ver detalle</button>}
-    </div>
-  );
-}
-
 function Avatar({ url, name }: { url?: string | null; name: string }) {
   const initials = (name || '?').split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   return url
@@ -107,7 +91,6 @@ export default function ClientStaff({ client }: { client: any }) {
   // Live refresh.
   useEffect(() => { const t = setInterval(() => load(true), 45000); return () => clearInterval(t); /* eslint-disable-next-line */ }, [q, sede, role, estado, turno, page, client.id]);
 
-  const kpis = data?.kpis || {};
   const dist: any[] = data?.roleDistribution || [];
   const sedes: any[] = data?.sedes || [];
   const personal: any[] = data?.personal || [];
@@ -126,22 +109,8 @@ export default function ClientStaff({ client }: { client: any }) {
 
   return (
     <div ref={containerRef} className="space-y-4">
-      {/* KPI row */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
-        <Kpi icon={<Users />} value={kpis.totalAsignados ?? 0} label="Total asignados" accent="primary" />
-        <Kpi icon={<UserCheck />} value={kpis.enTurno ?? 0} label="En turno ahora" accent="green"
-          sub={<span className="rounded-full bg-emerald-500/12 px-1.5 py-0.5 text-xs text-emerald-600">{kpis.enTurnoPct ?? 0}%</span>} />
-        <Kpi icon={<Clock />} value={kpis.fueraTurno ?? 0} label="Fuera de turno" accent="blue"
-          sub={<span className="rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{kpis.fueraTurnoPct ?? 0}%</span>} />
-        <Kpi icon={<Coffee />} value={kpis.descanso ?? 0} label="Descanso / Break" accent="orange"
-          sub={<span className="rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{kpis.descansoPct ?? 0}%</span>} />
-        <Kpi icon={<UserX />} value={kpis.ausentes ?? 0} label="Ausentes" accent={(kpis.ausentes ?? 0) > 0 ? 'red' : 'slate'}
-          sub={<span className={`rounded-full px-1.5 py-0.5 text-xs ${(kpis.ausentes ?? 0) > 0 ? 'bg-red-500/12 text-red-600' : 'bg-muted text-muted-foreground'}`}>{kpis.ausentesPct ?? 0}%</span>} />
-        <Kpi icon={<ShieldCheck />} value={kpis.proximosVencer ?? 0} label="Certificaciones / documentos" accent="orange" />
-        <Kpi icon={<ShieldCheck />} value={`${kpis.cumplimientoCobertura ?? 0}%`} label={`Cumplimiento (Meta ${kpis.metaCobertura ?? 95}%)`} accent="green" />
-        <Kpi icon={<Timer />} value={`${(kpis.horasMes ?? 0).toLocaleString('es-EC')} h`} label="Horas trabajadas (mes)" accent="blue" />
-      </div>
-
+      {/* The shared client-header KPI cards (ClientsLayout) stay visible on
+          this tab — no duplicate per-tab KPI row here. */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]">
         {/* LEFT — filters + roster table */}
         <Section title="Personal asignado" icon={<Users className="h-4 w-4" />}>

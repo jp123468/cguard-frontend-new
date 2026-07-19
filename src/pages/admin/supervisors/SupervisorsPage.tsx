@@ -1,15 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { ShieldCheck, Plus, Radar, UserPlus, Car, MapPin } from "lucide-react";
 import {
-  PageContainer, PageHeader, Section, SkeletonCards, StatCard, StatusBadge, Modal,
+  ShieldCheck, Plus, Radar, UserPlus, Car, MapPin, Users, Clock,
+  LayoutGrid, List as ListIcon, Search, Mail, Phone,
+} from "lucide-react";
+import {
+  PageContainer, PageHeader, Section, SkeletonCards, StatCard, StatusBadge, Modal, Stagger,
 } from "@/components/kit";
 import { supervisorService, type Supervisor } from "@/lib/api/supervisorService";
+
+type StatFilter = "todos" | "enTurno" | "fuera" | "conVehiculo";
 
 const WEEKDAYS = [
   { n: 1, label: "Lun" }, { n: 2, label: "Mar" }, { n: 3, label: "Mié" },
@@ -39,7 +44,37 @@ export default function SupervisorsPage() {
   }, []);
   useEffect(load, [load]);
 
+  // Vista tarjetas ⇄ lista (persistida) + filtro por tarjeta de estadística + búsqueda.
+  const [viewMode, setViewMode] = useState<"cards" | "list">(
+    () => (localStorage.getItem("supervisors.viewMode") as "cards" | "list") || "cards",
+  );
+  useEffect(() => { localStorage.setItem("supervisors.viewMode", viewMode); }, [viewMode]);
+  const [statFilter, setStatFilter] = useState<StatFilter>("todos");
+  const [search, setSearch] = useState("");
+
   const onDuty = rows.filter((r) => r.isOnDuty).length;
+  const offDuty = rows.length - onDuty;
+  const withVehicle = rows.filter((r) => (r.assignedVehicle || "").trim()).length;
+
+  const filtered = useMemo(() => {
+    let list = rows;
+    if (statFilter === "enTurno") list = list.filter((r) => r.isOnDuty);
+    else if (statFilter === "fuera") list = list.filter((r) => !r.isOnDuty);
+    else if (statFilter === "conVehiculo") list = list.filter((r) => (r.assignedVehicle || "").trim());
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter((r) =>
+        `${r.fullName || ""} ${r.zone || ""} ${r.email || ""} ${r.assignedVehicle || ""}`.toLowerCase().includes(q),
+      );
+    }
+    return list;
+  }, [rows, statFilter, search]);
+
+  // Clic en la MISMA tarjeta vuelve a "todos".
+  const toggleStat = (f: StatFilter) => setStatFilter((prev) => (prev === f ? "todos" : f));
+
+  const initialsOf = (name?: string) =>
+    (name || "?").split(/\s+/).slice(0, 2).map((w) => w[0] || "").join("").toUpperCase();
 
   const submit = async () => {
     if (!form.email.trim()) {
@@ -105,21 +140,109 @@ export default function SupervisorsPage() {
             }
           />
 
-          <div className="mb-4 grid grid-cols-2 gap-3 sm:max-w-md">
-            <StatCard label="Supervisores" value={rows.length} icon={<ShieldCheck />} />
-            <StatCard label="En turno" value={onDuty} icon={<Radar />} accent="success" />
-          </div>
+          {/* Stats — clic en una tarjeta filtra la lista (clic de nuevo: todos) */}
+          <Stagger className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {([
+              { f: "todos" as StatFilter, label: "Supervisores", value: rows.length, icon: <Users />, accent: "blue" as const },
+              { f: "enTurno" as StatFilter, label: "En turno", value: onDuty, icon: <Radar />, accent: "green" as const },
+              { f: "fuera" as StatFilter, label: "Fuera de turno", value: offDuty, icon: <Clock />, accent: "slate" as const },
+              { f: "conVehiculo" as StatFilter, label: "Con vehículo", value: withVehicle, icon: <Car />, accent: "orange" as const },
+            ]).map((c) => (
+              <button
+                key={c.f}
+                onClick={() => toggleStat(c.f)}
+                title={statFilter === c.f && c.f !== "todos" ? "Quitar filtro" : "Filtrar la lista"}
+                className={`rounded-2xl text-left transition-all ${statFilter === c.f ? "ring-2 ring-primary" : "hover:ring-1 hover:ring-border"}`}
+              >
+                <StatCard label={c.label} value={c.value} icon={c.icon} accent={c.accent} />
+              </button>
+            ))}
+          </Stagger>
 
-          <Section title="Supervisores" icon={<ShieldCheck />}>
+          <Section
+            title="Supervisores"
+            icon={<ShieldCheck />}
+            action={
+              <div className="flex items-center gap-2">
+                <div className="relative hidden sm:block">
+                  <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nombre, zona, vehículo…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="h-9 w-[240px] pl-8"
+                  />
+                </div>
+                <div className="inline-flex items-center rounded-xl border bg-card p-0.5">
+                  <Button variant={viewMode === "cards" ? "brand" : "ghost"} size="sm" className="h-8 px-2.5" aria-label="Vista de tarjetas" onClick={() => setViewMode("cards")}>
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                  <Button variant={viewMode === "list" ? "brand" : "ghost"} size="sm" className="h-8 px-2.5" aria-label="Vista de lista" onClick={() => setViewMode("list")}>
+                    <ListIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            }
+          >
             {loading ? (
               <SkeletonCards count={4} />
-            ) : (
+            ) : filtered.length === 0 ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">
+                {rows.length === 0 ? "Aún no hay supervisores" : "Ningún supervisor coincide con el filtro"}
+              </div>
+            ) : viewMode === "list" ? (
               <DataTable
                 columns={columns}
-                data={rows as (Supervisor & { id: string })[]}
+                data={filtered as (Supervisor & { id: string })[]}
                 onRowClick={(r) => navigate(`/supervisors/${r.id}`)}
                 emptyState={<div className="py-10 text-center text-sm text-muted-foreground">Aún no hay supervisores</div>}
               />
+            ) : (
+              <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {filtered.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => navigate(`/supervisors/${s.id}`)}
+                    className="cg-card cg-card-hover p-4 text-left transition-shadow hover:shadow-md"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/12 text-sm font-bold text-primary">
+                        {initialsOf(s.fullName)}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate font-semibold text-foreground">{s.fullName || "—"}</span>
+                          {s.isOnDuty
+                            ? <StatusBadge tone="green">En turno</StatusBadge>
+                            : <StatusBadge tone="slate" dot={false}>Fuera</StatusBadge>}
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{s.zone || "Sin zona asignada"}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-1.5 border-t border-border/40 pt-3 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <Car className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{s.assignedVehicle || "Sin vehículo"}</span>
+                      </div>
+                      {s.email && (
+                        <div className="flex items-center gap-1.5">
+                          <Mail className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{s.email}</span>
+                        </div>
+                      )}
+                      {(s as any).phoneNumber && (
+                        <div className="flex items-center gap-1.5">
+                          <Phone className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{(s as any).phoneNumber}</span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </Stagger>
             )}
           </Section>
         </PageContainer>
