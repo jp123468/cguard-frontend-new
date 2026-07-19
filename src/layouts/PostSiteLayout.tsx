@@ -1,241 +1,143 @@
-import React, { ReactNode, useState, useEffect, useRef } from 'react';
-import { ApiService } from '@/services/api/apiService';
+import { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
 import AppLayout from '@/layouts/app-layout';
-import { Link, useLocation, useParams } from 'react-router-dom';
-import { Menu, X, ChevronLeft, Pencil } from 'lucide-react';
+import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
+import {
+  ChevronRight, Pencil, Plus, AlertTriangle, MapPin, Calendar,
+  LayoutGrid, Building2, Users, ClipboardList, CheckSquare, Route as RouteIcon, Package,
+  ListChecks, FileBarChart, Contact, File as FileIcon, StickyNote, IdCard, Settings, MapPinned,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 type Props = { title?: string; children: ReactNode; site?: any };
 
+// Sección horizontal (mismo patrón que el detalle de cliente). Cada sede es una
+// vista sobre sus estaciones; el detalle por-estación vive dentro de cada estación.
+const TAB_DEFS: Array<{ id: string; seg: string; label: string; icon: any }> = [
+  { id: 'overview', seg: 'overview', label: 'Estadísticas', icon: LayoutGrid },
+  { id: 'stations', seg: 'stations', label: 'Estaciones', icon: Building2 },
+  { id: 'assign-guards', seg: 'assign-guards', label: 'Vigilantes', icon: Users },
+  { id: 'post-orders', seg: 'post-orders', label: 'Consignas', icon: ClipboardList },
+  { id: 'tasks', seg: 'tasks', label: 'Tareas', icon: CheckSquare },
+  { id: 'site-tours', seg: 'site-tours', label: 'Rondas', icon: RouteIcon },
+  { id: 'incidents', seg: 'incidents', label: 'Incidentes', icon: AlertTriangle },
+  { id: 'inventory', seg: 'inventory', label: 'Inventario', icon: Package },
+  { id: 'geo-fence', seg: 'geo-fence', label: 'Geocerca', icon: MapPinned },
+  { id: 'checklists', seg: 'checklists', label: 'Checklists', icon: ListChecks },
+  { id: 'assign-reports', seg: 'assign-reports', label: 'Reportes', icon: FileBarChart },
+  { id: 'contacts', seg: 'contacts', label: 'Contactos', icon: Contact },
+  { id: 'files', seg: 'files', label: 'Documentos', icon: FileIcon },
+  { id: 'notes', seg: 'notes', label: 'Notas', icon: StickyNote },
+  { id: 'profile', seg: 'profile', label: 'Perfil', icon: IdCard },
+  { id: 'settings', seg: 'settings', label: 'Configuración', icon: Settings },
+];
+
 export default function PostSiteLayout({ title, children, site }: Props) {
   const { t } = useTranslation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
   const { id } = useParams();
+  const base = `/post-sites/${id}`;
 
-  // A "sitio de servicio" is a broad view over its stations. Only these sections
-  // belong to its scope; per-station detail lives inside each station.
-  const sections = [
-    {
-      items: [
-        { id: 'overview', label: t('postSites.Details.Stats', 'Estadísticas'), path: `/post-sites/${id || ':id'}/overview` },
-        { id: 'profile', label: t('postSites.Details.Profile', 'Perfil'), path: `/post-sites/${id || ':id'}/profile` },
-        { id: 'contacts', label: t('postSites.Details.Contacts', 'Contactos'), path: `/post-sites/${id || ':id'}/contacts` },
-        { id: 'assignGuards', label: t('postSites.Details.GuardsList', 'Lista de vigilantes'), path: `/post-sites/${id || ':id'}/assign-guards` },
-        { id: 'postOrders', label: t('postSites.Details.OperationalRequirements', 'Requisitos operativos'), path: `/post-sites/${id || ':id'}/post-orders` },
-        { id: 'tasks', label: t('postSites.Details.TasksAssigned', 'Tareas asignadas'), path: `/post-sites/${id || ':id'}/tasks` },
-        { id: 'stations', label: t('postSites.Details.Stations', 'Estaciones'), path: `/post-sites/${id || ':id'}/stations` },
-      ],
-    },
-  ];
+  const displayName = site?.companyName || site?.businessName || site?.name || title || t('postSites.postsite', 'Sede');
+  const parts = location.pathname.split('/').filter(Boolean);
+  const currentSeg = parts[2] || 'overview';
 
-  const resolve = (p: string) => (id && p.includes(':id') ? p.replace(':id', id) : p);
-  const flatItems = sections.flatMap(s => s.items);
-  const activeItem = flatItems.find(it => {
-    const path = resolve(it.path);
-    return location.pathname === path || location.pathname.startsWith(path + '/') || location.pathname.endsWith(path);
-  });
-  const headerLabel = activeItem ? activeItem.label : (site?.businessName || site?.companyName || site?.name || title || t('postSites.postsite', 'Post Site'));
+  const logo = (() => {
+    const cand = site?.logoUrl || site?.placePictureUrl || site?.imageUrl;
+    if (Array.isArray(cand)) return cand[0]?.downloadUrl || cand[0]?.publicUrl || null;
+    return (cand && (cand.downloadUrl || cand.publicUrl)) || (typeof cand === 'string' ? cand : null);
+  })();
 
-  const navRef = useRef<HTMLDivElement | null>(null);
+  let h = 0; const nm = String(displayName || '?');
+  for (let i = 0; i < nm.length; i++) h = (h * 31 + nm.charCodeAt(i)) >>> 0;
+  const hue = [28, 205, 150, 265, 340, 95, 180, 12][h % 8];
 
-  const [inventoryModalOpen, setInventoryModalOpen] = useState(false);
-  const [inventoryStations, setInventoryStations] = useState<any[]>([]);
-  const [inventoryStationId, setInventoryStationId] = useState<string | null>(null);
-  const [inventoryName, setInventoryName] = useState<string>('');
-  const [creatingInventory, setCreatingInventory] = useState(false);
-
-  useEffect(() => {
-    if (!inventoryModalOpen) return;
-    let mounted = true;
-    (async () => {
-      try {
-        const tenantId = (site && (site.tenantId || site.tenant && site.tenant.id)) || localStorage.getItem('tenantId') || '';
-        const postSiteId = site?.id || id || '';
-        if (!postSiteId) return;
-        const res = await ApiService.get(`/tenant/${tenantId}/station?postSiteId=${encodeURIComponent(postSiteId)}&limit=999`);
-        const rows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
-        if (!mounted) return;
-        const mapped = rows.map((r: any) => ({ id: r.id || r.stationId, label: r.name || r.stationName || r.station_name || String(r.id) }));
-        setInventoryStations(mapped || []);
-      } catch (e) {
-        console.error('Failed loading stations for inventory modal', e);
-        setInventoryStations([]);
-      }
-    })();
-    return () => { mounted = false; };
-  }, [inventoryModalOpen, site, id]);
-
-  const submitCreateInventory = async () => {
-    try {
-      // Client-side validation: require name
-      if (!String(inventoryName || '').trim()) {
-        toast.error(t('postSites.inventories.nameRequired', 'El nombre es obligatorio'));
-        return;
-      }
-      setCreatingInventory(true);
-      const tenantId = (site && (site.tenantId || site.tenant && site.tenant.id)) || localStorage.getItem('tenantId') || '';
-      const belongsTo = inventoryStationId || site?.id || id;
-      const payload = { data: { belongsTo, name: inventoryName || `Inventario ${belongsTo}` } };
-      await ApiService.post(`/tenant/${tenantId}/inventory`, payload);
-      toast.success('Inventario creado');
-      setInventoryModalOpen(false);
-      setInventoryName('');
-      setInventoryStationId(null);
-    } catch (e: any) {
-      console.error('Create inventory failed', e);
-      toast.error(e?.message || 'No se pudo crear inventario');
-    } finally {
-      setCreatingInventory(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!activeItem || !navRef.current) return;
-    try {
-      // Prefer selecting the active link via data attribute for reliability
-      const activeEl = navRef.current.querySelector('[data-active="true"]') as HTMLElement | null;
-      if (activeEl && typeof activeEl.scrollIntoView === 'function') {
-        activeEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      }
-    } catch (err) {
-      // ignore any errors
-    }
-  }, [activeItem, id, location.pathname]);
+  const isActive = String(site?.status || (site?.active ? 'active' : '')).toLowerCase() === 'active' || site?.active === true;
+  const clientName = site?.client?.name || site?.clientAccount?.name || site?.clientAccount?.companyName || null;
+  const clientId = site?.client?.id || site?.clientAccount?.id || site?.clientAccountId || null;
+  const address = [site?.address, site?.city].filter(Boolean).join(', ');
+  const categoryName = site?.category?.name || null;
+  const fmtCoords = Number.isFinite(Number(site?.latitud)) && Number.isFinite(Number(site?.longitud)) && Number(site?.latitud) !== 0
+    ? `${Number(site.latitud).toFixed(4)}, ${Number(site.longitud).toFixed(4)}` : null;
 
   return (
     <AppLayout>
-      <div className="flex gap-6 h-[calc(100vh-64px)] overflow-hidden">
-        {/* Sidebar */}
-        <aside className={`shrink-0 transition-all duration-300 ${sidebarOpen ? 'w-60 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
-          <div className="h-full flex flex-col">
-            <div className="bg-card border border-border rounded-md p-4 m-3 flex-1 overflow-hidden">
-              <div className="text-lg font-semibold mb-4">{site?.businessName || site?.companyName || site?.name || title || t('postSites.postsite', 'Post Site')}</div>
-              <nav className="text-base">
-                <div ref={navRef} className="max-h-[calc(100vh-120px)] overflow-y-auto pr-3 pb-20">
-                  {sections.map((section, idx) => (
-                    <div key={idx} className="mb-0 pb-0">
-                      <ul className="divide-y">
-                                {section.items.map((it) => {
-                                  const path = resolve(it.path);
-                                  const isActive = location.pathname === path;
-                                  return (
-                                    <li key={it.id} className="bg-card">
-                                      <Link
-                                        to={path}
-                                        data-active={isActive ? 'true' : undefined}
-                                        className={`flex items-center justify-between px-5 py-3 text-sm ${
-                                          isActive ? 'bg-primary/10 text-primary font-medium' : 'text-foreground hover:bg-accent'
-                                        }`}
-                                      >
-                                        <span>{it.label}</span>
-                                      </Link>
-                                    </li>
-                                  );
-                                })}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </nav>
-            </div>
-          </div>
-        </aside>
+      <div className="mx-auto w-full max-w-[1440px] space-y-4 px-4 py-4">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          {clientId ? (
+            <>
+              <Link to="/clients" className="hover:text-primary">{t('clients.nav.title', 'Clientes')}</Link>
+              <ChevronRight className="h-3.5 w-3.5" />
+              <Link to={`/clients/${clientId}/post-sites`} className="truncate hover:text-primary">{clientName || t('postSites.pageTitle', 'Sedes')}</Link>
+            </>
+          ) : (
+            <Link to="/post-sites" className="hover:text-primary">{t('postSites.pageTitle', 'Sedes')}</Link>
+          )}
+          <ChevronRight className="h-3.5 w-3.5" />
+          <span className="truncate font-medium text-foreground">{displayName}</span>
+        </div>
 
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="bg-card border-b border-border rounded-md p-3 mb-4 flex items-center justify-between gap-3 sticky top-0 z-10">
-            <div className="flex items-center gap-2 min-w-0">
-              <button onClick={() => setSidebarOpen((v) => !v)} className="text-muted-foreground hover:text-foreground p-1.5 rounded-md hover:bg-accent" title={t('common.toggleMenu', 'Menú')}>
-                <Menu size={18} />
-              </button>
-              <Link to="/post-sites" className="text-muted-foreground hover:text-foreground p-1.5 rounded-md hover:bg-accent" title={t('postSites.backToList', 'Volver a sitios de servicio')}>
-                <ChevronLeft size={18} />
-              </Link>
-              <div className="flex items-center gap-2 min-w-0 text-sm">
-                <span className="font-semibold text-foreground truncate">
-                  {site?.businessName || site?.companyName || site?.name || title || t('postSites.postsite', 'Post Site')}
-                </span>
-                {activeItem ? (
-                  <>
-                    <span className="text-muted-foreground/50">/</span>
-                    <span className="text-muted-foreground truncate">{activeItem.label}</span>
-                  </>
-                ) : null}
+        {/* Header card */}
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex min-w-0 items-start gap-4">
+              {logo ? (
+                <img src={logo} alt="" className="h-16 w-16 shrink-0 rounded-2xl border bg-white object-cover" />
+              ) : (
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-2xl font-bold" style={{ backgroundColor: `hsl(${hue} 70% 92%)`, color: `hsl(${hue} 60% 32%)` }}>
+                  {nm.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <h1 className="truncate text-2xl font-bold tracking-tight text-foreground">{displayName}</h1>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+                  <span className={`inline-flex items-center gap-1 font-medium ${isActive ? 'text-emerald-600' : 'text-red-500'}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                    {isActive ? t('common.active', 'Activa') : t('common.archived', 'Inactiva')}
+                  </span>
+                  {categoryName && <span className="rounded-full bg-muted px-2.5 py-0.5 font-medium text-muted-foreground">{categoryName}</span>}
+                  {clientName && (
+                    <span className="text-muted-foreground">{t('postSites.client', 'Cliente')}: {clientId ? <Link to={`/clients/${clientId}/overview`} className="font-medium text-primary hover:underline">{clientName}</Link> : <span className="font-medium text-foreground">{clientName}</span>}</span>
+                  )}
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
+                  {address && <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {address}</span>}
+                  {fmtCoords && <span className="inline-flex items-center gap-1.5 tabular-nums"><Calendar className="h-3.5 w-3.5" /> {fmtCoords}</span>}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {id ? (
-                <Link to={`/post-sites/${id}/edit`}>
-                  <Button variant="outline" size="sm" className="gap-1.5">
-                    <Pencil size={14} />
-                    <span className="hidden sm:inline">{t('common.edit', 'Editar')}</span>
-                  </Button>
-                </Link>
-              ) : null}
-            </div>
+            {id && (
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => navigate(`${base}/edit`)}><Pencil className="mr-1 h-4 w-4" /> {t('common.edit', 'Editar sede')}</Button>
+                <Button variant="outline" size="sm" onClick={() => navigate(`${base}/stations/new`)}><Plus className="mr-1 h-4 w-4" /> {t('postSites.Details.newStation', 'Crear estación')}</Button>
+                <Button variant="brand" size="sm" onClick={() => navigate('/dispatch-tickets/new')}><AlertTriangle className="mr-1 h-4 w-4" /> {t('clients.newIncident', 'Crear incidente')}</Button>
+              </div>
+            )}
           </div>
+        </div>
 
-          <div className="pb-20">{children}</div>
-          <InventoryModal
-            open={inventoryModalOpen}
-            onClose={() => setInventoryModalOpen(false)}
-            stations={inventoryStations}
-            selectedStationId={inventoryStationId}
-            setSelectedStationId={setInventoryStationId}
-            name={inventoryName}
-            setName={setInventoryName}
-            onCreate={submitCreateInventory}
-            creating={creatingInventory}
-          />
-        </main>
+        {/* Tabs (sección horizontal) */}
+        <div className="overflow-x-auto">
+          <nav className="flex min-w-max items-center gap-1 border-b border-border">
+            {TAB_DEFS.map((it) => {
+              const path = `${base}/${it.seg}`;
+              const active = currentSeg === it.seg || (it.seg === 'overview' && (currentSeg === 'overview' || location.pathname === base));
+              const Icon = it.icon;
+              return (
+                <Link key={it.id} to={path} className={`relative flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 text-sm font-medium transition-colors ${active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                  <Icon className="h-4 w-4" />
+                  {it.label}
+                  {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" />}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div>{children}</div>
       </div>
     </AppLayout>
   );
 }
-
-// Inventory modal appended at file end
-// Modal JSX (placed after component definition to keep component body focused)
-const InventoryModal: React.FC<any> = ({ open, onClose, stations, selectedStationId, setSelectedStationId, name, setName, onCreate, creating }) => {
-  const { t } = useTranslation();
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/20 z-50" />
-
-      <div className="relative z-70 w-full sm:w-96 bg-card shadow-2xl overflow-y-auto rounded-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-6 border-b border-border bg-card rounded-t-md">
-          <h2 className="text-lg font-semibold text-foreground">{t('postSites.inventories.createTitle', 'Crear Inventario')}</h2>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-accent"><X className="h-4 w-4" /></button>
-        </div>
-
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm text-foreground mb-1">{t('postSites.inventories.selectStation', 'Seleccionar estación (opcional)')}</label>
-            <select value={selectedStationId || ''} onChange={(e) => setSelectedStationId(e.target.value || null)} className="w-full border rounded px-3 py-2 text-sm">
-              <option value="">{t('postSites.inventories.usePostsite', 'Usar puesto de seguridad (por defecto)')}</option>
-              {(stations || []).map((s: any) => (
-                <option key={s.id} value={s.id}>{s.label || s.id}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm text-foreground mb-1">{t('postSites.inventories.name', 'Nombre de inventario')}<span className="text-red-500">*</span></label>
-            <input aria-required={true} required className="w-full border rounded px-3 py-2 text-sm" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-card rounded-b-md">
-          <button onClick={onClose} className="px-4 py-2 rounded-md border text-sm">{t('common.cancel', 'Cancelar')}</button>
-          <button onClick={onCreate} disabled={creating} className="px-6 py-2 bg-primary text-white rounded-md">{creating ? t('common.creating','Creando...') : t('postSites.inventories.create','Crear inventario')}</button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export { InventoryModal };
