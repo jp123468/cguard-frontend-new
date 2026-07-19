@@ -83,6 +83,13 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTranslation } from 'react-i18next';
 import api from "@/lib/api";
 
+// The list is paginated client-side over what we load. The backend hard-caps a
+// no-limit /request query at 1000 rows, which silently truncated tenants past
+// that. Request the backend's max (5000) explicitly so the practical ceiling is
+// 5× higher — well beyond any real open-ticket volume. (A tenant approaching
+// this would warrant true server-side pagination.)
+const DISPATCH_FETCH_LIMIT = 5000;
+
 export default function DispatcherPage() {
   const { t } = useTranslation();
   const resolveServerMessage = (msg: any) => {
@@ -192,6 +199,7 @@ export default function DispatcherPage() {
         if (filters && filters.status && String(filters.status).toLowerCase() !== 'todo') {
           url += `?status=${encodeURIComponent(String(filters.status))}`;
         }
+        url += `${url.includes('?') ? '&' : '?'}limit=${DISPATCH_FETCH_LIMIT}`;
         const resp = await api.get(url);
         if (mine !== loadSeqRef.current) return; // superseded
         const payload = resp && resp.data ? resp.data : resp;
@@ -465,6 +473,7 @@ export default function DispatcherPage() {
         }
       }
 
+      params.append('limit', String(DISPATCH_FETCH_LIMIT));
       let url = `/tenant/${tenantId}/request`;
       const qs = params.toString();
       if (qs) url += `?${qs}`;
@@ -583,6 +592,7 @@ export default function DispatcherPage() {
       if (newFilters && newFilters.status && String(newFilters.status).toLowerCase() !== 'todo') {
         url += `?status=${encodeURIComponent(String(newFilters.status))}`;
       }
+      url += `${url.includes('?') ? '&' : '?'}limit=${DISPATCH_FETCH_LIMIT}`;
 
       const resp = await api.get(url);
       if (mine !== loadSeqRef.current) return; // superseded
@@ -1093,6 +1103,7 @@ export default function DispatcherPage() {
                         params.append('filter[archived]', 'true');
                       }
 
+                      params.append('limit', String(DISPATCH_FETCH_LIMIT));
                       let url = `/tenant/${tenantId}/request`;
                       const qs = params.toString();
                       if (qs) url += `?${qs}`;

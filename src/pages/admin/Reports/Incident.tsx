@@ -44,16 +44,21 @@ export default function Incident() {
       columns={columns}
       load={async ({ from, to }) => {
         const tenantId = localStorage.getItem("tenantId") || "";
+        // Filter by date range on the SERVER (filter[createdAtRange]) — the old
+        // limit=2000 + client-side date filter silently dropped any range older
+        // than the newest 2000 incidents.
+        const start = new Date(`${from}T00:00:00.000Z`).toISOString();
+        const end = new Date(`${to}T23:59:59.999Z`).toISOString();
+        const params = new URLSearchParams();
+        params.append("filter[createdAtRange][]", start);
+        params.append("filter[createdAtRange][]", end);
+        params.append("orderBy", "createdAt_DESC");
+        params.append("limit", "5000");
         const res: any = await ApiService.get(
-          `/tenant/${tenantId}/incident?limit=2000&orderBy=createdAt_DESC`,
+          `/tenant/${tenantId}/incident?${params.toString()}`,
         );
         const rows: Incident[] = Array.isArray(res) ? res : res?.rows || [];
-        const start = new Date(`${from}T00:00:00.000Z`).getTime();
-        const end = new Date(`${to}T23:59:59.999Z`).getTime();
-        return rows.filter((r) => {
-          const t = r.createdAt ? new Date(r.createdAt).getTime() : NaN;
-          return !Number.isNaN(t) && t >= start && t <= end;
-        });
+        return rows;
       }}
     />
   );
