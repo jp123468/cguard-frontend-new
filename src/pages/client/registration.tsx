@@ -3,10 +3,10 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Building2, CheckCircle2 } from "lucide-react";
 
-// Mi Seguridad (client app) store links — configurable via env so they can be
-// updated without a code change. Fallback to a store search until set.
-const MISEGURIDAD_PLAY_URL = (import.meta as any).env?.VITE_MISEGURIDAD_PLAY_URL || "https://play.google.com/store/search?q=Mi%20Seguridad%20CGuardPro&c=apps";
-const MISEGURIDAD_IOS_URL = (import.meta as any).env?.VITE_MISEGURIDAD_IOS_URL || "https://apps.apple.com/search?term=Mi%20Seguridad%20CGuardPro";
+// Mi Seguridad (client app) store links. Real store listings by default; still
+// overridable via env if they ever change.
+const MISEGURIDAD_PLAY_URL = (import.meta as any).env?.VITE_MISEGURIDAD_PLAY_URL || "https://play.google.com/store/apps/details?id=com.cguardpro.miseguridad";
+const MISEGURIDAD_IOS_URL = (import.meta as any).env?.VITE_MISEGURIDAD_IOS_URL || "https://apps.apple.com/us/app/mi-seguridad-by-c-guard-pro/id6778661633";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
