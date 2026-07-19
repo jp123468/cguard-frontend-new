@@ -150,47 +150,6 @@ export default function GuardSummary({ guard }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Guard Header */}
-      <div className="bg-card border rounded-lg p-6 shadow-sm">
-        <div className="flex items-start gap-6">
-          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-foreground/70 font-semibold text-2xl overflow-hidden">
-            {guard?.photoUrl ? (
-              <img src={guard.photoUrl} alt={guard.fullName} className="w-full h-full object-cover" />
-            ) : (
-              <span>{((guard?.fullName || '').split(' ').map((s: string) => s[0] || '').join('').slice(0, 2)) || 'G'}</span>
-            )}
-          </div>
-          <div className="flex-1 grid grid-cols-3 gap-8">
-            <div>
-              <div className="text-xl font-semibold mb-1">{guard?.fullName ?? '—'}</div>
-              <div className="text-sm text-foreground/70">{guard?.role ?? t('guards.summary.roleDefault')}</div>
-              <div className="mt-3">
-                <div className="text-xs text-muted-foreground">{t('guards.summary.header.guardNumber')}</div>
-                <div className="font-semibold">{guard?.guardNumber ?? guard?.employeeCode ?? '100447'}</div>
-              </div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground mb-1">{t('guards.summary.header.addedOn')}</div>
-              <div className="font-medium">
-                {guard?.createdAt ? new Date(guard.createdAt).toLocaleDateString('es-ES', { 
-                  year: 'numeric', 
-                  month: 'short', 
-                  day: '2-digit' 
-                }) : 'Oct 07, 2025'}
-              </div>
-              <div className="mt-3">
-                <div className="text-xs text-muted-foreground">{t('guards.summary.header.lastShift')}</div>
-                <div className="font-medium">--</div>
-              </div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground mb-1">{t('guards.summary.header.about')}</div>
-              <div className="font-medium">--</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Statistics Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">{t('guards.summary.stats.title')}</h2>

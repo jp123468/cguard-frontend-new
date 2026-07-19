@@ -136,74 +136,8 @@ export default function GuardResumenPage() {
             </div>
           ) : guard ? (
             <>
-              {/* ── HERO ───────────────────────────────────────────────────── */}
-              <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-muted/40 shadow-sm">
-                <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-primary/15 to-transparent" />
-                <div className="relative p-6 flex flex-col sm:flex-row items-center sm:items-end gap-5">
-                  <div className="relative">
-                    <div className="w-24 h-24 rounded-2xl bg-muted ring-4 ring-background overflow-hidden flex items-center justify-center shadow-md text-2xl font-semibold text-foreground/70">
-                      {avatar ? (
-                        <img
-                          src={avatar}
-                          alt={fullName}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <span>{initials}</span>
-                      )}
-                    </div>
-                    <span
-                      className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ring-2 ring-background ${onDuty ? 'bg-green-500' : 'bg-gray-400'}`}
-                      title={onDuty ? 'En servicio' : 'Fuera de servicio'}
-                    />
-                  </div>
-
-                  <div className="flex-1 min-w-0 text-center sm:text-left">
-                    <h1 className="text-2xl font-bold tracking-tight truncate">{fullName}</h1>
-                    <div className="mt-1 flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                      <span>
-                        {t('guards.summary.header.guardNumber')}:{' '}
-                        <span className="font-medium text-foreground">{guardNumber}</span>
-                      </span>
-                      <span className="truncate">{guard?.role ?? t('guards.summary.roleDefault')}</span>
-                    </div>
-                    <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${onDuty ? 'bg-green-500/15 text-green-700' : 'bg-muted text-foreground/60'}`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${onDuty ? 'bg-green-500' : 'bg-gray-400'}`} />
-                        {onDuty ? 'En servicio' : 'Fuera de servicio'}
-                      </span>
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${accessBadge.cls}`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${accessBadge.dot}`} />
-                        {accessBadge.txt}
-                      </span>
-                      <GuardRatingLevel
-                        average={rating?.average}
-                        count={rating?.count}
-                        showEmpty
-                        onClick={id ? () => navigate(`/guards/${id}/reviews`) : undefined}
-                      />
-                      {guard?.createdAt && (
-                        <span className="px-2 py-0.5 rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                          {t('guards.summary.header.addedOn')}:{' '}
-                          {new Date(guard.createdAt).toLocaleDateString('es-ES', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: '2-digit',
-                          })}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
+              {/* Identity (avatar/name/status/rating) now lives in the shared
+                  GuardsLayout header card. This page shows only the summary. */}
               {/* ── SUMMARY STAT TILES ─────────────────────────────────────── */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <StatTile

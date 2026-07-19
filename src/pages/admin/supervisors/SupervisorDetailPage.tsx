@@ -126,61 +126,28 @@ export default function SupervisorDetailPage() {
     <AppLayout>
       <GuardsLayout navKey="supervisors" title="Perfil del supervisor">
         <div className="mx-auto max-w-5xl space-y-6 pb-24">
-          <button onClick={() => navigate("/supervisors")} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Supervisores
-          </button>
-
           {loading ? (
             <div className="h-40 rounded-2xl border bg-card animate-pulse" />
           ) : sup ? (
             <>
-              {/* ── HERO ─────────────────────────────────────────────────── */}
-              <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-muted/40 shadow-sm">
-                <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-primary/15 to-transparent" />
-                <div className="relative p-6 flex flex-col sm:flex-row items-center sm:items-end gap-5">
-                  <div className="relative">
-                    <div className="w-28 h-28 rounded-2xl bg-muted ring-4 ring-background overflow-hidden flex items-center justify-center shadow-md">
-                      {sup.photoUrl ? (
-                        <img src={sup.photoUrl} alt={sup.fullName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                      ) : (
-                        <UserIcon className="w-16 h-16 text-muted-foreground" />
-                      )}
-                    </div>
-                    <span className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ring-2 ring-background ${onDuty ? "bg-green-500" : "bg-gray-400"}`} title={onDuty ? "En turno" : "Fuera de turno"} />
-                  </div>
-
-                  <div className="flex-1 min-w-0 text-center sm:text-left">
-                    <h1 className="text-2xl font-bold tracking-tight truncate">{sup.fullName}</h1>
-                    <div className="mt-1 flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                      {sup.governmentId && <span>CI: <span className="font-medium text-foreground">{sup.governmentId}</span></span>}
-                      {sup.email && <span className="inline-flex items-center gap-1 truncate"><Mail className="h-3.5 w-3.5" />{sup.email}</span>}
-                      {sup.phoneNumber && <span className="inline-flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{sup.phoneNumber}</span>}
-                    </div>
-                    <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-700">Supervisor</span>
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${onDuty ? "bg-green-500/15 text-green-700" : "bg-muted text-foreground/60"}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${onDuty ? "bg-green-500" : "bg-gray-400"}`} />
-                        {onDuty ? (sup.dutyStatus === "late" ? `En turno (tarde ${sup.dutyLateMinutes}m)` : "En turno") : "Fuera de turno"}
-                      </span>
-                      {sup.zone && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-muted text-foreground/70"><MapPin className="h-3 w-3" />{sup.zone}</span>}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {!editing ? (
-                      <button onClick={beginEdit} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition" style={{ background: GOLD }}>
-                        <Pencil className="h-4 w-4" /> Editar
+              {/* Edit toolbar — the supervisor's identity (avatar/name/status)
+                  lives in the shared GuardsLayout header card above. */}
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold text-foreground">Información del supervisor</h2>
+                <div className="flex items-center gap-2">
+                  {!editing ? (
+                    <button onClick={beginEdit} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition" style={{ background: GOLD }}>
+                      <Pencil className="h-4 w-4" /> Editar
+                    </button>
+                  ) : (
+                    <>
+                      <button onClick={cancelEdit} disabled={saving} className="text-sm px-3 py-2 rounded-lg border hover:bg-muted transition disabled:opacity-50">Cancelar</button>
+                      <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm disabled:opacity-50" style={{ background: GOLD }}>
+                        {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Check className="h-4 w-4" />}
+                        {saving ? "Guardando…" : "Guardar"}
                       </button>
-                    ) : (
-                      <>
-                        <button onClick={cancelEdit} disabled={saving} className="text-sm px-3 py-2 rounded-lg border hover:bg-muted transition disabled:opacity-50">Cancelar</button>
-                        <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm disabled:opacity-50" style={{ background: GOLD }}>
-                          {saving ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Check className="h-4 w-4" />}
-                          {saving ? "Guardando…" : "Guardar"}
-                        </button>
-                      </>
-                    )}
-                  </div>
+                    </>
+                  )}
                 </div>
               </div>
 

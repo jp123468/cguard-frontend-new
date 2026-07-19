@@ -220,56 +220,25 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
       <GuardsLayout navKey="keep-safe" title={t('guards.nav.perfil')}>
         <div className="mx-auto max-w-5xl space-y-6 pb-24">
 
-          {/* ── HERO ─────────────────────────────────────────────────────────── */}
-          <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-muted/40 shadow-sm">
-            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-primary/15 to-transparent" />
-            <div className="relative p-6 flex flex-col sm:flex-row items-center sm:items-end gap-5">
-              <div className="relative">
-                <div className="w-28 h-28 rounded-2xl bg-muted ring-4 ring-background overflow-hidden flex items-center justify-center shadow-md">
-                  {avatar ? (
-                    <img src={avatar} alt={fullName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  ) : (
-                    <svg className="w-16 h-16 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
-                  )}
-                </div>
-                <span className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ring-2 ring-background ${onDuty ? 'bg-green-500' : 'bg-gray-400'}`} title={onDuty ? 'En servicio' : 'Fuera de servicio'} />
-              </div>
-
-              <div className="flex-1 min-w-0 text-center sm:text-left">
-                <h1 className="text-2xl font-bold tracking-tight truncate">{fullName}</h1>
-                <div className="mt-1 flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                  {data?.governmentId && <span>CI: <span className="font-medium text-foreground">{data.governmentId}</span></span>}
-                  {data?.guard?.email && <span className="truncate">{data.guard.email}</span>}
-                  {(data?.guard?.phoneNumber || data?.guard?.phone) && <span>{data.guard.phoneNumber || data.guard.phone}</span>}
-                </div>
-                <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${onDuty ? 'bg-green-500/15 text-green-700' : 'bg-muted text-foreground/60'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${onDuty ? 'bg-green-500' : 'bg-gray-400'}`} />
-                    {onDuty ? 'En servicio' : 'Fuera de servicio'}
-                  </span>
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${accessBadge.cls}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${accessBadge.dot}`} />
-                    {accessBadge.txt}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {!editing ? (
-                  <button onClick={beginEdit} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition" style={{ background: GOLD }}>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-2a2 2 0 01.586-1.414z" /></svg>
-                    {t('guards.profile.actions.edit') || 'Editar'}
+          {/* Edit toolbar — the guard's identity (avatar/name/status) lives in
+              the shared GuardsLayout header card above. */}
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-foreground">{t('guards.nav.perfil', 'Perfil')}</h2>
+            <div className="flex items-center gap-2">
+              {!editing ? (
+                <button onClick={beginEdit} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm hover:opacity-90 transition" style={{ background: GOLD }}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-2a2 2 0 01.586-1.414z" /></svg>
+                  {t('guards.profile.actions.edit') || 'Editar'}
+                </button>
+              ) : (
+                <>
+                  <button onClick={cancelEdit} disabled={saving} className="text-sm px-3 py-2 rounded-lg border hover:bg-muted transition disabled:opacity-50">{t('guards.profile.actions.cancel') || 'Cancelar'}</button>
+                  <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm disabled:opacity-50" style={{ background: GOLD }}>
+                    {saving && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                    {saving ? (t('guards.profile.actions.saving') || 'Guardando…') : (t('guards.profile.actions.save') || 'Guardar')}
                   </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button onClick={cancelEdit} disabled={saving} className="text-sm px-3 py-2 rounded-lg border hover:bg-muted transition disabled:opacity-50">{t('guards.profile.actions.cancel') || 'Cancelar'}</button>
-                    <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg text-white shadow-sm disabled:opacity-50" style={{ background: GOLD }}>
-                      {saving && <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                      {saving ? (t('guards.profile.actions.saving') || 'Guardando…') : (t('guards.profile.actions.save') || 'Guardar')}
-                    </button>
-                  </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           </div>
 
