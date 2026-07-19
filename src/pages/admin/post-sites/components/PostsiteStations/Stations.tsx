@@ -938,7 +938,7 @@ export default function Stations({ site }: { site?: any }) {
                                           // security-guard id/route, navigate directly without any extra lookups.
                                           const directId = g.securityGuardId || g.securityGuard?.id || g.guard?.securityGuardId;
                                           if (directId) {
-                                            const directUrl = `${window.location.origin}/guards/${directId}/overview`;
+                                            const directUrl = `${window.location.origin}/guards/${directId}/resumen`;
                                             if (popup) popup.location.href = directUrl;
                                             return;
                                           }
@@ -981,11 +981,11 @@ export default function Stations({ site }: { site?: any }) {
                                           // (Previously this did a /security-guard?limit=999 full-roster scan,
                                           // which loaded the entire tenant guard list on every click.)
                                           const finalId = candidate ? (candidate.id || candidate.guard?.id || candidate.guardId || g.id) : g.id;
-                                          const finalUrl = `${window.location.origin}/guards/${finalId}/overview`;
+                                          const finalUrl = `${window.location.origin}/guards/${finalId}/resumen`;
                                           if (popup) popup.location.href = finalUrl;
                                           return;
                                         } catch (e) {
-                                          const fallbackUrl = `${window.location.origin}/guards/${g.id}/overview`;
+                                          const fallbackUrl = `${window.location.origin}/guards/${g.id}/resumen`;
                                           if (popup) popup.location.href = fallbackUrl;
                                         }
                                       })();

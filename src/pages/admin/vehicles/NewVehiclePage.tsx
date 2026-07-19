@@ -367,7 +367,7 @@ export default function NewVehiclePage() {
 
             <div className="flex items-center justify-end gap-2">
               <Button variant="outline" asChild>
-                <Link to="/vehicles">Cancelar</Link>
+                <Link to="/vehicle-patrol/vehicles">Cancelar</Link>
               </Button>
               <Button
                 type="submit"

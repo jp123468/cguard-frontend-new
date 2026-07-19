@@ -4,7 +4,7 @@ import AppLayout from "@/layouts/app-layout";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Search, Eye, Trash, ChevronLeft, ChevronRight } from "lucide-react";
 import { DataTable, type Column } from "@/components/table/DataTable";
@@ -136,13 +136,8 @@ export default function TenantsPage() {
             </div>
           </div>
 
-          <div className="ml-auto">
-            {hasPermission('tenantEdit') && (
-              <Button className="bg-primary hover:bg-primary/90 text-white" asChild>
-                <Link to="/superadmin/tenants/new">{t('actions.add') || 'Add'}</Link>
-              </Button>
-            )}
-          </div>
+          {/* "Add tenant" removed: /superadmin/tenants/new has no route (tenants
+              are created via signup/onboarding, not from this legacy CRM page). */}
         </div>
 
         <div className="mt-4">

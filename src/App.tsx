@@ -158,7 +158,6 @@ const PostOrderAck = lazy(() => import("./pages/admin/Reports/PostOrderAck"));
 const DocPolicyAck = lazy(() => import("./pages/admin/Reports/DocPolicyAck"));
 const License = lazy(() => import("./pages/admin/Reports/License"));
 const EditSecurityGuardPage = lazy(() => import("./pages/admin/security-guards/EditSecurityGuardPage"));
-const GuardOverview = lazy(() => import("./pages/admin/security-guards/SegurityGuardsDetails"));
 const GuardResumenPage = lazy(() => import("./pages/admin/security-guards/components/GuardOverview/GuardOverviewPage"));
 const GuardPerfilPage = lazy(() => import("./pages/admin/security-guards/components/GuardProfile/GuardProfilepage"));
 const GuardAvailabilityPage = lazy(() => import("./pages/admin/security-guards/components/GuardAvailability/GuardAvailabilitypage"));
@@ -235,30 +234,6 @@ function LoginRouteResolver() {
   );
 }
 
-/** Role-based redirect: guards go to /guard, others go to /dashboard */
-function RoleBasedRedirect() {
-  const { user, isAuthenticated } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  // Check if user is ONLY a security guard (not also admin/supervisor)
-  const roles: string[] = (() => {
-    const r = user?.roles ?? user?.role ?? [];
-    const arr = Array.isArray(r) ? r : [r];
-    // also include tenant-scoped roles
-    const tenantRoles: string[] = Array.isArray(user?.tenants)
-      ? user.tenants.flatMap((t: any) => {
-          const tr = t.roles ?? t.role ?? [];
-          return Array.isArray(tr) ? tr : [tr];
-        })
-      : [];
-    return [...arr, ...tenantRoles].map((x: any) => String(x || '').toLowerCase()).filter(Boolean);
-  })();
-  const adminRoles = ['admin', 'superadmin', 'operationsmanager', 'securitysupervisor', 'hrmanager', 'dispatcher', 'clientaccountmanager', 'administrativesupervisor', 'administrativeassistant', 'secretary'];
-  const hasAdminRole = roles.some(r => adminRoles.includes(r));
-  const isGuardOnly = roles.includes('securityguard') && !hasAdminRole;
-  if (isGuardOnly) return <Navigate to="/guard" replace />;
-  return <Navigate to="/dashboard" replace />;
-}
-
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -275,11 +250,13 @@ export default function App() {
               {/* Guía de estilo / sistema de diseño */}
               <Route path="/style-guide" element={<StyleGuide />} />
 
-              {/* Rutas públicas (solo accesibles si NO estás logueado) */}
+              {/* Ruta raíz: sin sesión muestra Login; con sesión redirige por rol
+                  (guardia-solo → /guard, resto → /dashboard). Antes había un
+                  segundo path="/" al final del árbol que nunca se ejecutaba. */}
               <Route
                 path="/"
                 element={
-                  <PublicOnlyRoute>
+                  <PublicOnlyRoute redirectByRole>
                     <Login />
                   </PublicOnlyRoute>
                 }
@@ -800,14 +777,6 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <NewSecurityGuardPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/guards/:id/overview"
-                element={
-                  <ProtectedRoute>
-                    <GuardOverview />
                   </ProtectedRoute>
                 }
               />
@@ -1783,9 +1752,6 @@ export default function App() {
                 <Route path="schedule" element={<GuardSchedulePage />} />
                 <Route path="time-off" element={<GuardTimeOffPage />} />
               </Route>
-
-              {/* Ruta raíz - redirige según estado de autenticación */}
-              <Route path="/" element={<RoleBasedRedirect />} />
 
               {/* 404 - Página no encontrada */}
               <Route path="*" element={<NotFound />} />

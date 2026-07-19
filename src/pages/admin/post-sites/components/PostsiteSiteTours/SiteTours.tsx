@@ -292,11 +292,12 @@ export default function PostSiteTours({ site, guards = [] }: { site?: any; guard
         if (stationId) {
           try {
             const ts = Date.now();
-            // First try the station-assigned guards endpoint which performs the correct join on server-side
+            // guard-assignments is the real source of truth for guard↔station
+            // (the old `/stations/:id/guards` route never existed → always 404'd
+            // into the shift-scrape fallback). Rows carry a nested `guard` user.
             try {
-              const resp: any = await ApiService.get(`/tenant/${tenantId}/stations/${encodeURIComponent(stationId)}/guards?limit=999&_=${ts}`, { headers: { 'Cache-Control': 'no-cache' } } as any);
+              const resp: any = await ApiService.get(`/tenant/${tenantId}/guard-assignments?stationId=${encodeURIComponent(stationId)}&status=active&_=${ts}`, { headers: { 'Cache-Control': 'no-cache' } } as any);
               const items = Array.isArray(resp) ? resp : (resp && (resp.rows || resp.data)) ? (resp.rows || resp.data) : [];
-              console.debug('[SiteTours] station-assigned guards response', { stationId, count: (items || []).length, raw: resp });
               // Items may be: assigned-guard rows with nested guard, OR raw shift rows. Try to extract guard objects in either case.
               const extracted = (items || []).flatMap((r: any) => {
                 // If r itself looks like a guard object (has firstName/fullName/displayName/email/id), keep it and attach stationId if missing.

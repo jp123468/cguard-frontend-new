@@ -49,6 +49,7 @@ import { invalidateTenantBranding } from '@/lib/tenantBranding';
 import AddressAutocomplete, { AddressComponents } from "@/components/maps/AddressAutocomplete";
 import GoogleMapEmbed from "@/components/GoogleMap/GoogleMapEmbed";
 import CompanyDocumentsSection, { CompanyDocument } from "./profile/documents/CompanyDocumentsSection";
+import TenantJoinModal from "@/components/TenantJoinModal";
 import { validateCedulaOrRuc } from '@/lib/validators/id';
 import { cacheTenantLocation } from '@/utils/tenantLocation';
 
@@ -122,6 +123,7 @@ export default function ProfileCompanyForm() {
 
   const [phoneE164, setPhoneE164] = useState("");
   const navigate = useNavigate();
+  const [createCompanyOpen, setCreateCompanyOpen] = useState(false);
 
   // resolved tenantId used across render and effect
   const resolvedTenantId =
@@ -378,11 +380,14 @@ export default function ProfileCompanyForm() {
             <h3 className="text-lg font-medium mb-2">Debe crear una Empresa</h3>
             <p className="text-sm text-foreground/70 mb-4">Aún no tiene una empresa asignada. Cree una para continuar configurando la información.</p>
             <div className="flex justify-center">
-              <Button variant="brand" onClick={() => navigate('/tenant/create')}>
+              {/* Opens the real join/create flow — the old navigate('/tenant/create')
+                  pointed at a route that doesn't exist (dead-end 404). */}
+              <Button variant="brand" onClick={() => setCreateCompanyOpen(true)}>
                 Crear Empresa
               </Button>
             </div>
           </div>
+          <TenantJoinModal open={createCompanyOpen} onOpenChange={setCreateCompanyOpen} />
         </div>
       );
     }

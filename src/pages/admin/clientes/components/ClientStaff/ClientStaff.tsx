@@ -125,7 +125,7 @@ export default function ClientStaff({ client }: { client: any }) {
   const resetPage = (fn: (v: any) => void) => (v: any) => { fn(v); setPage(1); };
 
   const openWorker = (p: any) => {
-    if (p.role === 'guardia') navigate(`/guards/${p.id}/overview`);
+    if (p.role === 'guardia') navigate(`/guards/${p.id}/resumen`);
     else navigate(`/supervisors/${p.guardId}`);
   };
 

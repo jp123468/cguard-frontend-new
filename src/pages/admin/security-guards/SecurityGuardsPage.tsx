@@ -75,7 +75,6 @@ import { toast } from "sonner";
 import securityGuardService from '@/lib/api/securityGuardService';
 import { clientService } from '@/lib/api/clientService';
 import { postSiteService } from '@/lib/api/postSiteService';
-import { categoryService } from '@/lib/api/categoryService';
 import { stationService } from '@/lib/api/stationService';
 // Fallback local Breadcrumb component (avoid missing module error)
 interface BreadcrumbItem { label: string; path?: string; }
@@ -163,13 +162,9 @@ export default function SecurityGuardsPage() {
   // Mostrar vigilantes activos por defecto; el usuario puede cambiar el filtro.
   const [filterStatus, setFilterStatus] = useState<string>("todos");
   // Filtros adicionales (controlados) para permitir "Limpiar filtros"
-  const [filterCategory, setFilterCategory] = useState<string>("todas");
   const [filterClient, setFilterClient] = useState<string>("todos");
   const [filterSite, setFilterSite] = useState<string>("todos");
-  const [filterSkills, setFilterSkills] = useState<string>("todos");
-  const [filterDepartment, setFilterDepartment] = useState<string>("todos");
   // Options loaded from backend for filters
-  const [availableCategories, setAvailableCategories] = useState<any[]>([]);
   const [availableClients, setAvailableClients] = useState<any[]>([]);
   const [availablePostSites, setAvailablePostSites] = useState<any[]>([]);
   const [loadingFilters, setLoadingFilters] = useState(false);
@@ -370,12 +365,10 @@ export default function SecurityGuardsPage() {
     // Always load all guards — status tabs filter client-side for instant switching without refetch
     const params: Record<string, any> = { "filter[status]": "ALL,archived" };
 
-    // Additional filters
-    if (filterCategory && filterCategory !== "todas") params["filter[categoryIds]"] = filterCategory;
+    // Additional filters — only client + site are backend-supported (resolved
+    // via guardAssignment). Category/skills/department have no guard-level data.
     if (filterClient && filterClient !== "todos") params["filter[clientId]"] = filterClient;
     if (filterSite && filterSite !== "todos") params["filter[postSiteId]"] = filterSite;
-    if (filterSkills && filterSkills !== "todos") params["filter[skills]"] = filterSkills;
-    if (filterDepartment && filterDepartment !== "todos") params["filter[department]"] = filterDepartment;
     if (searchQuery) params["q"] = searchQuery;
 
     securityGuardService
@@ -403,7 +396,7 @@ export default function SecurityGuardsPage() {
     return () => {
       mounted = false;
     };
-  }, [filterCategory, filterClient, filterSite, filterSkills, filterDepartment, searchQuery]);
+  }, [filterClient, filterSite, searchQuery]);
 
   // Load filter options when sheet opens
   useEffect(() => {
@@ -412,14 +405,11 @@ export default function SecurityGuardsPage() {
       Promise.all([
         clientService.getClients(),
         postSiteService.list({}, { limit: 100, offset: 0 }),
-        categoryService.list(),
       ])
-        .then(([clientsRes, postSitesRes, categoriesRes]) => {
+        .then(([clientsRes, postSitesRes]) => {
           setAvailableClients(clientsRes.rows ?? []);
           // postSiteService.list returns { rows, count }
           setAvailablePostSites(postSitesRes.rows ?? []);
-          // categoryService.list returns { rows }
-          setAvailableCategories(categoriesRes.rows ?? []);
         })
         .catch((err) => {
           console.error('Error loading filter options', err);
@@ -543,7 +533,7 @@ export default function SecurityGuardsPage() {
     const realId = guard.raw?.id || guard.id;
     const acts: GuardCardAction[] = [];
     if (hasPermission('securityGuardRead')) {
-      acts.push({ label: 'Ver detalles', icon: <Eye className="h-4 w-4" />, onClick: () => navigate(`/guards/${realId}/overview`) });
+      acts.push({ label: 'Ver detalles', icon: <Eye className="h-4 w-4" />, onClick: () => navigate(`/guards/${realId}/resumen`) });
     }
     if (hasPermission('securityGuardEdit') && guard.status !== 'Archivado') {
       acts.push({ label: 'Asignar a estación', icon: <ShieldCheck className="h-4 w-4" />, onClick: () => { setAssignGuard(guard); setAssignStationId(''); setAssignDialogOpen(true); } });
@@ -726,21 +716,6 @@ export default function SecurityGuardsPage() {
 
                   <div className="mt-6 space-y-4">
                     <div className="space-y-2">
-                      <Label>{t('guards.list.filter.categories', 'Sectores')}</Label>
-                      <Select value={filterCategory} onValueChange={(v) => setFilterCategory(v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sectores" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="todas">{t('guards.list.filter.categoriesAll', 'Todas')}</SelectItem>
-                            {availableCategories.map((c) => (
-                              <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
                       <Label>{t('guards.list.filter.client', 'Cliente')}</Label>
                       <Select value={filterClient} onValueChange={(v) => setFilterClient(v)}>
                         <SelectTrigger>
@@ -784,29 +759,6 @@ export default function SecurityGuardsPage() {
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>{t('guards.list.filter.skills', 'Conjunto de Habilidades')}</Label>
-                      <Select value={filterSkills} onValueChange={(v) => setFilterSkills(v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Conjunto de Habilidades" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todos">{t('guards.list.filter.skillsAll', 'Todos')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>{t('guards.list.filter.department', 'Departamento')}</Label>
-                      <Select value={filterDepartment} onValueChange={(v) => setFilterDepartment(v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Departamento" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todos">{t('guards.list.filter.departmentAll', 'Todos')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                     <Button
                       className="w-full bg-primary hover:bg-primary/90 text-white"
                       onClick={() => {
@@ -820,11 +772,8 @@ export default function SecurityGuardsPage() {
                       className="w-full bg-card text-foreground border hover:bg-muted/30"
                       onClick={() => {
                         // Limpiar filtros: resetear filtros controlados y mantener la hoja abierta
-                        setFilterCategory("todas");
                         setFilterClient("todos");
                         setFilterSite("todos");
-                        setFilterSkills("todos");
-                        setFilterDepartment("todos");
                         setFilterStatus("activos");
                       }}
                     >
@@ -881,7 +830,7 @@ export default function SecurityGuardsPage() {
                     loading={false}
                     selectedIds={selectedGuards}
                     onSelect={handleSelectGuard}
-                    onOpen={(g) => { const realId = g.raw?.id || g.id; navigate(`/guards/${realId}/overview`); }}
+                    onOpen={(g) => { const realId = g.raw?.id || g.id; navigate(`/guards/${realId}/resumen`); }}
                     actions={guardCardActions}
                   />
                 ) : (
@@ -929,13 +878,13 @@ export default function SecurityGuardsPage() {
                           className="flex-1 cursor-pointer select-none text-blue-600 hover:underline"
                           onClick={() => {
                             const realId = guard.raw?.id || guard.id;
-                            navigate(`/guards/${realId}/overview`);
+                            navigate(`/guards/${realId}/resumen`);
                           }}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
                               const realId = guard.raw?.id || guard.id;
-                              navigate(`/guards/${realId}/overview`);
+                              navigate(`/guards/${realId}/resumen`);
                             }
                           }}
                           aria-label={t('guards.list.openOverviewAria', 'Abrir resumen de {{name}}', { name: guard.name })}
@@ -1067,7 +1016,7 @@ export default function SecurityGuardsPage() {
                                   <DropdownMenuItem
                                     onClick={() => {
                                       const realId = guard.raw?.id || guard.id;
-                                      navigate(`/guards/${realId}/overview`);
+                                      navigate(`/guards/${realId}/resumen`);
                                     }}
                                   >
                                     <Eye className="mr-2 h-4 w-4" /> {t('guards.list.actions.viewDetails','Ver Detalles')}

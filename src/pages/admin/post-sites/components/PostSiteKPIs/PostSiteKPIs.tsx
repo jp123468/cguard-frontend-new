@@ -20,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import KpiService from '@/services/kpi.service';
 import { ApiService } from '@/services/api/apiService';
+import { stationService } from '@/lib/api/stationService';
 import KpiBarChart from '@/components/KpiBarChart';
 import { useTranslation } from "react-i18next";
 import MobileCardList from '@/components/responsive/MobileCardList';
@@ -323,6 +324,31 @@ export default function PostSiteKPIs({ site }: Props) {
       if (import.meta.env.DEV) console.debug('[PostSiteKPIs] reports response:', resp);
       const rows = Array.isArray(resp?.rows) ? resp.rows : (Array.isArray(resp) ? resp : []);
 
+      // Reports carry a stationId (report belongs to a station), but postSite
+      // KPIs are scoped to a SITE. Resolve the site's station ids so a
+      // postSite-scoped count sums the reports of all its stations — the old
+      // code looked up the site id directly in a station-keyed map → always 0.
+      const stationIdsByPostSite: Record<string, Set<string>> = {};
+      try {
+        const postSiteIds = Array.from(
+          new Set(
+            kpis
+              .filter((k: any) => k.scope === 'postSite' && k.postSite && k.postSite.id)
+              .map((k: any) => String(k.postSite.id)),
+          ),
+        );
+        for (const psId of postSiteIds) {
+          const stRes = await stationService.list(
+            { postSite: psId } as any,
+            { limit: 500, offset: 0 },
+          );
+          const stRows = Array.isArray(stRes?.rows) ? stRes.rows : [];
+          stationIdsByPostSite[psId] = new Set(stRows.map((s: any) => String(s.id)));
+        }
+      } catch {
+        /* if station resolution fails, postSite counts fall back to 0 */
+      }
+
       // Single pass over rows: build count maps keyed by guard id and station id.
       const countsByGuard: Record<string, number> = {};
       const countsByStation: Record<string, number> = {};
@@ -339,7 +365,12 @@ export default function PostSiteKPIs({ site }: Props) {
         if (kpi.scope === 'guard' && kpi.guard && kpi.guard.id) {
           cnt = countsByGuard[String(kpi.guard.id)] || 0;
         } else if (kpi.scope === 'postSite' && kpi.postSite && kpi.postSite.id) {
-          cnt = countsByStation[String(kpi.postSite.id)] || 0;
+          const stationSet = stationIdsByPostSite[String(kpi.postSite.id)];
+          if (stationSet) {
+            for (const [sid, n] of Object.entries(countsByStation)) {
+              if (stationSet.has(sid)) cnt += n;
+            }
+          }
         } else {
           cnt = rows.length;
         }

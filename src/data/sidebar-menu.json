@@ -78,11 +78,6 @@
         "id": "tenants",
         "name": "Tenants",
         "path": "/superadmin/tenants"
-      },
-      {
-        "id": "system",
-        "name": "System Settings",
-        "path": "/superadmin/settings"
       }
     ]
   },

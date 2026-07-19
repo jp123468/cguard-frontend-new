@@ -598,7 +598,7 @@ export default function Visitors() {
                     return;
                 }
 
-                const resp = await securityGuardService.list({ 'filter[station]': newVisitor.station, limit: 200, offset: 0 } as any);
+                const resp = await securityGuardService.list({ 'filter[stationId]': newVisitor.station, limit: 200, offset: 0 } as any);
                 const list = Array.isArray(resp) ? resp : (resp.rows || []);
                 setGuardsForNewVisitor(list || []);
             } catch (e) {

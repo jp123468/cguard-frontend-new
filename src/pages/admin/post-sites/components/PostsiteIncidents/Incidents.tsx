@@ -335,19 +335,15 @@ export default function Incidents({ site }: { site?: any }) {
 
         let stationRows: any[] = [];
         try {
-          const res = await ApiService.get(`/tenant/${tenantId}/post-site/${postSiteId}/stations`);
+          // The station list endpoint filters by post-site via filter[postSite]
+          // (the old `/post-site/:id/stations` route never existed → always 404'd
+          // and the dropdown came up empty on fresh sites).
+          const res: any = await ApiService.get(
+            `/tenant/${tenantId}/stations?filter[postSite]=${encodeURIComponent(postSiteId)}&limit=200&offset=0`,
+          );
           stationRows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
         } catch (err) {
-          console.warn('Primary stations endpoint failed (create dialog)', err);
-        }
-
-        if ((!stationRows || stationRows.length === 0) && postSiteId) {
-          try {
-            const fallback = await ApiService.get(`/tenant/${tenantId}/stations?postSiteId=${encodeURIComponent(postSiteId)}`);
-            stationRows = Array.isArray(fallback) ? fallback : (fallback && fallback.rows) ? fallback.rows : [];
-          } catch (err) {
-            console.warn('Fallback stations endpoint failed (create dialog)', err);
-          }
+          console.warn('Stations load failed (create dialog)', err);
         }
 
         let stationMapped = (stationRows || []).map((s: any) => {
@@ -418,25 +414,18 @@ export default function Incidents({ site }: { site?: any }) {
           if (mounted) setClientAdmins([]);
         }
 
-        // load stations for post site (try primary endpoint then fallback)
+        // load stations for post site
         try {
           let stationRows: any[] = [];
           try {
-            // prefer stations for the selected post-site (filterPostSiteId) falling back to current site
-            const res = await ApiService.get(`/tenant/${tenantId}/post-site/${postSiteId}/stations`);
+            // filter[postSite] is the supported station-list filter (the old
+            // `/post-site/:id/stations` route never existed → always 404'd).
+            const res: any = await ApiService.get(
+              `/tenant/${tenantId}/stations?filter[postSite]=${encodeURIComponent(postSiteId)}&limit=200&offset=0`,
+            );
             stationRows = Array.isArray(res) ? res : (res && res.rows) ? res.rows : [];
           } catch (err) {
-            console.warn('Primary stations endpoint failed', err);
-          }
-
-          // fallback: try generic stations endpoint filtered by postSiteId
-          if ((!stationRows || stationRows.length === 0) && postSiteId) {
-            try {
-              const fallback = await ApiService.get(`/tenant/${tenantId}/stations?postSiteId=${encodeURIComponent(postSiteId)}`);
-              stationRows = Array.isArray(fallback) ? fallback : (fallback && fallback.rows) ? fallback.rows : [];
-            } catch (err) {
-              console.warn('Fallback stations endpoint failed', err);
-            }
+            console.warn('Stations load failed', err);
           }
 
           let stationMapped = (stationRows || []).map((s: any) => {

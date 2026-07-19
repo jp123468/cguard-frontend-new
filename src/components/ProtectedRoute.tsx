@@ -153,9 +153,11 @@ export default function ProtectedRoute({
   return <>{children}</>
 }
 
-// Variante para rutas públicas (solo accesibles si NO estás autenticado)
-export function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth()
+// Variante para rutas públicas (solo accesibles si NO estás autenticado).
+// `redirectByRole`: usuarios guardia-solo van a /guard en vez de /dashboard
+// (usado en la ruta raíz "/").
+export function PublicOnlyRoute({ children, redirectByRole = false }: { children: React.ReactNode; redirectByRole?: boolean }) {
+  const { isAuthenticated, loading, user } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -177,6 +179,20 @@ export function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 
   // Si ya está autenticado y NO es flujo de invitación, redirigir al dashboard
   if (isAuthenticated) {
+    if (redirectByRole) {
+      const raw = (user as any)?.roles ?? (user as any)?.role ?? []
+      const arr = Array.isArray(raw) ? raw : [raw]
+      const tenantRoles: string[] = Array.isArray((user as any)?.tenants)
+        ? (user as any).tenants.flatMap((t: any) => {
+            const tr = t.roles ?? t.role ?? []
+            return Array.isArray(tr) ? tr : [tr]
+          })
+        : []
+      const roles = [...arr, ...tenantRoles].map((x: any) => String(x || '').toLowerCase()).filter(Boolean)
+      const adminRoles = ['admin', 'superadmin', 'operationsmanager', 'securitysupervisor', 'hrmanager', 'dispatcher', 'clientaccountmanager', 'administrativesupervisor', 'administrativeassistant', 'secretary']
+      const isGuardOnly = roles.includes('securityguard') && !roles.some((r) => adminRoles.includes(r))
+      if (isGuardOnly) return <Navigate to="/guard" replace />
+    }
     const from = (location.state as any)?.from?.pathname || "/dashboard"
     return <Navigate to={from} replace />
   }
