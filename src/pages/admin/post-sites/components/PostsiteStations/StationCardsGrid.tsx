@@ -1,0 +1,98 @@
+/**
+ * Vista de tarjetas de estaciones (toggle Cards ⇄ Lista en la subpágina de
+ * Estaciones), al mismo estilo que Clientes/Vigilantes. Cada tarjeta: ícono con
+ * color estable, nombre → detalle de la estación, horario, vigilantes requeridos
+ * y geocerca. Menú Ver/Eliminar inyectado desde la página.
+ */
+import { EllipsisVertical, Building2, Users, Clock, MapPin, Eye, Trash } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { StatusBadge, EmptyState } from '@/components/kit';
+
+const HUES = [28, 205, 150, 265, 340, 95, 180, 12];
+function hueFor(name: string): number {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    return HUES[h % HUES.length];
+}
+
+const SCHEDULE_LABEL: Record<string, string> = {
+    '24h': '24 horas',
+    '12h-day': '12h Día',
+    '12h-night': '12h Noche',
+    custom: 'Personalizado',
+};
+
+export default function StationCardsGrid({
+    stations,
+    onOpen,
+    onDelete,
+}: {
+    stations: any[];
+    onOpen: (id: string) => void;
+    onDelete: (id: string) => void;
+}) {
+    if (!stations.length) {
+        return <EmptyState icon={<Building2 />} title="Sin estaciones" description="Agrega la primera estación con “Crear estación”." />;
+    }
+
+    return (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {stations.map((st, i) => {
+                const id = st.id || st.stationId || '';
+                const name = st.name || 'Estación';
+                const hue = hueFor(name);
+                const guards = st.numberOfGuardsInStation ?? (Array.isArray(st.assignedGuards) ? st.assignedGuards.length : null);
+                const sched = st.scheduleType ? (SCHEDULE_LABEL[st.scheduleType] || st.scheduleType) : (Array.isArray(st.jornadas) && st.jornadas.length ? `${st.jornadas.length} jornada(s)` : null);
+                const geo = st.hasPolygon ? 'Polígono' : (st.geofenceRadius ? `${st.geofenceRadius} m` : null);
+                return (
+                    <div
+                        key={id || i}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => onOpen(id)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') onOpen(id); }}
+                        className="group flex cursor-pointer flex-col rounded-2xl border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md animate-in fade-in slide-in-from-bottom-2"
+                        style={{ animationDelay: `${Math.min(i, 12) * 30}ms`, animationFillMode: 'backwards' }}
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl [&_svg]:size-6" style={{ backgroundColor: `hsl(${hue} 70% 92%)`, color: `hsl(${hue} 60% 32%)` }}>
+                                <Building2 />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate font-semibold leading-tight group-hover:text-primary">{name}</p>
+                                {st.nickname ? <p className="truncate text-xs text-muted-foreground">{st.nickname}</p> : null}
+                                {sched && <div className="mt-1"><StatusBadge tone="blue" dot={false}>{sched}</StatusBadge></div>}
+                            </div>
+                            <div onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"><EllipsisVertical className="h-4 w-4" /></Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-44">
+                                        <DropdownMenuItem onClick={() => onOpen(id)}><Eye className="mr-2 h-4 w-4" /> Ver detalles</DropdownMenuItem>
+                                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(id)}><Trash className="mr-2 h-4 w-4" /> Eliminar</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 flex items-center gap-4 border-t pt-3 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1.5">
+                                <Users className="h-4 w-4 text-primary" />
+                                <span className="font-semibold text-foreground">{guards ?? '—'}</span> vigilante(s)
+                            </span>
+                            {sched && <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> {sched}</span>}
+                            {geo && <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4 text-primary" /> {geo}</span>}
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}

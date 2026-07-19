@@ -3,7 +3,8 @@ import { invalidateEntity } from "@/lib/queryClient";
 import { useNavigate } from 'react-router-dom';
 import { ApiService } from '@/services/api/apiService';
 import { toast } from 'sonner';
-import { Plus, Trash, Eye, MoreVertical, X, Shield } from 'lucide-react';
+import { Plus, Trash, Eye, MoreVertical, X, Shield, LayoutGrid, List as ListIcon } from 'lucide-react';
+import StationCardsGrid from './StationCardsGrid';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, SkeletonCards } from '@/components/kit';
@@ -38,6 +39,10 @@ export default function Stations({ site }: { site?: any }) {
   const { t } = useTranslation();
   const [stations, setStations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  // Vista Tarjetas ⇄ Lista (persistida), como en Clientes/Vigilantes.
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>(() => (localStorage.getItem('stationsView.viewMode') as 'cards' | 'list') || 'cards');
+  useEffect(() => { localStorage.setItem('stationsView.viewMode', viewMode); }, [viewMode]);
+  const [query, setQuery] = useState('');
   const [showNew, setShowNew] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
@@ -110,12 +115,18 @@ export default function Stations({ site }: { site?: any }) {
               jornadas = JSON.parse(raw);
             }
           } catch {}
+          const toNum = (v: any) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
           return {
             id: r.id || r.stationId || r._id || r.station_id || String(r._id || r.id || JSON.stringify(r)),
             name: r.name || r.stationName || r.station_name || r.label || r.title || (r.description ? String(r.description).slice(0, 60) : '') || '',
             nickname: r.nickname || r.nominativo || '',
             numberOfGuardsInStation: r.numberOfGuardsInStation,
             assignedGuards: r.assignedGuards,
+            scheduleType: r.scheduleType || null,
+            lat: toNum(r.latitud ?? r.latitude),
+            lng: toNum(r.longitud ?? r.longitude),
+            geofenceRadius: toNum(r.geofenceRadius),
+            hasPolygon: !!(r.geofencePolygon && (Array.isArray(r.geofencePolygon) ? r.geofencePolygon.length >= 3 : String(r.geofencePolygon).length > 5)),
             jornadas,
           };
         });
@@ -604,6 +615,12 @@ export default function Stations({ site }: { site?: any }) {
 
   // Assigned guards updates must be done via AssignGuards component/page.
 
+  const filteredStations = (() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return stations;
+    return stations.filter((s) => (s.name || '').toLowerCase().includes(q) || (s.nickname || '').toLowerCase().includes(q));
+  })();
+
   return (
     <div className="space-y-4 flex-1 min-h-0 flex flex-col animate-fade-up">
       <div className="cg-card p-4 flex-1 flex flex-col">
@@ -662,13 +679,17 @@ export default function Stations({ site }: { site?: any }) {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-muted-foreground" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.9 14.32a8 8 0 111.41-1.41l4.3 4.3a1 1 0 01-1.42 1.42l-4.3-4.3zM8 14a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" /></svg>
                 </div>
-                <input value={''} onChange={() => { }} placeholder={t('postSites.stations.searchPlaceholder', 'Search stations...')} className="w-full border border-border rounded-lg px-4 py-3 text-sm pl-10 shadow-sm focus:ring-2 focus:ring-primary/30" />
+                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('postSites.stations.searchPlaceholder', 'Buscar estación…')} className="w-full border border-border rounded-lg px-4 py-3 text-sm pl-10 shadow-sm focus:ring-2 focus:ring-primary/30" />
               </div>
             </div>
 
-            <div className="flex-shrink-0">
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="hidden md:inline-flex items-center rounded-xl border bg-card p-0.5">
+                <button onClick={() => setViewMode('cards')} className={`flex h-8 items-center rounded-md px-2.5 ${viewMode === 'cards' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'}`} aria-label="Vista de tarjetas"><LayoutGrid className="h-4 w-4" /></button>
+                <button onClick={() => setViewMode('list')} className={`flex h-8 items-center rounded-md px-2.5 ${viewMode === 'list' ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted'}`} aria-label="Vista de lista"><ListIcon className="h-4 w-4" /></button>
+              </div>
               <button onClick={() => navigate(`/post-sites/${site?.id || ''}/stations/new`)} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors shadow">
-                <Plus size={16} /> {t('postSites.stations.add', 'Add')}
+                <Plus size={16} /> {t('postSites.stations.add', 'Crear estación')}
               </button>
             </div>
           </div>
@@ -677,13 +698,18 @@ export default function Stations({ site }: { site?: any }) {
         <div className="w-full flex-1 flex flex-col min-h-0">
           {loading ? (
             <SkeletonCards count={4} />
-          ) : stations.length === 0 ? (
+          ) : filteredStations.length === 0 ? (
             <div className="min-h-[320px] flex items-center justify-center">
-              <EmptyState icon={<Shield />} title={t('postSites.stations.noStations', 'No stations added yet.')} />
+              <EmptyState icon={<Shield />} title={query ? t('postSites.stations.noResults', 'Sin resultados para la búsqueda.') : t('postSites.stations.noStations', 'Aún no hay estaciones.')} />
             </div>
           ) : (
             <>
               <div className="hidden md:block flex-1 min-h-0">
+                {viewMode === 'cards' ? (
+                  <div className="overflow-y-auto max-h-[52vh] pr-1">
+                    <StationCardsGrid stations={filteredStations} onOpen={(id) => navigate(`/post-sites/${site?.id}/stations/${id}`)} onDelete={(id) => handleDelete(id)} />
+                  </div>
+                ) : (
                 <div className="overflow-x-auto">
                   <div className="overflow-y-auto h-[48vh]">
                     <table className="min-w-full table-fixed">
@@ -701,7 +727,7 @@ export default function Stations({ site }: { site?: any }) {
                         </tr>
                       </thead>
                       <tbody className="min-h-0">
-                        {stations.map((st) => {
+                        {filteredStations.map((st) => {
                           const id = st.id || st.stationId || '';
                           const name = st.name || st.stationName || st.station_name || '—';
                           const jornadas: any[] = st.jornadas || [];
@@ -767,11 +793,12 @@ export default function Stations({ site }: { site?: any }) {
                     </table>
                   </div>
                 </div>
+                )}
               </div>
 
               <div className="block md:hidden">
                 <div className="space-y-3 min-h-[40vh]">
-                  {stations.map((st) => {
+                  {filteredStations.map((st) => {
                     const id = st.id || st.stationId || '';
                     const name = st.name || st.stationName || st.station_name || '—';
                     const guardsCount = st.numberOfGuardsInStation || (Array.isArray(st.assignedGuards) ? String(st.assignedGuards.length) : '-');
