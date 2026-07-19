@@ -1,8 +1,8 @@
 // Client types matching backend structure
 
 export interface Client {
-    company: any;
-    fullName: any;
+    company?: string;
+    fullName?: string;
     id: string;
     name: string;
     lastName?: string;
@@ -23,6 +23,12 @@ export interface Client {
         id: string;
         name: string;
     };
+    categoryIds?: string[];
+    contractDate?: string;
+    riskLevel?: string;
+    onboardingStatus?: string;
+    logoUrl?: Array<{ downloadUrl?: string; publicUrl?: string }> | string;
+    purchaseOrder?: string;
     tenantId: string;
     createdAt: string;
     updatedAt: string;
