@@ -70,6 +70,8 @@ const SupervisorKpisPage = lazy(() => import("./pages/admin/supervisors/Supervis
 const SupervisorNotesPage = lazy(() => import("./pages/admin/supervisors/SupervisorNotesPage"));
 const SupervisorLicensesPage = lazy(() => import("./pages/admin/supervisors/SupervisorLicensesPage"));
 const SupervisorPositionsPage = lazy(() => import("./pages/admin/supervisors/SupervisorPositionsPage"));
+const SupervisorCoveragePage = lazy(() => import("./pages/admin/supervisors/SupervisorCoveragePage"));
+const SupervisorSchedulePage = lazy(() => import("./pages/admin/supervisors/SupervisorSchedulePage"));
 const GuardRegistration = lazy(() => import("./pages/guard/registration"));
 const ClientRegistration = lazy(() => import("./pages/client/registration"));
 const AdminOfficeUsersPage = lazy(() => import("./pages/admin/administrative-office-users/AdminOfficeUsersPage"));
@@ -165,6 +167,9 @@ const GuardLicenciasPage = lazy(() => import("./pages/admin/security-guards/comp
 const GuardNotasPage = lazy(() => import("./pages/admin/security-guards/components/GuardNotes/GuardNotespage"));
 const GuardMemosPage = lazy(() => import("./pages/admin/security-guards/components/GuardMemos/GuardMemosPage"));
 const GuardReviewsPage = lazy(() => import("./pages/admin/security-guards/components/GuardReviews/GuardReviewsPage"));
+const GuardHorarioPage = lazy(() => import("./pages/admin/security-guards/components/GuardHorario/GuardHorarioPage"));
+const GuardDesempenoPage = lazy(() => import("./pages/admin/security-guards/components/GuardDesempeno/GuardDesempenoPage"));
+const GuardDocumentosPage = lazy(() => import("./pages/admin/security-guards/components/GuardDocumentos/GuardDocumentosPage"));
 const GuardRemindersPage = lazy(() => import("./pages/admin/security-guards/components/GuardReminders/GuardRemindersPage"));
 const GuardFilesPage = lazy(() => import("./pages/admin/security-guards/components/GuardFiles/GuardFilesPage"));
 const GuardAsignarSitiosPage = lazy(() => import("./pages/admin/security-guards/components/GuardAssign-Sites/GuardAsignarSitiosPage"));
@@ -871,6 +876,30 @@ export default function App() {
                 }
               />
               <Route
+                path="/guards/:id/horario"
+                element={
+                  <ProtectedRoute>
+                    <GuardHorarioPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/desempeno"
+                element={
+                  <ProtectedRoute>
+                    <GuardDesempenoPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/documentos"
+                element={
+                  <ProtectedRoute>
+                    <GuardDocumentosPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/guards/:id/recordatorios"
                 element={
                   <ProtectedRoute>
@@ -1258,6 +1287,8 @@ export default function App() {
               <Route path="/supervisor-positions" element={<ProtectedRoute><SupervisorPositionsPage /></ProtectedRoute>} />
               <Route path="/supervisors/:id" element={<ProtectedRoute><SupervisorDetailPage /></ProtectedRoute>} />
               <Route path="/supervisors/:id/perfil" element={<ProtectedRoute><SupervisorDetailPage /></ProtectedRoute>} />
+              <Route path="/supervisors/:id/cobertura" element={<ProtectedRoute><SupervisorCoveragePage /></ProtectedRoute>} />
+              <Route path="/supervisors/:id/horario" element={<ProtectedRoute><SupervisorSchedulePage /></ProtectedRoute>} />
               <Route path="/supervisors/:id/dispositivo" element={<ProtectedRoute><GuardDispositivoPage navKey="supervisors" title="Dispositivo" /></ProtectedRoute>} />
               <Route path="/supervisors/:id/indicadores" element={<ProtectedRoute><SupervisorKpisPage /></ProtectedRoute>} />
               <Route path="/supervisors/:id/notas" element={<ProtectedRoute><SupervisorNotesPage /></ProtectedRoute>} />

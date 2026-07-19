@@ -1387,7 +1387,7 @@
     },
     "nav": {
       "archivos": "Archivos",
-      "asignarSitios": "Asignar Estaciones",
+      "asignarSitios": "Puesto y estaciones",
       "configuracion": "Configuración",
       "conjuntoHabilidades": "Conjunto de Habilidades",
       "departamento": "Departamento",
@@ -1400,7 +1400,10 @@
       "recordatorios": "Recordatorios",
       "resumen": "Resumen",
       "memos": "Memos",
-      "reviews": "Reseñas"
+      "reviews": "Reseñas",
+      "horario": "Horario",
+      "desempeno": "Desempeño",
+      "documentos": "Documentos"
     },
     "new": {
       "title": "Nuevo Vigilante",

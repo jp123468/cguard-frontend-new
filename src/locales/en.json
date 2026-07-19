@@ -1387,7 +1387,7 @@
     },
     "nav": {
       "archivos": "Files",
-      "asignarSitios": "Assign Sites",
+      "asignarSitios": "Post & stations",
       "configuracion": "Settings",
       "conjuntoHabilidades": "Skill Set",
       "departamento": "Department",
@@ -1400,7 +1400,10 @@
       "recordatorios": "Reminders",
       "resumen": "Overview",
       "memos": "Memos",
-      "reviews": "Reviews"
+      "reviews": "Reviews",
+      "horario": "Schedule",
+      "desempeno": "Performance",
+      "documentos": "Documents"
     },
     "new": {
       "title": "New Guard",

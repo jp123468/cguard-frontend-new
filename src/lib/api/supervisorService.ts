@@ -68,4 +68,10 @@ export const supervisorService = {
     ApiService.post(`/tenant/${tid()}/supervisors`, body),
   update: (userId: string, body: Partial<Supervisor>): Promise<Supervisor> =>
     ApiService.put(`/tenant/${tid()}/supervisors/${userId}`, body),
+  // Zone/stations the supervisor covers (resolved from their puesto assignments).
+  getCoverage: (userId: string): Promise<{ positions: any[] }> =>
+    ApiService.get(`/tenant/${tid()}/supervisors/${userId}/coverage`),
+  // Generated upcoming schedule (rotation plan) for the supervisor.
+  getSchedule: (userId: string): Promise<{ rows: any[]; position: any }> =>
+    ApiService.get(`/tenant/${tid()}/supervisors/${userId}/schedule`),
 };

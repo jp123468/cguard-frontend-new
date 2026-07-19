@@ -373,6 +373,52 @@ export const securityGuardService = {
       }
     });
   },
+
+  // ── Worker-detail data (station/schedule/documents/performance) ──────────
+
+  /** The guard's active station/post assignments (station + shift window). */
+  async getAssignments(guardId: string) {
+    const tenantId = getTenantId();
+    const resp = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/assignments`);
+    const p: any = (resp as any)?.data ?? resp;
+    return { rows: Array.isArray(p?.rows) ? p.rows : [], count: p?.count ?? 0 };
+  },
+
+  /** Forward rotation schedule (D/N/L grid) for the guard. */
+  async getSchedule(guardId: string, params?: { startDate?: string; endDate?: string }) {
+    const tenantId = getTenantId();
+    const qs = params ? `?${new URLSearchParams(Object.entries(params).filter(([, v]) => v) as any).toString()}` : '';
+    const resp = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/schedule${qs}`);
+    return (resp as any)?.data ?? resp;
+  },
+
+  /** 8-factor performance score for the guard. */
+  async getPerformance(guardId: string, period = 30) {
+    const tenantId = getTenantId();
+    const resp = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/performance?period=${period}`);
+    return (resp as any)?.data ?? resp;
+  },
+
+  /** Documents linked to the guard. */
+  async getDocuments(guardId: string) {
+    const tenantId = getTenantId();
+    const resp = await api.get(`/tenant/${tenantId}/security-guard/${guardId}/documents`);
+    const p: any = (resp as any)?.data ?? resp;
+    return { rows: Array.isArray(p?.rows) ? p.rows : [], count: p?.count ?? 0 };
+  },
+
+  /** Persist already-uploaded document descriptors for the guard. */
+  async addDocuments(guardId: string, documents: any[]) {
+    const tenantId = getTenantId();
+    const resp = await api.post(`/tenant/${tenantId}/security-guard/${guardId}/documents`, { data: { documents } });
+    return (resp as any)?.data ?? resp;
+  },
+
+  async deleteDocument(guardId: string, docId: string) {
+    const tenantId = getTenantId();
+    const resp = await api.delete(`/tenant/${tenantId}/security-guard/${guardId}/documents/${docId}`);
+    return (resp as any)?.data ?? resp;
+  },
 };
 
 export default securityGuardService;
