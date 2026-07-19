@@ -151,8 +151,8 @@ export default function GuardResumenPage() {
                   }
                 />
                 <StatTile
-                  label={onDuty ? (t('guards.summary.onDuty') || 'En servicio') : (t('guards.summary.offDuty') || 'Servicio')}
-                  value={onDuty ? (t('guards.summary.onDutyYes') || 'Sí') : (t('guards.summary.onDutyNo') || 'No')}
+                  label={onDuty ? t('guards.summary.onDuty', 'En servicio') : t('guards.summary.offDuty', 'Fuera de servicio')}
+                  value={onDuty ? t('guards.summary.onDutyYes', 'Sí') : t('guards.summary.onDutyNo', 'No')}
                   accent={onDuty ? 'green' : 'muted'}
                   icon={
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

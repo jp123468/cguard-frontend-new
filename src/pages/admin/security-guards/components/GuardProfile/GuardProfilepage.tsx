@@ -283,7 +283,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                       <EditSelect label={t('guards.profile.fields.maritalStatus') || 'Estado civil'} field="maritalStatus" value={form.maritalStatus} onChange={(v) => setField('maritalStatus', v)} />
                       <EditSelect label={t('guards.profile.fields.education') || 'Instrucción académica'} field="academicInstruction" value={form.academicInstruction} onChange={(v) => setField('academicInstruction', v)} />
                       <EditText label={t('guards.profile.fields.guardCredentials') || 'Credencial'} value={form.guardCredentials} onChange={(v) => setField('guardCredentials', v)} />
-                      <EditText label={t('guards.profile.fields.hireDate') || 'Fecha de contratación'} value={form.hiringContractDate} onChange={(v) => setField('hiringContractDate', v)} type="date" />
+                      <EditText label={t('guards.profile.fields.hireDate', 'Fecha de contratación')} value={form.hiringContractDate} onChange={(v) => setField('hiringContractDate', v)} type="date" />
                     </>
                   ) : (
                     <>
@@ -292,7 +292,7 @@ export default function GuardProfile({ guard, onGuardUpdate }: Props) {
                       <ReadField label={t('guards.profile.fields.maritalStatus') || 'Estado civil'} value={data?.maritalStatus} />
                       <ReadField label={t('guards.profile.fields.education') || 'Instrucción académica'} value={data?.academicInstruction} />
                       <ReadField label={t('guards.profile.fields.guardCredentials') || 'Credencial'} value={data?.guardCredentials} />
-                      <ReadField label={t('guards.profile.fields.hireDate') || 'Fecha de contratación'} value={data?.hiringContractDate ? new Date(data.hiringContractDate).toLocaleDateString('es') : null} />
+                      <ReadField label={t('guards.profile.fields.hireDate', 'Fecha de contratación')} value={data?.hiringContractDate ? new Date(data.hiringContractDate).toLocaleDateString('es') : null} />
                     </>
                   )}
                 </div>

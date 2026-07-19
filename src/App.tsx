@@ -75,6 +75,7 @@ const ClientRegistration = lazy(() => import("./pages/client/registration"));
 const AdminOfficeUsersPage = lazy(() => import("./pages/admin/administrative-office-users/AdminOfficeUsersPage"));
 const NewAdminUserPage = lazy(() => import("./pages/admin/administrative-office-users/NewAdminUserPage"));
 const EditAdminUserPage = lazy(() => import("./pages/admin/administrative-office-users/EditAdminUserPage"));
+const AdminUserDetailPage = lazy(() => import("./pages/admin/administrative-office-users/AdminUserDetailPage"));
 const MessengerPage = lazy(() => import("./pages/admin/messenger/MessengerPage"));
 const RadioDispatch = lazy(() => import("./pages/radio/RadioDispatch"));
 const RadioDevices = lazy(() => import("./pages/admin/radio/RadioDevices"));
@@ -946,6 +947,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <EditAdminUserPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/back-office/:id"
+                element={
+                  <ProtectedRoute>
+                    <AdminUserDetailPage />
                   </ProtectedRoute>
                 }
               />

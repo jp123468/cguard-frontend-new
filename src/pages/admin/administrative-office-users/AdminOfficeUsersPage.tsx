@@ -505,7 +505,7 @@ export default function AdminOfficeUsersPage() {
 
   const openUser = (u: any) => {
     if (normalizeRolesForUser(u.roles || u.role || u.rolesList || u._rolesDisplay).includes('securitysupervisor')) { navigate(`/supervisors/${u.id}`); return; }
-    if (hasPermission('userEdit')) navigate(`/back-office/edit/${u.id}`);
+    navigate(`/back-office/${u.id}`);
   };
 
   return (
