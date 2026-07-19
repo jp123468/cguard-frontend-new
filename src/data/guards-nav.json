@@ -8,6 +8,7 @@
           { "id": "resumen", "label": "guards.nav.resumen", "path": "/guards/:id/resumen" },
           { "id": "perfil", "label": "guards.nav.perfil", "path": "/guards/:id/perfil" },
           { "id": "horario", "label": "guards.nav.horario", "path": "/guards/:id/horario" },
+          { "id": "asistencia", "label": "guards.nav.asistencia", "path": "/guards/:id/asistencia" },
           { "id": "asignar-sitios", "label": "guards.nav.asignarSitios", "path": "/guards/:id/asignar-sitios" },
           { "id": "desempeno", "label": "guards.nav.desempeno", "path": "/guards/:id/desempeno" },
           { "id": "reviews", "label": "guards.nav.reviews", "path": "/guards/:id/reviews" },
