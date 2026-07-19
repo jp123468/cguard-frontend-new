@@ -1,9 +1,11 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
 import GuardsLayout from '@/layouts/GuardsLayout';
 import GuardSummary from '@/pages/admin/security-guards/components/GuardSummary/GuardSummarypage';
 import { useEffect, useState } from 'react';
 import securityGuardService from '@/lib/api/securityGuardService';
+import guardRatingService from '@/lib/api/guardRatingService';
+import GuardRatingLevel from '@/pages/admin/security-guards/GuardRatingLevel';
 import { fileUrlFromFile } from '@/lib/fileUrl';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -43,9 +45,17 @@ const StatTile = ({
 
 export default function GuardResumenPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const [guard, setGuard] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [rating, setRating] = useState<{ average: number; count: number } | null>(null);
+  useEffect(() => {
+    if (!id) return;
+    let alive = true;
+    guardRatingService.summary([id]).then((m) => { if (alive) setRating(m[id] || null); }).catch(() => {});
+    return () => { alive = false; };
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -173,6 +183,12 @@ export default function GuardResumenPage() {
                         <span className={`w-1.5 h-1.5 rounded-full ${accessBadge.dot}`} />
                         {accessBadge.txt}
                       </span>
+                      <GuardRatingLevel
+                        average={rating?.average}
+                        count={rating?.count}
+                        showEmpty
+                        onClick={id ? () => navigate(`/guards/${id}/reviews`) : undefined}
+                      />
                       {guard?.createdAt && (
                         <span className="px-2 py-0.5 rounded-full bg-muted text-xs font-medium text-muted-foreground">
                           {t('guards.summary.header.addedOn')}:{' '}

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useScrollToTopOnMount from '@/hooks/useScrollToTopOnMount';
 import { clientService } from '@/lib/api/clientService';
+import guardRatingService from '@/lib/api/guardRatingService';
+import GuardRatingLevel from '@/pages/admin/security-guards/GuardRatingLevel';
 import { Section, EmptyState, StatusBadge } from '@/components/kit';
 import { Button } from '@/components/ui/button';
 import {
@@ -100,6 +102,17 @@ export default function ClientStaff({ client }: { client: any }) {
   const dist: any[] = data?.roleDistribution || [];
   const sedes: any[] = data?.sedes || [];
   const personal: any[] = data?.personal || [];
+
+  // Per-guard client-review level, so a service issue is visible right on the
+  // roster. Click → the guard's Perfil › Reseñas. Keyed by securityGuard id.
+  const [ratings, setRatings] = useState<Record<string, { average: number; count: number }>>({});
+  useEffect(() => {
+    const ids = personal.filter((p) => p.role === 'guardia').map((p) => p.id).filter(Boolean);
+    if (!ids.length) return;
+    let alive = true;
+    guardRatingService.summary(ids).then((m) => { if (alive) setRatings((prev) => ({ ...prev, ...m })); }).catch(() => {});
+    return () => { alive = false; };
+  }, [personal]);
   const total = data?.total ?? 0;
   const coberturaTurno: any[] = data?.coberturaTurno || [];
   const certs: any[] = data?.certificaciones || [];
@@ -206,7 +219,12 @@ export default function ClientStaff({ client }: { client: any }) {
                           <div className="flex items-center gap-2.5">
                             <Avatar url={p.photoUrl} name={p.name} />
                             <div className="min-w-0">
-                              <div className="font-medium truncate">{p.name}</div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-medium truncate">{p.name}</span>
+                                {p.role === 'guardia' && ratings[p.id] && (
+                                  <GuardRatingLevel average={ratings[p.id].average} count={ratings[p.id].count} onClick={() => navigate(`/guards/${p.id}/reviews`)} />
+                                )}
+                              </div>
                               {p.code && <div className="text-xs text-muted-foreground">{p.code}</div>}
                             </div>
                           </div>

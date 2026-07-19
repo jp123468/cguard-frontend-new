@@ -15,6 +15,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StatusBadge, SkeletonCards, EmptyState } from "@/components/kit";
+import GuardRatingLevel from "./GuardRatingLevel";
 
 export type GuardCardAction = {
     label: string;
@@ -39,6 +40,8 @@ const STATUS_TONE: Record<string, "green" | "orange" | "red" | "slate"> = {
 export default function GuardCardsGrid({
     guards,
     stationByUserId,
+    ratings,
+    onOpenReviews,
     loading,
     selectedIds,
     onSelect,
@@ -47,6 +50,8 @@ export default function GuardCardsGrid({
 }: {
     guards: any[];
     stationByUserId: Record<string, string>;
+    ratings?: Record<string, { average: number; count: number }>;
+    onOpenReviews?: (guardId: string) => void;
     loading: boolean;
     selectedIds: string[];
     onSelect: (id: string, checked: boolean) => void;
@@ -69,6 +74,8 @@ export default function GuardCardsGrid({
                 const photo = Array.isArray(pi) ? (pi[0]?.downloadUrl || pi[0]?.publicUrl || null) : (pi?.downloadUrl || pi?.publicUrl || (typeof pi === "string" ? pi : null)) || g.raw?.photoUrl || null;
                 const acts = actions(g);
                 const tone = STATUS_TONE[g.status] || "slate";
+                const realId = g.raw?.id || g.id;
+                const rating = ratings?.[realId];
                 return (
                     <div
                         key={g.id}
@@ -95,7 +102,16 @@ export default function GuardCardsGrid({
                             )}
                             <div className="min-w-0 flex-1">
                                 <p className="truncate font-semibold leading-tight group-hover:text-primary">{name}</p>
-                                <div className="mt-1"><StatusBadge tone={tone}>{g.status}</StatusBadge></div>
+                                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                    <StatusBadge tone={tone}>{g.status}</StatusBadge>
+                                    {rating && (
+                                        <GuardRatingLevel
+                                            average={rating.average}
+                                            count={rating.count}
+                                            onClick={onOpenReviews ? () => onOpenReviews(realId) : undefined}
+                                        />
+                                    )}
+                                </div>
                             </div>
                             {acts.length > 0 && (
                                 <div onClick={(e) => e.stopPropagation()}>

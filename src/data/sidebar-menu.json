@@ -341,8 +341,8 @@
     "path": "/customer-requests"
   },
   {
-    "id": "calificaciones-vigilantes",
-    "name": "Calificaciones de vigilantes",
+    "id": "control-de-calidad",
+    "name": "Control de Calidad",
     "icon": "Star",
     "path": "/guard-ratings"
   },

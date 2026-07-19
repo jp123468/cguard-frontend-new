@@ -44,6 +44,11 @@ export interface GuardRatingListResult {
   average: number | null;
 }
 
+export interface GuardRatingSummary {
+  average: number;
+  count: number;
+}
+
 const guardRatingService = {
   async list(params?: { guardId?: string; limit?: number }): Promise<GuardRatingListResult> {
     const tenantId = getTenantId();
@@ -55,6 +60,23 @@ const guardRatingService = {
       count: payload?.count ?? 0,
       average: payload?.average ?? null,
     };
+  },
+
+  /**
+   * Per-guard rating aggregates keyed by securityGuard.id, so any worker-detail
+   * surface can show a review "level" in one round-trip. Pass the visible guard
+   * ids (or none for all). Returns {} on failure (badges just don't render).
+   */
+  async summary(guardIds?: string[]): Promise<Record<string, GuardRatingSummary>> {
+    try {
+      const tenantId = getTenantId();
+      const qs = guardIds && guardIds.length ? `?guardIds=${guardIds.join(',')}` : '';
+      const resp = await api.get(`/tenant/${tenantId}/guard-ratings/summary${qs}`);
+      const payload = (resp as any)?.data ?? resp;
+      return payload?.summary && typeof payload.summary === 'object' ? payload.summary : {};
+    } catch {
+      return {};
+    }
   },
 };
 

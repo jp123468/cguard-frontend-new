@@ -3,6 +3,8 @@ import { invalidateEntity } from "@/lib/queryClient";
 import { useNavigate } from "react-router-dom";
 import MobileCardList from '@/components/responsive/MobileCardList';
 import GuardCardsGrid, { type GuardCardAction } from './GuardCardsGrid';
+import GuardRatingLevel from './GuardRatingLevel';
+import guardRatingService from '@/lib/api/guardRatingService';
 import { PageHeader, StatCard, Stagger } from '@/components/kit';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import AppLayout from "@/layouts/app-layout";
@@ -176,6 +178,16 @@ export default function SecurityGuardsPage() {
 
   // Estado principal SIN datos de prueba
   const [guards, setGuards] = useState<SecurityGuard[]>([]);
+  // Per-guard client-review level (keyed by securityGuard id = the /guards/:id
+  // route param). Loaded once the roster is known; badges click → Perfil › Reseñas.
+  const [ratings, setRatings] = useState<Record<string, { average: number; count: number }>>({});
+  useEffect(() => {
+    const ids = guards.map((g: any) => g.raw?.id || g.id).filter(Boolean);
+    if (!ids.length) return;
+    let alive = true;
+    guardRatingService.summary(ids).then((m) => { if (alive) setRatings(m); }).catch(() => {});
+    return () => { alive = false; };
+  }, [guards]);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsGuard, setDetailsGuard] = useState<SecurityGuard | null>(null);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
@@ -864,6 +876,8 @@ export default function SecurityGuardsPage() {
                   <GuardCardsGrid
                     guards={paginatedGuards}
                     stationByUserId={stationByUserId}
+                    ratings={ratings}
+                    onOpenReviews={(realId) => navigate(`/guards/${realId}/reviews`)}
                     loading={false}
                     selectedIds={selectedGuards}
                     onSelect={handleSelectGuard}
@@ -928,6 +942,13 @@ export default function SecurityGuardsPage() {
                         >
                           {guard.name}
                         </div>
+                        {(() => {
+                          const realId = guard.raw?.id || guard.id;
+                          const r = ratings[realId];
+                          return r ? (
+                            <GuardRatingLevel average={r.average} count={r.count} onClick={() => navigate(`/guards/${realId}/reviews`)} />
+                          ) : null;
+                        })()}
                       </td>
                       <td className="px-4 py-3">{guard.email}</td>
                       <td className="px-4 py-3">{guard.phone}</td>

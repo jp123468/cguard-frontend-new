@@ -163,6 +163,7 @@ const GuardDispositivoPage = lazy(() => import("./pages/admin/security-guards/co
 const GuardLicenciasPage = lazy(() => import("./pages/admin/security-guards/components/GuardLicenses/GuardLicensespage"));
 const GuardNotasPage = lazy(() => import("./pages/admin/security-guards/components/GuardNotes/GuardNotespage"));
 const GuardMemosPage = lazy(() => import("./pages/admin/security-guards/components/GuardMemos/GuardMemosPage"));
+const GuardReviewsPage = lazy(() => import("./pages/admin/security-guards/components/GuardReviews/GuardReviewsPage"));
 const GuardRemindersPage = lazy(() => import("./pages/admin/security-guards/components/GuardReminders/GuardRemindersPage"));
 const GuardFilesPage = lazy(() => import("./pages/admin/security-guards/components/GuardFiles/GuardFilesPage"));
 const GuardAsignarSitiosPage = lazy(() => import("./pages/admin/security-guards/components/GuardAssign-Sites/GuardAsignarSitiosPage"));
@@ -857,6 +858,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <GuardMemosPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guards/:id/reviews"
+                element={
+                  <ProtectedRoute>
+                    <GuardReviewsPage />
                   </ProtectedRoute>
                 }
               />

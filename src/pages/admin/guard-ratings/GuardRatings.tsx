@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,7 @@ interface GuardOption { id: string; fullName: string; }
 // ── component ────────────────────────────────────────────────────────────────
 
 export default function GuardRatings() {
+  const navigate = useNavigate();
   const [records, setRecords] = useState<GuardRatingRecord[]>([]);
   const [average, setAverage] = useState<number | null>(null);
   const [count, setCount] = useState(0);
@@ -132,14 +134,14 @@ export default function GuardRatings() {
       <Breadcrumb
         items={[
           { label: "Panel de control", path: "/dashboard" },
-          { label: "Calificaciones de vigilantes" },
+          { label: "Control de Calidad" },
         ]}
       />
       <PageContainer width="wide" className="p-6">
         <PageHeader
           icon={<Star />}
-          title="Calificaciones de vigilantes"
-          subtitle="Reseñas y puntuaciones enviadas por los clientes sobre tus vigilantes."
+          title="Control de Calidad"
+          subtitle="Calificaciones de los clientes hacia cada vigilante. Úsalas para generar memos u observaciones y mejorar el servicio."
         />
 
         {/* Stats */}
@@ -190,8 +192,10 @@ export default function GuardRatings() {
           </div>
         </div>
 
-        {/* Table */}
-        <Section title="Listado de calificaciones" icon={<Star />} contentClassName="overflow-hidden rounded-xl border">
+        {/* Table — Calificaciones a personal (las reseñas son hacia cada
+            vigilante, no hacia la empresa). Cada fila abre el perfil del
+            vigilante › Reseñas. */}
+        <Section title="Calificaciones a personal" icon={<Star />} contentClassName="overflow-hidden rounded-xl border">
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
@@ -239,9 +243,14 @@ export default function GuardRatings() {
                 </TableRow>
               ) : (
                 paginated.map((rec) => (
-                  <TableRow key={rec.id}>
+                  <TableRow
+                    key={rec.id}
+                    className={rec.guardId ? "cursor-pointer" : undefined}
+                    onClick={() => rec.guardId && navigate(`/guards/${rec.guardId}/reviews`)}
+                    title={rec.guardId ? "Ver reseñas del vigilante" : undefined}
+                  >
                     <TableCell className="whitespace-nowrap">{formatDate(rec.createdAt)}</TableCell>
-                    <TableCell className="font-medium">{rec.guardName ?? "—"}</TableCell>
+                    <TableCell className="font-medium text-primary hover:underline">{rec.guardName ?? "—"}</TableCell>
                     <TableCell>{rec.clientName ?? "—"}</TableCell>
                     <TableCell>{rec.stationName ?? "—"}</TableCell>
                     <TableCell><Stars value={rec.rating} /></TableCell>
